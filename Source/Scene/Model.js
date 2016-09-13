@@ -1853,26 +1853,32 @@ define([
         // Get the projection matrix name.  There is probably a better way to do this.
         var projectionMatrixUniformName = null;
         for (var techniqueName in model.gltf.techniques) {
-            var projectionMatrixParameterName = "";
-            var technique = model.gltf.techniques[techniqueName];
-            for (var parameterName in technique.parameters) {
-                var parameter = technique.parameters[parameterName];
-                if (parameter.semantic === "PROJECTION") {
-                    projectionMatrixParameterName = parameterName;
+            if (model.gltf.techniques.hasOwnProperty(techniqueName)) {
+                var technique = model.gltf.techniques[techniqueName];
+                var projectionMatrixParameterName = "";
+                for (var parameterName in technique.parameters) {
+                    if (technique.parameters.hasOwnProperty(parameterName)) {
+                        var parameter = technique.parameters[parameterName];
+                        if (parameter.semantic === "PROJECTION") {
+                            projectionMatrixParameterName = parameterName;
+                            break;
+                        }
+                    }
+                }
+
+                for (var uniformName in technique.uniforms) {
+                    if (technique.uniforms.hasOwnProperty(uniformName)) {
+                        var paramName = technique.uniforms[uniformName];
+                        if (paramName === projectionMatrixParameterName) {
+                            projectionMatrixUniformName = uniformName;
+                            break;
+                        }
+                    }
+                }
+
+                if (projectionMatrixUniformName) {
                     break;
                 }
-            }
-
-            for (var uniformName in technique.uniforms) {
-                var paramName = technique.uniforms[uniformName];
-                if (paramName == projectionMatrixParameterName) {
-                    projectionMatrixUniformName = uniformName;
-                    break;
-                }
-            }
-
-            if (projectionMatrixUniformName) {
-                break;
             }
         }
 
@@ -2955,6 +2961,18 @@ define([
         };
     }
 
+    function createHighlightColorFunction(model) {
+        return function() {
+            return model.highlightColor;
+        };
+    }
+
+    function createHighlightSizeFunction(model) {
+        return function() {
+            return model.highlightSize;
+        };
+    }
+
     function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
@@ -3115,14 +3133,9 @@ define([
 
                 highlightRS = RenderState.fromCache(highlightRS);
 
-                // Setup the highlight color uniform.
-                uniformMap.u_highlightColor = function(){
-                    return model.highlightColor;
-                };
-
-                uniformMap.u_highlightSize = function() {
-                    return model.highlightSize;
-                };
+                // Setup the highlight color and size uniforms.
+                uniformMap.u_highlightColor = createHighlightColorFunction(model);
+                uniformMap.u_highlightSize = createHighlightSizeFunction(model);
 
                 var highlightCommand = new DrawCommand({
                         boundingVolume : new BoundingSphere(), // updated in update()
@@ -3991,10 +4004,9 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        var command = nc.command;
-                        commandList.push(command);
+                        commandList.push(nc.command);
 
-                        boundingVolume = command.boundingVolume;
+                        boundingVolume = nc.command.boundingVolume;
                         if (frameState.mode === SceneMode.SCENE2D &&
                             (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
                             commandList.push(nc.command2D);
@@ -4008,8 +4020,7 @@ define([
                         nc = nodeCommands[i];
                         if (nc.show) {
                             commandList.push(nc.highlightCommand);
-
-                            boundingVolume = command.boundingVolume;
+                            boundingVolume = nc.command.boundingVolume;
                             if (frameState.mode === SceneMode.SCENE2D &&
                                 (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
                                 commandList.push(nc.highlightCommand2D);
