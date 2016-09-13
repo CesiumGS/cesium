@@ -1782,7 +1782,7 @@ define([
         return shader;
     }
 
-    function createHighlightVertexShaderSource(vertexShaderSource, projectionMatrixName) {
+    function createHighlightVertexShaderSource(vertexShaderSource, projectionMatrixName, viewportName) {
         var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_old_main');
         // Modified from http://forum.unity3d.com/threads/toon-outline-but-with-diffuse-surface.24668/
         var highlightMain = 'uniform float u_highlightSize;\n' +
@@ -1793,7 +1793,7 @@ define([
             '  n.x *= ' + projectionMatrixName + '[0][0];\n' +
             '  n.y *= ' + projectionMatrixName + '[1][1];\n' +
             '  vec4 clip = gl_Position;\n' +
-            '  clip.xy += n.xy * clip.w * u_highlightSize;\n' +
+            '  clip.xy += n.xy * clip.w * u_highlightSize / ' + viewportName + '.z * 2.0;\n' +
             '  gl_Position = clip;\n' +
             '}';
         return renamedVS + '\n' + highlightMain;
@@ -1886,8 +1886,15 @@ define([
 
         // Get the projection matrix name.  There is probably a better way to do this.
         var projectionMatrixUniformName = getUniformNameForSemantic(model, "PROJECTION");
+        if (!projectionMatrixUniformName) {
+            projectionMatrixUniformName = "czm_projection";
+        }
+        var viewportUniformName = getUniformNameForSemantic(model, "VIEWPORT");
+        if (!viewportUniformName) {
+            viewportUniformName = "czm_viewport";
+        }
 
-        var highlightVS = createHighlightVertexShaderSource(vs, projectionMatrixUniformName);
+        var highlightVS = createHighlightVertexShaderSource(vs, projectionMatrixUniformName, viewportUniformName);
 
         var highlightFS = 'uniform vec4 u_highlightColor;\n' +
                         'void main() \n' +

@@ -37,7 +37,7 @@
     <tbody><tr>
         <td>Highlight Size</td>
         <td>
-            <input type="range" min="0" max="0.5" step="0.0001" data-bind="value: highlightSize, valueUpdate: 'input'">
+            <input type="range" min="0" max="20" step="1" data-bind="value: highlightSize, valueUpdate: 'input'">
             <input type="text" size="5" data-bind="value: highlightSize">
         </td>
     </tr>
@@ -59,7 +59,7 @@ var entity = null;
 // The viewModel tracks the state of our mini application.
 var viewModel = {
     highlight: false,
-    highlightSize: 0.002
+    highlightSize: 2
 };
 
 // Convert the viewModel members into knockout observables.
