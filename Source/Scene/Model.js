@@ -1799,6 +1799,40 @@ define([
         return renamedVS + '\n' + highlightMain;
     }
 
+    function getUniformNameForSemantic(model, semantic) {
+        var semanticUniformName = null;
+        for (var techniqueName in model.gltf.techniques) {
+            if (model.gltf.techniques.hasOwnProperty(techniqueName)) {
+                var technique = model.gltf.techniques[techniqueName];
+                var semanticParameterName = "";
+                for (var parameterName in technique.parameters) {
+                    if (technique.parameters.hasOwnProperty(parameterName)) {
+                        var parameter = technique.parameters[parameterName];
+                        if (parameter.semantic === semantic) {
+                            semanticParameterName = parameterName;
+                            break;
+                        }
+                    }
+                }
+
+                for (var uniformName in technique.uniforms) {
+                    if (technique.uniforms.hasOwnProperty(uniformName)) {
+                        var paramName = technique.uniforms[uniformName];
+                        if (paramName === semanticParameterName) {
+                            semanticUniformName = uniformName;
+                            break;
+                        }
+                    }
+                }
+
+                if (semanticUniformName) {
+                    break;
+                }
+            }
+        }
+        return semanticUniformName;
+    }
+
     function createProgram(id, model, context) {
         var programs = model.gltf.programs;
         var shaders = model._loadResources.shaders;
@@ -1851,36 +1885,7 @@ define([
         }
 
         // Get the projection matrix name.  There is probably a better way to do this.
-        var projectionMatrixUniformName = null;
-        for (var techniqueName in model.gltf.techniques) {
-            if (model.gltf.techniques.hasOwnProperty(techniqueName)) {
-                var technique = model.gltf.techniques[techniqueName];
-                var projectionMatrixParameterName = "";
-                for (var parameterName in technique.parameters) {
-                    if (technique.parameters.hasOwnProperty(parameterName)) {
-                        var parameter = technique.parameters[parameterName];
-                        if (parameter.semantic === "PROJECTION") {
-                            projectionMatrixParameterName = parameterName;
-                            break;
-                        }
-                    }
-                }
-
-                for (var uniformName in technique.uniforms) {
-                    if (technique.uniforms.hasOwnProperty(uniformName)) {
-                        var paramName = technique.uniforms[uniformName];
-                        if (paramName === projectionMatrixParameterName) {
-                            projectionMatrixUniformName = uniformName;
-                            break;
-                        }
-                    }
-                }
-
-                if (projectionMatrixUniformName) {
-                    break;
-                }
-            }
-        }
+        var projectionMatrixUniformName = getUniformNameForSemantic(model, "PROJECTION");
 
         var highlightVS = createHighlightVertexShaderSource(vs, projectionMatrixUniformName);
 
