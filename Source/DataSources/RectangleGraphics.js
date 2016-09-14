@@ -245,7 +245,7 @@ define([
         result.closeTop = this.closeTop;
         result.closeBottom = this.closeBottom;
         result.shadows = this.shadows;
-        result.distanceDisplayCondition = this.distanceDisplayCondition
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
 

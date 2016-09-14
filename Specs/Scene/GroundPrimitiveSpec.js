@@ -540,7 +540,6 @@ defineSuite([
         depthPrimitive = new MockGlobePrimitive(primitive);
 
         var rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0));
-        var rectColor = rectColorAttribute.value;
         var rectInstance = new GeometryInstance({
             geometry : new RectangleGeometry({
                 ellipsoid : ellipsoid,

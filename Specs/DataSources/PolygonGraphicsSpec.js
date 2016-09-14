@@ -38,7 +38,7 @@ defineSuite([
             closeTop : true,
             closeBottom : true,
             shadows : ShadowMode.DISABLED,
-            distanceDisplayCondition : new DistanceDisplayCondition
+            distanceDisplayCondition : new DistanceDisplayCondition()
         };
 
         var polygon = new PolygonGraphics(options);
