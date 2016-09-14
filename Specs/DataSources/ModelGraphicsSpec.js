@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/ModelGraphics',
         'Core/Cartesian3',
+        'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Quaternion',
         'DataSources/ConstantProperty',
@@ -11,6 +12,7 @@ defineSuite([
     ], function(
         ModelGraphics,
         Cartesian3,
+        DistanceDisplayCondition,
         JulianDate,
         Quaternion,
         ConstantProperty,
@@ -29,6 +31,7 @@ defineSuite([
             incrementallyLoadTextures : false,
             runAnimations : false,
             shadows : ShadowMode.DISABLED,
+            distanceDisplayCondition : new DistanceDisplayCondition(),
             nodeTransformations : {
                 node1 : {
                     translation : Cartesian3.UNIT_Y,
@@ -57,6 +60,7 @@ defineSuite([
         expect(model.maximumScale.getValue()).toEqual(options.maximumScale);
         expect(model.incrementallyLoadTextures.getValue()).toEqual(options.incrementallyLoadTextures);
         expect(model.shadows.getValue()).toEqual(options.shadows);
+        expect(model.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
 
         var actualNodeTransformations = model.nodeTransformations.getValue(new JulianDate());
@@ -77,6 +81,7 @@ defineSuite([
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty({
@@ -99,6 +104,7 @@ defineSuite([
         expect(target.maximumScale).toBe(source.maximumScale);
         expect(target.incrementallyLoadTextures).toBe(source.incrementallyLoadTextures);
         expect(target.shadows).toBe(source.shadows);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
         expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
     });
@@ -112,6 +118,7 @@ defineSuite([
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
@@ -124,6 +131,7 @@ defineSuite([
         var maximumScale = new ConstantProperty(200.0);
         var incrementallyLoadTextures = new ConstantProperty(true);
         var shadows = new ConstantProperty(ShadowMode.ENABLED);
+        var distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         var runAnimations = new ConstantProperty(true);
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
@@ -137,6 +145,7 @@ defineSuite([
         target.maximumScale = maximumScale;
         target.incrementallyLoadTextures = incrementallyLoadTextures;
         target.shadows = shadows;
+        target.distanceDisplayCondition = distanceDisplayCondition;
         target.runAnimations = runAnimations;
         target.nodeTransformations = nodeTransformations;
 
@@ -149,6 +158,7 @@ defineSuite([
         expect(target.maximumScale).toBe(maximumScale);
         expect(target.incrementallyLoadTextures).toBe(incrementallyLoadTextures);
         expect(target.shadows).toBe(shadows);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
         expect(target.runAnimations).toBe(runAnimations);
         expect(target.nodeTransformations).toBe(nodeTransformations);
     });
@@ -162,6 +172,7 @@ defineSuite([
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty(),
@@ -176,6 +187,7 @@ defineSuite([
         expect(result.maximumScale).toBe(source.maximumScale);
         expect(result.incrementallyLoadTextures).toBe(source.incrementallyLoadTextures);
         expect(result.shadows).toBe(source.shadows);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
         expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
     });

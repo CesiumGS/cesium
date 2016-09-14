@@ -55,12 +55,20 @@ defineSuite([
         expect(dc.isVisible(mockPrimitive, mockFrameState)).toEqual(false);
     });
 
-    it('determines equality', function() {
+    it('determines equality with static function', function() {
         var dc = new DistanceDisplayCondition(10.0, 100.0);
         expect(DistanceDisplayCondition.equals(dc, new DistanceDisplayCondition(10.0, 100.0))).toEqual(true);
         expect(DistanceDisplayCondition.equals(dc, new DistanceDisplayCondition(11.0, 100.0))).toEqual(false);
         expect(DistanceDisplayCondition.equals(dc, new DistanceDisplayCondition(10.0, 101.0))).toEqual(false);
         expect(DistanceDisplayCondition.equals(dc, undefined)).toEqual(false);
+    });
+
+    it('determines equality with prototype function', function() {
+        var dc = new DistanceDisplayCondition(10.0, 100.0);
+        expect(dc.equals(new DistanceDisplayCondition(10.0, 100.0))).toEqual(true);
+        expect(dc.equals(new DistanceDisplayCondition(11.0, 100.0))).toEqual(false);
+        expect(dc.equals(new DistanceDisplayCondition(10.0, 101.0))).toEqual(false);
+        expect(dc.equals(undefined)).toEqual(false);
     });
 
     it('clones', function() {

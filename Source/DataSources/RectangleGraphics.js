@@ -76,6 +76,8 @@ define([
         this._outlineWidthSubscription = undefined;
         this._shadows = undefined;
         this._shadowsSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distancedisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -213,7 +215,9 @@ define([
          * @type {Property}
          * @default ShadowMode.DISABLED
          */
-        shadows : createPropertyDescriptor('shadows')
+        shadows : createPropertyDescriptor('shadows'),
+
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -241,6 +245,7 @@ define([
         result.closeTop = this.closeTop;
         result.closeBottom = this.closeBottom;
         result.shadows = this.shadows;
+        result.distanceDisplayCondition = this.distanceDisplayCondition
         return result;
     };
 
@@ -272,6 +277,7 @@ define([
         this.closeTop = defaultValue(this.closeTop, source.closeTop);
         this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
         this.shadows = defaultValue(this.shadows, source.shadows);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return RectangleGraphics;

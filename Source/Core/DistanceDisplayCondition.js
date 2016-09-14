@@ -102,5 +102,12 @@ define([
         return result;
     };
 
+    /**
+     * DOC_TBA
+     */
+    DistanceDisplayCondition.prototype.equals = function(other) {
+        return DistanceDisplayCondition.equals(this, other);
+    };
+
     return DistanceDisplayCondition;
 });
