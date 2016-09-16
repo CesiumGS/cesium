@@ -81,7 +81,7 @@ define([
     var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
-        texCoordAndExpand : 0,
+        texCoordExpandAndBatchIndex : 0,
         position3DHigh : 1,
         position3DLow : 2,
         position2DHigh : 3,
@@ -93,8 +93,7 @@ define([
         nextPosition3DHigh : 9,
         nextPosition3DLow : 10,
         nextPosition2DHigh : 11,
-        nextPosition2DLow : 12,
-        batchTableIndex : 13
+        nextPosition2DLow : 12
     };
 
     /**
@@ -195,8 +194,7 @@ define([
         this._polylinesToUpdate = [];
         this._vertexArrays = [];
         this._positionBuffer = undefined;
-        this._texCoordAndExpandBuffer = undefined;
-        this._batchTableIndexBuffer = undefined;
+        this._texCoordExpandAndBatchIndexBuffer = undefined;
 
         this._batchTable = undefined;
         this._createBatchTable = false;
@@ -756,18 +754,16 @@ define([
             var mode = collection._mode;
 
             var positionArray = new Float32Array(6 * totalLength * 3);
-            var texCoordAndExpandArray = new Float32Array(totalLength * 3);
-            var batchTableIndexArray = new Float32Array(totalLength);
+            var texCoordExpandAndBatchIndexArray = new Float32Array(totalLength * 4);
             var position3DArray;
 
             var positionIndex = 0;
             var colorIndex = 0;
-            var texCoordAndExpandIndex = 0;
-            var batchTableIndex = 0;
+            var texCoordExpandAndBatchIndexIndex = 0;
             for (x in polylineBuckets) {
                 if (polylineBuckets.hasOwnProperty(x)) {
                     bucket = polylineBuckets[x];
-                    bucket.write(positionArray, texCoordAndExpandArray, batchTableIndexArray, positionIndex, colorIndex, texCoordAndExpandIndex, batchTableIndex, batchTable, context, projection);
+                    bucket.write(positionArray, texCoordExpandAndBatchIndexArray, positionIndex, colorIndex, texCoordExpandAndBatchIndexIndex, batchTable, context, projection);
 
                     if (mode === SceneMode.MORPHING) {
                         if (!defined(position3DArray)) {
@@ -779,15 +775,13 @@ define([
                     var bucketLength = bucket.lengthOfPositions;
                     positionIndex += 6 * bucketLength * 3;
                     colorIndex += bucketLength * 4;
-                    texCoordAndExpandIndex += bucketLength * 3;
-                    batchTableIndex += bucketLength;
+                    texCoordExpandAndBatchIndexIndex += bucketLength * 4;
                     offset = bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
                 }
             }
 
             var positionBufferUsage = collection._positionBufferUsage.bufferUsage;
-            var texCoordAndExpandBufferUsage = BufferUsage.STATIC_DRAW;
-            var batchTableIndexBufferUsage = BufferUsage.STATIC_DRAW;
+            var texCoordExpandAndBatchIndexBufferUsage = BufferUsage.STATIC_DRAW;
 
             collection._positionBuffer = Buffer.createVertexBuffer({
                 context : context,
@@ -802,20 +796,14 @@ define([
                     usage : positionBufferUsage
                 });
             }
-            collection._texCoordAndExpandBuffer = Buffer.createVertexBuffer({
+            collection._texCoordExpandAndBatchIndexBuffer = Buffer.createVertexBuffer({
                 context : context,
-                typedArray : texCoordAndExpandArray,
-                usage : texCoordAndExpandBufferUsage
-            });
-            collection._batchTableIndexBuffer = Buffer.createVertexBuffer({
-                context : context,
-                typedArray : batchTableIndexArray,
-                usage : batchTableIndexBufferUsage
+                typedArray : texCoordExpandAndBatchIndexArray,
+                usage : texCoordExpandAndBatchIndexBufferUsage
             });
 
             var positionSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
-            var texCoordAndExpandSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
-            var batchTableIndexSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
+            var texCoordExpandAndBatchIndexSizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
 
             var vbo = 0;
             var numberOfIndicesArrays = totalIndices.length;
@@ -839,8 +827,7 @@ define([
                     var prevPositionLowOffset = positionSizeInBytes + prevPositionHighOffset;
                     var nextPositionHighOffset = positionSizeInBytes + prevPositionLowOffset;
                     var nextPositionLowOffset = positionSizeInBytes + nextPositionHighOffset;
-                    var vertexTexCoordAndExpandBufferOffset = k * (texCoordAndExpandSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * texCoordAndExpandSizeInBytes;
-                    var vertexBatchTableIndexBufferOffset = k * (batchTableIndexSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * batchTableIndexSizeInBytes;
+                    var vertexTexCoordExpandAndBatchIndexBufferOffset = k * (texCoordExpandAndBatchIndexSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * texCoordExpandAndBatchIndexSizeInBytes;
 
                     var attributes = [{
                         index : attributeLocations.position3DHigh,
@@ -915,17 +902,11 @@ define([
                         offsetInBytes : nextPositionLowOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeLocations.texCoordAndExpand,
-                        componentsPerAttribute : 3,
+                        index : attributeLocations.texCoordExpandAndBatchIndex,
+                        componentsPerAttribute : 4,
                         componentDatatype : ComponentDatatype.FLOAT,
-                        vertexBuffer : collection._texCoordAndExpandBuffer,
-                        offsetInBytes : vertexTexCoordAndExpandBufferOffset
-                    }, {
-                        index : attributeLocations.batchTableIndex,
-                        componentsPerAttribute : 1,
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        vertexBuffer : collection._batchTableIndexBuffer,
-                        offsetInBytes : vertexBatchTableIndexBufferOffset
+                        vertexBuffer : collection._texCoordExpandAndBatchIndexBuffer,
+                        offsetInBytes : vertexTexCoordExpandAndBatchIndexBufferOffset
                     }];
 
                     var buffer3D;
@@ -1166,7 +1147,7 @@ define([
     var scratchPickColorCartesian = new Cartesian4();
     var scratchWidthShowCartesian = new Cartesian2();
 
-    PolylineBucket.prototype.write = function(positionArray, texCoordAndExpand, batchTableIndexArray, positionIndex, colorIndex, texCoordAndExpandIndex, batchTableIndex, batchTable, context, projection) {
+    PolylineBucket.prototype.write = function(positionArray, texCoordExpandAndBatchIndexArray, positionIndex, colorIndex, texCoordExpandAndBatchIndexIndex, batchTable, context, projection) {
         var mode = this.mode;
         var maxLon = projection.ellipsoid.maximumRadius * CesiumMath.PI;
 
@@ -1256,14 +1237,13 @@ define([
                     EncodedCartesian3.writeElements(scratchWriteNextPosition, positionArray, positionIndex + 12);
 
                     var direction = (k - 2 < 0) ? -1.0 : 1.0;
-                    texCoordAndExpand[texCoordAndExpandIndex] = j / (positionsLength - 1); // s tex coord
-                    texCoordAndExpand[texCoordAndExpandIndex + 1] = 2 * (k % 2) - 1;       // expand direction
-                    texCoordAndExpand[texCoordAndExpandIndex + 2] = direction;
-
-                    batchTableIndexArray[batchTableIndex++] = polylineBatchIndex;
+                    texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex] = j / (positionsLength - 1); // s tex coord
+                    texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex + 1] = 2 * (k % 2) - 1;       // expand direction
+                    texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex + 2] = direction;
+                    texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex + 3] = polylineBatchIndex;
 
                     positionIndex += 6 * 3;
-                    texCoordAndExpandIndex += 3;
+                    texCoordExpandAndBatchIndexIndex += 4;
                 }
             }
 
