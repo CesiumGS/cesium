@@ -187,16 +187,16 @@ define([
         this._polylines = [];
         this._polylineBuckets = {};
 
-        // The buffer usage for each attribute is determined based on the usage of the attribute over time.
-        this._buffersUsage = [{bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}];  // POSITION_INDEX
+        // The buffer usage is determined based on the usage of the attribute over time.
+        this._positionBufferUsage = { bufferUsage : BufferUsage.STATIC_DRAW, frameCount : 0 };
 
         this._mode = undefined;
 
         this._polylinesToUpdate = [];
         this._vertexArrays = [];
         this._positionBuffer = undefined;
-        this._pickColorBuffer = undefined;
-        this._texCoordExpandWidthAndShowBuffer = undefined;
+        this._texCoordAndExpandBuffer = undefined;
+        this._batchTableIndexBuffer = undefined;
 
         this._batchTable = undefined;
         this._createBatchTable = false;
@@ -374,7 +374,7 @@ define([
         return this._polylines[index];
     };
 
-    function createBatchTable(collection, context) {
+    function createBatchTable(collection) {
         if (defined(collection._batchTable)) {
             collection._batchTable.destroy();
         }
@@ -396,7 +396,7 @@ define([
     /**
      * @private
      */
-    PolylineCollection.prototype.update = function(frameState, commandList) {
+    PolylineCollection.prototype.update = function(frameState) {
         removePolylines(this);
 
         if (this._polylines.length === 0) {
@@ -429,7 +429,7 @@ define([
             }
 
             // if a polyline's positions size changes, we need to recreate the vertex arrays and vertex buffers because the indices will be different.
-            // if a polyline's material changes, we need to recreate the VAOs and VBOs because they will be batched differenty.
+            // if a polyline's material changes, we need to recreate the VAOs and VBOs because they will be batched differently.
             if (properties[POSITION_SIZE_INDEX] || properties[MATERIAL_INDEX]) {
                 createVertexArrays(this, context, projection);
             } else {
@@ -440,17 +440,22 @@ define([
                     properties = polyline._propertiesChanged;
                     var bucket = polyline._bucket;
                     var index = 0;
-                    for ( var x in polylineBuckets) {
+                    for (var x in polylineBuckets) {
                         if (polylineBuckets.hasOwnProperty(x)) {
                             if (polylineBuckets[x] === bucket) {
-                                if (properties[POSITION_INDEX] || properties[SHOW_INDEX] || properties[WIDTH_INDEX]) {
-                                    bucket.writeUpdate(index, polyline, this._positionBuffer, this._texCoordExpandWidthAndShowBuffer, projection);
+                                if (properties[POSITION_INDEX]) {
+                                    bucket.writeUpdate(index, polyline, this._positionBuffer, projection);
                                 }
                                 break;
                             }
                             index += polylineBuckets[x].lengthOfPositions;
                         }
                     }
+
+                    if (properties[SHOW_INDEX] || properties[WIDTH_INDEX]) {
+                        this._batchTable.setEntry(polyline._index, 0, new Cartesian2(polyline._width, polyline._show));
+                    }
+
                     polyline._clean();
                 }
             }
@@ -688,34 +693,28 @@ define([
     };
 
     function computeNewBuffersUsage(collection) {
-        return false;
-
-        var buffersUsage = collection._buffersUsage;
         var usageChanged = false;
-
         var properties = collection._propertiesChanged;
-        //subtract 2 from NUMBER_OF_PROPERTIES because we don't care about POSITION_SIZE_INDEX or MATERIAL_INDEX property change.
-        for ( var k = 0; k < NUMBER_OF_PROPERTIES - 2; ++k) {
-            var bufferUsage = buffersUsage[k];
-            if (properties[k]) {
-                if (bufferUsage.bufferUsage !== BufferUsage.STREAM_DRAW) {
-                    usageChanged = true;
-                    bufferUsage.bufferUsage = BufferUsage.STREAM_DRAW;
-                    bufferUsage.frameCount = 100;
-                } else {
-                    bufferUsage.frameCount = 100;
-                }
+        var bufferUsage = collection._positionBufferUsage;
+        if (properties[POSITION_INDEX]) {
+            if (bufferUsage.bufferUsage !== BufferUsage.STREAM_DRAW) {
+                usageChanged = true;
+                bufferUsage.bufferUsage = BufferUsage.STREAM_DRAW;
+                bufferUsage.frameCount = 100;
             } else {
-                if (bufferUsage.bufferUsage !== BufferUsage.STATIC_DRAW) {
-                    if (bufferUsage.frameCount === 0) {
-                        usageChanged = true;
-                        bufferUsage.bufferUsage = BufferUsage.STATIC_DRAW;
-                    } else {
-                        bufferUsage.frameCount--;
-                    }
+                bufferUsage.frameCount = 100;
+            }
+        } else {
+            if (bufferUsage.bufferUsage !== BufferUsage.STATIC_DRAW) {
+                if (bufferUsage.frameCount === 0) {
+                    usageChanged = true;
+                    bufferUsage.bufferUsage = BufferUsage.STATIC_DRAW;
+                } else {
+                    bufferUsage.frameCount--;
                 }
             }
         }
+
         return usageChanged;
     }
 
@@ -785,7 +784,7 @@ define([
                 }
             }
 
-            var positionBufferUsage = collection._buffersUsage[POSITION_INDEX].bufferUsage;
+            var positionBufferUsage = collection._positionBufferUsage.bufferUsage;
             var texCoordAndExpandBufferUsage = BufferUsage.STATIC_DRAW;
             var batchTableIndexBufferUsage = BufferUsage.STATIC_DRAW;
 
@@ -1265,7 +1264,7 @@ define([
                 }
             }
 
-            // TODO: add support for color from the batch table
+            // TODO: add support for color from the batch table?
             var colorCartesian = new Cartesian4();
             colorCartesian.x = Color.floatToByte(pickColor.red);
             colorCartesian.y = Color.floatToByte(pickColor.green);
@@ -1500,9 +1499,8 @@ define([
     };
 
     var scratchPositionsArray;
-    var scratchTexCoordArray;
 
-    PolylineBucket.prototype.writeUpdate = function(index, polyline, positionBuffer, texCoordExpandWidthAndShowBuffer, projection) {
+    PolylineBucket.prototype.writeUpdate = function(index, polyline, positionBuffer, projection) {
         var mode = this.mode;
         var maxLon = projection.ellipsoid.maximumRadius * CesiumMath.PI;
 
@@ -1511,31 +1509,22 @@ define([
             index += this.getPolylineStartIndex(polyline);
 
             var positionArray = scratchPositionsArray;
-            var texCoordExpandWidthAndShowArray = scratchTexCoordArray;
-
             var positionsArrayLength = 6 * positionsLength * 3;
 
             if (!defined(positionArray) || positionArray.length < positionsArrayLength) {
                 positionArray = scratchPositionsArray = new Float32Array(positionsArrayLength);
-                texCoordExpandWidthAndShowArray = scratchTexCoordArray = new Float32Array(positionsLength * 4);
             } else if (positionArray.length > positionsArrayLength) {
                 positionArray = new Float32Array(positionArray.buffer, 0, positionsArrayLength);
-                texCoordExpandWidthAndShowArray = new Float32Array(texCoordExpandWidthAndShowArray.buffer, 0, positionsLength * 4);
             }
-
-            var positionIndex = 0;
-            var texCoordExpandWidthAndShowIndex = 0;
 
             var segments = this.getSegments(polyline, projection);
             var positions = segments.positions;
             var lengths = segments.lengths;
 
+            var positionIndex = 0;
             var segmentIndex = 0;
             var count = 0;
             var position;
-
-            var width = polyline.width;
-            var show = polyline.show && width > 0.0;
 
             positionsLength = positions.length;
             for ( var i = 0; i < positionsLength; ++i) {
@@ -1604,20 +1593,11 @@ define([
                     EncodedCartesian3.writeElements(scratchWritePosition, positionArray, positionIndex);
                     EncodedCartesian3.writeElements(scratchWritePrevPosition, positionArray, positionIndex + 6);
                     EncodedCartesian3.writeElements(scratchWriteNextPosition, positionArray, positionIndex + 12);
-
-                    var direction = (j - 2 < 0) ? -1.0 : 1.0;
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex] = i / (positionsLength - 1);  // s tex coord
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 1] = 2 * (j % 2) - 1;        // expand direction
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 2] = direction * width;
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 3] = show;
-
                     positionIndex += 6 * 3;
-                    texCoordExpandWidthAndShowIndex += 4;
                 }
             }
 
             positionBuffer.copyFromArrayView(positionArray, 6 * 3 * Float32Array.BYTES_PER_ELEMENT * index);
-            texCoordExpandWidthAndShowBuffer.copyFromArrayView(texCoordExpandWidthAndShowArray, 4 * Float32Array.BYTES_PER_ELEMENT * index);
         }
     };
 
