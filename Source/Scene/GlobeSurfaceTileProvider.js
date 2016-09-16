@@ -1090,7 +1090,8 @@ define([
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(texture)) {
                     // Our "ready" texture isn't actually ready.  This should never happen.
-                    // Side note: It IS possible for it to not be in the READY state, though.
+                    //
+                    // Side note: It IS possible for it to not be in the READY ImageryState, though.
                     // This can happen when a single imagery tile is shared by two terrain tiles (common)
                     // and one of them (A) needs a geographic version of the tile because it is near the poles,
                     // and the other (B) does not.  B can and will transition the imagery tile to the READY state

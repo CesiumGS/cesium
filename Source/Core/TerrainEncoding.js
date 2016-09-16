@@ -289,15 +289,15 @@ define([
         textureCoordAndEncodedNormals : 1
     };
     var attributes = {
-        compressed : 0,
-        compressedNormal : 1
+        compressed0 : 0,
+        compressed1 : 1
     };
 
     TerrainEncoding.prototype.getAttributes = function(buffer) {
         var datatype = ComponentDatatype.FLOAT;
+        var sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
 
         if (this.quantization === TerrainQuantization.NONE) {
-            var sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
             var position3DAndHeightLength = 4;
             var numTexCoordComponents = 2;
 
@@ -328,38 +328,42 @@ define([
             }];
         }
 
-        var numCompressed = 3;
+        var numCompressed0 = 3;
+        var numCompressed1 = 0;
 
         if (this.hasWebMercatorY || this.hasVertexNormals) {
-            ++numCompressed;
+            ++numCompressed0;
         }
 
         if (this.hasWebMercatorY && this.hasVertexNormals) {
-            var stride = (numCompressed + 1) * sizeInBytes;
+            ++numCompressed1;
+
+            var stride = (numCompressed0 + numCompressed1) * sizeInBytes;
+
             return [
                 {
-                    index : attributes.compressed,
+                    index : attributes.compressed0,
                     vertexBuffer : buffer,
                     componentDatatype : datatype,
-                    componentsPerAttribute : numComponents,
+                    componentsPerAttribute : numCompressed0,
                     offsetInBytes : 0,
                     strideInBytes : stride
                 },
                 {
-                    index : attributes.compressedNormal,
+                    index : attributes.compressed1,
                     vertexBuffer : buffer,
                     componentDatatype : datatype,
-                    componentsPerAttribute : numComponents,
-                    offsetInBytes : numCompressed * sizeInBytes,
+                    componentsPerAttribute : numCompressed1,
+                    offsetInBytes : numCompressed0 * sizeInBytes,
                     strideInBytes : stride
                 }
             ];
         } else {
             return [{
-                index : attributes.compressed,
+                index : attributes.compressed0,
                 vertexBuffer : buffer,
                 componentDatatype : datatype,
-                componentsPerAttribute : numCompressed
+                componentsPerAttribute : numCompressed0
             }];
         }
     };

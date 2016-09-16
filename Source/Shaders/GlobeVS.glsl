@@ -1,6 +1,6 @@
 #ifdef QUANTIZATION_BITS12
-attribute vec4 compressed;
-attribute float compressedNormal;
+attribute vec4 compressed0;
+attribute float compressed1;
 #else
 attribute vec4 position3DAndHeight;
 attribute vec4 textureCoordAndEncodedNormals;
@@ -101,24 +101,24 @@ uniform mat4 u_scaleAndBias;
 void main()
 {
 #ifdef QUANTIZATION_BITS12
-    vec2 xy = czm_decompressTextureCoordinates(compressed.x);
-    vec2 zh = czm_decompressTextureCoordinates(compressed.y);
+    vec2 xy = czm_decompressTextureCoordinates(compressed0.x);
+    vec2 zh = czm_decompressTextureCoordinates(compressed0.y);
     vec3 position = vec3(xy, zh.x);
     float height = zh.y;
-    vec2 textureCoordinates = czm_decompressTextureCoordinates(compressed.z);
+    vec2 textureCoordinates = czm_decompressTextureCoordinates(compressed0.z);
 
     height = height * (u_minMaxHeight.y - u_minMaxHeight.x) + u_minMaxHeight.x;
     position = (u_scaleAndBias * vec4(position, 1.0)).xyz;
 
 #if defined(ENABLE_VERTEX_LIGHTING) && defined(INCLUDE_WEB_MERCATOR_Y)
-    float webMercatorT = czm_decompressTextureCoordinates(compressed.w).x;
-    float encodedNormal = compressedNormal;
+    float webMercatorT = czm_decompressTextureCoordinates(compressed0.w).x;
+    float encodedNormal = compressed1;
 #elif defined(INCLUDE_WEB_MERCATOR_Y)
-    float webMercatorT = czm_decompressTextureCoordinates(compressed.w).x;
+    float webMercatorT = czm_decompressTextureCoordinates(compressed0.w).x;
     float encodedNormal = 0.0;
 #elif defined(ENABLE_VERTEX_LIGHTING)
     float webMercatorT = textureCoordinates.y;
-    float encodedNormal = compressed.w;
+    float encodedNormal = compressed0.w;
 #else
     float webMercatorT = textureCoordinates.y;
     float encodedNormal = 0.0;
