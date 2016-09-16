@@ -292,6 +292,17 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4094456877799821);
     });
 
+    it('computing rectangle property with zero rotation', function() {
+        expect(function() {
+            return RectangleGeometry.createGeometry(new RectangleGeometry({
+                vertexFormat : VertexFormat.POSITION_ONLY,
+                rectangle : Rectangle.MAX_VALUE,
+                granularity : 1.0,
+                rotation : 0
+            }));
+        }).not.toThrowDeveloperError();
+    });
+
     var rectangle = new RectangleGeometry({
         vertexFormat : VertexFormat.POSITION_ONLY,
         rectangle : new Rectangle(-2.0, -1.0, 0.0, 1.0),

@@ -991,7 +991,6 @@ define([
     }
 
     function rotateCVOnTerrain(controller, startPosition, movement) {
-        var ellipsoid = controller._ellipsoid;
         var scene = controller._scene;
         var camera = scene.camera;
 
@@ -1046,7 +1045,7 @@ define([
         var verticalCenter = IntersectionTests.rayPlane(ray, plane, rotateCVVerticalCenter);
 
         var projection = camera._projection;
-        ellipsoid = projection.ellipsoid;
+        var ellipsoid = projection.ellipsoid;
 
         Cartesian3.fromElements(center.y, center.z, center.x, center);
         var cart = projection.unproject(center, rotateCVCart);
@@ -1122,7 +1121,7 @@ define([
         controller._rotateRateRangeAdjustment = radius;
 
         var originalPosition = Cartesian3.clone(camera.positionWC, rotateCVCartesian3);
-        adjustHeightForTerrain(controller);
+        camera._adjustHeightForTerrain();
 
         if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
             camera._setTransform(verticalTransform);
@@ -1753,7 +1752,7 @@ define([
         controller._rotateRateRangeAdjustment = radius;
 
         var originalPosition = Cartesian3.clone(camera.positionWC, tilt3DCartesian3);
-        adjustHeightForTerrain(controller);
+        camera._adjustHeightForTerrain();
 
         if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
             camera._setTransform(verticalTransform);
@@ -1866,70 +1865,6 @@ define([
         reactToInput(controller, controller.enableLook, controller.lookEventTypes, look3D);
     }
 
-    var scratchAdjustHeightCartographic = new Cartographic();
-
-    function adjustHeightForTerrain(controller) {
-        if (!controller.enableCollisionDetection) {
-            return;
-        }
-
-        var scene = controller._scene;
-        var mode = scene.mode;
-        var globe = scene.globe;
-
-        if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
-            return;
-        }
-
-        var camera = scene.camera;
-        var ellipsoid = globe.ellipsoid;
-        var projection = scene.mapProjection;
-
-        var transform;
-        var mag;
-        if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
-            transform = Matrix4.clone(camera.transform);
-            mag = Cartesian3.magnitude(camera.position);
-            camera._setTransform(Matrix4.IDENTITY);
-        }
-
-        var cartographic = scratchAdjustHeightCartographic;
-        if (mode === SceneMode.SCENE3D) {
-            ellipsoid.cartesianToCartographic(camera.position, cartographic);
-        } else {
-            projection.unproject(camera.position, cartographic);
-        }
-
-        var heightUpdated = false;
-        if (cartographic.height < controller._minimumCollisionTerrainHeight) {
-            var height = globe.getHeight(cartographic);
-            if (defined(height)) {
-                height += controller.minimumZoomDistance;
-                if (cartographic.height < height) {
-                    cartographic.height = height;
-                    if (mode === SceneMode.SCENE3D) {
-                        ellipsoid.cartographicToCartesian(cartographic, camera.position);
-                    } else {
-                        projection.project(cartographic, camera.position);
-                    }
-                    heightUpdated = true;
-                }
-            }
-        }
-
-        if (defined(transform)) {
-            camera._setTransform(transform);
-            if (heightUpdated) {
-                Cartesian3.normalize(camera.position, camera.position);
-                Cartesian3.negate(camera.position, camera.direction);
-                Cartesian3.multiplyByScalar(camera.position, Math.max(mag, controller.minimumZoomDistance), camera.position);
-                Cartesian3.normalize(camera.direction, camera.direction);
-                Cartesian3.cross(camera.direction, camera.up, camera.right);
-                Cartesian3.cross(camera.right, camera.direction, camera.up);
-            }
-        }
-    }
-
     /**
      * @private
      */
@@ -1961,8 +1896,6 @@ define([
             this._horizontalRotationAxis = undefined;
             update3D(this);
         }
-
-        adjustHeightForTerrain(this);
 
         this._aggregator.reset();
     };

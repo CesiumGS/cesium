@@ -17,7 +17,9 @@ defineSuite([
         'DataSources/RectangleGraphics',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
+        'Scene/GroundPrimitive',
         'Scene/PrimitiveCollection',
+        'Scene/ShadowMode',
         'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
         'Specs/createScene'
@@ -39,7 +41,9 @@ defineSuite([
         RectangleGraphics,
         SampledProperty,
         TimeIntervalCollectionProperty,
+        GroundPrimitive,
         PrimitiveCollection,
+        ShadowMode,
         createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene) {
@@ -49,12 +53,14 @@ defineSuite([
     var time2;
     var time3;
     var scene;
+    var groundPrimitiveSupported;
 
     beforeAll(function() {
         scene = createScene();
         time = new JulianDate(0, 0);
         time2 = new JulianDate(10, 0);
         time3 = new JulianDate(20, 0);
+        groundPrimitiveSupported = GroundPrimitive.isSupported(scene);
     });
 
     afterAll(function() {
@@ -92,6 +98,7 @@ defineSuite([
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.shadowsProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -132,6 +139,7 @@ defineSuite([
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -385,8 +393,13 @@ defineSuite([
 
         var updater = new RectangleGeometryUpdater(entity, scene);
 
-        expect(updater.onTerrain).toBe(true);
-        expect(updater.outlineEnabled).toBe(false);
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+            expect(updater.outlineEnabled).toBe(false);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+            expect(updater.outlineEnabled).toBe(true);
+        }
     });
 
     it('Checks that an entity with height isn\'t on terrain', function() {
@@ -520,8 +533,14 @@ defineSuite([
         expect(groundPrimitives.length).toBe(0);
 
         dynamicUpdater.update(time);
-        expect(primitives.length).toBe(0);
-        expect(groundPrimitives.length).toBe(1);
+
+        if (groundPrimitiveSupported) {
+            expect(primitives.length).toBe(0);
+            expect(groundPrimitives.length).toBe(1);
+        } else {
+            expect(primitives.length).toBe(2);
+            expect(groundPrimitives.length).toBe(0);
+        }
 
         dynamicUpdater.destroy();
         updater.destroy();
@@ -630,7 +649,11 @@ defineSuite([
         var entity = createBasicRectangleWithoutHeight();
         entity.rectangle.fill = true;
         var updater = new RectangleGeometryUpdater(entity, scene);
-        expect(updater.onTerrain).toBe(true);
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+        }
     });
 
     it('fill is false sets onTerrain to false', function() {
@@ -661,7 +684,11 @@ defineSuite([
         entity.rectangle.fill = true;
         entity.rectangle.material = new ColorMaterialProperty(Color.WHITE);
         var updater = new RectangleGeometryUpdater(entity, scene);
-        expect(updater.onTerrain).toBe(true);
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+        }
     });
 
     it('non-color material sets onTerrain to false', function() {

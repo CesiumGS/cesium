@@ -43,7 +43,8 @@ define([
         './ImageryLayer',
         './ImageryState',
         './QuadtreeTileLoadState',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         BoundingSphere,
         BoxOutlineGeometry,
@@ -88,7 +89,8 @@ define([
         ImageryLayer,
         ImageryState,
         QuadtreeTileLoadState,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
 
     /**
@@ -124,8 +126,7 @@ define([
         this.oceanNormalMap = undefined;
         this.zoomedOutOceanSpecularIntensity = 0.5;
         this.enableLighting = false;
-        this.castShadows = false;
-        this.receiveShadows = false;
+        this.shadows = ShadowMode.RECEIVE_ONLY;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -925,8 +926,8 @@ define([
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
         var enableFog = frameState.fog.enabled;
-        var castShadows = tileProvider.castShadows;
-        var receiveShadows = tileProvider.receiveShadows;
+        var castShadows = ShadowMode.castShadows(tileProvider.shadows);
+        var receiveShadows = ShadowMode.receiveShadows(tileProvider.shadows);
 
         if (showReflectiveOcean) {
             --maxTextures;

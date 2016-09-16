@@ -18,6 +18,7 @@ define([
         '../Scene/PolylineCollection',
         '../Scene/PolylineColorAppearance',
         '../Scene/PolylineMaterialAppearance',
+        '../Scene/ShadowMode',
         './BoundingSphereState',
         './ColorMaterialProperty',
         './ConstantProperty',
@@ -42,6 +43,7 @@ define([
         PolylineCollection,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
+        ShadowMode,
         BoundingSphereState,
         ColorMaterialProperty,
         ConstantProperty,
@@ -54,6 +56,7 @@ define([
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
+    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
 
     function GeometryOptions(entity) {
         this.id = entity;
@@ -91,6 +94,7 @@ define([
         this._geometryChanged = new Event();
         this._showProperty = undefined;
         this._materialProperty = undefined;
+        this._shadowsProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'polyline', entity.polyline, undefined);
     }
@@ -192,6 +196,19 @@ define([
          */
         outlineColorProperty : {
             value : undefined
+        },
+        /**
+         * Gets the property specifying whether the geometry
+         * casts or receives shadows from each light source.
+         * @memberof PolylineGeometryUpdater.prototype
+         * 
+         * @type {Property}
+         * @readonly
+         */
+        shadowsProperty : {
+            get : function() {
+                return this._shadowsProperty;
+            }
         },
         /**
          * Gets a value indicating if the geometry is time-varying.
@@ -366,6 +383,7 @@ define([
         var isColorMaterial = material instanceof ColorMaterialProperty;
         this._materialProperty = material;
         this._showProperty = defaultValue(show, defaultShow);
+        this._shadowsProperty = defaultValue(polyline.shadows, defaultShadows);
         this._fillEnabled = true;
 
         var width = polyline.width;

@@ -798,6 +798,7 @@ define([
             !(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
             rectangle.width / texture.width > 1e-5) {
                 var that = this;
+                imagery.addReference();
                 var computeCommand = new ComputeCommand({
                     persists : true,
                     owner : this,
@@ -809,6 +810,7 @@ define([
                     postExecute : function(outputTexture) {
                         imagery.texture = outputTexture;
                         finalizeReprojectTexture(that, context, imagery, outputTexture);
+                        imagery.releaseReference();
                     }
                 });
                 this._reprojectComputeCommands.push(computeCommand);

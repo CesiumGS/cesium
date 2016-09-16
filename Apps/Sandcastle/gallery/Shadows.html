@@ -33,11 +33,11 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox : false,
     selectionIndicator : false,
     shadows : true,
-    terrainShadows : true
+    terrainShadows : Cesium.ShadowMode.ENABLED
 });
 
 viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-    url : '//assets.agi.com/stk-terrain/world',
+    url : 'https://assets.agi.com/stk-terrain/world',
     requestWaterMask : true,
     requestVertexNormals : true
 });
@@ -82,6 +82,46 @@ var simpleCity = viewer.entities.add({
     height : 0.0,
     model : {
         uri : '../../SampleData/models/ShadowTester/Shadow_Tester_4.gltf'
+    }
+});
+
+var boxEntity = viewer.entities.add({
+    name : 'Box',
+    height : 10.0,
+    box : {
+        dimensions : new Cesium.Cartesian3(10.0, 10.0, 10.0),
+        material : Cesium.Color.RED,
+        shadows : Cesium.ShadowMode.ENABLED
+    }
+});
+
+var checkerMaterial = new Cesium.CheckerboardMaterialProperty({
+    evenColor : Cesium.Color.RED.withAlpha(0.5),
+    oddColor : Cesium.Color.RED.withAlpha(0.0),
+    repeat : new Cesium.Cartesian2(5.0, 10.0)
+});
+
+var checkerEntity = viewer.entities.add({
+    name : 'Checkered Box',
+    height : 10.0,
+    box : {
+        dimensions : new Cesium.Cartesian3(10.0, 10.0, 10.0),
+        material : checkerMaterial,
+        outline : true,
+        outlineColor : Cesium.Color.RED,
+        shadows : Cesium.ShadowMode.ENABLED
+    }
+});
+
+var sphereEntity = viewer.entities.add({
+    name : 'Sphere',
+    height : 20.0,
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(15.0, 15.0, 15.0),
+        material : Cesium.Color.BLUE.withAlpha(0.5),
+        slicePartitions : 24,
+        stackPartitions : 36,
+        shadows : Cesium.ShadowMode.ENABLED
     }
 });
 
@@ -190,8 +230,18 @@ Sandcastle.addToolbarButton('Toggle Shadows', function() {
     viewer.shadows = !viewer.shadows;
 });
 
+var entityShadows = Cesium.ShadowMode.ENABLED;
+Sandcastle.addToolbarButton('Toggle Entity Shadows', function() {
+    entityShadows = (entityShadows === Cesium.ShadowMode.ENABLED) ? Cesium.ShadowMode.DISABLED : Cesium.ShadowMode.ENABLED;
+    for (i = 0; i < entitiesLength; ++i) {
+        var entity = entities[i];
+        var visual = entity.model || entity.box || entity.ellipsoid;
+        visual.shadows = entityShadows;
+    }
+});
+
 Sandcastle.addToolbarButton('Toggle Terrain Shadows', function() {
-    viewer.terrainShadows = !viewer.terrainShadows;
+    viewer.terrainShadows = (viewer.terrainShadows === Cesium.ShadowMode.ENABLED) ? Cesium.ShadowMode.DISABLED : Cesium.ShadowMode.ENABLED;
 });
 
 Sandcastle.addToolbarButton('Soft Shadows', function() {
@@ -217,35 +267,6 @@ Sandcastle.addToolbarMenu([{
     text : 'Size : 256',
     onselect : function() {
         shadowMap.size = 256;
-    }
-}]);
-
-function setShadows(castShadows, receiveShadows) {
-    for (i = 0; i < entitiesLength; ++i) {
-        entities[i].model.castShadows = castShadows;
-        entities[i].model.receiveShadows = receiveShadows;
-    }
-}
-
-Sandcastle.addToolbarMenu([{
-    text : 'Entity Shadows',
-    onselect : function() {
-        setShadows(true, true);
-    }
-}, {
-    text : 'Cast Only',
-    onselect : function() {
-        setShadows(true, false);
-    }
-}, {
-    text : 'Receive Only',
-    onselect : function() {
-        setShadows(false, true);
-    }
-}, {
-    text : 'Off',
-    onselect : function() {
-        setShadows(false, false);
     }
 }]);
 
