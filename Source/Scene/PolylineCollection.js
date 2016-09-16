@@ -689,6 +689,7 @@ define([
         destroyVertexArrays(this);
         releaseShaders(this);
         destroyPolylines(this);
+        this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };
 
@@ -1162,6 +1163,8 @@ define([
     var scratchWritePrevPosition = new Cartesian3();
     var scratchWriteNextPosition = new Cartesian3();
     var scratchWriteVector = new Cartesian3();
+    var scratchPickColorCartesian = new Cartesian4();
+    var scratchWidthShowCartesian = new Cartesian2();
 
     PolylineBucket.prototype.write = function(positionArray, texCoordAndExpand, batchTableIndexArray, positionIndex, colorIndex, texCoordAndExpandIndex, batchTableIndex, batchTable, context, projection) {
         var mode = this.mode;
@@ -1265,13 +1268,17 @@ define([
             }
 
             // TODO: add support for color from the batch table?
-            var colorCartesian = new Cartesian4();
+            var colorCartesian = scratchPickColorCartesian;
             colorCartesian.x = Color.floatToByte(pickColor.red);
             colorCartesian.y = Color.floatToByte(pickColor.green);
             colorCartesian.z = Color.floatToByte(pickColor.blue);
             colorCartesian.w = Color.floatToByte(pickColor.alpha);
 
-            batchTable.setEntry(polylineBatchIndex, 0, new Cartesian2(width, show ? 1.0 : 0.0));
+            var widthShowCartesian = scratchWidthShowCartesian;
+            widthShowCartesian.x = width;
+            widthShowCartesian.y = show ? 1.0 : 0.0;
+
+            batchTable.setEntry(polylineBatchIndex, 0, widthShowCartesian);
             batchTable.setEntry(polylineBatchIndex, 1, colorCartesian);
         }
     };
