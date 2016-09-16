@@ -225,7 +225,7 @@ define([
                     result.maximumHeight,
                     result.boundingSphere3D,
                     result.occludeePointInScaledSpace,
-                    6,
+                    result.numberOfAttributes,
                     result.orientedBoundingBox,
                     TerrainEncoding.clone(result.encoding),
                     exaggeration);

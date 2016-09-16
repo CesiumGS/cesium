@@ -61,11 +61,11 @@ define([
             var hDim = maximumHeight - minimumHeight;
             var maxDim = Math.max(Cartesian3.maximumComponent(dimensions), hDim);
 
-            // if (maxDim < SHIFT_LEFT_12 - 1.0) {
-            //     quantization = TerrainQuantization.BITS12;
-            // } else {
+            if (maxDim < SHIFT_LEFT_12 - 1.0) {
+                quantization = TerrainQuantization.BITS12;
+            } else {
                 quantization = TerrainQuantization.NONE;
-            // }
+            }
 
             center = axisAlignedBoundingBox.center;
             toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
@@ -175,7 +175,11 @@ define([
             vertexBuffer[bufferIndex++] = compressed1;
             vertexBuffer[bufferIndex++] = compressed2;
 
-            // TODO: store webMercatorY
+            if (this.hasWebMercatorY) {
+                Cartesian2.fromElements(webMercatorY, 0.0, cartesian2Scratch);
+                var compressed3 = AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
+                vertexBuffer[bufferIndex++] = compressed3;
+            }
         } else {
             Cartesian3.subtract(position, this.center, cartesian3Scratch);
 
@@ -285,7 +289,8 @@ define([
         textureCoordAndEncodedNormals : 1
     };
     var attributes = {
-        compressed : 0
+        compressed : 0,
+        compressedNormal : 1
     };
 
     TerrainEncoding.prototype.getAttributes = function(buffer) {
@@ -294,13 +299,17 @@ define([
         if (this.quantization === TerrainQuantization.NONE) {
             var sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
             var position3DAndHeightLength = 4;
-            var numTexCoordComponents = this.hasVertexNormals ? 3 : 2;
-            var stride = (this.hasVertexNormals ? 7 : 6) * sizeInBytes;
+            var numTexCoordComponents = 2;
 
             if (this.hasWebMercatorY) {
                 ++numTexCoordComponents;
-                stride += sizeInBytes;
             }
+
+            if (this.hasVertexNormals) {
+                ++numTexCoordComponents;
+            }
+
+            var stride = (position3DAndHeightLength + numTexCoordComponents) * sizeInBytes;
 
             return [{
                 index : attributesNone.position3DAndHeight,
@@ -319,15 +328,40 @@ define([
             }];
         }
 
-        // TODO: support hasWebMercatorY
-        var numComponents = 3;
-        numComponents += this.hasVertexNormals ? 1 : 0;
-        return [{
-            index : attributes.compressed,
-            vertexBuffer : buffer,
-            componentDatatype : datatype,
-            componentsPerAttribute : numComponents
-        }];
+        var numCompressed = 3;
+
+        if (this.hasWebMercatorY || this.hasVertexNormals) {
+            ++numCompressed;
+        }
+
+        if (this.hasWebMercatorY && this.hasVertexNormals) {
+            var stride = (numCompressed + 1) * sizeInBytes;
+            return [
+                {
+                    index : attributes.compressed,
+                    vertexBuffer : buffer,
+                    componentDatatype : datatype,
+                    componentsPerAttribute : numComponents,
+                    offsetInBytes : 0,
+                    strideInBytes : stride
+                },
+                {
+                    index : attributes.compressedNormal,
+                    vertexBuffer : buffer,
+                    componentDatatype : datatype,
+                    componentsPerAttribute : numComponents,
+                    offsetInBytes : numCompressed * sizeInBytes,
+                    strideInBytes : stride
+                }
+            ];
+        } else {
+            return [{
+                index : attributes.compressed,
+                vertexBuffer : buffer,
+                componentDatatype : datatype,
+                componentsPerAttribute : numCompressed
+            }];
+        }
     };
 
     TerrainEncoding.prototype.getAttributeLocations = function() {

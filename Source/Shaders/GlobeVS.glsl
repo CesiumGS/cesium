@@ -1,5 +1,6 @@
 #ifdef QUANTIZATION_BITS12
 attribute vec4 compressed;
+attribute float compressedNormal;
 #else
 attribute vec4 position3DAndHeight;
 attribute vec4 textureCoordAndEncodedNormals;
@@ -105,34 +106,50 @@ void main()
     vec3 position = vec3(xy, zh.x);
     float height = zh.y;
     vec2 textureCoordinates = czm_decompressTextureCoordinates(compressed.z);
-    float encodedNormal = compressed.w;
 
     height = height * (u_minMaxHeight.y - u_minMaxHeight.x) + u_minMaxHeight.x;
     position = (u_scaleAndBias * vec4(position, 1.0)).xyz;
-#else
-    vec3 position = position3DAndHeight.xyz;
-    float height = position3DAndHeight.w;
 
 #if defined(ENABLE_VERTEX_LIGHTING) && defined(INCLUDE_WEB_MERCATOR_Y)
-    vec3 textureCoordinates = textureCoordAndEncodedNormals.xyz;
+    float webMercatorT = czm_decompressTextureCoordinates(compressed.w).x;
+    float encodedNormal = compressedNormal;
+#elif defined(INCLUDE_WEB_MERCATOR_Y)
+    float webMercatorT = czm_decompressTextureCoordinates(compressed.w).x;
+    float encodedNormal = 0.0;
+#elif defined(ENABLE_VERTEX_LIGHTING)
+    float webMercatorT = textureCoordinates.y;
+    float encodedNormal = compressed.w;
+#else
+    float webMercatorT = textureCoordinates.y;
+    float encodedNormal = 0.0;
+#endif
+
+#else
+    // A single float per element
+    vec3 position = position3DAndHeight.xyz;
+    float height = position3DAndHeight.w;
+    vec2 textureCoordinates = textureCoordAndEncodedNormals.xy;
+
+#if defined(ENABLE_VERTEX_LIGHTING) && defined(INCLUDE_WEB_MERCATOR_Y)
+    float webMercatorT = textureCoordAndEncodedNormals.z;
     float encodedNormal = textureCoordAndEncodedNormals.w;
 #elif defined(ENABLE_VERTEX_LIGHTING)
-    vec3 textureCoordinates = textureCoordAndEncodedNormals.xyy;
+    float webMercatorT = textureCoordinates.y;
     float encodedNormal = textureCoordAndEncodedNormals.z;
 #elif defined(INCLUDE_WEB_MERCATOR_Y)
-    vec3 textureCoordinates = textureCoordAndEncodedNormals.xyz;
+    float webMercatorT = textureCoordAndEncodedNormals.z;
     float encodedNormal = 0.0;
 #else
-    vec3 textureCoordinates = vec3(textureCoordAndEncodedNormals.xy, 0.0); //textureCoordAndEncodedNormals.xyy;
+    float webMercatorT = textureCoordinates.y;
     float encodedNormal = 0.0;
 #endif
 
 #endif
 
     vec3 position3DWC = position + u_center3D;
-    gl_Position = getPosition(position, height, textureCoordinates.xy);
+    gl_Position = getPosition(position, height, textureCoordinates);
 
-    v_textureCoordinates = textureCoordinates;
+    v_textureCoordinates = vec3(textureCoordinates, webMercatorT);
 
 #if defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)
     v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
