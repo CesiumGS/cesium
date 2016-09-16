@@ -273,13 +273,22 @@ define([
         var functionReturnType = getComponentType(componentsPerAttribute);
         var functionReturnValue = getComponentSwizzle(componentsPerAttribute);
 
-        return functionReturnType + ' ' + functionName + '(float batchId) \n' +
-               '{ \n' +
-               '    vec2 st = computeSt(batchId); \n' +
-               '    st.x += batchTextureStep.x * float(' + attributeIndex + '); \n' +
-               '    vec4 value = texture2D(batchTexture, st); \n' +
-               '    return value' + functionReturnValue + '; \n' +
-               '} \n';
+        var glslFunction =
+            functionReturnType + ' ' + functionName + '(float batchId) \n' +
+            '{ \n' +
+            '    vec2 st = computeSt(batchId); \n' +
+            '    st.x += batchTextureStep.x * float(' + attributeIndex + '); \n' +
+            '    vec4 textureValue = texture2D(batchTexture, st); \n' +
+            '    ' + functionReturnType + ' value = textureValue' + functionReturnValue + '; \n';
+
+        if (batchTable._pixelDatatype === PixelDatatype.UNSIGNED_BYTE && !attribute.normalize) {
+            glslFunction += 'value *= 255.0; \n';
+        }
+
+        glslFunction +=
+            '    return value; \n' +
+            '} \n';
+        return glslFunction;
     }
 
     BatchTable.prototype.getVertexShaderCallback = function() {
