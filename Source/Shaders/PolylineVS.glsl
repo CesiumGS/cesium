@@ -10,8 +10,8 @@ attribute vec3 nextPosition3DHigh;
 attribute vec3 nextPosition3DLow;
 attribute vec3 nextPosition2DHigh;
 attribute vec3 nextPosition2DLow;
-attribute vec4 texCoordExpandWidthAndShow;
-attribute vec4 pickColor;
+attribute vec4 texCoordAndExpand;
+attribute float batchTableIndex;
 
 varying vec2  v_st;
 varying float v_width;
@@ -19,11 +19,15 @@ varying vec4  czm_pickColor;
 
 void main() 
 {
-    float texCoord = texCoordExpandWidthAndShow.x;
-    float expandDir = texCoordExpandWidthAndShow.y;
-    float width = abs(texCoordExpandWidthAndShow.z) + 0.5;
-    bool usePrev = texCoordExpandWidthAndShow.z < 0.0;
-    float show = texCoordExpandWidthAndShow.w;
+    float texCoord = texCoordAndExpand.x;
+    float expandDir = texCoordAndExpand.y;
+    bool usePrev = texCoordAndExpand.z < 0.0;
+
+    vec2 widthAndShow = batchTable_getWidthAndShow(batchTableIndex);
+    float width = widthAndShow.x * 255.0;
+    float show = widthAndShow.y * 255.0;
+
+    vec4 pickColor = batchTable_getPickColor(batchTableIndex);
     
     vec4 p, prev, next;
     if (czm_morphTime == 1.0)
