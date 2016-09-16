@@ -273,7 +273,7 @@ define([
             maximumHeight : this._maximumHeight,
             quantizedVertices : this._quantizedVertices,
             octEncodedNormals : this._encodedNormals,
-            includeWebMercatorY : true, // TODO: only include web mercator Y if it's needed.
+            includeWebMercatorY : true,
             indices : this._indices,
             westIndices : this._westIndices,
             southIndices : this._southIndices,

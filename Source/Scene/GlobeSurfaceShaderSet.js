@@ -148,7 +148,6 @@ define([
                 }
             }
 
-            // TODO: do this conditionally
             vs.defines.push('INCLUDE_WEB_MERCATOR_Y');
             fs.defines.push('INCLUDE_WEB_MERCATOR_Y');
 
