@@ -24,7 +24,7 @@ void main()
     float batchTableIndex = texCoordExpandAndBatchIndex.w;
 
     vec2 widthAndShow = batchTable_getWidthAndShow(batchTableIndex);
-    float width = widthAndShow.x;
+    float width = widthAndShow.x + 0.5;
     float show = widthAndShow.y;
 
     vec4 pickColor = batchTable_getPickColor(batchTableIndex);
