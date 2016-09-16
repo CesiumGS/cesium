@@ -96,7 +96,7 @@ define([
         }
 
         // If the imagery is already ready, but we need a geographic version and don't have it yet,
-        // we still need to do the reprojeciton step. This can happen if the Web Mercator version
+        // we still need to do the reprojection step. This can happen if the Web Mercator version
         // is fine initially, but the geographic one is needed later.
         var needsReprojection = this.state === ImageryState.READY && needGeographicProjection && !this.texture;
 

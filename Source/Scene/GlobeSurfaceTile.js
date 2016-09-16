@@ -20,7 +20,7 @@ define([
         './QuadtreeTileLoadState',
         './SceneMode',
         './TerrainState',
-        './TileBoundingBox',
+        './TileBoundingRegion',
         './TileTerrain'
     ], function(
         BoundingSphere,
@@ -43,7 +43,7 @@ define([
         QuadtreeTileLoadState,
         SceneMode,
         TerrainState,
-        TileBoundingBox,
+        TileBoundingRegion,
         TileTerrain) {
     'use strict';
 
@@ -75,7 +75,7 @@ define([
         this.boundingSphere3D = new BoundingSphere();
         this.boundingSphere2D = new BoundingSphere();
         this.orientedBoundingBox = undefined;
-        this.tileBoundingBox = undefined;
+        this.tileBoundingRegion = undefined;
         this.occludeePointInScaledSpace = new Cartesian3();
 
         this.loadedTerrain = undefined;
@@ -241,10 +241,29 @@ define([
         }
     };
 
+    function createTileBoundingRegion(tile) {
+        var minimumHeight;
+        var maximumHeight;
+        if (defined(tile.parent) && defined(tile.parent.data)) {
+            minimumHeight = tile.parent.data.minimumHeight;
+            maximumHeight = tile.parent.data.maximumHeight;
+        }
+        return new TileBoundingRegion({
+            rectangle : tile.rectangle,
+            ellipsoid : tile.tilingScheme.ellipsoid,
+            minimumHeight : minimumHeight,
+            maximumHeight : maximumHeight
+        });
+    }
+
     GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
+            // Create the TileBoundingRegion now in order to estimate the distance, which is used to prioritize the request.
+            // Since the terrain isn't loaded yet, estimate the heights using its parent's values.
+            surfaceTile.tileBoundingRegion = createTileBoundingRegion(tile, frameState);
+            tile._distance = surfaceTile.tileBoundingRegion.distanceToCamera(frameState);
         }
 
         if (tile.state === QuadtreeTileLoadState.START) {
@@ -343,7 +362,7 @@ define([
         var suspendUpsampling = false;
 
         if (defined(loaded)) {
-            loaded.processLoadStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level);
+            loaded.processLoadStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level, tile._distance);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
@@ -449,6 +468,8 @@ define([
     }
 
     function propagateNewUpsampledDataToChildren(tile) {
+        var surfaceTile = tile.data;
+
         // Now that there's new data for this tile:
         //  - child tiles that were previously upsampled need to be re-upsampled based on the new data.
 
@@ -456,34 +477,32 @@ define([
         // of its ancestors receives new (better) data and we want to re-upsample from the
         // new data.
 
-        propagateNewUpsampledDataToChild(tile, tile._southwestChild);
-        propagateNewUpsampledDataToChild(tile, tile._southeastChild);
-        propagateNewUpsampledDataToChild(tile, tile._northwestChild);
-        propagateNewUpsampledDataToChild(tile, tile._northeastChild);
-    }
+        if (defined(tile._children)) {
+            for (var childIndex = 0; childIndex < 4; ++childIndex) {
+                var childTile = tile._children[childIndex];
+                if (childTile.state !== QuadtreeTileLoadState.START) {
+                    var childSurfaceTile = childTile.data;
+                    if (defined(childSurfaceTile.terrainData) && !childSurfaceTile.terrainData.wasCreatedByUpsampling()) {
+                        // Data for the child tile has already been loaded.
+                        continue;
+                    }
 
-    function propagateNewUpsampledDataToChild(tile, childTile) {
-        if (childTile && childTile.state !== QuadtreeTileLoadState.START) {
-            var childSurfaceTile = childTile.data;
-            if (defined(childSurfaceTile.terrainData) && !childSurfaceTile.terrainData.wasCreatedByUpsampling()) {
-                // Data for the child tile has already been loaded.
-                return;
+                    // Restart the upsampling process, no matter its current state.
+                    // We create a new instance rather than just restarting the existing one
+                    // because there could be an asynchronous operation pending on the existing one.
+                    if (defined(childSurfaceTile.upsampledTerrain)) {
+                        childSurfaceTile.upsampledTerrain.freeResources();
+                    }
+                    childSurfaceTile.upsampledTerrain = new TileTerrain({
+                        data : surfaceTile.terrainData,
+                        x : tile.x,
+                        y : tile.y,
+                        level : tile.level
+                    });
+
+                    childTile.state = QuadtreeTileLoadState.LOADING;
+                }
             }
-
-            // Restart the upsampling process, no matter its current state.
-            // We create a new instance rather than just restarting the existing one
-            // because there could be an asynchronous operation pending on the existing one.
-            if (defined(childSurfaceTile.upsampledTerrain)) {
-                childSurfaceTile.upsampledTerrain.freeResources();
-            }
-            childSurfaceTile.upsampledTerrain = new TileTerrain({
-                data : tile.data.terrainData,
-                x : tile.x,
-                y : tile.y,
-                level : tile.level
-            });
-
-            childTile.state = QuadtreeTileLoadState.LOADING;
         }
     }
 
