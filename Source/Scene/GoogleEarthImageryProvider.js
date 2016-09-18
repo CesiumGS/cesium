@@ -120,13 +120,13 @@ define([
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
-         * By default, this is set to 1.9.  Changing this value after creating an {@link ImageryLayer} for this provider will have
+         * By default, this is set to 1.0.  Changing this value after creating an {@link ImageryLayer} for this provider will have
          * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
          *
          * @type {Number}
-         * @default 1.9
+         * @default 1.0
          */
-        this.defaultGamma = 1.9;
+        this.defaultGamma = 1.0;
 
         this._tilingScheme = undefined;
 
@@ -184,16 +184,16 @@ define([
 
             if(defined(data.projection) && data.projection === 'flat') {
               that._tilingScheme = new GeographicTilingScheme({
-                  numberOfLevelZeroTilesX : 2,
-                  numberOfLevelZeroTilesY : 2,
+                  numberOfLevelZeroTilesX : 1,
+                  numberOfLevelZeroTilesY : 1,
                   rectangle: new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI),
                   ellipsoid : options.ellipsoid
               });
             // Default to mercator projection when projection is undefined
             } else if(!defined(data.projection) || data.projection === 'mercator') {
               that._tilingScheme = new WebMercatorTilingScheme({
-                  numberOfLevelZeroTilesX : 2,
-                  numberOfLevelZeroTilesY : 2,
+                  numberOfLevelZeroTilesX : 1,
+                  numberOfLevelZeroTilesY : 1,
                   ellipsoid : options.ellipsoid
               });
             } else {
@@ -579,8 +579,7 @@ define([
 
         imageUrl = imageUrl.replace('{x}', x);
         imageUrl = imageUrl.replace('{y}', y);
-        // Google Earth starts with a zoom level of 1, not 0
-        imageUrl = imageUrl.replace('{zoom}', (level + 1));
+        imageUrl = imageUrl.replace('{zoom}', (level));
 
         var proxy = imageryProvider._proxy;
         if (defined(proxy)) {
