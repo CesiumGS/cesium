@@ -536,6 +536,8 @@ define([
             imageryTilingScheme.rectangleToNativeRectangle(clippedImageryRectangle, clippedImageryRectangle);
             imageryTilingScheme.rectangleToNativeRectangle(imageryBounds, imageryBounds);
             imageryTileXYToRectangle = imageryTilingScheme.tileXYToNativeRectangle.bind(imageryTilingScheme);
+            veryCloseX = terrainRectangle.width / 512.0;
+            veryCloseY = terrainRectangle.height / 512.0;
         } else {
             imageryTileXYToRectangle = imageryTilingScheme.tileXYToRectangle.bind(imageryTilingScheme);
         }
@@ -549,7 +551,6 @@ define([
         // If this is the northern-most or western-most tile in the imagery tiling scheme,
         // it may not start at the northern or western edge of the terrain tile.
         // Calculate where it does start.
-        // TODO: veryCloseX and veryCloseY are much too small if we're using web mercator coordinates.
         if (!this.isBaseLayer() && Math.abs(clippedImageryRectangle.west - terrainRectangle.west) >= veryCloseX) {
             maxU = Math.min(1.0, (clippedImageryRectangle.west - terrainRectangle.west) / terrainRectangle.width);
         }
