@@ -3,6 +3,7 @@ Change Log
 
 ### 1.26 - 2016-10-03
 
+* Removed an unnecessary reprojection of Web Mercator imagery tiles to the Geographic projection on load.  This should improve both visual quality and performance slightly.
 * Fixed billboard rotation when sized in meters. [#3979](https://github.com/AnalyticalGraphicsInc/cesium/issues/3979)
 * Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
 * Fixed touch events for the timeline [#4305](https://github.com/AnalyticalGraphicsInc/cesium/pull/4305)
