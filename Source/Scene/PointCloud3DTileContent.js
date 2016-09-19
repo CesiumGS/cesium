@@ -91,8 +91,21 @@ define([
         this._pickCommand = undefined;
         this._pickId = undefined; // Only defined when batchTable is undefined
         this._isTranslucent = false;
+        this._styleTranslucent = false;
         this._constantColor = Color.clone(Color.WHITE);
         this._rtcCenter = undefined;
+
+        // These values are used to regenerate the shader when the style changes
+        this._styleableShaderAttributes = undefined;
+        this._isQuantized = false;
+        this._isOctEncoded16P = false;
+        this._hasColors = false;
+        this._hasNormals = false;
+        this._hasBatchIds = false;
+
+        // TODO : How to expose this? Will this be part of the point cloud styling or a property of the tileset?
+        // Use per-point normals to hide back-facing points.
+        this._backFaceCulling = false;
 
         this._opaqueRenderState = undefined;
         this._translucentRenderState = undefined;
@@ -420,14 +433,24 @@ define([
             colors : colors,
             normals : normals,
             batchIds : batchIds,
-            isQuantized : isQuantized,
-            isOctEncoded16P : isOctEncoded16P,
             styleableProperties : styleableProperties
         };
+
+        this._isQuantized = isQuantized;
+        this._isOctEncoded16P = isOctEncoded16P;
+        this._hasColors = defined(colors);
+        this._hasNormals = defined(normals);
+        this._hasBatchIds = defined(batchIds);
 
         this.state = Cesium3DTileContentState.PROCESSING;
         this._contentReadyToProcessPromise.resolve(this);
     };
+
+    var positionLocation = 0;
+    var colorLocation = 1;
+    var normalLocation = 2;
+    var batchIdLocation = 3;
+    var numberOfAttributes = 4;
 
     function createResources(content, frameState) {
         var context = frameState.context;
@@ -437,57 +460,36 @@ define([
         var colors = parsedContent.colors;
         var normals = parsedContent.normals;
         var batchIds = parsedContent.batchIds;
-        var isQuantized = parsedContent.isQuantized;
-        var isOctEncoded16P = parsedContent.isOctEncoded16P;
         var styleableProperties = parsedContent.styleableProperties;
+        var hasStyleableProperties = defined(styleableProperties);
+        var isQuantized = content._isQuantized;
+        var isOctEncoded16P = content._isOctEncoded16P;
         var isTranslucent = content._isTranslucent;
-
-        var hasColors = defined(colors);
-        var hasNormals = defined(normals);
-        var hasBatchIds = defined(batchIds);
+        var hasColors = content._hasColors;
+        var hasNormals = content._hasNormals;
+        var hasBatchIds = content._hasBatchIds;
 
         var batchTable = content.batchTable;
         var hasBatchTable = defined(batchTable);
-        var hasStyleableProperties = defined(styleableProperties);
 
-        // TODO : How to expose this? Will this be part of the point cloud styling or a property of the tileset?
-        // Use per-point normals to hide back-facing points.
-        var backFaceCulling = false;
-
-        var positionAttributeLocation = 0;
-        var colorAttributeLocation = 1;
-        var normalAttributeLocation = 2;
-        var batchIdAttributeLocation = 3;
-        var numberOfAttributes = 4;
-
-        var styleableShaderAttributes;
-        var styleableVertexAttributes;
-        var styleableVertexAttributeLocations;
+        var styleableVertexAttributes = [];
 
         if (hasStyleableProperties) {
-            styleableShaderAttributes = '';
-            styleableVertexAttributes = [];
-            styleableVertexAttributeLocations = {};
-
+            var styleableShaderAttributes = {};
             var attributeLocation = numberOfAttributes;
 
             for (var name in styleableProperties) {
                 if (styleableProperties.hasOwnProperty(name)) {
                     var property = styleableProperties[name];
-                    // TODO : this will not handle matrix types currently
-                    var componentCount = property.componentCount;
                     var typedArray = property.typedArray;
+                    var componentCount = property.componentCount;
                     var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
 
-                    // Append attributes to shader
-                    var attributeName = 'czm_pnts_' + name;
-                    var attributeType;
-                    if (componentCount === 1) {
-                        attributeType = 'float';
-                    } else {
-                        attributeType = 'vec' + componentCount;
+                    //>>includeStart('debug', pragmas.debug);
+                    if (componentDatatype === ComponentDatatype.UNSIGNED_INT) {
+                        throw new DeveloperError('Property "' + name + '" has a component type of UNSIGNED_INT which is not a valid WebGL vertex attribute type.');
                     }
-                    styleableShaderAttributes += 'attribute ' + attributeType + ' ' + attributeName + '; \n';
+                    //>>includeEnd('debug');
 
                     var vertexBuffer = Buffer.createVertexBuffer({
                         context : context,
@@ -506,92 +508,16 @@ define([
                     };
 
                     styleableVertexAttributes.push(vertexAttribute);
-                    styleableVertexAttributeLocations[attributeName] = attributeLocation;
+                    styleableShaderAttributes[name] = {
+                        location : attributeLocation,
+                        componentCount : componentCount
+                    };
                     ++attributeLocation;
                 }
             }
+
+            content._styleableShaderAttributes = styleableShaderAttributes;
         }
-
-        var vs = 'attribute vec3 a_position; \n' +
-                 'varying vec4 v_color; \n' +
-                 'uniform float u_pointSize; \n' +
-                 'uniform vec4 u_highlightColor; \n';
-
-        if (hasColors) {
-            if (isTranslucent) {
-                vs += 'attribute vec4 a_color; \n';
-            } else {
-                vs += 'attribute vec3 a_color; \n';
-            }
-        }
-        if (hasNormals) {
-            if (isOctEncoded16P) {
-                vs += 'attribute vec2 a_normal; \n';
-            } else {
-                vs += 'attribute vec3 a_normal; \n';
-            }
-        }
-
-        if (hasBatchIds) {
-            vs += 'attribute float a_batchId; \n';
-        }
-
-        if (hasStyleableProperties) {
-            vs += styleableShaderAttributes;
-        }
-
-        if (isQuantized) {
-            vs += 'uniform vec3 u_quantizedVolumeScale; \n';
-        }
-
-        vs += 'void main() \n' +
-              '{ \n';
-
-        if (hasColors) {
-            if (isTranslucent) {
-                vs += '    vec4 color = a_color * u_highlightColor; \n';
-            } else {
-                vs += '    vec4 color =  vec4(a_color * u_highlightColor.rgb, u_highlightColor.a); \n';
-            }
-        } else {
-            vs += '    vec4 color = u_highlightColor; \n';
-        }
-
-        if (hasNormals) {
-            if (isOctEncoded16P) {
-                vs += '    vec3 normal = czm_octDecode(a_normal); \n';
-            } else {
-                vs += '    vec3 normal = a_normal; \n';
-            }
-
-            vs += '    normal = czm_normal * normal; \n' +
-                  '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
-                  '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
-                  '    color *= diffuseStrength; \n';
-        }
-
-        if (isQuantized) {
-            vs += '    vec3 position = a_position * u_quantizedVolumeScale; \n';
-        } else {
-            vs += '    vec3 position = a_position; \n';
-        }
-
-        vs += '    v_color = color; \n' +
-              '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n' +
-              '    gl_PointSize = u_pointSize; \n';
-
-        if (hasNormals && backFaceCulling) {
-            vs += '    float visible = step(-normal.z, 0.0); \n' +
-                  '    gl_Position *= visible; \n';
-        }
-
-        vs += '} \n';
-
-        var fs = 'varying vec4 v_color; \n' +
-                 'void main() \n' +
-                 '{ \n' +
-                 '    gl_FragColor = v_color; \n' +
-                 '} \n';
 
         var uniformMap = {
             u_pointSize : function() {
@@ -646,7 +572,7 @@ define([
         var attributes = [];
         if (isQuantized) {
             attributes.push({
-                index : positionAttributeLocation,
+                index : positionLocation,
                 vertexBuffer : positionsVertexBuffer,
                 componentsPerAttribute : 3,
                 componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
@@ -656,7 +582,7 @@ define([
             });
         } else {
             attributes.push({
-                index : positionAttributeLocation,
+                index : positionLocation,
                 vertexBuffer : positionsVertexBuffer,
                 componentsPerAttribute : 3,
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -669,7 +595,7 @@ define([
         if (hasColors) {
             var colorComponentsPerAttribute = isTranslucent ? 4 : 3;
             attributes.push({
-                index : colorAttributeLocation,
+                index : colorLocation,
                 vertexBuffer : colorsVertexBuffer,
                 componentsPerAttribute : colorComponentsPerAttribute,
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
@@ -682,7 +608,7 @@ define([
         if (hasNormals) {
             if (isOctEncoded16P) {
                 attributes.push({
-                    index : normalAttributeLocation,
+                    index : normalLocation,
                     vertexBuffer : normalsVertexBuffer,
                     componentsPerAttribute : 2,
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
@@ -692,7 +618,7 @@ define([
                 });
             } else {
                 attributes.push({
-                    index : normalAttributeLocation,
+                    index : normalLocation,
                     vertexBuffer : normalsVertexBuffer,
                     componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT,
@@ -705,7 +631,7 @@ define([
 
         if (hasBatchIds) {
             attributes.push({
-                index : batchIdAttributeLocation,
+                index : batchIdLocation,
                 vertexBuffer : batchIdsVertexBuffer,
                 componentsPerAttribute : 1,
                 componentDatatype : ComponentDatatype.fromTypedArray(batchIds),
@@ -724,48 +650,27 @@ define([
             attributes : attributes
         });
 
-        var attributeLocations = {
-            a_position : positionAttributeLocation
-        };
-
-        if (hasColors) {
-            attributeLocations = combine(attributeLocations, {
-                a_color : colorAttributeLocation
-            });
-        }
-
-        if (hasNormals) {
-            attributeLocations = combine(attributeLocations, {
-                a_normal : normalAttributeLocation
-            });
-        }
-
-        if (hasBatchIds) {
-            attributeLocations = combine(attributeLocations, {
-                a_batchId : batchIdAttributeLocation
-            });
-        }
-
-        if (hasStyleableProperties) {
-            attributeLocations = combine(attributeLocations, styleableVertexAttributeLocations);
-        }
-
-        var drawVS = vs;
-        var drawFS = fs;
         var drawUniformMap = uniformMap;
 
         if (hasBatchTable) {
-            drawVS = batchTable.getVertexShaderCallback()(vs, false);
-            drawFS = batchTable.getFragmentShaderCallback()(fs, false);
             drawUniformMap = batchTable.getUniformMapCallback()(uniformMap);
         }
 
-        var shaderProgram = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : drawVS,
-            fragmentShaderSource : drawFS,
-            attributeLocations : attributeLocations
-        });
+        var pickUniformMap;
+
+        if (hasBatchTable) {
+            pickUniformMap = batchTable.getPickUniformMapCallback()(uniformMap);
+        } else {
+            content._pickId = context.createPickId({
+                primitive : content
+            });
+
+            pickUniformMap = combine(uniformMap, {
+                czm_pickColor : function() {
+                    return content._pickId.color;
+                }
+            });
+        }
 
         content._opaqueRenderState = RenderState.fromCache({
             depthTest : {
@@ -788,41 +693,11 @@ define([
             primitiveType : PrimitiveType.POINTS,
             vertexArray : vertexArray,
             count : pointsLength,
-            shaderProgram : shaderProgram,
+            shaderProgram : undefined, // Updated in createShaders
             uniformMap : drawUniformMap,
             renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
             pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE,
             owner : content
-        });
-
-        var pickVS;
-        var pickFS;
-        var pickUniformMap;
-
-        if (hasBatchTable) {
-            pickVS = batchTable.getPickVertexShaderCallback()(vs);
-            pickFS = batchTable.getPickFragmentShaderCallback()(fs);
-            pickUniformMap = batchTable.getPickUniformMapCallback()(uniformMap);
-        } else {
-            content._pickId = context.createPickId({
-                primitive : content
-            });
-
-            pickUniformMap = combine(uniformMap, {
-                czm_pickColor : function() {
-                    return content._pickId.color;
-                }
-            });
-
-            pickVS = vs;
-            pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-        }
-
-        var pickShaderProgram = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : pickVS,
-            fragmentShaderSource : pickFS,
-            attributeLocations : attributeLocations
         });
 
         content._pickCommand = new DrawCommand({
@@ -832,11 +707,277 @@ define([
             primitiveType : PrimitiveType.POINTS,
             vertexArray : vertexArray,
             count : pointsLength,
-            shaderProgram : pickShaderProgram,
+            shaderProgram : undefined, // Updated in createShaders
             uniformMap : pickUniformMap,
             renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
             pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE,
             owner : content
+        });
+    }
+
+    function getStyleableProperties(source, properties) {
+        // Get all the properties used by this style
+        var regex = /czm_tiles3d_style_(\w+)/g;
+        var matches = regex.exec(source);
+        while (matches !== null) {
+            var name = matches[1];
+            if (properties.indexOf(name) === -1) {
+                properties.push(name);
+            }
+            matches = regex.exec(source);
+        }
+    }
+
+    function getVertexAttribute(vertexArray, index) {
+        var numberOfAttributes = vertexArray.numberOfAttributes;
+        for (var i = 0; i < numberOfAttributes; ++i) {
+            var attribute = vertexArray.getAttribute(i);
+            if (attribute.index === index) {
+                return attribute;
+            }
+        }
+    }
+
+    function createShaders(content, frameState, style) {
+        var i;
+        var name;
+        var attribute;
+
+        var context = frameState.context;
+        var batchTable = content.batchTable;
+        var hasBatchTable = defined(batchTable);
+        var hasStyle = defined(style);
+        var isQuantized = content._isQuantized;
+        var isOctEncoded16P = content._isOctEncoded16P;
+        var isTranslucent = content._isTranslucent;
+        var hasColors = content._hasColors;
+        var hasNormals = content._hasNormals;
+        var hasBatchIds = content._hasBatchIds;
+        var backFaceCulling = content._backFaceCulling;
+        var vertexArray = content._drawCommand.vertexArray;
+
+        var colorStyleFunction;
+        var showStyleFunction;
+        var styleTranslucent = isTranslucent;
+
+        if (hasBatchTable) {
+            // Styling is handled in the batch table
+            hasStyle = false;
+        }
+
+        if (hasStyle) {
+            var info = {
+                translucent : false
+            };
+            colorStyleFunction = style.getColorShaderFunction('getColorFromStyle', 'czm_tiles3d_style_', info);
+            showStyleFunction = style.getShowShaderFunction('getShowFromStyle', 'czm_tiles3d_style_', info);
+            styleTranslucent = info.translucent;
+        }
+
+        content._styleTranslucent = styleTranslucent;
+
+        var hasColorStyle = defined(colorStyleFunction);
+        var hasShowStyle = defined(showStyleFunction);
+
+        // Get the properties in use by the style
+        var styleableProperties = [];
+        if (hasColorStyle) {
+            getStyleableProperties(colorStyleFunction, styleableProperties);
+        }
+        if (hasShowStyle) {
+            getStyleableProperties(showStyleFunction, styleableProperties);
+        }
+
+        // Disable vertex attributes that aren't used in the style, enable attributes that are
+        var styleableShaderAttributes = content._styleableShaderAttributes;
+        if (defined(styleableShaderAttributes)) {
+            for (name in styleableShaderAttributes) {
+                if (styleableShaderAttributes.hasOwnProperty(name)) {
+                    attribute = styleableShaderAttributes[name];
+                    var enabled = (styleableProperties.indexOf(name) >= 0);
+                    var vertexAttribute = getVertexAttribute(vertexArray, attribute.location);
+                    vertexAttribute.enabled = enabled;
+                }
+            }
+        }
+
+        if (hasColorStyle) {
+            // Disable the color vertex attribute when a color style is used
+            var colorVertexAttribute = getVertexAttribute(vertexArray, colorLocation);
+            colorVertexAttribute.enabled = false;
+        }
+
+        var attributeLocations = {
+            a_position : positionLocation
+        };
+        if (hasColors && !hasColorStyle) {
+            attributeLocations.a_color = colorLocation;
+        }
+        if (hasNormals) {
+            attributeLocations.a_normal = normalLocation;
+        }
+        if (hasBatchIds) {
+            attributeLocations.a_batchId = batchIdLocation;
+        }
+
+        var attributeIncludes = '';
+        var length = styleableProperties.length;
+        for (i = 0; i < length; ++i) {
+            name = styleableProperties[i];
+            attribute = styleableShaderAttributes[name];
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(attribute)) {
+                throw new DeveloperError('Style reference a property "' + name + '" that does not exist or is not styleable.');
+            }
+            //>>includeEnd('debug');
+
+            var componentCount = attribute.componentCount;
+            var attributeName = 'czm_tiles3d_style_' + name;
+            var attributeType;
+            if (componentCount === 1) {
+                attributeType = 'float';
+            } else {
+                attributeType = 'vec' + componentCount;
+            }
+
+            attributeIncludes += 'attribute ' + attributeType + ' ' + attributeName + '; \n';
+            attributeLocations[attributeName] = attribute.location;
+        }
+
+        var vs = 'attribute vec3 a_position; \n' +
+                 'varying vec4 v_color; \n' +
+                 'uniform float u_pointSize; \n' +
+                 'uniform vec4 u_highlightColor; \n' +
+                 attributeIncludes;
+
+        if (hasColors && !hasColorStyle) {
+            if (isTranslucent) {
+                vs += 'attribute vec4 a_color; \n';
+            } else {
+                vs += 'attribute vec3 a_color; \n';
+            }
+        }
+        if (hasNormals) {
+            if (isOctEncoded16P) {
+                vs += 'attribute vec2 a_normal; \n';
+            } else {
+                vs += 'attribute vec3 a_normal; \n';
+            }
+        }
+
+        if (hasBatchIds) {
+            vs += 'attribute float a_batchId; \n';
+        }
+
+        if (isQuantized) {
+            vs += 'uniform vec3 u_quantizedVolumeScale; \n';
+        }
+
+        if (hasColorStyle) {
+            vs += colorStyleFunction;
+        }
+
+        if (hasShowStyle) {
+            vs += showStyleFunction;
+        }
+
+        vs += 'void main() \n' +
+              '{ \n';
+
+        if (hasColorStyle) {
+            vs += '    vec4 color = getColorFromStyle() * u_highlightColor; \n';
+        } else if (hasColors) {
+            if (isTranslucent) {
+                vs += '    vec4 color = a_color * u_highlightColor; \n';
+            } else {
+                vs += '    vec4 color = vec4(a_color * u_highlightColor.rgb, u_highlightColor.a); \n';
+            }
+        } else {
+            vs += '    vec4 color = u_highlightColor; \n';
+        }
+
+        if (hasNormals) {
+            if (isOctEncoded16P) {
+                vs += '    vec3 normal = czm_octDecode(a_normal); \n';
+            } else {
+                vs += '    vec3 normal = a_normal; \n';
+            }
+
+            vs += '    normal = czm_normal * normal; \n' +
+                  '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
+                  '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
+                  '    color *= diffuseStrength; \n';
+        }
+
+        if (isQuantized) {
+            vs += '    vec3 position = a_position * u_quantizedVolumeScale; \n';
+        } else {
+            vs += '    vec3 position = a_position; \n';
+        }
+
+        vs += '    v_color = color; \n' +
+              '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n' +
+              '    gl_PointSize = u_pointSize; \n';
+
+        if (hasNormals && backFaceCulling) {
+            vs += '    float visible = step(-normal.z, 0.0); \n' +
+                  '    gl_Position *= visible; \n';
+        }
+
+        if (hasShowStyle) {
+            vs += '    float show = float(getShowFromStyle()); \n' +
+                  '    gl_Position *= show; \n';
+        }
+
+        vs += '} \n';
+
+        var fs = 'varying vec4 v_color; \n' +
+                 'void main() \n' +
+                 '{ \n' +
+                 '    gl_FragColor = v_color; \n' +
+                 '} \n';
+
+        var drawVS = vs;
+        var drawFS = fs;
+
+        if (hasBatchTable) {
+            drawVS = batchTable.getVertexShaderCallback()(drawVS, false);
+            drawFS = batchTable.getFragmentShaderCallback()(drawFS, false);
+        }
+
+        var pickVS = vs;
+        var pickFS = fs;
+
+        if (hasBatchTable) {
+            pickVS = batchTable.getPickVertexShaderCallback()(pickVS);
+            pickFS = batchTable.getPickFragmentShaderCallback()(pickFS);
+        } else {
+            pickFS = ShaderSource.createPickFragmentShaderSource(pickFS, 'uniform');
+        }
+
+        var drawCommand = content._drawCommand;
+        if (defined(drawCommand.shaderProgram)) {
+            // Destroy the old shader
+            drawCommand.shaderProgram.destroy();
+        }
+        drawCommand.shaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : drawVS,
+            fragmentShaderSource : drawFS,
+            attributeLocations : attributeLocations
+        });
+
+        var pickCommand = content._pickCommand;
+        if (defined(pickCommand.shaderProgram)) {
+            // Destroy the old shader
+            pickCommand.shaderProgram.destroy();
+        }
+        pickCommand.shaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : pickVS,
+            fragmentShaderSource : pickFS,
+            attributeLocations : attributeLocations
         });
     }
 
@@ -848,6 +989,18 @@ define([
     };
 
     /**
+     * Apply a style to the point cloud.
+     *
+     * @param {FrameSate} frameState The frame state.
+     * @param {Cesium3DTileStyle} style The style.
+     *
+     * @private
+     */
+    PointCloud3DTileContent.prototype.applyStyle = function(frameState, style) {
+        createShaders(this, frameState, style);
+    };
+
+    /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
@@ -855,6 +1008,7 @@ define([
 
         if (!defined(this._drawCommand)) {
             createResources(this, frameState);
+            createShaders(this, frameState, tileset.style);
             updateModelMatrix = true;
 
             // Set state to ready
@@ -875,7 +1029,7 @@ define([
         }
 
         // Update the render state
-        var isTranslucent = (this._highlightColor.alpha < 1.0) || this._isTranslucent;
+        var isTranslucent = (this._highlightColor.alpha < 1.0) || this._styleTranslucent;
         this._drawCommand.renderState = isTranslucent ? this._translucentRenderState : this._opaqueRenderState;
         this._drawCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 

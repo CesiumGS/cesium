@@ -4,6 +4,7 @@ define([
        '../Core/defined',
        '../Core/defineProperties',
        '../Core/DeveloperError',
+       '../Core/isArray',
        '../ThirdParty/jsep',
        './ExpressionNodeType'
     ], function(
@@ -11,6 +12,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        isArray,
         jsep,
         ExpressionNodeType) {
     "use strict";
@@ -115,6 +117,48 @@ define([
      */
     Expression.prototype.evaluateColor = function(feature, result) {
         return this._runtimeAst.evaluate(feature, result);
+    };
+
+    /**
+     * Gets the shader function for this expression.
+     * Returns undefined if the shader function can't be generated from this expression.
+     *
+     * @param {String} name Name to give to the generated function.
+     * @param {String} variablePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {String} returnType The return type of the generated function.
+     * @param {Object} info Stores information about the generated shader function.
+     *
+     * @returns {String} The shader function.
+     *
+     * @private
+     */
+    Expression.prototype.getShaderFunction = function(name, variablePrefix, returnType, info) {
+        var shaderExpression = this.getShaderExpression(variablePrefix, info);
+        if (!defined(shaderExpression)) {
+            return undefined;
+        }
+
+        shaderExpression = returnType + ' ' + name + '() \n' +
+            '{ \n' +
+            '    return ' + shaderExpression + '; \n' +
+            '} \n';
+
+        return shaderExpression;
+    };
+
+    /**
+     * Gets the shader expression for this expression.
+     * Returns undefined if the shader expression can't be generated from this expression.
+     *
+     * @param {String} variablePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} info Stores information about the generated shader expression.
+     *
+     * @returns {String} The shader expression.
+     *
+     * @private
+     */
+    Expression.prototype.getShaderExpression = function(variablePrefix, info) {
+        return this._runtimeAst.getShaderExpression(variablePrefix, info);
     };
 
     function Node(type, value, left, right, test) {
@@ -542,7 +586,7 @@ define([
                 Color.fromCssColorString(args[0].evaluate(feature, result), result);
                 result.alpha = args[1].evaluate(feature, result);
             } else {
-                Color.fromCssColorString(this._left[0].evaluate(feature, result), result);
+                Color.fromCssColorString(args[0].evaluate(feature, result), result);
             }
         } else if (this._value === 'rgb') {
             Color.fromBytes(
@@ -629,7 +673,7 @@ define([
 
     Node.prototype._evaluateArray = function(feature, result) {
         var array = [];
-        for (var i = 0; i<this._value.length; i++) {
+        for (var i = 0; i < this._value.length; i++) {
             array[i] = this._value[i].evaluate(feature, result);
         }
         return array;
@@ -879,6 +923,183 @@ define([
             throw new DeveloperError('Error: Unexpected function call "' + this._value + '".');
         }
         //>>includeEnd('debug');
+    };
+
+    function convertHSLToRGB(ast) {
+        // Check if the color contains any nested expressions to see if the color can be converted here.
+        // E.g. "hsl(0.9, 0.6, 0.7)" is able to convert directly to rgb, "hsl(0.9, 0.6, ${Height})" is not.
+        var channels = ast._left;
+        var length = channels.length;
+        for (var i = 0; i < length; ++i) {
+            if (channels[i]._type !== ExpressionNodeType.LITERAL_NUMBER) {
+                return undefined;
+            }
+        }
+        var h = channels[0]._value;
+        var s = channels[1]._value;
+        var l = channels[2]._value;
+        var a = (length === 4) ? channels[3]._value : 1.0;
+        return Color.fromHsl(h, s, l, a, scratchColor);
+    }
+
+    function numberToString(number) {
+        if (number % 1 === 0) {
+            // Add a .0 to whole numbers
+            return number.toFixed(1);
+        } else {
+            return number.toString();
+        }
+    }
+
+    function colorToVec3(color) {
+        var r = numberToString(color.red);
+        var g = numberToString(color.green);
+        var b = numberToString(color.blue);
+        return 'vec3(' + r + ', ' + g + ', ' + b + ')';
+    }
+
+    function colorToVec4(color) {
+        var r = numberToString(color.red);
+        var g = numberToString(color.green);
+        var b = numberToString(color.blue);
+        var a = numberToString(color.alpha);
+        return 'vec4(' + r + ', ' + g + ', ' + b + ', ' + a + ')';
+    }
+
+    Node.prototype.getShaderExpression = function(variablePrefix, info) {
+        var color;
+        var left;
+        var right;
+        var test;
+
+        var type = this._type;
+        var value = this._value;
+
+        if (defined(this._left)) {
+            if (isArray(this._left)) {
+                // Left can be an array if the type is LITERAL_COLOR
+                var length = this._left.length;
+                left = new Array(length);
+                for (var i = 0; i < length; ++i) {
+                    var shader = this._left[i].getShaderExpression(variablePrefix, info);
+                    if (!defined(shader)) {
+                        // If the left side is not valid shader code, then the expression is not valid
+                        return undefined;
+                    }
+                    left[i] = shader;
+                }
+            } else {
+                left = this._left.getShaderExpression(variablePrefix, info);
+                if (!defined(left)) {
+                    // If the left side is not valid shader code, then the expression is not valid
+                    return undefined;
+                }
+            }
+        }
+
+        if (defined(this._right)) {
+            right = this._right.getShaderExpression(variablePrefix, info);
+            if (!defined(right)) {
+                // If the right side is not valid shader code, then the expression is not valid
+                return undefined;
+            }
+        }
+
+        if (defined(this._test)) {
+            test = this._test.getShaderExpression(variablePrefix, info);
+            if (!defined(test)) {
+                // If the test is not valid shader code, then the expression is not valid
+                return undefined;
+            }
+        }
+
+        switch (type) {
+            case ExpressionNodeType.VARIABLE:
+                return variablePrefix + value;
+            case ExpressionNodeType.UNARY:
+                // Supported types: +, -, !, Boolean, Number
+                if ((value === 'isNan') || (value === 'isFinite') || (value === 'String')) {
+                    return undefined;
+                } else if (value === 'Boolean') {
+                    return 'bool(' + left + ')';
+                } else if (value === 'Number') {
+                    return 'float(' + left + ')';
+                }
+                return value + left;
+            case ExpressionNodeType.BINARY:
+                // Supported types: ||, &&, ===, !==, <, >, <=, >=, +, -, *, /, %
+                if (value === '%') {
+                    return 'mod(' + left + ', ' + right + ')';
+                } else if (value === '===') {
+                    return '(' + left + ' == ' + right + ')';
+                } else if (value === '!==') {
+                    return '(' + left + ' != ' + right + ')';
+                }
+                return '(' + left + ' ' + value + ' ' + right + ')';
+            case ExpressionNodeType.CONDITIONAL:
+                return '(' + test + ' ? ' + left + ' : ' + right + ')';
+            case ExpressionNodeType.MEMBER:
+                // This is intended for accessing the components of vec2, vec3, and vec4 properties. String members aren't supported.
+                return left + '[int(' + right + ')]';
+            case ExpressionNodeType.LITERAL_BOOLEAN:
+                return value ? 'true' : 'false';
+            case ExpressionNodeType.LITERAL_NUMBER:
+                return numberToString(value);
+            case ExpressionNodeType.LITERAL_STRING:
+                // The only supported strings are css color strings
+                color = Color.fromCssColorString(value, scratchColor);
+                if (defined(color)) {
+                    return colorToVec3(color);
+                }
+                return undefined;
+            case ExpressionNodeType.LITERAL_COLOR:
+                var args = left;
+                if (value === 'color') {
+                    if (!defined(args)) {
+                        return 'vec4(1.0)';
+                    } else if (args.length > 1) {
+                        var rgb = args[0];
+                        var alpha = args[1];
+                        if (alpha !== '1.0') {
+                            info.translucent = true;
+                        }
+                        return 'vec4(' + rgb + ', ' + alpha + ')';
+                    } else {
+                        return 'vec4(' + args[0] + ', 1.0)';
+                    }
+                } else if (value === 'rgb') {
+                    return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, 1.0)';
+                } else if (value === 'rgba') {
+                    if (args[3] !== '1.0') {
+                        info.translucent = true;
+                    }
+                    return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, ' + args[3] + ')';
+                } else if (value === 'hsl') {
+                    color = convertHSLToRGB(this);
+                    if (defined(color)) {
+                        return colorToVec4(color);
+                    } else {
+                        return 'vec4(czm_HSLToRGB(vec3(' + args[0] + ', ' + args[1] + ', ' + args[2] + ')), 1.0)';
+                    }
+                } else if (value === 'hsla') {
+                    color = convertHSLToRGB(this);
+                    if (defined(color)) {
+                        if (color.alpha !== 1.0) {
+                            info.translucent = true;
+                        }
+                        return colorToVec4(color);
+                    } else {
+                        if (args[3] !== '1.0') {
+                            info.translucent = true;
+                        }
+                        return 'vec4(czm_HSLToRGB(vec3(' + args[0] + ', ' + args[1] + ', ' + args[2] + ')), ' + args[3] + ')';
+                    }
+                }
+                break;
+            default:
+                // Not supported: FUNCTION_CALL, ARRAY, REGEX, VARIABLE_IN_STRING, LITERAL_NULL, LITERAL_REGEX, LITERAL_UNDEFINED
+                return undefined;
+        }
     };
 
     return Expression;

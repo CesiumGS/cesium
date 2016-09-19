@@ -134,11 +134,58 @@ define([
             var length = conditions.length;
             for (var i = 0; i < length; ++i) {
                 var statement = conditions[i];
-                if (statement.condition.evaluate(feature, result)) {
+                if (statement.condition.evaluate(feature)) {
                     return statement.expression.evaluateColor(feature, result);
                 }
             }
         }
+    };
+
+    /**
+     * Gets the shader function for this expression.
+     * Returns undefined if the shader function can't be generated from this expression.
+     *
+     * @param {String} name Name to give to the generated function.
+     * @param {String} variablePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {String} returnType The return type of the generated function.
+     * @param {Object} info Stores information about the generated shader function.
+     *
+     * @returns {String} The shader function.
+     *
+     * @private
+     */
+    ConditionsExpression.prototype.getShaderFunction = function(name, variablePrefix, returnType, info) {
+        var conditions = this._runtimeConditions;
+        if (!defined(conditions) || conditions.length === 0) {
+            return undefined;
+        }
+
+        var shaderFunction = '';
+        var length = conditions.length;
+        for (var i = 0; i < length; ++i) {
+            var statement = conditions[i];
+            var condition = statement.condition.getShaderExpression(variablePrefix, info);
+            var expression = statement.expression.getShaderExpression(variablePrefix, info);
+
+            if (!defined(condition) || !defined(expression)) {
+                return undefined;
+            }
+
+            // Build the if/else chain from the list of conditions
+            shaderFunction +=
+                '    ' + ((i === 0) ? 'if' : 'else if') + ' (' + condition + ') \n' +
+                '    { \n' +
+                '        return ' + expression + '; \n' +
+                '    } \n';
+        }
+
+        shaderFunction = returnType + ' ' + name + '() \n' +
+            '{ \n' +
+                 shaderFunction +
+            '    return ' + returnType + '(1.0); \n' + // Return a default value if no conditions are met
+            '} \n';
+
+        return shaderFunction;
     };
 
     return ConditionsExpression;
