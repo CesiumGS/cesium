@@ -48,7 +48,7 @@
     "gulp-rename": "1.2.2",
     "gulp-replace": "0.5.4",
     "gulp-zip": "3.0.2",
-    "jasmine-core": "2.4.1",
+    "jasmine-core": "2.5.2",
     "jsdoc": "3.4.1",
     "jshint": "2.9.3",
     "jshint-stylish": "2.2.1",
