@@ -43,11 +43,11 @@ define([
      * @param {Number} maximumHeight The maximum height.
      * @param {Matrix4} fromENU The east-north-up to fixed frame matrix at the center of the terrain mesh.
      * @param {Boolean} hasVertexNormals If the mesh has vertex normals.
-     * @param {Boolean} [hasWebMercatorY=false] true if the terrain data includes a Web Mercator texture coordinate; otherwise, false.
+     * @param {Boolean} [hasWebMercatorT=false] true if the terrain data includes a Web Mercator texture coordinate; otherwise, false.
      *
      * @private
      */
-    function TerrainEncoding(axisAlignedBoundingBox, minimumHeight, maximumHeight, fromENU, hasVertexNormals, hasWebMercatorY) {
+    function TerrainEncoding(axisAlignedBoundingBox, minimumHeight, maximumHeight, fromENU, hasVertexNormals, hasWebMercatorT) {
         var quantization;
         var center;
         var toENU;
@@ -145,10 +145,10 @@ define([
          * The terrain mesh contains a vertical texture coordinate following the Web Mercator projection.
          * @type {Boolean}
          */
-        this.hasWebMercatorY = defaultValue(hasWebMercatorY, false);
+        this.hasWebMercatorT = defaultValue(hasWebMercatorT, false);
     }
 
-    TerrainEncoding.prototype.encode = function(vertexBuffer, bufferIndex, position, uv, height, normalToPack, webMercatorY) {
+    TerrainEncoding.prototype.encode = function(vertexBuffer, bufferIndex, position, uv, height, normalToPack, webMercatorT) {
         var u = uv.x;
         var v = uv.y;
 
@@ -175,8 +175,8 @@ define([
             vertexBuffer[bufferIndex++] = compressed1;
             vertexBuffer[bufferIndex++] = compressed2;
 
-            if (this.hasWebMercatorY) {
-                Cartesian2.fromElements(webMercatorY, 0.0, cartesian2Scratch);
+            if (this.hasWebMercatorT) {
+                Cartesian2.fromElements(webMercatorT, 0.0, cartesian2Scratch);
                 var compressed3 = AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
                 vertexBuffer[bufferIndex++] = compressed3;
             }
@@ -190,8 +190,8 @@ define([
             vertexBuffer[bufferIndex++] = u;
             vertexBuffer[bufferIndex++] = v;
 
-            if (this.hasWebMercatorY) {
-                vertexBuffer[bufferIndex++] = webMercatorY;
+            if (this.hasWebMercatorT) {
+                vertexBuffer[bufferIndex++] = webMercatorT;
             }
         }
 
@@ -273,7 +273,7 @@ define([
                 vertexStride = 6;
         }
 
-        if (this.hasWebMercatorY) {
+        if (this.hasWebMercatorT) {
             ++vertexStride;
         }
 
@@ -302,7 +302,7 @@ define([
             var position3DAndHeightLength = 4;
             var numTexCoordComponents = 2;
 
-            if (this.hasWebMercatorY) {
+            if (this.hasWebMercatorT) {
                 ++numTexCoordComponents;
             }
 
@@ -332,11 +332,11 @@ define([
         var numCompressed0 = 3;
         var numCompressed1 = 0;
 
-        if (this.hasWebMercatorY || this.hasVertexNormals) {
+        if (this.hasWebMercatorT || this.hasVertexNormals) {
             ++numCompressed0;
         }
 
-        if (this.hasWebMercatorY && this.hasVertexNormals) {
+        if (this.hasWebMercatorT && this.hasVertexNormals) {
             ++numCompressed1;
 
             stride = (numCompressed0 + numCompressed1) * sizeInBytes;
@@ -390,7 +390,7 @@ define([
         result.fromScaledENU = Matrix4.clone(encoding.fromScaledENU);
         result.matrix = Matrix4.clone(encoding.matrix);
         result.hasVertexNormals = encoding.hasVertexNormals;
-        result.hasWebMercatorY = encoding.hasWebMercatorY;
+        result.hasWebMercatorT = encoding.hasWebMercatorT;
         return result;
     };
 

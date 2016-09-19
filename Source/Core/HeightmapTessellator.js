@@ -194,7 +194,7 @@ define([
 
         var relativeToCenter = defaultValue(options.relativeToCenter, Cartesian3.ZERO);
         var exaggeration = defaultValue(options.exaggeration, 1.0);
-        var includeWebMercatorY = defaultValue(options.includeWebMercatorY, false);
+        var includeWebMercatorT = defaultValue(options.includeWebMercatorT, false);
 
         var structure = defaultValue(options.structure, HeightmapTessellator.DEFAULT_STRUCTURE);
         var heightScale = defaultValue(structure.heightScale, HeightmapTessellator.DEFAULT_STRUCTURE.heightScale);
@@ -220,7 +220,7 @@ define([
 
         var southMercatorY;
         var oneOverMercatorHeight;
-        if (includeWebMercatorY) {
+        if (includeWebMercatorT) {
             southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(geographicSouth);
             oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(geographicNorth) - southMercatorY);
         }
@@ -243,7 +243,7 @@ define([
         var positions = new Array(size);
         var heights = new Array(size);
         var uvs = new Array(size);
-        var webMercatorYs = includeWebMercatorY ? new Array(size) : [];
+        var webMercatorTs = includeWebMercatorT ? new Array(size) : [];
 
         var startRow = 0;
         var endRow = height;
@@ -283,9 +283,9 @@ define([
             var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
             v = CesiumMath.clamp(v, 0.0, 1.0);
 
-            var webMercatorY;
-            if (includeWebMercatorY) {
-                webMercatorY = (WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude) - southMercatorY) * oneOverMercatorHeight;
+            var webMercatorT;
+            if (includeWebMercatorT) {
+                webMercatorT = (WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude) - southMercatorY) * oneOverMercatorHeight;
             }
 
             for (var colIndex = startCol; colIndex < endCol; ++colIndex) {
@@ -359,8 +359,8 @@ define([
                 u = CesiumMath.clamp(u, 0.0, 1.0);
                 uvs[index] = new Cartesian2(u, v);
 
-                if (includeWebMercatorY) {
-                    webMercatorYs[index] = webMercatorY;
+                if (includeWebMercatorT) {
+                    webMercatorTs[index] = webMercatorT;
                 }
 
                 index++;
@@ -389,12 +389,12 @@ define([
         }
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
-        var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, false, includeWebMercatorY);
+        var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, false, includeWebMercatorT);
         var vertices = new Float32Array(size * encoding.getStride());
 
         var bufferIndex = 0;
         for (var j = 0; j < size; ++j) {
-            bufferIndex = encoding.encode(vertices, bufferIndex, positions[j], uvs[j], heights[j], undefined, webMercatorYs[j]);
+            bufferIndex = encoding.encode(vertices, bufferIndex, positions[j], uvs[j], heights[j], undefined, webMercatorTs[j]);
         }
 
         return {

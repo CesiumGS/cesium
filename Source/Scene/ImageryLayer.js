@@ -423,7 +423,7 @@ define([
         // Use Web Mercator for our texture coordinate computations if this imagery layer uses
         // that projection and the terrain tile falls entirely inside the valid bounds of the
         // projection.
-        var useWebMercatorY = imageryProvider.tilingScheme instanceof WebMercatorTilingScheme &&
+        var useWebMercatorT = imageryProvider.tilingScheme instanceof WebMercatorTilingScheme &&
                               tile.rectangle.north < WebMercatorProjection.MaximumLatitude &&
                               tile.rectangle.south > -WebMercatorProjection.MaximumLatitude;
 
@@ -530,7 +530,7 @@ define([
         var clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
 
         var imageryTileXYToRectangle;
-        if (useWebMercatorY) {
+        if (useWebMercatorT) {
             imageryTilingScheme.rectangleToNativeRectangle(terrainRectangle, terrainRectangle);
             imageryTilingScheme.rectangleToNativeRectangle(imageryRectangle, imageryRectangle);
             imageryTilingScheme.rectangleToNativeRectangle(clippedImageryRectangle, clippedImageryRectangle);
@@ -596,7 +596,7 @@ define([
 
                 var texCoordsRectangle = new Cartesian4(minU, minV, maxU, maxV);
                 var imagery = this.getImageryFromCache(i, j, imageryLevel);
-                surfaceTile.imagery.splice(insertionPoint, 0, new TileImagery(imagery, texCoordsRectangle, useWebMercatorY));
+                surfaceTile.imagery.splice(insertionPoint, 0, new TileImagery(imagery, texCoordsRectangle, useWebMercatorT));
                 ++insertionPoint;
             }
         }
@@ -619,7 +619,7 @@ define([
         var imageryRectangle = tileImagery.readyImagery.rectangle;
         var terrainRectangle = tile.rectangle;
 
-        if (tileImagery.useWebMercatorY) {
+        if (tileImagery.useWebMercatorT) {
             var tilingScheme = tileImagery.readyImagery.imageryLayer.imageryProvider.tilingScheme;
             imageryRectangle = tilingScheme.rectangleToNativeRectangle(imageryRectangle, imageryBoundsScratch);
             terrainRectangle = tilingScheme.rectangleToNativeRectangle(terrainRectangle, terrainRectangleScratch);

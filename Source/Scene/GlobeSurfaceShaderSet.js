@@ -166,7 +166,7 @@ define([
     color = sampleAndBlend(\n\
         color,\n\
         u_dayTextures[' + i + '],\n\
-        u_dayTextureUseWebMercatorY[' + i + '] ? textureCoordinates.xz : textureCoordinates.xy,\n\
+        u_dayTextureUseWebMercatorT[' + i + '] ? textureCoordinates.xz : textureCoordinates.xy,\n\
         u_dayTextureTexCoordsRectangle[' + i + '],\n\
         u_dayTextureTranslationAndScale[' + i + '],\n\
         ' + (applyAlpha ? 'u_dayTextureAlpha[' + i + ']' : '1.0') + ',\n\

@@ -198,7 +198,7 @@ define([
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : this._buffer,
             structure : structure,
-            includeWebMercatorY : true,
+            includeWebMercatorT : true,
             width : this._width,
             height : this._height,
             nativeRectangle : nativeRectangle,

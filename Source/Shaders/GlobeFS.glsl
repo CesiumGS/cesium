@@ -5,7 +5,7 @@ uniform vec4 u_initialColor;
 #if TEXTURE_UNITS > 0
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
-uniform bool u_dayTextureUseWebMercatorY[TEXTURE_UNITS];
+uniform bool u_dayTextureUseWebMercatorT[TEXTURE_UNITS];
 
 #ifdef APPLY_ALPHA
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];

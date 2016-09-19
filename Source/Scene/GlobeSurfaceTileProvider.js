@@ -716,8 +716,8 @@ define([
             u_dayTextureTexCoordsRectangle : function() {
                 return this.properties.dayTextureTexCoordsRectangle;
             },
-            u_dayTextureUseWebMercatorY : function() {
-                return this.properties.dayTextureUseWebMercatorY;
+            u_dayTextureUseWebMercatorT : function() {
+                return this.properties.dayTextureUseWebMercatorT;
             },
             u_dayTextureAlpha : function() {
                 return this.properties.dayTextureAlpha;
@@ -775,7 +775,7 @@ define([
                 dayTextures : [],
                 dayTextureTranslationAndScale : [],
                 dayTextureTexCoordsRectangle : [],
-                dayTextureUseWebMercatorY : [],
+                dayTextureUseWebMercatorT : [],
                 dayTextureAlpha : [],
                 dayTextureBrightness : [],
                 dayTextureContrast : [],
@@ -1086,7 +1086,7 @@ define([
                     continue;
                 }
 
-                var texture = tileImagery.useWebMercatorY ? imagery.textureWebMercator : imagery.texture;
+                var texture = tileImagery.useWebMercatorT ? imagery.textureWebMercator : imagery.texture;
 
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(texture)) {
@@ -1113,7 +1113,7 @@ define([
                 uniformMapProperties.dayTextures[numberOfDayTextures] = texture;
                 uniformMapProperties.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
                 uniformMapProperties.dayTextureTexCoordsRectangle[numberOfDayTextures] = tileImagery.textureCoordinateRectangle;
-                uniformMapProperties.dayTextureUseWebMercatorY[numberOfDayTextures] = tileImagery.useWebMercatorY;
+                uniformMapProperties.dayTextureUseWebMercatorT[numberOfDayTextures] = tileImagery.useWebMercatorT;
 
                 uniformMapProperties.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
                 applyAlpha = applyAlpha || uniformMapProperties.dayTextureAlpha[numberOfDayTextures] !== 1.0;

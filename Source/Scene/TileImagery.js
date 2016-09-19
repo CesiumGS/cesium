@@ -16,14 +16,14 @@ define([
      * @param {Imagery} imagery The imagery tile.
      * @param {Cartesian4} textureCoordinateRectangle The texture rectangle of the tile that is covered
      *        by the imagery, where X=west, Y=south, Z=east, W=north.
-     * @param {Boolean} useWebMercatorY true to use the Web Mercator texture coordinates for this imagery tile.
+     * @param {Boolean} useWebMercatorT true to use the Web Mercator texture coordinates for this imagery tile.
      */
-    function TileImagery(imagery, textureCoordinateRectangle, useWebMercatorY) {
+    function TileImagery(imagery, textureCoordinateRectangle, useWebMercatorT) {
         this.readyImagery = undefined;
         this.loadingImagery = imagery;
         this.textureCoordinateRectangle = textureCoordinateRectangle;
         this.textureTranslationAndScale = undefined;
-        this.useWebMercatorY = useWebMercatorY;
+        this.useWebMercatorT = useWebMercatorT;
     }
 
     /**
@@ -50,7 +50,7 @@ define([
         var loadingImagery = this.loadingImagery;
         var imageryLayer = loadingImagery.imageryLayer;
 
-        loadingImagery.processStateMachine(frameState, !this.useWebMercatorY);
+        loadingImagery.processStateMachine(frameState, !this.useWebMercatorT);
 
         if (loadingImagery.state === ImageryState.READY) {
             if (defined(this.readyImagery)) {
@@ -92,7 +92,7 @@ define([
                 // Push the ancestor's load process along a bit.  This is necessary because some ancestor imagery
                 // tiles may not be attached directly to a terrain tile.  Such tiles will never load if
                 // we don't do it here.
-                closestAncestorThatNeedsLoading.processStateMachine(frameState, !this.useWebMercatorY);
+                closestAncestorThatNeedsLoading.processStateMachine(frameState, !this.useWebMercatorT);
                 return false; // not done loading
             } else {
                 // This imagery tile is failed or invalid, and we have the "best available" substitute.
