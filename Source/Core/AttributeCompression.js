@@ -75,9 +75,9 @@ define([
      * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
      * @param {Cartesian2} result The 2 byte oct-encoded unit length vector.
      * @returns {Cartesian2} The 2 byte oct-encoded unit length vector.
-     * 
+     *
      * @exception {DeveloperError} vector must be normalized.
-     * 
+     *
      * @see AttributeCompression.octEncodeInRange
      * @see AttributeCompression.octDecode
      */
@@ -124,14 +124,14 @@ define([
 
     /**
      * Decodes a unit-length vector in 2 byte 'oct' encoding to a normalized 3-component vector.
-     * 
+     *
      * @param {Number} x The x component of the oct-encoded unit length vector.
      * @param {Number} y The y component of the oct-encoded unit length vector.
      * @param {Cartesian3} result The decoded and normalized vector.
      * @returns {Cartesian3} The decoded and normalized vector.
-     * 
+     *
      * @exception {DeveloperError} x and y must be an unsigned normalized integer between 0 and 255.
-     * 
+     *
      * @see AttributeCompression.octDecodeInRange
      */
     AttributeCompression.octDecode = function(x, y, result) {
@@ -268,7 +268,7 @@ define([
     /**
      * Pack texture coordinates into a single float. The texture coordinates will only preserve 12 bits of precision.
      *
-     * @param {Cartesian2} textureCoordinates The texture coordinates to compress
+     * @param {Cartesian2} textureCoordinates The texture coordinates to compress.  Both coordinates must be in the range 0.0-1.0.
      * @returns {Number} The packed texture coordinates.
      *
      */
@@ -279,8 +279,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        var x = textureCoordinates.x === 1.0 ? 4095.0 : (textureCoordinates.x * 4096.0) | 0;
-        var y = textureCoordinates.y === 1.0 ? 4095.0 : (textureCoordinates.y * 4096.0) | 0;
+        // Move x and y to the range 0-4095;
+        var x = (textureCoordinates.x * 4095.0) | 0;
+        var y = (textureCoordinates.y * 4095.0) | 0;
         return 4096.0 * x + y;
     };
 
@@ -303,8 +304,9 @@ define([
         //>>includeEnd('debug');
 
         var temp = compressed / 4096.0;
-        result.x = Math.floor(temp) / 4096.0;
-        result.y = temp - Math.floor(temp);
+        var xZeroTo4095 = Math.floor(temp);
+        result.x = xZeroTo4095 / 4095.0;
+        result.y = (compressed - xZeroTo4095 * 4096) / 4095;
         return result;
     };
 
