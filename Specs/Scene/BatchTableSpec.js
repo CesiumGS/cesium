@@ -208,4 +208,4 @@ defineSuite([
         batchTable.destroy();
         expect(batchTable.isDestroyed()).toEqual(true);
     });
-});
+}, 'WebGL');
