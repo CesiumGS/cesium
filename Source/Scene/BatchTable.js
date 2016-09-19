@@ -6,6 +6,7 @@ define([
         '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/PixelFormat',
@@ -23,6 +24,7 @@ define([
         combine,
         ComponentDatatype,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         PixelFormat,
@@ -71,6 +73,20 @@ define([
         this._batchValues = pixelDatatype === PixelDatatype.FLOAT ? new Float32Array(batchLength) : new Uint8Array(batchLength);
         this._batchValuesDirty = false;
     }
+
+    defineProperties(BatchTable.prototype, {
+        attributes : {
+            get : function() {
+                return this._attributes;
+            }
+        },
+
+        numberOfInstances : {
+            get : function () {
+                return this._numberOfInstances;
+            }
+        }
+    });
 
     function getDatatype(attributes) {
         var foundFloatDatatype = false;
@@ -131,6 +147,9 @@ define([
         }
         if (attributeIndex < 0 || attributeIndex >= this._attributes.length) {
             throw new DeveloperError('attributeIndex is out of range');
+        }
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
         }
         //>>includeEnd('debug');
 
