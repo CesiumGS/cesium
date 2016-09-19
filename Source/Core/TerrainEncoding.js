@@ -296,6 +296,7 @@ define([
     TerrainEncoding.prototype.getAttributes = function(buffer) {
         var datatype = ComponentDatatype.FLOAT;
         var sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
+        var stride;
 
         if (this.quantization === TerrainQuantization.NONE) {
             var position3DAndHeightLength = 4;
@@ -309,7 +310,7 @@ define([
                 ++numTexCoordComponents;
             }
 
-            var stride = (position3DAndHeightLength + numTexCoordComponents) * sizeInBytes;
+            stride = (position3DAndHeightLength + numTexCoordComponents) * sizeInBytes;
 
             return [{
                 index : attributesNone.position3DAndHeight,
@@ -338,7 +339,7 @@ define([
         if (this.hasWebMercatorY && this.hasVertexNormals) {
             ++numCompressed1;
 
-            var stride = (numCompressed0 + numCompressed1) * sizeInBytes;
+            stride = (numCompressed0 + numCompressed1) * sizeInBytes;
 
             return [
                 {
