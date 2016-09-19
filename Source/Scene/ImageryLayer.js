@@ -529,7 +529,7 @@ define([
         var imageryRectangle = imageryTilingScheme.tileXYToRectangle(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
         var clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
 
-        var imageryTileXYToRectangle
+        var imageryTileXYToRectangle;
         if (useWebMercatorY) {
             imageryTilingScheme.rectangleToNativeRectangle(terrainRectangle, terrainRectangle);
             imageryTilingScheme.rectangleToNativeRectangle(imageryRectangle, imageryRectangle);
@@ -790,6 +790,8 @@ define([
         var texture = imagery.textureWebMercator || imagery.texture;
         var rectangle = imagery.rectangle;
         var context = frameState.context;
+
+        needGeographicProjection = defaultValue(needGeographicProjection, true);
 
         // Reproject this texture if it is not already in a geographic projection and
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff

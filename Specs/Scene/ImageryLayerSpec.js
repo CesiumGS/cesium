@@ -156,7 +156,7 @@ defineSuite([
         });
     }
 
-    it('reprojects web mercator images', function() {
+    it('reprojects web mercator images when necessary', function() {
         var provider = createWebMercatorProvider();
         var layer = new ImageryLayer(provider);
 
@@ -175,7 +175,7 @@ defineSuite([
                 return pollToPromise(function() {
                     return imagery.state === ImageryState.TEXTURE_LOADED;
                 }).then(function() {
-                    var textureBeforeReprojection = imagery.texture;
+                    var textureBeforeReprojection = imagery.textureWebMercator;
                     layer._reprojectTexture(scene.frameState, imagery);
                     layer.queueReprojectionCommands(scene.frameState);
                     scene.frameState.commandList[0].execute(computeEngine);
@@ -183,6 +183,7 @@ defineSuite([
                     return pollToPromise(function() {
                         return imagery.state === ImageryState.READY;
                     }).then(function() {
+                        expect(imagery.texture).toBeDefined();
                         expect(textureBeforeReprojection).not.toEqual(imagery.texture);
                         imagery.releaseReference();
                     });
