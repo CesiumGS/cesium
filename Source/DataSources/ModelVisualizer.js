@@ -9,6 +9,7 @@ define([
         '../Scene/HeightReference',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
+        '../Scene/ShadowMode',
         './BoundingSphereState',
         './Property'
     ], function(
@@ -21,6 +22,7 @@ define([
         HeightReference,
         Model,
         ModelAnimationLoop,
+        ShadowMode,
         BoundingSphereState,
         Property) {
     'use strict';
@@ -28,9 +30,8 @@ define([
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
     var defaultIncrementallyLoadTextures = true;
+    var defaultShadows = ShadowMode.ENABLED;
     var defaultHeightReference = HeightReference.NONE;
-    var defaultCastShadows = true;
-    var defaultReceiveShadows = true;
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -130,13 +131,21 @@ define([
                 modelHash[entity.id] = modelData;
             }
 
+            var shadows = defaultShadows;
+            if (defined(modelGraphics._shadows)) {
+                shadows = Property.getValueOrDefault(modelGraphics._shadows, time, defaultShadows);
+            } else if (defined(modelGraphics._castShadows) || defined(modelGraphics._receiveShadows)) {
+                var castShadows = Property.getValueOrDefault(modelGraphics._castShadows, time, true);
+                var receiveShadows = Property.getValueOrDefault(modelGraphics.receiveShadows, time, true);
+                shadows = ShadowMode.fromCastReceive(castShadows, receiveShadows);
+            }
+
             model.show = true;
             model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
             model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
             model.maximumScale = Property.getValueOrUndefined(modelGraphics._maximumScale, time);
-            model.castShadows = Property.getValueOrDefault(modelGraphics._castShadows, time, defaultCastShadows);
-            model.receiveShadows = Property.getValueOrDefault(modelGraphics._receiveShadows, time, defaultReceiveShadows);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
+            model.shadows = shadows;
             model.heightReference = Property.getValueOrDefault(modelGraphics._heightReference, time, defaultHeightReference);
 
             if (model.ready) {
