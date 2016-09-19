@@ -29,6 +29,7 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the point.
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      */
     function PointGraphics(options) {
         this._color = undefined;
