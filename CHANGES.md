@@ -6,6 +6,7 @@ Change Log
 * Fixed billboard rotation when sized in meters. [#3979](https://github.com/AnalyticalGraphicsInc/cesium/issues/3979)
 * Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
 * Fixed touch events for the timeline [#4305](https://github.com/AnalyticalGraphicsInc/cesium/pull/4305)
+* Removed the default gamma correction for Bing Maps aerial imagery, because we no longer think it is an improvement in current versions of the tiles.  To restore the previous look, set the `defaultGamma` property of your `BingMapsImageryProvider` instance to 1.3.
 
 ### 1.25 - 2016-09-01
 
