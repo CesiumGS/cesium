@@ -840,7 +840,11 @@ define([
             attributeLocations.a_batchId = batchIdLocation;
         }
 
-        var attributeIncludes = '';
+        var vs = 'attribute vec3 a_position; \n' +
+                 'varying vec4 v_color; \n' +
+                 'uniform float u_pointSize; \n' +
+                 'uniform vec4 u_highlightColor; \n';
+
         var length = styleableProperties.length;
         for (i = 0; i < length; ++i) {
             name = styleableProperties[i];
@@ -861,15 +865,9 @@ define([
                 attributeType = 'vec' + componentCount;
             }
 
-            attributeIncludes += 'attribute ' + attributeType + ' ' + attributeName + '; \n';
+            vs += 'attribute ' + attributeType + ' ' + attributeName + '; \n';
             attributeLocations[attributeName] = attribute.location;
         }
-
-        var vs = 'attribute vec3 a_position; \n' +
-                 'varying vec4 v_color; \n' +
-                 'uniform float u_pointSize; \n' +
-                 'uniform vec4 u_highlightColor; \n' +
-                 attributeIncludes;
 
         if (hasColors && !hasColorStyle) {
             if (isTranslucent) {
