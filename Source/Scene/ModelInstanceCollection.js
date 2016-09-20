@@ -170,7 +170,7 @@ define([
         
         shadows : {
             get : function () { 
-                return _model.shadows;
+                return this._model.shadows;
             }
         }
     });
