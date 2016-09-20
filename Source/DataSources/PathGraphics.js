@@ -44,6 +44,8 @@ define([
         this._leadTimeSubscription = undefined;
         this._trailTime = undefined;
         this._trailTimeSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -106,7 +108,9 @@ define([
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        trailTime : createPropertyDescriptor('trailTime')
+        trailTime : createPropertyDescriptor('trailTime'),
+
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -125,6 +129,7 @@ define([
         result.show = this.show;
         result.leadTime = this.leadTime;
         result.trailTime = this.trailTime;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
 
@@ -147,6 +152,7 @@ define([
         this.show = defaultValue(this.show, source.show);
         this.leadTime = defaultValue(this.leadTime, source.leadTime);
         this.trailTime = defaultValue(this.trailTime, source.trailTime);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return PathGraphics;

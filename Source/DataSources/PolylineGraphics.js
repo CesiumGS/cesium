@@ -53,6 +53,8 @@ define([
         this._widthSubscription = undefined;
         this._shadows = undefined;
         this._shadowsSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -128,7 +130,9 @@ define([
          * @type {Property}
          * @default ShadowMode.DISABLED
          */
-        shadows : createPropertyDescriptor('shadows')
+        shadows : createPropertyDescriptor('shadows'),
+
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -148,6 +152,7 @@ define([
         result.followSurface = this.followSurface;
         result.granularity = this.granularity;
         result.shadows = this.shadows;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
 
@@ -171,6 +176,7 @@ define([
         this.followSurface = defaultValue(this.followSurface, source.followSurface);
         this.granularity = defaultValue(this.granularity, source.granularity);
         this.shadows = defaultValue(this.shadows, source.shadows);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return PolylineGraphics;
