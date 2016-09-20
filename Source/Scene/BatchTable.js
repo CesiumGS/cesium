@@ -391,6 +391,8 @@ define([
 
         if (batchTable._pixelDatatype === PixelDatatype.UNSIGNED_BYTE && !attribute.normalize) {
             glslFunction += 'value *= 255.0; \n';
+        } else if (batchTable._pixelDatatype === PixelDatatype.FLOAT && attribute.componentDatatype === ComponentDatatype.UNSIGNED_BYTE && attribute.normalize) {
+            glslFunction += 'value /= 255.0; \n';
         }
 
         glslFunction +=
