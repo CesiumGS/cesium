@@ -76,29 +76,29 @@ defineSuite([
         var color = new Cartesian4(0, 1, 2, 3);
 
         for (i = 0; i < batchTable.numberOfInstances; ++i) {
-            batchTable.setEntry(i, 0, 1);
-            batchTable.setEntry(i, 1, color);
+            batchTable.setBatchedAttribute(i, 0, 1);
+            batchTable.setBatchedAttribute(i, 1, color);
         }
 
         for (i = 0; i < batchTable.numberOfInstances; ++i) {
-            expect(batchTable.getEntry(3, 0)).toEqual(1);
-            expect(batchTable.getEntry(3, 1)).toEqual(color);
+            expect(batchTable.getBatchedAttribute(3, 0)).toEqual(1);
+            expect(batchTable.getBatchedAttribute(3, 1)).toEqual(color);
         }
 
         color = new Cartesian4(4, 5, 6, 7);
-        batchTable.setEntry(3, 0, 0);
-        batchTable.setEntry(3, 1, color);
-        expect(batchTable.getEntry(3, 0)).toEqual(0);
-        expect(batchTable.getEntry(3, 1)).toEqual(color);
+        batchTable.setBatchedAttribute(3, 0, 0);
+        batchTable.setBatchedAttribute(3, 1, color);
+        expect(batchTable.getBatchedAttribute(3, 0)).toEqual(0);
+        expect(batchTable.getBatchedAttribute(3, 1)).toEqual(color);
     });
 
     it('gets with result parameter', function() {
         batchTable = new BatchTable(unsignedByteAttributes, 5);
         var color = new Cartesian4(0, 1, 2, 3);
-        batchTable.setEntry(0, 1, color);
+        batchTable.setBatchedAttribute(0, 1, color);
 
         var result = new Cartesian4();
-        var returndValue = batchTable.getEntry(0, 1, result);
+        var returndValue = batchTable.getBatchedAttribute(0, 1, result);
         expect(returndValue).toBe(result);
         expect(result).toEqual(color);
     });
@@ -106,47 +106,47 @@ defineSuite([
     it('get entry throws when instance index is out of range', function() {
         batchTable = new BatchTable(unsignedByteAttributes, 5);
         expect(function() {
-            batchTable.getEntry(-1, 0);
+            batchTable.getBatchedAttribute(-1, 0);
         }).toThrowDeveloperError();
         expect(function() {
-            batchTable.getEntry(100, 0);
+            batchTable.getBatchedAttribute(100, 0);
         }).toThrowDeveloperError();
     });
 
     it('get entry throws when attribute index is out of range', function() {
         batchTable = new BatchTable(unsignedByteAttributes, 5);
         expect(function() {
-            batchTable.getEntry(0, -1);
+            batchTable.getBatchedAttribute(0, -1);
         }).toThrowDeveloperError();
         expect(function() {
-            batchTable.getEntry(0, 100);
+            batchTable.getBatchedAttribute(0, 100);
         }).toThrowDeveloperError();
     });
 
     it('set entry throws when instance index is out of range', function() {
         batchTable = new BatchTable(unsignedByteAttributes, 5);
         expect(function() {
-            batchTable.setEntry(-1, 0, 0);
+            batchTable.setBatchedAttribute(-1, 0, 0);
         }).toThrowDeveloperError();
         expect(function() {
-            batchTable.setEntry(100, 0, 1);
+            batchTable.setBatchedAttribute(100, 0, 1);
         }).toThrowDeveloperError();
     });
 
     it('set entry throws when attribute index is out of range', function() {
         batchTable = new BatchTable(unsignedByteAttributes, 5);
         expect(function() {
-            batchTable.setEntry(0, -1, 1);
+            batchTable.setBatchedAttribute(0, -1, 1);
         }).toThrowDeveloperError();
         expect(function() {
-            batchTable.setEntry(0, 100, 1);
+            batchTable.setBatchedAttribute(0, 100, 1);
         }).toThrowDeveloperError();
     });
 
     it('set entry throws when value is undefined', function() {
         batchTable = new BatchTable(unsignedByteAttributes, 5);
         expect(function() {
-            batchTable.setEntry(0, 0, undefined);
+            batchTable.setBatchedAttribute(0, 0, undefined);
         }).toThrowDeveloperError();
     });
 
