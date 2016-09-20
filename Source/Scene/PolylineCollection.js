@@ -472,7 +472,7 @@ define([
                     }
 
                     if (properties[SHOW_INDEX] || properties[WIDTH_INDEX]) {
-                        this._batchTable.setEntry(polyline._index, 0, new Cartesian2(polyline._width, polyline._show));
+                        this._batchTable.setBatchedAttribute(polyline._index, 0, new Cartesian2(polyline._width, polyline._show));
                     }
 
                     if (this._batchTable.attributes.length > 2) {
@@ -1323,13 +1323,13 @@ define([
                 nearFarCartesian.y = distanceDisplayCondition.far;
             }
 
-            batchTable.setEntry(polylineBatchIndex, 0, widthShowCartesian);
-            batchTable.setEntry(polylineBatchIndex, 1, colorCartesian);
+            batchTable.setBatchedAttribute(polylineBatchIndex, 0, widthShowCartesian);
+            batchTable.setBatchedAttribute(polylineBatchIndex, 1, colorCartesian);
 
             if (batchTable.attributes.length > 2) {
-                batchTable.setEntry(polylineBatchIndex, 2, high);
-                batchTable.setEntry(polylineBatchIndex, 3, low);
-                batchTable.setEntry(polylineBatchIndex, 4, nearFarCartesian);
+                batchTable.setBatchedAttribute(polylineBatchIndex, 2, high);
+                batchTable.setBatchedAttribute(polylineBatchIndex, 3, low);
+                batchTable.setBatchedAttribute(polylineBatchIndex, 4, nearFarCartesian);
             }
         }
     };

@@ -51,7 +51,7 @@ define([
      * @example
      * // create the batch table
      * var attributes = [{
-     *     functionName : 'getShow()',
+     *     functionName : 'getShow',
      *     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
      *     componentsPerAttribute : 1
      * }, {
@@ -156,7 +156,7 @@ define([
         return foundFloatDatatype ? PixelDatatype.FLOAT : PixelDatatype.UNSIGNED_BYTE;
     }
 
-    function getEntryType(attributes, attributeIndex) {
+    function getAttributeType(attributes, attributeIndex) {
         var componentsPerAttribute = attributes[attributeIndex].componentsPerAttribute;
         if (componentsPerAttribute === 2) {
             return Cartesian2;
@@ -168,10 +168,10 @@ define([
         return Number;
     }
 
-    var scratchgetEntryCartesian4 = new Cartesian4();
+    var scratchGetAttributeCartesian4 = new Cartesian4();
 
     /**
-     * Gets the value of an entry in the table.
+     * Gets the value of an attribute in the table.
      *
      * @param {Number} instanceIndex The index of the instance.
      * @param {Number} attributeIndex The index of the attribute.
@@ -181,7 +181,7 @@ define([
      * @exception {DeveloperError} instanceIndex is out of range.
      * @exception {DeveloperError} attributeIndex is out of range.
      */
-    BatchTable.prototype.getEntry = function(instanceIndex, attributeIndex, result) {
+    BatchTable.prototype.getBatchedAttribute = function(instanceIndex, attributeIndex, result) {
         //>>includeStart('debug', pragmas.debug);
         if (instanceIndex < 0 || instanceIndex >= this._numberOfInstances) {
             throw new DeveloperError('instanceIndex is out of range.');
@@ -193,23 +193,23 @@ define([
 
         var attributes = this._attributes;
         var index = 4 * attributes.length * instanceIndex + 4 * attributeIndex;
-        var value = Cartesian4.unpack(this._batchValues, index, scratchgetEntryCartesian4);
+        var value = Cartesian4.unpack(this._batchValues, index, scratchGetAttributeCartesian4);
 
-        var entryType = getEntryType(attributes, attributeIndex);
-        if (defined(entryType.fromCartesian4)) {
-            return entryType.fromCartesian4(value, result);
-        } else if (defined(entryType.clone)) {
-            return entryType.clone(value, result);
+        var attributeType = getAttributeType(attributes, attributeIndex);
+        if (defined(attributeType.fromCartesian4)) {
+            return attributeType.fromCartesian4(value, result);
+        } else if (defined(attributeType.clone)) {
+            return attributeType.clone(value, result);
         }
 
         return value.x;
     };
 
-    var setEntryScratchValues = [undefined, undefined, new Cartesian2(), new Cartesian3(), new Cartesian4()];
-    var setEntryScratchCartesian4 = new Cartesian4();
+    var setAttributeScratchValues = [undefined, undefined, new Cartesian2(), new Cartesian3(), new Cartesian4()];
+    var setAttributeScratchCartesian4 = new Cartesian4();
 
     /**
-     * Sets the value of an entry in the table.
+     * Sets the value of an attribute in the table.
      *
      * @param {Number} instanceIndex The index of the instance.
      * @param {Number} attributeIndex The index of the attribute.
@@ -218,7 +218,7 @@ define([
      * @exception {DeveloperError} instanceIndex is out of range.
      * @exception {DeveloperError} attributeIndex is out of range.
      */
-    BatchTable.prototype.setEntry = function(instanceIndex, attributeIndex, value) {
+    BatchTable.prototype.setBatchedAttribute = function(instanceIndex, attributeIndex, value) {
         //>>includeStart('debug', pragmas.debug);
         if (instanceIndex < 0 || instanceIndex >= this._numberOfInstances) {
             throw new DeveloperError('instanceIndex is out of range.');
@@ -232,22 +232,22 @@ define([
         //>>includeEnd('debug');
 
         var attributes = this._attributes;
-        var result = setEntryScratchValues[attributes[attributeIndex].componentsPerAttribute];
-        var currentEntry = this.getEntry(instanceIndex, attributeIndex, result);
-        var entryType = getEntryType(this._attributes, attributeIndex);
-        var entriesEqual = defined(entryType.equals) ? entryType.equals(currentEntry, value) : currentEntry === value;
+        var result = setAttributeScratchValues[attributes[attributeIndex].componentsPerAttribute];
+        var currentAttribute = this.getBatchedAttribute(instanceIndex, attributeIndex, result);
+        var attributeType = getAttributeType(this._attributes, attributeIndex);
+        var entriesEqual = defined(attributeType.equals) ? attributeType.equals(currentAttribute, value) : currentAttribute === value;
         if (entriesEqual) {
             return;
         }
 
-        var entryValue = setEntryScratchCartesian4;
-        entryValue.x = defined(value.x) ? value.x : value;
-        entryValue.y = defined(value.y) ? value.y : 0.0;
-        entryValue.z = defined(value.z) ? value.z : 0.0;
-        entryValue.w = defined(value.w) ? value.w : 0.0;
+        var attributeValue = setAttributeScratchCartesian4;
+        attributeValue.x = defined(value.x) ? value.x : value;
+        attributeValue.y = defined(value.y) ? value.y : 0.0;
+        attributeValue.z = defined(value.z) ? value.z : 0.0;
+        attributeValue.w = defined(value.w) ? value.w : 0.0;
 
         var index = 4 * attributes.length * instanceIndex + 4 * attributeIndex;
-        Cartesian4.pack(entryValue, this._batchValues, index);
+        Cartesian4.pack(attributeValue, this._batchValues, index);
 
         this._batchValuesDirty = true;
     };
@@ -285,7 +285,7 @@ define([
     BatchTable.prototype.update = function(frameState) {
         var context = frameState.context;
         if (this._pixelDatatype === PixelDatatype.FLOAT && !context.floatingPointTexture) {
-            // TODO: We could probably pack the floats to RGBA unsigned bytes but that would add a lot CPU and memory overhead.
+            // We could probably pack the floats to RGBA unsigned bytes but that would add a lot CPU and memory overhead.
             throw new RuntimeError('The floating point texture extension is required but not supported.');
         }
 
