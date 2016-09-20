@@ -166,14 +166,6 @@ define([
             get : function() {
                 return this._readyPromise.promise;
             }
-        },
-        shadows : {
-            get : function () { 
-                return this._model.shadows;
-            }
-            set : function () {
-                this._model.shadows = shadows;
-            }
         }
     });
 
