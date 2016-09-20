@@ -72,6 +72,7 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
+     * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      *
      * @exception {DeveloperError} Must specify either <options.gltf> or <options.url>, but not both.
      * @exception {DeveloperError} Shader program cannot be optimized for instancing. Parameters cannot have any of the following semantics: MODEL, MODELINVERSE, MODELVIEWINVERSE, MODELVIEWPROJECTIONINVERSE, MODELINVERSETRANSPOSE.
@@ -131,6 +132,7 @@ define([
         this._gltf = options.gltf;
         this._basePath = options.basePath;
         this._asynchronous = options.asynchronous;
+        this._incrementallyLoadTextures = options.incrementallyLoadTextures;
 
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugShowBoundingVolume = false;
@@ -494,6 +496,7 @@ define([
             cacheKey : undefined,
             asynchronous : collection._asynchronous,
             allowPicking : collection._allowPicking,
+            incrementallyLoadTextures : collection._incrementallyLoadTextures,
             precreatedAttributes : undefined,
             vertexShaderLoaded : undefined,
             fragmentShaderLoaded : undefined,
