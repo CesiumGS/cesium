@@ -1247,7 +1247,6 @@ define([
                 }
             }
 
-            // TODO: add support for color from the batch table?
             var colorCartesian = scratchPickColorCartesian;
             colorCartesian.x = Color.floatToByte(pickColor.red);
             colorCartesian.y = Color.floatToByte(pickColor.green);
