@@ -113,6 +113,8 @@ define([
             show = new Expression(String(showExpression));
         } else if (typeof(showExpression) === 'string') {
             show = new Expression(showExpression);
+        } else if (defined(showExpression.conditions)) {
+            show = new ConditionsExpression(showExpression);
         }
 
         that._show = show;

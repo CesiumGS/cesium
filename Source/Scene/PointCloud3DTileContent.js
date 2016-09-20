@@ -1026,15 +1026,14 @@ define([
     };
 
     /**
-     * Apply a style to the point cloud.
-     *
-     * @param {FrameSate} frameState The frame state.
-     * @param {Cesium3DTileStyle} style The style.
-     *
-     * @private
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    PointCloud3DTileContent.prototype.applyStyle = function(frameState, style) {
-        createShaders(this, frameState, style);
+    PointCloud3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
+        if (!defined(this.batchTable)) {
+            createShaders(this, frameState, style);
+            return true;
+        }
+        return false;
     };
 
     /**

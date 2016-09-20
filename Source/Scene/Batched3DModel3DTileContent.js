@@ -292,6 +292,13 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
+    Batched3DModel3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
     Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         var oldAddCommand = frameState.addCommand;
         if (frameState.passes.render) {

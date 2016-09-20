@@ -106,9 +106,8 @@ define([
 
         stats.numberOfFeaturesStyled += length;
 
-        // Apply style to point cloud. Only apply style if the point cloud is not backed by a batch table.
-        if ((content instanceof PointCloud3DTileContent) && (length === 0)) {
-            content.applyStyle(frameState, style);
+        if (content.applyStyleWithShader(frameState, style)) {
+            return;
         }
 
         if (!defined(style)) {

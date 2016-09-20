@@ -81,15 +81,18 @@ define([
         var exp = expression._expression;
         for (var cond in conditions) {
             if (conditions.hasOwnProperty(cond)) {
-                var colorExpression = conditions[cond];
+                cond = String(cond);
+                var condExpression = String(conditions[cond]);
                 if (defined(exp)) {
                     cond = cond.replace(expressionPlaceholder, exp);
+                    condExpression = condExpression.replace(expressionPlaceholder, exp);
                 } else {
                     cond = cond.replace(expressionPlaceholder, 'undefined');
+                    condExpression = condExpression.replace(expressionPlaceholder, 'undefined');
                 }
                 runtimeConditions.push(new Statement(
                     new Expression(cond),
-                    new Expression(colorExpression)
+                    new Expression(condExpression)
                 ));
             }
         }
