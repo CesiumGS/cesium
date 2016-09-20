@@ -14,6 +14,7 @@ defineSuite([
         'Scene/Model',
         'Scene/ModelAnimationLoop',
         'Scene/SceneMode',
+        'Scene/ShadowMode',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -32,6 +33,7 @@ defineSuite([
         Model,
         ModelAnimationLoop,
         SceneMode,
+        ShadowMode,
         createScene,
         pollToPromise,
         when) {
@@ -498,6 +500,23 @@ defineSuite([
             scene.camera.lookAt(new Cartesian3(100000.0, 0.0, 0.0), new HeadingPitchRange(0.0, 0.0, 10.0));
             scene.renderForSpecs();
             expect(scene._frustumCommandsList.length).not.toEqual(0);
+        });
+    });
+
+    it('shadows', function() {
+        return loadCollection({
+            gltf : boxGltf,
+            instances : createInstances(4)
+        }).then(function(collection) {
+            scene.renderForSpecs();
+            expect(collection._shadows).toBe(ShadowMode.ENABLED);
+            var drawCommand = collection._drawCommands[0];
+            expect(drawCommand.castShadows).toBe(true);
+            expect(drawCommand.receiveShadows).toBe(true);
+            collection.shadows = ShadowMode.DISABLED;
+            scene.renderForSpecs();
+            expect(drawCommand.castShadows).toBe(false);
+            expect(drawCommand.receiveShadows).toBe(false);
         });
     });
 
