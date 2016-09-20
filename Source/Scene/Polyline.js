@@ -8,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/Matrix4',
         '../Core/PolylinePipeline',
         './Material'
@@ -20,6 +21,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        DistanceDisplayCondition,
         Matrix4,
         PolylinePipeline,
         Material) {
@@ -48,6 +50,7 @@ define([
         this._show = defaultValue(options.show, true);
         this._width = defaultValue(options.width, 1.0);
         this._loop = defaultValue(options.loop, false);
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
 
         this._material = options.material;
         if (!defined(this._material)) {
@@ -98,7 +101,8 @@ define([
     var WIDTH_INDEX = Polyline.WIDTH_INDEX = 2;
     var MATERIAL_INDEX = Polyline.MATERIAL_INDEX = 3;
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 4;
-    var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES = 5;
+    var DISTANCE_DISPLAY_CONDITION = Polyline.DISTANCE_DISPLAY_CONDITION = 5;
+    var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES = 6;
 
     function makeDirty(polyline, propertyChanged) {
         ++polyline._propertiesChanged[propertyChanged];
@@ -283,6 +287,23 @@ define([
                 this._id = value;
                 if (defined(this._pickId)) {
                     this._pickId.object.id = value;
+                }
+            }
+        },
+
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                if (!DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (defined(value) && value.far <= value.near) {
+                        throw new DeveloperError('far distance must be greater than near distance.');
+                    }
+                    //>>includeEnd('debug');
+                    this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
+                    makeDirty(this, DISTANCE_DISPLAY_CONDITION);
                 }
             }
         }
