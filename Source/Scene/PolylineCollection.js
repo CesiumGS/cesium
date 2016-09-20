@@ -480,8 +480,8 @@ define([
                             var boundingSphere = frameState.mode === SceneMode.SCENE2D ? polyline._boundingVolume2D : polyline._boundingVolumeWC;
                             var encodedCenter = EncodedCartesian3.fromCartesian(boundingSphere.center, scratchUpdatePolylineEncodedCartesian);
                             var low = Cartesian4.fromElements(encodedCenter.low.x, encodedCenter.low.y, encodedCenter.low.z, boundingSphere.radius, scratchUpdatePolylineCartesian4);
-                            this._batchTable.setEntry(polyline._index, 2, encodedCenter.high);
-                            this._batchTable.setEntry(polyline._index, 3, low);
+                            this._batchTable.setBatchedAttribute(polyline._index, 2, encodedCenter.high);
+                            this._batchTable.setBatchedAttribute(polyline._index, 3, low);
                         }
 
                         if (properties[DISTANCE_DISPLAY_CONDITION]) {
@@ -495,7 +495,7 @@ define([
                                 nearFarCartesian.x = distanceDisplayCondition.far;
                             }
 
-                            this._batchTable.setEntry(polyline._index, 4, nearFarCartesian);
+                            this._batchTable.setBatchedAttribute(polyline._index, 4, nearFarCartesian);
                         }
                     }
 
