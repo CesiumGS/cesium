@@ -353,12 +353,16 @@ define([
         // Get the colors
         var colors;
         var isTranslucent = false;
+        var isRGB565 = false;
 
         if (defined(featureTableJson.RGBA)) {
             colors = featureTable.getPropertyArray('RGBA', ComponentDatatype.UNSIGNED_BYTE, 4);
             isTranslucent = true;
         } else if (defined(featureTableJson.RGB)) {
             colors = featureTable.getPropertyArray('RGB', ComponentDatatype.UNSIGNED_BYTE, 3);
+        } else if (defined(featureTableJson.RGB565)) {
+            colors = featureTable.getPropertyArray('RGB565', ComponentDatatype.UNSIGNED_SHORT, 1);
+            isRGB565 = true;
         } else if (defined(featureTableJson.CONSTANT_RGBA)) {
             var constantRGBA  = featureTable.getGlobalProperty('CONSTANT_RGBA');
             this._constantColor = Color.fromBytes(constantRGBA[0], constantRGBA[1], constantRGBA[2], constantRGBA[3], this._constantColor);
@@ -421,6 +425,7 @@ define([
             normals : normals,
             batchIds : batchIds,
             isQuantized : isQuantized,
+            isRGB565 : isRGB565,
             isOctEncoded16P : isOctEncoded16P,
             styleableProperties : styleableProperties
         };
@@ -438,6 +443,7 @@ define([
         var normals = parsedContent.normals;
         var batchIds = parsedContent.batchIds;
         var isQuantized = parsedContent.isQuantized;
+        var isRGB565 = parsedContent.isRGB565;
         var isOctEncoded16P = parsedContent.isOctEncoded16P;
         var styleableProperties = parsedContent.styleableProperties;
         var isTranslucent = content._isTranslucent;
@@ -520,6 +526,14 @@ define([
         if (hasColors) {
             if (isTranslucent) {
                 vs += 'attribute vec4 a_color; \n';
+            } else if (isRGB565) {
+                vs += 'attribute float a_color; \n' +
+                      'const float SHIFT_RIGHT_11 = 1.0 / 2048.0; \n' +
+                      'const float SHIFT_RIGHT_5 = 1.0 / 32.0; \n' +
+                      'const float SHIFT_LEFT_11 = 2048.0; \n' +
+                      'const float SHIFT_LEFT_5 = 32.0; \n' +
+                      'const float NORMALIZE_6 = 1.0 / 64.0; \n' +
+                      'const float NORMALIZE_5 = 1.0 / 32.0; \n';
             } else {
                 vs += 'attribute vec3 a_color; \n';
             }
@@ -550,6 +564,15 @@ define([
         if (hasColors) {
             if (isTranslucent) {
                 vs += '    vec4 color = a_color * u_highlightColor; \n';
+            } else if (isRGB565) {
+                vs += '    float compressed = a_color; \n' +
+                      '    float r = floor(compressed * SHIFT_RIGHT_11); \n' +
+                      '    compressed -= r * SHIFT_LEFT_11; \n' +
+                      '    float g = floor(compressed * SHIFT_RIGHT_5); \n' +
+                      '    compressed -= g * SHIFT_LEFT_5; \n' +
+                      '    float b = compressed; \n' +
+                      '    vec3 rgb = vec3(r * NORMALIZE_5, g * NORMALIZE_6, b * NORMALIZE_5); \n' +
+                      '    vec4 color = vec4(rgb * u_highlightColor.rgb, u_highlightColor.a); \n';
             } else {
                 vs += '    vec4 color =  vec4(a_color * u_highlightColor.rgb, u_highlightColor.a); \n';
             }
@@ -667,16 +690,28 @@ define([
         }
 
         if (hasColors) {
-            var colorComponentsPerAttribute = isTranslucent ? 4 : 3;
-            attributes.push({
-                index : colorAttributeLocation,
-                vertexBuffer : colorsVertexBuffer,
-                componentsPerAttribute : colorComponentsPerAttribute,
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                normalize : true,
-                offsetInBytes : 0,
-                strideInBytes : 0
-            });
+            if (isRGB565) {
+                attributes.push({
+                    index : colorAttributeLocation,
+                    vertexBuffer : colorsVertexBuffer,
+                    componentsPerAttribute : 1,
+                    componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+                    normalize : false,
+                    offsetInBytes : 0,
+                    strideInBytes : 0
+                });
+            } else {
+                var colorComponentsPerAttribute = isTranslucent ? 4 : 3;
+                attributes.push({
+                    index : colorAttributeLocation,
+                    vertexBuffer : colorsVertexBuffer,
+                    componentsPerAttribute : colorComponentsPerAttribute,
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    normalize : true,
+                    offsetInBytes : 0,
+                    strideInBytes : 0
+                });
+            }
         }
 
         if (hasNormals) {
