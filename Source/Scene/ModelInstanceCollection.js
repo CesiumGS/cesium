@@ -18,7 +18,8 @@ define([
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
         './Model',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -38,7 +39,8 @@ define([
         ShaderSource,
         when,
         Model,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
 
     var LoadState = {
@@ -132,7 +134,9 @@ define([
         this._gltf = options.gltf;
         this._basePath = options.basePath;
         this._asynchronous = options.asynchronous;
-        this._shadows = options.shadows;
+
+        this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
+        this._shadows = this.shadows;
 
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugShowBoundingVolume = false;
@@ -732,6 +736,23 @@ define([
         };
     }
 
+    function updateShadows(collection) {
+        if (collection.shadows !== collection._shadows) {
+            collection._shadows = collection.shadows;
+
+            var castShadows = ShadowMode.castShadows(collection.shadows);
+            var receiveShadows = ShadowMode.receiveShadows(collection.shadows);
+
+            var drawCommands = collection._drawCommands;
+            var length = drawCommands.length;
+            for (var i = 0; i < length; ++i) {
+                var drawCommand = drawCommands[i];
+                drawCommand.castShadows = castShadows;
+                drawCommand.receiveShadows = receiveShadows;
+            }
+        }
+    }
+
     ModelInstanceCollection.prototype.update = function(frameState) {
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
@@ -801,6 +822,7 @@ define([
             updateVertexBuffer(this, context);
         }
 
+        updateShadows(this);
         updateWireframe(this);
         updateShowBoundingVolume(this);
 
