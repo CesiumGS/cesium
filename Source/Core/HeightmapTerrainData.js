@@ -350,6 +350,12 @@ define([
             for (var i = 0; i < width; ++i) {
                 var longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
                 var heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude, exaggeration);
+
+                // Use conditionals here instead of Math.min and Math.max so that an undefined
+                // lowestEncodedHeight or highestEncodedHeight has no effect.
+                heightSample = heightSample < structure.lowestEncodedHeight ? structure.lowestEncodedHeight : heightSample;
+                heightSample = heightSample > structure.highestEncodedHeight ? structure.highestEncodedHeight : heightSample;
+
                 setHeight(heights, elementsPerHeight, elementMultiplier, divisor, stride, isBigEndian, j * width + i, heightSample);
             }
         }
@@ -448,6 +454,7 @@ define([
     }
 
     function interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude, exaggeration) {
+        // returns a height encoded according to the structure's heightScale and heightOffset.
         var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
         var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
 
@@ -536,7 +543,7 @@ define([
                 divisor /= elementMultiplier;
             }
         }
-        heights[index + i] = Math.max(0, height);
+        heights[index + i] = height;
     }
 
     return HeightmapTerrainData;
