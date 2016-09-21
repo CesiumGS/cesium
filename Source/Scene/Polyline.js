@@ -93,9 +93,9 @@ define([
         this._boundingVolume2D = new BoundingSphere(); // modified in PolylineCollection
     }
 
-    var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
-    var WIDTH_INDEX = Polyline.WIDTH_INDEX = 1;
-    var POSITION_INDEX = Polyline.POSITION_INDEX = 2;
+    var POSITION_INDEX = Polyline.POSITION_INDEX = 0;
+    var SHOW_INDEX = Polyline.SHOW_INDEX = 1;
+    var WIDTH_INDEX = Polyline.WIDTH_INDEX = 2;
     var MATERIAL_INDEX = Polyline.MATERIAL_INDEX = 3;
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 4;
     var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES = 5;

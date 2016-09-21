@@ -3,6 +3,8 @@ Change Log
 
 ### 1.26 - 2016-10-03
 
+* Breaking changes
+    * Vertex texture fetch is now required to be supported to render polylines. Maximum vertex texture image units must be greater than zero.
 * Fixed billboard rotation when sized in meters. [#3979](https://github.com/AnalyticalGraphicsInc/cesium/issues/3979)
 * Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
 * Fixed touch events for the timeline [#4305](https://github.com/AnalyticalGraphicsInc/cesium/pull/4305)
