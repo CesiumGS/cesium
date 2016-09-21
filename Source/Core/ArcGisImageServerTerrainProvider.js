@@ -60,7 +60,7 @@ define([
      *   proxy : new Cesium.DefaultProxy('/terrain/')
      * });
      * viewer.terrainProvider = terrainProvider;
-     * 
+     *
      *  @see TerrainProvider
      */
     function ArcGisImageServerTerrainProvider(options) {
@@ -91,7 +91,9 @@ define([
             elementsPerHeight : 3,
             stride : 4,
             elementMultiplier : 256.0,
-            isBigEndian : true
+            isBigEndian : true,
+            lowestEncodedHeight : 0,
+            highestEncodedHeight : 256 * 256 * 256
         };
 
         this._errorEvent = new Event();
