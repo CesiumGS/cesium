@@ -940,27 +940,6 @@ define([
         //>>includeEnd('debug');
     }
 
-    function createPickIds(context, primitive, instances) {
-        var pickColors = [];
-        var length = instances.length;
-
-        for (var i = 0; i < length; ++i) {
-            var pickObject = {
-                primitive : defaultValue(instances[i].pickPrimitive, primitive)
-            };
-
-            if (defined(instances[i].id)) {
-                pickObject.id = instances[i].id;
-            }
-
-            var pickId = context.createPickId(pickObject);
-            primitive._pickIds.push(pickId);
-            pickColors.push(pickId.color);
-        }
-
-        return pickColors;
-    }
-
     function getUniformFunction(uniforms, name) {
         return function() {
             return uniforms[name];
@@ -1057,19 +1036,16 @@ define([
             var transferableObjects = [];
             instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
 
-            var allowPicking = primitive.allowPicking;
             var scene3DOnly = frameState.scene3DOnly;
             var projection = frameState.mapProjection;
 
             var promise = combineGeometryTaskProcessor.scheduleTask(PrimitivePipeline.packCombineGeometryParameters({
                 createGeometryResults : primitive._createGeometryResults,
                 instances : instances,
-                pickIds : allowPicking ? createPickIds(frameState.context, primitive, instances) : undefined,
                 ellipsoid : projection.ellipsoid,
                 projection : projection,
                 elementIndexUintSupported : frameState.context.elementIndexUint,
                 scene3DOnly : scene3DOnly,
-                allowPicking : allowPicking,
                 vertexCacheOptimize : primitive.vertexCacheOptimize,
                 compressVertices : primitive.compressVertices,
                 modelMatrix : primitive.modelMatrix,
@@ -1154,19 +1130,16 @@ define([
         geometries.length = geometryIndex;
         clonedInstances.length = geometryIndex;
 
-        var allowPicking = primitive.allowPicking;
         var scene3DOnly = frameState.scene3DOnly;
         var projection = frameState.mapProjection;
 
         var result = PrimitivePipeline.combineGeometry({
             instances : clonedInstances,
             invalidInstances : invalidInstances,
-            pickIds : allowPicking ? createPickIds(frameState.context, primitive, clonedInstances) : undefined,
             ellipsoid : projection.ellipsoid,
             projection : projection,
             elementIndexUintSupported : frameState.context.elementIndexUint,
             scene3DOnly : scene3DOnly,
-            allowPicking : allowPicking,
             vertexCacheOptimize : primitive.vertexCacheOptimize,
             compressVertices : primitive.compressVertices,
             modelMatrix : primitive.modelMatrix,
