@@ -566,9 +566,8 @@ define([
     var scratchGetAttributeCartesian3 = new Cartesian3();
     var scratchGetAttributeCartesian4 = new Cartesian4();
 
-    function getAttributeValue(attribute) {
-        var componentsPerAttribute = attribute.componentsPerAttribute;
-        var value = attribute.value;
+    function getAttributeValue(value) {
+        var componentsPerAttribute = value.length;
         if (componentsPerAttribute === 1) {
             return value[0];
         } else if (componentsPerAttribute === 2) {
@@ -634,7 +633,7 @@ define([
             for (var j = 0; j < length; ++j) {
                 name = names[j];
                 attribute = instanceAttributes[name];
-                var value = getAttributeValue(attribute);
+                var value = getAttributeValue(attribute.value);
                 var attributeIndex = attributeIndices[name];
                 batchTable.setBatchedAttribute(i, attributeIndex, value);
             }
@@ -1197,7 +1196,6 @@ define([
     function createVertexArray(primitive, frameState) {
         var attributeLocations = primitive._attributeLocations;
         var geometries = primitive._geometries;
-        var vaAttributes = primitive._vaAttributes;
         var scene3DOnly = frameState.scene3DOnly;
         var context = frameState.context;
 
@@ -1206,24 +1204,12 @@ define([
         for (var i = 0; i < length; ++i) {
             var geometry = geometries[i];
 
-            var attributes = vaAttributes[i];
-            var vaLength = attributes.length;
-            for (var j = 0; j < vaLength; ++j) {
-                var attribute = attributes[j];
-                attribute.vertexBuffer = Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : attribute.values,
-                    usage : BufferUsage.DYNAMIC_DRAW});
-                delete attribute.values;
-            }
-
             va.push(VertexArray.fromGeometry({
                 context : context,
                 geometry : geometry,
                 attributeLocations : attributeLocations,
                 bufferUsage : BufferUsage.STATIC_DRAW,
-                interleave : primitive._interleave,
-                vertexArrayAttributes : attributes
+                interleave : primitive._interleave
             }));
 
             if (defined(primitive._createBoundingVolumeFunction)) {
@@ -1447,41 +1433,6 @@ define([
         }
     }
 
-    function updatePerInstanceAttributes(primitive) {
-        if (primitive._dirtyAttributes.length === 0) {
-            return;
-        }
-
-        var attributes = primitive._dirtyAttributes;
-        var length = attributes.length;
-        for (var i = 0; i < length; ++i) {
-            var attribute = attributes[i];
-            var value = attribute.value;
-            var indices = attribute.indices;
-            var indicesLength = indices.length;
-            for (var j = 0; j < indicesLength; ++j) {
-                var index = indices[j];
-                var offset = index.offset;
-                var count = index.count;
-
-                var vaAttribute = index.attribute;
-                var componentDatatype = vaAttribute.componentDatatype;
-                var componentsPerAttribute = vaAttribute.componentsPerAttribute;
-
-                var typedArray = ComponentDatatype.createTypedArray(componentDatatype, count * componentsPerAttribute);
-                for (var k = 0; k < count; ++k) {
-                    typedArray.set(value, k * componentsPerAttribute);
-                }
-
-                var offsetInBytes = offset * componentsPerAttribute * ComponentDatatype.getSizeInBytes(componentDatatype);
-                vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
-            }
-            attribute.dirty = false;
-        }
-
-        attributes.length = 0;
-    }
-
     function updateBoundingVolumes(primitive, frameState) {
         // Update bounding volumes for primitives that are sized in pixels.
         // The pixel size in meters varies based on the distance from the camera.
@@ -1600,6 +1551,11 @@ define([
             return;
         }
 
+        if (!defined(this._batchTable)) {
+            createBatchTable(this, frameState.context);
+        }
+        this._batchTable.update(frameState);
+
         if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
             if (this.asynchronous) {
                 loadAsynchronous(this, frameState);
@@ -1611,11 +1567,6 @@ define([
         if (this._state === PrimitiveState.COMBINED) {
             createVertexArray(this, frameState);
         }
-
-        if (!defined(this._batchTable)) {
-            createBatchTable(this, frameState.context);
-        }
-        this._batchTable.update(frameState);
 
         if (!this.show || this._state !== PrimitiveState.COMPLETE) {
             return;
@@ -1665,36 +1616,34 @@ define([
             commandFunc(this, appearance, material, translucent, twoPasses, this._colorCommands, this._pickCommands, frameState);
         }
 
-        updatePerInstanceAttributes(this);
-
         var updateAndQueueCommandsFunc = defaultValue(this._updateAndQueueCommandsFunction, updateAndQueueCommands);
         updateAndQueueCommandsFunc(this, frameState, this._colorCommands, this._pickCommands, this.modelMatrix, this.cull, this.debugShowBoundingVolume, twoPasses);
     };
 
-    function createGetFunction(name, perInstanceAttributes) {
-        var attribute = perInstanceAttributes[name];
+    function createGetFunction(batchTable, instanceIndex, attributeIndex) {
         return function() {
-            if (defined(attribute) && defined(attribute.value)) {
-                return perInstanceAttributes[name].value;
+            var attributeValue = batchTable.getBatchedAttribute(instanceIndex, attributeIndex);
+            var attribute = batchTable.attributes[attributeIndex];
+            var componentsPerAttribute = attribute.componentsPerAttribute;
+            var value = ComponentDatatype.createTypedArray(attribute.componentDatatype, componentsPerAttribute);
+            if (defined(attributeValue.constructor.pack)) {
+                attributeValue.constructor.pack(attributeValue, value, 0);
+            } else {
+                value[0] = attributeValue;
             }
-            return attribute;
+            return value;
         };
     }
 
-    function createSetFunction(name, perInstanceAttributes, dirtyList) {
-        return function (value) {
+    function createSetFunction(batchTable, instanceIndex, attributeIndex) {
+        return function(value) {
             //>>includeStart('debug', pragmas.debug);
             if (!defined(value) || !defined(value.length) || value.length < 1 || value.length > 4) {
                 throw new DeveloperError('value must be and array with length between 1 and 4.');
             }
             //>>includeEnd('debug');
-
-            var attribute = perInstanceAttributes[name];
-            attribute.value = value;
-            if (!attribute.dirty && attribute.valid) {
-                dirtyList.push(attribute);
-                attribute.dirty = true;
-            }
+            var attributeValue = getAttributeValue(value);
+            batchTable.setBatchedAttribute(instanceIndex, attributeIndex, attributeValue);
         };
     }
 
@@ -1718,7 +1667,7 @@ define([
         if (!defined(id)) {
             throw new DeveloperError('id is required');
         }
-        if (!defined(this._perInstanceAttributeLocations)) {
+        if (!defined(this._batchTable)) {
             throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
         }
         //>>includeEnd('debug');
@@ -1738,21 +1687,25 @@ define([
         if (index === -1) {
             return undefined;
         }
+
         var attributes = this._perInstanceAttributeCache[index];
         if (defined(attributes)) {
             return attributes;
         }
 
-        var perInstanceAttributes = this._perInstanceAttributeLocations[index];
+        var batchTable = this._batchTable;
+        var perInstanceAttributeIndices = this._batchTableAttributeIndices;
         attributes = {};
         var properties = {};
         var hasProperties = false;
 
-        for (var name in perInstanceAttributes) {
-            if (perInstanceAttributes.hasOwnProperty(name)) {
+        for (var name in perInstanceAttributeIndices) {
+            if (perInstanceAttributeIndices.hasOwnProperty(name)) {
+                var attributeIndex = perInstanceAttributeIndices[name];
+
                 hasProperties = true;
                 properties[name] = {
-                    get : createGetFunction(name, perInstanceAttributes)
+                    get : createGetFunction(batchTable, index, attributeIndex)
                 };
 
                 var createSetter = true;
@@ -1777,7 +1730,7 @@ define([
                 }
 
                 if (createSetter) {
-                    properties[name].set = createSetFunction(name, perInstanceAttributes, this._dirtyAttributes);
+                    properties[name].set = createSetFunction(batchTable, index, attributeIndex);
                 }
             }
         }
