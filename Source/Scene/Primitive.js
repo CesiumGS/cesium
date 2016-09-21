@@ -823,7 +823,7 @@ define([
             'void main() \n' +
             '{ \n' +
             '    czm_non_show_main(); \n' +
-            '    gl_Position *= czm_batchTable_show; \n' +
+            '    gl_Position *= czm_batchTable_show(batchId); \n' +
             '}';
 
         return renamedVS + '\n' + showMain;
