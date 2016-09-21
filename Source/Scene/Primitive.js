@@ -3,7 +3,9 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/clone',
+        '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -30,6 +32,7 @@ define([
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../ThirdParty/when',
+        './BatchTable',
         './CullFace',
         './Pass',
         './PrimitivePipeline',
@@ -40,7 +43,9 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         clone,
+        Color,
         combine,
         ComponentDatatype,
         defaultValue,
@@ -67,6 +72,7 @@ define([
         ShaderSource,
         VertexArray,
         when,
+        BatchTable,
         CullFace,
         Pass,
         PrimitivePipeline,
@@ -350,6 +356,9 @@ define([
         this._createGeometryResults = undefined;
         this._ready = false;
         this._readyPromise = when.defer();
+
+        this._batchTable = undefined;
+        this._batchTableAttributeIndices = undefined;
     }
 
     defineProperties(Primitive.prototype, {
@@ -518,6 +527,145 @@ define([
         }
     });
 
+    function getCommonPerInstanceAttributeNames(instances) {
+        var length = instances.length;
+
+        var attributesInAllInstances = [];
+        var attributes0 = instances[0].attributes;
+        var name;
+
+        for (name in attributes0) {
+            if (attributes0.hasOwnProperty(name)) {
+                var attribute = attributes0[name];
+                var inAllInstances = true;
+
+                // Does this same attribute exist in all instances?
+                for (var i = 1; i < length; ++i) {
+                    var otherAttribute = instances[i].attributes[name];
+
+                    if (!defined(otherAttribute) ||
+                        (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
+                        (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
+                        (attribute.normalize !== otherAttribute.normalize)) {
+
+                        inAllInstances = false;
+                        break;
+                    }
+                }
+
+                if (inAllInstances) {
+                    attributesInAllInstances.push(name);
+                }
+            }
+        }
+
+        return attributesInAllInstances;
+    }
+
+    var scratchGetAttributeCartesian2 = new Cartesian2();
+    var scratchGetAttributeCartesian3 = new Cartesian3();
+    var scratchGetAttributeCartesian4 = new Cartesian4();
+
+    function getAttributeValue(attribute) {
+        var componentsPerAttribute = attribute.componentsPerAttribute;
+        var value = attribute.value;
+        if (componentsPerAttribute === 1) {
+            return value[0];
+        } else if (componentsPerAttribute === 2) {
+            return Cartesian2.unpack(value, 0, scratchGetAttributeCartesian2);
+        } else if (componentsPerAttribute === 3) {
+            return Cartesian3.unpack(value, 0, scratchGetAttributeCartesian3);
+        } else if (componentsPerAttribute === 4) {
+            return Cartesian4.unpack(value, 0, scratchGetAttributeCartesian4);
+        }
+    }
+
+    function createBatchTable(primitive, context) {
+        var geometryInstances = primitive.geometryInstances;
+        var instances = (isArray(geometryInstances)) ? geometryInstances : [geometryInstances];
+        var numberOfInstances = instances.length;
+        if (numberOfInstances === 0) {
+            return;
+        }
+
+        var names = getCommonPerInstanceAttributeNames(instances);
+        var length = names.length;
+
+        var allowPicking = primitive.allowPicking;
+        var attributesLength = allowPicking ? length + 1 : length;
+        var attributes = new Array(attributesLength);
+        var attributeIndices = {};
+
+        var firstInstance = instances[0];
+        var instanceAttributes = firstInstance.attributes;
+
+        var i;
+        var name;
+        var attribute;
+
+        for (i = 0; i < length; ++i) {
+            name = names[i];
+            attribute = instanceAttributes[name];
+
+            attributeIndices[name] = i;
+            attributes[i] = {
+                functionName : 'czm_batchTable_' + name,
+                componentDatatype : attribute.componentDatatype,
+                componentsPerAttribute : attribute.componentsPerAttribute,
+                normalize : attribute.normalize
+            };
+        }
+
+        if (allowPicking) {
+            attributes[attributesLength - 1] = {
+                functionName : 'czm_batchTable_pickColor',
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 4,
+                normalize : true
+            };
+        }
+
+        var batchTable = new BatchTable(attributes, numberOfInstances);
+
+        for (i = 0; i < numberOfInstances; ++i) {
+            var instance = instances[i];
+            instanceAttributes = instance.attributes;
+
+            for (var j = 0; j < length; ++j) {
+                name = names[j];
+                attribute = instanceAttributes[name];
+                var value = getAttributeValue(attribute);
+                var attributeIndex = attributeIndices[name];
+                batchTable.setBatchedAttribute(i, attributeIndex, value);
+            }
+
+            if (allowPicking) {
+                var pickObject = {
+                    primitive : defaultValue(instance.pickPrimitive, primitive)
+                };
+
+                if (defined(instance.id)) {
+                    pickObject.id = instance.id;
+                }
+
+                var pickId = context.createPickId(pickObject);
+                primitive._pickIds.push(pickId);
+
+                var pickColor = pickId.color;
+                var color = scratchGetAttributeCartesian4;
+                color.x = Color.floatToByte(pickColor.red);
+                color.y = Color.floatToByte(pickColor.green);
+                color.z = Color.floatToByte(pickColor.blue);
+                color.w = Color.floatToByte(pickColor.alpha);
+
+                batchTable.setBatchedAttribute(i, attributesLength - 1, color);
+            }
+        }
+
+        primitive._batchTable = batchTable;
+        primitive._batchTableAttributeIndices = attributeIndices;
+    }
+
     function cloneAttribute(attribute) {
         var clonedValues;
         if (isArray(attribute.values)) {
@@ -667,21 +815,37 @@ define([
     };
 
     Primitive._appendShowToShader = function(primitive, vertexShaderSource) {
-        if (!defined(primitive._attributeLocations.show)) {
+        if (!defined(primitive._batchTableAttributeIndices.show)) {
             return vertexShaderSource;
         }
 
         var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_show_main');
         var showMain =
-            'attribute float show;\n' +
             'void main() \n' +
             '{ \n' +
             '    czm_non_show_main(); \n' +
-            '    gl_Position *= show; \n' +
+            '    gl_Position *= czm_batchTable_show; \n' +
             '}';
 
         return renamedVS + '\n' + showMain;
     };
+
+    function updateColorAttribute(primitive, vertexShaderSource) {
+        // some appearances have a color attribute for per vertex color.
+        // only remove if color is a per instance attribute.
+        if (!defined(primitive._batchTableAttributeIndices.color)) {
+            return vertexShaderSource;
+        }
+
+        if (vertexShaderSource.search(/attribute\s+vec4\s+color;/g) === -1) {
+            return vertexShaderSource;
+        }
+
+        var modifiedVS = vertexShaderSource;
+        modifiedVS = modifiedVS.replace(/attribute\s+vec4\s+color;/g, '');
+        modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_color(batchId)$2');
+        return modifiedVS;
+    }
 
     function modifyForEncodedNormals(primitive, vertexShaderSource) {
         if (!primitive.compressVertices) {
@@ -1149,17 +1313,24 @@ define([
 
         var attributeLocations = primitive._attributeLocations;
 
-        var vs = Primitive._modifyShaderPosition(primitive, appearance.vertexShaderSource, frameState.scene3DOnly);
+        var vs = primitive._batchTable.getVertexShaderCallback()(appearance.vertexShaderSource);
+        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive, vs);
+        vs = updateColorAttribute(primitive, vs);
         vs = modifyForEncodedNormals(primitive, vs);
         var fs = appearance.getFragmentShaderSource();
 
         // Create pick program
         if (primitive.allowPicking) {
+            var vsPick = ShaderSource.createPickVertexShaderSource(vs);
+
+            vsPick = vsPick.replace(/attribute\s+vec4\s+pickColor;/g, '');
+            vsPick = vsPick.replace(/(\b)pickColor(\b)/g, '$1czm_batchTable_pickColor(batchId)$2');
+
             primitive._pickSP = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : primitive._pickSP,
-                vertexShaderSource : ShaderSource.createPickVertexShaderSource(vs),
+                vertexShaderSource : vsPick,
                 fragmentShaderSource : ShaderSource.createPickFragmentShaderSource(fs, 'varying'),
                 attributeLocations : attributeLocations
             });
@@ -1205,6 +1376,7 @@ define([
             }
         }
         var uniforms = combine(appearanceUniformMap, materialUniformMap);
+        uniforms = primitive._batchTable.getUniformMapCallback()(uniforms);
 
         if (defined(primitive.rtcCenter)) {
             uniforms.u_modifiedModelView = function() {
@@ -1439,6 +1611,11 @@ define([
         if (this._state === PrimitiveState.COMBINED) {
             createVertexArray(this, frameState);
         }
+
+        if (!defined(this._batchTable)) {
+            createBatchTable(this, frameState.context);
+        }
+        this._batchTable.update(frameState);
 
         if (!this.show || this._state !== PrimitiveState.COMPLETE) {
             return;

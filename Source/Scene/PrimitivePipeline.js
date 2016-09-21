@@ -109,6 +109,37 @@ define([
         }
     }
 
+    function addGeometryBatchId(geometry, batchId) {
+        var attributes = geometry.attributes;
+        var positionAttr = attributes.position;
+        var numberOfComponents = positionAttr.values.length / positionAttr.componentsPerAttribute;
+
+        attributes.batchId = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 1,
+            values : new Float32Array(numberOfComponents)
+        });
+
+        var values = attributes.batchId.values;
+        for (var j = 0; j < numberOfComponents; ++j) {
+            values[j] = batchId;
+        }
+    }
+
+    function addBatchIds(instances) {
+        var length = instances.length;
+
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
+            if (defined(instance.geometry)) {
+                addGeometryBatchId(instance.geometry, i);
+            } else {
+                addGeometryBatchId(instance.westHemisphereGeometry, i);
+                addGeometryBatchId(instance.eastHemisphereGeometry, i);
+            }
+        }
+    }
+
     function getCommonPerInstanceAttributeNames(instances) {
         var length = instances.length;
 
@@ -217,6 +248,8 @@ define([
                 GeometryPipeline.splitLongitude(instances[i]);
             }
         }
+
+        addBatchIds(instances);
 
         // Add pickColor attribute for picking individual instances
         if (allowPicking) {
