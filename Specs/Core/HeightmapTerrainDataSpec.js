@@ -247,11 +247,17 @@ defineSuite([
              });
          });
 
-         it('upsample clamps negative data', function() {
+         it('upsample clamps out of range data', function() {
              data = new HeightmapTerrainData({
                  buffer : new Float32Array([-1.0, -2.0, -3.0, -4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]),
                  width : 4,
-                 height : 4
+                 height : 4,
+                 structure : {
+                     stride: 1,
+                     elementsPerHeight: 1,
+                     lowestEncodedHeight : 1,
+                     highestEncodedHeight : 7
+                 }
              });
 
              return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
@@ -260,7 +266,7 @@ defineSuite([
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
-                 expect(upsampled._buffer).toEqual([0, 0, 0, 0, 2, 1.5, 2, 1.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5]);
+                 expect(upsampled._buffer).toEqual([1, 1, 1, 1, 2, 1.5, 2, 1.5, 5, 5.5, 6, 6.5, 7, 7, 7, 7]);
              });
          });
      });
