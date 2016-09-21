@@ -27,6 +27,11 @@ void main()
     float width = widthAndShow.x + 0.5;
     float show = widthAndShow.y;
 
+    if (width < 1.0)
+    {
+        show = 0.0;
+    }
+
     vec4 pickColor = batchTable_getPickColor(batchTableIndex);
     
     vec4 p, prev, next;
