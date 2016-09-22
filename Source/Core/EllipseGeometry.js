@@ -741,6 +741,8 @@ define([
      * @param {EllipseGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     EllipseGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -774,6 +776,8 @@ define([
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex] = value._extrude ? 1.0 : 0.0;
+
+        return array;
     };
 
     var scratchCenter = new Cartesian3();

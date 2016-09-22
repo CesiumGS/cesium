@@ -11,6 +11,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
@@ -47,7 +48,7 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './getModelAccessor',
+        './getBinaryAccessor',
         './HeightReference',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -56,7 +57,8 @@ define([
         './ModelMesh',
         './ModelNode',
         './Pass',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -69,6 +71,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         FeatureDetection,
@@ -105,7 +108,7 @@ define([
         gltfDefaults,
         Uri,
         when,
-        getModelAccessor,
+        getBinaryAccessor,
         HeightReference,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -114,7 +117,8 @@ define([
         ModelMesh,
         ModelNode,
         Pass,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -311,8 +315,9 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
-     * @param {Boolean} [options.castShadows=true] Determines whether the model casts shadows from each light source.
-     * @param {Boolean} [options.receiveShadows=true] Determines whether the model receives shadows from shadow casters in the scene.
+     * @param {Boolean} [options.castShadows=true] Deprecated, use options.shadows instead. Determines whether the model casts shadows from each light source.
+     * @param {Boolean} [options.receiveShadows=true] Deprecated, use options.shadows instead. Determines whether the model receives shadows from shadow casters in the scene.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
@@ -502,25 +507,19 @@ define([
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
 
-        /**
-         * Determines whether the model casts shadows from each light source.
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         */
-        this.castShadows = defaultValue(options.castShadows, true);
-        this._castShadows = this.castShadows;
+        // Deprecated options
+        var castShadows = defaultValue(options.castShadows, true);
+        var receiveShadows = defaultValue(options.receiveShadows, true);
 
         /**
-         * Determines whether the model receives shadows from shadow casters in the scene.
+         * Determines whether the model casts or receives shadows from each light source.
          *
-         * @type {Boolean}
+         * @type {ShadowMode}
          *
-         * @default true
+         * @default ShadowMode.ENABLED
          */
-        this.receiveShadows = defaultValue(options.receiveShadows, true);
-        this._receiveShadows = this.receiveShadows;
+        this.shadows = defaultValue(options.shadows, ShadowMode.fromCastReceive(castShadows, receiveShadows));
+        this._shadows = this.shadows;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -868,6 +867,50 @@ define([
             get : function() {
                 return this._dirty;
             }
+        },
+
+        /**
+         * Determines whether the model casts shadows from each light source.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         *
+         * @deprecated
+         */
+        castShadows : {
+            get : function() {
+                deprecationWarning('Model.castShadows', 'Model.castShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Model.shadows instead.');
+                return ShadowMode.castShadows(this.shadows);
+            },
+            set : function(value) {
+                deprecationWarning('Model.castShadows', 'Model.castShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Model.shadows instead.');
+                var castShadows = value;
+                var receiveShadows = ShadowMode.receiveShadows(this.shadows);
+                this.shadows = ShadowMode.fromCastReceive(castShadows, receiveShadows);
+            }
+        },
+
+        /**
+         * Determines whether the model receives shadows from shadow casters in the scene.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         *
+         * @deprecated
+         */
+        receiveShadows : {
+            get : function() {
+                deprecationWarning('Model.receiveShadows', 'Model.receiveShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Model.shadows instead.');
+                return ShadowMode.receiveShadows(this.shadows);
+            },
+            set : function(value) {
+                deprecationWarning('Model.receiveShadows', 'Model.receiveShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Model.shadows instead.');
+                var castShadows = ShadowMode.castShadows(this.shadows);
+                var receiveShadows = value;
+                this.shadows = ShadowMode.fromCastReceive(castShadows, receiveShadows);
+            }
         }
     });
 
@@ -946,8 +989,7 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
-     * @param {Boolean} [options.castShadows=true] Determines whether the model casts shadows from each light source.
-     * @param {Boolean} [options.receiveShadows=true] Determines whether the model receives shadows from shadow casters in the scene.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -1629,7 +1671,7 @@ define([
         }
         return undefined;
     }
-    
+
     function modifyShaderForQuantizedAttributes(shader, programName, model, context) {
         var quantizedUniforms = {};
         model._quantizedUniforms[programName] = quantizedUniforms;
@@ -2172,7 +2214,7 @@ define([
                                 attributes.push({
                                     index : attributeLocation,
                                     vertexBuffer : rendererBuffers[a.bufferView],
-                                    componentsPerAttribute : getModelAccessor(a).componentsPerAttribute,
+                                    componentsPerAttribute : getBinaryAccessor(a).componentsPerAttribute,
                                     componentDatatype : a.componentType,
                                     normalize : false,
                                     offsetInBytes : a.byteOffset,
@@ -2386,7 +2428,7 @@ define([
         },
         MODELINVERSETRANSPOSE : function(uniformState, model) {
             return function() {
-                return uniformState.inverseTranposeModel;
+                return uniformState.inverseTransposeModel;
             };
         },
         MODELVIEWINVERSETRANSPOSE : function(uniformState, model) {
@@ -2880,7 +2922,7 @@ define([
                 else {
                     var positions = accessors[primitive.attributes.POSITION];
                     count = positions.count;
-                    var accessorInfo = getModelAccessor(positions);
+                    var accessorInfo = getBinaryAccessor(positions);
                     offset = (positions.byteOffset / (accessorInfo.componentsPerAttribute*ComponentDatatype.getSizeInBytes(positions.componentType)));
                 }
 
@@ -2915,6 +2957,9 @@ define([
                     mesh : runtimeMeshesByName[mesh.name]
                 };
 
+                var castShadows = ShadowMode.castShadows(model._shadows);
+                var receiveShadows = ShadowMode.receiveShadows(model._shadows);
+                
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     cull : model.cull,
@@ -2924,8 +2969,8 @@ define([
                     count : count,
                     offset : offset,
                     shaderProgram : rendererPrograms[technique.program],
-                    castShadows : model._castShadows,
-                    receiveShadows : model._receiveShadows,
+                    castShadows : castShadows,
+                    receiveShadows : receiveShadows,
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
@@ -3353,12 +3398,11 @@ define([
     }
 
     function updateShadows(model) {
-        if ((model.castShadows !== model._castShadows) || (model.receiveShadows !== model._receiveShadows)) {
-            model._castShadows = model.castShadows;
-            model._receiveShadows = model.receiveShadows;
+        if (model.shadows !== model._shadows) {
+            model._shadows = model.shadows;
 
-            var castShadows = model.castShadows;
-            var receiveShadows = model.receiveShadows;
+            var castShadows = ShadowMode.castShadows(model.shadows);
+            var receiveShadows = ShadowMode.receiveShadows(model.shadows);
             var nodeCommands = model._nodeCommands;
             var length = nodeCommands.length;
 

@@ -1,10 +1,45 @@
 Change Log
 ==========
 
+### 1.25 - 2016-09-01
+* Breaking changes
+    * The number and order of arguments passed to `KmlDataSource` `unsupportedNodeEvent` listeners have changed to allow better handling of unsupported KML Features.
+    * Changed billboards and labels that are clamped to terrain to have the `verticalOrigin` set to `CENTER` by default instead of `BOTTOM`.
+* Deprecated
+    * Deprecated `castShadows` and `receiveShadows` properties from `Model`, `Primitive`, and `Globe`. They will be removed in 1.26. Use `shadows` instead with the `ShadowMode` enum, e.g. `model.shadows = ShadowMode.ENABLED`.
+    * `Viewer.terrainShadows` now uses the `ShadowMode` enum instead of a Boolean, e.g. `viewer.terrainShadows = ShadowMode.RECEIVE_ONLY`. Boolean support will be removed in 1.26.
+* Updated the online [model converter](http://cesiumjs.org/convertmodel.html) to convert OBJ models to glTF with [obj2gltf](https://github.com/AnalyticalGraphicsInc/OBJ2GLTF), as well as optimize existing glTF models with the [gltf-pipeline](https://github.com/AnalyticalGraphicsInc/gltf-pipeline).  Added an option to bake ambient occlusion onto the glTF model.  Also added an option to compress geometry using the glTF [WEB3D_quantized_attributes](https://github.com/KhronosGroup/glTF/blob/master/extensions/Vendor/WEB3D_quantized_attributes/README.md) extension.
+* Improve label quality for oblique and italic fonts. [#3782](https://github.com/AnalyticalGraphicsInc/cesium/issues/3782)
+* Added `shadows` property to the entity API for `Box`, `Corridor`, `Cylinder`, `Ellipse`, `Ellipsoid`, `Polygon`, `Polyline`, `PoylineVolume`, `Rectangle`, and `Wall`. [#4005](https://github.com/AnalyticalGraphicsInc/cesium/pull/4005)
+* Added `Camera.cancelFlight` to cancel the existing camera flight if it exists.
+* Fix overlapping camera flights by always cancelling the previous flight when a new one is created.
+* Camera flights now disable collision with the terrain until all of the terrain in the area has finished loading. This prevents the camera from being moved to be above lower resolution terrain when flying to a position close to higher resolution terrain. [#4075](https://github.com/AnalyticalGraphicsInc/cesium/issues/4075)
+* Fixed a crash that would occur if quickly toggling imagery visibility. [#4083](https://github.com/AnalyticalGraphicsInc/cesium/issues/4083)
+* Fixed an issue causing an error if KML has a clamped to ground LineString with color. [#4131](https://github.com/AnalyticalGraphicsInc/cesium/issues/4131)
+* Added logic to `KmlDataSource` defaulting KML Feature node to hidden unless all ancestors are visible. This better matches the KML specification.
+* Fixed position of KML point features with an altitude mode of `relativeToGround` and `clampToGround`.
+* Added `GeocoderViewModel.keepExpanded` which when set to true will always keep the Geocoder in its expanded state.
+* Added support for `INT` and `UNSIGNED_INT` in `ComponentDatatype`.
+* Added `ComponentDatatype.fromName` for getting a `ComponentDatatype` from its name.
+* Fixed a crash caused by draping dynamic geometry over terrain. [#4255](https://github.com/AnalyticalGraphicsInc/cesium/pull/4255)
+
+### 1.24 - 2016-08-01
+
+* Added support in CZML for expressing `BillboardGraphics.alignedAxis` as the velocity vector of an entity, using `velocityReference` syntax.
+* Added `urlSchemeZeroPadding` property to `UrlTemplateImageryProvider` to allow the numeric parts of a URL, such as `{x}`, to be padded with zeros to make them a fixed width.
+* Added leap second just prior to January 2017. [#4092](https://github.com/AnalyticalGraphicsInc/cesium/issues/4092)
+* Fixed an exception that would occur when switching to 2D view when shadows are enabled. [#4051](https://github.com/AnalyticalGraphicsInc/cesium/issues/4051)
+* Fixed an issue causing entities to disappear when updating multiple entities simultaneously. [#4096](https://github.com/AnalyticalGraphicsInc/cesium/issues/4096)
+* Normalizing the velocity vector produced by `VelocityVectorProperty` is now optional.
+* Pack functions now return the result array  [#4156](https://github.com/AnalyticalGraphicsInc/cesium/pull/4156)
+* Added optional `rangeMax` parameter to `Math.toSNorm` and `Math.fromSNorm`. [#4121](https://github.com/AnalyticalGraphicsInc/cesium/pull/4121)
+* Removed `MapQuest OpenStreetMap` from the list of demo base layers since direct tile access has been discontinued.  See the [MapQuest Developer Blog](http://devblog.mapquest.com/2016/06/15/modernization-of-mapquest-results-in-changes-to-open-tile-access/) for details.
+* Fixed PolylinePipeline.generateArc to accept an array of heights when there's only one position [#4155](https://github.com/AnalyticalGraphicsInc/cesium/pull/4155)
+
 ### 1.23 - 2016-07-01
 
 * Breaking changes
-    * `GroundPrimitive.initializeTerrainHeights()` must be called and have the returned promise resolve before a `GroundPrimitive` can be added syncronously.
+    * `GroundPrimitive.initializeTerrainHeights()` must be called and have the returned promise resolve before a `GroundPrimitive` can be added synchronously.
 * Added terrain clamping to entities, KML, and GeoJSON
     * Added `heightReference` property to point, billboard and model entities.
     * Changed corridor, ellipse, polygon and rectangle entities to conform to terrain by using a `GroundPrimitive` if its material is a `ColorMaterialProperty` instance and it doesn't have a `height` or `extrudedHeight`. Entities with any other type of material are not clamped to terrain.
@@ -18,8 +53,7 @@ Change Log
 * Improved performance and accuracy of polygon triangulation by using the [earcut](https://github.com/mapbox/earcut) library. Loading a GeoJSON with polygons for each country was 2x faster.
 * Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
 * Added support for the glTF extension [WEB3D_quantized_attributes](https://github.com/KhronosGroup/glTF/blob/master/extensions/Vendor/WEB3D_quantized_attributes/README.md). [#3241](https://github.com/AnalyticalGraphicsInc/cesium/issues/3241)
-* Updated the online [model converter](http://cesiumjs.org/convertmodel.html) to convert OBJ model to glTF with [obj2gltf](https://github.com/AnalyticalGraphicsInc/OBJ2GLTF), as well as optimize existing glTF models with the [gltf-pipeline](https://github.com/AnalyticalGraphicsInc/gltf-pipeline).
-* Added CZML support for `Box`, `Corridor` and `Cylinder`.  Added new CZML properties: 
+* Added CZML support for `Box`, `Corridor` and `Cylinder`.  Added new CZML properties:
     * `Billboard`: `width`, `height`, `heightReference`, `scaleByDistance`, `translucencyByDistance`, `pixelOffsetScaleByDistance`, `imageSubRegion`
     * `Label`: `heightReference`, `translucencyByDistance`, `pixelOffsetScaleByDistance`
     * `Model`: `heightReference`, `maximumScale`
