@@ -803,7 +803,7 @@ define([
         return renamedVS + '\n' + showMain;
     };
 
-    function updateColorAttribute(primitive, vertexShaderSource) {
+    Primitive._updateColorAttribute = function(primitive, vertexShaderSource) {
         // some appearances have a color attribute for per vertex color.
         // only remove if color is a per instance attribute.
         if (!defined(primitive._batchTableAttributeIndices.color)) {
@@ -818,7 +818,13 @@ define([
         modifiedVS = modifiedVS.replace(/attribute\s+vec4\s+color;/g, '');
         modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_color(batchId)$2');
         return modifiedVS;
-    }
+    };
+
+    Primitive._updatePickColorAttribute = function(source) {
+        var vsPick = source.replace(/attribute\s+vec4\s+pickColor;/g, '');
+        vsPick = vsPick.replace(/(\b)pickColor(\b)/g, '$1czm_batchTable_pickColor(batchId)$2');
+        return vsPick;
+    };
 
     function modifyForEncodedNormals(primitive, vertexShaderSource) {
         if (!primitive.compressVertices) {
@@ -1214,16 +1220,14 @@ define([
         var vs = primitive._batchTable.getVertexShaderCallback()(appearance.vertexShaderSource);
         vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive, vs);
-        vs = updateColorAttribute(primitive, vs);
+        vs = Primitive._updateColorAttribute(primitive, vs);
         vs = modifyForEncodedNormals(primitive, vs);
         var fs = appearance.getFragmentShaderSource();
 
         // Create pick program
         if (primitive.allowPicking) {
             var vsPick = ShaderSource.createPickVertexShaderSource(vs);
-
-            vsPick = vsPick.replace(/attribute\s+vec4\s+pickColor;/g, '');
-            vsPick = vsPick.replace(/(\b)pickColor(\b)/g, '$1czm_batchTable_pickColor(batchId)$2');
+            vsPick = Primitive._updatePickColorAttribute(vsPick);
 
             primitive._pickSP = ShaderProgram.replaceCache({
                 context : context,
