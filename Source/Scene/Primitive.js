@@ -700,12 +700,12 @@ define([
     }
 
     function cloneInstance(instance, geometry) {
-        return new GeometryInstance({
+        return {
             geometry : geometry,
             modelMatrix : Matrix4.clone(instance.modelMatrix),
             pickPrimitive : instance.pickPrimitive,
             id : instance.id
-        });
+        };
     }
 
     var positionRegex = /attribute\s+vec(?:3|4)\s+(.*)3DHigh;/g;
@@ -1034,7 +1034,7 @@ define([
                 primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
                 primitive._pickOffsets = result.pickOffsets;
 
-                if (defined(primitive._geometries)) {
+                if (defined(primitive._geometries) && primitive._geometries.length > 0) {
                     primitive._state = PrimitiveState.COMBINED;
                 } else {
                     setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
@@ -1066,10 +1066,7 @@ define([
                 createdGeometry = geometry.constructor.createGeometry(geometry);
             }
 
-            if (defined(createdGeometry)) {
-                clonedInstances[geometryIndex++] = cloneInstance(instance, createdGeometry);
-            }
-
+            clonedInstances[geometryIndex++] = cloneInstance(instance, createdGeometry);
             instanceIds.push(instance.id);
         }
 
@@ -1095,7 +1092,7 @@ define([
         primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
         primitive._pickOffsets = result.pickOffsets;
 
-        if (defined(primitive._geometries)) {
+        if (defined(primitive._geometries) && primitive._geometries.length > 0) {
             primitive._state = PrimitiveState.COMBINED;
         } else {
             setReady(primitive, frameState, PrimitiveState.FAILED, undefined);

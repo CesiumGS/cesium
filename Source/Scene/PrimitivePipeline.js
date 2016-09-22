@@ -59,6 +59,9 @@ define([
 
         if (toWorld) {
             for (i = 0; i < length; ++i) {
+                if (!defined(instances[i].geometry)) {
+                    continue;
+                }
                 GeometryPipeline.transformToWorldCoordinates(instances[i]);
             }
         } else {
@@ -91,7 +94,7 @@ define([
             var instance = instances[i];
             if (defined(instance.geometry)) {
                 addGeometryBatchId(instance.geometry, i);
-            } else {
+            } else if (defined(instance.westHemisphereGeometry) && defined(instance.eastHemisphereGeometry)) {
                 addGeometryBatchId(instance.westHemisphereGeometry, i);
                 addGeometryBatchId(instance.eastHemisphereGeometry, i);
             }
@@ -109,12 +112,19 @@ define([
 
         var i;
         var geometry;
+        var primitiveType;
         var length = instances.length;
-        var primitiveType = instances[0].geometry.primitiveType;
+
+        for (i = 0 ; i < length; ++i) {
+            if (defined(instances[i].geometry)) {
+                primitiveType = instances[i].geometry.primitiveType;
+                break;
+            }
+        }
 
         //>>includeStart('debug', pragmas.debug);
         for (i = 1; i < length; ++i) {
-            if (instances[i].geometry.primitiveType !== primitiveType) {
+            if (defined(instances[i].geometry) && instances[i].geometry.primitiveType !== primitiveType) {
                 throw new DeveloperError('All instance geometries must have the same primitiveType.');
             }
         }
@@ -126,6 +136,9 @@ define([
         // Clip to IDL
         if (!scene3DOnly) {
             for (i = 0; i < length; ++i) {
+                if (!defined(instances[i].geometry)) {
+                    continue;
+                }
                 GeometryPipeline.splitLongitude(instances[i]);
             }
         }
@@ -139,7 +152,7 @@ define([
                 if (defined(instance.geometry)) {
                     GeometryPipeline.reorderForPostVertexCache(instance.geometry);
                     GeometryPipeline.reorderForPreVertexCache(instance.geometry);
-                } else {
+                } else if (defined(instance.westHemisphereGeometry) && defined(instance.eastHemisphereGeometry)) {
                     GeometryPipeline.reorderForPostVertexCache(instance.westHemisphereGeometry);
                     GeometryPipeline.reorderForPreVertexCache(instance.westHemisphereGeometry);
 
@@ -268,11 +281,13 @@ define([
 
         if (instances.length > 0) {
             geometries = geometryPipeline(parameters);
-            attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
+            if (geometries.length > 0) {
+                attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
+            }
         }
 
         var pickOffsets;
-        if (parameters.createPickOffsets && defined(geometries)) {
+        if (parameters.createPickOffsets && geometries.length > 0) {
             pickOffsets = createInstancePickOffsets(instances, geometries);
         }
 
@@ -280,7 +295,6 @@ define([
             geometries : geometries,
             modelMatrix : parameters.modelMatrix,
             attributeLocations : attributeLocations,
-            invalidInstancesIndices : parameters.invalidInstancesIndices,
             pickOffsets : pickOffsets
         };
     };
@@ -572,7 +586,6 @@ define([
         var createGeometryResults = packedParameters.createGeometryResults;
         var length = createGeometryResults.length;
         var instanceIndex = 0;
-        var invalidInstancesIndices = [];
 
         for (var resultIndex = 0; resultIndex < length; resultIndex++) {
             var geometries = PrimitivePipeline.unpackCreateGeometryResults(createGeometryResults[resultIndex]);
@@ -580,13 +593,7 @@ define([
             for (var geometryIndex = 0; geometryIndex < geometriesLength; geometryIndex++) {
                 var geometry = geometries[geometryIndex];
                 var instance = instances[instanceIndex];
-
-                if (defined(geometry)) {
-                    instance.geometry = geometry;
-                } else {
-                    invalidInstancesIndices.push(instanceIndex);
-                }
-
+                instance.geometry = geometry;
                 ++instanceIndex;
             }
         }
@@ -596,7 +603,6 @@ define([
 
         return {
             instances : instances,
-            invalidInstancesIndices : invalidInstancesIndices,
             ellipsoid : ellipsoid,
             projection : projection,
             elementIndexUintSupported : packedParameters.elementIndexUintSupported,
@@ -620,7 +626,6 @@ define([
             geometries : results.geometries,
             attributeLocations : results.attributeLocations,
             modelMatrix : results.modelMatrix,
-            invalidInstancesIndices : results.invalidInstancesIndices,
             pickOffsets : results.pickOffsets
         };
     };

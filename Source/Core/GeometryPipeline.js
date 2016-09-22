@@ -1033,7 +1033,7 @@ define([
             var instance = instances[i];
             if (defined(instance.geometry)) {
                 instanceGeometry.push(instance);
-            } else {
+            } else if (defined(instance.westHemisphereGeometry) && defined(instance.eastHemisphereGeometry)) {
                 instanceSplitGeometry.push(instance);
             }
         }
