@@ -9,6 +9,7 @@ Change Log
 * Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
 * Fixed touch events for the timeline [#4305](https://github.com/AnalyticalGraphicsInc/cesium/pull/4305)
 * Removed the default gamma correction for Bing Maps aerial imagery, because we no longer think it is an improvement in current versions of the tiles.  To restore the previous look, set the `defaultGamma` property of your `BingMapsImageryProvider` instance to 1.3.
+* Fixed a bug that could lead to incorrect terrain heights when using `HeightmapTerrainData` with an encoding in which actual heights were equal to the minimum representable height.
 * Fixed a bug in `AttributeCompression.compressTextureCoordinates` and `decompressTextureCoordinates` that could cause a small inaccuracy in the encoded texture coordinates.
 
 ### 1.25 - 2016-09-01
