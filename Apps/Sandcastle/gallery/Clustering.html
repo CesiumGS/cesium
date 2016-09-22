@@ -117,7 +117,9 @@ dataSourcePromise.then(function(dataSource) {
         } else {
             removeListener = dataSource.clustering.clusterEvent.addEventListener(function(cluster, entity) {
                 entity.label = undefined;
-                entity.billboard = {};
+                entity.billboard = {
+                    verticalOrigin : Cesium.VerticalOrigin.BOTTOM
+                };
 
                 if (cluster.length >= 50) {
                     entity.billboard.image = pin50;

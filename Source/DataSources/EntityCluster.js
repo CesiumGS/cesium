@@ -91,6 +91,7 @@ define([
         this._enabledDirty = false;
         this._pixelRangeDirty = false;
         this._minimumClusterSizeDirty = false;
+        this._clusterDirty = false;
 
         this._cluster = undefined;
         this._removeEventListener = undefined;
@@ -126,7 +127,7 @@ define([
 
         expandBoundingBox(result, pixelRange);
 
-        if (!defined(item._labelCollection) && defined(item.id._label)) {
+        if (!defined(item._labelCollection) && defined(item.id._label) && defined(entityCluster._labelCollection)) {
             var labelIndex = item.id._labelIndex;
             var label = entityCluster._labelCollection.get(labelIndex);
             var labelBBox = Label.getScreenSpaceBoundingBox(label, coord, labelBoundingBoxScratch);
@@ -539,6 +540,9 @@ define([
         }
 
         entity._labelIndex = index;
+
+        this._clusterDirty = true;
+
         return label;
     };
 
@@ -561,6 +565,8 @@ define([
         label.id = undefined;
 
         this._unusedLabelIndices.push(index);
+
+        this._clusterDirty = true;
     };
 
     /**
@@ -595,6 +601,9 @@ define([
         }
 
         entity._billboardIndex = index;
+
+        this._clusterDirty = true;
+
         return billboard;
     };
 
@@ -618,6 +627,8 @@ define([
         billboard.image = undefined;
 
         this._unusedBillboardIndices.push(index);
+
+        this._clusterDirty = true;
     };
 
     /**
@@ -650,6 +661,9 @@ define([
         }
 
         entity._pointIndex = index;
+
+        this._clusterDirty = true;
+
         return point;
     };
 
@@ -672,6 +686,8 @@ define([
         point.id = undefined;
 
         this._unusedPointIndices.push(index);
+
+        this._clusterDirty = true;
     };
 
     function disableCollectionClustering(collection) {
@@ -687,7 +703,6 @@ define([
 
     function updateEnable(entityCluster) {
         if (entityCluster.enabled) {
-            entityCluster._cluster();
             return;
         }
 
@@ -726,19 +741,21 @@ define([
             frameState.commandList = commandList;
         }
 
-        var clustered = false;
         if (this._enabledDirty) {
             this._enabledDirty = false;
             updateEnable(this);
-            clustered = this._enabled;
+            this._clusterDirty = true;
         }
 
         if (this._pixelRangeDirty || this._minimumClusterSizeDirty) {
             this._pixelRangeDirty = false;
             this._minimumClusterSizeDirty = false;
-            if (!clustered) {
-                this._cluster();
-            }
+            this._clusterDirty = true;
+        }
+
+        if (this._clusterDirty) {
+            this._clusterDirty = false;
+            this._cluster();
         }
 
         if (defined(this._clusterLabelCollection)) {
