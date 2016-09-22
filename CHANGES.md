@@ -11,7 +11,7 @@ Change Log
 * Removed the default gamma correction for Bing Maps aerial imagery, because we no longer think it is an improvement in current versions of the tiles.  To restore the previous look, set the `defaultGamma` property of your `BingMapsImageryProvider` instance to 1.3.
 * Added `Rectangle.simpleIntersection`.
 * Fixed a bug that could lead to incorrect terrain heights when using `HeightmapTerrainData` with an encoding in which actual heights were equal to the minimum representable height.
-* Removed an unnecessary reprojection of Web Mercator imagery tiles to the Geographic projection on load.  This should improve both visual quality and performance slightly.
+* Removed an unnecessary reprojection of Web Mercator imagery tiles to the Geographic projection on load.  This should improve both visual quality and load performance slightly.
 
 ### 1.25 - 2016-09-01
 
