@@ -278,8 +278,9 @@ define([
         var geometries;
         var attributeLocations;
         var instances = parameters.instances;
+        var length = instances.length;
 
-        if (instances.length > 0) {
+        if (length > 0) {
             geometries = geometryPipeline(parameters);
             if (geometries.length > 0) {
                 attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
@@ -291,11 +292,35 @@ define([
             pickOffsets = createInstancePickOffsets(instances, geometries);
         }
 
+        var boundingSpheres = new Array(length);
+        var boundingSpheresCV = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
+            var geometry = instance.geometry;
+            if (defined(geometry)) {
+                boundingSpheres[i] = geometry.boundingSphere;
+                boundingSpheresCV[i] = geometry.boundingSphereCV;
+            }
+
+            var eastHemisphereGeometry = instance.eastHemisphereGeometry;
+            var westHemisphereGeometry = instance.westHemisphereGeometry;
+            if (defined(eastHemisphereGeometry) && defined(westHemisphereGeometry)) {
+                if (defined(eastHemisphereGeometry.boundingSphere) && defined(westHemisphereGeometry.boundingSphere)) {
+                    boundingSpheres[i] = BoundingSphere.union(eastHemisphereGeometry.boundingSphere, westHemisphereGeometry.boundingSphere);
+                }
+                if (defined(eastHemisphereGeometry.boundingSphereCV) && defined(westHemisphereGeometry.boundingSphereCV)) {
+                    boundingSpheresCV[i] = BoundingSphere.union(eastHemisphereGeometry.boundingSphereCV, westHemisphereGeometry.boundingSphereCV);
+                }
+            }
+        }
+
         return {
             geometries : geometries,
             modelMatrix : parameters.modelMatrix,
             attributeLocations : attributeLocations,
-            pickOffsets : pickOffsets
+            pickOffsets : pickOffsets,
+            boundingSpheres : boundingSpheres,
+            boundingSpheresCV : boundingSpheresCV
         };
     };
 
@@ -511,6 +536,7 @@ define([
                 primitiveType : primitiveType,
                 geometryType : geometryType,
                 boundingSphere : boundingSphere,
+                boundingSphereCV : boundingSphereCV,
                 indices : indices,
                 attributes : attributes
             });
@@ -614,6 +640,43 @@ define([
         };
     };
 
+    function packBoundingSpheres(boundingSpheres) {
+        var length = boundingSpheres.length;
+        var bufferLength = 1 + (BoundingSphere.packedLength + 1) * length;
+        var buffer = new Float32Array(bufferLength);
+
+        var bufferIndex = 0;
+        buffer[bufferIndex++] = length;
+
+        for (var i = 0; i < length; ++i) {
+            var bs = boundingSpheres[i];
+            if (!defined(bs)) {
+                buffer[bufferIndex++] = 0.0;
+            } else {
+                buffer[bufferIndex++] = 1.0;
+                BoundingSphere.pack(boundingSpheres[i], buffer, bufferIndex);
+            }
+            bufferIndex += BoundingSphere.packedLength;
+        }
+
+        return buffer;
+    }
+
+    function unpackBoundingSpheres(buffer) {
+        var result = new Array(buffer[0]);
+        var count = 0;
+
+        var i = 1;
+        while (i < buffer.length) {
+            if(buffer[i++] === 1.0) {
+                result[count++] = BoundingSphere.unpack(buffer, i);
+            }
+            i += BoundingSphere.packedLength;
+        }
+
+        return result;
+    }
+
     /**
      * @private
      */
@@ -622,11 +685,17 @@ define([
             transferGeometries(results.geometries, transferableObjects);
         }
 
+        var packedBoundingSpheres = packBoundingSpheres(results.boundingSpheres);
+        var packedBoundingSpheresCV = packBoundingSpheres(results.boundingSpheresCV);
+        transferableObjects.push(packedBoundingSpheres.buffer, packedBoundingSpheresCV.buffer);
+
         return {
             geometries : results.geometries,
             attributeLocations : results.attributeLocations,
             modelMatrix : results.modelMatrix,
-            pickOffsets : results.pickOffsets
+            pickOffsets : results.pickOffsets,
+            boundingSpheres : packedBoundingSpheres,
+            boundingSpheresCV : packedBoundingSpheresCV
         };
     };
 
@@ -638,7 +707,9 @@ define([
             geometries : packedResult.geometries,
             attributeLocations : packedResult.attributeLocations,
             modelMatrix : packedResult.modelMatrix,
-            pickOffsets : packedResult.pickOffsets
+            pickOffsets : packedResult.pickOffsets,
+            boundingSpheres : unpackBoundingSpheres(packedResult.boundingSpheres),
+            boundingSpheresCV : unpackBoundingSpheres(packedResult.boundingSpheresCV)
         };
     };
 

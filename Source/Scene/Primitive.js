@@ -355,6 +355,8 @@ define([
 
         this._batchTable = undefined;
         this._batchTableAttributeIndices = undefined;
+        this._instanceBoundingSpheres = undefined;
+        this._instanceBoundingSpheresCV = undefined;
     }
 
     defineProperties(Primitive.prototype, {
@@ -1033,6 +1035,8 @@ define([
                 primitive._attributeLocations = result.attributeLocations;
                 primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
                 primitive._pickOffsets = result.pickOffsets;
+                primitive._instanceBoundingSpheres = result.boundingSpheres;
+                primitive._instanceBoundingSpheresCV = result.boundingSpheresCV;
 
                 if (defined(primitive._geometries) && primitive._geometries.length > 0) {
                     primitive._state = PrimitiveState.COMBINED;
@@ -1091,6 +1095,8 @@ define([
         primitive._attributeLocations = result.attributeLocations;
         primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
         primitive._pickOffsets = result.pickOffsets;
+        primitive._instanceBoundingSpheres = result.boundingSpheres;
+        primitive._instanceBoundingSpheresCV = result.boundingSpheresCV;
 
         if (defined(primitive._geometries) && primitive._geometries.length > 0) {
             primitive._state = PrimitiveState.COMBINED;
@@ -1553,7 +1559,18 @@ define([
         };
     }
 
-    var readOnlyInstanceAttributesScratch = ['boundingSphere', 'boundingSphereCV'];
+    function createBoundingSphereProperties(primitive, properties, index) {
+        properties.boundingSphere = {
+            get : function() {
+                return primitive._instanceBoundingSpheres[index];
+            }
+        };
+        properties.boundingSphereCV = {
+            get : function() {
+                return primitive._instanceBoundingSpheresCV[index];
+            }
+        };
+    }
 
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
@@ -1603,28 +1620,16 @@ define([
         var perInstanceAttributeIndices = this._batchTableAttributeIndices;
         attributes = {};
         var properties = {};
-        var hasProperties = false;
 
         for (var name in perInstanceAttributeIndices) {
             if (perInstanceAttributeIndices.hasOwnProperty(name)) {
                 var attributeIndex = perInstanceAttributeIndices[name];
-
-                hasProperties = true;
                 properties[name] = {
                     get : createGetFunction(batchTable, index, attributeIndex)
                 };
 
                 var createSetter = true;
-                var readOnlyAttributes = readOnlyInstanceAttributesScratch;
-                length = readOnlyAttributes.length;
-                for (var j = 0; j < length; ++j) {
-                    if (name === readOnlyInstanceAttributesScratch[j]) {
-                        createSetter = false;
-                        break;
-                    }
-                }
-
-                readOnlyAttributes = this._readOnlyInstanceAttributes;
+                var readOnlyAttributes = this._readOnlyInstanceAttributes;
                 if (createSetter && defined(readOnlyAttributes)) {
                     length = readOnlyAttributes.length;
                     for (var k = 0; k < length; ++k) {
@@ -1641,9 +1646,8 @@ define([
             }
         }
 
-        if (hasProperties) {
-            defineProperties(attributes, properties);
-        }
+        createBoundingSphereProperties(this, properties, index);
+        defineProperties(attributes, properties);
 
         this._lastPerInstanceAttributeIndex = index;
         this._perInstanceAttributeCache[index] = attributes;
@@ -1705,14 +1709,14 @@ define([
         }
         this._pickIds = undefined;
 
+        this._batchTable = this._batchTable && this._batchTable.destroy();
+
         //These objects may be fairly large and reference other large objects (like Entities)
         //We explicitly set them to undefined here so that the memory can be freed
         //even if a reference to the destroyed Primitive has been kept around.
         this._instanceIds = undefined;
         this._perInstanceAttributeCache = undefined;
-        this._perInstanceAttributeLocations = undefined;
         this._attributeLocations = undefined;
-        this._dirtyAttributes = undefined;
 
         return destroyObject(this);
     };
