@@ -182,7 +182,7 @@ define([
                         elementMultiplier : 256.0,
                         isBigEndian : false,
                         lowestEncodedHeight : 0,
-                        highestEncodedHeight : 256 * 256
+                        highestEncodedHeight : 256 * 256 - 1
                     };
                 that._hasWaterMask = true;
                 that._requestWaterMask = true;

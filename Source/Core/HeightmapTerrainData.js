@@ -73,6 +73,14 @@ define([
      * @param {Boolean} [options.structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
      *                  stride property is greater than 1.  If this property is false, the first element is the
      *                  low-order element.  If it is true, the first element is the high-order element.
+     * @param {Number} [options.structure.lowestEncodedHeight] The lowest value that can be stored in the height buffer.  Any heights that are lower
+     *                 than this value after encoding with the `heightScale` and `heightOffset` are clamped to this value.  For example, if the height
+     *                 buffer is a `Uint16Array`, this value should be 0 because a `Uint16Array` cannot store negative numbers.  If this parameter is
+     *                 not specified, no minimum value is enforced.
+     * @param {Number} [options.structure.highestEncodedHeight] The highest value that can be stored in the height buffer.  Any heights that are higher
+     *                 than this value after encoding with the `heightScale` and `heightOffset` are clamped to this value.  For example, if the height
+     *                 buffer is a `Uint16Array`, this value should be `256 * 256 - 1` or 65535 because a `Uint16Array` cannot store numbers larger
+     *                 than 65535.  If this parameter is not specified, no maximum value is enforced.
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
