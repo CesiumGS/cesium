@@ -26,7 +26,8 @@ define([
         './Cesium3DTileStyleEngine',
         './CullingVolume',
         './DebugCameraPrimitive',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         Color,
         defaultValue,
@@ -54,7 +55,8 @@ define([
         Cesium3DTileStyleEngine,
         CullingVolume,
         DebugCameraPrimitive,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
 
     /**
@@ -76,6 +78,7 @@ define([
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      *
      * @example
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -129,6 +132,14 @@ define([
         this._trimTiles = false;
 
         this._refineToVisible = defaultValue(options.refineToVisible, false);
+
+        /**
+         * Determines whether the tileset casts or receives shadows from each light source.
+         *  
+         * @type {ShadowMode}
+         * @default ShadowMode.ENABLED
+         */
+        this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
 
         /**
          * Determines if the tileset will be shown.
