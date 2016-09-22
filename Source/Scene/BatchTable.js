@@ -151,6 +151,7 @@ define([
         for (var i = 0; i < length; ++i) {
             if (attributes[i].componentDatatype !== ComponentDatatype.UNSIGNED_BYTE) {
                 foundFloatDatatype = true;
+                break;
             }
         }
         return foundFloatDatatype ? PixelDatatype.FLOAT : PixelDatatype.UNSIGNED_BYTE;
