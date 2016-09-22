@@ -311,21 +311,17 @@ define([
 
         this._state = PrimitiveState.READY;
         this._geometries = [];
-        this._vaAttributes = undefined;
         this._error = undefined;
         this._numberOfInstances = 0;
-        this._validModelMatrix = false;
 
         this._boundingSpheres = [];
         this._boundingSphereWC = [];
         this._boundingSphereCV = [];
         this._boundingSphere2D = [];
         this._boundingSphereMorph = [];
-        this._perInstanceAttributeLocations = undefined;
         this._perInstanceAttributeCache = [];
         this._instanceIds = [];
         this._lastPerInstanceAttributeIndex = 0;
-        this._dirtyAttributes = [];
 
         this._va = [];
         this._attributeLocations = undefined;
@@ -703,34 +699,10 @@ define([
         });
     }
 
-    function cloneGeometryInstanceAttribute(attribute) {
-        var clonedValue;
-        if (isArray(attribute.value)) {
-            clonedValue = attribute.value.slice(0);
-        } else {
-            clonedValue = new attribute.value.constructor(attribute.value);
-        }
-        return new GeometryInstanceAttribute({
-            componentDatatype : attribute.componentDatatype,
-            componentsPerAttribute : attribute.componentsPerAttribute,
-            normalize : attribute.normalize,
-            value : clonedValue
-        });
-    }
-
     function cloneInstance(instance, geometry) {
-        var attributes = instance.attributes;
-        var newAttributes = {};
-        for (var property in attributes) {
-            if (attributes.hasOwnProperty(property)) {
-                newAttributes[property] = cloneGeometryInstanceAttribute(attributes[property]);
-            }
-        }
-
         return new GeometryInstance({
             geometry : geometry,
             modelMatrix : Matrix4.clone(instance.modelMatrix),
-            attributes : newAttributes,
             pickPrimitive : instance.pickPrimitive,
             id : instance.id
         });
@@ -1059,28 +1031,11 @@ define([
                 var result = PrimitivePipeline.unpackCombineGeometryResults(packedResult);
                 primitive._geometries = result.geometries;
                 primitive._attributeLocations = result.attributeLocations;
-                primitive._vaAttributes = result.vaAttributes;
-                primitive._perInstanceAttributeLocations = result.perInstanceAttributeLocations;
                 primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
-                primitive._validModelMatrix = !Matrix4.equals(primitive.modelMatrix, Matrix4.IDENTITY);
                 primitive._pickOffsets = result.pickOffsets;
 
-                var validInstancesIndices = packedResult.validInstancesIndices;
-                var invalidInstancesIndices = packedResult.invalidInstancesIndices;
-                var instanceIds = primitive._instanceIds;
-                var reorderedInstanceIds = new Array(instanceIds.length);
-
-                var validLength = validInstancesIndices.length;
-                for (var i = 0; i < validLength; ++i) {
-                    reorderedInstanceIds[i] = instanceIds[validInstancesIndices[i]];
-                }
-
-                var invalidLength = invalidInstancesIndices.length;
-                for (var j = 0; j < invalidLength; ++j) {
-                    reorderedInstanceIds[validLength + j] = instanceIds[invalidInstancesIndices[j]];
-                }
-
-                primitive._instanceIds = reorderedInstanceIds;
+                // TODO
+                //var invalidInstancesIndices = packedResult.invalidInstancesIndices;
 
                 if (defined(primitive._geometries)) {
                     primitive._state = PrimitiveState.COMBINED;
@@ -1096,11 +1051,7 @@ define([
     function loadSynchronous(primitive, frameState) {
         var instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
         var length = primitive._numberOfInstances = instances.length;
-
-        var geometries = new Array(length);
         var clonedInstances = new Array(length);
-
-        var invalidInstances = [];
         var instanceIds = primitive._instanceIds;
 
         var instance;
@@ -1119,15 +1070,12 @@ define([
             }
 
             if (defined(createdGeometry)) {
-                geometries[geometryIndex] = createdGeometry;
                 clonedInstances[geometryIndex++] = cloneInstance(instance, createdGeometry);
-                instanceIds.push(instance.id);
-            } else {
-                invalidInstances.push(instance);
             }
+
+            instanceIds.push(instance.id);
         }
 
-        geometries.length = geometryIndex;
         clonedInstances.length = geometryIndex;
 
         var scene3DOnly = frameState.scene3DOnly;
@@ -1135,7 +1083,6 @@ define([
 
         var result = PrimitivePipeline.combineGeometry({
             instances : clonedInstances,
-            invalidInstances : invalidInstances,
             ellipsoid : projection.ellipsoid,
             projection : projection,
             elementIndexUintSupported : frameState.context.elementIndexUint,
@@ -1148,16 +1095,8 @@ define([
 
         primitive._geometries = result.geometries;
         primitive._attributeLocations = result.attributeLocations;
-        primitive._vaAttributes = result.vaAttributes;
-        primitive._perInstanceAttributeLocations = result.vaAttributeLocations;
         primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
-        primitive._validModelMatrix = !Matrix4.equals(primitive.modelMatrix, Matrix4.IDENTITY);
         primitive._pickOffsets = result.pickOffsets;
-
-        for (i = 0; i < invalidInstances.length; ++i) {
-            instance = invalidInstances[i];
-            instanceIds.push(instance.id);
-        }
 
         if (defined(primitive._geometries)) {
             primitive._state = PrimitiveState.COMBINED;
