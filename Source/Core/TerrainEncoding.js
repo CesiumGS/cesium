@@ -341,24 +341,21 @@ define([
 
             stride = (numCompressed0 + numCompressed1) * sizeInBytes;
 
-            return [
-                {
-                    index : attributes.compressed0,
-                    vertexBuffer : buffer,
-                    componentDatatype : datatype,
-                    componentsPerAttribute : numCompressed0,
-                    offsetInBytes : 0,
-                    strideInBytes : stride
-                },
-                {
-                    index : attributes.compressed1,
-                    vertexBuffer : buffer,
-                    componentDatatype : datatype,
-                    componentsPerAttribute : numCompressed1,
-                    offsetInBytes : numCompressed0 * sizeInBytes,
-                    strideInBytes : stride
-                }
-            ];
+            return [{
+                index: attributes.compressed0,
+                vertexBuffer: buffer,
+                componentDatatype: datatype,
+                componentsPerAttribute: numCompressed0,
+                offsetInBytes: 0,
+                strideInBytes: stride
+            }, {
+                index: attributes.compressed1,
+                vertexBuffer: buffer,
+                componentDatatype: datatype,
+                componentsPerAttribute: numCompressed1,
+                offsetInBytes: numCompressed0 * sizeInBytes,
+                strideInBytes: stride
+            }];
         } else {
             return [{
                 index : attributes.compressed0,
