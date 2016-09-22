@@ -1034,9 +1034,6 @@ define([
                 primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
                 primitive._pickOffsets = result.pickOffsets;
 
-                // TODO
-                //var invalidInstancesIndices = packedResult.invalidInstancesIndices;
-
                 if (defined(primitive._geometries)) {
                     primitive._state = PrimitiveState.COMBINED;
                 } else {

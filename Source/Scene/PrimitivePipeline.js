@@ -505,28 +505,9 @@ define([
         return result;
     };
 
-    // This function was created by simplifying packInstancesForCombine into a count-only operation.
-    function countInstancesForCombine(instances) {
-        var length = instances.length;
-        var count = 1 + (length * 17);
-        for (var i = 0; i < length; i++) {
-            var attributes = instances[i].attributes;
-            for ( var property in attributes) {
-                if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
-                    var attribute = attributes[property];
-                    count += 5 + attribute.value.length;
-                }
-            }
-        }
-        return count;
-    }
-
     function packInstancesForCombine(instances, transferableObjects) {
-        var packedData = new Float64Array(countInstancesForCombine(instances));
-        var stringHash = {};
-        var stringTable = [];
-
         var length = instances.length;
+        var packedData = new Float64Array(1 + (length * 16));
         var count = 0;
         packedData[count++] = length;
         for (var i = 0; i < length; i++) {
@@ -534,43 +515,14 @@ define([
 
             Matrix4.pack(instance.modelMatrix, packedData, count);
             count += Matrix4.packedLength;
-
-            var attributes = instance.attributes;
-            var attributesToWrite = [];
-            for ( var property in attributes) {
-                if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
-                    attributesToWrite.push(property);
-                    if (!defined(stringHash[property])) {
-                        stringHash[property] = stringTable.length;
-                        stringTable.push(property);
-                    }
-                }
-            }
-
-            packedData[count++] = attributesToWrite.length;
-            for (var q = 0; q < attributesToWrite.length; q++) {
-                var name = attributesToWrite[q];
-                var attribute = attributes[name];
-                packedData[count++] = stringHash[name];
-                packedData[count++] = attribute.componentDatatype;
-                packedData[count++] = attribute.componentsPerAttribute;
-                packedData[count++] = attribute.normalize;
-                packedData[count++] = attribute.value.length;
-                packedData.set(attribute.value, count);
-                count += attribute.value.length;
-            }
         }
         transferableObjects.push(packedData.buffer);
 
-        return {
-            stringTable : stringTable,
-            packedData : packedData
-        };
+        return packedData;
     }
 
     function unpackInstancesForCombine(data) {
-        var packedInstances = data.packedData;
-        var stringTable = data.stringTable;
+        var packedInstances = data;
         var result = new Array(packedInstances[0]);
         var count = 0;
 
@@ -579,29 +531,7 @@ define([
             var modelMatrix = Matrix4.unpack(packedInstances, i);
             i += Matrix4.packedLength;
 
-            var attributes = {};
-            var numAttributes = packedInstances[i++];
-            for (var x = 0; x < numAttributes; x++) {
-                var name = stringTable[packedInstances[i++]];
-                var componentDatatype = packedInstances[i++];
-                var componentsPerAttribute = packedInstances[i++];
-                var normalize = packedInstances[i++] !== 0;
-                var length = packedInstances[i++];
-                var value = ComponentDatatype.createTypedArray(componentDatatype, length);
-                for (var valueIndex = 0; valueIndex < length; valueIndex++) {
-                    value[valueIndex] = packedInstances[i++];
-                }
-
-                attributes[name] = {
-                    componentDatatype : componentDatatype,
-                    componentsPerAttribute : componentsPerAttribute,
-                    normalize : normalize,
-                    value : value
-                };
-            }
-
             result[count++] = {
-                attributes : attributes,
                 modelMatrix : modelMatrix
             };
         }
