@@ -25,6 +25,7 @@ defineSuite([
 
     var pointCloudRGBUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB';
     var pointCloudRGBAUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGBA';
+    var pointCloudRGB565Url = './Data/Cesium3DTiles/PointCloud/PointCloudRGB565';
     var pointCloudNoColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNoColor';
     var pointCloudConstantColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudConstantColor';
     var pointCloudNormalsUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormals';
@@ -177,6 +178,10 @@ defineSuite([
 
     it('renders point cloud with rgba colors', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBAUrl).then(expectRenderPointCloud);
+    });
+
+    it('renders point cloud with rgb565 colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGB565Url).then(expectRenderPointCloud);
     });
 
     it('renders point cloud with no colors', function() {

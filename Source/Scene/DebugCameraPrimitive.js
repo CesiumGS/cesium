@@ -90,7 +90,8 @@ define([
         this.id = options.id;
         this._id = undefined;
 
-        this._primitive = undefined;
+        this._outlinePrimitive = undefined;
+        this._planesPrimitive = undefined;
     }
 
     var frustumCornersNDC = new Array(8);
@@ -109,6 +110,8 @@ define([
         scratchFrustumCorners[i] = new Cartesian4();
     }
 
+    var scratchColor = new Color();
+
     /**
      * @private
      */
@@ -119,10 +122,11 @@ define([
 
         if (this._updateOnChange) {
             // Recreate the primitive every frame
-            this._primitive = this._primitive && this._primitive.destroy();
+            this._outlinePrimitive = this._outlinePrimitive && this._outlinePrimitive.destroy();
+            this._planesPrimitive = this._planesPrimitive && this._planesPrimitive.destroy();
         }
 
-        if (!defined(this._primitive)) {
+        if (!defined(this._outlinePrimitive)) {
             var view = this._camera.viewMatrix;
             var projection = this._camera.frustum.projectionMatrix;
             var viewProjection = Matrix4.multiply(projection, view, scratchMatrix);
@@ -138,6 +142,8 @@ define([
                 positions[i * 3 + 2] = corner.z;
             }
 
+            var boundingSphere = new BoundingSphere.fromVertices(positions);
+
             var attributes = new GeometryAttributes();
             attributes.position = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
@@ -145,17 +151,17 @@ define([
                 values : positions
             });
 
-            var indices = new Uint16Array([0,1,1,2,2,3,3,0,0,4,4,7,7,3,7,6,6,2,2,1,1,5,5,4,5,6]);
-            var geometry = new Geometry({
-                attributes : attributes,
-                indices : indices,
-                primitiveType : PrimitiveType.LINES,
-                boundingSphere : new BoundingSphere.fromVertices(positions)
-            });
+            // Create the outline primitive
+            var outlineIndices = new Uint16Array([0,1,1,2,2,3,3,0,0,4,4,7,7,3,7,6,6,2,2,1,1,5,5,4,5,6]);
 
-            this._primitive = new Primitive({
+            this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
-                    geometry : geometry,
+                    geometry : {
+                        attributes : attributes,
+                        indices : outlineIndices,
+                        primitiveType : PrimitiveType.LINES,
+                        boundingSphere : boundingSphere
+                    },
                     attributes : {
                         color : ColorGeometryInstanceAttribute.fromColor(this._color)
                     },
@@ -168,9 +174,34 @@ define([
                 }),
                 asynchronous : false
             });
+
+            // Create the planes primitive
+            var planesIndices = new Uint16Array([4,5,6,4,6,7,5,1,2,5,2,6,7,6,2,7,2,3,0,1,5,0,5,4,0,4,7,0,7,3,1,0,3,1,3,2]);
+
+            this._planesPrimitive = new Primitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : {
+                        attributes : attributes,
+                        indices : planesIndices,
+                        primitiveType : PrimitiveType.TRIANGLES,
+                        boundingSphere : boundingSphere
+                    },
+                    attributes : {
+                        color : ColorGeometryInstanceAttribute.fromColor(Color.fromAlpha(this._color, 0.1, scratchColor))
+                    },
+                    id : this.id,
+                    pickPrimitive : this
+                }),
+                appearance : new PerInstanceColorAppearance({
+                    translucent : true,
+                    flat : true
+                }),
+                asynchronous : false
+            });
         }
 
-        this._primitive.update(frameState);
+        this._outlinePrimitive.update(frameState);
+        this._planesPrimitive.update(frameState);
     };
 
     /**
@@ -207,7 +238,8 @@ define([
      * @see DebugCameraPrimitive#isDestroyed
      */
     DebugCameraPrimitive.prototype.destroy = function() {
-        this._primitive = this._primitive && this._primitive.destroy();
+        this._outlinePrimitive = this._outlinePrimitive && this._outlinePrimitive.destroy();
+        this._planesPrimitive = this._planesPrimitive && this._planesPrimitive.destroy();
         return destroyObject(this);
     };
 
