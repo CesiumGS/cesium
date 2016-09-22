@@ -211,7 +211,7 @@ defineSuite([
                 return pollToPromise(function() {
                     return imagery.state === ImageryState.TEXTURE_LOADED;
                 }).then(function() {
-                    var textureBeforeReprojection = imagery.textureWebMercator;
+                    expect(imagery.textureWebMercator).toBeDefined();
                     layer._reprojectTexture(scene.frameState, imagery, false);
                     layer.queueReprojectionCommands(scene.frameState);
                     expect(scene.frameState.commandList.length).toBe(0);
