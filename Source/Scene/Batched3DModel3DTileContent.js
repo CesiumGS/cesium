@@ -258,6 +258,7 @@ define([
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
             basePath : this._url,
             modelMatrix : this._tile.computedTransform,
+            shadows: this._tileset.shadows,
             vertexShaderLoaded : batchTable.getVertexShaderCallback(),
             fragmentShaderLoaded : batchTable.getFragmentShaderCallback(),
             uniformMapLoaded : batchTable.getUniformMapCallback(),
@@ -303,6 +304,7 @@ define([
         // actually generate commands.
         this.batchTable.update(tileset, frameState);
         this._model.modelMatrix = this._tile.computedTransform;
+        this._model.shadows = this._tileset.shadows;
         this._model.update(frameState);
 
         frameState.addCommand = oldAddCommand;
