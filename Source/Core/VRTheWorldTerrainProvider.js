@@ -92,7 +92,7 @@ define([
                 elementMultiplier : 256.0,
                 isBigEndian : true,
                 lowestEncodedHeight : 0,
-                highestEncodedHeight : 256 * 256 * 256
+                highestEncodedHeight : 256 * 256 * 256 - 1
             };
 
         var credit = options.credit;

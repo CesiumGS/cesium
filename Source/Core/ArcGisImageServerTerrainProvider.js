@@ -93,7 +93,7 @@ define([
             elementMultiplier : 256.0,
             isBigEndian : true,
             lowestEncodedHeight : 0,
-            highestEncodedHeight : 256 * 256 * 256
+            highestEncodedHeight : 256 * 256 * 256 - 1
         };
 
         this._errorEvent = new Event();
