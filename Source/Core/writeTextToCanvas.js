@@ -30,7 +30,6 @@ define([
      * @param {Number} [options.strokeWidth=1] The stroke width.
      * @param {Color} [options.backgroundColor=Color.TRANSPARENT] The background color of the canvas.
      * @param {Number} [options.borderWidth=0] The pixel size of the border to add around the text.
-     * @param {Number} [options.borderColor=Color.BLACK] The color of the border.
      * @returns {Canvas} A new canvas with the given text drawn into it.  The dimensions object
      *                   from measureText will also be added to the returned canvas. If text is
      *                   blank, returns undefined.
@@ -52,7 +51,7 @@ define([
         var strokeWidth = defaultValue(options.strokeWidth, 1);
         var backgroundColor = defaultValue(options.backgroundColor, Color.TRANSPARENT);
         var borderWidth = defaultValue(options.borderWidth, 0);
-        var halfBorderWidth = borderWidth * 0.5;
+        var doubleBorderWidth = borderWidth * 2.0;
 
         var canvas = document.createElement('canvas');
         canvas.width = 1;
@@ -94,23 +93,10 @@ define([
         document.body.removeChild(canvas);
         canvas.style.visibility = '';
 
-        var baseline = dimensions.height - dimensions.ascent + halfBorderWidth;
-        canvas.width = dimensions.computedWidth + borderWidth;
-        canvas.height = dimensions.height + borderWidth;
+        var baseline = dimensions.height - dimensions.ascent + borderWidth;
+        canvas.width = dimensions.computedWidth + doubleBorderWidth;
+        canvas.height = dimensions.height + doubleBorderWidth;
         var y = canvas.height - baseline;
-
-        // Draw border color to whole canvas
-        if (borderWidth > 0) {
-            var borderColor = defaultValue(options.borderColor, Color.BLACK);
-            context2D.fillStyle = borderColor.toCssColorString();
-            context2D.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        // Draw background except to the border area
-        if (backgroundColor !== Color.TRANSPARENT) {
-            context2D.fillStyle = backgroundColor.toCssColorString();
-            context2D.fillRect(halfBorderWidth, halfBorderWidth, canvas.width-borderWidth, canvas.height-borderWidth);
-        }
 
         // Properties must be explicitly set again after changing width and height
         context2D.font = font;
@@ -118,16 +104,22 @@ define([
         context2D.lineWidth = strokeWidth;
         context2D[imageSmoothingEnabledName] = false;
 
+        // Draw background except to the border area
+        if (backgroundColor !== Color.TRANSPARENT) {
+            context2D.fillStyle = backgroundColor.toCssColorString();
+            context2D.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
         if (stroke) {
             var strokeColor = defaultValue(options.strokeColor, Color.BLACK);
             context2D.strokeStyle = strokeColor.toCssColorString();
-            context2D.strokeText(text, halfBorderWidth, y);
+            context2D.strokeText(text, borderWidth, y);
         }
 
         if (fill) {
             var fillColor = defaultValue(options.fillColor, Color.WHITE);
             context2D.fillStyle = fillColor.toCssColorString();
-            context2D.fillText(text, halfBorderWidth, y);
+            context2D.fillText(text, borderWidth, y);
         }
 
         return canvas;
