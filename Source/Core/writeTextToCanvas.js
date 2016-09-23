@@ -104,7 +104,7 @@ define([
         context2D.lineWidth = strokeWidth;
         context2D[imageSmoothingEnabledName] = false;
 
-        // Draw background except to the border area
+        // Draw background
         if (backgroundColor !== Color.TRANSPARENT) {
             context2D.fillStyle = backgroundColor.toCssColorString();
             context2D.fillRect(0, 0, canvas.width, canvas.height);
