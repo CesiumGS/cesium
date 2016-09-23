@@ -74,6 +74,7 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the collection casts or receives shadows from each light source.
+     * @param {Number} [options.scale] A uniform scale applied to the Models in this collection.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
      * 
@@ -139,6 +140,9 @@ define([
 
         this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
         this._shadows = this.shadows;
+        
+        this.scale = defaultValue(options.scale, 0);
+        this._scale = this.scale;
 
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugShowBoundingVolume = false;
@@ -500,6 +504,7 @@ define([
             gltf : collection._gltf,
             basePath : collection._basePath,
             shadows : collection._shadows,
+            scale : collection._scale,
             cacheKey : undefined,
             asynchronous : collection._asynchronous,
             allowPicking : collection._allowPicking,
