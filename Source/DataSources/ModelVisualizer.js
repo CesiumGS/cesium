@@ -131,21 +131,12 @@ define([
                 modelHash[entity.id] = modelData;
             }
 
-            var shadows = defaultShadows;
-            if (defined(modelGraphics._shadows)) {
-                shadows = Property.getValueOrDefault(modelGraphics._shadows, time, defaultShadows);
-            } else if (defined(modelGraphics._castShadows) || defined(modelGraphics._receiveShadows)) {
-                var castShadows = Property.getValueOrDefault(modelGraphics._castShadows, time, true);
-                var receiveShadows = Property.getValueOrDefault(modelGraphics.receiveShadows, time, true);
-                shadows = ShadowMode.fromCastReceive(castShadows, receiveShadows);
-            }
-
             model.show = true;
             model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
             model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
             model.maximumScale = Property.getValueOrUndefined(modelGraphics._maximumScale, time);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
-            model.shadows = shadows;
+            model.shadows = Property.getValueOrDefault(modelGraphics._shadows, time, defaultShadows);
             model.heightReference = Property.getValueOrDefault(modelGraphics._heightReference, time, defaultHeightReference);
             model.distanceDisplayCondition = Property.getValueOrUndefined(modelGraphics._distanceDisplayCondition, time);
 

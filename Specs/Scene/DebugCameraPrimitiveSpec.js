@@ -86,9 +86,9 @@ defineSuite([
             camera : camera
         }));
         scene.renderForSpecs();
-        var primitive = p._primitive;
+        var primitive = p._outlinePrimitive;
         scene.renderForSpecs();
-        expect(p._primitive).not.toBe(primitive);
+        expect(p._outlinePrimitive).not.toBe(primitive);
     });
 
     it('does not update when updateOnChange is false', function() {
