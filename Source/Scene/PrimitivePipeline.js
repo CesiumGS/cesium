@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
-        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -19,7 +18,6 @@ define([
         '../Core/WebMercatorProjection'
     ], function(
         BoundingSphere,
-        Cartesian3,
         Color,
         ComponentDatatype,
         defaultValue,
