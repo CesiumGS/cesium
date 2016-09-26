@@ -1422,7 +1422,9 @@ define([
         if (!defined(this._batchTable)) {
             createBatchTable(this, frameState.context);
         }
-        this._batchTable.update(frameState);
+        if (this._batchTable.attributes.length > 0) {
+            this._batchTable.update(frameState);
+        }
 
         if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
             if (this.asynchronous) {
