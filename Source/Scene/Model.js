@@ -2948,7 +2948,7 @@ define([
 
                 var castShadows = ShadowMode.castShadows(model._shadows);
                 var receiveShadows = ShadowMode.receiveShadows(model._shadows);
-                
+
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     cull : model.cull,
@@ -3461,11 +3461,11 @@ define([
     }
 
     function checkSupportedExtensions(model) {
-        var extensionsUsed = model.gltf.extensionsUsed;
-        if (defined(extensionsUsed)) {
-            var extensionsUsedCount = extensionsUsed.length;
-            for (var index=0;index<extensionsUsedCount;++index) {
-                var extension = extensionsUsed[index];
+        var extensionsRequired = model.gltf.extensionsRequired;
+        if (defined(extensionsRequired)) {
+            var extensionsRequiredCount = extensionsRequired.length;
+            for (var index=0;index<extensionsRequiredCount;++index) {
+                var extension = extensionsRequired[index];
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
                     extension !== 'KHR_materials_common' && extension !== 'WEB3D_quantized_attributes') {
