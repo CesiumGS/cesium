@@ -1401,6 +1401,7 @@ define([
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
      * @exception {DeveloperError} Primitive.modelMatrix is only supported in 3D mode.
+     * @exception {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
      */
     Primitive.prototype.update = function(frameState) {
         if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||

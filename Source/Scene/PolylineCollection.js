@@ -396,7 +396,14 @@ define([
     }
 
     /**
-     * @private
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     *
+     * @exception {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
      */
     PolylineCollection.prototype.update = function(frameState) {
         removePolylines(this);
