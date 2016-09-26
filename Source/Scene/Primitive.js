@@ -23,10 +23,12 @@ define([
         '../Core/GeometryInstanceAttribute',
         '../Core/isArray',
         '../Core/Matrix4',
+        '../Core/RuntimeError',
         '../Core/subdivideArray',
         '../Core/TaskProcessor',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
@@ -64,10 +66,12 @@ define([
         GeometryInstanceAttribute,
         isArray,
         Matrix4,
+        RuntimeError,
         subdivideArray,
         TaskProcessor,
         Buffer,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
         RenderState,
         ShaderProgram,
@@ -1561,10 +1565,14 @@ define([
             return;
         }
 
+        var context = frameState.context;
         if (!defined(this._batchTable)) {
-            createBatchTable(this, frameState.context);
+            createBatchTable(this, context);
         }
         if (this._batchTable.attributes.length > 0) {
+            if (ContextLimits.maximumVertexTextureImageUnits === 0) {
+                throw new RuntimeError('Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.');
+            }
             this._batchTable.update(frameState);
         }
 
@@ -1607,7 +1615,6 @@ define([
             createRS = true;
         }
 
-        var context = frameState.context;
         if (defined(this._material)) {
             this._material.update(context);
         }

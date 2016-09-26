@@ -18,8 +18,10 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Plane',
+        '../Core/RuntimeError',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
@@ -53,8 +55,10 @@ define([
         CesiumMath,
         Matrix4,
         Plane,
+        RuntimeError,
         Buffer,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
         RenderState,
         ShaderProgram,
@@ -430,6 +434,9 @@ define([
         var properties = this._propertiesChanged;
 
         if (this._createBatchTable) {
+            if (ContextLimits.maximumVertexTextureImageUnits === 0) {
+                throw new RuntimeError('Vertex texture fetch support is required to render polylines. The maximum number of vertex texture image units must be greater than zero.');
+            }
             createBatchTable(this, context);
             this._createBatchTable = false;
         }

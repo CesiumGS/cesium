@@ -59,10 +59,9 @@ define([
 
         if (toWorld) {
             for (i = 0; i < length; ++i) {
-                if (!defined(instances[i].geometry)) {
-                    continue;
+                if (defined(instances[i].geometry)) {
+                    GeometryPipeline.transformToWorldCoordinates(instances[i]);
                 }
-                GeometryPipeline.transformToWorldCoordinates(instances[i]);
             }
         } else {
             // Leave geometry in local coordinate system; auto update model-matrix.
@@ -136,10 +135,9 @@ define([
         // Clip to IDL
         if (!scene3DOnly) {
             for (i = 0; i < length; ++i) {
-                if (!defined(instances[i].geometry)) {
-                    continue;
+                if (defined(instances[i].geometry)) {
+                    GeometryPipeline.splitLongitude(instances[i]);
                 }
-                GeometryPipeline.splitLongitude(instances[i]);
             }
         }
 
@@ -668,7 +666,7 @@ define([
 
         var i = 1;
         while (i < buffer.length) {
-            if(buffer[i++] === 1.0) {
+            if (buffer[i++] === 1.0) {
                 result[count++] = BoundingSphere.unpack(buffer, i);
             }
             i += BoundingSphere.packedLength;
