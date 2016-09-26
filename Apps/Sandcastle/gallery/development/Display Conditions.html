@@ -25,78 +25,78 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    'use strict';
+'use strict';
 //Sandcastle_Begin
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
 
-    function addBillboardAndPrimitive() {
-        Sandcastle.declare(addBillboardAndPrimitive);
+function addBillboardAndPrimitive() {
+    Sandcastle.declare(addBillboardAndPrimitive);
 
-        var billboards = scene.primitives.add(new Cesium.BillboardCollection());
-        billboards.add({
-            image : '../images/facility.gif',
-            position : Cesium.Cartesian3.fromDegrees(-77, 40.5),
-            distanceDisplayCondition : new Cesium.DistanceDisplayCondition(5.5e6)
-        });
+    var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+    billboards.add({
+        image : '../images/facility.gif',
+        position : Cesium.Cartesian3.fromDegrees(-77, 40.5),
+        distanceDisplayCondition : new Cesium.DistanceDisplayCondition(5.5e6)
+    });
 
-        scene.primitives.add(new Cesium.Primitive({
-            geometryInstances : new Cesium.GeometryInstance({
-                geometry : new Cesium.RectangleGeometry({
-                    rectangle : Cesium.Rectangle.fromDegrees(-80.5, 39.7, -75.1, 42.0),
-                    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-                }),
-                attributes: {
-                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5)),
-                    distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(0.0, 5.5e6)
-                }
+    scene.primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(-80.5, 39.7, -75.1, 42.0),
+                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
-            appearance : new Cesium.PerInstanceColorAppearance({
-                closed : true
-            })
-        }));
+            attributes: {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5)),
+                distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(0.0, 5.5e6)
+            }
+        }),
+        appearance : new Cesium.PerInstanceColorAppearance({
+            closed : true
+        })
+    }));
+}
+
+function addPointAndModel() {
+    Sandcastle.declare(addPointAndModel);
+
+    var position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+
+    var pointPrimitives = scene.primitives.add(new Cesium.PointPrimitiveCollection());
+    pointPrimitives.add({
+        color : Cesium.Color.YELLOW,
+        position : position,
+        distanceDisplayCondition : new Cesium.DistanceDisplayCondition(250.5)
+    });
+
+    scene.primitives.add(Cesium.Model.fromGltf({
+        url : '../../SampleData/models/CesiumGround/Cesium_Ground.glb',
+        modelMatrix : Cesium.Transforms.eastNorthUpToFixedFrame(position),
+        distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0.0, 250.5)
+    }));
+}
+
+Sandcastle.addToolbarMenu([{
+    text : 'Billboard and Primitive',
+    onselect : function() {
+        addBillboardAndPrimitive();
+        Sandcastle.highlight(addBillboardAndPrimitive);
     }
-
-    function addPointAndModel() {
-        Sandcastle.declare(addPointAndModel);
-
-        var position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-
-        var pointPrimitives = scene.primitives.add(new Cesium.PointPrimitiveCollection());
-        pointPrimitives.add({
-            color : Cesium.Color.YELLOW,
-            position : position,
-            distanceDisplayCondition : new Cesium.DistanceDisplayCondition(250.5)
-        });
-
-        scene.primitives.add(Cesium.Model.fromGltf({
-            url : '../../SampleData/models/CesiumGround/Cesium_Ground.glb',
-            modelMatrix : Cesium.Transforms.eastNorthUpToFixedFrame(position),
-            distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0.0, 250.5)
-        }));
+}, {
+    text : 'Point and Model',
+    onselect : function() {
+        addPointAndModel();
+        Sandcastle.highlight(addPointAndModel);
     }
+}]);
 
-    Sandcastle.addToolbarMenu([{
-        text : 'Billboard and Primitive',
-        onselect : function() {
-            addBillboardAndPrimitive();
-            Sandcastle.highlight(addBillboardAndPrimitive);
-        }
-    }, {
-        text : 'Point and Model',
-        onselect : function() {
-            addPointAndModel();
-            Sandcastle.highlight(addPointAndModel);
-        }
-    }]);
-
-    Sandcastle.reset = function () {
-        viewer.camera.flyHome(0);
-        scene.primitives.removeAll();
-    };
+Sandcastle.reset = function () {
+    viewer.camera.flyHome(0);
+    scene.primitives.removeAll();
+};
 
 //Sandcastle_End
-    Sandcastle.finishedLoading();
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);
