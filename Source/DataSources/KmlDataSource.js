@@ -1664,13 +1664,13 @@ define([
                     west = CesiumMath.negativePiToPi(CesiumMath.toRadians(west));
                 }
                 if (defined(south)) {
-                    south = CesiumMath.negativePiToPi(CesiumMath.toRadians(south));
+                    south = CesiumMath.clampToLatitudeRange(CesiumMath.toRadians(south));
                 }
                 if (defined(east)) {
                     east = CesiumMath.negativePiToPi(CesiumMath.toRadians(east));
                 }
                 if (defined(north)) {
-                    north = CesiumMath.negativePiToPi(CesiumMath.toRadians(north));
+                    north = CesiumMath.clampToLatitudeRange(CesiumMath.toRadians(north));
                 }
                 geometry.coordinates = new Rectangle(west, south, east, north);
 
