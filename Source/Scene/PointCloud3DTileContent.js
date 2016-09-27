@@ -786,12 +786,12 @@ define([
         }
 
         if (hasStyle) {
-            var info = {
+            var shaderState = {
                 translucent : false
             };
-            colorStyleFunction = style.getColorShaderFunction('getColorFromStyle', 'czm_tiles3d_style_', info);
-            showStyleFunction = style.getShowShaderFunction('getShowFromStyle', 'czm_tiles3d_style_', info);
-            styleTranslucent = info.translucent;
+            colorStyleFunction = style.getColorShaderFunction('getColorFromStyle', 'czm_tiles3d_style_', shaderState);
+            showStyleFunction = style.getShowShaderFunction('getShowFromStyle', 'czm_tiles3d_style_', shaderState);
+            styleTranslucent = shaderState.translucent;
         }
 
         content._styleTranslucent = styleTranslucent;

@@ -123,22 +123,22 @@ define([
      * Gets the shader function for this expression.
      * Returns undefined if the shader function can't be generated from this expression.
      *
-     * @param {String} name Name to give to the generated function.
-     * @param {String} variablePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
      * @param {String} returnType The return type of the generated function.
-     * @param {Object} info Stores information about the generated shader function.
      *
      * @returns {String} The shader function.
      *
      * @private
      */
-    Expression.prototype.getShaderFunction = function(name, variablePrefix, returnType, info) {
-        var shaderExpression = this.getShaderExpression(variablePrefix, info);
+    Expression.prototype.getShaderFunction = function(functionName, attributePrefix, shaderState, returnType) {
+        var shaderExpression = this.getShaderExpression(attributePrefix, shaderState);
         if (!defined(shaderExpression)) {
             return undefined;
         }
 
-        shaderExpression = returnType + ' ' + name + '() \n' +
+        shaderExpression = returnType + ' ' + functionName + '() \n' +
             '{ \n' +
             '    return ' + shaderExpression + '; \n' +
             '} \n';
@@ -150,15 +150,15 @@ define([
      * Gets the shader expression for this expression.
      * Returns undefined if the shader expression can't be generated from this expression.
      *
-     * @param {String} variablePrefix Prefix that is added to any variable names to access vertex attributes.
-     * @param {Object} info Stores information about the generated shader expression.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
      *
      * @returns {String} The shader expression.
      *
      * @private
      */
-    Expression.prototype.getShaderExpression = function(variablePrefix, info) {
-        return this._runtimeAst.getShaderExpression(variablePrefix, info);
+    Expression.prototype.getShaderExpression = function(attributePrefix, shaderState) {
+        return this._runtimeAst.getShaderExpression(attributePrefix, shaderState);
     };
 
     function Node(type, value, left, right, test) {
@@ -966,7 +966,21 @@ define([
         return 'vec4(' + r + ', ' + g + ', ' + b + ', ' + a + ')';
     }
 
-    Node.prototype.getShaderExpression = function(variablePrefix, info) {
+    function getExpressionArray(array, attributePrefix, shaderState) {
+        var length = array.length;
+        var expressions = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            var shader = array[i].getShaderExpression(attributePrefix, shaderState);
+            if (!defined(shader)) {
+                // If any of the expressions are not valid, the array is not valid
+                return undefined;
+            }
+            expressions[i] = shader;
+        }
+        return expressions;
+    }
+
+    Node.prototype.getShaderExpression = function(attributePrefix, shaderState) {
         var color;
         var left;
         var right;
@@ -978,27 +992,18 @@ define([
         if (defined(this._left)) {
             if (isArray(this._left)) {
                 // Left can be an array if the type is LITERAL_COLOR
-                var length = this._left.length;
-                left = new Array(length);
-                for (var i = 0; i < length; ++i) {
-                    var shader = this._left[i].getShaderExpression(variablePrefix, info);
-                    if (!defined(shader)) {
-                        // If the left side is not valid shader code, then the expression is not valid
-                        return undefined;
-                    }
-                    left[i] = shader;
-                }
+                left = getExpressionArray(this._left, attributePrefix, shaderState);
             } else {
-                left = this._left.getShaderExpression(variablePrefix, info);
-                if (!defined(left)) {
-                    // If the left side is not valid shader code, then the expression is not valid
-                    return undefined;
-                }
+                left = this._left.getShaderExpression(attributePrefix, shaderState);
+            }
+            if (!defined(left)) {
+                // If the left side is not valid shader code, then the expression is not valid
+                return undefined;
             }
         }
 
         if (defined(this._right)) {
-            right = this._right.getShaderExpression(variablePrefix, info);
+            right = this._right.getShaderExpression(attributePrefix, shaderState);
             if (!defined(right)) {
                 // If the right side is not valid shader code, then the expression is not valid
                 return undefined;
@@ -1006,16 +1011,25 @@ define([
         }
 
         if (defined(this._test)) {
-            test = this._test.getShaderExpression(variablePrefix, info);
+            test = this._test.getShaderExpression(attributePrefix, shaderState);
             if (!defined(test)) {
                 // If the test is not valid shader code, then the expression is not valid
                 return undefined;
             }
         }
 
+        if (isArray(this._value)) {
+            // For ARRAY type
+            value = getExpressionArray(this._value, attributePrefix, shaderState);
+            if (!defined(value)) {
+                // If the values are not valid shader code, then the expression is not valid
+                return undefined;
+            }
+        }
+
         switch (type) {
             case ExpressionNodeType.VARIABLE:
-                return variablePrefix + value;
+                return attributePrefix + value;
             case ExpressionNodeType.UNARY:
                 // Supported types: +, -, !, Boolean, Number
                 if ((value === 'isNan') || (value === 'isFinite') || (value === 'String')) {
@@ -1041,6 +1055,15 @@ define([
             case ExpressionNodeType.MEMBER:
                 // This is intended for accessing the components of vec2, vec3, and vec4 properties. String members aren't supported.
                 return left + '[int(' + right + ')]';
+            case ExpressionNodeType.ARRAY:
+                if (value.length === 4) {
+                    return 'vec4(' + value[0] + ', ' + value[1] + ', ' + value[2] + ', ' + value[3] + ')';
+                } else if (value.length === 3) {
+                    return 'vec3(' + value[0] + ', ' + value[1] + ', ' + value[2] + ')';
+                } else if (value.length === 2) {
+                    return 'vec2(' + value[0] + ', ' + value[1] + ')';
+                }
+                break;
             case ExpressionNodeType.LITERAL_BOOLEAN:
                 return value ? 'true' : 'false';
             case ExpressionNodeType.LITERAL_NUMBER:
@@ -1061,7 +1084,7 @@ define([
                         var rgb = args[0];
                         var alpha = args[1];
                         if (alpha !== '1.0') {
-                            info.translucent = true;
+                            shaderState.translucent = true;
                         }
                         return 'vec4(' + rgb + ', ' + alpha + ')';
                     } else {
@@ -1071,7 +1094,7 @@ define([
                     return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, 1.0)';
                 } else if (value === 'rgba') {
                     if (args[3] !== '1.0') {
-                        info.translucent = true;
+                        shaderState.translucent = true;
                     }
                     return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, ' + args[3] + ')';
                 } else if (value === 'hsl') {
@@ -1085,19 +1108,19 @@ define([
                     color = convertHSLToRGB(this);
                     if (defined(color)) {
                         if (color.alpha !== 1.0) {
-                            info.translucent = true;
+                            shaderState.translucent = true;
                         }
                         return colorToVec4(color);
                     } else {
                         if (args[3] !== '1.0') {
-                            info.translucent = true;
+                            shaderState.translucent = true;
                         }
                         return 'vec4(czm_HSLToRGB(vec3(' + args[0] + ', ' + args[1] + ', ' + args[2] + ')), ' + args[3] + ')';
                     }
                 }
                 break;
             default:
-                // Not supported: FUNCTION_CALL, ARRAY, REGEX, VARIABLE_IN_STRING, LITERAL_NULL, LITERAL_REGEX, LITERAL_UNDEFINED
+                // Not supported: FUNCTION_CALL, REGEX, VARIABLE_IN_STRING, LITERAL_NULL, LITERAL_REGEX, LITERAL_UNDEFINED
                 return undefined;
         }
     };

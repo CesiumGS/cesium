@@ -148,16 +148,16 @@ define([
      * Gets the shader function for this expression.
      * Returns undefined if the shader function can't be generated from this expression.
      *
-     * @param {String} name Name to give to the generated function.
-     * @param {String} variablePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
      * @param {String} returnType The return type of the generated function.
-     * @param {Object} info Stores information about the generated shader function.
      *
      * @returns {String} The shader function.
      *
      * @private
      */
-    ConditionsExpression.prototype.getShaderFunction = function(name, variablePrefix, returnType, info) {
+    ConditionsExpression.prototype.getShaderFunction = function(functionName, attributePrefix, shaderState, returnType) {
         var conditions = this._runtimeConditions;
         if (!defined(conditions) || conditions.length === 0) {
             return undefined;
@@ -167,8 +167,8 @@ define([
         var length = conditions.length;
         for (var i = 0; i < length; ++i) {
             var statement = conditions[i];
-            var condition = statement.condition.getShaderExpression(variablePrefix, info);
-            var expression = statement.expression.getShaderExpression(variablePrefix, info);
+            var condition = statement.condition.getShaderExpression(attributePrefix, shaderState);
+            var expression = statement.expression.getShaderExpression(attributePrefix, shaderState);
 
             if (!defined(condition) || !defined(expression)) {
                 return undefined;
@@ -182,7 +182,7 @@ define([
                 '    } \n';
         }
 
-        shaderFunction = returnType + ' ' + name + '() \n' +
+        shaderFunction = returnType + ' ' + functionName + '() \n' +
             '{ \n' +
                  shaderFunction +
             '    return ' + returnType + '(1.0); \n' + // Return a default value if no conditions are met

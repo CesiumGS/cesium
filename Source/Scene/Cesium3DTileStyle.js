@@ -318,22 +318,22 @@ define([
     /**
      * Gets the color shader function for this style.
      *
-     * @param {String} name Name to give to the generated function.
-     * @param {String} variablePrefix Prefix that is added to any variable names to access vertex attributes.
-     * @param {Object} info Stores information about the generated shader function.
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
      *
      * @returns {String} The shader function.
      *
      * @private
      */
-    Cesium3DTileStyle.prototype.getColorShaderFunction = function(name, variablePrefix, info) {
+    Cesium3DTileStyle.prototype.getColorShaderFunction = function(functionName, attributePrefix, shaderState) {
         if (this._colorShaderFunctionReady) {
             // Return the cached result, may be undefined
             return this._colorShaderFunction;
         }
 
         this._colorShaderFunctionReady = true;
-        this._colorShaderFunction = this.color.getShaderFunction(name, variablePrefix, 'vec4', info);
+        this._colorShaderFunction = this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4');
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this._colorShaderFunction)) {
             throw new DeveloperError('Could not generate valid shader code for the color style.');
@@ -345,22 +345,22 @@ define([
     /**
      * Gets the show shader function for this style.
      *
-     * @param {String} name Name to give to the generated function.
-     * @param {String} variablePrefix Prefix that is added to any variable names to access vertex attributes.
-     * @param {Object} info Stores information about the generated shader function.
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
      *
      * @returns {String} The shader function.
      *
      * @private
      */
-    Cesium3DTileStyle.prototype.getShowShaderFunction = function(name, variablePrefix, info) {
+    Cesium3DTileStyle.prototype.getShowShaderFunction = function(functionName, attributePrefix, shaderState) {
         if (this._showShaderFunctionReady) {
             // Return the cached result, may be undefined
             return this._showShaderFunction;
         }
 
         this._showShaderFunctionReady = true;
-        this._showShaderFunction = this.show.getShaderFunction(name, variablePrefix, 'bool', info);
+        this._showShaderFunction = this.show.getShaderFunction(functionName, attributePrefix, shaderState, 'bool');
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this._showShaderFunction)) {
             throw new DeveloperError('Could not generate valid shader code for the show style.');
