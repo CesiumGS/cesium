@@ -87,15 +87,15 @@ function loadTileset(url) {
 //              "color" : "rgb(100, 255, 190)",
 //              "color" : "hsla(0.9, 0.6, 0.7, 0.75)",
                 "color" : {
-                    "conditions" : {
-                        "${Height} >= 83" : "color('purple', 0.5)",
-                        "${Height} >= 80" : "color('red')",
-                        "${Height} >= 70" : "color('orange')",
-                        "${Height} >= 12" : "color('yellow')",
-                        "${Height} >= 7" : "color('lime')",
-                        "${Height} >= 1" : "color('cyan')",
-                        "true" : "color('blue')"
-                    }
+                    "conditions" : [
+                        ["${Height} >= 83", "color('purple', 0.5)"],
+                        ["${Height} >= 80", "color('red')"],
+                        ["${Height} >= 70", "color('orange')"],
+                        ["${Height} >= 12", "color('yellow')"],
+                        ["${Height} >= 7", "color('lime')"],
+                        ["${Height} >= 1", "color('cyan')"],
+                        ["true", "color('blue')"]
+                    ]
                 },
 //              "show": false,
 //              "show" : "${Height} >= 0",
@@ -410,13 +410,13 @@ function getRandomColor() {
 }
 
 function styleFunction(name) {
-    var conditions = {};
+    var conditions = [];
     var intervalSize = Math.floor(100/numberofColors);
     for (var i = numberofColors; i >= 0; --i) {
         var cond = '${' + name + '} > ' + (i * intervalSize);
-        conditions[cond] = getRandomColor();
+        conditions.push([cond, getRandomColor()]);
     }
-    conditions['true'] = getRandomColor();
+    conditions.push(['true', getRandomColor()]);
 
     tileset.style = new Cesium.Cesium3DTileStyle({
         color : {
