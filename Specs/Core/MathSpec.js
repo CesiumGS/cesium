@@ -156,6 +156,20 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('clampToLatitudeRange (1)', function() {
+        expect(CesiumMath.clampToLatitudeRange(Math.PI)).toEqual(CesiumMath.PI_OVER_TWO);
+    });
+
+    it('clampToLatitudeRange (2)', function() {
+        expect(CesiumMath.clampToLatitudeRange(-Math.PI)).toEqual(-CesiumMath.PI_OVER_TWO);
+    });
+
+    it('clampToLatitudeRange throws for undefined', function() {
+        expect(function() {
+            CesiumMath.clampToLatitudeRange();
+        }).toThrowDeveloperError();
+    });
+
     it('negativePiToPi positive', function() {
         expect(CesiumMath.negativePiToPi((Math.PI / 2) * Math.PI)).toEqualEpsilon((Math.PI / 2) * Math.PI - CesiumMath.TWO_PI, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(Math.PI / 0.5)).toEqualEpsilon(0.0, CesiumMath.EPSILON16);
