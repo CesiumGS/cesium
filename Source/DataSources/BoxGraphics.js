@@ -32,6 +32,7 @@ define([
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the box casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this box will be displayed.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
      */
@@ -136,6 +137,11 @@ define([
          */
         shadows : createPropertyDescriptor('shadows'),
 
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this box will be displayed.
+         * @memberof BoxGraphics.prototype
+         * @type {Property}
+         */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 

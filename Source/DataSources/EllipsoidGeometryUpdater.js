@@ -252,6 +252,13 @@ define([
                 return this._shadowsProperty;
             }
         },
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
+         * @memberof EllipsoidGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
         distanceDisplayConditionProperty : {
             get : function() {
                 return this._distanceDisplayConditionProperty;

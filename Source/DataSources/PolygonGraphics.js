@@ -41,6 +41,7 @@ define([
      * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
      * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polygon casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polygon will be displayed.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
@@ -217,6 +218,11 @@ define([
          */
         shadows : createPropertyDescriptor('shadows'),
 
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this polygon will be displayed.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 

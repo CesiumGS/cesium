@@ -39,6 +39,7 @@ define([
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the distance between each latitude and longitude.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the corridor casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this corridor will be displayed.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
@@ -194,6 +195,11 @@ define([
          */
         shadows : createPropertyDescriptor('shadows'),
 
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this corridor will be displayed.
+         * @memberof CorridorGraphics.prototype
+         * @type {Property}
+         */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 

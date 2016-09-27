@@ -49,6 +49,7 @@ define([
      * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -180,6 +181,11 @@ define([
          */
         heightReference : createPropertyDescriptor('heightReference'),
 
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this model will be displayed.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 

@@ -240,13 +240,18 @@ define([
                 return this._shadowsProperty;
             }
         },
-
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
+         * @memberof BoxGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
         distanceDisplayConditionProperty : {
             get : function() {
                 return this._distanceDisplayConditionProperty;
             }
         },
-
         /**
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}

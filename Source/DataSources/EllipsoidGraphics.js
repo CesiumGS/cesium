@@ -35,6 +35,7 @@ define([
      * @param {Property} [options.stackPartitions=64] A Property specifying the number of stacks.
      * @param {Property} [options.slicePartitions=64] A Property specifying the number of radial slices.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipsoid casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipsoid will be displayed.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
      */
@@ -170,6 +171,11 @@ define([
          */
         shadows : createPropertyDescriptor('shadows'),
 
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this ellipsoid will be displayed.
+         * @memberof EllipsoidGraphics.prototype
+         * @type {Property}
+         */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 

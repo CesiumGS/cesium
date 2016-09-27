@@ -43,6 +43,7 @@ define([
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      * @param {Property} [options.pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
@@ -253,8 +254,12 @@ define([
          */
         pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance'),
 
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this label will be displayed.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
-
     });
 
     /**

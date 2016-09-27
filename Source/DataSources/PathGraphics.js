@@ -30,6 +30,7 @@ define([
      * @param {Property} [options.width=1.0] A numeric Property specifying the width in pixels.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the path.
      * @param {Property} [options.resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this path will be displayed.
      */
     function PathGraphics(options) {
         this._material = undefined;
@@ -110,6 +111,11 @@ define([
          */
         trailTime : createPropertyDescriptor('trailTime'),
 
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this path will be displayed.
+         * @memberof PathGraphics.prototype
+         * @type {Property}
+         */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 

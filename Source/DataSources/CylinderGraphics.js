@@ -37,6 +37,7 @@ define([
      * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
      * @param {Property} [options.slices=128] The number of edges around the perimeter of the cylinder.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the cylinder casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this cylinder will be displayed.
      */
     function CylinderGraphics(options) {
         this._length = undefined;
@@ -178,6 +179,11 @@ define([
          */
         shadows : createPropertyDescriptor('shadows'),
 
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this cylinder will be displayed.
+         * @memberof CylinderGraphics.prototype
+         * @type {Property}
+         */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 

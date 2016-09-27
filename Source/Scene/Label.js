@@ -659,6 +659,12 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the condition specifying at what distance from the camera that this label will be displayed.
+         * @memberof Label.prototype
+         * @type {DistanceDisplayCondition}
+         * @default undefined
+         */
         distanceDisplayCondition : {
             get : function() {
                 return this._distanceDisplayCondition;

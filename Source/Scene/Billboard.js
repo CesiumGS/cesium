@@ -723,7 +723,7 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Gets or sets the condition specifying at what distance from the camera that this billboard will be displayed.
          * @memberof Billboard.prototype
          * @type {DistanceDisplayCondition}
          * @default undefined

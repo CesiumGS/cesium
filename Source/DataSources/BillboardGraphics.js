@@ -46,6 +46,7 @@ define([
      * @param {Property} [options.imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
      * @param {Property} [options.sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
@@ -310,6 +311,11 @@ define([
          */
         sizeInMeters : createPropertyDescriptor('sizeInMeters'),
 
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this billboard will be displayed.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 

@@ -40,6 +40,7 @@ define([
      * @param {Material} [options.material=Material.ColorType] The material.
      * @param {Cartesian3[]} [options.positions] The positions.
      * @param {Object} [options.id] The user-defined object to be returned when this polyline is picked.
+     * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this polyline will be displayed.
      *
      * @see PolylineCollection
      *
@@ -291,6 +292,12 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the condition specifying at what distance from the camera that this polyline will be displayed.
+         * @memberof Polyline.prototype
+         * @type {DistanceDisplayCondition}
+         * @default undefined
+         */
         distanceDisplayCondition : {
             get : function() {
                 return this._distanceDisplayCondition;

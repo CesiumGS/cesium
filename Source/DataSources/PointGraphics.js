@@ -30,6 +30,7 @@ define([
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this point will be displayed.
      */
     function PointGraphics(options) {
         this._color = undefined;
@@ -136,6 +137,11 @@ define([
          */
         heightReference : createPropertyDescriptor('heightReference'),
 
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this point will be displayed.
+         * @memberof PointGraphics.prototype
+         * @type {Property}
+         */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 

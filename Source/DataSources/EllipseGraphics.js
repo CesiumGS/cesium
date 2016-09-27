@@ -42,6 +42,7 @@ define([
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the ellipse texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the ellipse.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipse casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipse will be displayed.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
      */
@@ -216,6 +217,11 @@ define([
          */
         shadows : createPropertyDescriptor('shadows'),
 
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this ellipse will be displayed.
+         * @memberof EllipseGraphics.prototype
+         * @type {Property}
+         */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
