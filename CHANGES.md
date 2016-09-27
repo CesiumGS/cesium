@@ -12,6 +12,7 @@ Change Log
 * Fixed timeline touch events. [#4305](https://github.com/AnalyticalGraphicsInc/cesium/pull/4305)
 * Fixed a bug that could lead to incorrect terrain heights when using `HeightmapTerrainData` with an encoding in which actual heights were equal to the minimum representable height.
 * Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
+* Added `DistanceDisplayCondition`s to all primitives to determine the range interval from the camera for when it will be visible.
 
 ### 1.25 - 2016-09-01
 
