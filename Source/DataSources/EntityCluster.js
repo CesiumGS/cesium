@@ -127,7 +127,7 @@ define([
 
         expandBoundingBox(result, pixelRange);
 
-        if (!defined(item._labelCollection) && defined(item.id._label) && defined(entityCluster._labelCollection)) {
+        if (!defined(item._labelCollection) && defined(item.id) && defined(item.id._label) && defined(entityCluster._labelCollection)) {
             var labelIndex = item.id._labelIndex;
             var label = entityCluster._labelCollection.get(labelIndex);
             var labelBBox = Label.getScreenSpaceBoundingBox(label, coord, labelBoundingBoxScratch);
@@ -141,7 +141,7 @@ define([
     function addNonClusteredItem(item, entityCluster) {
         item.clusterShow = true;
 
-        if (!defined(item._labelCollection) && defined(item.id._label)) {
+        if (!defined(item._labelCollection) && defined(item.id) && defined(item.id._label)) {
             var labelIndex = item.id._labelIndex;
             var label = entityCluster._labelCollection.get(labelIndex);
             label.clusterShow = true;

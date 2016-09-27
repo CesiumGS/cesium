@@ -133,6 +133,10 @@ define([
                 continue;
             }
 
+            if (!Property.isConstant(entity._position)) {
+                cluster._clusterDirty = true;
+            }
+
             if (!defined(billboard)) {
                 billboard = cluster.getBillboard(entity);
                 billboard.id = entity;

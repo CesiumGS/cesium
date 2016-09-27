@@ -451,6 +451,10 @@ define([
 
         var modelMatrix = pointPrimitiveCollection.modelMatrix;
         var windowCoordinates = PointPrimitive._computeScreenSpacePosition(modelMatrix, this._actualPosition, scene, result);
+        if (!defined(windowCoordinates)) {
+            return undefined;
+        }
+
         windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
         return windowCoordinates;
     };

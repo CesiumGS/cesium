@@ -135,6 +135,10 @@ define([
                 continue;
             }
 
+            if (!Property.isConstant(entity._position)) {
+                cluster._clusterDirty = true;
+            }
+
             if (!defined(label)) {
                 label = cluster.getLabel(entity);
                 label.id = entity;

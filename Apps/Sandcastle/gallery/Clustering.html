@@ -35,23 +35,23 @@
 <div id="toolbar">
     <table>
         <tbody><tr>
-            <td>pixel range</td>
+            <td>Pixel Range</td>
             <td>
                 <input type="range" min="1" max="200" step="1" data-bind="value: pixelRange, valueUpdate: 'input'">
                 <input type="text" size="2" data-bind="value: pixelRange">
             </td>
         </tr>
         <tr>
-            <td>minimum cluster size</td>
+            <td>Minimum Cluster Size</td>
             <td>
                 <input type="range" min="2" max="20" step="1" data-bind="value: minimumClusterSize, valueUpdate: 'input'">
                 <input type="text" size="2" data-bind="value: minimumClusterSize">
             </td>
         </tr>
+        <tr><td><input type="checkbox" data-bind="checked: enabled"/>Enabled</td></tr>
+        <tr><td><input type="checkbox" data-bind="checked: customStyle"/>Custom Styling</td></tr>
         </tbody>
     </table>
-    <div id="toggleClustering"></div>
-    <div id="customStyling"></div>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
@@ -67,34 +67,11 @@ var dataSourcePromise = viewer.dataSources.add(Cesium.KmlDataSource.load('../../
 dataSourcePromise.then(function(dataSource) {
     var pixelRange = 15;
     var minimumClusterSize = 3;
+    var enabled = true;
 
-    dataSource.clustering.enabled = true;
+    dataSource.clustering.enabled = enabled;
     dataSource.clustering.pixelRange = pixelRange;
     dataSource.clustering.minimumClusterSize = minimumClusterSize;
-
-    var viewModel = {
-        pixelRange: pixelRange,
-        minimumClusterSize: minimumClusterSize
-    };
-    Cesium.knockout.track(viewModel);
-
-    var toolbar = document.getElementById('toolbar');
-    Cesium.knockout.applyBindings(viewModel, toolbar);
-
-    function subscribeParameter(name) {
-        Cesium.knockout.getObservable(viewModel, name).subscribe(
-            function(newValue) {
-                dataSource.clustering[name] = newValue;
-            }
-        );
-    }
-
-    subscribeParameter('pixelRange');
-    subscribeParameter('minimumClusterSize');
-
-    Sandcastle.addToolbarButton('Toggle Clustering', function() {
-        dataSource.clustering.enabled = !dataSource.clustering.enabled;
-    }, 'toggleClustering');
 
     var removeListener;
 
@@ -146,7 +123,29 @@ dataSourcePromise.then(function(dataSource) {
     // start with custom style
     customStyle();
 
-    Sandcastle.addToolbarButton('Toggle Custom Styling', customStyle, 'customStyling');
+    var viewModel = {
+        pixelRange: pixelRange,
+        minimumClusterSize: minimumClusterSize,
+        enabled : enabled,
+        customStyle : true
+    };
+    Cesium.knockout.track(viewModel);
+
+    var toolbar = document.getElementById('toolbar');
+    Cesium.knockout.applyBindings(viewModel, toolbar);
+
+    function subscribeParameter(name) {
+        Cesium.knockout.getObservable(viewModel, name).subscribe(
+            function(newValue) {
+                dataSource.clustering[name] = newValue;
+            }
+        );
+    }
+
+    subscribeParameter('pixelRange');
+    subscribeParameter('minimumClusterSize');
+    subscribeParameter('enabled');
+    Cesium.knockout.getObservable(viewModel, 'customStyle').subscribe(customStyle);
 
     var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction(function(movement) {

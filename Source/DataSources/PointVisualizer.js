@@ -116,6 +116,10 @@ define([
                 continue;
             }
 
+            if (!Property.isConstant(entity._position)) {
+                cluster._clusterDirty = true;
+            }
+
             var needsRedraw = false;
             if ((heightReference !== HeightReference.NONE) && !defined(billboard)) {
                 if (defined(pointPrimitive)) {
