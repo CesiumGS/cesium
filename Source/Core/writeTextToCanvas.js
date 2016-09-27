@@ -29,7 +29,7 @@ define([
      * @param {Color} [options.strokeColor=Color.BLACK] The stroke color.
      * @param {Number} [options.strokeWidth=1] The stroke width.
      * @param {Color} [options.backgroundColor=Color.TRANSPARENT] The background color of the canvas.
-     * @param {Number} [options.borderWidth=0] The pixel size of the border to add around the text.
+     * @param {Number} [options.padding=0] The pixel size of the padding to add around the text.
      * @returns {Canvas} A new canvas with the given text drawn into it.  The dimensions object
      *                   from measureText will also be added to the returned canvas. If text is
      *                   blank, returns undefined.
@@ -50,8 +50,8 @@ define([
         var fill = defaultValue(options.fill, true);
         var strokeWidth = defaultValue(options.strokeWidth, 1);
         var backgroundColor = defaultValue(options.backgroundColor, Color.TRANSPARENT);
-        var borderWidth = defaultValue(options.borderWidth, 0);
-        var doubleBorderWidth = borderWidth * 2.0;
+        var padding = defaultValue(options.padding, 0);
+        var doublePadding = padding * 2.0;
 
         var canvas = document.createElement('canvas');
         canvas.width = 1;
@@ -93,9 +93,9 @@ define([
         document.body.removeChild(canvas);
         canvas.style.visibility = '';
 
-        var baseline = dimensions.height - dimensions.ascent + borderWidth;
-        canvas.width = dimensions.computedWidth + doubleBorderWidth;
-        canvas.height = dimensions.height + doubleBorderWidth;
+        var baseline = dimensions.height - dimensions.ascent + padding;
+        canvas.width = dimensions.computedWidth + doublePadding;
+        canvas.height = dimensions.height + doublePadding;
         var y = canvas.height - baseline;
 
         // Properties must be explicitly set again after changing width and height
@@ -113,13 +113,13 @@ define([
         if (stroke) {
             var strokeColor = defaultValue(options.strokeColor, Color.BLACK);
             context2D.strokeStyle = strokeColor.toCssColorString();
-            context2D.strokeText(text, borderWidth, y);
+            context2D.strokeText(text, padding, y);
         }
 
         if (fill) {
             var fillColor = defaultValue(options.fillColor, Color.WHITE);
             context2D.fillStyle = fillColor.toCssColorString();
-            context2D.fillText(text, borderWidth, y);
+            context2D.fillText(text, padding, y);
         }
 
         return canvas;

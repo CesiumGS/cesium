@@ -124,7 +124,7 @@ defineSuite([
         var canvas2 = writeTextToCanvas('a', {
             font : '90px "Open Sans"',
             backgroundColor : Color.RED,
-            borderWidth : 2
+            padding : 2
         });
 
         expect(canvas2.width).toEqual(canvas1.width+4);
