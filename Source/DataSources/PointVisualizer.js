@@ -287,11 +287,13 @@ define([
         if (defined(item)) {
             var pointPrimitive = item.pointPrimitive;
             if (defined(pointPrimitive)) {
+                item.pointPrimitive = undefined;
                 cluster.removePoint(entity);
                 return;
             }
             var billboard = item.billboard;
             if (defined(billboard)) {
+                item.billboard = undefined;
                 cluster.removeBillboard(entity);
             }
         }
