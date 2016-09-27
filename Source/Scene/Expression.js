@@ -695,38 +695,90 @@ define([
     // that we can assign if we know the types before runtime
 
     Node.prototype._evaluateNot = function(feature) {
-        return !(this._left.evaluate(feature));
+        var left = this._left.evaluate(feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'boolean') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
+        return !left;
     };
 
     Node.prototype._evaluateNegative = function(feature) {
-        return -(this._left.evaluate(feature));
+        var left = this._left.evaluate(feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'number') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
+        return -left;
     };
 
     Node.prototype._evaluatePositive = function(feature) {
-        return +(this._left.evaluate(feature));
+        var left = this._left.evaluate(feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'number') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
+        return left;
     };
 
     Node.prototype._evaluateLessThan = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left < right;
     };
 
     Node.prototype._evaluateLessThanOrEquals = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left <= right;
     };
 
     Node.prototype._evaluateGreaterThan = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left > right;
     };
 
     Node.prototype._evaluateGreaterThanOrEquals = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left >= right;
     };
 
@@ -777,18 +829,36 @@ define([
     Node.prototype._evaluatePlus = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
+
         if ((right instanceof Color) && (left instanceof Color)) {
             return Color.add(left, right, getScratchColor());
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        var leftType = typeof(left);
+        var rightType = typeof(right);
+        if (leftType !== rightType || (leftType !== 'number' && leftType !== 'string')) {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left + right;
     };
 
     Node.prototype._evaluateMinus = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
+
         if ((right instanceof Color) && (left instanceof Color)) {
             return Color.subtract(left, right, getScratchColor());
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left - right;
     };
 
@@ -802,6 +872,13 @@ define([
         } else if ((left instanceof Color) && (typeof(right) === 'number')) {
             return Color.multiplyByScalar(left, right, getScratchColor());
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left * right;
     };
 
@@ -813,6 +890,13 @@ define([
         } else if ((left instanceof Color) && (typeof(right) === 'number')) {
             return Color.divideByScalar(left, right, getScratchColor());
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left / right;
     };
 
@@ -822,6 +906,13 @@ define([
         if ((right instanceof Color) && (left instanceof Color)) {
             return Color.mod(left, right, getScratchColor());
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left % right;
     };
 
@@ -851,11 +942,27 @@ define([
     };
 
     Node.prototype._evaluateNaN = function(feature) {
-        return isNaN(this._left.evaluate(feature));
+        var left = this._left.evaluate(feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'number') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
+        return isNaN(left);
     };
 
     Node.prototype._evaluateIsFinite = function(feature) {
-        return isFinite(this._left.evaluate(feature));
+        var left = this._left.evaluate(feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'number') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
+        return isFinite(left);
     };
 
     Node.prototype._evaluateBooleanConversion = function(feature) {
