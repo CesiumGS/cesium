@@ -117,6 +117,7 @@ define([
      * @returns {Boolean|Number|String|Color|RegExp} The result of evaluating the expression.
      */
     Expression.prototype.evaluate = function(feature) {
+        scratchColorIndex = 0;
         return this._runtimeAst.evaluate(feature);
     };
 
