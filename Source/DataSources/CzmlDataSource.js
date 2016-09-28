@@ -1411,8 +1411,6 @@ define([
         processPacketData(Number, model, 'maximumScale', modelData.maximumScale, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'incrementallyLoadTextures', modelData.incrementallyLoadTextures, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, model, 'castShadows', modelData.castShadows, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, model, 'receiveShadows', modelData.receiveShadows, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, model, 'shadows', modelData.shadows, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, model, 'heightReference', modelData.heightReference, interval, sourceUri, entityCollection);
 
