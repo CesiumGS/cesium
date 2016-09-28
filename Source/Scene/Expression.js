@@ -1198,6 +1198,11 @@ define([
                 // This is intended for accessing the components of vec2, vec3, and vec4 properties. String members aren't supported.
                 return left + '[int(' + right + ')]';
             case ExpressionNodeType.ARRAY:
+                //>>includeStart('debug', pragmas.debug);
+                if (value.length < 2 || value.length > 4) {
+                    throw new DeveloperError('Invalid array length. Array length should be between 2 and 4');
+                }
+                //>>includeEnd('debug');
                 if (value.length === 4) {
                     return 'vec4(' + value[0] + ', ' + value[1] + ', ' + value[2] + ', ' + value[3] + ')';
                 } else if (value.length === 3) {
