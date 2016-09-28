@@ -11,6 +11,7 @@ Change Log
 * Fixed billboard rotation when sized in meters. [#3979](https://github.com/AnalyticalGraphicsInc/cesium/issues/3979)
 * Fixed timeline touch events. [#4305](https://github.com/AnalyticalGraphicsInc/cesium/pull/4305)
 * Fixed a bug that could lead to incorrect terrain heights when using `HeightmapTerrainData` with an encoding in which actual heights were equal to the minimum representable height.
+* Fixed a bug in `AttributeCompression.compressTextureCoordinates` and `decompressTextureCoordinates` that could cause a small inaccuracy in the encoded texture coordinates.
 * Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
 
 ### 1.25 - 2016-09-01
