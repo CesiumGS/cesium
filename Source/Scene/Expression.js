@@ -1066,6 +1066,24 @@ define([
         return Color.fromHsl(h, s, l, a, scratchColor);
     }
 
+    function convertRGBToColor(ast) {
+        // Check if the color contains any nested expressions to see if the color can be converted here.
+        // E.g. "rgb(255, 255, 255)" is able to convert directly to Color, "rgb(255, 255, ${Height})" is not.
+        var channels = ast._left;
+        var length = channels.length;
+        for (var i = 0; i < length; ++i) {
+            if (channels[i]._type !== ExpressionNodeType.LITERAL_NUMBER) {
+                return undefined;
+            }
+        }
+        var color = scratchColor;
+        color.red = channels[0]._value / 255.0;
+        color.green = channels[1]._value / 255.0;
+        color.blue = channels[2]._value / 255.0;
+        color.alpha = (length === 4) ? channels[3]._value : 1.0;
+        return color;
+    }
+
     function numberToString(number) {
         if (number % 1 === 0) {
             // Add a .0 to whole numbers
@@ -1215,12 +1233,22 @@ define([
                         return 'vec4(' + args[0] + ', 1.0)';
                     }
                 } else if (value === 'rgb') {
-                    return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, 1.0)';
+                    color = convertRGBToColor(this);
+                    if (defined(color)) {
+                        return colorToVec4(color);
+                    } else {
+                        return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, 1.0)';
+                    }
                 } else if (value === 'rgba') {
                     if (args[3] !== '1.0') {
                         shaderState.translucent = true;
                     }
-                    return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, ' + args[3] + ')';
+                    color = convertRGBToColor(this);
+                    if (defined(color)) {
+                        return colorToVec4(color);
+                    } else {
+                        return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, ' + args[3] + ')';
+                    }
                 } else if (value === 'hsl') {
                     color = convertHSLToRGB(this);
                     if (defined(color)) {
