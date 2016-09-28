@@ -1,7 +1,7 @@
 /*global define*/
 define([
         '../ThirdParty/when',
-        './CredentialsRegistry',
+        './TrustedServers',
         './defaultValue',
         './defined',
         './DeveloperError',
@@ -9,7 +9,7 @@ define([
         './RuntimeError'
     ], function(
         when,
-        CredentialsRegistry,
+        TrustedServers,
         defaultValue,
         defined,
         DeveloperError,
@@ -134,7 +134,7 @@ define([
 
         var xhr = new XMLHttpRequest();
 
-        if (CredentialsRegistry.isTrusted(url)) {
+        if (TrustedServers.contains(url)) {
             xhr.withCredentials = true;
         }
 

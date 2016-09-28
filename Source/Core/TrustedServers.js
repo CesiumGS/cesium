@@ -15,12 +15,12 @@ define([
      * A singleton that contains all of the servers that are trusted. Credentials will be sent with
      * any requests to these servers.
      *
-     * @exports CredentialsRegistry
+     * @exports TrustedServers
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
-    var CredentialsRegistry = {};
-    var _credentials = {};
+    var TrustedServers = {};
+    var _servers = {};
 
     /**
      * Adds a trusted server to the registry
@@ -29,9 +29,9 @@ define([
      *
      * @example
      * // Add a trusted server
-     * CredentialsRegistry.addTrustedServer('my.server.com:81');
+     * TrustedServers.add('my.server.com:81');
      */
-    CredentialsRegistry.addTrustedServer = function(authority) {
+    TrustedServers.add = function(authority) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(authority)) {
             throw new DeveloperError('authority is required.');
@@ -39,8 +39,8 @@ define([
         //>>includeEnd('debug');
 
         authority = authority.toLowerCase();
-        if (!defined(_credentials[authority])) {
-            _credentials[authority] = true;
+        if (!defined(_servers[authority])) {
+            _servers[authority] = true;
         }
     };
 
@@ -51,9 +51,9 @@ define([
      *
      * @example
      * // Remove a trusted server
-     * CredentialsRegistry.removeTrustedServer('my.server.com:81');
+     * TrustedServers.remove('my.server.com:81');
      */
-    CredentialsRegistry.removeTrustedServer = function(authority) {
+    TrustedServers.remove = function(authority) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(authority)) {
             throw new DeveloperError('authority is required.');
@@ -61,8 +61,8 @@ define([
         //>>includeEnd('debug');
 
         authority = authority.toLowerCase();
-        if (defined(_credentials[authority])) {
-            delete _credentials[authority];
+        if (defined(_servers[authority])) {
+            delete _servers[authority];
         }
     };
 
@@ -75,17 +75,17 @@ define([
      *
      * @example
      * // Add server
-     * CredentialsRegistry.removeTrustedServer('my.server.com:81');
+     * TrustedServers.add('my.server.com:81');
      *
      * // Check if server is trusted
-     * if (CredentialsRegistry.isTrusted('https://my.server.com:81/path/to/file.png')) {
+     * if (TrustedServers.contains('https://my.server.com:81/path/to/file.png')) {
      *     // my.server.com:81 is trusted
      * }
-     * if (CredentialsRegistry.isTrusted('https://my.server.com/path/to/file.png')) {
+     * if (TrustedServers.contains('https://my.server.com/path/to/file.png')) {
      *     // my.server.com isn't trusted
      * }
      */
-    CredentialsRegistry.isTrusted = function(url) {
+    TrustedServers.contains = function(url) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
@@ -98,7 +98,7 @@ define([
             return false;
         }
 
-        if (defined(_credentials[authority])) {
+        if (defined(_servers[authority])) {
             return true;
         }
 
@@ -112,7 +112,7 @@ define([
                 return false;
             }
 
-            if (defined(_credentials[authority])) {
+            if (defined(_servers[authority])) {
                 return true;
             }
         }
@@ -125,11 +125,11 @@ define([
      *
      * @example
      * // Remove a trusted server
-     * CredentialsRegistry.clear();
+     * TrustedServers.clear();
      */
-    CredentialsRegistry.clear = function() {
-        _credentials = [];
+    TrustedServers.clear = function() {
+        _servers = [];
     };
     
-    return CredentialsRegistry;
+    return TrustedServers;
 });
