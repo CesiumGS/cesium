@@ -697,6 +697,7 @@ define([
             this._lastShow = showFill;
             this._lastOutlineShow = showOutline;
             this._lastOutlineColor = Color.clone(outlineColor, this._lastOutlineColor);
+            this._lastDistanceDisplayCondition = distanceDisplayCondition;
         } else if (this._primitive.ready) {
             //Update attributes only.
             var primitive = this._primitive;
@@ -733,6 +734,12 @@ define([
             if (!Color.equals(outlineColor, this._lastOutlineColor)) {
                 outlineAttributes.color = ColorGeometryInstanceAttribute.toValue(outlineColor, outlineAttributes.color);
                 Color.clone(outlineColor, this._lastOutlineColor);
+            }
+
+            if (!DistanceDisplayCondition.equals(distanceDisplayCondition, this._lastDistanceDisplayCondition)) {
+                attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
+                outlineAttributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, outlineAttributes.distanceDisplayCondition);
+                DistanceDisplayCondition.clone(distanceDisplayCondition, this._lastDistanceDisplayCondition);
             }
         }
 
