@@ -344,13 +344,10 @@ defineSuite([
         cluster = new EntityCluster();
         cluster._initialize(scene);
 
-        cluster.clusterEvent.addEventListener(function(cluster, entity) {
-            entity.billboard = {
-                image : createBillboardImage()
-            };
-            entity.label = {
-                text : 'cluster'
-            };
+        cluster.clusterEvent.addEventListener(function(clusteredEntities, cluster) {
+            cluster.billboard.show = true;
+            cluster.billboard.image = createBillboardImage();
+            cluster.label.text = 'cluster';
         });
 
         var entity = new Entity();
