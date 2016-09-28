@@ -67,7 +67,8 @@ defineSuite([
 
     it('default construct with normal, binormal, or tangent attribute name', function() {
         var a = new DebugAppearance({
-            attributeName : 'normal'
+            attributeName : 'normal',
+            perInstanceAttribute : false
         });
 
         expect(a.vertexShaderSource).toBeDefined();
@@ -87,7 +88,8 @@ defineSuite([
 
     it('default construct with st attribute name', function() {
         var a = new DebugAppearance({
-            attributeName : 'st'
+            attributeName : 'st',
+            perInstanceAttribute : false
         });
 
         expect(a.vertexShaderSource).toBeDefined();
@@ -108,7 +110,8 @@ defineSuite([
     it('debug appearance with float attribute name', function() {
         var a = new DebugAppearance({
             attributeName : 'rotation',
-            glslDatatype : 'float'
+            glslDatatype : 'float',
+            perInstanceAttribute : true
         });
 
         expect(a.vertexShaderSource).toBeDefined();
@@ -129,7 +132,8 @@ defineSuite([
     it('debug appearance with vec3 attribute name', function() {
         var a = new DebugAppearance({
             attributeName : 'str',
-            glslDatatype : 'vec3'
+            glslDatatype : 'vec3',
+            perInstanceAttribute : false
         });
 
         expect(a.vertexShaderSource).toBeDefined();
@@ -150,7 +154,8 @@ defineSuite([
     it('debug appearance with vec4 attribute name', function() {
         var a = new DebugAppearance({
             attributeName : 'quaternion',
-            glslDatatype : 'vec4'
+            glslDatatype : 'vec4',
+            perInstanceAttribute : true
         });
 
         expect(a.vertexShaderSource).toBeDefined();
@@ -172,7 +177,8 @@ defineSuite([
         expect(function() {
             return new DebugAppearance({
                 attributeName : 'invalid_datatype',
-                glslDatatype : 'invalid'
+                glslDatatype : 'invalid',
+                perInstanceAttribute : true
             });
         }).toThrowDeveloperError();
     });
@@ -185,7 +191,8 @@ defineSuite([
         primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
-                attributeName : 'normal'
+                attributeName : 'normal',
+                perInstanceAttribute : false
             }),
             asynchronous : false,
             compressVertices : false
@@ -206,7 +213,8 @@ defineSuite([
         primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
-                attributeName : 'binormal'
+                attributeName : 'binormal',
+                perInstanceAttribute : false
             }),
             asynchronous : false,
             compressVertices : false
@@ -227,7 +235,8 @@ defineSuite([
         primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
-                attributeName : 'tangent'
+                attributeName : 'tangent',
+                perInstanceAttribute : false
             }),
             asynchronous : false,
             compressVertices : false
@@ -247,7 +256,8 @@ defineSuite([
         primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
-                attributeName : 'st'
+                attributeName : 'st',
+                perInstanceAttribute : false
             }),
             asynchronous : false,
             compressVertices : false
@@ -272,7 +282,8 @@ defineSuite([
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
-                glslDatatype : 'float'
+                glslDatatype : 'float',
+                perInstanceAttribute : true
             }),
             asynchronous : false
         });
@@ -296,7 +307,8 @@ defineSuite([
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
-                glslDatatype : 'vec2'
+                glslDatatype : 'vec2',
+                perInstanceAttribute : true
             }),
             asynchronous : false
         });
@@ -320,7 +332,8 @@ defineSuite([
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
-                glslDatatype : 'vec3'
+                glslDatatype : 'vec3',
+                perInstanceAttribute : true
             }),
             asynchronous : false
         });
@@ -344,7 +357,8 @@ defineSuite([
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
-                glslDatatype : 'vec4'
+                glslDatatype : 'vec4',
+                perInstanceAttribute : true
             }),
             asynchronous : false
         });
