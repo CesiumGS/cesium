@@ -6,6 +6,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
@@ -24,6 +25,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        getBaseUri,
         getMagic,
         getStringFromTypedArray,
         loadArrayBuffer,
@@ -256,7 +258,7 @@ define([
             gltf : gltfView,
             cull : false,           // The model is already culled by the 3D tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-            basePath : this._url,
+            basePath : getBaseUri(this._url, false),
             modelMatrix : this._tile.computedTransform,
             vertexShaderLoaded : batchTable.getVertexShaderCallback(),
             fragmentShaderLoaded : batchTable.getFragmentShaderCallback(),

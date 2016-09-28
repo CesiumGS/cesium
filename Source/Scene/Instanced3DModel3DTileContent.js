@@ -11,6 +11,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/joinUrls',
@@ -43,6 +44,7 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        getBaseUri,
         getMagic,
         getStringFromTypedArray,
         joinUrls,
@@ -314,7 +316,7 @@ define([
             collectionOptions.url = joinUrls(baseUrl, gltfUrl);
         } else {
             collectionOptions.gltf = gltfView;
-            collectionOptions.basePath = this._url;
+            collectionOptions.basePath = getBaseUri(this._url, false);
         }
 
         var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');
