@@ -35,26 +35,6 @@ defineSuite([
         expect(dc.far).toEqual(far);
     });
 
-    it('determines if a primitive is visible', function() {
-        var mockPrimitive = {
-            modelMatrix : Matrix4.IDENTITY
-        };
-        var mockFrameState = {
-            camera : {
-                positionWC : new Cartesian3(0.0, 0.0, 200.0)
-            }
-        };
-
-        var dc = new DistanceDisplayCondition(10.0, 100.0);
-        expect(dc.isVisible(mockPrimitive, mockFrameState)).toEqual(false);
-
-        mockFrameState.camera.positionWC.z = 50.0;
-        expect(dc.isVisible(mockPrimitive, mockFrameState)).toEqual(true);
-
-        mockFrameState.camera.positionWC.z = 5.0;
-        expect(dc.isVisible(mockPrimitive, mockFrameState)).toEqual(false);
-    });
-
     it('determines equality with static function', function() {
         var dc = new DistanceDisplayCondition(10.0, 100.0);
         expect(DistanceDisplayCondition.equals(dc, new DistanceDisplayCondition(10.0, 100.0))).toEqual(true);
@@ -71,13 +51,13 @@ defineSuite([
         expect(dc.equals(undefined)).toEqual(false);
     });
 
-    it('clones', function() {
+    it('static clones', function() {
         var dc = new DistanceDisplayCondition(10.0, 100.0);
         var result = DistanceDisplayCondition.clone(dc);
         expect(dc).toEqual(result);
     });
 
-    it('clone with a result parameter', function() {
+    it('static clone with a result parameter', function() {
         var dc = new DistanceDisplayCondition(10.0, 100.0);
         var result = new DistanceDisplayCondition();
         var returnedResult = DistanceDisplayCondition.clone(dc, result);
@@ -86,9 +66,30 @@ defineSuite([
         expect(dc).toEqual(result);
     });
 
+    it('static clone works with a result parameter that is an input parameter', function() {
+        var dc = new DistanceDisplayCondition(10.0, 100.0);
+        var returnedResult = DistanceDisplayCondition.clone(dc, dc);
+        expect(dc).toBe(returnedResult);
+    });
+
+    it('clones', function() {
+        var dc = new DistanceDisplayCondition(10.0, 100.0);
+        var result = dc.clone();
+        expect(dc).toEqual(result);
+    });
+
+    it('clone with a result parameter', function() {
+        var dc = new DistanceDisplayCondition(10.0, 100.0);
+        var result = new DistanceDisplayCondition();
+        var returnedResult = dc.clone(result);
+        expect(dc).not.toBe(result);
+        expect(result).toBe(returnedResult);
+        expect(dc).toEqual(result);
+    });
+
     it('clone works with a result parameter that is an input parameter', function() {
         var dc = new DistanceDisplayCondition(10.0, 100.0);
-        var returnedResult = Cartesian3.clone(dc, dc);
+        var returnedResult = dc.clone(dc);
         expect(dc).toBe(returnedResult);
     });
 });

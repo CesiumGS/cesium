@@ -3576,6 +3576,35 @@ define([
         }
     }
 
+    var scratchDisplayConditionCartesian = new Cartesian3();
+    var scratchDistanceDisplayConditionCartographic = new Cartographic();
+
+    function distanceDisplayConditionVisible(model, frameState) {
+        var distance2;
+        var ddc = model.distanceDisplayCondition;
+        var nearSquared = ddc.near * ddc.near;
+        var farSquared = ddc.far * ddc.far;
+
+        if (frameState.mode === SceneMode.SCENE2D) {
+            var frustum2DWidth = frameState.camera.frustum.right - frameState.camera.frustum.left;
+            distance2 = frustum2DWidth * 0.5;
+            distance2 = distance2 * distance2;
+        } else {
+            // Distance to center of primitive's reference frame
+            var position = Matrix4.getTranslation(model.modelMatrix, scratchDisplayConditionCartesian);
+            if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+                var projection = frameState.mapProjection;
+                var ellipsoid = projection.ellipsoid;
+                var cartographic = ellipsoid.cartesianToCartographic(position, scratchDistanceDisplayConditionCartographic);
+                position = projection.project(cartographic, position);
+                Cartesian3.fromElements(position.z, position.x, position.y, position);
+            }
+            distance2 = Cartesian3.distanceSquared(position, frameState.camera.positionWC);
+        }
+
+        return (distance2 >= nearSquared) && (distance2 <= farSquared);
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -3692,7 +3721,7 @@ define([
             }
         }
 
-        var displayConditionPassed = defined(this.distanceDisplayCondition) ? this.distanceDisplayCondition.isVisible(this, frameState) : true;
+        var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
         var show = this.show && displayConditionPassed && (this.scale !== 0.0);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {

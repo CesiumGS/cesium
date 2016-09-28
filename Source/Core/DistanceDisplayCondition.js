@@ -3,14 +3,12 @@ define([
         './Cartesian3',
         './defaultValue',
         './defined',
-        './defineProperties',
-        './Matrix4'
+        './defineProperties'
     ], function(
         Cartesian3,
         defaultValue,
         defined,
-        defineProperties,
-        Matrix4) {
+        defineProperties) {
     'use strict';
 
     /**
@@ -29,11 +27,9 @@ define([
     function DistanceDisplayCondition(near, far) {
         near = defaultValue(near, 0.0);
         this._near = near;
-        this._near2 = near * near;
 
         far = defaultValue(far, Number.MAX_VALUE);
         this._far = far;
-        this._far2 = far * far;
     }
 
     defineProperties(DistanceDisplayCondition.prototype, {
@@ -49,7 +45,6 @@ define([
             },
             set : function(value) {
                 this._near = value;
-                this._near2 = value * value;
             }
         },
         /**
@@ -64,27 +59,9 @@ define([
             },
             set : function(value) {
                 this._far = value;
-                this._far2 = value * value;
             }
         }
     });
-
-    var scratchPosition = new Cartesian3();
-
-    /**
-     * Determines is a model is visible based on the current frame state.
-     * @private
-     *
-     * @param {Model} model The model.
-     * @param {FrameState} frameState The current frame state.
-     * @return {Boolean} Whether the model is visible.
-     */
-    DistanceDisplayCondition.prototype.isVisible = function(model, frameState) {
-        // Distance to center of primitive's reference frame
-        var position = Matrix4.getTranslation(model.modelMatrix, scratchPosition);
-        var distance2 = Cartesian3.distanceSquared(position, frameState.camera.positionWC);
-        return (distance2 >= this._near2) && (distance2 <= this._far2);
-    };
 
     /**
      * Determines if two distance display conditions are equal.
@@ -120,6 +97,16 @@ define([
         result.near = value.near;
         result.far = value.far;
         return result;
+    };
+
+    /**
+     * Duplicates this instance.
+     *
+     * @param {DistanceDisplayCondition} [result] The result onto which to store the result.
+     * @return {DistanceDisplayCondition} The duplicated instance.
+     */
+    DistanceDisplayCondition.prototype.clone = function(result) {
+        return DistanceDisplayCondition.clone(this, result);
     };
 
     /**
