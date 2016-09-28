@@ -861,11 +861,11 @@ defineSuite([
     it('enable debugShow for cascaded shadow map', function() {
         createCascadedShadowMap();
 
-        // Shadow overlay command, shadow volume outline, camera outline, and four cascade outlines
+        // Shadow overlay command, shadow volume outline, camera outline, four cascade outlines, four cascade planes
         scene.shadowMap.debugShow = true;
         scene.shadowMap.debugFreezeFrame = true;
         render();
-        expect(scene.frameState.commandList.length).toBe(7);
+        expect(scene.frameState.commandList.length).toBe(13);
 
         scene.shadowMap.debugShow = false;
         render();
@@ -875,10 +875,10 @@ defineSuite([
     it('enable debugShow for fixed shadow map', function() {
         createShadowMapForDirectionalLight();
 
-        // Overlay command and shadow volume outline
+        // Overlay command, shadow volume outline, shadow volume planes
         scene.shadowMap.debugShow = true;
         render();
-        expect(scene.frameState.commandList.length).toBe(2);
+        expect(scene.frameState.commandList.length).toBe(3);
 
         scene.shadowMap.debugShow = false;
         render();
