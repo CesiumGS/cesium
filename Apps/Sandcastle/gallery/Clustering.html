@@ -92,24 +92,23 @@ dataSourcePromise.then(function(dataSource) {
             removeListener();
             removeListener = undefined;
         } else {
-            removeListener = dataSource.clustering.clusterEvent.addEventListener(function(cluster, entity) {
-                entity.label = undefined;
-                entity.billboard = {
-                    verticalOrigin : Cesium.VerticalOrigin.BOTTOM
-                };
+            removeListener = dataSource.clustering.clusterEvent.addEventListener(function(clusteredEntities, cluster) {
+                cluster.label.show = false;
+                cluster.billboard.show = true;
+                cluster.billboard.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
 
-                if (cluster.length >= 50) {
-                    entity.billboard.image = pin50;
-                } else if (cluster.length >= 40) {
-                    entity.billboard.image = pin40;
-                } else if (cluster.length >= 30) {
-                    entity.billboard.image = pin30;
-                } else if (cluster.length >= 20) {
-                    entity.billboard.image = pin20;
-                } else if (cluster.length >= 10) {
-                    entity.billboard.image = pin10;
+                if (clusteredEntities.length >= 50) {
+                    cluster.billboard.image = pin50;
+                } else if (clusteredEntities.length >= 40) {
+                    cluster.billboard.image = pin40;
+                } else if (clusteredEntities.length >= 30) {
+                    cluster.billboard.image = pin30;
+                } else if (clusteredEntities.length >= 20) {
+                    cluster.billboard.image = pin20;
+                } else if (clusteredEntities.length >= 10) {
+                    cluster.billboard.image = pin10;
                 } else {
-                    entity.billboard.image = singleDigitPins[cluster.length - 2];
+                    cluster.billboard.image = singleDigitPins[clusteredEntities.length - 2];
                 }
             });
         }

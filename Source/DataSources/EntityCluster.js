@@ -148,57 +148,20 @@ define([
         }
     }
 
-    var defaultFont = '30px sans-serif';
-    var defaultStyle = LabelStyle.FILL;
-    var defaultFillColor = Color.WHITE;
-    var defaultOutlineColor = Color.BLACK;
-    var defaultOutlineWidth = 1.0;
-
     function addCluster(position, numPoints, ids, entityCluster) {
-        var entity = new Entity({
-            position : position,
-            label : {
-                text : numPoints.toLocaleString()
-            }
-        });
+        var cluster = {
+            billboard : entityCluster._clusterBillboardCollection.add(),
+            label : entityCluster._clusterLabelCollection.add(),
+            point : entityCluster._clusterPointCollection.add()
+        };
 
-        entityCluster._clusterEvent.raiseEvent(ids, entity);
-
-        var labelGraphics = entity._label;
-
-        var hasLabel = defined(labelGraphics);
-        hasLabel = hasLabel && defined(labelGraphics._text) && Property.isConstant(labelGraphics._text);
-        hasLabel = hasLabel && (!defined(labelGraphics._font) || Property.isConstant(labelGraphics._font));
-        hasLabel = hasLabel && (!defined(labelGraphics._style) || Property.isConstant(labelGraphics._style));
-        hasLabel = hasLabel && (!defined(labelGraphics._fillColor) || Property.isConstant(labelGraphics._fillColor));
-        hasLabel = hasLabel && (!defined(labelGraphics._outlineColor) || Property.isConstant(labelGraphics._outlineColor));
-        hasLabel = hasLabel && (!defined(labelGraphics._outlineWidth) || Property.isConstant(labelGraphics._outlineWidth));
-
-        if (hasLabel) {
-            var label = entityCluster._clusterLabelCollection.add();
-
-            label.show = true;
-            label.position = position;
-            label.text = Property.getValueOrUndefined(labelGraphics._text, undefined);
-            label.font = Property.getValueOrDefault(labelGraphics._font, undefined, defaultFont);
-            label.style = Property.getValueOrDefault(labelGraphics._style, undefined, defaultStyle);
-            label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, undefined, defaultFillColor);
-            label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, undefined, defaultOutlineColor);
-            label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, undefined, defaultOutlineWidth);
-
-            label.id = ids;
-        }
-
-        var billboardGraphics = entity._billboard;
-        if (defined(billboardGraphics) && defined(billboardGraphics._image) && Property.isConstant(billboardGraphics._image)) {
-            var billboard = entityCluster._clusterBillboardCollection.add();
-
-            billboard.show = true;
-            billboard.position = position;
-            billboard.image = billboardGraphics._image.getValue();
-
-            billboard.id = ids;
-        }
+        cluster.billboard.show = false;
+        cluster.point.show = false;
+        cluster.label.show = true;
+        cluster.label.text = numPoints.toLocaleString();
+        cluster.billboard.position = cluster.label.position = cluster.point.position = position;
+        
+        entityCluster._clusterEvent.raiseEvent(ids, cluster);
     }
 
     function getScreenSpacePositions(collection, points, scene, occluder) {
