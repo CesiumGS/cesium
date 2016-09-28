@@ -487,6 +487,7 @@ define([
 
             for (var name in styleableProperties) {
                 if (styleableProperties.hasOwnProperty(name)) {
+                    // TODO : this will not handle matrix types currently
                     var property = styleableProperties[name];
                     var typedArray = property.typedArray;
                     var componentCount = property.componentCount;
