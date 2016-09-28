@@ -32,11 +32,11 @@ define([
      * @example
      * var expression = new Cesium.Expression({
      *     expression : 'regExp("^1(\\d)").exec(${id})',
-     *     conditions : {
-     *         '${expression} === "1"' : 'color("#FF0000")',
-     *         '${expression} === "2"' : 'color("#00FF00")',
-     *         'true' : 'color("#FFFFFF")'
-     *     }
+     *     conditions : [
+     *         ['${expression} === "1"', 'color("#FF0000")'],
+     *         ['${expression} === "2"', 'color("#00FF00")'],
+     *         ['true', 'color("#FFFFFF")']
+     *     ]
      * });
      * expression.evaluateColor(feature, result); // returns a Cesium.Color object
      *
@@ -78,23 +78,25 @@ define([
     function setRuntime(expression) {
         var runtimeConditions = [];
         var conditions = expression._conditions;
-        var exp = expression._expression;
-        var length = conditions.length;
-        for (var i = 0; i < length; ++i) {
-            var statement = conditions[i];
-            var cond = String(statement[0]);
-            var condExpression = String(statement[1]);
-            if (defined(exp)) {
-                cond = cond.replace(expressionPlaceholder, exp);
-                condExpression = condExpression.replace(expressionPlaceholder, exp);
-            } else {
-                cond = cond.replace(expressionPlaceholder, 'undefined');
-                condExpression = condExpression.replace(expressionPlaceholder, 'undefined');
+        if (defined(conditions)) {
+            var exp = expression._expression;
+            var length = conditions.length;
+            for (var i = 0; i < length; ++i) {
+                var statement = conditions[i];
+                var cond = String(statement[0]);
+                var condExpression = String(statement[1]);
+                if (defined(exp)) {
+                    cond = cond.replace(expressionPlaceholder, exp);
+                    condExpression = condExpression.replace(expressionPlaceholder, exp);
+                } else {
+                    cond = cond.replace(expressionPlaceholder, 'undefined');
+                    condExpression = condExpression.replace(expressionPlaceholder, 'undefined');
+                }
+                runtimeConditions.push(new Statement(
+                    new Expression(cond),
+                    new Expression(condExpression)
+                ));
             }
-            runtimeConditions.push(new Statement(
-                new Expression(cond),
-                new Expression(condExpression)
-            ));
         }
 
         expression._runtimeConditions = runtimeConditions;

@@ -118,7 +118,11 @@ define([
      */
     Expression.prototype.evaluate = function(feature) {
         scratchColorIndex = 0;
-        return this._runtimeAst.evaluate(feature);
+        var result = this._runtimeAst.evaluate(feature);
+        if (result instanceof Color) {
+            return Color.clone(result);
+        }
+        return result;
     };
 
     /**

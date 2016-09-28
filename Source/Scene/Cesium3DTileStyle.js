@@ -40,11 +40,11 @@ define([
      * @example
      * tileset.style = new Cesium.Cesium3DTileStyle({
      *     color : {
-     *         conditions : {
-     *             '${Height} >= 100' : 'color("purple", 0.5)',
-     *             '${Height} >= 50' : 'color("red")',
-     *             'true' : 'color("blue")'
-     *         }
+     *         conditions : [
+     *             ['${Height} >= 100', 'color("purple", 0.5)'],
+     *             ['${Height} >= 50', 'color("red")'],
+     *             ['true', 'color("blue")']
+     *         ]
      *     },
      *     show : '${Height} > 0',
      *     meta : {

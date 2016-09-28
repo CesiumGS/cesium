@@ -1177,10 +1177,10 @@ defineSuite([
             // ${id} < 10 will always evaluate to true
             tileset.style = new Cesium3DTileStyle({
                 color : {
-                    conditions : {
-                        '${id} < 10' : 'color("red")',
-                        'true' : 'color("blue")'
-                    }
+                    conditions : [
+                        ['${id} < 10', 'color("red")'],
+                        ['true', 'color("blue")']
+                    ]
                 }
             });
             var color = scene.renderForSpecs();
@@ -1192,10 +1192,10 @@ defineSuite([
             // ${id}>= 10 will always evaluate to false
             tileset.style = new Cesium3DTileStyle({
                 color : {
-                    conditions : {
-                        '${id} >= 10' : 'color("red")',
-                        'true' : 'color("blue")'
-                    }
+                    conditions : [
+                        ['${id} >= 10', 'color("red")'],
+                        ['true', 'color("blue")']
+                    ]
                 }
             });
             color = scene.renderForSpecs();

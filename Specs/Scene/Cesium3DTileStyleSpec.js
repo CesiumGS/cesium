@@ -148,10 +148,10 @@ defineSuite([
 
     it ('sets color value to conditional', function() {
         var jsonExp = {
-            conditions : {
-                '${height} > 2' : 'color("cyan")',
-                'true' : 'color("blue")'
-            }
+            conditions : [
+                ['${height} > 2', 'color("cyan")'],
+                ['true', 'color("blue")']
+            ]
         };
 
         var style = new Cesium3DTileStyle({
@@ -295,11 +295,11 @@ defineSuite([
         var style = new Cesium3DTileStyle({
             "color" : {
                 "expression" : "regExp('^1(\\d)').exec(${id})",
-                "conditions" : {
-                    "${expression} === '1'" : "color('#FF0000')",
-                    "${expression} === '2'" : "color('#00FF00')",
-                    "true" : "color('#FFFFFF')"
-                }
+                "conditions" : [
+                    ["${expression} === '1'", "color('#FF0000')"],
+                    ["${expression} === '2'", "color('#00FF00')"],
+                    ["true", "color('#FFFFFF')"]
+                ]
             }
         });
         expect(style.show.evaluate(feature1)).toEqual(true);
@@ -311,14 +311,14 @@ defineSuite([
         var style = new Cesium3DTileStyle({
             "color" : {
                 "expression" : "${Height}",
-                "conditions" : {
-                    "(${expression} >= 1.0)  && (${expression} < 10.0)" : "color('#FF00FF')",
-                    "(${expression} >= 10.0) && (${expression} < 30.0)" : "color('#FF0000')",
-                    "(${expression} >= 30.0) && (${expression} < 50.0)" : "color('#FFFF00')",
-                    "(${expression} >= 50.0) && (${expression} < 70.0)" : "color('#00FF00')",
-                    "(${expression} >= 70.0) && (${expression} < 100.0)" : "color('#00FFFF')",
-                    "(${expression} >= 100.0)" : "color('#0000FF')"
-                }
+                "conditions" : [
+                    ["(${expression} >= 1.0)  && (${expression} < 10.0)", "color('#FF00FF')"],
+                    ["(${expression} >= 10.0) && (${expression} < 30.0)", "color('#FF0000')"],
+                    ["(${expression} >= 30.0) && (${expression} < 50.0)", "color('#FFFF00')"],
+                    ["(${expression} >= 50.0) && (${expression} < 70.0)", "color('#00FF00')"],
+                    ["(${expression} >= 70.0) && (${expression} < 100.0)", "color('#00FFFF')"],
+                    ["(${expression} >= 100.0)", "color('#0000FF')"]
+                ]
             }
         });
         expect(style.show.evaluate(feature1)).toEqual(true);
@@ -329,14 +329,14 @@ defineSuite([
     it ('applies color style with conditional', function() {
         var style = new Cesium3DTileStyle({
             "color" : {
-                "conditions" : {
-                    "(${Height} >= 100.0)" : "color('#0000FF')",
-                    "(${Height} >= 70.0)" : "color('#00FFFF')",
-                    "(${Height} >= 50.0)" : "color('#00FF00')",
-                    "(${Height} >= 30.0)" : "color('#FFFF00')",
-                    "(${Height} >= 10.0)" : "color('#FF0000')",
-                    "(${Height} >= 1.0)" : "color('#FF00FF')"
-                }
+                "conditions" : [
+                    ["(${Height} >= 100.0)", "color('#0000FF')"],
+                    ["(${Height} >= 70.0)", "color('#00FFFF')"],
+                    ["(${Height} >= 50.0)", "color('#00FF00')"],
+                    ["(${Height} >= 30.0)", "color('#FFFF00')"],
+                    ["(${Height} >= 10.0)", "color('#FF0000')"],
+                    ["(${Height} >= 1.0)", "color('#FF00FF')"]
+                ]
             }
         });
         expect(style.show.evaluate(feature1)).toEqual(true);
