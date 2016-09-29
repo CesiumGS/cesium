@@ -2143,7 +2143,6 @@ define([
         var shadowMaps = frameState.shadowMaps;
         var length = shadowMaps.length;
 
-
         var shadowsEnabled = (length > 0) && !frameState.passes.pick && (scene.mode === SceneMode.SCENE3D);
         if (shadowsEnabled !== frameState.shadowHints.shadowsEnabled) {
             // Update derived commands when shadowsEnabled changes
