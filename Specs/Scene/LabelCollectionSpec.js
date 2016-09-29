@@ -324,7 +324,7 @@ defineSuite([
     it('can render after adding a label', function() {
         labels.add({
             position : Cartesian3.ZERO,
-            text : 'x',
+            text : 'w',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
