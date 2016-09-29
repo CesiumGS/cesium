@@ -25,20 +25,24 @@ define([
     /**
      * Adds a trusted server to the registry
      *
-     * @param {String} authority The server that is trusted. Can include a port if it is needed. (eg. my.server.com or my.server.com:8080)
+     * @param {String} domain The domain to be added.
+     * @param {Number} port The port used to access the domain.
      *
      * @example
      * // Add a trusted server
-     * TrustedServers.add('my.server.com:81');
+     * TrustedServers.add('my.server.com', 80);
      */
-    TrustedServers.add = function(authority) {
+    TrustedServers.add = function(domain, port) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(authority)) {
-            throw new DeveloperError('authority is required.');
+        if (!defined(domain)) {
+            throw new DeveloperError('domain is required.');
+        }
+        if (!defined(port) || port <= 0) {
+            throw new DeveloperError('port is required to be greater than 0.');
         }
         //>>includeEnd('debug');
 
-        authority = authority.toLowerCase();
+        var authority = domain.toLowerCase() + ':' + port;
         if (!defined(_servers[authority])) {
             _servers[authority] = true;
         }
@@ -47,24 +51,54 @@ define([
     /**
      * Removes a trusted server from the registry
      *
-     * @param {String} authority The server that is trusted. Should be exact authority that was added. (eg. my.server.com or my.server.com:8080)
+     * @param {String} domain The domain to be removed.
+     * @param {Number} port The port used to access the domain.
      *
      * @example
      * // Remove a trusted server
-     * TrustedServers.remove('my.server.com:81');
+     * TrustedServers.remove('my.server.com', 80);
      */
-    TrustedServers.remove = function(authority) {
+    TrustedServers.remove = function(domain, port) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(authority)) {
-            throw new DeveloperError('authority is required.');
+        if (!defined(domain)) {
+            throw new DeveloperError('domain is required.');
+        }
+        if (!defined(port) || port <= 0) {
+            throw new DeveloperError('port is required to be greater than 0.');
         }
         //>>includeEnd('debug');
 
-        authority = authority.toLowerCase();
+        var authority = domain.toLowerCase() + ':' + port;
         if (defined(_servers[authority])) {
             delete _servers[authority];
         }
     };
+
+    function getAuthority(url) {
+        var uri = new Uri(url);
+        uri.normalize();
+
+        // Removes username:password@ so we just have domain[:port]
+        var authority = uri.getAuthority();
+        if (authority.indexOf('@') !== -1) {
+            var parts = authority.split('@');
+            authority = parts[1];
+        }
+
+        // If the port is missing add one based on the scheme
+        if (authority.indexOf(':') === -1) {
+            var scheme = uri.getScheme();
+            if (scheme === 'http') {
+                authority += ':80';
+            } else if (scheme === 'https') {
+                authority += ':443';
+            } else {
+                return undefined;
+            }
+        }
+
+        return authority;
+    }
 
     /**
      * Tests whether a server is trusted or not. The server must have been added with the port if it is included in the url.
@@ -91,30 +125,9 @@ define([
             throw new DeveloperError('url is required.');
         }
         //>>includeEnd('debug');
-        var uri = new Uri(url);
-        uri.normalize();
-        var authority = uri.getAuthority();
-        if (!defined(authority)) {
-            return false;
-        }
-
-        if (defined(_servers[authority])) {
+        var authority = getAuthority(url);
+        if (defined(authority) && defined(_servers[authority])) {
             return true;
-        }
-
-        if (authority.indexOf(':') === -1) {
-            var scheme = uri.getScheme();
-            if (scheme === 'http') {
-                authority += ':80';
-            } else if (scheme === 'https') {
-                authority += ':443';
-            } else {
-                return false;
-            }
-
-            if (defined(_servers[authority])) {
-                return true;
-            }
         }
 
         return false;
@@ -128,7 +141,7 @@ define([
      * TrustedServers.clear();
      */
     TrustedServers.clear = function() {
-        _servers = [];
+        _servers = {};
     };
     
     return TrustedServers;
