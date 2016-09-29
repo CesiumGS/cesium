@@ -476,11 +476,6 @@ defineSuite([
 
         expression = new Expression('!!true');
         expect(expression.evaluate(undefined)).toEqual(true);
-
-        expression = new Expression('!"true"');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
     });
 
     it('evaluates unary negative', function() {
@@ -489,11 +484,6 @@ defineSuite([
 
         expression = new Expression('-(-5)');
         expect(expression.evaluate(undefined)).toEqual(5);
-
-        expression = new Expression('-"5"');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
     });
 
     it('evaluates unary positive', function() {
@@ -501,9 +491,13 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(5);
 
         expression = new Expression('+"5"');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(5);
+
+        expression = new Expression('+true');
+        expect(expression.evaluate(undefined)).toEqual(1);
+
+        expression = new Expression('+null');
+        expect(expression.evaluate(undefined)).toEqual(0);
     });
 
     it('evaluates binary addition', function() {
@@ -512,11 +506,6 @@ defineSuite([
 
         expression = new Expression('1 + 2 + 3 + 4');
         expect(expression.evaluate(undefined)).toEqual(10);
-
-        expression = new Expression('1 + "2"');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
     });
 
     it('evaluates binary subtraction', function() {
@@ -525,11 +514,6 @@ defineSuite([
 
         expression = new Expression('4 - 3 - 2 - 1');
         expect(expression.evaluate(undefined)).toEqual(-2);
-
-        expression = new Expression('1 - "2"');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
     });
 
     it('evaluates binary multiplication', function() {
@@ -538,11 +522,6 @@ defineSuite([
 
         expression = new Expression('1 * 2 * 3 * 4');
         expect(expression.evaluate(undefined)).toEqual(24);
-
-        expression = new Expression('1 * "2"');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
     });
 
     it('evaluates binary division', function() {
@@ -554,11 +533,6 @@ defineSuite([
 
         expression = new Expression('24 / -4 / 2');
         expect(expression.evaluate(undefined)).toEqual(-3);
-
-        expression = new Expression('1 / "2"');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
     });
 
     it('evaluates binary modulus', function() {
@@ -567,11 +541,6 @@ defineSuite([
 
         expression = new Expression('6 % 4 % 3');
         expect(expression.evaluate(undefined)).toEqual(2);
-
-        expression = new Expression('1 % "2"');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
     });
 
     it('evaluates binary equals', function() {
@@ -583,12 +552,6 @@ defineSuite([
 
         expression = new Expression('false === true === false');
         expect(expression.evaluate(undefined)).toEqual(true);
-
-        expression = new Expression('undefined === null');
-        expect(expression.evaluate(undefined)).toEqual(false);
-
-        expression = new Expression('1 === "1"');
-        expect(expression.evaluate(undefined)).toEqual(false);
     });
 
     it('evaluates binary not equals', function() {
@@ -599,12 +562,6 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(true);
 
         expression = new Expression('false !== true !== false');
-        expect(expression.evaluate(undefined)).toEqual(true);
-
-        expression = new Expression('undefined !== null');
-        expect(expression.evaluate(undefined)).toEqual(true);
-
-        expression = new Expression('1 !== "1"');
         expect(expression.evaluate(undefined)).toEqual(true);
     });
 
@@ -618,10 +575,11 @@ defineSuite([
         expression = new Expression('3 < 2');
         expect(expression.evaluate(undefined)).toEqual(false);
 
+        expression = new Expression('true < false');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
         expression = new Expression('color(\'blue\') < 10');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(false);
     });
 
     it('evaluates binary less than or equals', function() {
@@ -634,10 +592,11 @@ defineSuite([
         expression = new Expression('3 <= 2');
         expect(expression.evaluate(undefined)).toEqual(false);
 
+        expression = new Expression('true <= false');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
         expression = new Expression('color(\'blue\') <= 10');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(false);
     });
 
     it('evaluates binary greater than', function() {
@@ -650,10 +609,11 @@ defineSuite([
         expression = new Expression('3 > 2');
         expect(expression.evaluate(undefined)).toEqual(true);
 
+        expression = new Expression('true > false');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
         expression = new Expression('color(\'blue\') > 10');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(false);
     });
 
     it('evaluates binary greater than or equals', function() {
@@ -666,10 +626,11 @@ defineSuite([
         expression = new Expression('3 >= 2');
         expect(expression.evaluate(undefined)).toEqual(true);
 
+        expression = new Expression('true >= false');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
         expression = new Expression('color(\'blue\') >= 10');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(false);
     });
 
     it('evaluates logical and', function() {
@@ -681,6 +642,18 @@ defineSuite([
 
         expression = new Expression('true && true');
         expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression('2 && color(\'red\')');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid and operands', function() {
+        var expression = new Expression('2 && true');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
 
         expression = new Expression('true && color(\'red\')');
         expect(function() {
@@ -697,16 +670,15 @@ defineSuite([
 
         expression = new Expression('true || true');
         expect(expression.evaluate(undefined)).toEqual(true);
+    });
 
-        expression = new Expression('true || color(\'red\')');
-        expect(expression.evaluate(undefined)).toEqual(true);
-
-        expression = new Expression('false || color(\'red\')');
+    it('throws with invalid or operands', function() {
+        var expression = new Expression('2 || false');
         expect(function() {
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
 
-        expression = new Expression('2 || false');
+        expression = new Expression('false || color(\'red\')');
         expect(function() {
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
@@ -743,6 +715,9 @@ defineSuite([
         expression = new Expression('color() === color()');
         expect(expression.evaluate(undefined)).toEqual(true);
 
+        expression = new Expression('!!color() === true');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
         expression = new Expression('color(\'green\') !== color(\'green\')');
         expect(expression.evaluate(undefined)).toEqual(false);
     });
@@ -762,7 +737,10 @@ defineSuite([
     });
 
     it('evaluates isNaN function', function() {
-        var expression = new Expression('isNaN(NaN)');
+        var expression = new Expression('isNaN()');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression('isNaN(NaN)');
         expect(expression.evaluate(undefined)).toEqual(true);
 
         expression = new Expression('isNaN(1)');
@@ -772,13 +750,23 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(false);
 
         expression = new Expression('isNaN(null)');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression('isNaN(true)');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression('isNaN("hello")');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression('isNaN(color("white"))');
+        expect(expression.evaluate(undefined)).toEqual(true);
     });
 
     it('evaluates isFinite function', function() {
-        var expression = new Expression('isFinite(NaN)');
+        var expression = new Expression('isFinite()');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression('isFinite(NaN)');
         expect(expression.evaluate(undefined)).toEqual(false);
 
         expression = new Expression('isFinite(1)');
@@ -788,9 +776,16 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(false);
 
         expression = new Expression('isFinite(null)');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression('isFinite(true)');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression('isFinite("hello")');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression('isFinite(color("white"))');
+        expect(expression.evaluate(undefined)).toEqual(false);
     });
 
     it('evaluates ternary conditional', function() {
@@ -1168,11 +1163,11 @@ defineSuite([
         feature.addProperty('property', 'value');
         feature.addProperty('array', [Color.GREEN, Color.PURPLE, Color.YELLOW]);
         feature.addProperty('complicatedArray', [{
-            'subproperty' : Color.ORANGE,
-            'anotherproperty' : Color.RED
-        }, {
-            'subproperty' : Color.BLUE,
-            'anotherproperty' : Color.WHITE
+                'subproperty' : Color.ORANGE,
+                'anotherproperty' : Color.RED
+             }, {
+                'subproperty' : Color.BLUE,
+                'anotherproperty' : Color.WHITE
         }]);
         feature.addProperty('temperatures', {
             "scale" : "fahrenheit",
@@ -1184,6 +1179,12 @@ defineSuite([
 
         expression = new Expression('[1+2, "hello", 2 < 3, color("blue"), ${property}]');
         expect(expression.evaluate(feature)).toEqual([3, 'hello', true, Color.BLUE, 'value']);
+
+        expression = new Expression('[1, 2, 3] * 4');
+        expect(expression.evaluate(undefined)).toEqual(NaN);
+
+        expression = new Expression('-[1, 2, 3]');
+        expect(expression.evaluate(undefined)).toEqual(NaN);
 
         expression = new Expression('${array[1]}');
         expect(expression.evaluate(feature)).toEqual(Color.PURPLE);
@@ -1202,15 +1203,5 @@ defineSuite([
 
         expression = new Expression('${temperatures["values"][0]}');
         expect(expression.evaluate(feature)).toEqual(70);
-
-        expression = new Expression('[1, 2, 3] * 4');
-        expect(function() {
-            return expression.evaluate(feature);
-        }).toThrowDeveloperError();
-
-        expression = new Expression('-[1, 2, 3]');
-        expect(function() {
-            return expression.evaluate(feature);
-        }).toThrowDeveloperError();
     });
 });
