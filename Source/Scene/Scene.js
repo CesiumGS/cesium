@@ -1130,10 +1130,11 @@ define([
 
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-                if (lightShadowsEnabled && command.receiveShadows) {
-                    derivedCommands.oit = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit);
-                } else {
+                if (!scene.scene3DOnly || !(lightShadowsEnabled && command.receiveShadows)) {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
+                }
+                if (lightShadowsEnabled && command.receiveShadows) {
+                    derivedCommands.oit.shadows = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
                 }
             }
         }

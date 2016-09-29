@@ -17,7 +17,8 @@ define([
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS',
         './BlendEquation',
-        './BlendFunction'
+        './BlendFunction',
+        './SceneMode'
     ], function(
         BoundingRectangle,
         Color,
@@ -36,7 +37,8 @@ define([
         AdjustTranslucentFS,
         CompositeOITFS,
         BlendEquation,
-        BlendFunction) {
+        BlendFunction,
+        SceneMode) {
     'use strict';
 
     /**
@@ -525,6 +527,9 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+        var scene2D = scene.mode === SceneMode.SCENE2D;
+
         passState.framebuffer = oit._adjustTranslucentFBO;
         oit._adjustTranslucentCommand.execute(context, passState);
         passState.framebuffer = oit._adjustAlphaFBO;
@@ -535,7 +540,7 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            derivedCommand = command.derivedCommands.oit.translucentCommand;
+            derivedCommand = shadowsEnabled && !scene2D ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
@@ -543,7 +548,7 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            derivedCommand = command.derivedCommands.oit.alphaCommand;
+            derivedCommand = shadowsEnabled && !scene2D ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
@@ -555,6 +560,9 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+        var scene2D = scene.mode === SceneMode.SCENE2D;
+
         passState.framebuffer = oit._adjustTranslucentFBO;
         oit._adjustTranslucentCommand.execute(context, passState);
 
@@ -563,7 +571,7 @@ define([
 
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
-            var derivedCommand = command.derivedCommands.oit.translucentCommand;
+            var derivedCommand = shadowsEnabled && !scene2D ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
