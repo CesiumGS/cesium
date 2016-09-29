@@ -560,7 +560,7 @@ defineSuite([
         });
         billboards.add({
             position : new Cartesian3(-1.0, 0.0, 0.0),
-            image : blueImage
+            image : largeBlueImage
         });
 
         expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
@@ -589,7 +589,7 @@ defineSuite([
 
         billboards.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-            image : blueImage
+            image : largeBlueImage
         });
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
@@ -602,7 +602,7 @@ defineSuite([
         });
         var blueBillboard = billboards.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-            image : blueImage
+            image : largeBlueImage
         });
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
@@ -634,7 +634,7 @@ defineSuite([
         billboards.removeAll();
         billboards.add({
             position : Cartesian3.ZERO,
-            image : blueImage
+            image : largeBlueImage
         });
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
@@ -661,7 +661,7 @@ defineSuite([
         var blueBillboard = billboards.add({
             show : false,
             position : Cartesian3.ZERO,
-            image : blueImage
+            image : largeBlueImage
         });
 
         expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
@@ -710,7 +710,7 @@ defineSuite([
 
         expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
 
-        b.image = blueImage;
+        b.image = largeBlueImage;
         expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
     });
 
@@ -722,7 +722,7 @@ defineSuite([
 
         expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
 
-        b.setImage(blueImage.src, blueImage);
+        b.setImage(largeBlueImage.src, largeBlueImage);
         expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
     });
 
@@ -821,7 +821,7 @@ defineSuite([
 
         var b2 = billboards.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-            image : blueImage
+            image : largeBlueImage
         });
         expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
 
@@ -1463,10 +1463,10 @@ defineSuite([
 
         // switch to blue while green is in-flight
 
-        one.image = './Data/Images/Blue.png';
+        one.image = './Data/Images/Blue10x10.png';
 
         expect(one.ready).toEqual(false);
-        expect(one.image).toEqual('./Data/Images/Blue.png');
+        expect(one.image).toEqual('./Data/Images/Blue10x10.png');
 
         return pollToPromise(function() {
             return one.ready;
