@@ -783,6 +783,13 @@ define([
                 derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
             }
 
+            derivedCommands.originalCommand.castShadows = command.castShadows;
+            derivedCommands.originalCommand.receiveShadows = command.receiveShadows;
+            derivedCommands.back.castShadows = command.castShadows;
+            derivedCommands.back.receiveShadows = command.receiveShadows;
+            derivedCommands.front.castShadows = command.castShadows;
+            derivedCommands.front.receiveShadows = command.receiveShadows;
+
             // If the command was originally opaque:
             //    * If the styling applied to the tile is all opaque, use the original command
             //      (with one additional uniform needed for the shader).
