@@ -101,14 +101,17 @@ define([
     var scratchColor = new Color();
 
     function styleContent(styleEngine, frameState, content, stats) {
-        var length = content.featuresLength;
         var style = styleEngine._style;
 
-        stats.numberOfFeaturesStyled += length;
-
-        if (content.applyStyleWithShader(frameState, style)) {
-            return;
+        if (!content.applyStyleWithShader(frameState, style)) {
+            applyStyleWithBatchTable(content, stats, style);
         }
+
+    }
+
+    function applyStyleWithBatchTable(content, stats, style) {
+        var length = content.featuresLength;
+        stats.numberOfFeaturesStyled += length;
 
         if (!defined(style)) {
             clearStyle(content);
