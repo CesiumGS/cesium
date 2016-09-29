@@ -10,6 +10,7 @@ defineSuite([
         'Core/NearFarScalar',
         'DataSources/BoundingSphereState',
         'DataSources/ConstantProperty',
+        'DataSources/EntityCluster',
         'DataSources/EntityCollection',
         'DataSources/LabelGraphics',
         'Scene/HorizontalOrigin',
@@ -29,6 +30,7 @@ defineSuite([
         NearFarScalar,
         BoundingSphereState,
         ConstantProperty,
+        EntityCluster,
         EntityCollection,
         LabelGraphics,
         HorizontalOrigin,
@@ -40,6 +42,7 @@ defineSuite([
     'use strict';
 
     var scene;
+    var entityCluster;
     var visualizer;
 
     beforeAll(function() {
@@ -51,8 +54,14 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    beforeEach(function() {
+        entityCluster = new EntityCluster();
+        entityCluster._initialize(scene);
+    });
+
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
+        entityCluster.destroy();
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -63,7 +72,7 @@ defineSuite([
 
     it('update throws if no time specified.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
         expect(function() {
             visualizer.update();
         }).toThrowDeveloperError();
@@ -71,7 +80,7 @@ defineSuite([
 
     it('isDestroy returns false until destroyed.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -80,7 +89,7 @@ defineSuite([
 
     it('removes the listener from the entity collection when destroyed', function() {
         var entityCollection = new EntityCollection();
-        var visualizer = new LabelVisualizer(scene, entityCollection);
+        var visualizer = new LabelVisualizer(entityCluster, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
         visualizer = visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
@@ -88,7 +97,7 @@ defineSuite([
 
     it('object with no label does not create a label.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -98,7 +107,7 @@ defineSuite([
 
     it('object with no position does not create a label.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         var label = testObject.label = new LabelGraphics();
@@ -111,7 +120,7 @@ defineSuite([
 
     it('object with no text does not create a label.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -124,7 +133,7 @@ defineSuite([
 
     it('A LabelGraphics causes a label to be created and updated.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
 
@@ -151,7 +160,7 @@ defineSuite([
 
         visualizer.update(time);
 
-        var labelCollection = scene.primitives.get(0);
+        var labelCollection = entityCluster._labelCollection;
         expect(labelCollection.length).toEqual(1);
 
         l = labelCollection.get(0);
@@ -216,7 +225,7 @@ defineSuite([
     it('Reuses primitives when hiding one and showing another', function() {
         var time = JulianDate.now();
         var entityCollection = new EntityCollection();
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -226,7 +235,7 @@ defineSuite([
 
         visualizer.update(time);
 
-        var labelCollection = scene.primitives.get(0);
+        var labelCollection = entityCluster._labelCollection;
         expect(labelCollection.length).toEqual(1);
 
         testObject.label.show = new ConstantProperty(false);
@@ -247,7 +256,7 @@ defineSuite([
 
     it('clear hides labels.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         var time = JulianDate.now();
@@ -258,7 +267,7 @@ defineSuite([
         label.text = new ConstantProperty('lorum ipsum');
         visualizer.update(time);
 
-        var labelCollection = scene.primitives.get(0);
+        var labelCollection = entityCluster._labelCollection;
         expect(labelCollection.length).toEqual(1);
         var l = labelCollection.get(0);
         expect(l.show).toEqual(true);
@@ -273,7 +282,7 @@ defineSuite([
 
     it('Visualizer sets entity property.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         var time = JulianDate.now();
@@ -284,7 +293,7 @@ defineSuite([
         label.text = new ConstantProperty('lorum ipsum');
         visualizer.update(time);
 
-        var labelCollection = scene.primitives.get(0);
+        var labelCollection = entityCluster._labelCollection;
         expect(labelCollection.length).toEqual(1);
         var l = labelCollection.get(0);
         expect(l.id).toEqual(testObject);
@@ -292,7 +301,7 @@ defineSuite([
 
     it('Computes bounding sphere.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         var time = JulianDate.now();
@@ -323,7 +332,7 @@ defineSuite([
 
     it('Compute bounding sphere throws without entity.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
         var result = new BoundingSphere();
         expect(function() {
             visualizer.getBoundingSphere(undefined, result);
@@ -333,7 +342,7 @@ defineSuite([
     it('Compute bounding sphere throws without result.', function() {
         var entityCollection = new EntityCollection();
         var testObject = entityCollection.getOrCreateEntity('test');
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
         expect(function() {
             visualizer.getBoundingSphere(testObject, undefined);
         }).toThrowDeveloperError();

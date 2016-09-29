@@ -158,6 +158,8 @@ define([
         this._removeCallbackFunc = undefined;
         this._mode = SceneMode.SCENE3D;
 
+        this._clusterShow = true;
+
         this._updateClamping();
     }
 
@@ -852,6 +854,24 @@ define([
                 this._actualClampedPosition = Cartesian3.clone(value, this._actualClampedPosition);
                 makeDirty(this, POSITION_INDEX);
             }
+        },
+
+        /**
+         * Determines whether or not this billboard will be shown or hidden because it was clustered.
+         * @memberof Billboard.prototype
+         * @type {Boolean}
+         * @private
+         */
+        clusterShow : {
+            get : function() {
+                return this._clusterShow;
+            },
+            set : function(value) {
+                if (this._clusterShow !== value) {
+                    this._clusterShow = value;
+                    makeDirty(this, SHOW_INDEX);
+                }
+            }
         }
     });
 
@@ -1123,6 +1143,9 @@ define([
 
         // World to window coordinates
         var positionWC = SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(scene, positionWorld, eyeOffset, result);
+        if (!defined(positionWC)) {
+            return undefined;
+        }
 
         // Apply pixel offset
         pixelOffset = Cartesian2.clone(pixelOffset, scratchComputePixelOffset);
@@ -1177,6 +1200,49 @@ define([
         var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition,
                 this._eyeOffset, scratchPixelOffset, scene, result);
         return windowCoordinates;
+    };
+
+    /**
+     * Gets a billboard's screen space bounding box centered around screenSpacePosition.
+     * @param {Billboard} billboard The billboard to get the screen space bounding box for.
+     * @param {Cartesian2} screenSpacePosition The screen space center of the label.
+     * @param {BoundingRectangle} [result] The object onto which to store the result.
+     * @returns {BoundingRectangle} The screen space bounding box.
+     *
+     * @private
+     */
+    Billboard.getScreenSpaceBoundingBox = function(billboard, screenSpacePosition, result) {
+        var width = billboard.width;
+        var height = billboard.height;
+
+        var scale = billboard.scale;
+        width *= scale;
+        height *= scale;
+
+        var x = screenSpacePosition.x;
+        if (billboard.horizontalOrigin === HorizontalOrigin.RIGHT) {
+            x -= width;
+        } else if (billboard.horizontalOrigin === HorizontalOrigin.CENTER) {
+            x -= width * 0.5;
+        }
+
+        var y = screenSpacePosition.y;
+        if (billboard.verticalOrigin === VerticalOrigin.TOP) {
+            y -= height;
+        } else if (billboard.verticalOrigin === VerticalOrigin.CENTER) {
+            y -= height * 0.5;
+        }
+
+        if (!defined(result)) {
+            result = new BoundingRectangle();
+        }
+
+        result.x = x;
+        result.y = y;
+        result.width = width;
+        result.height = height;
+
+        return result;
     };
 
     /**

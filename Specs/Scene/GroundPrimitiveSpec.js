@@ -137,7 +137,8 @@ defineSuite([
                 }
             }),
             appearance : new PerInstanceColorAppearance({
-                translucent : false
+                translucent : false,
+                flat : true
             }),
             asynchronous : false
         });

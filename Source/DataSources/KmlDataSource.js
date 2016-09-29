@@ -46,6 +46,7 @@ define([
         './DataSource',
         './DataSourceClock',
         './Entity',
+        './EntityCluster',
         './EntityCollection',
         './LabelGraphics',
         './PathGraphics',
@@ -105,6 +106,7 @@ define([
         DataSource,
         DataSourceClock,
         Entity,
+        EntityCluster,
         EntityCollection,
         LabelGraphics,
         PathGraphics,
@@ -1664,13 +1666,13 @@ define([
                     west = CesiumMath.negativePiToPi(CesiumMath.toRadians(west));
                 }
                 if (defined(south)) {
-                    south = CesiumMath.negativePiToPi(CesiumMath.toRadians(south));
+                    south = CesiumMath.clampToLatitudeRange(CesiumMath.toRadians(south));
                 }
                 if (defined(east)) {
                     east = CesiumMath.negativePiToPi(CesiumMath.toRadians(east));
                 }
                 if (defined(north)) {
-                    north = CesiumMath.negativePiToPi(CesiumMath.toRadians(north));
+                    north = CesiumMath.clampToLatitudeRange(CesiumMath.toRadians(north));
                 }
                 geometry.coordinates = new Rectangle(west, south, east, north);
 
@@ -2229,6 +2231,7 @@ define([
         this._pinBuilder = new PinBuilder();
         this._promises = [];
         this._networkLinks = new AssociativeArray();
+        this._entityCluster = new EntityCluster();
 
         this._canvas = canvas;
         this._camera = camera;
@@ -2364,6 +2367,26 @@ define([
             },
             set : function(value) {
                 this._entityCollection.show = value;
+            }
+        },
+
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof KmlDataSource.prototype
+         * @type {EntityCluster}
+         */
+        clustering : {
+            get : function() {
+                return this._entityCluster;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value must be defined.');
+                }
+                //>>includeEnd('debug');
+                this._entityCluster = value;
             }
         }
     });
