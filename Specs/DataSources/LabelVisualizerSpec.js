@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/NearFarScalar',
         'DataSources/BoundingSphereState',
@@ -24,6 +25,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        DistanceDisplayCondition,
         JulianDate,
         NearFarScalar,
         BoundingSphereState,
@@ -154,6 +156,7 @@ defineSuite([
         label.show = new ConstantProperty(true);
         label.translucencyByDistance = new ConstantProperty(new NearFarScalar());
         label.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
+        label.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
         visualizer.update(time);
 
@@ -178,6 +181,7 @@ defineSuite([
         expect(l.show).toEqual(testObject.label.show.getValue(time));
         expect(l.translucencyByDistance).toEqual(testObject.label.translucencyByDistance.getValue(time));
         expect(l.pixelOffsetScaleByDistance).toEqual(testObject.label.pixelOffsetScaleByDistance.getValue(time));
+        expect(l.distanceDisplayCondition).toEqual(testObject.label.distanceDisplayCondition.getValue(time));
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1293434));
         label.text = new ConstantProperty('b');
@@ -194,6 +198,7 @@ defineSuite([
         label.show = new ConstantProperty(true);
         label.translucencyByDistance = new ConstantProperty(new NearFarScalar());
         label.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
+        label.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
         visualizer.update(time);
         expect(l.position).toEqual(testObject.position.getValue(time));
@@ -211,6 +216,7 @@ defineSuite([
         expect(l.show).toEqual(testObject.label.show.getValue(time));
         expect(l.translucencyByDistance).toEqual(testObject.label.translucencyByDistance.getValue(time));
         expect(l.pixelOffsetScaleByDistance).toEqual(testObject.label.pixelOffsetScaleByDistance.getValue(time));
+        expect(l.distanceDisplayCondition).toEqual(testObject.label.distanceDisplayCondition.getValue(time));
 
         label.show = new ConstantProperty(false);
         visualizer.update(time);

@@ -138,6 +138,7 @@ define([
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
             model.shadows = Property.getValueOrDefault(modelGraphics._shadows, time, defaultShadows);
             model.heightReference = Property.getValueOrDefault(modelGraphics._heightReference, time, defaultHeightReference);
+            model.distanceDisplayCondition = Property.getValueOrUndefined(modelGraphics._distanceDisplayCondition, time);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);

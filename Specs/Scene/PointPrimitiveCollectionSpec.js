@@ -6,6 +6,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Rectangle',
@@ -19,6 +20,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        DistanceDisplayCondition,
         CesiumMath,
         NearFarScalar,
         Rectangle,
@@ -70,6 +72,7 @@ defineSuite([
         expect(p.outlineWidth).toEqual(0.0);
         expect(p.scaleByDistance).not.toBeDefined();
         expect(p.translucencyByDistance).not.toBeDefined();
+        expect(p.distanceDisplayCondition).not.toBeDefined();
         expect(p.id).not.toBeDefined();
     });
 
@@ -99,6 +102,7 @@ defineSuite([
             outlineWidth : 4.0,
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0),
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
             id : 'id'
         });
 
@@ -116,6 +120,7 @@ defineSuite([
         expect(p.outlineWidth).toEqual(4.0);
         expect(p.scaleByDistance).toEqual(new NearFarScalar(1.0, 3.0, 1.0e6, 0.0));
         expect(p.translucencyByDistance).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
+        expect(p.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
         expect(p.id).toEqual('id');
     });
 
@@ -129,6 +134,7 @@ defineSuite([
         p.outlineWidth = 4.0;
         p.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
         p.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
+        p.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
 
         expect(p.show).toEqual(false);
         expect(p.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -144,6 +150,7 @@ defineSuite([
         expect(p.outlineWidth).toEqual(4.0);
         expect(p.scaleByDistance).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
         expect(p.translucencyByDistance).toEqual(new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0));
+        expect(p.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
     });
 
     it('is not destroyed', function() {
@@ -241,6 +248,40 @@ defineSuite([
         var translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
             p.translucencyByDistance = translucency;
+        }).toThrowDeveloperError();
+    });
+
+    it('renders pointPrimitive with distanceDisplayCondition', function() {
+        pointPrimitives.add({
+            position : Cartesian3.ZERO,
+            color : Color.LIME,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
+        });
+
+        camera.position = new Cartesian3(200.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        camera.position = new Cartesian3(50.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+
+        camera.position = new Cartesian3(5.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+    });
+
+    it('throws new pointPrimitive with invalid distanceDisplayCondition (near >= far)', function() {
+        var dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function() {
+            pointPrimitives.add({
+                distanceDisplayCondition : dc
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws distanceDisplayCondition with near >= far', function() {
+        var p = pointPrimitives.add();
+        var dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function() {
+            p.distanceDisplayCondition = dc;
         }).toThrowDeveloperError();
     });
 

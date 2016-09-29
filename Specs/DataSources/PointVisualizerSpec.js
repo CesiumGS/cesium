@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/defineProperties',
+        'Core/DistanceDisplayCondition',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/JulianDate',
@@ -24,6 +25,7 @@ defineSuite([
         Cartesian3,
         Color,
         defineProperties,
+        DistanceDisplayCondition,
         Ellipsoid,
         Event,
         JulianDate,
@@ -158,7 +160,8 @@ defineSuite([
                 outlineColor : new Color(0.5, 0.6, 0.7, 0.8),
                 outlineWidth : 9,
                 pixelSize : 10,
-                scaleByDistance : new NearFarScalar(11, 12, 13, 14)
+                scaleByDistance : new NearFarScalar(11, 12, 13, 14),
+                distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
             }
         });
         var point = entity.point;
@@ -176,12 +179,14 @@ defineSuite([
         expect(pointPrimitive.color).toEqual(point.color.getValue(time));
         expect(pointPrimitive.outlineColor).toEqual(point.outlineColor.getValue(time));
         expect(pointPrimitive.outlineWidth).toEqual(point.outlineWidth.getValue(time));
+        expect(pointPrimitive.distanceDisplayCondition).toEqual(point.distanceDisplayCondition.getValue(time));
 
         point.color = new Color(0.15, 0.16, 0.17, 0.18);
         point.outlineColor = new Color(0.19, 0.20, 0.21, 0.22);
         point.pixelSize = 23;
         point.outlineWidth = 24;
         point.scaleByDistance = new NearFarScalar(25, 26, 27, 28);
+        point.distanceDisplayCondition = new DistanceDisplayCondition(1000.0, 1000000.0);
 
         visualizer.update(time);
 
@@ -191,6 +196,7 @@ defineSuite([
         expect(pointPrimitive.color).toEqual(point.color.getValue(time));
         expect(pointPrimitive.outlineColor).toEqual(point.outlineColor.getValue(time));
         expect(pointPrimitive.outlineWidth).toEqual(point.outlineWidth.getValue(time));
+        expect(pointPrimitive.distanceDisplayCondition).toEqual(point.distanceDisplayCondition.getValue(time));
 
         point.show = false;
         visualizer.update(time);
@@ -212,6 +218,7 @@ defineSuite([
                 outlineWidth : 9,
                 pixelSize : 10,
                 scaleByDistance : new NearFarScalar(11, 12, 13, 14),
+                distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
                 heightReference : HeightReference.CLAMP_TO_GROUND
             }
         });
@@ -227,6 +234,7 @@ defineSuite([
         expect(billboard.show).toEqual(point.show.getValue(time));
         expect(billboard.position).toEqual(entity.position.getValue(time));
         expect(billboard.scaleByDistance).toEqual(point.scaleByDistance.getValue(time));
+        expect(billboard.distanceDisplayCondition).toEqual(point.distanceDisplayCondition.getValue(time));
         //expect(billboard.color).toEqual(point.color.getValue(time));
         //expect(billboard.outlineColor).toEqual(point.outlineColor.getValue(time));
         //expect(billboard.outlineWidth).toEqual(point.outlineWidth.getValue(time));
@@ -236,12 +244,14 @@ defineSuite([
         point.pixelSize = 23;
         point.outlineWidth = 24;
         point.scaleByDistance = new NearFarScalar(25, 26, 27, 28);
+        point.distanceDisplayCondition = new DistanceDisplayCondition(1000.0, 1000000.0);
 
         visualizer.update(time);
 
         expect(billboard.show).toEqual(point.show.getValue(time));
         expect(billboard.position).toEqual(entity.position.getValue(time));
         expect(billboard.scaleByDistance).toEqual(point.scaleByDistance.getValue(time));
+        expect(billboard.distanceDisplayCondition).toEqual(point.distanceDisplayCondition.getValue(time));
         //expect(billboard.color).toEqual(point.color.getValue(time));
         //expect(billboard.outlineColor).toEqual(point.outlineColor.getValue(time));
         //expect(billboard.outlineWidth).toEqual(point.outlineWidth.getValue(time));

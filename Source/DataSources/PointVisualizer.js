@@ -8,6 +8,7 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
         '../Scene/HeightReference',
         './BoundingSphereState',
@@ -22,6 +23,7 @@ define([
         deprecationWarning,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
         NearFarScalar,
         HeightReference,
         BoundingSphereState,
@@ -39,6 +41,7 @@ define([
     var outlineColor = new Color();
     var scaleByDistance = new NearFarScalar();
     var translucencyByDistance = new NearFarScalar();
+    var distanceDisplayCondition = new DistanceDisplayCondition();
 
     function EntityData(entity) {
         this.entity = entity;
@@ -152,11 +155,13 @@ define([
                 pointPrimitive.outlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
                 pointPrimitive.outlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
                 pointPrimitive.pixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
+                pointPrimitive.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
             } else { // billboard
                 billboard.show = true;
                 billboard.position = position;
                 billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
                 billboard.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistance);
+                billboard.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
                 billboard.heightReference = heightReference;
 
                 var newColor = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);

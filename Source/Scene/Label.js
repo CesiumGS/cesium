@@ -8,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
         './Billboard',
         './HeightReference',
@@ -23,6 +24,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        DistanceDisplayCondition,
         NearFarScalar,
         Billboard,
         HeightReference,
@@ -56,6 +58,7 @@ define([
      *
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
      * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
+     * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
      *
      * @see LabelCollection
      * @see LabelCollection#add
@@ -71,6 +74,9 @@ define([
         }
         if (defined(options.pixelOffsetScaleByDistance) && options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
             throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
+        }
+        if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
+            throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
         }
         //>>includeEnd('debug');
 
@@ -91,6 +97,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -657,6 +664,36 @@ define([
         },
 
         /**
+         * Gets or sets the condition specifying at what distance from the camera that this label will be displayed.
+         * @memberof Label.prototype
+         * @type {DistanceDisplayCondition}
+         * @default undefined
+         */
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && value.far <= value.near) {
+                    throw new DeveloperError('far must be greater than near');
+                }
+                //>>includeEnd('debug');
+                if (!DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
+                    this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.distanceDisplayCondition = value;
+                        }
+                    }
+                }
+            }
+        },
+
+        /**
          * Gets or sets the user-defined object returned when the label is picked.
          * @memberof Label.prototype
          * @type {Object}
@@ -856,6 +893,7 @@ define([
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
                NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
+               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
                this._id === other._id;
     };
 

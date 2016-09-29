@@ -9,6 +9,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/Matrix4',
         '../Core/NearFarScalar',
         './SceneMode',
@@ -23,6 +24,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        DistanceDisplayCondition,
         Matrix4,
         NearFarScalar,
         SceneMode,
@@ -45,6 +47,7 @@ define([
      *
      * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+     * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
      *
      * @see PointPrimitiveCollection
      * @see PointPrimitiveCollection#add
@@ -63,6 +66,9 @@ define([
         if (defined(options.translucencyByDistance) && options.translucencyByDistance.far <= options.translucencyByDistance.near) {
             throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
         }
+        if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
+            throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
+        }
         //>>includeEnd('debug');
 
         this._show = defaultValue(options.show, true);
@@ -74,6 +80,7 @@ define([
         this._pixelSize = defaultValue(options.pixelSize, 10.0);
         this._scaleByDistance = options.scaleByDistance;
         this._translucencyByDistance = options.translucencyByDistance;
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
         this._id = options.id;
         this._collection = defaultValue(options.collection, pointPrimitiveCollection);
 
@@ -93,7 +100,8 @@ define([
     var PIXEL_SIZE_INDEX = PointPrimitive.PIXEL_SIZE_INDEX = 5;
     var SCALE_BY_DISTANCE_INDEX = PointPrimitive.SCALE_BY_DISTANCE_INDEX = 6;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX = 7;
-    PointPrimitive.NUMBER_OF_PROPERTIES = 8;
+    var DISTANCE_DISPLAY_CONDITION_INDEX = PointPrimitive.DISTANCE_DISPLAY_CONDITION = 8;
+    PointPrimitive.NUMBER_OF_PROPERTIES = 9;
 
     function makeDirty(pointPrimitive, propertyChanged) {
         var pointPrimitiveCollection = pointPrimitive._pointPrimitiveCollection;
@@ -344,6 +352,29 @@ define([
         },
 
         /**
+         * Gets or sets the condition specifying at what distance from the camera that this point will be displayed.
+         * @memberof PointPrimitive.prototype
+         * @type {DistanceDisplayCondition}
+         * @default undefined
+         */
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && value.far <= value.near) {
+                    throw new DeveloperError('far must be greater than near');
+                }
+                //>>includeEnd('debug');
+                if (!DistanceDisplayCondition.equals(this._distanceDisplayCondition, value)) {
+                    this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
+                    makeDirty(this, DISTANCE_DISPLAY_CONDITION_INDEX);
+                }
+            }
+        },
+
+        /**
          * Gets or sets the user-defined object returned when the point is picked.
          * @memberof PointPrimitive.prototype
          * @type {Object}
@@ -507,7 +538,8 @@ define([
                this._show === other._show &&
                Color.equals(this._outlineColor, other._outlineColor) &&
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
-               NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance);
+               NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
+               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition);
     };
 
     PointPrimitive.prototype._destroy = function() {

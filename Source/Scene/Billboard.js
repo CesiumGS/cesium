@@ -11,6 +11,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/Matrix4',
         '../Core/NearFarScalar',
         './HeightReference',
@@ -30,6 +31,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        DistanceDisplayCondition,
         Matrix4,
         NearFarScalar,
         HeightReference,
@@ -61,6 +63,7 @@ define([
      * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
      * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
+     * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
      *
      * @see BillboardCollection
      * @see BillboardCollection#add
@@ -83,6 +86,9 @@ define([
         if (defined(options.pixelOffsetScaleByDistance) && options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
             throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
         }
+        if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
+            throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
+        }
         //>>includeEnd('debug');
 
         this._show = defaultValue(options.show, true);
@@ -104,6 +110,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._sizeInMeters = defaultValue(options.sizeInMeters, false);
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -170,7 +177,8 @@ define([
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX = 11;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
-    Billboard.NUMBER_OF_PROPERTIES = 14;
+    var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
+    Billboard.NUMBER_OF_PROPERTIES = 15;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -717,6 +725,29 @@ define([
         },
 
         /**
+         * Gets or sets the condition specifying at what distance from the camera that this billboard will be displayed.
+         * @memberof Billboard.prototype
+         * @type {DistanceDisplayCondition}
+         * @default undefined
+         */
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                if (!DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (defined(value) && value.far <= value.near) {
+                        throw new DeveloperError('far distance must be greater than near distance.');
+                    }
+                    //>>includeEnd('debug');
+                    this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
+                    makeDirty(this, DISTANCE_DISPLAY_CONDITION);
+                }
+            }
+        },
+
+        /**
          * Gets or sets the user-defined object returned when the billboard is picked.
          * @memberof Billboard.prototype
          * @type {Object}
@@ -1239,7 +1270,8 @@ define([
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
-               NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance);
+               NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
+               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition);
     };
 
     Billboard.prototype._destroy = function() {

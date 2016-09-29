@@ -9,6 +9,7 @@ defineSuite([
         'Core/Color',
         'Core/defined',
         'Core/defineProperties',
+        'Core/DistanceDisplayCondition',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/loadImage',
@@ -36,6 +37,7 @@ defineSuite([
         Color,
         defined,
         defineProperties,
+        DistanceDisplayCondition,
         Ellipsoid,
         Event,
         loadImage,
@@ -129,6 +131,7 @@ defineSuite([
         expect(b.id).not.toBeDefined();
         expect(b.heightReference).toEqual(HeightReference.NONE);
         expect(b.sizeInMeters).toEqual(false);
+        expect(b.distanceDisplayCondition).not.toBeDefined();
     });
 
     it('can add and remove before first update.', function() {
@@ -161,6 +164,7 @@ defineSuite([
             width : 300.0,
             height : 200.0,
             sizeInMeters : true,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
             id : 'id'
         });
 
@@ -184,6 +188,7 @@ defineSuite([
         expect(b.width).toEqual(300.0);
         expect(b.height).toEqual(200.0);
         expect(b.sizeInMeters).toEqual(true);
+        expect(b.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
         expect(b.id).toEqual('id');
     });
 
@@ -206,6 +211,7 @@ defineSuite([
         b.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
         b.pixelOffsetScaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
         b.sizeInMeters = true;
+        b.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
 
         expect(b.show).toEqual(false);
         expect(b.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -227,6 +233,7 @@ defineSuite([
         expect(b.width).toEqual(300.0);
         expect(b.height).toEqual(200.0);
         expect(b.sizeInMeters).toEqual(true);
+        expect(b.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
     });
 
     it('is not destroyed', function() {
@@ -388,6 +395,40 @@ defineSuite([
         var translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
             b.translucencyByDistance = translucency;
+        }).toThrowDeveloperError();
+    });
+
+    it('renders billboard with distanceDisplayCondition', function() {
+        billboards.add({
+            position : Cartesian3.ZERO,
+            image : greenImage,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
+        });
+
+        camera.position = new Cartesian3(200.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        camera.position = new Cartesian3(50.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+
+        camera.position = new Cartesian3(5.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+    });
+
+    it('throws new billboard with invalid distanceDisplayCondition (near >= far)', function() {
+        var dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function() {
+            billboards.add({
+                distanceDisplayCondition : dc
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws distanceDisplayCondition with near >= far', function() {
+        var b = billboards.add();
+        var dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function() {
+            b.distanceDisplayCondition = dc;
         }).toThrowDeveloperError();
     });
 

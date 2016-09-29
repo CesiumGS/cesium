@@ -10,6 +10,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
+        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
@@ -34,6 +36,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         Event,
         GeometryInstance,
         Iso8601,
@@ -55,6 +59,7 @@ define([
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
+    var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
     var scratchColor = new Color();
 
@@ -101,6 +106,7 @@ define([
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
         this._shadowsProperty = undefined;
+        this._distanceDisplayConditionProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'cylinder', entity.cylinder, undefined);
     }
@@ -242,6 +248,18 @@ define([
             }
         },
         /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
+         * @memberof CylinderGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        distanceDisplayConditionProperty : {
+            get : function() {
+                return this._distanceDisplayConditionProperty;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
@@ -329,6 +347,8 @@ define([
 
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
+        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -337,11 +357,13 @@ define([
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
                 show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute,
                 color : color
             };
         } else {
             attributes = {
-                show : show
+                show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute
             };
         }
 
@@ -375,6 +397,7 @@ define([
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
         return new GeometryInstance({
             id : entity,
@@ -382,7 +405,8 @@ define([
             modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
             }
         });
     };
@@ -464,6 +488,7 @@ define([
         this._showOutlineProperty = defaultValue(cylinder.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(cylinder.outlineColor, defaultOutlineColor) : undefined;
         this._shadowsProperty = defaultValue(cylinder.shadows, defaultShadows);
+        this._distanceDisplayConditionProperty = defaultValue(cylinder.distanceDisplayCondition, defaultDistanceDisplayCondition);
 
         var slices = cylinder.slices;
         var outlineWidth = cylinder.outlineWidth;
@@ -566,6 +591,10 @@ define([
         options.numberOfVerticalLines = Property.getValueOrUndefined(cylinder.numberOfVerticalLines, time);
 
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
+
+        var distanceDisplayConditionProperty = this._geometryUpdater.distanceDisplayConditionProperty;
+        var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time);
+        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
         
         if (Property.getValueOrDefault(cylinder.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
@@ -582,7 +611,10 @@ define([
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new CylinderGeometry(options),
-                    modelMatrix : modelMatrix
+                    modelMatrix : modelMatrix,
+                    attributes : {
+                        distanceDisplayCondition : distanceDisplayConditionAttribute
+                    }
                 }),
                 appearance : appearance,
                 asynchronous : false,
@@ -603,7 +635,8 @@ define([
                     geometry : new CylinderOutlineGeometry(options),
                     modelMatrix : modelMatrix,
                     attributes : {
-                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+                        distanceDisplayCondition : distanceDisplayConditionAttribute
                     }
                 }),
                 appearance : new PerInstanceColorAppearance({

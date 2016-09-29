@@ -6,6 +6,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/NearFarScalar',
         'DataSources/BillboardGraphics',
@@ -27,6 +28,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        DistanceDisplayCondition,
         JulianDate,
         NearFarScalar,
         BillboardGraphics,
@@ -162,6 +164,7 @@ defineSuite([
         billboard.translucencyByDistance = new ConstantProperty(new NearFarScalar());
         billboard.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
         billboard.sizeInMeters = new ConstantProperty(true);
+        billboard.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
 
         visualizer.update(time);
 
@@ -189,6 +192,7 @@ defineSuite([
             expect(bb.translucencyByDistance).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
             expect(bb.pixelOffsetScaleByDistance).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
             expect(bb.sizeInMeters).toEqual(testObject.billboard.sizeInMeters.getValue(time));
+            expect(bb.distanceDisplayCondition).toEqual(testObject.billboard.distanceDisplayCondition.getValue(time));
             expect(bb._imageSubRegion).toEqual(testObject.billboard.imageSubRegion.getValue(time));
 
             billboard.show = new ConstantProperty(false);
