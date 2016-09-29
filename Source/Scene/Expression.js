@@ -27,17 +27,21 @@ define([
 
     var scratchColor = new Color();
 
-    var scratchColorIndex = 0;
-    var scratchColors = [new Color()];
-
-    function getScratchColor() {
-        if (scratchColorIndex >= scratchColors.length) {
-            scratchColors.push(new Color());
+    var ScratchStorage = {
+        scratchColorIndex : 0,
+        scratchColors : [new Color()],
+        reset : function() {
+            this.scratchColorIndex = 0;
+        },
+        getColor : function() {
+            if (this.scratchColorIndex >= this.scratchColors.length) {
+                this.scratchColors.push(new Color());
+            }
+            var scratchColor = this.scratchColors[this.scratchColorIndex];
+            ++this.scratchColorIndex;
+            return scratchColor;
         }
-        var scratchColor = scratchColors[scratchColorIndex];
-        ++scratchColorIndex;
-        return scratchColor;
-    }
+    };
 
     /**
      * Evaluates an expression defined using the
@@ -117,7 +121,7 @@ define([
      * @returns {Boolean|Number|String|Color|RegExp} The result of evaluating the expression.
      */
     Expression.prototype.evaluate = function(feature) {
-        scratchColorIndex = 0;
+        ScratchStorage.reset();
         var result = this._runtimeAst.evaluate(feature);
         if (result instanceof Color) {
             return Color.clone(result);
@@ -133,7 +137,7 @@ define([
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      */
     Expression.prototype.evaluateColor = function(feature, result) {
-        scratchColorIndex = 0;
+        ScratchStorage.reset();
         var color = this._runtimeAst.evaluate(feature);
         return Color.clone(color, result);
     };
@@ -594,7 +598,7 @@ define([
     };
 
     Node.prototype._evaluateLiteralColor = function(feature) {
-        var result = getScratchColor();
+        var result = ScratchStorage.getColor();
         var args = this._left;
         if (this._value === 'color') {
             if (!defined(args)) {
@@ -700,90 +704,38 @@ define([
     // that we can assign if we know the types before runtime
 
     Node.prototype._evaluateNot = function(feature) {
-        var left = this._left.evaluate(feature);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
-        return !left;
+        return !(this._left.evaluate(feature));
     };
 
     Node.prototype._evaluateNegative = function(feature) {
-        var left = this._left.evaluate(feature);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'number') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
-        return -left;
+        return -(this._left.evaluate(feature));
     };
 
     Node.prototype._evaluatePositive = function(feature) {
-        var left = this._left.evaluate(feature);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'number') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
-        return left;
+        return +(this._left.evaluate(feature));
     };
 
     Node.prototype._evaluateLessThan = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
         return left < right;
     };
 
     Node.prototype._evaluateLessThanOrEquals = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
         return left <= right;
     };
 
     Node.prototype._evaluateGreaterThan = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
         return left > right;
     };
 
     Node.prototype._evaluateGreaterThanOrEquals = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
         return left >= right;
     };
 
@@ -834,36 +786,18 @@ define([
     Node.prototype._evaluatePlus = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.add(left, right, getScratchColor());
+            return Color.add(left, right, ScratchStorage.getColor());
         }
-
-        //>>includeStart('debug', pragmas.debug);
-        var leftType = typeof(left);
-        var rightType = typeof(right);
-        if (leftType !== rightType || (leftType !== 'number' && leftType !== 'string')) {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
         return left + right;
     };
 
     Node.prototype._evaluateMinus = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.subtract(left, right, getScratchColor());
+            return Color.subtract(left, right, ScratchStorage.getColor());
         }
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
         return left - right;
     };
 
@@ -871,19 +805,12 @@ define([
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.multiply(left, right, getScratchColor());
+            return Color.multiply(left, right, ScratchStorage.getColor());
         } else if ((right instanceof Color) && (typeof(left) === 'number')) {
-            return Color.multiplyByScalar(right, left, getScratchColor());
+            return Color.multiplyByScalar(right, left, ScratchStorage.getColor());
         } else if ((left instanceof Color) && (typeof(right) === 'number')) {
-            return Color.multiplyByScalar(left, right, getScratchColor());
+            return Color.multiplyByScalar(left, right, ScratchStorage.getColor());
         }
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
         return left * right;
     };
 
@@ -891,17 +818,10 @@ define([
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.divide(left, right, getScratchColor());
+            return Color.divide(left, right, ScratchStorage.getColor());
         } else if ((left instanceof Color) && (typeof(right) === 'number')) {
-            return Color.divideByScalar(left, right, getScratchColor());
+            return Color.divideByScalar(left, right, ScratchStorage.getColor());
         }
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
         return left / right;
     };
 
@@ -909,15 +829,8 @@ define([
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.mod(left, right, getScratchColor());
+            return Color.mod(left, right, ScratchStorage.getColor());
         }
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'number' || typeof(right) !== 'number') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
         return left % right;
     };
 
@@ -947,27 +860,11 @@ define([
     };
 
     Node.prototype._evaluateNaN = function(feature) {
-        var left = this._left.evaluate(feature);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'number') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
-        return isNaN(left);
+        return isNaN(this._left.evaluate(feature));
     };
 
     Node.prototype._evaluateIsFinite = function(feature) {
-        var left = this._left.evaluate(feature);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'number') {
-            throw new DeveloperError('Error: Operation is undefined.');
-        }
-        //>>includeEnd('debug');
-
-        return isFinite(left);
+        return isFinite(this._left.evaluate(feature));
     };
 
     Node.prototype._evaluateBooleanConversion = function(feature) {
@@ -1174,13 +1071,16 @@ define([
                 return attributePrefix + value;
             case ExpressionNodeType.UNARY:
                 // Supported types: +, -, !, Boolean, Number
-                if ((value === 'isNan') || (value === 'isFinite') || (value === 'String')) {
-                    return undefined;
-                } else if (value === 'Boolean') {
+                if (value === 'Boolean') {
                     return 'bool(' + left + ')';
                 } else if (value === 'Number') {
                     return 'float(' + left + ')';
                 }
+                //>>includeStart('debug', pragmas.debug);
+                else if ((value === 'isNan') || (value === 'isFinite') || (value === 'String')) {
+                    throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
+                }
+                //>>includeEnd('debug');
                 return value + left;
             case ExpressionNodeType.BINARY:
                 // Supported types: ||, &&, ===, !==, <, >, <=, >=, +, -, *, /, %
@@ -1197,12 +1097,11 @@ define([
             case ExpressionNodeType.MEMBER:
                 // This is intended for accessing the components of vec2, vec3, and vec4 properties. String members aren't supported.
                 return left + '[int(' + right + ')]';
-            case ExpressionNodeType.ARRAY:
+            case ExpressionNodeType.FUNCTION_CALL:
                 //>>includeStart('debug', pragmas.debug);
-                if (value.length < 2 || value.length > 4) {
-                    throw new DeveloperError('Invalid array length. Array length should be between 2 and 4');
-                }
+                throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
                 //>>includeEnd('debug');
+            case ExpressionNodeType.ARRAY:
                 if (value.length === 4) {
                     return 'vec4(' + value[0] + ', ' + value[1] + ', ' + value[2] + ', ' + value[3] + ')';
                 } else if (value.length === 3) {
@@ -1210,7 +1109,24 @@ define([
                 } else if (value.length === 2) {
                     return 'vec2(' + value[0] + ', ' + value[1] + ')';
                 }
+                //>>includeStart('debug', pragmas.debug);
+                else {
+                    throw new DeveloperError('Error generating style shader: Invalid array length. Array length should be 2, 3, or 4.');
+                }
+                //>>includeEnd('debug');
                 break;
+            case ExpressionNodeType.REGEX:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: Regular expressions are not supported.');
+                //>>includeEnd('debug');
+            case ExpressionNodeType.VARIABLE_IN_STRING:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: Converting a variable to a string is not supported.');
+                //>>includeEnd('debug');
+            case ExpressionNodeType.LITERAL_NULL:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: null is not supported.');
+                //>>includeEnd('debug');
             case ExpressionNodeType.LITERAL_BOOLEAN:
                 return value ? 'true' : 'false';
             case ExpressionNodeType.LITERAL_NUMBER:
@@ -1221,7 +1137,9 @@ define([
                 if (defined(color)) {
                     return colorToVec3(color);
                 }
-                return undefined;
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: String literals are not supported.');
+                //>>includeEnd('debug');
             case ExpressionNodeType.LITERAL_COLOR:
                 var args = left;
                 if (value === 'color') {
@@ -1276,9 +1194,14 @@ define([
                     }
                 }
                 break;
-            default:
-                // Not supported: FUNCTION_CALL, REGEX, VARIABLE_IN_STRING, LITERAL_NULL, LITERAL_REGEX, LITERAL_UNDEFINED
-                return undefined;
+            case ExpressionNodeType.LITERAL_REGEX:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: Regular expressions are not supported.');
+                //>>includeEnd('debug');
+            case ExpressionNodeType.LITERAL_UNDEFINED:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: undefined is not supported.');
+                //>>includeEnd('debug');
         }
     };
 

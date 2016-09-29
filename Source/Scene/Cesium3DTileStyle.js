@@ -334,11 +334,6 @@ define([
 
         this._colorShaderFunctionReady = true;
         this._colorShaderFunction = this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4');
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(this._colorShaderFunction)) {
-            throw new DeveloperError('Could not generate valid shader code for the color style.');
-        }
-        //>>includeEnd('debug');
         return this._colorShaderFunction;
     };
 
@@ -361,11 +356,6 @@ define([
 
         this._showShaderFunctionReady = true;
         this._showShaderFunction = this.show.getShaderFunction(functionName, attributePrefix, shaderState, 'bool');
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(this._showShaderFunction)) {
-            throw new DeveloperError('Could not generate valid shader code for the show style.');
-        }
-        //>>includeEnd('debug');
         return this._showShaderFunction;
     };
 

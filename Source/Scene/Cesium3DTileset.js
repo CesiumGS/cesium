@@ -503,7 +503,7 @@ define([
          *        conditions : [
          *            ['${Height} >= 100', 'color("purple", 0.5)'],
          *            ['${Height} >= 50', 'color("red")'],
-         *            ['true' : 'color("blue")']
+         *            ['true', 'color("blue")']
          *        ]
          *    },
          *    show : '${Height} > 0',
