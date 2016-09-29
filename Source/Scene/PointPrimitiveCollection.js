@@ -555,7 +555,7 @@ define([
             }
         }
 
-        var show = pointPrimitive.show;
+        var show = pointPrimitive.show && pointPrimitive.clusterShow;
 
         // If the color alphas are zero, do not show this pointPrimitive.  This lets us avoid providing
         // color during the pick pass and also eliminates a discard in the fragment shader.

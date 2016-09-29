@@ -3,6 +3,8 @@ Change Log
 
 ### 1.26 - 2016-10-03
 
+* Deprecated
+    * The `scene` parameter for creating `BillboardVisualizer`, `LabelVisualizer`, and `PointVisualizer` has been deprecated and will be removed in 1.28. Instead, pass an instance of `EntityCluster`.
 * Breaking changes
     * Vertex texture fetch is now required to be supported to render polylines. Maximum vertex texture image units must be greater than zero.
     * Removed `castShadows` and `receiveShadows` properties from `Model`, `Primitive`, and `Globe`. Instead, use `shadows` with the `ShadowMode` enum, e.g. `model.shadows = ShadowMode.ENABLED`.
@@ -15,6 +17,7 @@ Change Log
 * Added `CesiumMath.clampToLatitudeRange`. A convenience function to clamp a passed radian angle to valid Latitudes.
 * Fixed a bug in `AttributeCompression.compressTextureCoordinates` and `decompressTextureCoordinates` that could cause a small inaccuracy in the encoded texture coordinates.
 * Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
+* Added support for clustering `Billboard`, `Label` and `Point` entities. [#4240](https://github.com/AnalyticalGraphicsInc/cesium/pull/4240)
 
 ### 1.25 - 2016-09-01
 

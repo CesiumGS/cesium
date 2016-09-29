@@ -16,6 +16,7 @@ defineSuite([
         'Core/NearFarScalar',
         'Core/Rectangle',
         'Renderer/ContextLimits',
+        'Scene/Billboard',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/OrthographicFrustum',
@@ -42,6 +43,7 @@ defineSuite([
         NearFarScalar,
         Rectangle,
         ContextLimits,
+        Billboard,
         HeightReference,
         HorizontalOrigin,
         OrthographicFrustum,
@@ -1053,6 +1055,114 @@ defineSuite([
         expect(function() {
             b.computeScreenSpacePosition();
         }).toThrowDeveloperError();
+    });
+
+    it('computes screen space bounding box', function() {
+        var width = 10;
+        var height = 15;
+        var scale = 1.5;
+
+        var b = billboards.add({
+            width : width,
+            height : height,
+            scale : scale
+        });
+
+        var halfWidth = width * scale * 0.5;
+        var halfHeight = height * scale * 0.5;
+        width = width * scale;
+        height = height * scale;
+
+        var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+        expect(bbox.x).toEqual(-halfWidth);
+        expect(bbox.y).toEqual(-halfHeight);
+        expect(bbox.width).toEqual(width);
+        expect(bbox.height).toEqual(height);
+    });
+
+    it('computes screen space bounding box with result', function() {
+        var width = 10;
+        var height = 15;
+        var scale = 1.5;
+
+        var b = billboards.add({
+            width : width,
+            height : height,
+            scale : scale
+        });
+
+        var halfWidth = width * scale * 0.5;
+        var halfHeight = height * scale * 0.5;
+        width = width * scale;
+        height = height * scale;
+
+        var result = new BoundingRectangle();
+        var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO, result);
+        expect(bbox.x).toEqual(-halfWidth);
+        expect(bbox.y).toEqual(-halfHeight);
+        expect(bbox.width).toEqual(width);
+        expect(bbox.height).toEqual(height);
+        expect(bbox).toBe(result);
+    });
+
+    it('computes screen space bounding box with vertical origin', function() {
+        var width = 10;
+        var height = 15;
+        var scale = 1.5;
+
+        var b = billboards.add({
+            width : width,
+            height : height,
+            scale : scale,
+            verticalOrigin : VerticalOrigin.BOTTOM
+        });
+
+        var halfWidth = width * scale * 0.5;
+        width = width * scale;
+        height = height * scale;
+
+        var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+        expect(bbox.x).toEqual(-halfWidth);
+        expect(bbox.y).toEqual(0);
+        expect(bbox.width).toEqual(width);
+        expect(bbox.height).toEqual(height);
+
+        b.verticalOrigin = VerticalOrigin.TOP;
+        bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+        expect(bbox.x).toEqual(-halfWidth);
+        expect(bbox.y).toEqual(-height);
+        expect(bbox.width).toEqual(width);
+        expect(bbox.height).toEqual(height);
+    });
+
+    it('computes screen space bounding box with horizontal origin', function() {
+        var width = 10;
+        var height = 15;
+        var scale = 1.5;
+
+        var b = billboards.add({
+            width : width,
+            height : height,
+            scale : scale,
+            horizontalOrigin : HorizontalOrigin.LEFT
+        });
+
+        var halfHeight = height * scale * 0.5;
+        height = height * scale;
+        width = width * scale;
+
+        var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+        expect(bbox.x).toEqual(0);
+        expect(bbox.y).toEqual(-halfHeight);
+        expect(bbox.width).toEqual(width);
+        expect(bbox.height).toEqual(height);
+
+        b.horizontalOrigin = HorizontalOrigin.RIGHT;
+        bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+        expect(bbox.x).toEqual(-width);
+        expect(bbox.y).toEqual(-halfHeight);
+        expect(bbox.width).toEqual(width);
+        expect(bbox.height).toEqual(height);
     });
 
     it('equals another billboard', function() {
