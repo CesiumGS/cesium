@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/getMagic',
@@ -22,6 +23,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         getMagic,
@@ -41,6 +43,7 @@ define([
      * Represents the contents of a
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md|Batched 3D Model}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     *
      *
      * @alias Batched3DModel3DTileContent
      * @constructor
@@ -214,11 +217,12 @@ define([
         // If the header is in the legacy format 'batchLength' will be the start of the JSON string (a quotation mark) or the glTF magic.
         // Accordingly the first byte of uint32 will be either 0x22 or 0x67 and so the uint32 will exceed any reasonable 'batchLength'.
         if (batchLength > 10000000) {
+            //@deprecated b3dm legacy header format [batchLength] [batchTableByteLength]
             byteOffset -= sizeOfUint32;
             batchLength = batchTableJsonByteLength;
             batchTableJsonByteLength = batchTableBinaryByteLength;
             batchTableBinaryByteLength = 0;
-            console.log('Warning: b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
+            deprecationWarning('Batched3DModel3DTileContent.prototype.initialize', 'This b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
         }
 
         this._featuresLength = batchLength;
