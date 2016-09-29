@@ -793,13 +793,14 @@ define([
      * @callback EntityCluster~newClusterCallback
      *
      * @param {Entity[]} clusteredEntities An array of the entities contained in the cluster.
-     * @param {Entity} entity The entity that will be display for the cluster.
+     * @param {Object} cluster An object containing billboard, label, and point properties. The values are the same as
+     * billboard, label and point entities, but must be the values of the ConstantProperty.
      *
      * @example
-     * dataSource.clustering.clusterEvent.addEventListener(function(entities, entity) {
-     *     entity.label = {
-     *         text : '' + entities.length
-     *     };
+     * // The default cluster values.
+     * dataSource.clustering.clusterEvent.addEventListener(function(entities, cluster) {
+     *     cluster.label.show = true;
+     *     cluster.label.text = entities.length.toLocaleString();
      * });
      */
 
