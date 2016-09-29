@@ -25,24 +25,24 @@ define([
     /**
      * Adds a trusted server to the registry
      *
-     * @param {String} domain The domain to be added.
-     * @param {Number} port The port used to access the domain.
+     * @param {String} host The host to be added.
+     * @param {Number} port The port used to access the host.
      *
      * @example
      * // Add a trusted server
      * TrustedServers.add('my.server.com', 80);
      */
-    TrustedServers.add = function(domain, port) {
+    TrustedServers.add = function(host, port) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(domain)) {
-            throw new DeveloperError('domain is required.');
+        if (!defined(host)) {
+            throw new DeveloperError('host is required.');
         }
         if (!defined(port) || port <= 0) {
             throw new DeveloperError('port is required to be greater than 0.');
         }
         //>>includeEnd('debug');
 
-        var authority = domain.toLowerCase() + ':' + port;
+        var authority = host.toLowerCase() + ':' + port;
         if (!defined(_servers[authority])) {
             _servers[authority] = true;
         }
@@ -51,24 +51,24 @@ define([
     /**
      * Removes a trusted server from the registry
      *
-     * @param {String} domain The domain to be removed.
-     * @param {Number} port The port used to access the domain.
+     * @param {String} host The host to be removed.
+     * @param {Number} port The port used to access the host.
      *
      * @example
      * // Remove a trusted server
      * TrustedServers.remove('my.server.com', 80);
      */
-    TrustedServers.remove = function(domain, port) {
+    TrustedServers.remove = function(host, port) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(domain)) {
-            throw new DeveloperError('domain is required.');
+        if (!defined(host)) {
+            throw new DeveloperError('host is required.');
         }
         if (!defined(port) || port <= 0) {
             throw new DeveloperError('port is required to be greater than 0.');
         }
         //>>includeEnd('debug');
 
-        var authority = domain.toLowerCase() + ':' + port;
+        var authority = host.toLowerCase() + ':' + port;
         if (defined(_servers[authority])) {
             delete _servers[authority];
         }
@@ -78,8 +78,12 @@ define([
         var uri = new Uri(url);
         uri.normalize();
 
-        // Removes username:password@ so we just have domain[:port]
+        // Removes username:password@ so we just have host[:port]
         var authority = uri.getAuthority();
+        if (!defined(authority)) {
+            return undefined; // Relative URL
+        }
+
         if (authority.indexOf('@') !== -1) {
             var parts = authority.split('@');
             authority = parts[1];
@@ -88,6 +92,10 @@ define([
         // If the port is missing add one based on the scheme
         if (authority.indexOf(':') === -1) {
             var scheme = uri.getScheme();
+            if (!defined(scheme)) {
+                scheme = window.location.protocol;
+                scheme = scheme.substring(0, scheme.length-1);
+            }
             if (scheme === 'http') {
                 authority += ':80';
             } else if (scheme === 'https') {
@@ -109,7 +117,7 @@ define([
      *
      * @example
      * // Add server
-     * TrustedServers.add('my.server.com:81');
+     * TrustedServers.add('my.server.com', 81);
      *
      * // Check if server is trusted
      * if (TrustedServers.contains('https://my.server.com:81/path/to/file.png')) {

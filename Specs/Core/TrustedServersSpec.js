@@ -60,6 +60,15 @@ defineSuite([
         expect(TrustedServers.contains('http://user:pass@cesiumjs.org:81/index.html')).toBe(true);
     });
 
+    it('always returns false for relative paths', function() {
+        expect(TrustedServers.contains('./data/index.html')).toBe(false);
+    });
+
+    it('handles protocol relative URLs', function() {
+        TrustedServers.add('cesiumjs.org', 80);
+        expect(TrustedServers.contains('//cesiumjs.org/index.html')).toBe(true);
+    });
+
     it('clear', function() {
         TrustedServers.add('cesiumjs.org', 80);
         expect(TrustedServers.contains('http://cesiumjs.org/index.html')).toBe(true);
