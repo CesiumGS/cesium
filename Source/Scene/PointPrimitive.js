@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -13,6 +14,7 @@ define([
         './SceneMode',
         './SceneTransforms'
     ], function(
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -74,6 +76,8 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._id = options.id;
         this._collection = defaultValue(options.collection, pointPrimitiveCollection);
+
+        this._clusterShow = true;
 
         this._pickId = undefined;
         this._pointPrimitiveCollection = pointPrimitiveCollection;
@@ -354,6 +358,24 @@ define([
                     this._pickId.object.id = value;
                 }
             }
+        },
+
+        /**
+         * Determines whether or not this point will be shown or hidden because it was clustered.
+         * @memberof PointPrimitive.prototype
+         * @type {Boolean}
+         * @private
+         */
+        clusterShow : {
+            get : function() {
+                return this._clusterShow;
+            },
+            set : function(value) {
+                if (this._clusterShow !== value) {
+                    this._clusterShow = value;
+                    makeDirty(this, SHOW_INDEX);
+                }
+            }
         }
     });
 
@@ -429,8 +451,42 @@ define([
 
         var modelMatrix = pointPrimitiveCollection.modelMatrix;
         var windowCoordinates = PointPrimitive._computeScreenSpacePosition(modelMatrix, this._actualPosition, scene, result);
+        if (!defined(windowCoordinates)) {
+            return undefined;
+        }
+
         windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
         return windowCoordinates;
+    };
+
+    /**
+     * Gets a point's screen space bounding box centered around screenSpacePosition.
+     * @param {PointPrimitive} point The point to get the screen space bounding box for.
+     * @param {Cartesian2} screenSpacePosition The screen space center of the label.
+     * @param {BoundingRectangle} [result] The object onto which to store the result.
+     * @returns {BoundingRectangle} The screen space bounding box.
+     *
+     * @private
+     */
+    PointPrimitive.getScreenSpaceBoundingBox = function(point, screenSpacePosition, result) {
+        var size = point.pixelSize;
+        var halfSize = size * 0.5;
+
+        var x = screenSpacePosition.x - halfSize;
+        var y = screenSpacePosition.y - halfSize;
+        var width = size;
+        var height = size;
+
+        if (!defined(result)) {
+            result = new BoundingRectangle();
+        }
+
+        result.x = x;
+        result.y = y;
+        result.width = width;
+        result.height = height;
+
+        return result;
     };
 
     /**

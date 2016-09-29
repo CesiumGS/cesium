@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/PointPrimitiveCollection',
+        'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -9,9 +10,11 @@ defineSuite([
         'Core/NearFarScalar',
         'Core/Rectangle',
         'Scene/OrthographicFrustum',
+        'Scene/PointPrimitive',
         'Specs/createScene'
     ], function(
         PointPrimitiveCollection,
+        BoundingRectangle,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -20,6 +23,7 @@ defineSuite([
         NearFarScalar,
         Rectangle,
         OrthographicFrustum,
+        PointPrimitive,
         createScene) {
     'use strict';
 
@@ -677,6 +681,42 @@ defineSuite([
         expect(function() {
             p.computeScreenSpacePosition();
         }).toThrowDeveloperError();
+    });
+
+    it('computes screen space bounding box', function() {
+        var size = 10;
+
+        var p = pointPrimitives.add({
+            size : size
+        });
+
+        var halfWidth = size * 0.5;
+        var halfHeight = halfWidth;
+
+        var bbox = PointPrimitive.getScreenSpaceBoundingBox(p, Cartesian2.ZERO);
+        expect(bbox.x).toEqual(-halfWidth);
+        expect(bbox.y).toEqual(-halfHeight);
+        expect(bbox.width).toEqual(size);
+        expect(bbox.height).toEqual(size);
+    });
+
+    it('computes screen space bounding box with result', function() {
+        var size = 10;
+
+        var p = pointPrimitives.add({
+            size : size
+        });
+
+        var halfWidth = size * 0.5;
+        var halfHeight = halfWidth;
+
+        var result = new BoundingRectangle();
+        var bbox = PointPrimitive.getScreenSpaceBoundingBox(p, Cartesian2.ZERO, result);
+        expect(bbox.x).toEqual(-halfWidth);
+        expect(bbox.y).toEqual(-halfHeight);
+        expect(bbox.width).toEqual(size);
+        expect(bbox.height).toEqual(size);
+        expect(bbox).toBe(result);
     });
 
     it('equals another pointPrimitive', function() {

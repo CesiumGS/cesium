@@ -11,6 +11,7 @@ defineSuite([
         'Core/NearFarScalar',
         'DataSources/BoundingSphereState',
         'DataSources/ConstantProperty',
+        'DataSources/EntityCluster',
         'DataSources/EntityCollection',
         'DataSources/PointGraphics',
         'Scene/BillboardCollection',
@@ -29,6 +30,7 @@ defineSuite([
         NearFarScalar,
         BoundingSphereState,
         ConstantProperty,
+        EntityCluster,
         EntityCollection,
         PointGraphics,
         BillboardCollection,
@@ -38,6 +40,7 @@ defineSuite([
     'use strict';
 
     var scene;
+    var entityCluster;
     var visualizer;
 
     beforeAll(function() {
@@ -71,8 +74,14 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    beforeEach(function() {
+        entityCluster = new EntityCluster();
+        entityCluster._initialize(scene);
+    });
+
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
+        entityCluster.destroy();
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -84,13 +93,13 @@ defineSuite([
 
     it('constructor throws if no entityCollection is passed.', function() {
         expect(function() {
-            return new PointVisualizer(scene, undefined);
+            return new PointVisualizer(entityCluster, undefined);
         }).toThrowDeveloperError();
     });
 
     it('update throws if no time specified.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
         expect(function() {
             visualizer.update();
         }).toThrowDeveloperError();
@@ -98,7 +107,7 @@ defineSuite([
 
     it('isDestroy returns false until destroyed.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -107,7 +116,7 @@ defineSuite([
 
     it('removes the listener from the entity collection when destroyed', function() {
         var entityCollection = new EntityCollection();
-        var visualizer = new PointVisualizer(scene, entityCollection);
+        var visualizer = new PointVisualizer(entityCluster, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
         visualizer = visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
@@ -115,7 +124,7 @@ defineSuite([
 
     it('object with no point does not create a pointPrimitive.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -125,7 +134,7 @@ defineSuite([
 
     it('object with no position does not create a pointPrimitive.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         var point = testObject.point = new PointGraphics();
@@ -139,7 +148,7 @@ defineSuite([
         var time = JulianDate.now();
 
         var entityCollection = new EntityCollection();
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
 
         var entity = entityCollection.add({
             position : new Cartesian3(1234, 5678, 9101112),
@@ -156,7 +165,7 @@ defineSuite([
 
         visualizer.update(time);
 
-        var pointPrimitiveCollection = scene.primitives.get(0);
+        var pointPrimitiveCollection = entityCluster._pointCollection;
         expect(pointPrimitiveCollection instanceof PointPrimitiveCollection).toBe(true);
         expect(pointPrimitiveCollection.length).toEqual(1);
         var pointPrimitive = pointPrimitiveCollection.get(0);
@@ -192,7 +201,7 @@ defineSuite([
         var time = JulianDate.now();
 
         var entityCollection = new EntityCollection();
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
 
         var entity = entityCollection.add({
             position : new Cartesian3(1234, 5678, 9101112),
@@ -210,7 +219,7 @@ defineSuite([
 
         visualizer.update(time);
 
-        var billboardCollection = scene.primitives.get(0);
+        var billboardCollection = entityCluster._billboardCollection;
         expect(billboardCollection instanceof BillboardCollection).toBe(true);
         expect(billboardCollection.length).toEqual(1);
         var billboard = billboardCollection.get(0);
@@ -245,7 +254,7 @@ defineSuite([
     it('Reuses primitives when hiding one and showing another', function() {
         var time = JulianDate.now();
         var entityCollection = new EntityCollection();
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -254,7 +263,7 @@ defineSuite([
 
         visualizer.update(time);
 
-        var pointPrimitiveCollection = scene.primitives.get(0);
+        var pointPrimitiveCollection = entityCluster._pointCollection;
         expect(pointPrimitiveCollection.length).toEqual(1);
 
         testObject.point.show = new ConstantProperty(false);
@@ -274,7 +283,7 @@ defineSuite([
 
     it('clear hides pointPrimitives.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
         var testObject = entityCollection.getOrCreateEntity('test');
         var time = JulianDate.now();
 
@@ -283,7 +292,7 @@ defineSuite([
         point.show = new ConstantProperty(true);
         visualizer.update(time);
 
-        var pointPrimitiveCollection = scene.primitives.get(0);
+        var pointPrimitiveCollection = entityCluster._pointCollection;
         expect(pointPrimitiveCollection.length).toEqual(1);
         var bb = pointPrimitiveCollection.get(0);
 
@@ -297,7 +306,7 @@ defineSuite([
 
     it('Visualizer sets entity property.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         var time = JulianDate.now();
@@ -308,7 +317,7 @@ defineSuite([
 
         visualizer.update(time);
 
-        var pointPrimitiveCollection = scene.primitives.get(0);
+        var pointPrimitiveCollection = entityCluster._pointCollection;
         expect(pointPrimitiveCollection.length).toEqual(1);
         var bb = pointPrimitiveCollection.get(0);
         expect(bb.id).toEqual(testObject);
@@ -316,7 +325,7 @@ defineSuite([
 
     it('Computes bounding sphere.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         var time = JulianDate.now();
@@ -338,7 +347,7 @@ defineSuite([
     it('Fails bounding sphere for entity without pointPrimitive.', function() {
         var entityCollection = new EntityCollection();
         var testObject = entityCollection.getOrCreateEntity('test');
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
         visualizer.update(JulianDate.now());
         var result = new BoundingSphere();
         var state = visualizer.getBoundingSphere(testObject, result);
@@ -347,7 +356,7 @@ defineSuite([
 
     it('Compute bounding sphere throws without entity.', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
         var result = new BoundingSphere();
         expect(function() {
             visualizer.getBoundingSphere(undefined, result);
@@ -357,7 +366,7 @@ defineSuite([
     it('Compute bounding sphere throws without result.', function() {
         var entityCollection = new EntityCollection();
         var testObject = entityCollection.getOrCreateEntity('test');
-        visualizer = new PointVisualizer(scene, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
         expect(function() {
             visualizer.getBoundingSphere(testObject, undefined);
         }).toThrowDeveloperError();
