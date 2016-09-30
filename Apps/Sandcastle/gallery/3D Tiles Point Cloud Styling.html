@@ -117,6 +117,18 @@ addStyle('Secondary Color', {
     }
 });
 
+addStyle('Use point colors', {
+    color : "${COLOR} * ${temperature} + rgb(128,128,128)"
+});
+
+addStyle('Use point positions', {
+    show : "${POSITION}[0] > 0.5 || ${POSITION}[1] > 0.5 || ${POSITION}[2] > 0.5"
+});
+
+addStyle('Color based on position', {
+    color : "rgb(${POSITION}[0] * 255, ${POSITION}[1] * 255, ${POSITION}[2] * 255)"
+});
+
 function setStyle(style) {
     tileset.style = new Cesium.Cesium3DTileStyle(style);
 }

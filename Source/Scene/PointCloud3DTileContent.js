@@ -735,16 +735,30 @@ define([
         });
     }
 
+    var semantics = ['POSITION', 'COLOR', 'NORMAL'];
+
     function getStyleableProperties(source, properties) {
         // Get all the properties used by this style
         var regex = /czm_tiles3d_style_(\w+)/g;
         var matches = regex.exec(source);
         while (matches !== null) {
             var name = matches[1];
-            if (properties.indexOf(name) === -1) {
+            if ((semantics.indexOf(name) === -1) && (properties.indexOf(name) === -1)) {
                 properties.push(name);
             }
             matches = regex.exec(source);
+        }
+    }
+
+    function getStyleableSemantics(source, properties) {
+        // Get the semantics used by this style
+        var length = semantics.length;
+        for (var i = 0; i < length; ++i) {
+            var semantic = semantics[i];
+            var styleName = 'czm_tiles3d_style_' + semantic;
+            if (source.indexOf(styleName) >= 0) {
+                properties.push(semantic);
+            }
         }
     }
 
@@ -756,6 +770,20 @@ define([
                 return attribute;
             }
         }
+    }
+
+    function modifyStyleFunction(source) {
+        // Replace occurrences of czm_tiles3d_style_SEMANTIC with semantic
+        var length = semantics.length;
+        for (var i = 0; i < length; ++i) {
+            var semantic = semantics[i];
+            var styleName = 'czm_tiles3d_style_' + semantic;
+            var replaceName = semantic.toLowerCase();
+            source = source.replace(new RegExp(styleName, 'g'), replaceName);
+        }
+
+        // Edit the function header to accept the point position, color, and normal
+        return source.replace('()', '(vec3 position, vec4 color, vec3 normal)');
     }
 
     function createShaders(content, frameState, style) {
@@ -802,12 +830,30 @@ define([
 
         // Get the properties in use by the style
         var styleableProperties = [];
+        var styleableSemantics = [];
+
         if (hasColorStyle) {
             getStyleableProperties(colorStyleFunction, styleableProperties);
+            getStyleableSemantics(colorStyleFunction, styleableSemantics);
+            colorStyleFunction = modifyStyleFunction(colorStyleFunction);
         }
         if (hasShowStyle) {
             getStyleableProperties(showStyleFunction, styleableProperties);
+            getStyleableSemantics(showStyleFunction, styleableSemantics);
+            showStyleFunction = modifyStyleFunction(showStyleFunction);
         }
+
+        var usesColorSemantic = styleableSemantics.indexOf('COLOR') >= 0;
+        var usesNormalSemantic = styleableSemantics.indexOf('NORMAL') >= 0;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (usesColorSemantic && !hasColors) {
+            throw new DeveloperError('Style references the COLOR semantic but the point cloud does not have colors');
+        }
+        if (usesNormalSemantic && !hasNormals) {
+            throw new DeveloperError('Style references the NORMAL semantic but the point cloud does not have normals');
+        }
+        //>>includeEnd('debug');
 
         // Disable vertex attributes that aren't used in the style, enable attributes that are
         var styleableShaderAttributes = content._styleableShaderAttributes;
@@ -822,16 +868,17 @@ define([
             }
         }
 
-        if (hasColorStyle) {
-            // Disable the color vertex attribute when a color style is used
+        var usesColors = hasColors && (!hasColorStyle || usesColorSemantic);
+        if (hasColors) {
+            // Disable the color vertex attribute if the color style does not reference the color semantic
             var colorVertexAttribute = getVertexAttribute(vertexArray, colorLocation);
-            colorVertexAttribute.enabled = false;
+            colorVertexAttribute.enabled = usesColors;
         }
 
         var attributeLocations = {
             a_position : positionLocation
         };
-        if (hasColors && !hasColorStyle) {
+        if (usesColors) {
             attributeLocations.a_color = colorLocation;
         }
         if (hasNormals) {
@@ -853,7 +900,7 @@ define([
 
             //>>includeStart('debug', pragmas.debug);
             if (!defined(attribute)) {
-                throw new DeveloperError('Style reference a property "' + name + '" that does not exist or is not styleable.');
+                throw new DeveloperError('Style references a property "' + name + '" that does not exist or is not styleable.');
             }
             //>>includeEnd('debug');
 
@@ -870,7 +917,7 @@ define([
             attributeLocations[attributeName] = attribute.location;
         }
 
-        if (hasColors && !hasColorStyle) {
+        if (usesColors) {
             if (isTranslucent) {
                 vs += 'attribute vec4 a_color; \n';
             } else if (isRGB565) {
@@ -912,11 +959,9 @@ define([
         vs += 'void main() \n' +
               '{ \n';
 
-        if (hasColorStyle) {
-            vs += '    vec4 color = getColorFromStyle() * u_highlightColor; \n';
-        } else if (hasColors) {
+        if (usesColors) {
             if (isTranslucent) {
-                vs += '    vec4 color = a_color * u_highlightColor; \n';
+                vs += '    vec4 color = a_color; \n';
             } else if (isRGB565) {
                 vs += '    float compressed = a_color; \n' +
                       '    float r = floor(compressed * SHIFT_RIGHT_11); \n' +
@@ -925,12 +970,18 @@ define([
                       '    compressed -= g * SHIFT_LEFT_5; \n' +
                       '    float b = compressed; \n' +
                       '    vec3 rgb = vec3(r * NORMALIZE_5, g * NORMALIZE_6, b * NORMALIZE_5); \n' +
-                      '    vec4 color = vec4(rgb * u_highlightColor.rgb, u_highlightColor.a); \n';
+                      '    vec4 color = vec4(rgb, 1.0); \n';
             } else {
-                vs += '    vec4 color = vec4(a_color * u_highlightColor.rgb, u_highlightColor.a); \n';
+                vs += '    vec4 color = vec4(a_color, 1.0); \n';
             }
         } else {
-            vs += '    vec4 color = u_highlightColor; \n';
+            vs += '    vec4 color = vec4(1.0); \n';
+        }
+
+        if (isQuantized) {
+            vs += '    vec3 position = a_position * u_quantizedVolumeScale; \n';
+        } else {
+            vs += '    vec3 position = a_position; \n';
         }
 
         if (hasNormals) {
@@ -939,17 +990,25 @@ define([
             } else {
                 vs += '    vec3 normal = a_normal; \n';
             }
+        } else {
+            vs += '    vec3 normal = vec3(1.0); \n';
+        }
 
+        if (hasColorStyle) {
+            vs += '    color = getColorFromStyle(position, color, normal); \n';
+        }
+
+        if (hasShowStyle) {
+            vs += '    float show = float(getShowFromStyle(position, color, normal)); \n';
+        }
+
+        vs += '    color = color * u_highlightColor; \n';
+
+        if (hasNormals) {
             vs += '    normal = czm_normal * normal; \n' +
                   '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
                   '    color *= diffuseStrength; \n';
-        }
-
-        if (isQuantized) {
-            vs += '    vec3 position = a_position * u_quantizedVolumeScale; \n';
-        } else {
-            vs += '    vec3 position = a_position; \n';
         }
 
         vs += '    v_color = color; \n' +
@@ -962,8 +1021,7 @@ define([
         }
 
         if (hasShowStyle) {
-            vs += '    float show = float(getShowFromStyle()); \n' +
-                  '    gl_Position *= show; \n';
+            vs += '    gl_Position *= show; \n';
         }
 
         vs += '} \n';
