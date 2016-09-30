@@ -642,7 +642,6 @@ defineSuite([
             setZoom(1500.0);
             scene.renderForSpecs();
             expect(stats.numberOfCommands).toEqual(4);
-
         });
     });
 
