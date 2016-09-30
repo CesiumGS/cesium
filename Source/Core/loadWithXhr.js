@@ -204,12 +204,8 @@ define([
                         }
                     }
                 }
-            } else if ((browserResponseType === '' || browserResponseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
-                deferred.resolve(xhr.responseXML);
-            } else if ((browserResponseType === '' || browserResponseType === 'text') && defined(xhr.responseText)) {
-                deferred.resolve(xhr.responseText);
             } else {
-                deferred.reject(new RuntimeError('Invalid XMLHttpRequest response type.'));
+                deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
             }
         };
 
