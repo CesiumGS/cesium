@@ -19,6 +19,7 @@ Change Log
 * Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
 * Added support for clustering `Billboard`, `Label` and `Point` entities. [#4240](https://github.com/AnalyticalGraphicsInc/cesium/pull/4240)
 * Added `DistanceDisplayCondition`s to all primitives to determine the range interval from the camera for when it will be visible.
+* Fix a bug when morphing from 2D to 3D. [#4388](https://github.com/AnalyticalGraphicsInc/cesium/pull/4388)
 
 ### 1.25 - 2016-09-01
 
