@@ -316,7 +316,7 @@ define([
             collectionOptions.url = joinUrls(baseUrl, gltfUrl);
         } else {
             collectionOptions.gltf = gltfView;
-            collectionOptions.basePath = getBaseUri(this._url, false);
+            collectionOptions.basePath = getBaseUri(this._url);
         }
 
         var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');
