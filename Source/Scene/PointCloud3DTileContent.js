@@ -398,7 +398,7 @@ define([
             isOctEncoded16P = true;
         }
 
-        // Get the batchIds and batch table
+        // Get the batchIds and batch table. BATCH_ID does not need to be defined when the point cloud has per-point properties.
         var batchIds;
         if (defined(featureTableJson.BATCH_ID)) {
             var componentType;
@@ -426,7 +426,7 @@ define([
             this.batchTable = new Cesium3DTileBatchTable(this, batchLength, batchTableJson, batchTableBinary);
         }
 
-        // If points are not batched and there there are per-point properties, use these properties for styling purposes
+        // If points are not batched and there are per-point properties, use these properties for styling purposes
         var styleableProperties;
         if (!defined(batchIds) && defined(batchTableBinary)) {
             styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(pointsLength, batchTableJson, batchTableBinary);
