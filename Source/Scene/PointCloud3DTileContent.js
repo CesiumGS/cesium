@@ -430,6 +430,18 @@ define([
         var styleableProperties;
         if (!defined(batchIds) && defined(batchTableBinary)) {
             styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(pointsLength, batchTableJson, batchTableBinary);
+
+            // WebGL does not support UNSIGNED_INT, INT, or DOUBLE vertex attributes. Convert these to FLOAT.
+            for (var name in styleableProperties) {
+                if (styleableProperties.hasOwnProperty(name)) {
+                    var property = styleableProperties[name];
+                    var typedArray = property.typedArray;
+                    var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
+                    if (componentDatatype === ComponentDatatype.INT || componentDatatype === ComponentDatatype.UNSIGNED_INT || componentDatatype === ComponentDatatype.DOUBLE) {
+                        property.typedArray = new Float32Array(typedArray);
+                    }
+                }
+            }
         }
 
         this._parsedContent = {
@@ -492,12 +504,6 @@ define([
                     var typedArray = property.typedArray;
                     var componentCount = property.componentCount;
                     var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
-
-                    //>>includeStart('debug', pragmas.debug);
-                    if (componentDatatype === ComponentDatatype.UNSIGNED_INT) {
-                        throw new DeveloperError('Property "' + name + '" has a component type of UNSIGNED_INT which is not a valid WebGL vertex attribute type.');
-                    }
-                    //>>includeEnd('debug');
 
                     var vertexBuffer = Buffer.createVertexBuffer({
                         context : context,
