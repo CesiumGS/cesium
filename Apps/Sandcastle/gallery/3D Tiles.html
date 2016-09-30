@@ -45,6 +45,8 @@ var tilesets = [{
 }, {
     name : 'Translucent/Opaque', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/'
 }, {
+    name : 'Request Volume', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/'
+}, {
     name : 'Batched', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/'
 }, {
     name : 'Instanced', url : '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/'
@@ -377,6 +379,10 @@ Sandcastle.addToolbarButton('BV on/off', function() {
 
 Sandcastle.addToolbarButton('Contents BV on/off', function() {
     tileset.debugShowContentBoundingVolume = !tileset.debugShowContentBoundingVolume;
+});
+
+Sandcastle.addToolbarButton('Request Volume on/off', function() {
+    tileset.debugShowViewerRequestVolume = !tileset.debugShowViewerRequestVolume;
 });
 
 Sandcastle.addToolbarButton('SSE++', function() {
