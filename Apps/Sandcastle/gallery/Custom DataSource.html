@@ -208,7 +208,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
             return this._entityCluster;
         },
         set : function(value) {
-            if (!defined(value)) {
+            if (!Cesium.defined(value)) {
                 throw new Cesium.DeveloperError('value must be defined.');
             }
             this._entityCluster = value;
