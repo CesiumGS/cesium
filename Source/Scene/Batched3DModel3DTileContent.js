@@ -7,6 +7,7 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
@@ -26,6 +27,7 @@ define([
         deprecationWarning,
         destroyObject,
         DeveloperError,
+        getBaseUri,
         getMagic,
         getStringFromTypedArray,
         loadArrayBuffer,
@@ -258,7 +260,7 @@ define([
             gltf : gltfView,
             cull : false,           // The model is already culled by the 3D tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-            basePath : this._url,
+            basePath : getBaseUri(this._url),
             modelMatrix : this._tile.computedTransform,
             shadows: this._tileset.shadows,
             incrementallyLoadTextures : false,
