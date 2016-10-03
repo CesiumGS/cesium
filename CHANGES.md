@@ -12,6 +12,7 @@ Change Log
 * Removed the default gamma correction for Bing Maps aerial imagery, because it is no longer an improvement to current versions of the tiles.  To restore the previous look, set the `defaultGamma` property of your `BingMapsImageryProvider` instance to 1.3.
 * Added `TrustedServer` collection that controls which servers should have `withCredential` set to `true` on XHR Requests.
 * Fixed billboard rotation when sized in meters. [#3979](https://github.com/AnalyticalGraphicsInc/cesium/issues/3979)
+* Added `backgroundColor` and `borderWidth` properties to `writeTextToCanvas`.
 * Fixed timeline touch events. [#4305](https://github.com/AnalyticalGraphicsInc/cesium/pull/4305)
 * Fixed a bug that could lead to incorrect terrain heights when using `HeightmapTerrainData` with an encoding in which actual heights were equal to the minimum representable height.
 * Fixed a bug that was incorrectly clamping Latitudes in KML <GroundOverlay>(s) to the range -PI..PI. Now correctly clamps to -PI/2..PI/2.
