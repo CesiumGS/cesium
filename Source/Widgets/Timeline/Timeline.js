@@ -702,9 +702,9 @@ define([
             var len = e.touches.length, leftX = timeline._topDiv.getBoundingClientRect().left;
             if (timeline._touchMode === timelineTouchMode.singleTap) {
                 timeline._touchMode = timelineTouchMode.scrub;
-                timeline._handleTouchMove(e);
+                timeline._onTouchMove(e);
             } else if (timeline._touchMode === timelineTouchMode.scrub) {
-                timeline._handleTouchMove(e);
+                timeline._onTouchMove(e);
             }
             timeline._mouseMode = timelineMouseMode.touchOnly;
             if (len !== 1) {
