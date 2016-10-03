@@ -8,6 +8,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
+        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/EllipsoidGeometry',
         '../Core/EllipsoidOutlineGeometry',
         '../Core/Event',
@@ -34,6 +36,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         EllipsoidGeometry,
         EllipsoidOutlineGeometry,
         Event,
@@ -59,6 +63,7 @@ define([
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
+    var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
     var radiiScratch = new Cartesian3();
     var scratchColor = new Color();
@@ -106,6 +111,7 @@ define([
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
         this._shadowsProperty = undefined;
+        this._distanceDisplayConditionProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'ellipsoid', entity.ellipsoid, undefined);
     }
@@ -247,6 +253,18 @@ define([
             }
         },
         /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
+         * @memberof EllipsoidGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        distanceDisplayConditionProperty : {
+            get : function() {
+                return this._distanceDisplayConditionProperty;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
@@ -334,6 +352,8 @@ define([
 
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
+        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -342,11 +362,13 @@ define([
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
                 show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute,
                 color : color
             };
         } else {
             attributes = {
-                show : show
+                show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute
             };
         }
 
@@ -381,6 +403,7 @@ define([
         var isAvailable = entity.isAvailable(time);
 
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
         return new GeometryInstance({
             id : entity,
@@ -388,7 +411,8 @@ define([
             modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
             }
         });
     };
@@ -468,6 +492,7 @@ define([
         this._showOutlineProperty = defaultValue(ellipsoid.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(ellipsoid.outlineColor, defaultOutlineColor) : undefined;
         this._shadowsProperty = defaultValue(ellipsoid.shadows, defaultShadows);
+        this._distanceDisplayConditionProperty = defaultValue(ellipsoid.distanceDisplayCondition, defaultDistanceDisplayCondition);
         
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
@@ -598,6 +623,10 @@ define([
         var options = this._options;
         
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
+
+        var distanceDisplayConditionProperty = this._geometryUpdater.distanceDisplayConditionProperty;
+        var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time);
+        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
         
         //We only rebuild the primitive if something other than the radii has changed
         //For the radii, we use unit sphere and then deform it with a scale matrix.
@@ -632,7 +661,8 @@ define([
                     geometry : new EllipsoidGeometry(options),
                     modelMatrix : !in3D ? modelMatrix : undefined,
                     attributes : {
-                        show : new ShowGeometryInstanceAttribute(showFill)
+                        show : new ShowGeometryInstanceAttribute(showFill),
+                        distanceDisplayCondition : distanceDisplayConditionAttribute
                     }
                 }),
                 appearance : appearance,
@@ -649,7 +679,8 @@ define([
                     modelMatrix : !in3D ? modelMatrix : undefined,
                     attributes : {
                         show : new ShowGeometryInstanceAttribute(showOutline),
-                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+                        distanceDisplayCondition : distanceDisplayConditionAttribute
                     }
                 }),
                 appearance : new PerInstanceColorAppearance({
@@ -666,6 +697,7 @@ define([
             this._lastShow = showFill;
             this._lastOutlineShow = showOutline;
             this._lastOutlineColor = Color.clone(outlineColor, this._lastOutlineColor);
+            this._lastDistanceDisplayCondition = distanceDisplayCondition;
         } else if (this._primitive.ready) {
             //Update attributes only.
             var primitive = this._primitive;
@@ -702,6 +734,12 @@ define([
             if (!Color.equals(outlineColor, this._lastOutlineColor)) {
                 outlineAttributes.color = ColorGeometryInstanceAttribute.toValue(outlineColor, outlineAttributes.color);
                 Color.clone(outlineColor, this._lastOutlineColor);
+            }
+
+            if (!DistanceDisplayCondition.equals(distanceDisplayCondition, this._lastDistanceDisplayCondition)) {
+                attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
+                outlineAttributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, outlineAttributes.distanceDisplayCondition);
+                DistanceDisplayCondition.clone(distanceDisplayCondition, this._lastDistanceDisplayCondition);
             }
         }
 

@@ -786,6 +786,24 @@ defineSuite([
         });
     });
 
+    it('GroundOverlay: Handles out-of-range latitudes.', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <LatLonBox>\
+                <west>-180</west>\
+                <south>-100</south>\
+                <east>180</east>\
+                <north>100</north>\
+            </LatLonBox>\
+        </GroundOverlay>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon).toBeUndefined();
+            expect(entity.rectangle.coordinates.getValue()).toEqual(Rectangle.fromDegrees(-180, -90, 180, 90));
+        });
+    });
+
     it('GroundOverlay: Sets polygon coordinates for gx:LatLonQuad', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <GroundOverlay xmlns="http://www.opengis.net/kml/2.2"\
