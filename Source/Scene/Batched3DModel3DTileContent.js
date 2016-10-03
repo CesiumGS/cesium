@@ -260,6 +260,7 @@ define([
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
             basePath : this._url,
             modelMatrix : this._tile.computedTransform,
+            shadows: this._tileset.shadows,
             incrementallyLoadTextures : false,
             vertexShaderLoaded : batchTable.getVertexShaderCallback(),
             fragmentShaderLoaded : batchTable.getFragmentShaderCallback(),
