@@ -307,7 +307,8 @@ define([
             url : undefined,
             requestType : RequestType.TILES3D,
             gltf : undefined,
-            basePath : undefined
+            basePath : undefined,
+            incrementallyLoadTextures : false
         };
 
         if (gltfFormat === 0) {

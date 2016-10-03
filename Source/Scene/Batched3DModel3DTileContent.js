@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/getBaseUri',
@@ -23,6 +24,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         getBaseUri,
@@ -220,7 +222,7 @@ define([
             batchLength = batchTableJsonByteLength;
             batchTableJsonByteLength = batchTableBinaryByteLength;
             batchTableBinaryByteLength = 0;
-            console.log('Warning: b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
+            deprecationWarning('b3dm-legacy-header', 'This b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
         }
 
         this._featuresLength = batchLength;
@@ -260,7 +262,7 @@ define([
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
             basePath : getBaseUri(this._url),
             modelMatrix : this._tile.computedTransform,
-            shadows: this._tileset.shadows,
+            incrementallyLoadTextures : false,
             vertexShaderLoaded : batchTable.getVertexShaderCallback(),
             fragmentShaderLoaded : batchTable.getFragmentShaderCallback(),
             uniformMapLoaded : batchTable.getUniformMapCallback(),
