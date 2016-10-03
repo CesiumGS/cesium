@@ -34,11 +34,11 @@
   },
   "devDependencies": {
     "almond": "0.3.3",
-    "aws-sdk": "2.6.3",
+    "aws-sdk": "2.6.5",
     "bluebird": "3.4.6",
     "compressible": "2.0.8",
     "compression": "1.6.2",
-    "electron-prebuilt": "1.4.0",
+    "electron-prebuilt": "1.4.1",
     "event-stream": "3.3.4",
     "express": "4.14.0",
     "globby": "6.0.0",

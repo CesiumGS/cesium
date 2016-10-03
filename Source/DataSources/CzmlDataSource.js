@@ -55,6 +55,7 @@ define([
         './DataSourceClock',
         './EllipseGraphics',
         './EllipsoidGraphics',
+        './EntityCluster',
         './EntityCollection',
         './GridMaterialProperty',
         './ImageMaterialProperty',
@@ -138,6 +139,7 @@ define([
         DataSourceClock,
         EllipseGraphics,
         EllipsoidGraphics,
+        EntityCluster,
         EntityCollection,
         GridMaterialProperty,
         ImageMaterialProperty,
@@ -1832,6 +1834,7 @@ define([
         this._documentPacket = new DocumentPacket();
         this._version = undefined;
         this._entityCollection = new EntityCollection(this);
+        this._entityCluster = new EntityCluster();
     }
 
     /**
@@ -1930,6 +1933,26 @@ define([
             },
             set : function(value) {
                 this._entityCollection.show = value;
+            }
+        },
+
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof CzmlDataSource.prototype
+         * @type {EntityCluster}
+         */
+        clustering : {
+            get : function() {
+                return this._entityCluster;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value must be defined.');
+                }
+                //>>includeEnd('debug');
+                this._entityCluster = value;
             }
         }
     });

@@ -9,6 +9,7 @@ defineSuite([
         'Core/Color',
         'Core/defined',
         'Core/defineProperties',
+        'Core/DistanceDisplayCondition',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/loadImage',
@@ -16,6 +17,7 @@ defineSuite([
         'Core/NearFarScalar',
         'Core/Rectangle',
         'Renderer/ContextLimits',
+        'Scene/Billboard',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/OrthographicFrustum',
@@ -35,6 +37,7 @@ defineSuite([
         Color,
         defined,
         defineProperties,
+        DistanceDisplayCondition,
         Ellipsoid,
         Event,
         loadImage,
@@ -42,6 +45,7 @@ defineSuite([
         NearFarScalar,
         Rectangle,
         ContextLimits,
+        Billboard,
         HeightReference,
         HorizontalOrigin,
         OrthographicFrustum,
@@ -127,6 +131,7 @@ defineSuite([
         expect(b.id).not.toBeDefined();
         expect(b.heightReference).toEqual(HeightReference.NONE);
         expect(b.sizeInMeters).toEqual(false);
+        expect(b.distanceDisplayCondition).not.toBeDefined();
     });
 
     it('can add and remove before first update.', function() {
@@ -159,6 +164,7 @@ defineSuite([
             width : 300.0,
             height : 200.0,
             sizeInMeters : true,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
             id : 'id'
         });
 
@@ -182,6 +188,7 @@ defineSuite([
         expect(b.width).toEqual(300.0);
         expect(b.height).toEqual(200.0);
         expect(b.sizeInMeters).toEqual(true);
+        expect(b.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
         expect(b.id).toEqual('id');
     });
 
@@ -204,6 +211,7 @@ defineSuite([
         b.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
         b.pixelOffsetScaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
         b.sizeInMeters = true;
+        b.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
 
         expect(b.show).toEqual(false);
         expect(b.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -225,6 +233,7 @@ defineSuite([
         expect(b.width).toEqual(300.0);
         expect(b.height).toEqual(200.0);
         expect(b.sizeInMeters).toEqual(true);
+        expect(b.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
     });
 
     it('is not destroyed', function() {
@@ -386,6 +395,40 @@ defineSuite([
         var translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
             b.translucencyByDistance = translucency;
+        }).toThrowDeveloperError();
+    });
+
+    it('renders billboard with distanceDisplayCondition', function() {
+        billboards.add({
+            position : Cartesian3.ZERO,
+            image : greenImage,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
+        });
+
+        camera.position = new Cartesian3(200.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        camera.position = new Cartesian3(50.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+
+        camera.position = new Cartesian3(5.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+    });
+
+    it('throws new billboard with invalid distanceDisplayCondition (near >= far)', function() {
+        var dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function() {
+            billboards.add({
+                distanceDisplayCondition : dc
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws distanceDisplayCondition with near >= far', function() {
+        var b = billboards.add();
+        var dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function() {
+            b.distanceDisplayCondition = dc;
         }).toThrowDeveloperError();
     });
 
@@ -560,7 +603,7 @@ defineSuite([
         });
         billboards.add({
             position : new Cartesian3(-1.0, 0.0, 0.0),
-            image : blueImage
+            image : largeBlueImage
         });
 
         expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
@@ -589,7 +632,7 @@ defineSuite([
 
         billboards.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-            image : blueImage
+            image : largeBlueImage
         });
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
@@ -602,7 +645,7 @@ defineSuite([
         });
         var blueBillboard = billboards.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-            image : blueImage
+            image : largeBlueImage
         });
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
@@ -634,7 +677,7 @@ defineSuite([
         billboards.removeAll();
         billboards.add({
             position : Cartesian3.ZERO,
-            image : blueImage
+            image : largeBlueImage
         });
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
@@ -661,7 +704,7 @@ defineSuite([
         var blueBillboard = billboards.add({
             show : false,
             position : Cartesian3.ZERO,
-            image : blueImage
+            image : largeBlueImage
         });
 
         expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
@@ -710,7 +753,7 @@ defineSuite([
 
         expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
 
-        b.image = blueImage;
+        b.image = largeBlueImage;
         expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
     });
 
@@ -722,7 +765,7 @@ defineSuite([
 
         expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
 
-        b.setImage(blueImage.src, blueImage);
+        b.setImage(largeBlueImage.src, largeBlueImage);
         expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
     });
 
@@ -821,7 +864,7 @@ defineSuite([
 
         var b2 = billboards.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-            image : blueImage
+            image : largeBlueImage
         });
         expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
 
@@ -1053,6 +1096,114 @@ defineSuite([
         expect(function() {
             b.computeScreenSpacePosition();
         }).toThrowDeveloperError();
+    });
+
+    it('computes screen space bounding box', function() {
+        var width = 10;
+        var height = 15;
+        var scale = 1.5;
+
+        var b = billboards.add({
+            width : width,
+            height : height,
+            scale : scale
+        });
+
+        var halfWidth = width * scale * 0.5;
+        var halfHeight = height * scale * 0.5;
+        width = width * scale;
+        height = height * scale;
+
+        var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+        expect(bbox.x).toEqual(-halfWidth);
+        expect(bbox.y).toEqual(-halfHeight);
+        expect(bbox.width).toEqual(width);
+        expect(bbox.height).toEqual(height);
+    });
+
+    it('computes screen space bounding box with result', function() {
+        var width = 10;
+        var height = 15;
+        var scale = 1.5;
+
+        var b = billboards.add({
+            width : width,
+            height : height,
+            scale : scale
+        });
+
+        var halfWidth = width * scale * 0.5;
+        var halfHeight = height * scale * 0.5;
+        width = width * scale;
+        height = height * scale;
+
+        var result = new BoundingRectangle();
+        var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO, result);
+        expect(bbox.x).toEqual(-halfWidth);
+        expect(bbox.y).toEqual(-halfHeight);
+        expect(bbox.width).toEqual(width);
+        expect(bbox.height).toEqual(height);
+        expect(bbox).toBe(result);
+    });
+
+    it('computes screen space bounding box with vertical origin', function() {
+        var width = 10;
+        var height = 15;
+        var scale = 1.5;
+
+        var b = billboards.add({
+            width : width,
+            height : height,
+            scale : scale,
+            verticalOrigin : VerticalOrigin.BOTTOM
+        });
+
+        var halfWidth = width * scale * 0.5;
+        width = width * scale;
+        height = height * scale;
+
+        var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+        expect(bbox.x).toEqual(-halfWidth);
+        expect(bbox.y).toEqual(0);
+        expect(bbox.width).toEqual(width);
+        expect(bbox.height).toEqual(height);
+
+        b.verticalOrigin = VerticalOrigin.TOP;
+        bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+        expect(bbox.x).toEqual(-halfWidth);
+        expect(bbox.y).toEqual(-height);
+        expect(bbox.width).toEqual(width);
+        expect(bbox.height).toEqual(height);
+    });
+
+    it('computes screen space bounding box with horizontal origin', function() {
+        var width = 10;
+        var height = 15;
+        var scale = 1.5;
+
+        var b = billboards.add({
+            width : width,
+            height : height,
+            scale : scale,
+            horizontalOrigin : HorizontalOrigin.LEFT
+        });
+
+        var halfHeight = height * scale * 0.5;
+        height = height * scale;
+        width = width * scale;
+
+        var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+        expect(bbox.x).toEqual(0);
+        expect(bbox.y).toEqual(-halfHeight);
+        expect(bbox.width).toEqual(width);
+        expect(bbox.height).toEqual(height);
+
+        b.horizontalOrigin = HorizontalOrigin.RIGHT;
+        bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+        expect(bbox.x).toEqual(-width);
+        expect(bbox.y).toEqual(-halfHeight);
+        expect(bbox.width).toEqual(width);
+        expect(bbox.height).toEqual(height);
     });
 
     it('equals another billboard', function() {
@@ -1463,10 +1614,10 @@ defineSuite([
 
         // switch to blue while green is in-flight
 
-        one.image = './Data/Images/Blue.png';
+        one.image = './Data/Images/Blue10x10.png';
 
         expect(one.ready).toEqual(false);
-        expect(one.image).toEqual('./Data/Images/Blue.png');
+        expect(one.image).toEqual('./Data/Images/Blue10x10.png');
 
         return pollToPromise(function() {
             return one.ready;
