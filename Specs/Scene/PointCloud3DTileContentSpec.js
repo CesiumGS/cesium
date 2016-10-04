@@ -4,8 +4,10 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ComponentDatatype',
+        'Core/defined',
         'Core/HeadingPitchRange',
         'Core/Transforms',
+        'Scene/Cesium3DTileStyle',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
@@ -13,8 +15,10 @@ defineSuite([
         Cartesian3,
         Color,
         ComponentDatatype,
+        defined,
         HeadingPitchRange,
         Transforms,
+        Cesium3DTileStyle,
         Cesium3DTilesTester,
         createScene) {
     'use strict';
@@ -328,6 +332,197 @@ defineSuite([
             expect(function(){
                 content.getFeature();
             }).toThrowDeveloperError();
+        });
+    });
+
+    it('Supports back face culling when there are per-point normals', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
+            var content = tileset._root.content;
+
+            // Get the number of picked sections with back face culling on
+            content.backFaceCulling = true;
+            var numberPickedCulling = 0;
+            var picked = scene.pickForSpecs();
+            while (defined(picked)) {
+                picked.show = false;
+                picked = scene.pickForSpecs();
+                ++numberPickedCulling;
+            }
+            content.backFaceCulling = false;
+
+            // Set the shows back to true
+            var length = content.featuresLength;
+            for (var i = 0; i < length; ++i) {
+                var feature = content.getFeature(i);
+                feature.show = true;
+            }
+
+            // Get the number of picked sections with back face culling off
+            var numberPicked = 0;
+            picked = scene.pickForSpecs();
+            while (defined(picked)) {
+                picked.show = false;
+                picked = scene.pickForSpecs();
+                ++numberPicked;
+            }
+            expect(numberPicked).toBeGreaterThan(numberPickedCulling);
+        });
+    });
+
+    it('applies shader style', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
+            var content = tileset._root.content;
+
+            // Solid red color
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color("red")'
+            });
+            expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+            expect(content._styleTranslucent).toBe(false);
+
+            // Applies translucency
+            tileset.style = new Cesium3DTileStyle({
+                color : 'rgba(255, 0, 0, 0.1)'
+            });
+            var pixelColor = scene.renderForSpecs();
+            expect(pixelColor[0]).toBeLessThan(255);
+            expect(pixelColor[1]).toBe(0);
+            expect(pixelColor[2]).toBe(0);
+            expect(pixelColor[3]).toBe(255);
+            expect(content._styleTranslucent).toBe(true);
+
+            // Style with property
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color() * ${temperature}'
+            });
+            pixelColor = scene.renderForSpecs(); // Pixel color is some shade of gray
+            expect(pixelColor[0]).toBe(pixelColor[1]);
+            expect(pixelColor[0]).toBe(pixelColor[2]);
+            expect(pixelColor[0]).toBeGreaterThan(0);
+            expect(pixelColor[0]).toBeLessThan(255);
+
+            // When no conditions are met the default color is white
+            tileset.style = new Cesium3DTileStyle({
+                color : {
+                    conditions : [
+                        ['${secondaryColor}[0] > 1.0', 'color("red")'] // This condition will not be met
+                    ]
+                }
+            });
+            expect(scene.renderForSpecs()).toEqual([255, 255, 255, 255]);
+
+            // Apply style with conditions
+            tileset.style = new Cesium3DTileStyle({
+                color : {
+                    conditions : [
+                        ['${temperature} < 0.1', 'color("#000099")'],
+                        ['${temperature} < 0.2', 'color("#00cc99", 1.0)'],
+                        ['${temperature} < 0.3', 'color("#66ff33", 0.5)'],
+                        ['${temperature} < 0.4', 'rgba(255, 255, 0, 0.1)'],
+                        ['${temperature} < 0.5', 'rgb(255, 128, 0)'],
+                        ['${temperature} < 0.6', 'color("red")'],
+                        ['${temperature} < 0.7', 'color("rgb(255, 102, 102)")'],
+                        ['${temperature} < 0.8', 'hsl(0.875, 1.0, 0.6)'],
+                        ['${temperature} < 0.9', 'hsla(0.83, 1.0, 0.5, 0.1)'],
+                        ['true', 'color("#FFFFFF", 1.0)']
+                    ]
+                }
+            });
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+
+            // Apply show style
+            tileset.style = new Cesium3DTileStyle({
+                show : true
+            });
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+
+            // Apply show style that hides all points
+            tileset.style = new Cesium3DTileStyle({
+                show : false
+            });
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            // Apply show style with property
+            tileset.style = new Cesium3DTileStyle({
+                show : '${temperature} > 0.1'
+            });
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            tileset.style = new Cesium3DTileStyle({
+                show : '${temperature} > 0.9'
+            });
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            // Apply style with point cloud semantics
+            tileset.style = new Cesium3DTileStyle({
+                color : '${COLOR} / 2.0',
+                show : '${POSITION}[0] > 0.5'
+            });
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        });
+    });
+
+    it('applies shader style to point cloud with normals', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl).then(function(tileset) {
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color("red")'
+            });
+            var red = scene.renderForSpecs()[0];
+            expect(red).toBeGreaterThan(0);
+            expect(red).toBeLessThan(255);
+        });
+    });
+
+    it('applies shader style to point cloud with normals', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl).then(function(tileset) {
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color("red")'
+            });
+            expect(scene.renderForSpecs()[0]).toBeGreaterThan(0);
+        });
+    });
+
+    it('applies shader style to point cloud without colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color("red")'
+            });
+            expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+        });
+    });
+
+    it('throws if style references the NORMAL semantic but the point cloud does not have per-point normals', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(function() {
+                content.applyStyleWithShader(scene.frameState, new Cesium3DTileStyle({
+                    color : '${NORMAL}[0] > 0.5'
+                }));
+            }).toThrowDeveloperError();
+        });
+    });
+
+    it('throws when shader style reference a non-existent property', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(function() {
+                content.applyStyleWithShader(scene.frameState, new Cesium3DTileStyle({
+                    color : 'color() * ${non_existent_property}'
+                }));
+            }).toThrowDeveloperError();
+        });
+    });
+
+    it('does not apply shader style if the point cloud has a batch table', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            var shaderProgram = content._drawCommand.shaderProgram;
+            tileset.style = new Cesium3DTileStyle({
+                color:'color("red")'
+            });
+            expect(content._drawCommand.shaderProgram).toBe(shaderProgram);
+
+            // Point cloud is styled through the batch table
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         });
     });
 

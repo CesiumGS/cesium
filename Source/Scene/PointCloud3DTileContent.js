@@ -106,12 +106,13 @@ define([
 
         // TODO : How to expose this? Will this be part of the point cloud styling or a property of the tileset?
         // Use per-point normals to hide back-facing points.
+        this.backFaceCulling = false;
         this._backFaceCulling = false;
 
         this._opaqueRenderState = undefined;
         this._translucentRenderState = undefined;
 
-        this._highlightColor = this._constantColor;
+        this._highlightColor = Color.clone(Color.WHITE);
         this._pointSize = 2.0;
         this._quantizedVolumeScale = undefined;
         this._quantizedVolumeOffset = undefined;
@@ -539,6 +540,9 @@ define([
             },
             u_highlightColor : function() {
                 return content._highlightColor;
+            },
+            u_constantColor : function() {
+                return content._constantColor;
             }
         };
 
@@ -853,9 +857,6 @@ define([
         var usesNormalSemantic = styleableSemantics.indexOf('NORMAL') >= 0;
 
         //>>includeStart('debug', pragmas.debug);
-        if (usesColorSemantic && !hasColors) {
-            throw new DeveloperError('Style references the COLOR semantic but the point cloud does not have colors');
-        }
         if (usesNormalSemantic && !hasNormals) {
             throw new DeveloperError('Style references the NORMAL semantic but the point cloud does not have normals');
         }
@@ -897,13 +898,13 @@ define([
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
                  'uniform float u_pointSize; \n' +
+                 'uniform vec4 u_constantColor; \n' +
                  'uniform vec4 u_highlightColor; \n';
 
         var length = styleableProperties.length;
         for (i = 0; i < length; ++i) {
             name = styleableProperties[i];
             attribute = styleableShaderAttributes[name];
-
             //>>includeStart('debug', pragmas.debug);
             if (!defined(attribute)) {
                 throw new DeveloperError('Style references a property "' + name + '" that does not exist or is not styleable.');
@@ -981,7 +982,7 @@ define([
                 vs += '    vec4 color = vec4(a_color, 1.0); \n';
             }
         } else {
-            vs += '    vec4 color = vec4(1.0); \n';
+            vs += '    vec4 color = u_constantColor; \n';
         }
 
         if (isQuantized) {
@@ -1085,7 +1086,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     PointCloud3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
-        this._highlightColor = enabled ? color : this._constantColor;
+        this._highlightColor = enabled ? color : Color.WHITE;
     };
 
     /**
@@ -1127,8 +1128,13 @@ define([
             Matrix4.clone(this._drawCommand.modelMatrix, this._pickCommand.modelMatrix);
         }
 
+        if (this.backFaceCulling !== this._backFaceCulling) {
+            this._backFaceCulling = this.backFaceCulling;
+            createShaders(this, frameState, tileset.style);
+        }
+
         // Update the render state
-        var isTranslucent = (this._highlightColor.alpha < 1.0) || this._styleTranslucent;
+        var isTranslucent = (this._highlightColor.alpha < 1.0) || (this._constantColor.alpha < 1.0) || this._styleTranslucent;
         this._drawCommand.renderState = isTranslucent ? this._translucentRenderState : this._opaqueRenderState;
         this._drawCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 

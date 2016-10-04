@@ -273,6 +273,41 @@ defineSuite([
         expect(style.color.evaluate(undefined)).toEqual(Color.WHITE);
     });
 
+    it ('applies show style with complex conditional', function() {
+        var style = new Cesium3DTileStyle({
+            "show" : {
+                "expression" : "${Height}",
+                "conditions" : [
+                    ["(${expression} >= 1.0)  && (${expression} < 10.0)", "true"],
+                    ["(${expression} >= 10.0) && (${expression} < 30.0)", "false"],
+                    ["(${expression} >= 30.0) && (${expression} < 50.0)", "true"],
+                    ["(${expression} >= 50.0) && (${expression} < 70.0)", "false"],
+                    ["(${expression} >= 70.0) && (${expression} < 100.0)", "true"],
+                    ["(${expression} >= 100.0)", "false"]
+                ]
+            }
+        });
+        expect(style.show.evaluate(feature1)).toEqual(false);
+        expect(style.show.evaluate(feature2)).toEqual(true);
+    });
+
+    it ('applies show style with conditional', function() {
+        var style = new Cesium3DTileStyle({
+            "show" : {
+                "conditions" : [
+                    ["(${Height} >= 100.0)", "false"],
+                    ["(${Height} >= 70.0)", "true"],
+                    ["(${Height} >= 50.0)", "false"],
+                    ["(${Height} >= 30.0)", "true"],
+                    ["(${Height} >= 10.0)", "false"],
+                    ["(${Height} >= 1.0)", "true"]
+                ]
+            }
+        });
+        expect(style.show.evaluate(feature1)).toEqual(false);
+        expect(style.show.evaluate(feature2)).toEqual(true);
+    });
+
     it ('applies color style variables', function() {
         var style = new Cesium3DTileStyle({
             "color" : "(${Temperature} > 90) ? color('red') : color('white')"
@@ -342,5 +377,15 @@ defineSuite([
         expect(style.show.evaluate(feature1)).toEqual(true);
         expect(style.color.evaluate(feature1)).toEqual(Color.BLUE);
         expect(style.color.evaluate(feature2)).toEqual(Color.YELLOW);
+    });
+
+    it('return undefined shader functions when the style is empty', function() {
+        // The default color style is white and the default show style is true, but the generated shader
+        // functions should just be undefined. We don't want all the points to be white.
+        var style = new Cesium3DTileStyle({});
+        var colorFunction = style.getColorShaderFunction('getColor', '', {});
+        var showFunction = style.getShowShaderFunction('getShow', '', {});
+        expect(colorFunction).toBeUndefined();
+        expect(showFunction).toBeUndefined();
     });
 });

@@ -1028,6 +1028,18 @@ define([
         var type = this._type;
         var value = this._value;
 
+        // Right may be a string if it's a member variable: e.g. "${property.name}"
+        var stringMember = typeof(this._right) === 'string';
+        if (stringMember) {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Error generating style shader: string members are not supported.');
+            //>>includeEnd('debug');
+        }
+        if (stringMember) {
+            // Avoid jsHint error by creating a new block. Want to return undefined in release.
+            return undefined;
+        }
+
         if (defined(this._left)) {
             if (isArray(this._left)) {
                 // Left can be an array if the type is LITERAL_COLOR
@@ -1077,7 +1089,7 @@ define([
                     return 'float(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
-                else if ((value === 'isNan') || (value === 'isFinite') || (value === 'String')) {
+                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
                     throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
                 }
                 //>>includeEnd('debug');

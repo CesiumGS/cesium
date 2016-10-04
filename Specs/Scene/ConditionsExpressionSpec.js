@@ -21,7 +21,7 @@ defineSuite([
         conditions : [
             ['${Height} > 100', 'color("blue")'],
             ['${Height} > 50', 'color("red")'],
-            ['true', 'color("green")']
+            ['true', 'color("lime")']
         ]
     };
 
@@ -30,7 +30,7 @@ defineSuite([
         conditions : [
             ['${expression} > 50', 'color("blue")'],
             ['${expression} > 25', 'color("red")'],
-            ['true', 'color("green")']
+            ['true', 'color("lime")']
         ]
     };
 
@@ -39,7 +39,7 @@ defineSuite([
         conditions : [
             ['${expression} > 50 && ${expression} < 100', 'color("blue")'],
             ['${expression} > 25 && ${expression} < 26', 'color("red")'],
-            ['true', 'color("green")']
+            ['true', 'color("lime")']
         ]
     };
 
@@ -47,7 +47,7 @@ defineSuite([
     var jsonExpWithUndefinedExpression = {
         conditions : [
             ['${expression} === undefined', 'color("blue")'],
-            ['true', 'color("green")']
+            ['true', 'color("lime")']
         ]
     };
 
@@ -63,7 +63,7 @@ defineSuite([
         expect(expression._conditions).toEqual([
             ['${expression} > 50', 'color("blue")'],
             ['${expression} > 25', 'color("red")'],
-            ['true', 'color("green")']
+            ['true', 'color("lime")']
         ]);
     });
 
@@ -73,7 +73,7 @@ defineSuite([
         expect(expression._conditions).toEqual([
             ['${expression} > 50', 'color("blue")'],
             ['${expression} > 25', 'color("red")'],
-            ['true', 'color("green")']
+            ['true', 'color("lime")']
         ]);
     });
 
@@ -81,14 +81,14 @@ defineSuite([
         var expression = new ConditionsExpression(jsonExp);
         expect(expression.evaluate(new MockFeature(101))).toEqual(Color.BLUE);
         expect(expression.evaluate(new MockFeature(52))).toEqual(Color.RED);
-        expect(expression.evaluate(new MockFeature(3))).toEqual(Color.GREEN);
+        expect(expression.evaluate(new MockFeature(3))).toEqual(Color.LIME);
     });
 
     it('evaluates conditional with multiple expressions', function() {
         var expression = new ConditionsExpression(jsonExpWithMultipleExpression);
         expect(expression.evaluate(new MockFeature(101))).toEqual(Color.BLUE);
-        expect(expression.evaluate(new MockFeature(52))).toEqual(Color.GREEN);
-        expect(expression.evaluate(new MockFeature(3))).toEqual(Color.GREEN);
+        expect(expression.evaluate(new MockFeature(52))).toEqual(Color.LIME);
+        expect(expression.evaluate(new MockFeature(3))).toEqual(Color.LIME);
     });
 
     it('constructs and evaluates empty conditional', function() {
@@ -113,12 +113,40 @@ defineSuite([
         var expression = new ConditionsExpression(jsonExpWithExpression);
         expect(expression.evaluate(new MockFeature(101))).toEqual(Color.BLUE);
         expect(expression.evaluate(new MockFeature(52))).toEqual(Color.RED);
-        expect(expression.evaluate(new MockFeature(3))).toEqual(Color.GREEN);
+        expect(expression.evaluate(new MockFeature(3))).toEqual(Color.LIME);
     });
 
     it('evaluates undefined conditional expression', function() {
         var expression = new ConditionsExpression(jsonExpWithUndefinedExpression);
         expect(expression._expression).toEqual(undefined);
         expect(expression.evaluate(undefined)).toEqual(Color.BLUE);
+    });
+
+    it('gets shader function', function() {
+        var expression = new ConditionsExpression(jsonExpWithExpression);
+        var shaderFunction = expression.getShaderFunction('getColor', '', {}, 'vec4');
+        var expected = 'vec4 getColor() \n' +
+                       '{ \n' +
+                       '    if (((Height / 2.0) > 50.0)) \n' +
+                       '    { \n' +
+                       '        return vec4(vec3(0.0, 0.0, 1.0), 1.0); \n' +
+                       '    } \n' +
+                       '    else if (((Height / 2.0) > 25.0)) \n' +
+                       '    { \n' +
+                       '        return vec4(vec3(1.0, 0.0, 0.0), 1.0); \n' +
+                       '    } \n' +
+                       '    else if (true) \n' +
+                       '    { \n' +
+                       '        return vec4(vec3(0.0, 1.0, 0.0), 1.0); \n' +
+                       '    } \n' +
+                       '    return vec4(1.0); \n' +
+                       '} \n';
+        expect(shaderFunction).toEqual(expected);
+    });
+
+    it('return undefined shader function when there are no conditions', function() {
+        var expression = new ConditionsExpression([]);
+        var shaderFunction = expression.getShaderFunction('getColor', '', {}, 'vec4');
+        expect(shaderFunction).toBeUndefined();
     });
 });
