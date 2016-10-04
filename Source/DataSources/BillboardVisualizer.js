@@ -132,7 +132,7 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                cluster.removeBillboard(entity);
+                returnPrimitive(item, entity, cluster);
                 continue;
             }
 
@@ -254,17 +254,24 @@ define([
                     items.set(entity.id, new EntityData(entity));
                 }
             } else {
-                cluster.removeBillboard(entity);
+                returnPrimitive(items.get(entity.id), entity, cluster);
                 items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            cluster.removeBillboard(entity);
+            returnPrimitive(items.get(entity.id), entity, cluster);
             items.remove(entity.id);
         }
     };
+
+    function returnPrimitive(item, entity, cluster) {
+        if (defined(item)) {
+            item.billboard = undefined;
+            cluster.removeBillboard(entity);
+        }
+    }
 
     return BillboardVisualizer;
 });
