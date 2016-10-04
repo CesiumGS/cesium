@@ -352,15 +352,15 @@ define([
     }
 
     function Cesium3DTilesetStatistics() {
-        this.selected = -1;
-        this.visited = -1;
-        this.numberOfCommands = -1;
-        this.numberOfPendingRequests = -1;
-        this.numberProcessing = -1;
-        this.numberContentReady = -1;
-        this.numberTotal = -1;
-        this.numberOfTilesStyled = -1;
-        this.numberOfFeaturesStyled = -1;
+        this.selected = 0;
+        this.visited = 0;
+        this.numberOfCommands = 0;
+        this.numberOfPendingRequests = 0;
+        this.numberProcessing = 0;
+        this.numberContentReady = 0;
+        this.numberTotal = 0;
+        this.numberOfTilesStyled = 0;
+        this.numberOfFeaturesStyled = 0;
     }
 
     defineProperties(Cesium3DTileset.prototype, {
