@@ -19,7 +19,7 @@ define([
     '../Core/RequestScheduler',
     '../Core/RequestType',
     '../ThirdParty/when',
-    './Cesium3DTileBatchTableResources',
+    './Cesium3DTileBatchTable',
     './Cesium3DTileContentState',
     './Cesium3DTileFeature',
     './Cesium3DTileGroundPrimitive'
@@ -43,7 +43,7 @@ define([
     RequestScheduler,
     RequestType,
     when,
-    Cesium3DTileBatchTableResources,
+    Cesium3DTileBatchTable,
     Cesium3DTileContentState,
     Cesium3DTileFeature,
     Cesium3DTileGroundPrimitive) {
@@ -245,16 +245,29 @@ define([
 
         var numberOfPolygons = featureTableJSON.NUMBER_OF_POLYGONS;
 
-        var batchTableResources = new Cesium3DTileBatchTableResources(this, numberOfPolygons, createColorChangedCallback(this));
-        this.batchTableResources = batchTableResources;
+        var batchTableJson;
+        var batchTableBinary;
         if (batchTableJSONByteLength > 0) {
+            // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
+            // arraybuffer/string compressed in memory and then decompress it when it is first accessed.
+            //
+            // We could also make another request for it, but that would make the property set/get
+            // API async, and would double the number of numbers in some cases.
             var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableJSONByteLength);
-            batchTableResources.batchTable = JSON.parse(batchTableString);
+            batchTableJson = JSON.parse(batchTableString);
             byteOffset += batchTableJSONByteLength;
+
+            if (batchTableBinaryByteLength > 0) {
+                // Has a batch table binary
+                batchTableBinary = new Uint8Array(arrayBuffer, byteOffset, batchTableBinaryByteLength);
+                // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+                batchTableBinary = new Uint8Array(batchTableBinary);
+                byteOffset += batchTableBinaryByteLength;
+            }
         }
 
-        // TODO: Right now batchTableResources doesn't support binary
-        byteOffset += batchTableBinaryByteLength;
+        var batchTableResources = new Cesium3DTileBatchTable(this, numberOfPolygons, batchTableJson, batchTableBinary, createColorChangedCallback(this));
+        this.batchTableResources = batchTableResources;
 
         var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
         byteOffset += indicesByteLength;
