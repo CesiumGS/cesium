@@ -79,7 +79,7 @@ define([
      *     url : 'https://assets.agi.com/stk-terrain/world',
      *     requestVertexNormals : true
      * });
-     * 
+     *
      * // Terrain geometry near the surface of the globe is difficult to view when using NaturalEarthII imagery,
      * // unless the TerrainProvider provides additional lighting information to shade the terrain (as shown above).
      * var imageryProvider = Cesium.createTileMapServiceImageryProvider({
@@ -95,7 +95,7 @@ define([
      *
      * // The globe must enable lighting to make use of the terrain's vertex normals
      * viewer.scene.globe.enableLighting = true;
-     * 
+     *
      * @see TerrainProvider
      */
     function CesiumTerrainProvider(options) {
@@ -184,7 +184,9 @@ define([
                         elementsPerHeight : 1,
                         stride : 1,
                         elementMultiplier : 256.0,
-                        isBigEndian : false
+                        isBigEndian : false,
+                        lowestEncodedHeight : 0,
+                        highestEncodedHeight : 256 * 256 - 1
                     };
                 that._hasWaterMask = true;
                 that._requestWaterMask = true;

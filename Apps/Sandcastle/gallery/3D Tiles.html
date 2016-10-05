@@ -63,13 +63,23 @@ var tilesets = [{
 }, {
     name : 'Translucent/Opaque', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/'
 }, {
+    name : 'Request Volume', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/'
+}, {
     name : 'Batched', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/'
 }, {
     name : 'Instanced', url : '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/'
 }, {
+    name : 'Instanced/Orientation', url : '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientationWithBatchTable/'
+}, {
     name : 'Composite', url : '../../../Specs/Data/Cesium3DTiles/Composite/Composite/'
 }, {
-    name : 'Points', url : '../../../Specs/Data/Cesium3DTiles/Points/PointsRGB/'
+    name : 'PointCloud', url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudRGB/'
+}, {
+    name : 'PointCloudConstantColor', url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/'
+}, {
+    name : 'PointCloudNormals', url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/'
+}, {
+    name : 'PointCloudBatched', url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudBatched/'
 }];
 
 var tileset;
@@ -79,8 +89,9 @@ function loadTileset(url) {
 
     tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url,
-        debugShowStatistics : true,
-        maximumNumberOfLoadedTiles : 512
+        debugShowStatistics : true
+//        , maximumNumberOfLoadedTiles : 3
+//       , refineToVisible : true
     }));
 
     return tileset.readyPromise.then(function(tileset) {
@@ -386,6 +397,10 @@ Sandcastle.addToolbarButton('BV on/off', function() {
 
 Sandcastle.addToolbarButton('Contents BV on/off', function() {
     tileset.debugShowContentBoundingVolume = !tileset.debugShowContentBoundingVolume;
+});
+
+Sandcastle.addToolbarButton('Request Volume on/off', function() {
+    tileset.debugShowViewerRequestVolume = !tileset.debugShowViewerRequestVolume;
 });
 
 Sandcastle.addToolbarButton('SSE++', function() {

@@ -740,8 +740,10 @@ define([
         var context = frameState.context;
 
         var vs = ShadowVolumeVS;
+        vs = primitive._primitive._batchTable.getVertexShaderCallback()(vs);
         vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive._primitive, vs);
+        vs = Primitive._updateColorAttribute(primitive._primitive, vs);
 
         var fs = ShadowVolumeFS;
         var attributeLocations = primitive._primitive._attributeLocations;
@@ -755,6 +757,9 @@ define([
         });
 
         if (primitive._primitive.allowPicking) {
+            var vsPick = ShaderSource.createPickVertexShaderSource(vs);
+            vsPick = Primitive._updatePickColorAttribute(vsPick);
+
             var pickFS = new ShaderSource({
                 sources : [fs],
                 pickColorQualifier : 'varying'
@@ -762,7 +767,7 @@ define([
             primitive._spPick = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : primitive._spPick,
-                vertexShaderSource : ShaderSource.createPickVertexShaderSource(vs),
+                vertexShaderSource : vsPick,
                 fragmentShaderSource : pickFS,
                 attributeLocations : attributeLocations
             });
@@ -782,6 +787,7 @@ define([
         colorCommands.length = length;
 
         var vaIndex = 0;
+        var uniformMap = primitive._batchTable.getUniformMapCallback()(groundPrimitive._uniformMap);
 
         for (var i = 0; i < length; i += 3) {
             var vertexArray = primitive._va[vaIndex++];
@@ -798,7 +804,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsStencilPreloadPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = groundPrimitive._uniformMap;
+            command.uniformMap = uniformMap;
             command.pass = Pass.GROUND;
 
             // stencil depth command
@@ -813,7 +819,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsStencilDepthPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = groundPrimitive._uniformMap;
+            command.uniformMap = uniformMap;
             command.pass = Pass.GROUND;
 
             // color command
@@ -828,7 +834,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsColorPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = groundPrimitive._uniformMap;
+            command.uniformMap = uniformMap;
             command.pass = Pass.GROUND;
         }
     }
@@ -840,6 +846,7 @@ define([
         pickCommands.length = length;
 
         var pickIndex = 0;
+        var uniformMap = primitive._batchTable.getUniformMapCallback()(groundPrimitive._uniformMap);
 
         for (var j = 0; j < length; j += 3) {
             var pickOffset = pickOffsets[pickIndex++];
@@ -862,7 +869,7 @@ define([
             command.count = count;
             command.renderState = groundPrimitive._rsStencilPreloadPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = groundPrimitive._uniformMap;
+            command.uniformMap = uniformMap;
             command.pass = Pass.GROUND;
 
             // stencil depth command
@@ -879,7 +886,7 @@ define([
             command.count = count;
             command.renderState = groundPrimitive._rsStencilDepthPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = groundPrimitive._uniformMap;
+            command.uniformMap = uniformMap;
             command.pass = Pass.GROUND;
 
             // color command
@@ -896,7 +903,7 @@ define([
             command.count = count;
             command.renderState = groundPrimitive._rsPickPass;
             command.shaderProgram = groundPrimitive._spPick;
-            command.uniformMap = groundPrimitive._uniformMap;
+            command.uniformMap = uniformMap;
             command.pass = Pass.GROUND;
         }
     }

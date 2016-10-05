@@ -50,6 +50,9 @@ define([
         if (!defined(options.positionsTypedArray)) {
             throw new DeveloperError('options.positionsTypedArray is required.');
         }
+        if (!defined(options.colorsTypedArray)) {
+            throw new DeveloperError('options.colorsTypedArray is required');
+        }
         //>>includeEnd('debug');
 
         this._positionsTypedArray = options.positionsTypedArray;
@@ -77,18 +80,12 @@ define([
             values : positions
         });
 
-        var colors = pointGeometry._colorsTypedArray;
-        if (defined(colors)) {
-            // Check if the colors are provided as rgb or rgba
-            var colorComponentsPerAttribute = (colors.length === positions.length) ? 3 : 4;
-
-            attributes.color = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : colorComponentsPerAttribute,
-                values : colors,
-                normalize : true
-            });
-        }
+        attributes.color = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 3,
+            values : pointGeometry._colorsTypedArray,
+            normalize : true
+        });
 
         // User provided bounding sphere to save computation time.
         var boundingSphere = pointGeometry._boundingSphere;

@@ -80,7 +80,24 @@ define([
         this._header = header;
         var contentHeader = header.content;
 
-        this._boundingVolume = createBoundingVolume(header.boundingVolume);
+        /**
+         * The local transform of this tile
+         * @type {Matrix4}
+         */
+        this.transform = defined(header.transform) ? Matrix4.unpack(header.transform) : Matrix4.clone(Matrix4.IDENTITY);
+
+        var parentTransform = defined(parent) ? parent.computedTransform : tileset.modelMatrix;
+        var computedTransform = Matrix4.multiply(parentTransform, this.transform, new Matrix4());
+
+        /**
+         * The final computed transform of this tile
+         * @type {Matrix4}
+         */
+        this.computedTransform = computedTransform;
+
+        this._transformDirty = true;
+
+        this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform);
 
         var contentBoundingVolume;
 
@@ -90,9 +107,15 @@ define([
             // but not for culling for traversing the tree since it is not spatial coherence, i.e.,
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
-            contentBoundingVolume = createBoundingVolume(contentHeader.boundingVolume);
+            contentBoundingVolume = this.createBoundingVolume(contentHeader.boundingVolume, computedTransform);
         }
         this._contentBoundingVolume = contentBoundingVolume;
+
+        var viewerRequestVolume;
+        if (defined(header.viewerRequestVolume)) {
+            viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, computedTransform);
+        }
+        this._viewerRequestVolume = viewerRequestVolume;
 
         /**
          * The error, in meters, introduced if this tile is rendered and its children are not.
@@ -253,15 +276,6 @@ define([
         this.distanceToCamera = 0;
 
         /**
-         * The plane mask of the parent for use with {@link CullingVolume#computeVisibilityWithPlaneMask}).
-         *
-         * @type {Number}
-         *
-         * @private
-         */
-        this.parentPlaneMask = 0;
-
-        /**
          * Marks if the tile is selected this frame.
          *
          * @type {Boolean}
@@ -274,8 +288,19 @@ define([
          * Marks if the tile is replaced this frame.
          *
          * @type {Boolean}
+         *
+         * @private
          */
         this.replaced = false;
+
+        /**
+         * The stored plane mask from the visibility check during tree traversal.
+         *
+         * @type {Number}
+         *
+         * @private
+         */
+        this.visibilityPlaneMask = true;
 
         /**
          * The last frame number the tile was selected in.
@@ -297,6 +322,7 @@ define([
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
+        this._debugViewerRequestVolume = undefined;
         this._debugColor = new Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
     }
@@ -344,6 +370,20 @@ define([
         boundingSphere : {
             get : function() {
                 return this._boundingVolume.boundingSphere;
+            }
+        },
+
+        /**
+         * Whether the computedTransform has changed this frame.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        transformDirty : {
+            get : function() {
+                return this._transformDirty;
             }
         },
 
@@ -452,25 +492,27 @@ define([
 
         // Restore properties set per frame to their defaults
         this.distanceToCamera = 0;
-        this.parentPlaneMask = 0;
+        this.visibilityPlaneMask = 0;
         this.selected = false;
         this.lastSelectedFrameNumber = 0;
         this.lastStyleTime = 0;
 
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
+        this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
     };
 
     /**
      * Determines whether the tile's bounding volume intersects the culling volume.
      *
      * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile is to be tested.
+     * @param {Number} parentVisibilityPlaneMask The parent's plane mask to speed up the visibility check.
      * @returns {Number} A plane mask as described above in {@link CullingVolume#computeVisibilityWithPlaneMask}.
      *
      * @private
      */
-    Cesium3DTile.prototype.visibility = function(cullingVolume) {
-        return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, this.parentPlaneMask);
+    Cesium3DTile.prototype.visibility = function(cullingVolume, parentVisibilityPlaneMask) {
+        return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, parentVisibilityPlaneMask);
     };
 
     /**
@@ -483,6 +525,8 @@ define([
      * @private
      */
     Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
+        // Assumes the tile's bounding volume intersects the culling volume already, so
+        // just return Intersect.INSIDE if there is no content bounding volume.
         var boundingVolume = this._contentBoundingVolume;
         if (!defined(boundingVolume)) {
             return Intersect.INSIDE;
@@ -504,54 +548,126 @@ define([
         return this._boundingVolume.distanceToCamera(frameState);
     };
 
-    function createBoundingVolume(boundingVolumeHeader) {
-        var volume;
-        if (boundingVolumeHeader.box) {
+    /**
+     * Checks if the camera is inside the viewer request volume.
+     *
+     * @param {FrameState} frameState The frame state.
+     * @returns {Boolean} Whether the camera is inside the volume.
+     */
+    Cesium3DTile.prototype.insideViewerRequestVolume = function(frameState) {
+        var viewerRequestVolume = this._viewerRequestVolume;
+        if (!defined(viewerRequestVolume)) {
+            return true;
+        }
+
+        return (viewerRequestVolume.distanceToCamera(frameState) === 0.0);
+    };
+
+    var scratchMatrix = new Matrix3();
+    var scratchScale = new Cartesian3();
+    var scratchHalfAxes = new Matrix3();
+    var scratchCenter = new Cartesian3();
+    var scratchRectangle = new Rectangle();
+
+    /**
+     * Create a bounding volume from the tile's bounding volume header.
+     *
+     * @param {Object} boundingVolumeHeader The tile's bounding volume header.
+     * @param {Matrix4} transform The transform to apply to the bounding volume.
+     * @param {TileBoundingVolume} [result] The object onto which to store the result.
+     *
+     * @returns {TileBoundingVolume} The modified result parameter or a new TileBoundingVolume instance if none was provided.
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.createBoundingVolume = function(boundingVolumeHeader, transform, result) {
+        var center;
+        if (defined(boundingVolumeHeader.box)) {
             var box = boundingVolumeHeader.box;
-            var center = new Cartesian3(box[0], box[1], box[2]);
-            var halfAxes = Matrix3.fromArray(box, 3);
+            center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
+            var halfAxes = Matrix3.fromArray(box, 3, scratchHalfAxes);
 
-            volume = new TileOrientedBoundingBox({
-                center: center,
-                halfAxes: halfAxes
-            });
-        } else if (boundingVolumeHeader.region) {
+            // Find the transformed center and halfAxes
+            center = Matrix4.multiplyByPoint(transform, center, center);
+            var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
+            halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
+
+            if (defined(result)) {
+                result.update(center, halfAxes);
+                return result;
+            }
+            return new TileOrientedBoundingBox(center, halfAxes);
+        } else if (defined(boundingVolumeHeader.region)) {
             var region = boundingVolumeHeader.region;
-            var rectangleRegion = new Rectangle(region[0], region[1], region[2], region[3]);
+            var rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
 
-            volume = new TileBoundingRegion({
+            if (defined(result)) {
+                // Don't update regions when the transform changes
+                return result;
+            }
+            return new TileBoundingRegion({
                 rectangle : rectangleRegion,
                 minimumHeight : region[4],
                 maximumHeight : region[5]
             });
-        } else if (boundingVolumeHeader.sphere) {
+        } else if (defined(boundingVolumeHeader.sphere)) {
             var sphere = boundingVolumeHeader.sphere;
+            center = Cartesian3.fromElements(sphere[0], sphere[1], sphere[2], scratchCenter);
+            var radius = sphere[3];
 
-            volume = new TileBoundingSphere(
-                new Cartesian3(sphere[0], sphere[1], sphere[2]),
-                sphere[3]
-            );
+            // Find the transformed center and radius
+            center = Matrix4.multiplyByPoint(transform, center, center);
+            var scale = Matrix4.getScale(transform, scratchScale);
+            var uniformScale = Cartesian3.maximumComponent(scale);
+            radius *= uniformScale;
+
+            if (defined(result)) {
+                result.update(center, radius);
+                return result;
+            }
+            return new TileBoundingSphere(center, radius);
         }
+    };
 
-        return volume;
-    }
+    var scratchTransform = new Matrix4();
 
-// TODO: remove workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/2657
-    function workaround2657(boundingVolume) {
-        if (defined(boundingVolume.region)) {
-            var region = boundingVolume.region;
-            return (region[1] !== region[3]) && (region[0] !== region[2]);
-        } else {
-            return true;
+    /**
+     * Update the tile's transform. The transform is applied to the tile's bounding volumes.
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.updateTransform = function(parentTransform) {
+        parentTransform = defaultValue(parentTransform, Matrix4.IDENTITY);
+        var computedTransform = Matrix4.multiply(parentTransform, this.transform, scratchTransform);
+        var transformDirty = !Matrix4.equals(computedTransform, this.computedTransform);
+        if (transformDirty) {
+            this._transformDirty = true;
+            Matrix4.clone(computedTransform, this.computedTransform);
+
+            // Update the bounding volumes
+            var header = this._header;
+            var content = this._header.content;
+            this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform, this._boundingVolume);
+            if (defined(this._contentBoundingVolume)) {
+                this._contentBoundingVolume = this.createBoundingVolume(content.boundingVolume, computedTransform, this._contentBoundingVolume);
+            }
+            if (defined(this._viewerRequestVolume)) {
+                this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, computedTransform, this._viewerRequestVolume);
+            }
+
+            // Destroy the debug bounding volumes. They will be generated fresh.
+            this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
+            this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
+            this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
         }
-    }
+    };
 
     function applyDebugSettings(tile, tileset, frameState) {
-        // Tiles do not have a content.box if it is the same as the tile's box.
+        // Tiles do not have a content.boundingVolume if it is the same as the tile's boundingVolume.
         var hasContentBoundingVolume = defined(tile._header.content) && defined(tile._header.content.boundingVolume);
 
         var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
-        if (showVolume && workaround2657(tile._header.boundingVolume)) {
+        if (showVolume) {
             if (!defined(tile._debugBoundingVolume)) {
                 tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(hasContentBoundingVolume ? Color.WHITE : Color.RED);
             }
@@ -560,13 +676,22 @@ define([
             tile._debugBoundingVolume = tile._debugBoundingVolume.destroy();
         }
 
-        if (tileset.debugShowContentBoundingVolume && hasContentBoundingVolume && workaround2657(tile._header.content.boundingVolume)) {
+        if (tileset.debugShowContentBoundingVolume && hasContentBoundingVolume) {
             if (!defined(tile._debugContentBoundingVolume)) {
                 tile._debugContentBoundingVolume = tile._contentBoundingVolume.createDebugVolume(Color.BLUE);
             }
             tile._debugContentBoundingVolume.update(frameState);
         } else if (!tileset.debugShowContentBoundingVolume && defined(tile._debugContentBoundingVolume)) {
             tile._debugContentBoundingVolume = tile._debugContentBoundingVolume.destroy();
+        }
+
+        if (tileset.debugShowViewerRequestVolume && defined(tile._viewerRequestVolume)) {
+            if (!defined(tile._debugViewerRequestVolume)) {
+                tile._debugViewerRequestVolume = tile._viewerRequestVolume.createDebugVolume(Color.YELLOW);
+            }
+            tile._debugViewerRequestVolume.update(frameState);
+        } else if (!tileset.debugShowViewerRequestVolume && defined(tile._debugViewerRequestVolume)) {
+            tile._debugViewerRequestVolume = tile._debugViewerRequestVolume.destroy();
         }
 
         if (tileset.debugColorizeTiles && !tile._debugColorizeTiles) {
@@ -586,6 +711,7 @@ define([
     Cesium3DTile.prototype.update = function(tileset, frameState) {
         applyDebugSettings(this, tileset, frameState);
         this._content.update(tileset, frameState);
+        this._transformDirty = false;
     };
 
     var scratchCommandList = [];
@@ -622,6 +748,7 @@ define([
         this._content = this._content && this._content.destroy();
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
+        this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
         return destroyObject(this);
     };
 
