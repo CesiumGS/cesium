@@ -39,22 +39,8 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
 {
     vec2 halfSize = imageSize * scale * czm_resolutionScale;
     halfSize *= ((direction * 2.0) - 1.0);
-    
-    if (sizeInMeters)
-    {
-        positionEC.xy += halfSize;
-    }
-    
-    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
-    
-    if (sizeInMeters)
-    {
-        positionWC.xy += (origin * abs(halfSize)) / czm_metersPerPixel(positionEC);
-    }
-    else
-    {
-        positionWC.xy += (origin * abs(halfSize));
-    }
+
+    vec2 originTranslate = origin * abs(halfSize);
     
 #if defined(ROTATION) || defined(ALIGNED_AXIS)
     if (validAlignedAxis || rotation != 0.0)
@@ -75,7 +61,20 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
         halfSize = rotationMatrix * halfSize;
     }
 #endif
-    
+
+    if (sizeInMeters)
+    {
+        positionEC.xy += halfSize;
+    }
+
+    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
+
+    if (sizeInMeters)
+    {
+        originTranslate += originTranslate / czm_metersPerPixel(positionEC);
+    }
+
+    positionWC.xy += originTranslate;
     if (!sizeInMeters)
     {
         positionWC.xy += halfSize;

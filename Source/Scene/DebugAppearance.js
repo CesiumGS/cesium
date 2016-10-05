@@ -26,6 +26,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.attributeName The name of the attribute to visualize.
+     * @param {Boolean} options.perInstanceAttribute Boolean that determines whether this attribute is a per-instance geometry attribute.
      * @param {String} [options.glslDatatype='vec3'] The GLSL datatype of the attribute.  Supported datatypes are <code>float</code>, <code>vec2</code>, <code>vec3</code>, and <code>vec4</code>.
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
@@ -44,10 +45,14 @@ define([
     function DebugAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var attributeName = options.attributeName;
+        var perInstanceAttribute = options.perInstanceAttribute;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(attributeName)) {
             throw new DeveloperError('options.attributeName is required.');
+        }
+        if (!defined(perInstanceAttribute)) {
+            throw new DeveloperError('options.perInstanceAttribute is required.');
         }
         //>>includeEnd('debug');
 
@@ -85,12 +90,15 @@ define([
         var vs =
             'attribute vec3 position3DHigh;\n' +
             'attribute vec3 position3DLow;\n' +
-            'attribute ' + glslDatatype + ' ' + attributeName + ';\n' +
+            'attribute float batchId;\n' +
+            (perInstanceAttribute ? '' : 'attribute ' + glslDatatype + ' ' + attributeName + ';\n') +
             'varying ' + glslDatatype + ' ' + varyingName + ';\n' +
             'void main()\n' +
             '{\n' +
             'vec4 p = czm_translateRelativeToEye(position3DHigh, position3DLow);\n' +
-            varyingName + ' = ' +  attributeName + ';\n' +
+            (perInstanceAttribute ?
+                varyingName + ' = czm_batchTable_' + attributeName + '(batchId);\n' :
+                varyingName + ' = ' +  attributeName + ';\n') +
             'gl_Position = czm_modelViewProjectionRelativeToEye * p;\n' +
             '}';
         var fs =

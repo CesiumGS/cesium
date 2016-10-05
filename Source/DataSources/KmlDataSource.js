@@ -651,7 +651,6 @@ define([
         var heading = queryNumericValue(node, 'heading', namespaces.kml);
         var color = queryColorValue(node, 'color', namespaces.kml);
 
-
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
         var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false);
         var x = queryNumericValue(iconNode, 'x', namespaces.gx);
@@ -700,19 +699,20 @@ define([
             } else if (hotSpotXUnit === 'insetPixels') {
                 xOffset = (hotSpotX - BILLBOARD_SIZE) * scale;
             } else if (hotSpotXUnit === 'fraction') {
-                xOffset = -BILLBOARD_SIZE * scale * hotSpotX;
+                xOffset = -hotSpotX * BILLBOARD_SIZE * scale;
             }
             xOffset += BILLBOARD_SIZE * 0.5 * scale;
         }
 
         if (defined(hotSpotY)) {
             if (hotSpotYUnit === 'pixels') {
-                yOffset = hotSpotY;
+                yOffset = hotSpotY * scale;
             } else if (hotSpotYUnit === 'insetPixels') {
-                yOffset = -hotSpotY;
+                yOffset = (-hotSpotY + BILLBOARD_SIZE) * scale;
             } else if (hotSpotYUnit === 'fraction') {
-                yOffset = hotSpotY * BILLBOARD_SIZE;
+                yOffset = hotSpotY * BILLBOARD_SIZE * scale;
             }
+
             yOffset -= BILLBOARD_SIZE * 0.5 * scale;
         }
 
@@ -1066,8 +1066,9 @@ define([
             billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
         }
 
+        var scale = 1.0;
         if (defined(billboard.scale)) {
-            var scale = billboard.scale.getValue();
+            scale = billboard.scale.getValue();
             if (scale !== 0) {
                 label.pixelOffset = new Cartesian2((scale * 16) + 1, 0);
             } else {
@@ -1527,8 +1528,16 @@ define([
         }
         entity.availability = availability;
 
+        // Per KML spec "A Feature is visible only if it and all its ancestors are visible."
+        function ancestryIsVisible(parentEntity) {
+            if (!parentEntity) {
+              return true;
+            }
+            return parentEntity.show && ancestryIsVisible(parentEntity.parent);
+        }
+
         var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.kml);
-        entity.show = defaultValue(visibility, true);
+        entity.show = ancestryIsVisible(parent) && defaultValue(visibility, true);
         //var open = queryBooleanValue(featureNode, 'open', namespaces.kml);
 
         var authorNode = queryFirstNode(featureNode, 'author', namespaces.atom);
@@ -1719,8 +1728,8 @@ define([
         }
     }
 
-    function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
+    function processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -2010,9 +2019,9 @@ define([
         Placemark : processPlacemark,
         NetworkLink : processNetworkLink,
         GroundOverlay : processGroundOverlay,
-        PhotoOverlay : processUnsupported,
-        ScreenOverlay : processUnsupported,
-        Tour : processUnsupported
+        PhotoOverlay : processUnsupportedFeature,
+        ScreenOverlay : processUnsupportedFeature,
+        Tour : processUnsupportedFeature
     };
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
@@ -2020,8 +2029,7 @@ define([
         if (defined(featureProcessor)) {
             featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
-            dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
-            console.log('KML - Unsupported feature node: ' + node.localName);
+            processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         }
     }
 

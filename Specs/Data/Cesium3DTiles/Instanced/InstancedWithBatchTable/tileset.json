@@ -16,8 +16,8 @@
       "maximum": 0.6988894207110236
     },
     "Height": {
-      "minimum": 15,
-      "maximum": 15
+      "minimum": 0,
+      "maximum": 80
     }
   },
   "geometricError": 40,
@@ -30,7 +30,7 @@
         -1.3196595204101946,
         0.6988897891,
         0,
-        15
+        80
       ]
     },
     "geometricError": 0,

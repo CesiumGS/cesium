@@ -21,7 +21,7 @@ defineSuite([
     
     var center = new Cartesian3(0.0, 0.0, 0.0);
     var halfAxes = Matrix3.fromScale(new Cartesian3(0.5, 0.5, 0.5), new Matrix3());
-    var tileBoundingVolume = new TileOrientedBoundingBox({center: center, halfAxes: halfAxes});
+    var tileBoundingVolume = new TileOrientedBoundingBox(center, halfAxes);
 
     var frameState = createFrameState();
     

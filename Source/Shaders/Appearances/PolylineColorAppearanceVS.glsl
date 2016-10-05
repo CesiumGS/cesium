@@ -15,6 +15,7 @@ attribute vec3 nextPosition3DHigh;
 attribute vec3 nextPosition3DLow;
 attribute vec2 expandAndWidth;
 attribute vec4 color;
+attribute float batchId;
 
 varying vec4 v_color;
 #endif
