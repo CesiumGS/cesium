@@ -90,7 +90,7 @@ define([
         this._boundingVolume = options.boundingVolume;
         this._boundingVolumes = new Array(this._offsets.length);
 
-        this._batchTableResources = options.batchTableResources;
+        this._batchTable = options.batchTable;
 
         this._batchedIndices = undefined;
 
@@ -373,10 +373,10 @@ define([
             return;
         }
 
-        var batchTableResources = primitive._batchTableResources;
+        var batchTable = primitive._batchTable;
 
-        var vsSource = batchTableResources.getVertexShaderCallback()(ShadowVolumeVS, false);
-        var fsSource = batchTableResources.getFragmentShaderCallback()(ShadowVolumeFS, false);
+        var vsSource = batchTable.getVertexShaderCallback()(ShadowVolumeVS, false);
+        var fsSource = batchTable.getFragmentShaderCallback()(ShadowVolumeFS, false);
 
         var vs = new ShaderSource({
             defines : ['VECTOR_TILE'],
@@ -394,8 +394,8 @@ define([
             attributeLocations : attributeLocations
         });
 
-        vsSource = batchTableResources.getPickVertexShaderCallback()(ShadowVolumeVS);
-        fsSource = batchTableResources.getPickFragmentShaderCallback()(ShadowVolumeFS);
+        vsSource = batchTable.getPickVertexShaderCallback()(ShadowVolumeVS);
+        fsSource = batchTable.getPickFragmentShaderCallback()(ShadowVolumeFS);
 
         var pickVS = new ShaderSource({
             defines : ['VECTOR_TILE'],
@@ -647,7 +647,7 @@ define([
         commands.length = length;
 
         var vertexArray = primitive._va;
-        var uniformMap = primitive._batchTableResources.getUniformMapCallback()(primitive._uniformMap);
+        var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
         var bv = primitive._boundingVolume;
 
         for (var j = 0; j < length; j += 3) {
@@ -714,7 +714,7 @@ define([
         pickCommands.length = length;
 
         var vertexArray = primitive._va;
-        var uniformMap = primitive._batchTableResources.getPickUniformMapCallback()(primitive._uniformMap);
+        var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
 
         for (var j = 0; j < length; j += 3) {
             var offset = primitive._indexOffsets[j / 3];

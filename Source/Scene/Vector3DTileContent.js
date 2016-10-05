@@ -69,7 +69,7 @@ define([
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-        this.batchTableResources = undefined;
+        this.batchTable = undefined;
         this.featurePropertiesDirty = false;
         this.boundingSphere = tile.contentBoundingVolume.boundingSphere;
 
@@ -83,7 +83,7 @@ define([
          */
         featuresLength : {
             get : function() {
-                return this.batchTableResources.featuresLength;
+                return this.batchTable.featuresLength;
             }
         },
 
@@ -131,7 +131,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTableResources.hasProperty(name);
+        return this.batchTable.hasProperty(name);
     };
 
     /**
@@ -272,8 +272,8 @@ define([
             }
         }
 
-        var batchTableResources = new Cesium3DTileBatchTable(this, numberOfPolygons + numberOfPolylines, batchTableJson, batchTableBinary, createColorChangedCallback(this, numberOfPolygons));
-        this.batchTableResources = batchTableResources;
+        var batchTable = new Cesium3DTileBatchTable(this, numberOfPolygons + numberOfPolylines, batchTableJson, batchTableBinary, createColorChangedCallback(this, numberOfPolygons));
+        this.batchTable = batchTable;
 
         var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
         byteOffset += indicesByteLength;
@@ -313,7 +313,7 @@ define([
         var n;
         for (n = 0; n < tempLength; ++n) {
             colors[n] = randomColors[n % randomColors.length];
-            batchTableResources.setColor(n, colors[n]);
+            batchTable.setColor(n, colors[n]);
         }
 
         if (positions.length > 0 && false) {
@@ -331,7 +331,7 @@ define([
                 quantizedOffset : quantizedOffset,
                 quantizedScale : quantizedScale,
                 boundingVolume : this._tile._boundingVolume.boundingVolume,
-                batchTableResources : this.batchTableResources
+                batchTable : this.batchTable
             });
         }
 
@@ -343,7 +343,7 @@ define([
         tempLength = polylineOffsets.length;
         for (n = 0; n < tempLength; ++n) {
             colors[n] = randomColors[n % randomColors.length];
-            batchTableResources.setColor(n + numberOfPolygons, colors[n]);
+            batchTable.setColor(n + numberOfPolygons, colors[n]);
 
             widths[n] = 2.0;
             batchIds[n] = numberOfPolygons + n;
@@ -360,7 +360,7 @@ define([
                 quantizedOffset : quantizedOffset,
                 quantizedScale : quantizedScale,
                 boundingVolume : this._tile._boundingVolume.boundingVolume,
-                batchTableResources : this.batchTableResources
+                batchTable : this.batchTable
             });
         }
 
@@ -381,8 +381,8 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
-        if (defined(this.batchTableResources)) {
-            this.batchTableResources.update(tileset, frameState);
+        if (defined(this.batchTable)) {
+            this.batchTable.update(tileset, frameState);
         }
 
         if (defined(this._polygons)) {

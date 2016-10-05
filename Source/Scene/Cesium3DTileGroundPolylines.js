@@ -52,7 +52,7 @@ define([
         this._quantizedScale = options.quantizedScale;
 
         this._boundingVolume = options.boundingVolume;
-        this._batchTableResources = options.batchTableResources;
+        this._batchTable = options.batchTable;
 
         this._va = undefined;
         this._sp = undefined;
@@ -308,10 +308,10 @@ define([
             return;
         }
 
-        var batchTableResources = primitive._batchTableResources;
+        var batchTable = primitive._batchTable;
 
-        var vsSource = batchTableResources.getVertexShaderCallback()(PolylineColorAppearanceVS, false);
-        var fsSource = batchTableResources.getFragmentShaderCallback()(PolylineFS, false);
+        var vsSource = batchTable.getVertexShaderCallback()(PolylineColorAppearanceVS, false);
+        var fsSource = batchTable.getFragmentShaderCallback()(PolylineFS, false);
 
         var vs = new ShaderSource({
             defines : ['VECTOR_TILE'],
@@ -329,8 +329,8 @@ define([
             attributeLocations : attributeLocations
         });
 
-        vsSource = batchTableResources.getPickVertexShaderCallback()(PolylineColorAppearanceVS);
-        fsSource = batchTableResources.getPickFragmentShaderCallback()(PolylineFS);
+        vsSource = batchTable.getPickVertexShaderCallback()(PolylineColorAppearanceVS);
+        fsSource = batchTable.getPickFragmentShaderCallback()(PolylineFS);
 
         var pickVS = new ShaderSource({
             defines : ['VECTOR_TILE'],
@@ -350,7 +350,7 @@ define([
 
     function queueCommands(primitive, frameState) {
         if (!defined(primitive._command)) {
-            var uniformMap = primitive._batchTableResources.getUniformMapCallback()(primitive._uniformMap);
+            var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
             primitive._command = new DrawCommand({
                 owner : primitive,
                 vertexArray : primitive._va,
@@ -369,7 +369,7 @@ define([
 
     function queuePickCommands(primitive, frameState) {
         if (!defined(primitive._pickCommand)) {
-            var uniformMap = primitive._batchTableResources.getPickUniformMapCallback()(primitive._uniformMap);
+            var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
             primitive._pickCommand = new DrawCommand({
                 owner : primitive,
                 vertexArray : primitive._va,
