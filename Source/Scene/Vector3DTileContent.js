@@ -306,8 +306,8 @@ define([
         var quantizedScale = Cartesian3.unpack(featureTableJSON.QUANTIZED_VOLUME_SCALE);
 
         // TODO: get feature colors
-        //var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
-        var randomColors = [Color.WHITE.withAlpha(0.5)];
+        var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
+        //var randomColors = [Color.WHITE.withAlpha(0.5)];
         var colors = [];
         var tempLength = offsets.length;
         var n;
@@ -316,7 +316,7 @@ define([
             batchTable.setColor(n, colors[n]);
         }
 
-        if (positions.length > 0 && false) {
+        if (positions.length > 0) {
             this._polygons = new Cesium3DTileGroundPrimitive({
                 positions : positions,
                 colors : colors,
