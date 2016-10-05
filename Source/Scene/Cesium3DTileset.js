@@ -185,6 +185,7 @@ define([
             visited : 0,
             numberOfCommands : 0,
             // Loading stats
+            numberOfAttemptedRequests : 0,
             numberOfPendingRequests : 0,
             numberProcessing : 0,
             numberContentReady : 0, // Number of tiles with content loaded, does not include empty tiles
@@ -288,6 +289,22 @@ define([
         this.loadProgress = new Event();
 
         /**
+         * The event fired to indicate that all visible tiles are loaded.
+         * <p>
+         * This event is fired at the end of the frame after the scene is rendered.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * city.allVisibleTilesLoaded.addEventListener(function() {
+         *     console.log('All visible tiles are loaded');
+         * });
+         */
+        this.allVisibleTilesLoaded = new Event();
+
+        /**
          * The event fired to indicate that a tile's content was unloaded from the cache.
          * <p>
          * The unloaded {@link Cesium3DTile} is passed to the event listener.
@@ -352,15 +369,16 @@ define([
     }
 
     function Cesium3DTilesetStatistics() {
-        this.selected = -1;
-        this.visited = -1;
-        this.numberOfCommands = -1;
-        this.numberOfPendingRequests = -1;
-        this.numberProcessing = -1;
-        this.numberContentReady = -1;
-        this.numberTotal = -1;
-        this.numberOfTilesStyled = -1;
-        this.numberOfFeaturesStyled = -1;
+        this.selected = 0;
+        this.visited = 0;
+        this.numberOfCommands = 0;
+        this.numberOfAttemptedRequests = 0;
+        this.numberOfPendingRequests = 0;
+        this.numberProcessing = 0;
+        this.numberContentReady = 0;
+        this.numberTotal = 0;
+        this.numberOfTilesStyled = 0;
+        this.numberOfFeaturesStyled = 0;
     }
 
     defineProperties(Cesium3DTileset.prototype, {
@@ -865,13 +883,16 @@ define([
 
         tile.requestContent();
 
+        var stats = tileset._statistics;
+
         if (!tile.contentUnloaded) {
-            var stats = tileset._statistics;
             ++stats.numberOfPendingRequests;
 
             var removeFunction = removeFromProcessingQueue(tileset, tile);
             tile.content.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile)).otherwise(removeFunction);
             tile.content.readyPromise.then(removeFunction).otherwise(removeFunction);
+        } else {
+            ++stats.numberOfAttemptedRequests;
         }
     }
 
@@ -1281,6 +1302,7 @@ define([
         var stats = tileset._statistics;
         stats.visited = 0;
         stats.numberOfCommands = 0;
+        stats.numberOfAttemptedRequests = 0;
         stats.numberOfTilesStyled = 0;
         stats.numberOfFeaturesStyled = 0;
     }
@@ -1297,6 +1319,7 @@ define([
             (last.visited !== stats.visited ||
              last.numberOfCommands !== stats.numberOfCommands ||
              last.selected !== tileset._selectedTiles.length ||
+             last.numberOfAttemptedRequests !== stats.numberOfAttemptedRequests ||
              last.numberOfPendingRequests !== stats.numberOfPendingRequests ||
              last.numberProcessing !== stats.numberProcessing ||
              last.numberContentReady !== stats.numberContentReady ||
@@ -1326,6 +1349,7 @@ define([
 
                 // --- Cache/loading stats
                 ' | Requests: ' + stats.numberOfPendingRequests +
+                ', Attempted: ' + stats.numberOfAttemptedRequests +
                 ', Processing: ' + stats.numberProcessing +
                 ', Content Ready: ' + stats.numberContentReady +
                 // Total number of tiles includes tiles without content, so "Ready" may never reach
@@ -1343,6 +1367,7 @@ define([
         last.visited = stats.visited;
         last.numberOfCommands = stats.numberOfCommands;
         last.selected = tileset._selectedTiles.length;
+        last.numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
         last.numberOfPendingRequests = stats.numberOfPendingRequests;
         last.numberProcessing = stats.numberProcessing;
         last.numberContentReady = stats.numberContentReady;
@@ -1420,14 +1445,23 @@ define([
 
     function raiseLoadProgressEvent(tileset, frameState) {
         var stats = tileset._statistics;
+        var numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
         var numberOfPendingRequests = stats.numberOfPendingRequests;
         var numberProcessing = stats.numberProcessing;
         var lastNumberOfPendingRequest = stats.lastColor.numberOfPendingRequests;
         var lastNumberProcessing = stats.lastColor.numberProcessing;
 
-        if ((numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberProcessing !== lastNumberProcessing)) {
+        var progressChanged = (numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberProcessing !== lastNumberProcessing);
+
+        if (progressChanged) {
             frameState.afterRender.push(function() {
                 tileset.loadProgress.raiseEvent(numberOfPendingRequests, numberProcessing);
+            });
+        }
+
+        if (progressChanged && (numberOfPendingRequests === 0) && (numberProcessing === 0) && (numberOfAttemptedRequests === 0)) {
+            frameState.afterRender.push(function() {
+                tileset.allVisibleTilesLoaded.raiseEvent();
             });
         }
     }

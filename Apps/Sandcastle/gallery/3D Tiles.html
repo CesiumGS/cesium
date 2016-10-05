@@ -117,6 +117,10 @@ function loadTileset(url) {
             //console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberProcessing);
         });
 
+        tileset.allVisibleTilesLoaded.addEventListener(function() {
+            //console.log('All visible tiles are loaded');
+        });
+
         tileset.tileUnload.addEventListener(function(tile) {
             //console.log('Tile unloaded.')
         });

@@ -995,6 +995,24 @@ defineSuite([
         });
     });
 
+    it('all visible tiles loaded event is raised', function() {
+        // Called first when the only the root is visible and it becomes loaded, and then again when
+        // the rest of the tileset is visible and all tiles are loaded.
+        var spyUpdate = jasmine.createSpy('listener');
+        viewRootOnly();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            tileset.allVisibleTilesLoaded.addEventListener(spyUpdate);
+            return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
+                scene.renderForSpecs();
+                viewAllTiles();
+                return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
+                    scene.renderForSpecs();
+                    expect(spyUpdate.calls.count()).toEqual(2);
+                });
+            });
+        });
+    });
+
     it('tile visible event is raised', function() {
         viewRootOnly();
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {

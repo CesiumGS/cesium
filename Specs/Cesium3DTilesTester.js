@@ -87,7 +87,7 @@ define([
         return pollToPromise(function() {
             scene.renderForSpecs();
             var stats = tileset._statistics;
-            return ((stats.numberOfPendingRequests === 0) && (stats.numberProcessing === 0));
+            return ((stats.numberOfPendingRequests === 0) && (stats.numberProcessing === 0) && (stats.numberOfAttemptedRequests === 0));
         });
     };
 
