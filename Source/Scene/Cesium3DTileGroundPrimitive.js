@@ -69,7 +69,7 @@ define([
         StencilOperation) {
     'use strict';
 
-    function Cesium3DTileGroundPrimitive(options) {
+    function GroundPrimitiveBatch(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._positions = options.positions;
@@ -144,12 +144,10 @@ define([
         var decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
 
         var positionsLength = positions.length;
-        var batchedPositions = new Float32Array(positionsLength * 2.0);
+        var batchedPositions = new Float32Array(positionsLength * 2);
         var batchedIds = new Uint16Array(positionsLength / 3 * 2);
         var batchedIndexOffsets = new Array(indexOffsets.length);
         var batchedIndexCounts = new Array(indexCounts.length);
-
-        // TODO: compute length and create typed array
         var batchedIndices = [];
 
         var colors = primitive._colors;
@@ -178,22 +176,23 @@ define([
             }
         }
 
-        var object;
+        // get the offsets and counts for the positions and indices of each primitive
+        var buffer;
         var byColorPositionOffset = 0;
         var byColorIndexOffset = 0;
         for (rgba in buffers) {
             if (buffers.hasOwnProperty(rgba)) {
-                object = buffers[rgba];
-                object.offset = byColorPositionOffset;
-                object.indexOffset = byColorIndexOffset;
+                buffer = buffers[rgba];
+                buffer.offset = byColorPositionOffset;
+                buffer.indexOffset = byColorIndexOffset;
 
-                var positionLength = object.positionLength * 2;
-                var indexLength = object.indexLength * 2 + object.positionLength * 6;
+                var positionLength = buffer.positionLength * 2;
+                var indexLength = buffer.indexLength * 2 + buffer.positionLength * 6;
 
                 byColorPositionOffset += positionLength;
                 byColorIndexOffset += indexLength;
 
-                object.indexLength = indexLength;
+                buffer.indexLength = indexLength;
             }
         }
 
@@ -201,13 +200,13 @@ define([
 
         for (rgba in buffers) {
             if (buffers.hasOwnProperty(rgba)) {
-                object = buffers[rgba];
+                buffer = buffers[rgba];
 
                 batchedDrawCalls.push({
                     color : Color.fromRgba(parseInt(rgba)),
-                    offset : object.indexOffset,
-                    count : object.indexLength,
-                    batchIds : object.batchIds
+                    offset : buffer.indexOffset,
+                    count : buffer.indexLength,
+                    batchIds : buffer.batchIds
                 });
             }
         }
@@ -218,11 +217,11 @@ define([
             color = colors[i];
             rgba = color.toRgba();
 
-            object = buffers[rgba];
-            var positionOffset = object.offset;
+            buffer = buffers[rgba];
+            var positionOffset = buffer.offset;
             var positionIndex = positionOffset * 3;
             var colorIndex = positionOffset * 4;
-            var idIndex = positionOffset;
+            var batchIdIndex = positionOffset;
 
             var polygonOffset = offsets[i];
             var polygonCount = counts[i];
@@ -260,12 +259,12 @@ define([
                 Cartesian3.pack(maxHeightPosition, batchedPositions, positionIndex);
                 Cartesian3.pack(minHeightPosition, batchedPositions, positionIndex + 3);
 
-                batchedIds[idIndex] = i;
-                batchedIds[idIndex + 1] = i;
+                batchedIds[batchIdIndex] = i;
+                batchedIds[batchIdIndex + 1] = i;
 
                 positionIndex += 6;
                 colorIndex += 8;
-                idIndex += 2;
+                batchIdIndex += 2;
             }
 
             var rectangle = scratchBVRectangle;
@@ -276,7 +275,7 @@ define([
 
             boundingVolumes[i] = OrientedBoundingBox.fromRectangle(rectangle, minHeight, maxHeight, ellipsoid);
 
-            var indicesIndex = object.indexOffset;
+            var indicesIndex = buffer.indexOffset;
 
             var indexOffset = indexOffsets[i];
             var indexCount = indexCounts[i];
@@ -288,15 +287,18 @@ define([
                 var i1 = indices[indexOffset + j + 1] - polygonOffset;
                 var i2 = indices[indexOffset + j + 2] - polygonOffset;
 
+                // triangle on the top of the extruded polygon
                 batchedIndices[indicesIndex++] = i0 * 2 + positionOffset;
                 batchedIndices[indicesIndex++] = i1 * 2 + positionOffset;
                 batchedIndices[indicesIndex++] = i2 * 2 + positionOffset;
 
+                // triangle on the bottom of the extruded polygon
                 batchedIndices[indicesIndex++] = i2 * 2 + 1 + positionOffset;
                 batchedIndices[indicesIndex++] = i1 * 2 + 1 + positionOffset;
                 batchedIndices[indicesIndex++] = i0 * 2 + 1 + positionOffset;
             }
 
+            // indices for the walls of the extruded polygon
             for (j = 0; j < polygonCount - 1; ++j) {
                 batchedIndices[indicesIndex++] = j * 2 + 1 + positionOffset;
                 batchedIndices[indicesIndex++] = (j + 1) * 2 + positionOffset;
@@ -307,8 +309,8 @@ define([
                 batchedIndices[indicesIndex++] = (j + 1) * 2 + positionOffset;
             }
 
-            object.offset += polygonCount * 2;
-            object.indexOffset = indicesIndex;
+            buffer.offset += polygonCount * 2;
+            buffer.indexOffset = indicesIndex;
 
             batchedIndexCounts[i] = indicesIndex - batchedIndexOffsets[i];
         }
@@ -322,7 +324,6 @@ define([
         primitive._indexOffsets = batchedIndexOffsets;
         primitive._indexCounts = batchedIndexCounts;
 
-        // TODO: fix this
         for (var m = 0; m < primitive._batchedIndices.length; ++m) {
             var tempIds = primitive._batchedIndices[m].batchIds;
             var count = 0;
@@ -555,12 +556,12 @@ define([
         };
     }
 
-    function copyIndices(indices, newIndices, currentOffset, offsets, counts, batchedIds) {
+    function copyIndices(indices, newIndices, currentOffset, offsets, counts, batchIds) {
         var sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
 
-        var batchedIdsLength = batchedIds.length;
+        var batchedIdsLength = batchIds.length;
         for (var j = 0; j < batchedIdsLength; ++j) {
-            var batchedId = batchedIds[j];
+            var batchedId = batchIds[j];
             var offset = offsets[batchedId];
             var count = counts[batchedId];
 
@@ -774,15 +775,15 @@ define([
         }
     }
 
-    Cesium3DTileGroundPrimitive.prototype.updateCommands = function(batchId, color) {
+    GroundPrimitiveBatch.prototype.updateCommands = function(batchId, color) {
         var offset = this._indexOffsets[batchId];
         var count = this._indexCounts[batchId];
 
         var batchedIndices = this._batchedIndices;
         var length = batchedIndices.length;
 
-        var i = 0;
-        for (; i < length; ++i) {
+        var i;
+        for (i = 0; i < length; ++i) {
             var batchedOffset = batchedIndices[i].offset;
             var batchedCount = batchedIndices[i].count;
 
@@ -834,7 +835,7 @@ define([
         }
     };
 
-    Cesium3DTileGroundPrimitive.prototype.update = function(frameState) {
+    GroundPrimitiveBatch.prototype.update = function(frameState) {
         var context = frameState.context;
 
         createVertexArray(this, context);
@@ -860,16 +861,16 @@ define([
         }
     };
 
-    Cesium3DTileGroundPrimitive.prototype.isDestroyed = function() {
+    GroundPrimitiveBatch.prototype.isDestroyed = function() {
         return false;
     };
 
-    Cesium3DTileGroundPrimitive.prototype.destroy = function() {
+    GroundPrimitiveBatch.prototype.destroy = function() {
         this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         return destroyObject(this);
     };
 
-    return Cesium3DTileGroundPrimitive;
+    return GroundPrimitiveBatch;
 });

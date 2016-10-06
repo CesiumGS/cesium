@@ -228,6 +228,13 @@ define([
 
         var featureTableJSONByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (featureTableJSONByteLength === 0) {
+            throw new DeveloperError('Feature table must have a byte length greater than zero');
+        }
+        //>>includeEnd('debug');
+
         var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
         var batchTableJSONByteLength = view.getUint32(byteOffset, true);
