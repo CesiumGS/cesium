@@ -83,11 +83,21 @@ define([
         expectRender(scene, tileset);
     };
 
-    Cesium3DTilesTester.waitForPendingRequests = function(scene, tileset) {
+    Cesium3DTilesTester.waitForViewComplete = function(scene, tileset) {
         return pollToPromise(function() {
             scene.renderForSpecs();
-            var stats = tileset._statistics;
-            return ((stats.numberOfPendingRequests === 0) && (stats.numberProcessing === 0) && (stats.numberOfAttemptedRequests === 0));
+            return tileset.viewComplete;
+        }).then(function() {
+            return tileset;
+        });
+    };
+
+    Cesium3DTilesTester.waitForReady = function(scene, tileset) {
+        return pollToPromise(function() {
+            scene.renderForSpecs();
+            return tileset.ready;
+        }).then(function() {
+            return tileset;
         });
     };
 
@@ -97,11 +107,7 @@ define([
             url : url
         }));
 
-        return tileset.readyPromise.then(function() {
-            return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
-                return tileset;
-            });
-        });
+        return Cesium3DTilesTester.waitForViewComplete(scene, tileset);
     };
 
     Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {

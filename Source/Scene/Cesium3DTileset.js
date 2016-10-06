@@ -289,7 +289,7 @@ define([
         this.loadProgress = new Event();
 
         /**
-         * The event fired to indicate that all visible tiles are loaded.
+         * The event fired to indicate that all tiles in view are loaded.
          * <p>
          * This event is fired at the end of the frame after the scene is rendered.
          * </p>
@@ -298,11 +298,11 @@ define([
          * @default new Event()
          *
          * @example
-         * city.allVisibleTilesLoaded.addEventListener(function() {
-         *     console.log('All visible tiles are loaded');
+         * city.allTilesLoaded.addEventListener(function() {
+         *     console.log('All tiles are loaded');
          * });
          */
-        this.allVisibleTilesLoaded = new Event();
+        this.allTilesLoaded = new Event();
 
         /**
          * The event fired to indicate that a tile's content was unloaded from the cache.
@@ -352,20 +352,9 @@ define([
          */
         this.tileVisible = new Event();
 
+        this._state = TilesetState.NEEDS_LOAD;
+        this._ready = false;
         this._readyPromise = when.defer();
-
-        var that = this;
-
-        this.loadTileset(tilesetUrl).then(function(data) {
-            var tilesetJson = data.tilesetJson;
-            that._asset = tilesetJson.asset;
-            that._properties = tilesetJson.properties;
-            that._geometricError = tilesetJson.geometricError;
-            that._root = data.root;
-            that._readyPromise.resolve(that);
-        }).otherwise(function(error) {
-            that._readyPromise.reject(error);
-        });
     }
 
     function Cesium3DTilesetStatistics() {
@@ -457,7 +446,7 @@ define([
          */
         ready : {
             get : function() {
-                return defined(this._root);
+                return this._ready;
             }
         },
 
@@ -486,6 +475,23 @@ define([
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
+            }
+        },
+
+        /**
+         * When <code>true</code>, all tiles in view are are loaded.
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        viewComplete : {
+            get : function() {
+                var stats = this._statistics;
+                return this.ready && (stats.numberOfPendingRequests === 0) && (stats.numberProcessing === 0) && (stats.numberOfAttemptedRequests === 0);
             }
         },
 
@@ -1445,7 +1451,6 @@ define([
 
     function raiseLoadProgressEvent(tileset, frameState) {
         var stats = tileset._statistics;
-        var numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
         var numberOfPendingRequests = stats.numberOfPendingRequests;
         var numberProcessing = stats.numberProcessing;
         var lastNumberOfPendingRequest = stats.lastColor.numberOfPendingRequests;
@@ -1459,9 +1464,9 @@ define([
             });
         }
 
-        if (progressChanged && (numberOfPendingRequests === 0) && (numberProcessing === 0) && (numberOfAttemptedRequests === 0)) {
+        if (progressChanged && tileset.viewComplete) {
             frameState.afterRender.push(function() {
-                tileset.allVisibleTilesLoaded.raiseEvent();
+                tileset.allTilesLoaded.raiseEvent();
             });
         }
     }
@@ -1491,6 +1496,26 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    var TilesetState = {
+        NEEDS_LOAD : 0,
+        LOADING : 1,
+        LOADED : 2,
+        FAILED : 3
+    };
+
+    function loadTileset(tileset) {
+        tileset.loadTileset(tileset._tilesetUrl).then(function(data) {
+            var tilesetJson = data.tilesetJson;
+            tileset._asset = tilesetJson.asset;
+            tileset._properties = tilesetJson.properties;
+            tileset._geometricError = tilesetJson.geometricError;
+            tileset._root = data.root;
+        }).otherwise(function(error) {
+            tileset._state = TilesetState.FAILED;
+            tileset._readyPromise.reject(error);
+        });
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -1502,8 +1527,23 @@ define([
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status
      */
     Cesium3DTileset.prototype.update = function(frameState) {
+        if (!this._ready) {
+            var that = this;
+            if (this._state === TilesetState.NEEDS_LOAD) {
+                this._state = TilesetState.LOADING;
+                loadTileset(this);
+            }
+            if ((this._state === TilesetState.LOADING) && defined(this._root)) {
+                this._state = TilesetState.LOADED;
+                this._ready = true;
+                frameState.afterRender.push(function() {
+                    that._readyPromise.resolve(that);
+                });
+            }
+        }
+
         // TODO: Support 2D and CV
-        if (!this.show || !defined(this._root) || (frameState.mode !== SceneMode.SCENE3D)) {
+        if (!this.show || !this._ready || (frameState.mode !== SceneMode.SCENE3D)) {
             return;
         }
 
