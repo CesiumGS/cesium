@@ -38,6 +38,7 @@ define([
      * @param {Number} [options.width=1.0] The width of the polyline in pixels.
      * @param {Boolean} [options.loop=false] Whether a line segment will be added between the last and first line positions to make this line a loop.
      * @param {Material} [options.material=Material.ColorType] The material.
+     * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each polyline be pickable with {@link Scene#pick}.
      * @param {Cartesian3[]} [options.positions] The positions.
      * @param {Object} [options.id] The user-defined object to be returned when this polyline is picked.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this polyline will be displayed.
@@ -52,6 +53,7 @@ define([
         this._width = defaultValue(options.width, 1.0);
         this._loop = defaultValue(options.loop, false);
         this._distanceDisplayCondition = options.distanceDisplayCondition;
+        this._allowPicking = defaultValue(options.allowPicking, true);
 
         this._material = options.material;
         if (!defined(this._material)) {
@@ -136,6 +138,32 @@ define([
                 if (value !== this._show) {
                     this._show = value;
                     makeDirty(this, SHOW_INDEX);
+                }
+            }
+        },
+
+        /**
+         * Determines if this polyline is allowed to be picked (selected).
+         * @memberof Polyline.prototype
+         * @type {Boolean}
+         */
+        allowPicking: {
+            get: function() {
+                return this._allowPicking;
+            },
+            set: function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                if (value !== this._allowPicking) {
+                    this._allowPicking = value;
+                    // Need to destroy the pickId so that it can be recreated (or ignored) as necessary
+                    this._pickId = this._pickId && this._pickId.destroy();
+                    // This forces the pickID color to be re-retrieved by PolylineCollection.write
+                    makeDirty(this, MATERIAL_INDEX);
                 }
             }
         },

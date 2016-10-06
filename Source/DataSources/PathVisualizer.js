@@ -294,7 +294,8 @@ define([
         var showProperty = pathGraphics._show;
         var polyline = item.polyline;
         var show = entity.isShowing && (!defined(showProperty) || showProperty.getValue(time));
-
+        var allowPicking = entity.allowPicking;
+        
         //While we want to show the path, there may not actually be anything to show
         //depending on lead/trail settings.  Compute the interval of the path to
         //show and check against actual availability.
@@ -370,6 +371,7 @@ define([
         polyline.material = MaterialProperty.getValue(time, pathGraphics._material, polyline.material);
         polyline.width = Property.getValueOrDefault(pathGraphics._width, time, defaultWidth);
         polyline.distanceDisplayCondition = Property.getValueOrUndefined(pathGraphics._distanceDisplayCondition, time, polyline.distanceDisplayCondition);
+        polyline.allowPicking = allowPicking;
     };
 
     PolylineUpdater.prototype.removeObject = function(item) {
