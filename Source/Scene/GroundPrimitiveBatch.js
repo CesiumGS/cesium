@@ -73,7 +73,6 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._positions = options.positions;
-        this._colors = options.colors;
         this._offsets = options.offsets;
         this._counts = options.counts;
         this._indexOffsets = options.indexOffsets;
@@ -91,6 +90,7 @@ define([
         this._boundingVolumes = new Array(this._offsets.length);
 
         this._batchTable = options.batchTable;
+        this._batchIds = options.batchIds;
 
         this._batchedIndices = undefined;
 
@@ -120,6 +120,7 @@ define([
     var scratchMaxHeightPosition = new Cartesian3();
     var scratchBVCartographic = new Cartographic();
     var scratchBVRectangle = new Rectangle();
+    var scratchColor = new Color();
 
     function createVertexArray(primitive, context) {
         if (!defined(primitive._positions)) {
@@ -135,6 +136,8 @@ define([
         var boundingVolumes = primitive._boundingVolumes;
         var center = primitive._center;
         var ellipsoid = primitive._ellispoid;
+        var batchIds = primitive._batchIds;
+        var batchTable = primitive._batchTable;
 
         var minHeight = primitive._minimumHeight;
         var maxHeight = primitive._maximumHeight;
@@ -150,17 +153,16 @@ define([
         var batchedIndexCounts = new Array(indexCounts.length);
         var batchedIndices = [];
 
-        var colors = primitive._colors;
-        var colorsLength = colors.length;
-
         var i;
         var j;
         var color;
         var rgba;
 
+        var countsLength = counts.length;
         var buffers = {};
-        for (i = 0; i < colorsLength; ++i) {
-            rgba = colors[i].toRgba();
+        for (i = 0; i < countsLength; ++i) {
+            color = batchTable.getColor(batchIds[i], scratchColor);
+            rgba = color.toRgba();
             if (!defined(buffers[rgba])) {
                 buffers[rgba] = {
                     positionLength : counts[i],
@@ -213,8 +215,8 @@ define([
 
         primitive._batchedIndices = batchedDrawCalls;
 
-        for (i = 0; i < colorsLength; ++i) {
-            color = colors[i];
+        for (i = 0; i < countsLength; ++i) {
+            color = batchTable.getColor(batchIds[i], scratchColor);
             rgba = color.toRgba();
 
             buffer = buffers[rgba];
@@ -225,6 +227,7 @@ define([
 
             var polygonOffset = offsets[i];
             var polygonCount = counts[i];
+            var batchId = batchIds[i];
 
             var minLat = Number.POSITIVE_INFINITY;
             var maxLat = Number.NEGATIVE_INFINITY;
@@ -259,8 +262,8 @@ define([
                 Cartesian3.pack(maxHeightPosition, batchedPositions, positionIndex);
                 Cartesian3.pack(minHeightPosition, batchedPositions, positionIndex + 3);
 
-                batchedIds[batchIdIndex] = i;
-                batchedIds[batchIdIndex + 1] = i;
+                batchedIds[batchIdIndex] = batchId;
+                batchedIds[batchIdIndex + 1] = batchId;
 
                 positionIndex += 6;
                 colorIndex += 8;

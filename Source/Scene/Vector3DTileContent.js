@@ -315,18 +315,19 @@ define([
         // TODO: get feature colors
         var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
         //var randomColors = [Color.WHITE.withAlpha(0.5)];
-        var colors = [];
         var tempLength = offsets.length;
         var n;
+        var color;
+        var batchIds = new Array(tempLength);
         for (n = 0; n < tempLength; ++n) {
-            colors[n] = randomColors[n % randomColors.length];
-            batchTable.setColor(n, colors[n]);
+            color = randomColors[n % randomColors.length];
+            batchTable.setColor(n, color);
+            batchIds[n] = n;
         }
 
         if (positions.length > 0) {
             this._polygons = new GroundPrimitiveBatch({
                 positions : positions,
-                colors : colors,
                 offsets : offsets,
                 counts : counts,
                 indexOffsets : indexOffsets,
@@ -338,19 +339,19 @@ define([
                 quantizedOffset : quantizedOffset,
                 quantizedScale : quantizedScale,
                 boundingVolume : this._tile._boundingVolume.boundingVolume,
-                batchTable : this.batchTable
+                batchTable : this.batchTable,
+                batchIds : batchIds
             });
         }
 
         // TODO: get feature colors/widths
         randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
-        colors = [];
-        var widths = [];
-        var batchIds = [];
         tempLength = polylineOffsets.length;
+        var widths = new Array(tempLength);
+        batchIds = new Array(tempLength);
         for (n = 0; n < tempLength; ++n) {
-            colors[n] = randomColors[n % randomColors.length];
-            batchTable.setColor(n + numberOfPolygons, colors[n]);
+            color = randomColors[n % randomColors.length];
+            batchTable.setColor(n + numberOfPolygons, color);
 
             widths[n] = 2.0;
             batchIds[n] = numberOfPolygons + n;
