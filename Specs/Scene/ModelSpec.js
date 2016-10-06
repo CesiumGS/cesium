@@ -849,6 +849,18 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
+    it('cesiumAir is not picked (allowPicking === false)', function() {
+        cesiumAirModel.show = true;
+        var wasPicking = cesiumAirModel.allowPicking;
+        cesiumAirModel.allowPicking = false;
+        cesiumAirModel.zoomTo();
+
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick).not.toBeDefined();
+        cesiumAirModel.allowPicking = wasPicking;
+        cesiumAirModel.show = false;
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('renders animBoxes without animation', function() {
