@@ -520,7 +520,7 @@ define([
         var color = pointPrimitive.color;
         // The pointPrimitive might not be pickable, in which case pickID is undefined.
         var pickID = pointPrimitive.getPickId(context);
-        var pickColor = defined(pickID) ? pickID.color : Cesium.Color(0.0,0.0,0.0,0.0);
+        var pickColor = defined(pickID) ? pickID.color : new Color(0.0,0.0,0.0,0.0);
         var outlineColor = pointPrimitive.outlineColor;
 
         var red = Color.floatToByte(color.red);
