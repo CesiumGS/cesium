@@ -123,7 +123,8 @@ define([
             var textureValue;
             var billboard = item.billboard;
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(billboardGraphics._show, time, true);
-
+            var allowPicking = entity.allowPicking;
+            
             if (show) {
                 position = Property.getValueOrUndefined(entity._position, time, position);
                 textureValue = Property.getValueOrUndefined(billboardGraphics._image, time);
@@ -169,6 +170,7 @@ define([
             billboard.pixelOffsetScaleByDistance = Property.getValueOrUndefined(billboardGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
             billboard.sizeInMeters = Property.getValueOrDefault(billboardGraphics._sizeInMeters, defaultSizeInMeters);
             billboard.distanceDisplayCondition = Property.getValueOrUndefined(billboardGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
+            billboard.allowPicking = allowPicking;
 
             var subRegion = Property.getValueOrUndefined(billboardGraphics._imageSubRegion, time, boundingRectangle);
             if (defined(subRegion)) {

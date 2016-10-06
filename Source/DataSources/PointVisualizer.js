@@ -166,6 +166,7 @@ define([
                 billboard.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistance);
                 billboard.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
                 billboard.heightReference = heightReference;
+                billboard.allowPicking = allowPicking;
 
                 var newColor = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
                 var newOutlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);

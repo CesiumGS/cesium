@@ -949,7 +949,10 @@ define([
         var i;
         var writer = vafWriters[attributeLocations.compressedAttribute2];
         var color = billboard.color;
-        var pickColor = billboard.getPickId(context).color;
+
+        // The billboard might not be pickable, in which case pickID is undefined.
+        var pickID = billboard.getPickId(context);
+        var pickColor = defined(pickID) ? pickID.color : new Color(0.0,0.0,0.0,0.0);
         var sizeInMeters = billboard.sizeInMeters ? 1.0 : 0.0;
         var validAlignedAxis = Math.abs(Cartesian3.magnitudeSquared(billboard.alignedAxis) - 1.0) < CesiumMath.EPSILON6 ? 1.0 : 0.0;
 

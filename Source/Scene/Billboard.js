@@ -114,6 +114,7 @@ define([
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
+        this._allowPicking = defaultValue(options.allowPicking, true);
         this._pickId = undefined;
         this._pickPrimitive = defaultValue(options._pickPrimitive, this);
         this._billboardCollection = billboardCollection;
@@ -236,6 +237,31 @@ define([
 
                     this._updateClamping();
                     makeDirty(this, POSITION_INDEX);
+                }
+            }
+        },
+
+        /**
+        * Gets whether to allow picking this billboard.
+        * @memberof PointPrimitive.prototype
+        * @type {Boolean}
+        */
+        allowPicking : {
+            get : function() {
+                return this._allowPicking;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug)
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+                if (this._allowPicking !== value) {
+                    this._allowPicking = value;
+                    // Need to destroy the pickId so that it can be recreated (or ignored) as necessary
+                    this._pickId = this._pickId && this._pickId.destroy();
+                    // This forces the pickID color to be re-retrieved by BillboardCollection.writeCompressedAttrib2
+                    makeDirty(this, COLOR_INDEX);
                 }
             }
         },
@@ -876,7 +902,7 @@ define([
     });
 
     Billboard.prototype.getPickId = function(context) {
-        if (!defined(this._pickId)) {
+        if (!defined(this._pickId) && this._allowPicking) {
             this._pickId = context.createPickId({
                 primitive : this._pickPrimitive,
                 collection : this._collection,
