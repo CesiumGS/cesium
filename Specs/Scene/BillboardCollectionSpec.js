@@ -956,7 +956,7 @@ defineSuite([
             id : 'id'
         });
 
-        expect(p.getPickId(scene.context)).toBeUndefined();
+        expect(b.getPickId(scene.context)).toBeUndefined();
     });
 
     it('is not picked (show === false)', function() {
