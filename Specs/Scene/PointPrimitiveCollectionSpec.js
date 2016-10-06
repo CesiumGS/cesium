@@ -636,11 +636,51 @@ defineSuite([
         expect(pick.id).toEqual('id2');
     });
 
-    it('is not picked', function() {
+    it('can change pick id', function() {
+        var p = pointPrimitives.add({
+            position : Cartesian3.ZERO,
+            color : Color.WHITE,
+            id : 'id'
+        });
+
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(p);
+        expect(pick.id).toEqual('id');
+
+        p.id = 'id2';
+
+        pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(p);
+        expect(pick.id).toEqual('id2');
+    });
+
+    it('has undefined pickId (allowPicking === false)', function() {
+        var p = pointPrimitives.add({
+            position : Cartesian3.ZERO,
+            color : Color.WHITE,
+            id : 'id',
+            allowPicking : false
+        });
+
+        expect(p.getPickId(scene.context)).toBeUndefined();
+    });
+
+    it('is not picked (show === false)', function() {
         pointPrimitives.add({
             show : false,
             position : Cartesian3.ZERO,
             color : Color.WHITE
+        });
+
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick).not.toBeDefined();
+    });
+
+    it('is not picked (allowPicking === false)', function() {
+        pointPrimitives.add({
+            position : Cartesian3.ZERO,
+            color : Color.WHITE,
+            allowPicking : false
         });
 
         var pick = scene.pick(new Cartesian2(0, 0));
