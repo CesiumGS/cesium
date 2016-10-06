@@ -682,6 +682,7 @@ define([
                             color: ColorGeometryInstanceAttribute.fromColor(currentColor)
                         }
                     }),
+                    allowPicking: entity.allowPicking,
                     asynchronous : false,
                     shadows : shadows
                 }));

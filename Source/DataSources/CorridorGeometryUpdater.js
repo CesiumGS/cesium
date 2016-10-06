@@ -645,6 +645,7 @@ define([
                             distanceDisplayCondition : distanceDisplayConditionAttribute
                         }
                     }),
+                    allowPicking: entity.allowPicking,
                     asynchronous : false,
                     shadows : shadows
                 }));
