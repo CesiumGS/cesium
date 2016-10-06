@@ -1228,7 +1228,8 @@ define([
             var lengths = segments.lengths;
             var positionsLength = positions.length;
 
-            var pickColor = polyline.getPickId(context).color;
+            var pickID = polyline.getPickId(context);
+            var pickColor = defined(pickID) ? pickID : new Color(0.0,0.0,0.0,0.0);
 
             var segmentIndex = 0;
             var count = 0;

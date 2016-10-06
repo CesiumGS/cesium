@@ -93,6 +93,7 @@ defineSuite([
         p.loop = true;
         p.width = 2;
         p.material = material;
+        p.allowPicking = false;
 
         expect(p.show).toEqual(false);
         expect(p.positions[0]).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -104,6 +105,7 @@ defineSuite([
         expect(p.material.uniforms.color).toEqual(material.uniforms.color);
         expect(p.material.uniforms.outlineColor).toEqual(material.uniforms.outlineColor);
         expect(p.material.uniforms.outlineWidth).toEqual(material.uniforms.outlineWidth);
+        expect(p.allowPicking)toEqual(false);
     });
 
     it('constructor sets loop only when number of positions is greater than 2', function() {
@@ -1385,6 +1387,25 @@ defineSuite([
         expect(pickedObject.id).toEqual('id2');
     });
 
+    it('has undefined pickId (allowPicking === false)', function() {
+        var p = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1000000.0,
+                z : 0.0
+            }, {
+                x : 0.0,
+                y : 1000000.0,
+                z : 0.0
+            }],
+            id : 'id',
+            allowPicking : false
+        });
+
+        scene.primitives.add(polylines);
+        expect(p.getPickId(scene.context)).toBeUndefined();
+    });
+
     it('is not picked (show === false)', function() {
         polylines.add({
             positions : [{
@@ -1416,6 +1437,24 @@ defineSuite([
             }]
         });
         p.material.uniforms.color.alpha = 0.0;
+        scene.primitives.add(polylines);
+
+        expect(scene.pickForSpecs()).toBeUndefined();
+    });
+
+    it('is not picked (allowPicking === false)', function() {
+        polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1000000.0,
+                z : 0.0
+            }, {
+                x : 0.0,
+                y : 1000000.0,
+                z : 0.0
+            }],
+            allowPicking : false,
+        });
         scene.primitives.add(polylines);
 
         expect(scene.pickForSpecs()).toBeUndefined();

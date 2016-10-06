@@ -383,7 +383,7 @@ define([
      * @private
      */
     Polyline.prototype.getPickId = function(context) {
-        if (!defined(this._pickId)) {
+        if (!defined(this._pickId) && this._allowPicking) {
             this._pickId = context.createPickId({
                 primitive : this,
                 collection : this._polylineCollection,
