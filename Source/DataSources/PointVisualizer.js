@@ -110,6 +110,8 @@ define([
             var billboard = item.billboard;
             var heightReference = Property.getValueOrDefault(pointGraphics._heightReference, time, HeightReference.NONE);
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(pointGraphics._show, time, true);
+            var allowPicking = entity.allowPicking;
+            
             if (show) {
                 position = Property.getValueOrUndefined(entity._position, time, position);
                 show = defined(position);
@@ -156,6 +158,7 @@ define([
                 pointPrimitive.outlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
                 pointPrimitive.pixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
                 pointPrimitive.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
+                pointPrimitive.allowPicking = allowPicking;
             } else { // billboard
                 billboard.show = true;
                 billboard.position = position;
