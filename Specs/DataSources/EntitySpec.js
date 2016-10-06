@@ -105,7 +105,8 @@ defineSuite([
             position : new Cartesian3(5, 6, 7),
             rectangle : {},
             viewFrom : new Cartesian3(8, 9, 10),
-            wall : {}
+            wall : {},
+            allowPicking : false
         };
 
         entity = new Entity(options);
@@ -135,6 +136,7 @@ defineSuite([
         expect(entity.rectangle).toBeInstanceOf(RectangleGraphics);
         expect(entity.viewFrom).toBeInstanceOf(ConstantProperty);
         expect(entity.wall).toBeInstanceOf(WallGraphics);
+        expect(entity.allowPicking).toBe(options.allowPicking);
 
         expect(entity.entityCollection).toBeUndefined();
     });
