@@ -23,7 +23,7 @@ define([
     './Cesium3DTileContentState',
     './Cesium3DTileFeature',
     './Cesium3DTileGroundPolylines',
-    './Cesium3DTileGroundPrimitive'
+    './GroundPrimitiveBatch'
 ], function(
     BoundingSphere,
     Cartesian3,
@@ -48,7 +48,7 @@ define([
     Cesium3DTileContentState,
     Cesium3DTileFeature,
     Cesium3DTileGroundPolylines,
-    Cesium3DTileGroundPrimitive) {
+    GroundPrimitiveBatch) {
     'use strict';
 
     /**
@@ -324,7 +324,7 @@ define([
         }
 
         if (positions.length > 0) {
-            this._polygons = new Cesium3DTileGroundPrimitive({
+            this._polygons = new GroundPrimitiveBatch({
                 positions : positions,
                 colors : colors,
                 offsets : offsets,
