@@ -105,7 +105,7 @@ defineSuite([
         expect(p.material.uniforms.color).toEqual(material.uniforms.color);
         expect(p.material.uniforms.outlineColor).toEqual(material.uniforms.outlineColor);
         expect(p.material.uniforms.outlineWidth).toEqual(material.uniforms.outlineWidth);
-        expect(p.allowPicking)toEqual(false);
+        expect(p.allowPicking).toEqual(false);
     });
 
     it('constructor sets loop only when number of positions is greater than 2', function() {
