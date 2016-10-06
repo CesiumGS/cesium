@@ -113,7 +113,8 @@ define([
                 model = Model.fromGltf({
                     url : uri,
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures),
-                    scene : this._scene
+                    scene : this._scene,
+                    allowPicking: entity.allowPicking,
                 });
 
                 model.readyPromise.otherwise(onModelError);
