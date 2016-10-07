@@ -938,7 +938,7 @@ define([
         } else {
             count = defaultValue(count, va.numberOfVertices);
             if (instanceCount === 0) {
-                context._gl.drawArrays(primitiveType, offset, count);
+                context._gl.drawArrays(primitiveType, 0, count);
             } else {
                 context.glDrawArraysInstanced(primitiveType, offset, count, instanceCount);
             }
