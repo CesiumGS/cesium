@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### 1.27 - 2016-11-01
+
+* Deprecated
+    * 
+* Breaking changes
+    * 
+* Fixed a crash that would occur when using dynamic `distanceDisplayCondition` properties. [#4403](https://github.com/AnalyticalGraphicsInc/cesium/pull/4403)
+
 ### 1.26 - 2016-10-03
 
 * Deprecated
