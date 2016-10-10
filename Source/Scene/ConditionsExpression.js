@@ -33,8 +33,8 @@ define([
      * var expression = new Cesium.Expression({
      *     expression : 'regExp("^1(\\d)").exec(${id})',
      *     conditions : [
-     *         ['${expression} === "1"', 'color("#FF0000")'],
-     *         ['${expression} === "2"', 'color("#00FF00")'],
+     *         ['${expression} == "1"', 'color("#FF0000")'],
+     *         ['${expression} == "2"', 'color("#00FF00")'],
      *         ['true', 'color("#FFFFFF")']
      *     ]
      * });

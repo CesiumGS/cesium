@@ -98,11 +98,11 @@ addStyle('Hide Low Temperature', {
 });
 
 addStyle('Show Subsections', {
-    show : "${id} === 1 || ${id} > 250 && ${id} < 300"
+    show : "${id} == 1 || ${id} > 250 && ${id} < 300"
 });
 
 addStyle('Mod', {
-    show : "${id} % 2 === 0"
+    show : "${id} % 2 == 0"
 });
 
 addStyle('Secondary Color', {

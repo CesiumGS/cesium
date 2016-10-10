@@ -18,7 +18,7 @@ define([
     "use strict";
 
     var unaryOperators = ['!', '-', '+'];
-    var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
+    var binaryOperators = ['+', '-', '*', '/', '%', '==', '!=', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
 
     var variableRegex = /\${(.*?)}/g;
     var backslashRegex = /\\/g;
@@ -531,9 +531,9 @@ define([
                 node.evaluate = node._evaluateDivide;
             } else if (node._value === '%') {
                 node.evaluate = node._evaluateMod;
-            } else if (node._value === '===') {
+            } else if (node._value === '==') {
                 node.evaluate = node._evaluateEquals;
-            } else if (node._value === '!==') {
+            } else if (node._value === '!=') {
                 node.evaluate = node._evaluateNotEquals;
             } else if (node._value === '<') {
                 node.evaluate = node._evaluateLessThan;
@@ -840,7 +840,10 @@ define([
         if ((right instanceof Color) && (left instanceof Color)) {
             return Color.equals(left, right);
         }
-        return left === right;
+
+        // Specifically want to do an abstract equality comparison (==) instead of a strict equality comparison (===)
+        // so that cases like "5 === '5'" return true. Tell jsHint to ignore this line.
+        return left == right; // jshint ignore:line
     };
 
     Node.prototype._evaluateNotEquals = function(feature) {
@@ -1029,14 +1032,12 @@ define([
         var value = this._value;
 
         // Right may be a string if it's a member variable: e.g. "${property.name}"
-        var stringMember = typeof(this._right) === 'string';
-        //>>includeStart('debug', pragmas.debug);
-        if (stringMember) {
+        if (typeof(this._right) === 'string') {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Error generating style shader: string members are not supported.');
-        }
-        //>>includeEnd('debug');
-        if (stringMember) {
-            return undefined;
+            //>>includeEnd('debug');
+            // Return undefined when not in debug. Tell jsHint to ignore this line.
+            return; // jshint ignore:line
         }
 
         if (defined(this._left)) {
@@ -1094,13 +1095,9 @@ define([
                 //>>includeEnd('debug');
                 return value + left;
             case ExpressionNodeType.BINARY:
-                // Supported types: ||, &&, ===, !==, <, >, <=, >=, +, -, *, /, %
+                // Supported types: ||, &&, ==, !=, <, >, <=, >=, +, -, *, /, %
                 if (value === '%') {
                     return 'mod(' + left + ', ' + right + ')';
-                } else if (value === '===') {
-                    return '(' + left + ' == ' + right + ')';
-                } else if (value === '!==') {
-                    return '(' + left + ' != ' + right + ')';
                 }
                 return '(' + left + ' ' + value + ' ' + right + ')';
             case ExpressionNodeType.CONDITIONAL:

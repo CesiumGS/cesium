@@ -46,7 +46,7 @@ defineSuite([
 
     var jsonExpWithUndefinedExpression = {
         conditions : [
-            ['${expression} === undefined', 'color("blue")'],
+            ['${expression} == undefined', 'color("blue")'],
             ['true', 'color("lime")']
         ]
     };

@@ -161,11 +161,11 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('2 == 3');
+            return new Expression('2 === 3');
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('2 != 3');
+            return new Expression('2 !== 3');
         }).toThrowDeveloperError();
 
         expect(function() {
@@ -544,24 +544,24 @@ defineSuite([
     });
 
     it('evaluates binary equals', function() {
-        var expression = new Expression('\'hello\' === \'hello\'');
+        var expression = new Expression('\'hello\' == \'hello\'');
         expect(expression.evaluate(undefined)).toEqual(true);
 
-        expression = new Expression('1 === 2');
+        expression = new Expression('1 == 2');
         expect(expression.evaluate(undefined)).toEqual(false);
 
-        expression = new Expression('false === true === false');
+        expression = new Expression('false == true == false');
         expect(expression.evaluate(undefined)).toEqual(true);
     });
 
     it('evaluates binary not equals', function() {
-        var expression = new Expression('\'hello\' !== \'hello\'');
+        var expression = new Expression('\'hello\' != \'hello\'');
         expect(expression.evaluate(undefined)).toEqual(false);
 
-        expression = new Expression('1 !== 2');
+        expression = new Expression('1 != 2');
         expect(expression.evaluate(undefined)).toEqual(true);
 
-        expression = new Expression('false !== true !== false');
+        expression = new Expression('false != true != false');
         expect(expression.evaluate(undefined)).toEqual(true);
     });
 
@@ -709,16 +709,16 @@ defineSuite([
         expression = new Expression('rgba(255, 255, 255, 1.0) % rgba(255, 255, 255, 1.0)');
         expect(expression.evaluate(undefined)).toEqual(new Color(0, 0, 0, 0));
 
-        expression = new Expression('color(\'green\') === color(\'green\')');
+        expression = new Expression('color(\'green\') == color(\'green\')');
         expect(expression.evaluate(undefined)).toEqual(true);
 
-        expression = new Expression('color() === color()');
+        expression = new Expression('color() == color()');
         expect(expression.evaluate(undefined)).toEqual(true);
 
-        expression = new Expression('!!color() === true');
+        expression = new Expression('!!color() == true');
         expect(expression.evaluate(undefined)).toEqual(true);
 
-        expression = new Expression('color(\'green\') !== color(\'green\')');
+        expression = new Expression('color(\'green\') != color(\'green\')');
         expect(expression.evaluate(undefined)).toEqual(false);
     });
 
@@ -951,7 +951,7 @@ defineSuite([
             color : Color.BLUE
         });
 
-        expression = new Expression('${feature} === ${feature.feature}');
+        expression = new Expression('${feature} == ${feature.feature}');
         expect(expression.evaluate(feature)).toEqual(true);
     });
 
@@ -1293,14 +1293,14 @@ defineSuite([
     });
 
     it('gets shader expression for binary equals', function() {
-        var expression = new Expression('1.0 === 2.0');
+        var expression = new Expression('1.0 == 2.0');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = '(1.0 == 2.0)';
         expect(shaderExpression).toEqual(expected);
     });
 
     it('gets shader expression for binary not equals', function() {
-        var expression = new Expression('1.0 !== 2.0');
+        var expression = new Expression('1.0 != 2.0');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = '(1.0 != 2.0)';
         expect(shaderExpression).toEqual(expected);
