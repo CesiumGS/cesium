@@ -43,7 +43,6 @@ define([
     function Cesium3DTileGroundPolylines(options) {
         this._positions = options.positions;
         this._widths = options.widths;
-        this._offsets = options.offsets;
         this._counts = options.counts;
         this._batchIds = options.batchIds;
 
@@ -89,7 +88,6 @@ define([
         var positions = primitive._positions;
         var widths = primitive._widths;
         var ids = primitive._batchIds;
-        var offsets = primitive._offsets;
         var counts = primitive._counts;
 
         var positionsLength = positions.length / 3;
@@ -111,10 +109,10 @@ define([
         var decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
 
         var i;
-        var length = offsets.length;
+        var offset = 0;
+        var length = counts.length;
 
         for (i = 0; i < length; ++i) {
-            var offset = offsets[i];
             var count = counts [i];
             var width = widths[i];
             var id = ids[i];
@@ -164,6 +162,8 @@ define([
                     batchIds[batchIdIndex++] = id;
                 }
             }
+
+            offset += count;
         }
 
         var indices = IndexDatatype.createTypedArray(size, positionsLength * 6 - 6);

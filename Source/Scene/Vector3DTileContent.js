@@ -249,14 +249,11 @@ define([
         byteOffset += sizeOfUint32;
 
         var featureTableString = getStringFromTypedArray(uint8Array, byteOffset, featureTableJSONByteLength);
-        var featureTableJSON = JSON.parse(featureTableString);
+        var featureTableJson = JSON.parse(featureTableString);
         byteOffset += featureTableJSONByteLength;
 
         var featureTableBinary = new Uint8Array(arrayBuffer, byteOffset, featureTableBinaryByteLength);
         byteOffset += featureTableBinaryByteLength;
-
-        var numberOfPolygons = featureTableJSON.NUMBER_OF_POLYGONS;
-        var numberOfPolylines = featureTableJSON.NUMBER_OF_POLYLINES;
 
         var batchTableJson;
         var batchTableBinary;
@@ -279,6 +276,9 @@ define([
             }
         }
 
+        var numberOfPolygons = featureTableJson.POLYGONS_LENGTH;
+        var numberOfPolylines = featureTableJson.POLYLINES_LENGTH;
+
         var batchTable = new Cesium3DTileBatchTable(this, numberOfPolygons + numberOfPolylines, batchTableJson, batchTableBinary, createColorChangedCallback(this, numberOfPolygons));
         this.batchTable = batchTable;
 
@@ -288,34 +288,27 @@ define([
         byteOffset += positionByteLength;
         var polylinePositions = new Uint16Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfUint16);
 
-        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_POSITION_OFFSETS.offset;
-        var offsets = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
-
-        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_POSITION_COUNTS.offset;
+        byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_COUNT.byteOffset;
         var counts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
 
-        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_INDICES_OFFSETS.offset;
-        var indexOffsets = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
-
-        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_INDICES_COUNTS.offset;
+        byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_INDICES.byteOffset;
         var indexCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
 
-        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYLINE_POSITION_OFFSETS.offset;
-        var polylineOffsets = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolylines);
-
-        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYLINE_POSITION_COUNTS.offset;
+        byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_COUNT.byteOffset;
         var polylineCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolylines);
 
-        var center = Cartesian3.unpack(featureTableJSON.CENTER);
-        var minHeight = featureTableJSON.MINIMUM_HEIGHT;
-        var maxHeight = featureTableJSON.MAXIMUM_HEIGHT;
-        var quantizedOffset = Cartesian3.unpack(featureTableJSON.QUANTIZED_VOLUME_OFFSET);
-        var quantizedScale = Cartesian3.unpack(featureTableJSON.QUANTIZED_VOLUME_SCALE);
+        var center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
+        var minHeight = featureTableJson.MINIMUM_HEIGHT;
+        var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
+        var quantizedOffset = Cartesian3.unpack(featureTableJson.QUANTIZED_VOLUME_OFFSET);
+        var quantizedScale = Cartesian3.unpack(featureTableJson.QUANTIZED_VOLUME_SCALE);
+
+        //var featureTable = new Cesium3DTileFeatureTable(featureTableJson, featureTableBinary);
 
         // TODO: get feature colors
         var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
         //var randomColors = [Color.WHITE.withAlpha(0.5)];
-        var tempLength = offsets.length;
+        var tempLength = counts.length;
         var n;
         var color;
         var batchIds = new Array(tempLength);
@@ -328,9 +321,7 @@ define([
         if (positions.length > 0) {
             this._polygons = new GroundPrimitiveBatch({
                 positions : positions,
-                offsets : offsets,
                 counts : counts,
-                indexOffsets : indexOffsets,
                 indexCounts : indexCounts,
                 indices : indices,
                 minimumHeight : minHeight,
@@ -346,7 +337,7 @@ define([
 
         // TODO: get feature colors/widths
         randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
-        tempLength = polylineOffsets.length;
+        tempLength = polylineCounts.length;
         var widths = new Array(tempLength);
         batchIds = new Array(tempLength);
         for (n = 0; n < tempLength; ++n) {
@@ -361,7 +352,6 @@ define([
             this._polylines = new Cesium3DTileGroundPolylines({
                 positions : polylinePositions,
                 widths : widths,
-                offsets : polylineOffsets,
                 counts : polylineCounts,
                 batchIds : batchIds,
                 center : center,

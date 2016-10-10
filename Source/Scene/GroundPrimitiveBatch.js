@@ -73,9 +73,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._positions = options.positions;
-        this._offsets = options.offsets;
         this._counts = options.counts;
-        this._indexOffsets = options.indexOffsets;
         this._indexCounts = options.indexCounts;
         this._indices = options.indices;
 
@@ -87,7 +85,7 @@ define([
         this._quantizedScale = options.quantizedScale;
 
         this._boundingVolume = options.boundingVolume;
-        this._boundingVolumes = new Array(this._offsets.length);
+        this._boundingVolumes = new Array(this._counts.length);
 
         this._batchTable = options.batchTable;
         this._batchIds = options.batchIds;
@@ -128,9 +126,7 @@ define([
         }
 
         var positions = primitive._positions;
-        var offsets = primitive._offsets;
         var counts = primitive._counts;
-        var indexOffsets = primitive._indexOffsets;
         var indexCounts = primitive._indexCounts;
         var indices = primitive._indices;
         var boundingVolumes = primitive._boundingVolumes;
@@ -146,6 +142,24 @@ define([
         var quantizedScale = primitive._quantizedScale;
         var decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
 
+        var i;
+        var j;
+        var color;
+        var rgba;
+
+        var countsLength = counts.length;
+        var offsets = new Array(countsLength);
+        var indexOffsets = new Array(countsLength);
+        var currentOffset = 0;
+        var currentIndexOffset = 0;
+        for (i = 0; i < countsLength; ++i) {
+            offsets[i] = currentOffset;
+            indexOffsets[i] = currentIndexOffset;
+
+            currentOffset += counts[i];
+            currentIndexOffset += indexCounts[i];
+        }
+
         var positionsLength = positions.length;
         var batchedPositions = new Float32Array(positionsLength * 2);
         var batchedIds = new Uint16Array(positionsLength / 3 * 2);
@@ -153,12 +167,6 @@ define([
         var batchedIndexCounts = new Array(indexCounts.length);
         var batchedIndices = [];
 
-        var i;
-        var j;
-        var color;
-        var rgba;
-
-        var countsLength = counts.length;
         var buffers = {};
         for (i = 0; i < countsLength; ++i) {
             color = batchTable.getColor(batchIds[i], scratchColor);
