@@ -561,7 +561,7 @@ define([
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
      *
      * @param {PrimitiveCollection} primitives The primitive collection to use.
-     * @param {PrimitiveCollection} primitives The primitive collection to use for GroundPrimitives.
+     * @param {PrimitiveCollection} groundPrimitives The primitive collection to use for GroundPrimitives.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
