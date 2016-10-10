@@ -1030,13 +1030,12 @@ define([
 
         // Right may be a string if it's a member variable: e.g. "${property.name}"
         var stringMember = typeof(this._right) === 'string';
+        //>>includeStart('debug', pragmas.debug);
         if (stringMember) {
-            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Error generating style shader: string members are not supported.');
-            //>>includeEnd('debug');
         }
+        //>>includeEnd('debug');
         if (stringMember) {
-            // Avoid jsHint error by creating a new block. Want to return undefined in release.
             return undefined;
         }
 

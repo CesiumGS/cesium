@@ -14,6 +14,7 @@ define([
         '../Core/loadArrayBuffer',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/oneTimeWarning',
         '../Core/PrimitiveType',
         '../Core/Request',
         '../Core/RequestScheduler',
@@ -48,6 +49,7 @@ define([
         loadArrayBuffer,
         Matrix3,
         Matrix4,
+        oneTimeWarning,
         PrimitiveType,
         Request,
         RequestScheduler,
@@ -439,6 +441,7 @@ define([
                     var typedArray = property.typedArray;
                     var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
                     if (componentDatatype === ComponentDatatype.INT || componentDatatype === ComponentDatatype.UNSIGNED_INT || componentDatatype === ComponentDatatype.DOUBLE) {
+                        oneTimeWarning('Cast pnts property to floats', 'Point cloud property "' + name + '" will be casted to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.');
                         property.typedArray = new Float32Array(typedArray);
                     }
                 }
