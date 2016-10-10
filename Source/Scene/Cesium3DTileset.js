@@ -1524,8 +1524,8 @@ define([
      */
     Cesium3DTileset.prototype.update = function(frameState) {
         if (!this._ready && defined(this._root)) {
-            var that = this;
             this._ready = true;
+            var that = this;
             frameState.afterRender.push(function() {
                 that._readyPromise.resolve(that);
             });
