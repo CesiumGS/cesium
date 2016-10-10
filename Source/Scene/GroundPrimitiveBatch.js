@@ -103,6 +103,9 @@ define([
 
         this._commands = [];
         this._pickCommands = [];
+
+        this._constantColor = Color.clone(Color.WHITE);
+        this._highlightColor = this._constantColor;
     }
 
     var attributeLocations = {
@@ -563,6 +566,9 @@ define([
                 Matrix4.setTranslation(modifiedModelViewScratch, rtcScratch, modifiedModelViewScratch);
                 Matrix4.multiply(projectionMatrix, modifiedModelViewScratch, modifiedModelViewScratch);
                 return modifiedModelViewScratch;
+            },
+            u_highlightColor : function() {
+                return primitive._highlightColor;
             }
         };
     }
@@ -785,6 +791,10 @@ define([
             command.pass = Pass.GROUND;
         }
     }
+
+    GroundPrimitiveBatch.prototype.applyDebugSettings = function(enabled, color) {
+        this._highlightColor = enabled ? color : this._constantColor;
+    };
 
     GroundPrimitiveBatch.prototype.updateCommands = function(batchId, color) {
         var offset = this._indexOffsets[batchId];

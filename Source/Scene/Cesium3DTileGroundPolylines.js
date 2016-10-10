@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/destroyObject',
@@ -20,6 +21,7 @@ define([
         './Pass'
     ], function(
         Cartesian3,
+        Color,
         ComponentDatatype,
         defined,
         destroyObject,
@@ -57,6 +59,9 @@ define([
         this._sp = undefined;
         this._rs = undefined;
         this._uniformMap = undefined;
+
+        this._constantColor = Color.clone(Color.WHITE);
+        this._highlightColor = this._constantColor;
     }
 
     var attributeLocations = {
@@ -264,6 +269,9 @@ define([
                 Matrix4.multiplyByPoint(modifiedModelViewScratch, primitive._center, rtcScratch);
                 Matrix4.setTranslation(modifiedModelViewScratch, rtcScratch, modifiedModelViewScratch);
                 return modifiedModelViewScratch;
+            },
+            u_highlightColor : function() {
+                return primitive._highlightColor;
             }
         };
     }
@@ -298,9 +306,10 @@ define([
     }
 
     var PolylineFS =
+        'uniform vec4 u_highlightColor; \n' +
         'void main()\n' +
         '{\n' +
-        '    gl_FragColor = vec4(1.0);\n' +
+        '    gl_FragColor = u_highlightColor;\n' +
         '}\n';
 
     function createShaders(primitive, context) {
@@ -385,6 +394,11 @@ define([
 
         frameState.commandList.push(primitive._pickCommand);
     }
+
+    Cesium3DTileGroundPolylines.prototype.applyDebugSettings = function(enabled, color) {
+        this._highlightColor = enabled ? color : this._constantColor;
+    };
+
 
     Cesium3DTileGroundPolylines.prototype.update = function(frameState) {
         var context = frameState.context;

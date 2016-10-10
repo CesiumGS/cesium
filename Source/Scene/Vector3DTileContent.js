@@ -306,14 +306,14 @@ define([
         //var featureTable = new Cesium3DTileFeatureTable(featureTableJson, featureTableBinary);
 
         // TODO: get feature colors
-        var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
-        //var randomColors = [Color.WHITE.withAlpha(0.5)];
+        //var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
+        var randomColors = [Color.WHITE.withAlpha(0.5)];
         var tempLength = counts.length;
         var n;
         var color;
         var batchIds = new Array(tempLength);
         for (n = 0; n < tempLength; ++n) {
-            color = randomColors[n % randomColors.length];
+            color = color = randomColors[n % randomColors.length];
             batchTable.setColor(n, color);
             batchIds[n] = n;
         }
@@ -336,7 +336,7 @@ define([
         }
 
         // TODO: get feature colors/widths
-        randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
+        //randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
         tempLength = polylineCounts.length;
         var widths = new Array(tempLength);
         batchIds = new Array(tempLength);
@@ -373,6 +373,13 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
+        if (defined(this._polygons)) {
+            this._polygons.applyDebugSettings(enabled, color);
+        }
+
+        if (defined(this._polylines)) {
+            this._polylines.applyDebugSettings(enabled, color);
+        }
     };
 
     /**
