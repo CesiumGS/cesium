@@ -382,7 +382,7 @@ defineSuite([
 
             // Applies translucency
             tileset.style = new Cesium3DTileStyle({
-                color : 'rgba(255, 0, 0, 0.1)'
+                color : 'rgba(255, 0, 0, 0.005)'
             });
             var pixelColor = scene.renderForSpecs();
             expect(pixelColor[0]).toBeLessThan(255);
