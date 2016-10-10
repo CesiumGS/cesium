@@ -289,7 +289,8 @@ define([
         this.loadProgress = new Event();
 
         /**
-         * The event fired to indicate that all tiles in view are loaded.
+         * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. The tileset
+         * is completely loaded for this view.
          * <p>
          * This event is fired at the end of the frame after the scene is rendered.
          * </p>
@@ -301,6 +302,8 @@ define([
          * city.allTilesLoaded.addEventListener(function() {
          *     console.log('All tiles are loaded');
          * });
+         *
+         * @see Cesium3DTileset#viewComplete
          */
         this.allTilesLoaded = new Event();
 
@@ -489,7 +492,8 @@ define([
         },
 
         /**
-         * When <code>true</code>, all tiles in view are are loaded.
+         * When <code>true</code>, all tiles that meet the screen space error this frame are loaded. The tileset is
+         * completely loaded for this view.
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -497,6 +501,8 @@ define([
          * @readonly
          *
          * @default false
+         *
+         * @see Cesium3DTileset#allTilesLoaded
          */
         viewComplete : {
             get : function() {
