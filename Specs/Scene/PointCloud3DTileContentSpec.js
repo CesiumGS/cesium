@@ -458,6 +458,12 @@ defineSuite([
                 show : '${POSITION}[0] > 0.5'
             });
             expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+
+            // Apply size style
+            tileset.style = new Cesium3DTileStyle({
+                size : 5.0
+            });
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         });
     });
 

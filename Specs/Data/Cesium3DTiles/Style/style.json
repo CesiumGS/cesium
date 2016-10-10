@@ -1,4 +1,5 @@
 {
   "color" : "color('red')",
-  "show" : "${id} < 100"
+  "show" : "${id} < 100",
+  "size" : "${id} / 100"
 }

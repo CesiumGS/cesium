@@ -27,6 +27,7 @@ define([
 
     var DEFAULT_JSON_COLOR_EXPRESSION = 'color("#ffffff")';
     var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
+    var DEFAULT_JSON_NUMBER_EXPRESSION = 1.0;
 
     /**
      * Evaluates an expression defined using the
@@ -60,12 +61,15 @@ define([
         this._readyPromise = when.defer();
         this._color = undefined;
         this._show = undefined;
+        this._size = undefined;
         this._meta = undefined;
 
         this._colorShaderFunction = undefined;
         this._showShaderFunction = undefined;
+        this._sizeShaderFunction = undefined;
         this._colorShaderFunctionReady = false;
         this._showShaderFunctionReady = false;
+        this._sizeShaderFunctionReady = false;
 
         var style = this;
         if (typeof data === 'string') {
@@ -96,8 +100,13 @@ define([
             that._showShaderFunctionReady = true;
         }
 
+        if (!defined(styleJson.size)) {
+            that._sizeShaderFunctionReady = true;
+        }
+
         var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
+        var sizeExpression = defaultValue(styleJson.size, DEFAULT_JSON_NUMBER_EXPRESSION);
 
         var color;
         if (typeof(colorExpression) === 'string') {
@@ -118,6 +127,17 @@ define([
         }
 
         that._show = show;
+
+        var size;
+        if (typeof(sizeExpression) === 'number') {
+            size = new Expression(String(sizeExpression));
+        } else if (typeof(sizeExpression) === 'string') {
+            size = new Expression(sizeExpression);
+        } else if (defined(sizeExpression.conditions)) {
+            size = new ConditionsExpression(sizeExpression);
+        }
+
+        that._size = size;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -280,6 +300,50 @@ define([
         },
 
         /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>size</code> property.
+         * <p>
+         * The expression must return or convert to a <code>Number</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     size : '(${Temperature} > 90) ? 2.0 : 1.0'
+         * });
+         * style.size.evaluate(feature); // returns a Number
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override size expression with a custom function
+         * style.size = {
+         *     evaluate : function(feature) {
+         *         return 1.0;
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        size : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._size;
+            },
+            set : function(value) {
+                this._size = value;
+            }
+        },
+
+        /**
          * Gets or sets the object containing application-specific expression that can be explicitly
          * evaluated, e.g., for display in a UI.
          *
@@ -357,6 +421,28 @@ define([
         this._showShaderFunctionReady = true;
         this._showShaderFunction = this.show.getShaderFunction(functionName, attributePrefix, shaderState, 'bool');
         return this._showShaderFunction;
+    };
+
+    /**
+     * Gets the size shader function for this style.
+     *
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+     *
+     * @returns {String} The shader function.
+     *
+     * @private
+     */
+    Cesium3DTileStyle.prototype.getSizeShaderFunction = function(functionName, attributePrefix, shaderState) {
+        if (this._sizeShaderFunctionReady) {
+            // Return the cached result, may be undefined
+            return this._sizeShaderFunction;
+        }
+
+        this._sizeShaderFunctionReady = true;
+        this._sizeShaderFunction = this.size.getShaderFunction(functionName, attributePrefix, shaderState, 'float');
+        return this._sizeShaderFunction;
     };
 
     return Cesium3DTileStyle;

@@ -820,6 +820,7 @@ define([
 
         var colorStyleFunction;
         var showStyleFunction;
+        var sizeStyleFunction;
         var styleTranslucent = isTranslucent;
 
         if (hasBatchTable) {
@@ -833,6 +834,7 @@ define([
             };
             colorStyleFunction = style.getColorShaderFunction('getColorFromStyle', 'czm_tiles3d_style_', shaderState);
             showStyleFunction = style.getShowShaderFunction('getShowFromStyle', 'czm_tiles3d_style_', shaderState);
+            sizeStyleFunction = style.getSizeShaderFunction('getSizeFromStyle', 'czm_tiles3d_style_', shaderState);
             styleTranslucent = shaderState.translucent;
         }
 
@@ -840,6 +842,7 @@ define([
 
         var hasColorStyle = defined(colorStyleFunction);
         var hasShowStyle = defined(showStyleFunction);
+        var hasSizeStyle = defined(sizeStyleFunction);
 
         // Get the properties in use by the style
         var styleableProperties = [];
@@ -854,6 +857,11 @@ define([
             getStyleableProperties(showStyleFunction, styleableProperties);
             getStyleableSemantics(showStyleFunction, styleableSemantics);
             showStyleFunction = modifyStyleFunction(showStyleFunction);
+        }
+        if (hasSizeStyle) {
+            getStyleableProperties(sizeStyleFunction, styleableProperties);
+            getStyleableSemantics(sizeStyleFunction, styleableSemantics);
+            sizeStyleFunction = modifyStyleFunction(sizeStyleFunction);
         }
 
         var usesColorSemantic = styleableSemantics.indexOf('COLOR') >= 0;
@@ -966,6 +974,10 @@ define([
             vs += showStyleFunction;
         }
 
+        if (hasSizeStyle) {
+            vs += sizeStyleFunction;
+        }
+
         vs += 'void main() \n' +
               '{ \n';
 
@@ -1012,6 +1024,12 @@ define([
             vs += '    float show = float(getShowFromStyle(position, color, normal)); \n';
         }
 
+        if (hasSizeStyle) {
+            vs += '    gl_PointSize = getSizeFromStyle(position, color, normal); \n';
+        } else {
+            vs += '    gl_PointSize = u_pointSize; \n';
+        }
+
         vs += '    color = color * u_highlightColor; \n';
 
         if (hasNormals) {
@@ -1022,8 +1040,7 @@ define([
         }
 
         vs += '    v_color = color; \n' +
-              '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n' +
-              '    gl_PointSize = u_pointSize; \n';
+              '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
         if (hasNormals && backFaceCulling) {
             vs += '    float visible = step(-normal.z, 0.0); \n' +

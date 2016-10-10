@@ -2,13 +2,11 @@
 define([
        '../Core/Color',
        '../Core/defined',
-       '../Core/defineProperties',
-       './PointCloud3DTileContent'
+       '../Core/defineProperties'
     ], function(
         Color,
         defined,
-        defineProperties,
-        PointCloud3DTileContent) {
+        defineProperties) {
     'use strict';
 
     /**

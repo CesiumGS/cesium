@@ -129,6 +129,11 @@ addStyle('Color based on position', {
     color : "rgb(${POSITION}[0] * 255, ${POSITION}[1] * 255, ${POSITION}[2] * 255)"
 });
 
+addStyle('Style point size', {
+    color : "color('red')",
+    size : "${temperature} * 10"
+});
+
 function setStyle(style) {
     tileset.style = new Cesium.Cesium3DTileStyle(style);
 }
