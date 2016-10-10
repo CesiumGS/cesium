@@ -303,7 +303,7 @@ define([
          *     console.log('All tiles are loaded');
          * });
          *
-         * @see Cesium3DTileset#viewComplete
+         * @see Cesium3DTileset#tilesLoaded
          */
         this.allTilesLoaded = new Event();
 
@@ -504,7 +504,7 @@ define([
          *
          * @see Cesium3DTileset#allTilesLoaded
          */
-        viewComplete : {
+        tilesLoaded : {
             get : function() {
                 var stats = this._statistics;
                 return this.ready && (stats.numberOfPendingRequests === 0) && (stats.numberProcessing === 0) && (stats.numberOfAttemptedRequests === 0);
@@ -1480,7 +1480,7 @@ define([
             });
         }
 
-        if (progressChanged && tileset.viewComplete) {
+        if (progressChanged && tileset.tilesLoaded) {
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });

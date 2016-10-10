@@ -83,10 +83,10 @@ define([
         expectRender(scene, tileset);
     };
 
-    Cesium3DTilesTester.waitForViewComplete = function(scene, tileset) {
+    Cesium3DTilesTester.waitForTilesLoaded = function(scene, tileset) {
         return pollToPromise(function() {
             scene.renderForSpecs();
-            return tileset.viewComplete;
+            return tileset.tilesLoaded;
         }).then(function() {
             return tileset;
         });
@@ -107,7 +107,7 @@ define([
             url : url
         }));
 
-        return Cesium3DTilesTester.waitForViewComplete(scene, tileset);
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     };
 
     Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {

@@ -260,7 +260,7 @@ defineSuite([
             expect(stats.numberOfPendingRequests).toEqual(4);
             expect(stats.numberProcessing).toEqual(0);
 
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 expect(stats.numberOfPendingRequests).toEqual(0);
                 expect(stats.numberProcessing).toEqual(0);
 
@@ -323,7 +323,7 @@ defineSuite([
             expect(stats.numberProcessing).toEqual(0);
 
             // Wait for all tiles to load and check that they are all visited and rendered
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 expect(stats.visited).toEqual(5);
                 expect(stats.numberOfCommands).toEqual(5);
@@ -552,7 +552,7 @@ defineSuite([
             expect(stats.visited).toEqual(1); // Visits root only, child tiles aren't ready
             expect(stats.numberOfCommands).toEqual(1);
 
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 // Even though we are only looking at the lower-left tile, all child tiles are loaded
                 scene.renderForSpecs();
                 expect(stats.visited).toEqual(2); // Only visible tiles are visited - root and ll
@@ -589,7 +589,7 @@ defineSuite([
             expect(stats.visited).toEqual(1); // Visits root only, ll (lower-left child) isn't ready
             expect(stats.numberOfCommands).toEqual(1);
 
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 expect(stats.visited).toEqual(2); // Visits root and ll
                 expect(stats.numberOfCommands).toEqual(1); // ll is the only visible child and is ready, so it replaces root
@@ -600,7 +600,7 @@ defineSuite([
                 expect(stats.visited).toEqual(2); // Visits root and ll
                 expect(stats.numberOfCommands).toEqual(2); // Now other children are visible but not ready. Render root and any visible ready children (only ll)
 
-                return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                     scene.renderForSpecs();
                     expect(stats.visited).toEqual(5); // Visits root and all children
                     expect(stats.numberOfCommands).toEqual(4); // Renders children, root is replaced because all visible children are ready
@@ -667,7 +667,7 @@ defineSuite([
                 expect(stats.numberOfCommands).toEqual(1); // Render root
                 expect(stats.numberOfPendingRequests).toEqual(4); // Loading grandchildren
 
-                return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                     scene.renderForSpecs();
                     expect(stats.numberOfCommands).toEqual(4); // Render children
                 });
@@ -693,14 +693,14 @@ defineSuite([
             var root = tileset._root;
             expect(root.descendantsWithContent).toBeDefined();
             expect(root.descendantsWithContent.length).toEqual(2);
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toEqual(1);
 
                 setZoom(5.0); // Zoom into the last tile, when it is ready the root is refinable
                 scene.renderForSpecs();
 
-                return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                     scene.renderForSpecs();
                     expect(stats.numberOfCommands).toEqual(2); // Renders two content tiles
                 });
@@ -735,7 +735,7 @@ defineSuite([
                 expect(stats.numberOfCommands).toEqual(1); // Render root
                 expect(stats.numberOfPendingRequests).toEqual(4); // Loading child content tiles
 
-                return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                     scene.renderForSpecs();
                     expect(root.selected).toEqual(false);
                     expect(stats.numberOfCommands).toEqual(4); // Render child content tiles
@@ -984,7 +984,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.loadProgress.addEventListener(spyUpdate);
             viewRootOnly();
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 expect(spyUpdate.calls.count()).toEqual(3);
                 expect(spyUpdate.calls.allArgs()).toEqual(results);
@@ -992,15 +992,15 @@ defineSuite([
         });
     });
 
-    it('view complete', function() {
+    it('tilesLoaded', function() {
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetUrl
         }));
-        expect(tileset.viewComplete).toBe(false);
+        expect(tileset.tilesLoaded).toBe(false);
         return Cesium3DTilesTester.waitForReady(scene, tileset).then(function() {
-            expect(tileset.viewComplete).toBe(false);
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
-                expect(tileset.viewComplete).toBe(true);
+            expect(tileset.tilesLoaded).toBe(false);
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                expect(tileset.tilesLoaded).toBe(true);
             });
         });
     });
@@ -1012,10 +1012,10 @@ defineSuite([
         viewRootOnly();
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.allTilesLoaded.addEventListener(spyUpdate);
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 viewAllTiles();
-                return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                     scene.renderForSpecs();
                     expect(spyUpdate.calls.count()).toEqual(2);
                 });
@@ -1373,7 +1373,7 @@ defineSuite([
             // Zoom back in so all four children are re-requested.
             viewAllTiles();
 
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toEqual(5);
                 expect(stats.numberContentReady).toEqual(5); // Five loaded tiles
@@ -1405,7 +1405,7 @@ defineSuite([
             // Zoom back in so the two children are re-requested.
             viewAllTiles();
 
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toEqual(5);
                 expect(stats.numberContentReady).toEqual(5); // Five loaded tiles
@@ -1434,7 +1434,7 @@ defineSuite([
             // Reset camera so all tiles are reloaded
             viewAllTiles();
 
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toEqual(5);
                 expect(stats.numberContentReady).toEqual(5);
@@ -1466,7 +1466,7 @@ defineSuite([
             // Reset camera so all tiles are reloaded
             viewAllTiles();
 
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toEqual(5);
                 expect(stats.numberContentReady).toEqual(5);
@@ -1498,7 +1498,7 @@ defineSuite([
             // Reset camera so all tiles are reloaded
             viewAllTiles();
 
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toEqual(4);
                 expect(stats.numberContentReady).toEqual(4);
@@ -1535,7 +1535,7 @@ defineSuite([
             // Zoom back in so the four children are re-requested.
             viewAllTiles();
 
-            return Cesium3DTilesTester.waitForViewComplete(scene, tileset).then(function() {
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toEqual(4);
                 expect(stats.numberContentReady).toEqual(5);
