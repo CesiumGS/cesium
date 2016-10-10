@@ -291,7 +291,7 @@ define([
         byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_COUNT.byteOffset;
         var counts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
 
-        byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_INDICES.byteOffset;
+        byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_INDEX_COUNT.byteOffset;
         var indexCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
 
         byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_COUNT.byteOffset;
