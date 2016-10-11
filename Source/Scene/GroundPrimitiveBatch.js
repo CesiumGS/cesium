@@ -69,14 +69,41 @@ define([
         StencilOperation) {
     'use strict';
 
-    function Cesium3DTileGroundPrimitive(options) {
+    /**
+     * Renders a batch of pre-triangulated polygons draped on terrain.
+     *
+     * @alias GroundPrimitiveBatch
+     * @constructor
+     * @private
+     *
+     * @param {Object} options An object with following properties:
+     * @param {Float32Array|Uint16Array} options.positions The positions of the polygons. The positions must be contiguous
+     * so that the positions for polygon n are in [c, c + counts[n]] where c = sum{counts[0], counts[n - 1]} and they are the outer ring of
+     * the polygon in counter-clockwise order.
+     * @param {Number[]} options.counts The number or positions in the each polygon.
+     * @param {Uint32Array | Uint32Array} options.indices The indices of the triangulated polygons. The indices must be contiguous so that
+     * the indices for polygon n are in [i, i + indexCounts[n]] where i = sum{indexCounts[0], indexCounts[n - 1]}.
+     * @param {Number[]} options.indexCounts The number of indices for each polygon.
+     * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
+     * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
+     * @param {Number} [options.quantizedOffset] The quantized offset. If undefined, the positions should be in Float32Array and are not quantized.
+     * @param {Number} [options.quantizedScale] The quantized scale. If undefined, the positions should be in Float32Array and are not quantized.
+     * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.
+     * @param {Number[]} options.batchIds The batch ids for each polygon.
+     * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polygons.
+     */
+    function GroundPrimitiveBatch(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        this._batchTable = options.batchTable;
+
+        // These arrays are released after VAO creation
+        this._batchIds = options.batchIds;
         this._positions = options.positions;
-        this._colors = options.colors;
-        this._offsets = options.offsets;
         this._counts = options.counts;
-        this._indexOffsets = options.indexOffsets;
+
+        // These arrays are kept for re-batching indices based on colors
         this._indexCounts = options.indexCounts;
         this._indices = options.indices;
 
@@ -88,9 +115,7 @@ define([
         this._quantizedScale = options.quantizedScale;
 
         this._boundingVolume = options.boundingVolume;
-        this._boundingVolumes = new Array(this._offsets.length);
-
-        this._batchTableResources = options.batchTableResources;
+        this._boundingVolumes = new Array(this._counts.length);
 
         this._batchedIndices = undefined;
 
@@ -105,6 +130,12 @@ define([
 
         this._commands = [];
         this._pickCommands = [];
+
+        this._constantColor = Color.clone(Color.WHITE);
+        this._highlightColor = this._constantColor;
+
+        this._batchDirty = false;
+        this._pickCommandsDirty = true;
     }
 
     var attributeLocations = {
@@ -120,6 +151,7 @@ define([
     var scratchMaxHeightPosition = new Cartesian3();
     var scratchBVCartographic = new Cartographic();
     var scratchBVRectangle = new Rectangle();
+    var scratchColor = new Color();
 
     function createVertexArray(primitive, context) {
         if (!defined(primitive._positions)) {
@@ -127,14 +159,14 @@ define([
         }
 
         var positions = primitive._positions;
-        var offsets = primitive._offsets;
         var counts = primitive._counts;
-        var indexOffsets = primitive._indexOffsets;
         var indexCounts = primitive._indexCounts;
         var indices = primitive._indices;
         var boundingVolumes = primitive._boundingVolumes;
         var center = primitive._center;
         var ellipsoid = primitive._ellispoid;
+        var batchIds = primitive._batchIds;
+        var batchTable = primitive._batchTable;
 
         var minHeight = primitive._minimumHeight;
         var maxHeight = primitive._maximumHeight;
@@ -143,28 +175,37 @@ define([
         var quantizedScale = primitive._quantizedScale;
         var decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
 
-        var positionsLength = positions.length;
-        var batchedPositions = new Float32Array(positionsLength * 2.0);
-        var batchedIds = new Uint16Array(positionsLength / 3 * 2);
-        var batchedIndexOffsets = new Array(indexOffsets.length);
-        var batchedIndexCounts = new Array(indexCounts.length);
-
-        // TODO: compute length and create typed array
-        var batchedIndices = [];
-
-        var colors = primitive._colors;
-        var colorsLength = colors.length;
-
         var i;
         var j;
         var color;
         var rgba;
 
-        var buffers = {};
-        for (i = 0; i < colorsLength; ++i) {
-            rgba = colors[i].toRgba();
-            if (!defined(buffers[rgba])) {
-                buffers[rgba] = {
+        var countsLength = counts.length;
+        var offsets = new Array(countsLength);
+        var indexOffsets = new Array(countsLength);
+        var currentOffset = 0;
+        var currentIndexOffset = 0;
+        for (i = 0; i < countsLength; ++i) {
+            offsets[i] = currentOffset;
+            indexOffsets[i] = currentIndexOffset;
+
+            currentOffset += counts[i];
+            currentIndexOffset += indexCounts[i];
+        }
+
+        var positionsLength = positions.length;
+        var batchedPositions = new Float32Array(positionsLength * 2);
+        var batchedIds = new Uint16Array(positionsLength / 3 * 2);
+        var batchedIndexOffsets = new Array(indexOffsets.length);
+        var batchedIndexCounts = new Array(indexCounts.length);
+        var batchedIndices = [];
+
+        var colorToBuffers = {};
+        for (i = 0; i < countsLength; ++i) {
+            color = batchTable.getColor(batchIds[i], scratchColor);
+            rgba = color.toRgba();
+            if (!defined(colorToBuffers[rgba])) {
+                colorToBuffers[rgba] = {
                     positionLength : counts[i],
                     indexLength : indexCounts[i],
                     offset : 0,
@@ -172,60 +213,62 @@ define([
                     batchIds : [i]
                 };
             } else {
-                buffers[rgba].positionLength += counts[i];
-                buffers[rgba].indexLength += indexCounts[i];
-                buffers[rgba].batchIds.push(i);
+                colorToBuffers[rgba].positionLength += counts[i];
+                colorToBuffers[rgba].indexLength += indexCounts[i];
+                colorToBuffers[rgba].batchIds.push(i);
             }
         }
 
-        var object;
+        // get the offsets and counts for the positions and indices of each primitive
+        var buffer;
         var byColorPositionOffset = 0;
         var byColorIndexOffset = 0;
-        for (rgba in buffers) {
-            if (buffers.hasOwnProperty(rgba)) {
-                object = buffers[rgba];
-                object.offset = byColorPositionOffset;
-                object.indexOffset = byColorIndexOffset;
+        for (rgba in colorToBuffers) {
+            if (colorToBuffers.hasOwnProperty(rgba)) {
+                buffer = colorToBuffers[rgba];
+                buffer.offset = byColorPositionOffset;
+                buffer.indexOffset = byColorIndexOffset;
 
-                var positionLength = object.positionLength * 2;
-                var indexLength = object.indexLength * 2 + object.positionLength * 6;
+                var positionLength = buffer.positionLength * 2;
+                var indexLength = buffer.indexLength * 2 + buffer.positionLength * 6;
 
                 byColorPositionOffset += positionLength;
                 byColorIndexOffset += indexLength;
 
-                object.indexLength = indexLength;
+                buffer.indexLength = indexLength;
             }
         }
 
         var batchedDrawCalls = [];
 
-        for (rgba in buffers) {
-            if (buffers.hasOwnProperty(rgba)) {
-                object = buffers[rgba];
+        for (rgba in colorToBuffers) {
+            if (colorToBuffers.hasOwnProperty(rgba)) {
+                buffer = colorToBuffers[rgba];
 
                 batchedDrawCalls.push({
                     color : Color.fromRgba(parseInt(rgba)),
-                    offset : object.indexOffset,
-                    count : object.indexLength,
-                    batchIds : object.batchIds
+                    offset : buffer.indexOffset,
+                    count : buffer.indexLength,
+                    batchIds : buffer.batchIds
                 });
             }
         }
 
         primitive._batchedIndices = batchedDrawCalls;
 
-        for (i = 0; i < colorsLength; ++i) {
-            color = colors[i];
+        for (i = 0; i < countsLength; ++i) {
+            color = batchTable.getColor(batchIds[i], scratchColor);
             rgba = color.toRgba();
 
-            object = buffers[rgba];
-            var positionOffset = object.offset;
+            buffer = colorToBuffers[rgba];
+            var positionOffset = buffer.offset;
             var positionIndex = positionOffset * 3;
             var colorIndex = positionOffset * 4;
-            var idIndex = positionOffset;
+            var batchIdIndex = positionOffset;
 
             var polygonOffset = offsets[i];
             var polygonCount = counts[i];
+            var batchId = batchIds[i];
 
             var minLat = Number.POSITIVE_INFINITY;
             var maxLat = Number.NEGATIVE_INFINITY;
@@ -260,12 +303,12 @@ define([
                 Cartesian3.pack(maxHeightPosition, batchedPositions, positionIndex);
                 Cartesian3.pack(minHeightPosition, batchedPositions, positionIndex + 3);
 
-                batchedIds[idIndex] = i;
-                batchedIds[idIndex + 1] = i;
+                batchedIds[batchIdIndex] = batchId;
+                batchedIds[batchIdIndex + 1] = batchId;
 
                 positionIndex += 6;
                 colorIndex += 8;
-                idIndex += 2;
+                batchIdIndex += 2;
             }
 
             var rectangle = scratchBVRectangle;
@@ -276,7 +319,7 @@ define([
 
             boundingVolumes[i] = OrientedBoundingBox.fromRectangle(rectangle, minHeight, maxHeight, ellipsoid);
 
-            var indicesIndex = object.indexOffset;
+            var indicesIndex = buffer.indexOffset;
 
             var indexOffset = indexOffsets[i];
             var indexCount = indexCounts[i];
@@ -288,15 +331,18 @@ define([
                 var i1 = indices[indexOffset + j + 1] - polygonOffset;
                 var i2 = indices[indexOffset + j + 2] - polygonOffset;
 
+                // triangle on the top of the extruded polygon
                 batchedIndices[indicesIndex++] = i0 * 2 + positionOffset;
                 batchedIndices[indicesIndex++] = i1 * 2 + positionOffset;
                 batchedIndices[indicesIndex++] = i2 * 2 + positionOffset;
 
+                // triangle on the bottom of the extruded polygon
                 batchedIndices[indicesIndex++] = i2 * 2 + 1 + positionOffset;
                 batchedIndices[indicesIndex++] = i1 * 2 + 1 + positionOffset;
                 batchedIndices[indicesIndex++] = i0 * 2 + 1 + positionOffset;
             }
 
+            // indices for the walls of the extruded polygon
             for (j = 0; j < polygonCount - 1; ++j) {
                 batchedIndices[indicesIndex++] = j * 2 + 1 + positionOffset;
                 batchedIndices[indicesIndex++] = (j + 1) * 2 + positionOffset;
@@ -307,8 +353,8 @@ define([
                 batchedIndices[indicesIndex++] = (j + 1) * 2 + positionOffset;
             }
 
-            object.offset += polygonCount * 2;
-            object.indexOffset = indicesIndex;
+            buffer.offset += polygonCount * 2;
+            buffer.indexOffset = indicesIndex;
 
             batchedIndexCounts[i] = indicesIndex - batchedIndexOffsets[i];
         }
@@ -316,13 +362,12 @@ define([
         batchedIndices = new Uint32Array(batchedIndices);
 
         primitive._positions = undefined;
-        primitive._offsets = undefined;
         primitive._counts = undefined;
+        primitive._batchIds = undefined;
         primitive._indices = batchedIndices;
         primitive._indexOffsets = batchedIndexOffsets;
         primitive._indexCounts = batchedIndexCounts;
 
-        // TODO: fix this
         for (var m = 0; m < primitive._batchedIndices.length; ++m) {
             var tempIds = primitive._batchedIndices[m].batchIds;
             var count = 0;
@@ -373,10 +418,10 @@ define([
             return;
         }
 
-        var batchTableResources = primitive._batchTableResources;
+        var batchTable = primitive._batchTable;
 
-        var vsSource = batchTableResources.getVertexShaderCallback()(ShadowVolumeVS, false);
-        var fsSource = batchTableResources.getFragmentShaderCallback()(ShadowVolumeFS, false);
+        var vsSource = batchTable.getVertexShaderCallback()(ShadowVolumeVS, false);
+        var fsSource = batchTable.getFragmentShaderCallback()(ShadowVolumeFS, false);
 
         var vs = new ShaderSource({
             defines : ['VECTOR_TILE'],
@@ -394,8 +439,8 @@ define([
             attributeLocations : attributeLocations
         });
 
-        vsSource = batchTableResources.getPickVertexShaderCallback()(ShadowVolumeVS);
-        fsSource = batchTableResources.getPickFragmentShaderCallback()(ShadowVolumeFS);
+        vsSource = batchTable.getPickVertexShaderCallback()(ShadowVolumeVS);
+        fsSource = batchTable.getPickFragmentShaderCallback()(ShadowVolumeFS);
 
         var pickVS = new ShaderSource({
             defines : ['VECTOR_TILE'],
@@ -551,16 +596,19 @@ define([
                 Matrix4.setTranslation(modifiedModelViewScratch, rtcScratch, modifiedModelViewScratch);
                 Matrix4.multiply(projectionMatrix, modifiedModelViewScratch, modifiedModelViewScratch);
                 return modifiedModelViewScratch;
+            },
+            u_highlightColor : function() {
+                return primitive._highlightColor;
             }
         };
     }
 
-    function copyIndices(indices, newIndices, currentOffset, offsets, counts, batchedIds) {
+    function copyIndices(indices, newIndices, currentOffset, offsets, counts, batchIds) {
         var sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
 
-        var batchedIdsLength = batchedIds.length;
+        var batchedIdsLength = batchIds.length;
         for (var j = 0; j < batchedIdsLength; ++j) {
-            var batchedId = batchedIds[j];
+            var batchedId = batchIds[j];
             var offset = offsets[batchedId];
             var count = counts[batchedId];
 
@@ -574,7 +622,17 @@ define([
         return currentOffset;
     }
 
+    function compareColors(a, b) {
+        return b.color.toRgba() - a.color.toRgba();
+    }
+
+    // PERFORMANCE_IDEA: For WebGL 2, we can use copyBufferSubData for buffer-to-buffer copies.
+    // PERFORMANCE_IDEA: Not supported, but we could use glMultiDrawElements here.
     function rebatchCommands(primitive) {
+        if (!primitive._batchDirty) {
+            return false;
+        }
+
         var batchedIndices = primitive._batchedIndices;
         var length = batchedIndices.length;
 
@@ -593,12 +651,11 @@ define([
         }
 
         if (!needToRebatch) {
+            primitive._batchDirty = false;
             return false;
         }
 
-        batchedIndices.sort(function(a, b) {
-            return b.color.toRgba() - a.color.toRgba();
-        });
+        batchedIndices.sort(compareColors);
 
         var newIndices = new primitive._indices.constructor(primitive._indices.length);
 
@@ -632,6 +689,8 @@ define([
         primitive._indices = newIndices;
         primitive._batchedIndices = newBatchedIndices;
 
+        primitive._batchDirty = false;
+        primitive._pickCommandsDirty = true;
         return true;
     }
 
@@ -647,7 +706,7 @@ define([
         commands.length = length;
 
         var vertexArray = primitive._va;
-        var uniformMap = primitive._batchTableResources.getUniformMapCallback()(primitive._uniformMap);
+        var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
         var bv = primitive._boundingVolume;
 
         for (var j = 0; j < length; j += 3) {
@@ -708,13 +767,16 @@ define([
     }
 
     function createPickCommands(primitive) {
-        // TODO: only update the commands after a rebatch
+        if (!primitive._pickCommandsDirty) {
+            return;
+        }
+
         var length = primitive._indexOffsets.length * 3;
         var pickCommands = primitive._pickCommands;
         pickCommands.length = length;
 
         var vertexArray = primitive._va;
-        var uniformMap = primitive._batchTableResources.getPickUniformMapCallback()(primitive._uniformMap);
+        var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
 
         for (var j = 0; j < length; j += 3) {
             var offset = primitive._indexOffsets[j / 3];
@@ -772,17 +834,38 @@ define([
             command.boundingVolume = bv;
             command.pass = Pass.GROUND;
         }
+
+        primitive._pickCommandsDirty = false;
     }
 
-    Cesium3DTileGroundPrimitive.prototype.updateCommands = function(batchId, color) {
+    /**
+     * Colors the entire tile when enabled is true. The resulting color will be (polygon batch table color * color).
+     * @private
+     *
+     * @param {Boolean} enabled Whether to enable debug coloring.
+     * @param {Color} color The debug color.
+     */
+    GroundPrimitiveBatch.prototype.applyDebugSettings = function(enabled, color) {
+        this._highlightColor = enabled ? color : this._constantColor;
+    };
+
+    /**
+     * Call when updating the color of a polygon with batchId changes color. The polygons will need to be re-batched
+     * on the next update.
+     * @private
+     *
+     * @param {Number} batchId The batch id of the polygon whose color has changed.
+     * @param {Color} color The new polygon color.
+     */
+    GroundPrimitiveBatch.prototype.updateCommands = function(batchId, color) {
         var offset = this._indexOffsets[batchId];
         var count = this._indexCounts[batchId];
 
         var batchedIndices = this._batchedIndices;
         var length = batchedIndices.length;
 
-        var i = 0;
-        for (; i < length; ++i) {
+        var i;
+        for (i = 0; i < length; ++i) {
             var batchedOffset = batchedIndices[i].offset;
             var batchedCount = batchedIndices[i].count;
 
@@ -832,9 +915,17 @@ define([
         } else {
             batchedIndices.splice(i, 1);
         }
+
+        this._batchDirty = true;
     };
 
-    Cesium3DTileGroundPrimitive.prototype.update = function(frameState) {
+    /**
+     * Updates the batches and queues the commands for rendering
+     * @private
+     *
+     * @param {FrameState} frameState The current frame state.
+     */
+    GroundPrimitiveBatch.prototype.update = function(frameState) {
         var context = frameState.context;
 
         createVertexArray(this, context);
@@ -860,16 +951,40 @@ define([
         }
     };
 
-    Cesium3DTileGroundPrimitive.prototype.isDestroyed = function() {
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <p>
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * </p>
+     * @private
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     */
+    GroundPrimitiveBatch.prototype.isDestroyed = function() {
         return false;
     };
 
-    Cesium3DTileGroundPrimitive.prototype.destroy = function() {
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <p>
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * </p>
+     * @private
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
+    GroundPrimitiveBatch.prototype.destroy = function() {
         this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         return destroyObject(this);
     };
 
-    return Cesium3DTileGroundPrimitive;
+    return GroundPrimitiveBatch;
 });

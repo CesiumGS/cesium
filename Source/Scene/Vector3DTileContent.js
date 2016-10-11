@@ -22,7 +22,8 @@ define([
     './Cesium3DTileBatchTable',
     './Cesium3DTileContentState',
     './Cesium3DTileFeature',
-    './Cesium3DTileGroundPrimitive'
+    './GroundPolylineBatch',
+    './GroundPrimitiveBatch'
 ], function(
     BoundingSphere,
     Cartesian3,
@@ -46,7 +47,8 @@ define([
     Cesium3DTileBatchTable,
     Cesium3DTileContentState,
     Cesium3DTileFeature,
-    Cesium3DTileGroundPrimitive) {
+    GroundPolylineBatch,
+    GroundPrimitiveBatch) {
     'use strict';
 
     /**
@@ -60,13 +62,14 @@ define([
         this._tileset = tileset;
         this._tile = tile;
 
-        this._primitive = undefined;
+        this._polygons = undefined;
+        this._polylines = undefined;
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-        this.batchTableResources = undefined;
+        this.batchTable = undefined;
         this.featurePropertiesDirty = false;
         this.boundingSphere = tile.contentBoundingVolume.boundingSphere;
 
@@ -80,7 +83,7 @@ define([
          */
         featuresLength : {
             get : function() {
-                return this.batchTableResources.featuresLength;
+                return this.batchTable.featuresLength;
             }
         },
 
@@ -128,7 +131,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTableResources.hasProperty(name);
+        return this.batchTable.hasProperty(name);
     };
 
     /**
@@ -178,10 +181,10 @@ define([
         return true;
     };
 
-    function createColorChangedCallback(content) {
+    function createColorChangedCallback(content, numberOfPolygons) {
         return function(batchId, color) {
-            if (defined(content._primitive)) {
-                content._primitive.updateCommands(batchId, color);
+            if (defined(content._polygons) && batchId < numberOfPolygons) {
+                content._polygons.updateCommands(batchId, color);
             }
         };
     }
@@ -225,6 +228,13 @@ define([
 
         var featureTableJSONByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (featureTableJSONByteLength === 0) {
+            throw new DeveloperError('Feature table must have a byte length greater than zero');
+        }
+        //>>includeEnd('debug');
+
         var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
         var batchTableJSONByteLength = view.getUint32(byteOffset, true);
@@ -235,15 +245,15 @@ define([
         byteOffset += sizeOfUint32;
         var positionByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
+        var polylinePositionByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
 
         var featureTableString = getStringFromTypedArray(uint8Array, byteOffset, featureTableJSONByteLength);
-        var featureTableJSON = JSON.parse(featureTableString);
+        var featureTableJson = JSON.parse(featureTableString);
         byteOffset += featureTableJSONByteLength;
 
         var featureTableBinary = new Uint8Array(arrayBuffer, byteOffset, featureTableBinaryByteLength);
         byteOffset += featureTableBinaryByteLength;
-
-        var numberOfPolygons = featureTableJSON.NUMBER_OF_POLYGONS;
 
         var batchTableJson;
         var batchTableBinary;
@@ -266,57 +276,91 @@ define([
             }
         }
 
-        var batchTableResources = new Cesium3DTileBatchTable(this, numberOfPolygons, batchTableJson, batchTableBinary, createColorChangedCallback(this));
-        this.batchTableResources = batchTableResources;
+        var numberOfPolygons = featureTableJson.POLYGONS_LENGTH;
+        var numberOfPolylines = featureTableJson.POLYLINES_LENGTH;
+
+        var batchTable = new Cesium3DTileBatchTable(this, numberOfPolygons + numberOfPolylines, batchTableJson, batchTableBinary, createColorChangedCallback(this, numberOfPolygons));
+        this.batchTable = batchTable;
 
         var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
         byteOffset += indicesByteLength;
         var positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
+        byteOffset += positionByteLength;
+        var polylinePositions = new Uint16Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfUint16);
 
-        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_POSITION_OFFSETS.offset;
-        var offsets = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
-
-        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_POSITION_COUNTS.offset;
+        byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_COUNT.byteOffset;
         var counts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
 
-        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_INDICES_OFFSETS.offset;
-        var indexOffsets = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
-
-        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_INDICES_COUNTS.offset;
+        byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_INDEX_COUNT.byteOffset;
         var indexCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
 
-        var center = Cartesian3.unpack(featureTableJSON.CENTER);
-        var minHeight = featureTableJSON.MINIMUM_HEIGHT;
-        var maxHeight = featureTableJSON.MAXIMUM_HEIGHT;
-        var quantizedOffset = Cartesian3.unpack(featureTableJSON.QUANTIZED_VOLUME_OFFSET);
-        var quantizedScale = Cartesian3.unpack(featureTableJSON.QUANTIZED_VOLUME_SCALE);
+        byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_COUNT.byteOffset;
+        var polylineCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolylines);
+
+        var center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
+        var minHeight = featureTableJson.MINIMUM_HEIGHT;
+        var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
+        var quantizedOffset = Cartesian3.unpack(featureTableJson.QUANTIZED_VOLUME_OFFSET);
+        var quantizedScale = Cartesian3.unpack(featureTableJson.QUANTIZED_VOLUME_SCALE);
+
+        //var featureTable = new Cesium3DTileFeatureTable(featureTableJson, featureTableBinary);
 
         // TODO: get feature colors
-        var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
-        var colors = [];
-        var tempLength = offsets.length;
-        for (var n = 0; n < tempLength; ++n) {
-            colors[n] = randomColors[n % randomColors.length];
-            batchTableResources.setColor(n, colors[n]);
+        //var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
+        var randomColors = [Color.WHITE.withAlpha(0.5)];
+        var tempLength = counts.length;
+        var n;
+        var color;
+        var batchIds = new Array(tempLength);
+        for (n = 0; n < tempLength; ++n) {
+            color = color = randomColors[n % randomColors.length];
+            batchTable.setColor(n, color);
+            batchIds[n] = n;
         }
 
-        this._primitive = new Cesium3DTileGroundPrimitive({
-            positions : positions,
-            colors : colors,
-            offsets : offsets,
-            counts : counts,
-            indexOffsets : indexOffsets,
-            indexCounts : indexCounts,
-            indices : indices,
-            minimumHeight : minHeight,
-            maximumHeight : maxHeight,
-            center : center,
-            quantizedOffset : quantizedOffset,
-            quantizedScale : quantizedScale,
-            boundingVolume : this._tile._boundingVolume.boundingVolume,
-            batchTableResources : this.batchTableResources
-        });
+        if (positions.length > 0) {
+            this._polygons = new GroundPrimitiveBatch({
+                positions : positions,
+                counts : counts,
+                indexCounts : indexCounts,
+                indices : indices,
+                minimumHeight : minHeight,
+                maximumHeight : maxHeight,
+                center : center,
+                quantizedOffset : quantizedOffset,
+                quantizedScale : quantizedScale,
+                boundingVolume : this._tile._boundingVolume.boundingVolume,
+                batchTable : this.batchTable,
+                batchIds : batchIds
+            });
+        }
 
+        // TODO: get feature colors/widths
+        //randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
+        tempLength = polylineCounts.length;
+        var widths = new Array(tempLength);
+        batchIds = new Array(tempLength);
+        for (n = 0; n < tempLength; ++n) {
+            color = randomColors[n % randomColors.length];
+            batchTable.setColor(n + numberOfPolygons, color);
+
+            widths[n] = 2.0;
+            batchIds[n] = numberOfPolygons + n;
+        }
+
+        if (polylinePositions.length > 0) {
+            this._polylines = new GroundPolylineBatch({
+                positions : polylinePositions,
+                widths : widths,
+                counts : polylineCounts,
+                batchIds : batchIds,
+                center : center,
+                quantizedOffset : quantizedOffset,
+                quantizedScale : quantizedScale,
+                boundingVolume : this._tile._boundingVolume.boundingVolume,
+                batchTable : this.batchTable
+            });
+        }
 
         this.state = Cesium3DTileContentState.PROCESSING;
         this._contentReadyToProcessPromise.resolve(this);
@@ -329,15 +373,29 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
+        if (defined(this._polygons)) {
+            this._polygons.applyDebugSettings(enabled, color);
+        }
+
+        if (defined(this._polylines)) {
+            this._polylines.applyDebugSettings(enabled, color);
+        }
     };
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
-        if (defined(this._primitive)) {
-            this.batchTableResources.update(tileset, frameState);
-            this._primitive.update(frameState);
+        if (defined(this.batchTable)) {
+            this.batchTable.update(tileset, frameState);
+        }
+
+        if (defined(this._polygons)) {
+            this._polygons.update(frameState);
+        }
+
+        if (defined(this._polylines)) {
+            this._polylines.update(frameState);
         }
     };
 
@@ -352,7 +410,8 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.destroy = function() {
-        this._primitive = this._primitive && this._primitive.destroy();
+        this._polygons = this._polygons && this._polygons.destroy();
+        this._polylines = this._polylines && this._polylines.destroy();
         return destroyObject(this);
     };
 
