@@ -42,7 +42,7 @@ define([
     ) {
     'use strict';
 
-    function Cesium3DTileGroundPolylines(options) {
+    function GroundPolylineBatch(options) {
         // these arrays are all released after the first update.
         this._positions = options.positions;
         this._widths = options.widths;
@@ -404,11 +404,11 @@ define([
         frameState.commandList.push(primitive._pickCommand);
     }
 
-    Cesium3DTileGroundPolylines.prototype.applyDebugSettings = function(enabled, color) {
+    GroundPolylineBatch.prototype.applyDebugSettings = function(enabled, color) {
         this._highlightColor = enabled ? color : this._constantColor;
     };
 
-    Cesium3DTileGroundPolylines.prototype.update = function(frameState) {
+    GroundPolylineBatch.prototype.update = function(frameState) {
         var context = frameState.context;
 
         createVertexArray(this, context);
@@ -426,16 +426,16 @@ define([
         }
     };
 
-    Cesium3DTileGroundPolylines.prototype.isDestroyed = function() {
+    GroundPolylineBatch.prototype.isDestroyed = function() {
         return false;
     };
 
-    Cesium3DTileGroundPolylines.prototype.destroy = function() {
+    GroundPolylineBatch.prototype.destroy = function() {
         this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         return destroyObject(this);
     };
 
-    return Cesium3DTileGroundPolylines;
+    return GroundPolylineBatch;
 });

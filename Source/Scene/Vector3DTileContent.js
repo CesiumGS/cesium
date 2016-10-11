@@ -22,7 +22,7 @@ define([
     './Cesium3DTileBatchTable',
     './Cesium3DTileContentState',
     './Cesium3DTileFeature',
-    './Cesium3DTileGroundPolylines',
+    './GroundPolylineBatch',
     './GroundPrimitiveBatch'
 ], function(
     BoundingSphere,
@@ -47,7 +47,7 @@ define([
     Cesium3DTileBatchTable,
     Cesium3DTileContentState,
     Cesium3DTileFeature,
-    Cesium3DTileGroundPolylines,
+    GroundPolylineBatch,
     GroundPrimitiveBatch) {
     'use strict';
 
@@ -349,7 +349,7 @@ define([
         }
 
         if (polylinePositions.length > 0) {
-            this._polylines = new Cesium3DTileGroundPolylines({
+            this._polylines = new GroundPolylineBatch({
                 positions : polylinePositions,
                 widths : widths,
                 counts : polylineCounts,
