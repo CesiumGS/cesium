@@ -15,8 +15,8 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
+        '../Shaders/GroundPolylineBatchVS',
         '../Shaders/PolylineCommon',
-        '../Shaders/Appearances/PolylineColorAppearanceVS',
         './BlendingState',
         './Pass'
     ], function(
@@ -35,14 +35,15 @@ define([
         ShaderProgram,
         ShaderSource,
         VertexArray,
+        GroundPolylineBatchVS,
         PolylineCommon,
-        PolylineColorAppearanceVS,
         BlendingState,
         Pass
     ) {
     'use strict';
 
     function Cesium3DTileGroundPolylines(options) {
+        // these arrays are all released after the first update.
         this._positions = options.positions;
         this._widths = options.widths;
         this._counts = options.counts;
@@ -59,6 +60,11 @@ define([
         this._sp = undefined;
         this._rs = undefined;
         this._uniformMap = undefined;
+        this._command = undefined;
+
+        this._spPick = undefined;
+        this._rsPick = undefined;
+        this._pickCommand = undefined;
 
         this._constantColor = Color.clone(Color.WHITE);
         this._highlightColor = this._constantColor;
@@ -96,7 +102,7 @@ define([
         var counts = primitive._counts;
 
         var positionsLength = positions.length / 3;
-        var size = positionsLength * 4.0 - 4.0;
+        var size = positionsLength * 4 - 4;
 
         var curPositions = new Float32Array(size * 3);
         var prevPositions = new Float32Array(size * 3);
@@ -171,10 +177,15 @@ define([
             offset += count;
         }
 
+        primitive._positions = undefined;
+        primitive._widths = undefined;
+        primitive._batchIds = undefined;
+        primitive._counts = undefined;
+
         var indices = IndexDatatype.createTypedArray(size, positionsLength * 6 - 6);
         var index = 0;
         var indicesIndex = 0;
-        length = positionsLength - 1.0;
+        length = positionsLength - 1;
         for (i = 0; i < length; ++i) {
             indices[indicesIndex++] = index;
             indices[indicesIndex++] = index + 2;
@@ -319,7 +330,7 @@ define([
 
         var batchTable = primitive._batchTable;
 
-        var vsSource = batchTable.getVertexShaderCallback()(PolylineColorAppearanceVS, false);
+        var vsSource = batchTable.getVertexShaderCallback()(GroundPolylineBatchVS, false);
         var fsSource = batchTable.getFragmentShaderCallback()(PolylineFS, false);
 
         var vs = new ShaderSource({
@@ -338,7 +349,7 @@ define([
             attributeLocations : attributeLocations
         });
 
-        vsSource = batchTable.getPickVertexShaderCallback()(PolylineColorAppearanceVS);
+        vsSource = batchTable.getPickVertexShaderCallback()(GroundPolylineBatchVS);
         fsSource = batchTable.getPickFragmentShaderCallback()(PolylineFS);
 
         var pickVS = new ShaderSource({
@@ -367,7 +378,6 @@ define([
                 shaderProgram : primitive._sp,
                 uniformMap : uniformMap,
                 boundingVolume : primitive._boundingVolume,
-                modelMatrix : Matrix4.IDENTITY,
                 //pass : Pass.GROUND
                 pass : Pass.TRANSLUCENT
             });
@@ -386,7 +396,6 @@ define([
                 shaderProgram : primitive._spPick,
                 uniformMap : uniformMap,
                 boundingVolume : primitive._boundingVolume,
-                modelMatrix : Matrix4.IDENTITY,
                 //pass : Pass.GROUND
                 pass : Pass.TRANSLUCENT
             });
@@ -398,7 +407,6 @@ define([
     Cesium3DTileGroundPolylines.prototype.applyDebugSettings = function(enabled, color) {
         this._highlightColor = enabled ? color : this._constantColor;
     };
-
 
     Cesium3DTileGroundPolylines.prototype.update = function(frameState) {
         var context = frameState.context;
@@ -425,6 +433,7 @@ define([
     Cesium3DTileGroundPolylines.prototype.destroy = function() {
         this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.destroy();
+        this._spPick = this._spPick && this._spPick.destroy();
         return destroyObject(this);
     };
 
