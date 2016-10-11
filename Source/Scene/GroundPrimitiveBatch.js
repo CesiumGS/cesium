@@ -69,6 +69,30 @@ define([
         StencilOperation) {
     'use strict';
 
+    /**
+     * Renders a batch of pre-triangulated polygons draped on terrain.
+     *
+     * @alias GroundPrimitiveBatch
+     * @constructor
+     * @private
+     *
+     * @param {Object} options An object with following properties:
+     * @param {Float32Array|Uint16Array} options.positions The positions of the polygons. The positions must be contiguous
+     * so that the positions for polygon n are in [c, c + counts[n]] where c = sum{counts[0], counts[n - 1]} and they are the outer ring of
+     * the polygon in counter-clockwise order.
+     * @param {Number[]} options.counts The number or positions in the each polygon.
+     * @param {Uint32Array | Uint32Array} options.indices The indices of the triangulated polygons. The indices must be contiguous so that
+     * the indices for polygon n are in [i, i + indexCounts[n]] where i = sum{indexCounts[0], indexCounts[n - 1]}.
+     * @param {Number[]} options.indexCounts The number of indices for each polygon.
+     * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
+     * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
+     * @param {Number} [options.quantizedOffset] The quantized offset. If undefined, the positions should be in Float32Array and are not quantized.
+     * @param {Number} [options.quantizedScale] The quantized scale. If undefined, the positions should be in Float32Array and are not quantized.
+     * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.
+     * @param {Number[]} options.batchIds The batch ids for each polygon.
+     * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polygons.
+     */
     function GroundPrimitiveBatch(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -792,10 +816,25 @@ define([
         }
     }
 
+    /**
+     * Colors the entire tile when enabled is true. The resulting color will be (polygon batch table color * color).
+     * @private
+     *
+     * @param {Boolean} enabled Whether to enable debug coloring.
+     * @param {Color} color The debug color.
+     */
     GroundPrimitiveBatch.prototype.applyDebugSettings = function(enabled, color) {
         this._highlightColor = enabled ? color : this._constantColor;
     };
 
+    /**
+     * Call when updating the color of a polygon with batchId changes color. The polygons will need to be re-batched
+     * on the next update.
+     * @private
+     *
+     * @param {Number} batchId The batch id of the polygon whose color has changed.
+     * @param {Color} color The new polygon color.
+     */
     GroundPrimitiveBatch.prototype.updateCommands = function(batchId, color) {
         var offset = this._indexOffsets[batchId];
         var count = this._indexCounts[batchId];
@@ -856,6 +895,12 @@ define([
         }
     };
 
+    /**
+     * Updates the batches and queues the commands for rendering
+     * @private
+     *
+     * @param {FrameState} frameState The current frame state.
+     */
     GroundPrimitiveBatch.prototype.update = function(frameState) {
         var context = frameState.context;
 
@@ -882,10 +927,34 @@ define([
         }
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <p>
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * </p>
+     * @private
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     */
     GroundPrimitiveBatch.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <p>
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * </p>
+     * @private
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
     GroundPrimitiveBatch.prototype.destroy = function() {
         this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.destroy();
