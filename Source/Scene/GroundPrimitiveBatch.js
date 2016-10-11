@@ -96,8 +96,14 @@ define([
     function GroundPrimitiveBatch(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        this._batchTable = options.batchTable;
+
+        // These arrays are released after VAO creation
+        this._batchIds = options.batchIds;
         this._positions = options.positions;
         this._counts = options.counts;
+
+        // These arrays are kept for re-batching indices based on colors
         this._indexCounts = options.indexCounts;
         this._indices = options.indices;
 
@@ -110,9 +116,6 @@ define([
 
         this._boundingVolume = options.boundingVolume;
         this._boundingVolumes = new Array(this._counts.length);
-
-        this._batchTable = options.batchTable;
-        this._batchIds = options.batchIds;
 
         this._batchedIndices = undefined;
 
@@ -130,6 +133,9 @@ define([
 
         this._constantColor = Color.clone(Color.WHITE);
         this._highlightColor = this._constantColor;
+
+        this._batchDirty = false;
+        this._pickCommandsDirty = true;
     }
 
     var attributeLocations = {
@@ -194,12 +200,12 @@ define([
         var batchedIndexCounts = new Array(indexCounts.length);
         var batchedIndices = [];
 
-        var buffers = {};
+        var colorToBuffers = {};
         for (i = 0; i < countsLength; ++i) {
             color = batchTable.getColor(batchIds[i], scratchColor);
             rgba = color.toRgba();
-            if (!defined(buffers[rgba])) {
-                buffers[rgba] = {
+            if (!defined(colorToBuffers[rgba])) {
+                colorToBuffers[rgba] = {
                     positionLength : counts[i],
                     indexLength : indexCounts[i],
                     offset : 0,
@@ -207,9 +213,9 @@ define([
                     batchIds : [i]
                 };
             } else {
-                buffers[rgba].positionLength += counts[i];
-                buffers[rgba].indexLength += indexCounts[i];
-                buffers[rgba].batchIds.push(i);
+                colorToBuffers[rgba].positionLength += counts[i];
+                colorToBuffers[rgba].indexLength += indexCounts[i];
+                colorToBuffers[rgba].batchIds.push(i);
             }
         }
 
@@ -217,9 +223,9 @@ define([
         var buffer;
         var byColorPositionOffset = 0;
         var byColorIndexOffset = 0;
-        for (rgba in buffers) {
-            if (buffers.hasOwnProperty(rgba)) {
-                buffer = buffers[rgba];
+        for (rgba in colorToBuffers) {
+            if (colorToBuffers.hasOwnProperty(rgba)) {
+                buffer = colorToBuffers[rgba];
                 buffer.offset = byColorPositionOffset;
                 buffer.indexOffset = byColorIndexOffset;
 
@@ -235,9 +241,9 @@ define([
 
         var batchedDrawCalls = [];
 
-        for (rgba in buffers) {
-            if (buffers.hasOwnProperty(rgba)) {
-                buffer = buffers[rgba];
+        for (rgba in colorToBuffers) {
+            if (colorToBuffers.hasOwnProperty(rgba)) {
+                buffer = colorToBuffers[rgba];
 
                 batchedDrawCalls.push({
                     color : Color.fromRgba(parseInt(rgba)),
@@ -254,7 +260,7 @@ define([
             color = batchTable.getColor(batchIds[i], scratchColor);
             rgba = color.toRgba();
 
-            buffer = buffers[rgba];
+            buffer = colorToBuffers[rgba];
             var positionOffset = buffer.offset;
             var positionIndex = positionOffset * 3;
             var colorIndex = positionOffset * 4;
@@ -356,8 +362,8 @@ define([
         batchedIndices = new Uint32Array(batchedIndices);
 
         primitive._positions = undefined;
-        primitive._offsets = undefined;
         primitive._counts = undefined;
+        primitive._batchIds = undefined;
         primitive._indices = batchedIndices;
         primitive._indexOffsets = batchedIndexOffsets;
         primitive._indexCounts = batchedIndexCounts;
@@ -616,7 +622,17 @@ define([
         return currentOffset;
     }
 
+    function compareColors(a, b) {
+        return b.color.toRgba() - a.color.toRgba();
+    }
+
+    // PERFORMANCE_IDEA: For WebGL 2, we can use copyBufferSubData for buffer-to-buffer copies.
+    // PERFORMANCE_IDEA: Not supported, but we could use glMultiDrawElements here.
     function rebatchCommands(primitive) {
+        if (!primitive._batchDirty) {
+            return false;
+        }
+
         var batchedIndices = primitive._batchedIndices;
         var length = batchedIndices.length;
 
@@ -635,12 +651,11 @@ define([
         }
 
         if (!needToRebatch) {
+            primitive._batchDirty = false;
             return false;
         }
 
-        batchedIndices.sort(function(a, b) {
-            return b.color.toRgba() - a.color.toRgba();
-        });
+        batchedIndices.sort(compareColors);
 
         var newIndices = new primitive._indices.constructor(primitive._indices.length);
 
@@ -674,6 +689,8 @@ define([
         primitive._indices = newIndices;
         primitive._batchedIndices = newBatchedIndices;
 
+        primitive._batchDirty = false;
+        primitive._pickCommandsDirty = true;
         return true;
     }
 
@@ -750,7 +767,10 @@ define([
     }
 
     function createPickCommands(primitive) {
-        // TODO: only update the commands after a rebatch
+        if (!primitive._pickCommandsDirty) {
+            return;
+        }
+
         var length = primitive._indexOffsets.length * 3;
         var pickCommands = primitive._pickCommands;
         pickCommands.length = length;
@@ -814,6 +834,8 @@ define([
             command.boundingVolume = bv;
             command.pass = Pass.GROUND;
         }
+
+        primitive._pickCommandsDirty = false;
     }
 
     /**
@@ -893,6 +915,8 @@ define([
         } else {
             batchedIndices.splice(i, 1);
         }
+
+        this._batchDirty = true;
     };
 
     /**
