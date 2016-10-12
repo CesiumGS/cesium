@@ -525,6 +525,7 @@ define([
 
         var label = this._labelCollection.get(index);
         label.show = false;
+        label.text = '';
         label.id = undefined;
 
         this._unusedLabelIndices.push(index);
