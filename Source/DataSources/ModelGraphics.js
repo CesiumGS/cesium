@@ -49,6 +49,7 @@ define([
      * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -74,6 +75,8 @@ define([
         this._nodeTransformationsSubscription = undefined;
         this._heightReference = undefined;
         this._heightReferenceSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -176,7 +179,14 @@ define([
          * @type {Property}
          * @default HeightReference.NONE
          */
-        heightReference : createPropertyDescriptor('heightReference')
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this model will be displayed.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -199,6 +209,7 @@ define([
         result.runAnimations = this.runAnimations;
         result.nodeTransformations = this.nodeTransformations;
         result.heightReference = this._heightReference;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
 
         return result;
     };
@@ -225,6 +236,7 @@ define([
         this.uri = defaultValue(this.uri, source.uri);
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
 
         var sourceNodeTransformations = source.nodeTransformations;
         if (defined(sourceNodeTransformations)) {
