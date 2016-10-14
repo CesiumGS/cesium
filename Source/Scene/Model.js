@@ -2895,8 +2895,7 @@ define([
                 else {
                     var positions = accessors[primitive.attributes.POSITION];
                     count = positions.count;
-                    var accessorInfo = getBinaryAccessor(positions);
-                    offset = (positions.byteOffset / (accessorInfo.componentsPerAttribute*ComponentDatatype.getSizeInBytes(positions.componentType)));
+                    offset = 0;
                 }
 
                 var um = uniformMaps[primitive.material];
