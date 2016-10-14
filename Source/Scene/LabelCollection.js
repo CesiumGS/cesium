@@ -203,6 +203,7 @@ define([
                 billboard.image = id;
                 billboard.translucencyByDistance = label._translucencyByDistance;
                 billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+                billboard.distanceDisplayCondition = label._distanceDisplayCondition;
             }
         }
 

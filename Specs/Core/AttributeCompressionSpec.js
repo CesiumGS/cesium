@@ -490,24 +490,49 @@ defineSuite([
 
     it('compresses texture coordinates', function() {
         var coords = new Cartesian2(0.5, 0.5);
-        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqual(coords);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqualEpsilon(coords, 1.0 / 4096.0);
     });
-    
+
     it('compress texture coordinates throws without texture coordinates', function() {
         expect(function() {
             AttributeCompression.compressTextureCoordinates(undefined);
         }).toThrowDeveloperError();
     });
-    
+
     it('decompress texture coordinates throws without encoded texture coordinates', function() {
         expect(function() {
             AttributeCompression.decompressTextureCoordinates(undefined, new Cartesian2());
         }).toThrowDeveloperError();
     });
-    
+
     it('decompress texture coordinates throws without result', function() {
         expect(function() {
             AttributeCompression.decompressTextureCoordinates(0.0, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('compresses/decompresses 1.0', function() {
+        var coords = new Cartesian2(1.0, 1.0);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqual(coords);
+    });
+
+    it('compresses/decompresses 0.0', function() {
+        var coords = new Cartesian2(1.0, 1.0);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqual(coords);
+    });
+
+    it('compresses/decompresses 0.5 / 1.0', function() {
+        var coords = new Cartesian2(0.5, 1.0);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqualEpsilon(coords, 1.0 / 4095.0);
+    });
+
+    it('compresses/decompresses 1.0 / 0.5', function() {
+        var coords = new Cartesian2(1.0, 0.5);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqualEpsilon(coords, 1.0 / 4095.0);
+    });
+
+    it('compresses/decompresses values very close but not equal to 1.0', function() {
+        var coords = new Cartesian2(0.99999999999999, 0.99999999999999);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqualEpsilon(coords, 1.0 / 4095.0);
     });
 });
