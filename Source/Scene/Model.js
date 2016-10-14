@@ -2893,7 +2893,9 @@ define([
                     offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
                 }
                 else {
-                    offset = 0; // for primitives without indices, the offset is baked into the corresponding VertexArray
+                    var positions = accessors[primitive.attributes.POSITION];
+                    count = positions.count;
+                    offset = 0;
                 }
 
                 var um = uniformMaps[primitive.material];
