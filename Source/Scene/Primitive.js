@@ -683,7 +683,11 @@ define([
         var indices;
         if (defined(geometry.indices)) {
             var sourceValues = geometry.indices;
-            indices = new sourceValues.constructor(sourceValues);
+            if (isArray(sourceValues)) {
+                indices = sourceValues.slice(0);
+            } else {
+                indices = new sourceValues.constructor(sourceValues);
+            }
         }
 
         return new Geometry({
