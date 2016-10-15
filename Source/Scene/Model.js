@@ -2274,8 +2274,8 @@ define([
             WebGLConstants.FUNC_ADD]);
         var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
             WebGLConstants.ONE,
-            WebGLConstants.ONE,
             WebGLConstants.ZERO,
+            WebGLConstants.ONE,
             WebGLConstants.ZERO]);
         var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
         var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
@@ -2329,8 +2329,8 @@ define([
                 equationRgb : blendEquationSeparate[0],
                 equationAlpha : blendEquationSeparate[1],
                 functionSourceRgb : blendFuncSeparate[0],
-                functionSourceAlpha : blendFuncSeparate[1],
-                functionDestinationRgb : blendFuncSeparate[2],
+                functionDestinationRgb : blendFuncSeparate[1],
+                functionSourceAlpha : blendFuncSeparate[2],
                 functionDestinationAlpha : blendFuncSeparate[3]
             }
         });
