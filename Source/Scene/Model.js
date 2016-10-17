@@ -3076,20 +3076,19 @@ define([
                 uniformMap.u_highlightSize = createHighlightSizeFunction(model);
 
                 var highlightCommand = new DrawCommand({
-                        boundingVolume : new BoundingSphere(), // updated in update()
-                        cull : model.cull,
-                        modelMatrix : new Matrix4(),           // computed in update()
-                        primitiveType : primitive.mode,
-                        vertexArray : vertexArray,
-                        count : count,
-                        offset : offset,
-                        shaderProgram : rendererhighlightPrograms[technique.program],
-                        uniformMap : uniformMap,
-                        renderState : highlightRS,
-                        owner : owner,
-                        pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                    boundingVolume : new BoundingSphere(), // updated in update()
+                    cull : model.cull,
+                    modelMatrix : new Matrix4(),           // computed in update()
+                    primitiveType : primitive.mode,
+                    vertexArray : vertexArray,
+                    count : count,
+                    offset : offset,
+                    shaderProgram : rendererhighlightPrograms[technique.program],
+                    uniformMap : uniformMap,
+                    renderState : highlightRS,
+                    owner : owner,
+                    pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                 });
-
 
                 var pickCommand;
 
