@@ -10,6 +10,7 @@ attribute vec4 eyeOffset;                   // eye offset in meters, 4 bytes fre
 attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
 attribute vec2 distanceDisplayCondition;    // near, far
+attribute float a_batchId;
 
 varying vec2 v_textureCoordinates;
 

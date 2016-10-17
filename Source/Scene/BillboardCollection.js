@@ -95,7 +95,8 @@ define([
         eyeOffset : 5,                   // 4 bytes free
         scaleByDistance : 6,
         pixelOffsetScaleByDistance : 7,
-        distanceDisplayCondition : 8
+        distanceDisplayCondition : 8,
+        a_batchId : 9
     };
 
     var attributeLocationsInstanced = {
@@ -108,7 +109,8 @@ define([
         eyeOffset : 6,                  // texture range in w
         scaleByDistance : 7,
         pixelOffsetScaleByDistance : 8,
-        distanceDisplayCondition : 9
+        distanceDisplayCondition : 9,
+        a_batchId : 10
     };
 
     /**
@@ -161,6 +163,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._scene = options.scene;
+        this._batchTable = options.batchTable;
 
         this._textureAtlas = undefined;
         this._textureAtlasGUID = undefined;
@@ -291,7 +294,8 @@ define([
         this._uniforms = {
             u_atlas : function() {
                 return that._textureAtlas.texture;
-            }
+            },
+            tile_translucentCommand : function() { return false; }
         };
 
         var scene = this._scene;
@@ -656,7 +660,7 @@ define([
         return usageChanged;
     };
 
-    function createVAF(context, numberOfBillboards, buffersUsage, instanced) {
+    function createVAF(context, numberOfBillboards, buffersUsage, instanced, batchTable) {
         var attributes = [{
             index : attributeLocations.positionHighAndScale,
             componentsPerAttribute : 4,
@@ -711,6 +715,15 @@ define([
                 componentsPerAttribute : 2,
                 componentDatatype : ComponentDatatype.FLOAT,
                 vertexBuffer : getVertexBufferInstanced(context)
+            });
+        }
+
+        if (defined(batchTable)) {
+            attributes.push({
+                index : attributeLocations.a_batchId,
+                componentsPerAttribute : 1,
+                componentDatatyps : ComponentDatatype.FLOAT,
+                bufferUsage : BufferUsage.STATIC_DRAW
             });
         }
 
@@ -1135,6 +1148,26 @@ define([
             writer(i + 3, near, far);
         }
     }
+    function writeBatchId(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+        if (!defined(billboardCollection._batchTable)) {
+            return;
+        }
+
+        var writer = vafWriters[attributeLocations.a_batchId];
+        var id = billboard._batchIndex;
+
+        var i;
+        if (billboardCollection._instanced) {
+            i = billboard._index;
+            writer(i, id);
+        } else {
+            i = billboard._index * 4;
+            writer(i + 0, id);
+            writer(i + 1, id);
+            writer(i + 2, id);
+            writer(i + 3, id);
+        }
+    }
 
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         writePositionScaleAndRotation(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -1145,6 +1178,7 @@ define([
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeDistanceDisplayCondition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeBatchId(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -1287,7 +1321,7 @@ define([
 
             if (billboardsLength > 0) {
                 // PERFORMANCE_IDEA:  Instead of creating a new one, resize like std::vector.
-                this._vaf = createVAF(context, billboardsLength, this._buffersUsage, this._instanced);
+                this._vaf = createVAF(context, billboardsLength, this._buffersUsage, this._instanced, this._batchTable);
                 vafWriters = this._vaf.writers;
 
                 // Rewrite entire buffer if billboards were added or removed.
@@ -1414,6 +1448,9 @@ define([
         var command;
         var vs;
         var fs;
+        var uniforms;
+        var vsSource;
+        var fsSource;
         var j;
 
         var commandList = frameState.commandList;
@@ -1438,8 +1475,16 @@ define([
                     (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
                     (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition)) {
 
+                vsSource = BillboardCollectionVS;
+                fsSource = BillboardCollectionFS;
+
+                if (defined(this._batchTable)) {
+                    vsSource = this._batchTable.getVertexShaderCallback()(vsSource);
+                    fsSource = this._batchTable.getFragmentShaderCallback()(fsSource);
+                }
+
                 vs = new ShaderSource({
-                    sources : [BillboardCollectionVS]
+                    sources : [vsSource]
                 });
                 if (this._instanced) {
                     vs.defines.push('INSTANCED');
@@ -1463,11 +1508,15 @@ define([
                     vs.defines.push('DISTANCE_DISPLAY_CONDITION');
                 }
 
+                fs = new ShaderSource({
+                    sources : [fsSource]
+                });
+
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._sp,
                     vertexShaderSource : vs,
-                    fragmentShaderSource : BillboardCollectionFS,
+                    fragmentShaderSource : fs,
                     attributeLocations : attributeLocations
                 });
 
@@ -1481,6 +1530,11 @@ define([
 
             va = this._vaf.va;
             vaLength = va.length;
+
+            uniforms = this._uniforms;
+            if (defined(this._batchTable)) {
+                uniforms = this._batchTable.getUniformMapCallback()(uniforms);
+            }
 
             colorList.length = vaLength;
             for (j = 0; j < vaLength; ++j) {
@@ -1496,7 +1550,7 @@ define([
                 command.modelMatrix = modelMatrix;
                 command.count = va[j].indicesCount;
                 command.shaderProgram = this._sp;
-                command.uniformMap = this._uniforms;
+                command.uniformMap = uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
@@ -1521,9 +1575,17 @@ define([
                     (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistancePick) ||
                     (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayConditionPick)) {
 
+                vsSource = BillboardCollectionVS;
+                fsSource = BillboardCollectionFS;
+
+                if (defined(this._batchTable)) {
+                    vsSource = this._batchTable.getPickVertexShaderCallback()(vsSource);
+                    fsSource = this._batchTable.getPickFragmentShaderCallback()(fsSource);
+                }
+
                 vs = new ShaderSource({
                     defines : ['RENDER_FOR_PICK'],
-                    sources : [BillboardCollectionVS]
+                    sources : [vsSource]
                 });
 
                 if(this._instanced) {
@@ -1550,7 +1612,7 @@ define([
 
                 fs = new ShaderSource({
                     defines : ['RENDER_FOR_PICK'],
-                    sources : [BillboardCollectionFS]
+                    sources : [fsSource]
                 });
 
                 this._spPick = ShaderProgram.replaceCache({
@@ -1571,6 +1633,11 @@ define([
             va = this._vaf.va;
             vaLength = va.length;
 
+            uniforms = this._uniforms;
+            if (defined(this._batchTable)) {
+                uniforms = this._batchTable.getPickUniformMapCallback()(uniforms);
+            }
+
             pickList.length = vaLength;
             for (j = 0; j < vaLength; ++j) {
                 command = pickList[j];
@@ -1585,7 +1652,7 @@ define([
                 command.modelMatrix = modelMatrix;
                 command.count = va[j].indicesCount;
                 command.shaderProgram = this._spPick;
-                command.uniformMap = this._uniforms;
+                command.uniformMap = uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
 

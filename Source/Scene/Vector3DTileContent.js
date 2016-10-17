@@ -200,10 +200,14 @@ define([
         var labels = json.labels;
         var length = labels.length;
 
+        this._featuresLength = length;
+
         var batchTable = new Cesium3DTileBatchTable(this, length, json.batchTable, undefined);
         this.batchTable = batchTable;
 
-        var labelCollection = new LabelCollection();
+        var labelCollection = new LabelCollection({
+            batchTable : batchTable
+        });
         var polylineCollection = new PolylineCollection();
 
         for (var i = 0; i < length; ++i) {
@@ -229,6 +233,8 @@ define([
             polylineCollection.add({
                 positions : [position, offsetPosition]
             });
+
+            this.batchTable.setColor(i, Color.fromRandom({ alpha : 1.0 }));
         }
 
         this.state = Cesium3DTileContentState.PROCESSING;
@@ -250,6 +256,10 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
+        if (this._featuresLength === 0) {
+            return;
+        }
+        this.batchTable.update(tileset, frameState);
         this._labelCollection.update(frameState);
         this._polylineCollection.update(frameState);
     };
