@@ -59,7 +59,13 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox : false,
     selectionIndicator : false,
-    shadows : true
+    shadows : true,
+    // Explicitly request a stencil buffer so highlighting will work.
+    contextOptions: {
+        webgl : {
+            stencil: true
+        }
+    }
 });
 
 var entity = null;
