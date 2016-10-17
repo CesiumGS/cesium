@@ -50,6 +50,7 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './getBinaryAccessor',
+        './BlendingState',
         './HeightReference',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -111,6 +112,7 @@ define([
         Uri,
         when,
         getBinaryAccessor,
+        BlendingState,
         HeightReference,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -3068,6 +3070,7 @@ define([
                     enabled : false
                 };
                 highlightRS.depthTest = false;
+                highlightRS.blending = BlendingState.ALPHA_BLEND;
 
                 highlightRS = RenderState.fromCache(highlightRS);
 
