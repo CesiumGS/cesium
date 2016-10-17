@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/ModelGraphics',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Quaternion',
@@ -12,6 +13,7 @@ defineSuite([
     ], function(
         ModelGraphics,
         Cartesian3,
+        Color,
         DistanceDisplayCondition,
         JulianDate,
         Quaternion,
@@ -32,6 +34,9 @@ defineSuite([
             runAnimations : false,
             shadows : ShadowMode.DISABLED,
             distanceDisplayCondition : new DistanceDisplayCondition(),
+            highlight: false,
+            highlightSize: 3.0,
+            highlightColor: new Color(1.0, 0.0, 0.0, 1.0),
             nodeTransformations : {
                 node1 : {
                     translation : Cartesian3.UNIT_Y,
@@ -50,6 +55,9 @@ defineSuite([
         expect(model.incrementallyLoadTextures).toBeInstanceOf(ConstantProperty);
         expect(model.shadows).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
+        expect(model.highlight).toBeInstanceOf(ConstantProperty);
+        expect(model.highlightSize).toBeInstanceOf(ConstantProperty);
+        expect(model.highlightColor).toBeInstanceOf(ConstantProperty);
 
         expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
 
@@ -62,6 +70,9 @@ defineSuite([
         expect(model.shadows.getValue()).toEqual(options.shadows);
         expect(model.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
+        expect(model.highlight.getValue()).toEqual(options.highlight);
+        expect(model.highlightSize.getValue()).toEqual(options.highlightSize);
+        expect(model.highlightColor.getValue()).toEqual(options.highlightColor);
 
         var actualNodeTransformations = model.nodeTransformations.getValue(new JulianDate());
         var expectedNodeTransformations = options.nodeTransformations;
@@ -81,6 +92,9 @@ defineSuite([
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.highlight = new ConstantProperty(true);
+        source.highlightSize = new ConstantProperty(3.0);
+        source.highlightColor = new ConstantProperty(new Color(1.0, 0.0, 0.0, 1.0));
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
@@ -107,6 +121,9 @@ defineSuite([
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
         expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
+        expect(target.highlight).toEqual(source.highlight);
+        expect(target.highlightSize).toEqual(source.highlightSize);
+        expect(target.highlightColor).toEqual(source.highlightColor);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -123,6 +140,9 @@ defineSuite([
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
         };
+        source.highlight = new ConstantProperty(true);
+        source.highlightSize = new ConstantProperty(1.0);
+        source.highlightColor = new ConstantProperty(new Color());
 
         var uri = new ConstantProperty('');
         var show = new ConstantProperty(true);
@@ -136,6 +156,9 @@ defineSuite([
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
         });
+        var highlight = new ConstantProperty(true);
+        var highlightSize = new ConstantProperty(1.0);
+        var highlightColor = new ConstantProperty(new Color());
 
         var target = new ModelGraphics();
         target.uri = uri;
@@ -148,6 +171,9 @@ defineSuite([
         target.distanceDisplayCondition = distanceDisplayCondition;
         target.runAnimations = runAnimations;
         target.nodeTransformations = nodeTransformations;
+        target.highlight = highlight;
+        target.highlightSize = highlightSize;
+        target.highlightColor = highlightColor;
 
         target.merge(source);
 
@@ -161,6 +187,9 @@ defineSuite([
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
         expect(target.runAnimations).toBe(runAnimations);
         expect(target.nodeTransformations).toBe(nodeTransformations);
+        expect(target.highlight).toBe(highlight);
+        expect(target.highlightSize).toBe(highlightSize);
+        expect(target.highlightColor).toBe(highlightColor);
     });
 
     it('clone works', function() {
@@ -178,6 +207,9 @@ defineSuite([
             node1 : new NodeTransformationProperty(),
             node2 : new NodeTransformationProperty()
         };
+        source.highlight = new ConstantProperty(true);
+        source.highlightSize = new ConstantProperty(2.0);
+        source.highlightColor = new ConstantProperty(new Color());
 
         var result = source.clone();
         expect(result.uri).toBe(source.uri);
@@ -190,6 +222,9 @@ defineSuite([
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
         expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
+        expect(result.highlight).toEqual(source.highlight);
+        expect(result.highlightSize).toEqual(source.highlightSize);
+        expect(result.highlightColor).toEqual(source.highlightColor);
     });
 
     it('merge throws if source undefined', function() {
