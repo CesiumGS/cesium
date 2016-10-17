@@ -243,7 +243,7 @@ define([
 
         /**
         * Gets whether to allow picking this billboard.
-        * @memberof PointPrimitive.prototype
+        * @memberof Billboard.prototype
         * @type {Boolean}
         */
         allowPicking : {
