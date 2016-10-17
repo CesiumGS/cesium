@@ -234,7 +234,7 @@ define([
                 positions : [position, offsetPosition]
             });
 
-            this.batchTable.setColor(i, Color.fromRandom({ alpha : 1.0 }));
+            this.batchTable.setColor(i, Color.WHITE);
         }
 
         this.state = Cesium3DTileContentState.PROCESSING;

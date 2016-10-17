@@ -1583,8 +1583,10 @@ define([
                     fsSource = this._batchTable.getPickFragmentShaderCallback()(fsSource);
                 }
 
+                var renderForPick = defined(this._batchTable) ? '' : 'RENDER_FOR_PICK';
+
                 vs = new ShaderSource({
-                    defines : ['RENDER_FOR_PICK'],
+                    defines : [renderForPick],
                     sources : [vsSource]
                 });
 
@@ -1611,7 +1613,7 @@ define([
                 }
 
                 fs = new ShaderSource({
-                    defines : ['RENDER_FOR_PICK'],
+                    defines : [renderForPick],
                     sources : [fsSource]
                 });
 

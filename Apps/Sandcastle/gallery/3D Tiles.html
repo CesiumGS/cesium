@@ -196,7 +196,8 @@ var tilesets = [{
             originalColor : new Cesium.Color()
         };
 
-        var HIGHLIGHT_COLOR = new Cesium.Color(1.0, 1.0, 0.0, 0.4);
+        //var HIGHLIGHT_COLOR = new Cesium.Color(1.0, 1.0, 0.0, 0.4);
+        var HIGHLIGHT_COLOR = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
 
 // Highlight feature on mouse over
         handler.setInputAction(function(movement) {
@@ -253,7 +254,7 @@ var tilesets = [{
                     }
 
                     // evaluate feature description
-                    if (Cesium.defined(tileset.style.meta.description)) {
+                    if (Cesium.defined(tileset.style) && Cesium.defined(tileset.style.meta.description)) {
                         console.log("Description : " + tileset.style.meta.description.evaluate(feature));
                     }
 
