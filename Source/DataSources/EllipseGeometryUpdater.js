@@ -7,6 +7,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
+        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/EllipseGeometry',
         '../Core/EllipseOutlineGeometry',
         '../Core/Event',
@@ -32,6 +34,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         EllipseGeometry,
         EllipseOutlineGeometry,
         Event,
@@ -57,6 +61,7 @@ define([
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
+    var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
     var scratchColor = new Color();
 
     function GeometryOptions(entity) {
@@ -107,6 +112,7 @@ define([
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
         this._shadowsProperty = undefined;
+        this._distanceDisplayConditionProperty = undefined;
         this._onTerrain = false;
         this._options = new GeometryOptions(entity);
 
@@ -250,6 +256,18 @@ define([
             }
         },
         /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
+         * @memberof EllipseGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        distanceDisplayConditionProperty : {
+            get : function() {
+                return this._distanceDisplayConditionProperty;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
@@ -351,6 +369,8 @@ define([
 
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
+        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -359,11 +379,13 @@ define([
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
                 show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute,
                 color : color
             };
         } else {
             attributes = {
-                show : show
+                show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute
             };
         }
 
@@ -396,13 +418,15 @@ define([
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
         return new GeometryInstance({
             id : entity,
             geometry : new EllipseOutlineGeometry(this._options),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
             }
         });
     };
@@ -483,6 +507,7 @@ define([
         this._showOutlineProperty = defaultValue(ellipse.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(ellipse.outlineColor, defaultOutlineColor) : undefined;
         this._shadowsProperty = defaultValue(ellipse.shadows, defaultShadows);
+        this._distanceDisplayConditionProperty = defaultValue(ellipse.distanceDisplayCondition, defaultDistanceDisplayCondition);
 
         var rotation = ellipse.rotation;
         var height = ellipse.height;
@@ -617,6 +642,10 @@ define([
 
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
 
+        var distanceDisplayConditionProperty = this._geometryUpdater.distanceDisplayConditionProperty;
+        var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time);
+        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
+
         if (Property.getValueOrDefault(ellipse.fill, time, true)) {
             var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
             var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
@@ -633,7 +662,8 @@ define([
                         id : entity,
                         geometry : new EllipseGeometry(options),
                         attributes: {
-                            color: ColorGeometryInstanceAttribute.fromColor(currentColor)
+                            color: ColorGeometryInstanceAttribute.fromColor(currentColor),
+                            distanceDisplayCondition : distanceDisplayConditionAttribute
                         }
                     }),
                     asynchronous : false,
@@ -652,6 +682,9 @@ define([
                         id : entity,
                         geometry : new EllipseGeometry(options)
                     }),
+                    attributes : {
+                        distanceDisplayCondition : distanceDisplayConditionAttribute
+                    },
                     appearance : appearance,
                     asynchronous : false,
                     shadows : shadows
@@ -671,7 +704,8 @@ define([
                     id : entity,
                     geometry : new EllipseOutlineGeometry(options),
                     attributes : {
-                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+                        distanceDisplayCondition : distanceDisplayConditionAttribute
                     }
                 }),
                 appearance : new PerInstanceColorAppearance({

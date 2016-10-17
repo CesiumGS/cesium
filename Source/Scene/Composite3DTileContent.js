@@ -48,7 +48,7 @@ define([
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-        this.batchTableResources = undefined;
+        this.batchTable = undefined;
 
         this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
@@ -225,7 +225,7 @@ define([
 
         var that = this;
 
-        when.all(contentPromises, function() {
+        when.all(contentPromises).then(function() {
             that.state = Cesium3DTileContentState.READY;
             that._readyPromise.resolve(that);
         }).otherwise(function(error) {

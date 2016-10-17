@@ -203,6 +203,7 @@ define([
                 billboard.image = id;
                 billboard.translucencyByDistance = label._translucencyByDistance;
                 billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+                billboard.distanceDisplayCondition = label._distanceDisplayCondition;
             }
         }
 
@@ -242,8 +243,7 @@ define([
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
 
-        var heightReference = label._heightReference;
-        var verticalOrigin = (heightReference === HeightReference.NONE) ? label._verticalOrigin : VerticalOrigin.BOTTOM;
+        var verticalOrigin = label._verticalOrigin;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             glyph = glyphs[glyphIndex];
             dimensions = glyph.dimensions;

@@ -56,33 +56,44 @@
         scene.fog.enabled = false;
         scene.debugShowFramesPerSecond = true;
 
-        var tilesets = [{
-            //name : 'Tileset', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/'
-            name : 'Tileset', url : 'http://localhost:8002/tilesets/Names/'
-        }, {
-            name : 'Translucent', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucent/'
-        }, {
-            name : 'Translucent/Opaque', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/'
-        }, {
-            name : 'Batched', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/'
-        }, {
-            name : 'Instanced', url : '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/'
-        }, {
-            name : 'Composite', url : '../../../Specs/Data/Cesium3DTiles/Composite/Composite/'
-        }, {
-            name : 'Points', url : '../../../Specs/Data/Cesium3DTiles/Points/PointsRGB/'
-        }];
+var tilesets = [{
+    //name : 'Tileset', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/'
+    name : 'Tileset', url : 'http://localhost:8002/tilesets/Names/'
+}, {
+    name : 'Translucent', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucent/'
+}, {
+    name : 'Translucent/Opaque', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/'
+}, {
+    name : 'Request Volume', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/'
+}, {
+    name : 'Batched', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/'
+}, {
+    name : 'Instanced', url : '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/'
+}, {
+    name : 'Instanced/Orientation', url : '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientationWithBatchTable/'
+}, {
+    name : 'Composite', url : '../../../Specs/Data/Cesium3DTiles/Composite/Composite/'
+}, {
+    name : 'PointCloud', url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudRGB/'
+}, {
+    name : 'PointCloudConstantColor', url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/'
+}, {
+    name : 'PointCloudNormals', url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/'
+}, {
+    name : 'PointCloudBatched', url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudBatched/'
+}];
 
         var tileset;
 
         function loadTileset(url) {
             reset();
 
-            tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-                url : url,
-                debugShowStatistics : true,
-                maximumNumberOfLoadedTiles : 3
-            }));
+    tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+        url : url,
+        debugShowStatistics : true
+//        , maximumNumberOfLoadedTiles : 3
+//       , refineToVisible : true
+    }));
 
             return tileset.readyPromise.then(function(tileset) {
                 //var boundingSphere = tileset.boundingSphere;
@@ -388,10 +399,10 @@
             tileset.debugShowContentBoundingVolume = !tileset.debugShowContentBoundingVolume;
         });
 
-        Sandcastle.addToolbarButton('SSE++', function() {
-            ++tileset.maximumScreenSpaceError;
-            console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
-        });
+Sandcastle.addToolbarButton('Request Volume on/off', function() {
+    tileset.debugShowViewerRequestVolume = !tileset.debugShowViewerRequestVolume;
+});
+
 
         Sandcastle.addToolbarButton('SSE--', function() {
             tileset.maximumScreenSpaceError = Math.max(tileset.maximumScreenSpaceError - 1, 0);

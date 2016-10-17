@@ -24,10 +24,9 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-
         // One item in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 50.0));
     });
 
     afterAll(function() {
@@ -121,7 +120,8 @@ defineSuite([
         // Instanced3DModel3DTileContent, and Composite3DTileContent.
         var arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
             tiles : [Cesium3DTilesTester.generateInstancedTileBuffer({
-                gltfFormat : 0
+                gltfFormat : 0,
+                gltfUri : 'invalid'
             })]
         });
         return Cesium3DTilesTester.rejectsReadyPromiseOnError(scene, arrayBuffer, 'cmpt');

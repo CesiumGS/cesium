@@ -46,6 +46,7 @@ define([
      * @param {Property} [options.imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
      * @param {Property} [options.sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
@@ -86,6 +87,8 @@ define([
         this._pixelOffsetScaleByDistanceSubscription = undefined;
         this._sizeInMeters = undefined;
         this._sizeInMetersSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -306,7 +309,14 @@ define([
          * @type {Property}
          * @default false
          */
-        sizeInMeters : createPropertyDescriptor('sizeInMeters')
+        sizeInMeters : createPropertyDescriptor('sizeInMeters'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this billboard will be displayed.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -337,6 +347,7 @@ define([
         result.translucencyByDistance = this._translucencyByDistance;
         result.pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
         result.sizeInMeters = this._sizeInMeters;
+        result.distanceDisplayCondition = this._distanceDisplayCondition;
         return result;
     };
 
@@ -371,6 +382,7 @@ define([
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
         this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
         this.sizeInMeters = defaultValue(this._sizeInMeters, source.sizeInMeters);
+        this.distanceDisplayCondition = defaultValue(this._distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return BillboardGraphics;

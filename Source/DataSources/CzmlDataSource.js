@@ -56,6 +56,7 @@ define([
         './DataSourceClock',
         './EllipseGraphics',
         './EllipsoidGraphics',
+        './EntityCluster',
         './EntityCollection',
         './GridMaterialProperty',
         './ImageMaterialProperty',
@@ -140,6 +141,7 @@ define([
         DataSourceClock,
         EllipseGraphics,
         EllipsoidGraphics,
+        EntityCluster,
         EntityCollection,
         GridMaterialProperty,
         ImageMaterialProperty,
@@ -1411,8 +1413,6 @@ define([
         processPacketData(Number, model, 'maximumScale', modelData.maximumScale, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'incrementallyLoadTextures', modelData.incrementallyLoadTextures, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, model, 'castShadows', modelData.castShadows, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, model, 'receiveShadows', modelData.receiveShadows, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, model, 'shadows', modelData.shadows, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, model, 'heightReference', modelData.heightReference, interval, sourceUri, entityCollection);
 
@@ -1836,6 +1836,7 @@ define([
         this._documentPacket = new DocumentPacket();
         this._version = undefined;
         this._entityCollection = new EntityCollection(this);
+        this._entityCluster = new EntityCluster();
     }
 
     /**
@@ -1934,6 +1935,26 @@ define([
             },
             set : function(value) {
                 this._entityCollection.show = value;
+            }
+        },
+
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof CzmlDataSource.prototype
+         * @type {EntityCluster}
+         */
+        clustering : {
+            get : function() {
+                return this._entityCluster;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value must be defined.');
+                }
+                //>>includeEnd('debug');
+                this._entityCluster = value;
             }
         }
     });

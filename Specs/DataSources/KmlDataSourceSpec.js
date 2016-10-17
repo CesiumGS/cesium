@@ -7,6 +7,7 @@ defineSuite([
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/Color',
+        'Core/combine',
         'Core/DefaultProxy',
         'Core/Event',
         'Core/Iso8601',
@@ -37,6 +38,7 @@ defineSuite([
         ClockRange,
         ClockStep,
         Color,
+        combine,
         DefaultProxy,
         Event,
         Iso8601,
@@ -102,7 +104,7 @@ defineSuite([
     var uberIconColor = Color.fromBytes(0xdd, 0xdd, 0xdd, 0xdd);
     var uberIconScale = 3;
     var uberIconHeading = CesiumMath.toRadians(-45);
-    var uberIconHotspot = new Cartesian2(45, -46);
+    var uberIconHotspot = new Cartesian2(45, -42);
 
     var uberLabelColor = Color.fromBytes(0xee, 0xee, 0xee, 0xee);
     var uberLabelScale = 4;
@@ -336,10 +338,11 @@ defineSuite([
             expect(spy.calls.count()).toEqual(3);
             for (var i = 0; i < nodeNames.length; i++) {
                 var args = spy.calls.argsFor(i);
-                expect(args.length).toEqual(3);
+                expect(args.length).toEqual(7);
                 expect(args[0]).toBe(dataSource);
-                expect(args[1].localName).toEqual(nodeNames[i]);
-                // args[2] could be undefined, allow for that
+                expect(args[2].localName).toEqual(nodeNames[i]);
+                expect(args[3]).toBeInstanceOf(EntityCollection);
+                expect(args[4]).toBeInstanceOf(EntityCollection);
             }
         });
     });
@@ -773,6 +776,24 @@ defineSuite([
                 <south>-90</south>\
                 <east>180</east>\
                 <north>90</north>\
+            </LatLonBox>\
+        </GroundOverlay>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon).toBeUndefined();
+            expect(entity.rectangle.coordinates.getValue()).toEqual(Rectangle.fromDegrees(-180, -90, 180, 90));
+        });
+    });
+
+    it('GroundOverlay: Handles out-of-range latitudes.', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <LatLonBox>\
+                <west>-180</west>\
+                <south>-100</south>\
+                <east>180</east>\
+                <north>100</north>\
             </LatLonBox>\
         </GroundOverlay>';
 
@@ -1568,7 +1589,7 @@ defineSuite([
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var billboard = dataSource.entities.values[0].billboard;
-            expect(billboard.pixelOffset.getValue()).toEqual(new Cartesian2(-15, -18));
+            expect(billboard.pixelOffset.getValue()).toEqual(new Cartesian2(-15, 14));
         });
     });
 
@@ -2183,6 +2204,7 @@ defineSuite([
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
+            expect(entities[0].billboard.pixelOffset).toBeUndefined();
             expect(entities[0].polyline).toBeUndefined();
         });
     });
@@ -2191,7 +2213,7 @@ defineSuite([
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Point>\
-              <altitudeMode>absolute</altitudeMode>\
+              <altitudeMode>relativeToGround</altitudeMode>\
               <coordinates>1,2,3</coordinates>\
             </Point>\
           </Placemark>';
@@ -2200,6 +2222,7 @@ defineSuite([
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
+            expect(entities[0].billboard.pixelOffset).toBeUndefined();
             expect(entities[0].polyline).toBeUndefined();
         });
     });
@@ -2217,7 +2240,8 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
-            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2));
+            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 0));
+            expect(entities[0].billboard.pixelOffset).toBeUndefined();
             expect(entities[0].polyline).toBeUndefined();
         });
     });
@@ -3844,7 +3868,7 @@ defineSuite([
                     </coordinates>\
                 </LineString>\
             </Placemark>';
-        var clampToGroundOptions = Object.assign({ clampToGround : true }, options);
+        var clampToGroundOptions = combine(options, { clampToGround : true });
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), clampToGroundOptions).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.corridor).toBeDefined();
