@@ -34,8 +34,8 @@ define([
     var defaultIncrementallyLoadTextures = true;
     var defaultShadows = ShadowMode.ENABLED;
     var defaultHeightReference = HeightReference.NONE;
-    var defaultHighlightColor = new Color(1.0, 0.0, 0.0, 1.0);
-    var defaultHighlightSize = 0.002;
+    var defaultHighlightColor = new Color();
+    var defaultHighlightSize = 2.0;
     var defaultHighlight = false;
 
     var modelMatrixScratch = new Matrix4();

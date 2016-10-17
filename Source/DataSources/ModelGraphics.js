@@ -50,8 +50,8 @@ define([
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.highlight=false] Whether to highlight the model using an outline
-     * @param {Property} [options.highlightColor=Color(1.0, 0.0, 0.0, 1.0)] The highlight color for the outline.
-     * @param {Property} [options.highlightSize=0.002] The highlight color for the outline.
+     * @param {Property} [options.highlightColor=new Color())] The highlight color for the outline.
+     * @param {Property} [options.highlightSize=2] The size of the highlight in pixels
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
@@ -199,15 +199,15 @@ define([
          * Gets or sets the Color Property specifying the highlight color of this model.
          * @memberof ModelGraphics.prototype
          * @type {Property}
-         * @default Color(1.0,0.0,1.0,1.0)
+         * @default Color()
          */
         highlightColor: createPropertyDescriptor('highlightColor'),
 
         /**
-         * Gets or sets the float Property specifying the size of the highlight of this model.
+         * Gets or sets the float Property specifying the size of the highlight of this model in pixels
          * @memberof ModelGraphics.prototype
          * @type {Property}
-         * @default 0.002
+         * @default 2.0
          */
         highlightSize: createPropertyDescriptor('highlightSize'),
 
