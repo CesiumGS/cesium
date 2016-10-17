@@ -3158,7 +3158,6 @@ define([
                     pickCommand2D : pickCommand2D,
                     highlightCommand: highlightCommand,
                     highlightCommand2D: highlightCommand2D
-
                 };
                 runtimeNode.commands.push(nodeCommand);
                 nodeCommands.push(nodeCommand);
@@ -3358,7 +3357,6 @@ define([
                             var highlightCommand = primitiveCommand.highlightCommand;
                             Matrix4.clone(command.modelMatrix, highlightCommand.modelMatrix);
                             BoundingSphere.clone(command.boundingVolume, highlightCommand.boundingVolume);
-
 
                             // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
                             // will be clipped by the viewport. We create a second command that translates the model
