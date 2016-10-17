@@ -59,8 +59,6 @@ define([
      */
     function Vector3DTileContent(tileset, tile, url) {
         this._labelCollection = undefined;
-        this._pointCollection = undefined;
-        this._billboardCollection = undefined;
         this._polylineCollection = undefined;
         this._url = url;
         this._tileset = tileset;
@@ -175,44 +173,17 @@ define([
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
-        /*
-        var magic = getMagic(uint8Array, byteOffset);
-        if (magic !== 'vctr') {
-            throw new DeveloperError('Invalid Vector tile.  Expected magic=vctr.  Read magic=' + magic);
-        }
-
-        var view = new DataView(arrayBuffer);
-        byteOffset += sizeOfUint32;  // Skip magic number
-
-        //>>includeStart('debug', pragmas.debug);
-        var version = view.getUint32(byteOffset, true);
-        if (version !== 1) {
-            throw new DeveloperError('Only Vector tile version 1 is supported.  Version ' + version + ' is not.');
-        }
-        //>>includeEnd('debug');
-        byteOffset += sizeOfUint32;
-
-        // Skip byteLength
-        byteOffset += sizeOfUint32;
-        */
 
         var text = getStringFromTypedArray(uint8Array, byteOffset);
         var json = JSON.parse(text);
 
         var labelCollection = new LabelCollection();
-        //var pointCollection = new PointPrimitiveCollection();
-        //var billboardCollection = new BillboardCollection();
         var polylineCollection = new PolylineCollection();
 
-        var offset = new Cartesian3(0.0, 1.0, 1.0);
-        Cartesian3.normalize(offset, offset);
-        Cartesian3.multiplyByScalar(offset, 100.0, offset);
-
-        //var pinBuilder = new PinBuilder();
-
-        var length = json.length;
+        var labels = json.labels;
+        var length = labels.length;
         for (var i = 0; i < length; ++i) {
-            var label = json[i];
+            var label = labels[i];
             var labelText = label.text;
             var cartographicArray = label.position;
 
@@ -223,29 +194,14 @@ define([
             var cartographic = new Cartographic(lon, lat, alt);
             var position = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
 
-            var offsetPosition = Cartesian3.add(offset, position, new Cartesian3());
+            cartographic.height += 100.0;
+            var offsetPosition = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
 
             labelCollection.add({
                 text : labelText,
-                //position : position
-                position : offsetPosition
+                position : offsetPosition,
+                horizontalOrigin : HorizontalOrigin.CENTER
             });
-            /*
-            pointCollection.add({
-                position : position,
-                pixelSize : 10.0,
-                color : Color.RED,
-                outlineColor : Color.BLACK,
-                oulineWidth : 2.0
-            });
-            */
-            /*
-            billboardCollection.add({
-                image : pinBuilder.fromColor(Color.ROYALBLUE, 48).toDataURL(),
-                position : position,
-                horizontalOrigin : HorizontalOrigin.RIGHT
-            });
-            */
             polylineCollection.add({
                 positions : [position, offsetPosition]
             });
@@ -255,8 +211,6 @@ define([
         this._contentReadyToProcessPromise.resolve(this);
 
         this._labelCollection = labelCollection;
-        //this._pointCollection = pointCollection;
-        //this._billboardCollection = billboardCollection;
         this._polylineCollection = polylineCollection;
         this.state = Cesium3DTileContentState.READY;
         this._readyPromise.resolve(this);
@@ -273,8 +227,6 @@ define([
      */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
         this._labelCollection.update(frameState);
-        //this._pointCollection.update(frameState);
-        //this._billboardCollection.update(frameState);
         this._polylineCollection.update(frameState);
     };
 
@@ -290,8 +242,6 @@ define([
      */
     Vector3DTileContent.prototype.destroy = function() {
         this._labelCollection = this._labelCollection && this._labelCollection.destroy();
-        //this._pointCollection = this._pointCollection && this._pointCollection.destroy();
-        //this._billboardCollection = this._billboardCollection && this._billboardCollection.destroy();
         this._polylineCollection = this._polylineCollection && this._polylineCollection.destroy();
         return destroyObject(this);
     };
