@@ -412,21 +412,20 @@ define([
         /**
          * The highlight color
          *
-         * @type {Cartesian4}
+         * @type {Color}
          *
-         * @default Color(1.0, 0.0, 0.0, 1.0)
+         * @default Color()
          */
-        this.highlightColor = defaultValue(options.highlightColor, new Color(1.0, 0.0, 0.0, 1.0));
+        this.highlightColor = defaultValue(options.highlightColor, new Color());
 
         /**
          * The size of the highlight
          *
          * @type {Float}
          *
-         * @default 0.002
+         * @default 2.0
          */
-        this.highlightSize = 0.002;
-
+        this.highlightSize = 2.0;
 
         /**
          * The 4x4 transformation matrix that transforms the model from model to world coordinates.
