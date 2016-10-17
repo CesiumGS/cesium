@@ -19,7 +19,9 @@ define([
     '../Core/RequestType',
     '../ThirdParty/when',
     './BillboardCollection',
+    './Cesium3DTileBatchTable',
     './Cesium3DTileContentState',
+    './Cesium3DTileFeature',
     './HorizontalOrigin',
     './LabelCollection',
     './PointPrimitiveCollection',
@@ -44,7 +46,9 @@ define([
     RequestType,
     when,
     BillboardCollection,
+    Cesium3DTileBatchTable,
     Cesium3DTileContentState,
+    Cesium3DTileFeature,
     HorizontalOrigin,
     LabelCollection,
     PointPrimitiveCollection,
@@ -68,12 +72,13 @@ define([
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-        this.batchTableResources = undefined;
+        this.batchTable = undefined;
         this.featurePropertiesDirty = false;
-        this.boundingSphere = tile.contentBoundingVolume.boundingSphere;
 
         this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
+        this._featuresLength = 0;
+        this._features = undefined;
     }
 
     defineProperties(Vector3DTileContent.prototype, {
@@ -82,8 +87,7 @@ define([
          */
         featuresLength : {
             get : function() {
-                // TODO: implement batchTable for vctr tile format
-                return 0;
+                return this._featuresLength;
             }
         },
 
@@ -115,20 +119,38 @@ define([
         }
     });
 
+    function createFeatures(content) {
+        var tileset = content._tileset;
+        var featuresLength = content._featuresLength;
+        if (!defined(content._features) && (featuresLength > 0)) {
+            var features = new Array(featuresLength);
+            for (var i = 0; i < featuresLength; ++i) {
+                features[i] = new Cesium3DTileFeature(tileset, content, i);
+            }
+            content._features = features;
+        }
+    }
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.hasProperty = function(name) {
-        // TODO: implement batchTable for vctr tile format
-        return false;
+        return this.batchTable.hasProperty(name);
     };
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.getFeature = function(batchId) {
-        // TODO: implement batchTable for vctr tile format
-        return undefined;
+        var featuresLength = this._featuresLength;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
+        }
+        //>>includeEnd('debug');
+
+        createFeatures(this);
+        return this._features[batchId];
     };
 
     /**
@@ -164,8 +186,6 @@ define([
         return true;
     };
 
-    //var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
@@ -177,11 +197,15 @@ define([
         var text = getStringFromTypedArray(uint8Array, byteOffset);
         var json = JSON.parse(text);
 
+        var labels = json.labels;
+        var length = labels.length;
+
+        var batchTable = new Cesium3DTileBatchTable(this, length, json.batchTable, undefined);
+        this.batchTable = batchTable;
+
         var labelCollection = new LabelCollection();
         var polylineCollection = new PolylineCollection();
 
-        var labels = json.labels;
-        var length = labels.length;
         for (var i = 0; i < length; ++i) {
             var label = labels[i];
             var labelText = label.text;
