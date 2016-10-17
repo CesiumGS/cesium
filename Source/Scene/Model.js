@@ -3065,8 +3065,7 @@ define([
                     }
                 };
                 highlightRS.cull = {
-                    enabled : false,
-                    face : WebGLConstants.FRONT
+                    enabled : false
                 };
                 highlightRS.depthTest = false;
 
