@@ -3983,17 +3983,24 @@ define([
                 }
 
                 if (this.highlight) {
-                    // highlight commands second.
-                    for (i = 0; i < length; ++i) {
-                        nc = nodeCommands[i];
-                        if (nc.show) {
-                            commandList.push(nc.highlightCommand);
-                            boundingVolume = nc.command.boundingVolume;
-                            if (frameState.mode === SceneMode.SCENE2D &&
-                                (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                                commandList.push(nc.highlightCommand2D);
+
+                    // Only render the highlight commands if we have sufficient stencil bits.
+                    if (context.stencilBits > 0) {
+                        // highlight commands second.
+                        for (i = 0; i < length; ++i) {
+                            nc = nodeCommands[i];
+                            if (nc.show) {
+                                commandList.push(nc.highlightCommand);
+                                boundingVolume = nc.command.boundingVolume;
+                                if (frameState.mode === SceneMode.SCENE2D &&
+                                    (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                                    commandList.push(nc.highlightCommand2D);
+                                }
                             }
                         }
+                    }
+                    else {
+                        console.log("Model highlighting not supported, stencilBits = " + context.stencilBits + ".  Request a stencil buffer when initializing the Viewer");
                     }
                 }
             }
