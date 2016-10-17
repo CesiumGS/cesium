@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/RectangleGraphics',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'Core/Rectangle',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
@@ -11,6 +12,7 @@ defineSuite([
     ], function(
         RectangleGraphics,
         Color,
+        DistanceDisplayCondition,
         Rectangle,
         ColorMaterialProperty,
         ConstantProperty,
@@ -35,41 +37,44 @@ defineSuite([
             outlineWidth : 10,
             closeTop : false,
             closeBottom : false,
-            shadows : ShadowMode.DISABLED
+            shadows : ShadowMode.DISABLED,
+            distanceDisplayCondition : new DistanceDisplayCondition()
         };
 
-        var ellipse = new RectangleGraphics(options);
-        expect(ellipse.material).toBeInstanceOf(ColorMaterialProperty);
-        expect(ellipse.show).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.coordinates).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.height).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.extrudedHeight).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.granularity).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.rotation).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.stRotation).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.fill).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.outline).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.outlineColor).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.outlineWidth).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.closeTop).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.closeBottom).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.shadows).toBeInstanceOf(ConstantProperty);
+        var rectangle = new RectangleGraphics(options);
+        expect(rectangle.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(rectangle.show).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.coordinates).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.height).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.extrudedHeight).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.granularity).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.rotation).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.stRotation).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.fill).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.outline).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.closeTop).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.closeBottom).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.shadows).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
         
-        expect(ellipse.material.color.getValue()).toEqual(options.material);
-        expect(ellipse.show.getValue()).toEqual(options.show);
-        expect(ellipse.coordinates.getValue()).toEqual(options.coordinates);
-        expect(ellipse.height.getValue()).toEqual(options.height);
-        expect(ellipse.extrudedHeight.getValue()).toEqual(options.extrudedHeight);
-        expect(ellipse.granularity.getValue()).toEqual(options.granularity);
-        expect(ellipse.rotation.getValue()).toEqual(options.rotation);
-        expect(ellipse.stRotation.getValue()).toEqual(options.stRotation);
-        expect(ellipse.fill.getValue()).toEqual(options.fill);
-        expect(ellipse.outline.getValue()).toEqual(options.outline);
-        expect(ellipse.outlineColor.getValue()).toEqual(options.outlineColor);
-        expect(ellipse.outlineWidth.getValue()).toEqual(options.outlineWidth);
-        expect(ellipse.closeTop.getValue()).toEqual(options.closeTop);
-        expect(ellipse.closeBottom.getValue()).toEqual(options.closeBottom);
-        expect(ellipse.shadows.getValue()).toEqual(options.shadows);
+        expect(rectangle.material.color.getValue()).toEqual(options.material);
+        expect(rectangle.show.getValue()).toEqual(options.show);
+        expect(rectangle.coordinates.getValue()).toEqual(options.coordinates);
+        expect(rectangle.height.getValue()).toEqual(options.height);
+        expect(rectangle.extrudedHeight.getValue()).toEqual(options.extrudedHeight);
+        expect(rectangle.granularity.getValue()).toEqual(options.granularity);
+        expect(rectangle.rotation.getValue()).toEqual(options.rotation);
+        expect(rectangle.stRotation.getValue()).toEqual(options.stRotation);
+        expect(rectangle.fill.getValue()).toEqual(options.fill);
+        expect(rectangle.outline.getValue()).toEqual(options.outline);
+        expect(rectangle.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(rectangle.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(rectangle.closeTop.getValue()).toEqual(options.closeTop);
+        expect(rectangle.closeBottom.getValue()).toEqual(options.closeBottom);
+        expect(rectangle.shadows.getValue()).toEqual(options.shadows);
+        expect(rectangle.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -89,6 +94,7 @@ defineSuite([
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty();
 
         var target = new RectangleGraphics();
         target.merge(source);
@@ -108,6 +114,7 @@ defineSuite([
         expect(target.closeTop).toBe(source.closeTop);
         expect(target.closeBottom).toBe(source.closeBottom);
         expect(target.shadows).toBe(source.shadows);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -128,6 +135,7 @@ defineSuite([
         var closeTop = new ConstantProperty();
         var closeBottom = new ConstantProperty();
         var shadows = new ConstantProperty();
+        var distanceDisplayCondition = new ConstantProperty();
 
         var target = new RectangleGraphics();
         target.material = material;
@@ -145,6 +153,7 @@ defineSuite([
         target.closeTop = closeTop;
         target.closeBottom = closeBottom;
         target.shadows = shadows;
+        target.distanceDisplayCondition = distanceDisplayCondition;
 
         target.merge(source);
 
@@ -163,6 +172,7 @@ defineSuite([
         expect(target.closeTop).toBe(closeTop);
         expect(target.closeBottom).toBe(closeBottom);
         expect(target.shadows).toBe(shadows);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
     });
 
     it('clone works', function() {
@@ -182,6 +192,7 @@ defineSuite([
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
         source.shadows = new ConstantProperty();
+        source.distanceDisplayCondition = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -199,6 +210,7 @@ defineSuite([
         expect(result.closeTop).toBe(source.closeTop);
         expect(result.closeBottom).toBe(source.closeBottom);
         expect(result.shadows).toBe(source.shadows);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge throws if source undefined', function() {
@@ -225,5 +237,6 @@ defineSuite([
         testDefinitionChanged(property, 'closeTop', false, true);
         testDefinitionChanged(property, 'closeBottom', false, true);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
+        testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
 });

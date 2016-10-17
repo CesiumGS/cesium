@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/WallGraphics',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'Scene/ShadowMode',
@@ -10,6 +11,7 @@ defineSuite([
     ], function(
         WallGraphics,
         Color,
+        DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
         ShadowMode,
@@ -29,7 +31,8 @@ defineSuite([
             outlineWidth : 2,
             minimumHeights : [3, 4, 5],
             maximumHeights : [6, 7, 8],
-            shadows : ShadowMode.DISABLED
+            shadows : ShadowMode.DISABLED,
+            distanceDisplayCondition : new DistanceDisplayCondition()
         };
 
         var wall = new WallGraphics(options);
@@ -45,6 +48,7 @@ defineSuite([
         expect(wall.minimumHeights).toBeInstanceOf(ConstantProperty);
         expect(wall.maximumHeights).toBeInstanceOf(ConstantProperty);
         expect(wall.shadows).toBeInstanceOf(ConstantProperty);
+        expect(wall.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
 
         expect(wall.material.color.getValue()).toEqual(options.material);
         expect(wall.positions.getValue()).toEqual(options.positions);
@@ -58,6 +62,7 @@ defineSuite([
         expect(wall.minimumHeights.getValue()).toEqual(options.minimumHeights);
         expect(wall.maximumHeights.getValue()).toEqual(options.maximumHeights);
         expect(wall.shadows.getValue()).toEqual(options.shadows);
+        expect(wall.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -73,6 +78,7 @@ defineSuite([
         source.minimumHeights = new ConstantProperty();
         source.maximumHeights = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty();
 
         var target = new WallGraphics();
         target.merge(source);
@@ -88,6 +94,7 @@ defineSuite([
         expect(target.minimumHeights).toBe(source.minimumHeights);
         expect(target.maximumHeights).toBe(source.maximumHeights);
         expect(target.shadows).toBe(source.shadows);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -104,6 +111,7 @@ defineSuite([
         var minimumHeights = new ConstantProperty();
         var maximumHeights = new ConstantProperty();
         var shadows = new ConstantProperty();
+        var distanceDisplayCondition = new ConstantProperty();
 
         var target = new WallGraphics();
         target.material = material;
@@ -117,6 +125,7 @@ defineSuite([
         target.minimumHeights = minimumHeights;
         target.maximumHeights = maximumHeights;
         target.shadows = shadows;
+        target.distanceDisplayCondition = distanceDisplayCondition;
 
         target.merge(source);
 
@@ -131,6 +140,7 @@ defineSuite([
         expect(target.minimumHeights).toBe(minimumHeights);
         expect(target.maximumHeights).toBe(maximumHeights);
         expect(target.shadows).toBe(shadows);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
     });
 
     it('clone works', function() {
@@ -146,6 +156,7 @@ defineSuite([
         source.minimumHeights = new ConstantProperty();
         source.maximumHeights = new ConstantProperty();
         source.shadows = new ConstantProperty();
+        source.distanceDisplayCondition = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -159,6 +170,7 @@ defineSuite([
         expect(result.minimumHeights).toBe(source.minimumHeights);
         expect(result.maximumHeights).toBe(source.maximumHeights);
         expect(result.shadows).toBe(source.shadows);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge throws if source undefined', function() {
@@ -181,5 +193,6 @@ defineSuite([
         testDefinitionChanged(property, 'minimumHeights', [0, 1], [2, 3]);
         testDefinitionChanged(property, 'maximumHeights', [3, 5], [7, 8]);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
+        testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
 });
