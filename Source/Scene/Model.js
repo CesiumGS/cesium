@@ -1823,12 +1823,12 @@ define([
         }
 
         var highlightVS = createHighlightVertexShaderSource(vs);
-
         var highlightFS = 'uniform vec4 u_highlightColor;\n' +
-                        'void main() \n' +
-                        '{ \n' +
-                        '    gl_FragColor = u_highlightColor;\n' +
-                        '}';
+            'void main() \n' +
+            '{ \n' +
+            '    gl_FragColor = u_highlightColor;\n' +
+            '}';
+
         model._rendererResources.highlightPrograms[id] = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : highlightVS,
