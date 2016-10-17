@@ -34,11 +34,19 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
     <table>
-    <tbody><tr>
-        <td>Highlight Size</td>
+    <tbody>
+    <tr>
+        <td>Size</td>
         <td>
             <input type="range" min="0" max="20" step="1" data-bind="value: highlightSize, valueUpdate: 'input'">
             <input type="text" size="5" data-bind="value: highlightSize">
+        </td>
+    </tr>
+    <tr>
+        <td>Opacity</td>
+        <td>
+            <input type="range" min="0" max="100" step="1" data-bind="value: highlightOpacity, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: highlightOpacity">
         </td>
     </tr>
 
@@ -59,7 +67,9 @@ var entity = null;
 // The viewModel tracks the state of our mini application.
 var viewModel = {
     highlight: true,
-    highlightSize: 2.0
+    highlightSize: 2.0,
+    highlightOpacity: 100.0,
+    highlightColor: new Cesium.Color(1.0, 1.0, 1.0, 1.0)
 };
 
 // Convert the viewModel members into knockout observables.
@@ -88,7 +98,8 @@ function createModel(url, height) {
             minimumPixelSize : 128,
             maximumScale : 20000,
             highlight: viewModel.highlight,
-            highlightSize: viewModel.highlightSize
+            highlightSize: viewModel.highlightSize,
+            highlightColor: viewModel.highlightColor
         }
     });
     viewer.trackedEntity = entity;
@@ -129,14 +140,26 @@ Sandcastle.addToolbarButton('Toggle Highlight', function() {
 });
 
 Sandcastle.addToolbarButton('Change Highlight Color', function() {
-    entity.model.highlightColor = new Cesium.ConstantProperty(Cesium.Color.fromRandom({
-          alpha : 0.3
-    }));
+    viewModel.highlightColor = Cesium.Color.fromRandom({
+          alpha : viewModel.highlightOpacity / 100.0
+    });
 });
 
 Cesium.knockout.getObservable(viewModel, "highlightSize").subscribe(
     function(newValue) {
         entity.model.highlightSize = newValue;
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, "highlightOpacity").subscribe(
+    function(newValue) {
+        viewModel.highlightColor = Cesium.Color.fromAlpha(viewModel.highlightColor, viewModel.highlightOpacity / 100.0);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, "highlightColor").subscribe(
+    function(newValue) {
+        entity.model.highlightColor = new Cesium.ConstantProperty(viewModel.highlightColor);
     }
 );
 
