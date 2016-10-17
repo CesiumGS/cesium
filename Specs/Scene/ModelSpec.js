@@ -10,6 +10,7 @@ defineSuite([
         'Core/defaultValue',
         'Core/defined',
         'Core/defineProperties',
+        'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/Ellipsoid',
         'Core/Event',
@@ -42,6 +43,7 @@ defineSuite([
         defaultValue,
         defined,
         defineProperties,
+        Color,
         DistanceDisplayCondition,
         Ellipsoid,
         Event,
@@ -233,6 +235,10 @@ defineSuite([
         expect(texturedBoxModel.debugShowBoundingVolume).toEqual(false);
         expect(texturedBoxModel.debugWireframe).toEqual(false);
         expect(texturedBoxModel.distanceDisplayCondition).toBeUndefined();
+        expect(texturedBoxModel.highlight).toEqual(false);
+        expect(texturedBoxModel.highlightSize).toEqual(2.0);
+        expect(texturedBoxModel.highlightColor).toEqual(new Color());
+
     });
 
     it('renders', function() {
@@ -1986,7 +1992,7 @@ defineSuite([
                 scene.renderForSpecs();
                 expect(scene.globe.removedCallback).toEqual(true);
                 expect(scene.globe.callback).not.toBeDefined();
-                
+
                 primitives.remove(model);
             });
         });
