@@ -547,6 +547,23 @@ define([
         },
 
         /**
+         * Defines how per-feature colors blend with the source colors.
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Cesium3DTileColorBlendMode}
+         * @default Cesium3DTileColorBlendMode.HIGHLIGHT
+         */
+        colorBlendMode : {
+            get : function() {
+                return this._styleEngine.colorBlendMode;
+            },
+            set : function(value) {
+                this._styleEngine.colorBlendMode = value;
+            }
+        },
+
+        /**
          * The maximum screen-space error used to drive level-of-detail refinement.  Higher
          * values will provide better performance but lower visual quality.
          *

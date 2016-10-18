@@ -2,11 +2,13 @@
 define([
        '../Core/Color',
        '../Core/defined',
-       '../Core/defineProperties'
+       '../Core/defineProperties',
+       './Cesium3DTileColorBlendMode'
     ], function(
         Color,
         defined,
-        defineProperties) {
+        defineProperties,
+        Cesium3DTileColorBlendMode) {
     'use strict';
 
     /**
@@ -16,6 +18,7 @@ define([
         this._style = undefined;      // The style provided by the user
         this._styleDirty = false;     // true when the style is reassigned
         this._lastStyleTime = 0;      // The "time" when the last style was assigned
+        this._colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
     }
 
     defineProperties(Cesium3DTileStyleEngine.prototype, {
@@ -26,6 +29,15 @@ define([
             set : function(value) {
                 this._style = value;
                 this._styleDirty = true;
+            }
+        },
+        colorBlendMode : {
+            get : function() {
+                return this._colorBlendMode;
+            },
+            set : function(value) {
+                this._colorBlendMode = value;
+                this.makeDirty();
             }
         }
     });
@@ -75,7 +87,6 @@ define([
                 if (tile.lastStyleTime !== lastStyleTime) {
                     tile.lastStyleTime = lastStyleTime;
                     styleCompositeContent(this, frameState, tile.content, stats);
-
                     ++stats.numberOfTilesStyled;
                 }
             }
@@ -102,14 +113,16 @@ define([
         var style = styleEngine._style;
 
         if (!content.applyStyleWithShader(frameState, style)) {
-            applyStyleWithBatchTable(content, stats, style);
+            applyStyleWithBatchTable(styleEngine, frameState, content, stats, style);
         }
 
     }
 
-    function applyStyleWithBatchTable(content, stats, style) {
+    function applyStyleWithBatchTable(styleEngine, frameState, content, stats, style) {
         var length = content.featuresLength;
         stats.numberOfFeaturesStyled += length;
+
+        content.applyStyleWithBatchTable(frameState, style, styleEngine._colorBlendMode);
 
         if (!defined(style)) {
             clearStyle(content);

@@ -8,24 +8,16 @@
       "maximum": 9
     },
     "Longitude": {
-      "minimum": -1.3196978941607327,
-      "maximum": -1.3196695761161537
+      "minimum": -1.3196962229287068,
+      "maximum": -1.319660981377494
     },
     "Latitude": {
-      "minimum": 0.6988584125615972,
-      "maximum": 0.698887038399972
+      "minimum": 0.6988617298544142,
+      "maximum": 0.6988852320112072
     },
     "Height": {
       "minimum": 6,
       "maximum": 14
-    },
-    "info": {
-      "minimum": null,
-      "maximum": null
-    },
-    "rooms": {
-      "minimum": null,
-      "maximum": null
     }
   },
   "geometricError": 70,
@@ -43,7 +35,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "batchedWithBatchTable.b3dm"
+      "url": "batchedColorsMix.b3dm"
     }
   }
 }

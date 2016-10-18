@@ -15,6 +15,7 @@ define([
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
         './Model',
@@ -36,6 +37,7 @@ define([
         Buffer,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         ShaderSource,
         when,
         Model,
@@ -302,17 +304,44 @@ define([
             vertexShaderCached = instancedSource;
 
             if (usesBatchTable) {
-                instancedSource = collection._batchTable.getVertexShaderCallback()(instancedSource);
+                instancedSource = collection._batchTable.getVertexShaderCallback(true)(instancedSource);
             }
 
             return instancedSource;
         };
     }
 
-    function getFragmentShaderCallback(collection) {
+    // TODO : duplicate of Batched3DModel3DTileContent
+    function getDiffuseUniformName(gltf) {
+        var techniques = gltf.techniques;
+        for (var techniqueName in techniques) {
+            if (techniques.hasOwnProperty(techniqueName)) {
+                var technique = techniques[techniqueName];
+                var parameters = technique.parameters;
+                var uniforms = technique.uniforms;
+                for (var uniformName in uniforms) {
+                    if (uniforms.hasOwnProperty(uniformName)) {
+                        var parameterName = uniforms[uniformName];
+                        var parameter = parameters[parameterName];
+                        var semantic = parameter.semantic;
+                        if (defined(semantic) && (semantic === '_3DTILESDIFFUSE')) {
+                            return uniformName;
+                        }
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+
+    function getFragmentShaderCallback(collection, colorBlendMode) {
         return function(fs) {
-            if (defined(collection._batchTable)) {
-                fs = collection._batchTable.getFragmentShaderCallback()(fs);
+            var batchTable = collection._batchTable;
+            if (defined(batchTable)) {
+                var gltf = collection._model.gltf;
+                var diffuseUniformName = getDiffuseUniformName(gltf);
+                batchTable.updateColorBlendMode(colorBlendMode);
+                fs = batchTable.getFragmentShaderCallback(true, diffuseUniformName)(fs);
             }
             return fs;
         };
@@ -386,7 +415,7 @@ define([
     function getVertexShaderNonInstancedCallback(collection) {
         return function(vs) {
             if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getVertexShaderCallback()(vs);
+                vs = collection._batchTable.getVertexShaderCallback(true)(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;
             }
@@ -517,7 +546,8 @@ define([
         if (instancingSupported) {
             createVertexBuffer(collection, context);
 
-            var usesBatchTable = defined(collection._batchTable);
+            var batchTable = collection._batchTable;
+            var usesBatchTable = defined(batchTable);
             var vertexSizeInFloats = 12;
             var componentSizeInBytes = ComponentDatatype.getSizeInBytes(ComponentDatatype.FLOAT);
 
@@ -568,18 +598,29 @@ define([
                 };
             }
 
+            var colorBlendMode;
+            if (usesBatchTable) {
+                colorBlendMode = batchTable._content._tileset.colorBlendMode;
+            }
+
             modelOptions.precreatedAttributes = instancedAttributes;
             modelOptions.vertexShaderLoaded = getVertexShaderCallback(collection);
-            modelOptions.fragmentShaderLoaded = getFragmentShaderCallback(collection);
+            modelOptions.fragmentShaderLoaded = getFragmentShaderCallback(collection, colorBlendMode);
             modelOptions.uniformMapLoaded = getUniformMapCallback(collection, context);
             modelOptions.pickVertexShaderLoaded = getPickVertexShaderCallback(collection);
             modelOptions.pickFragmentShaderLoaded = getPickFragmentShaderCallback(collection);
             modelOptions.pickUniformMapLoaded = getPickUniformMapCallback(collection);
 
+            var cacheKey;
             if (defined(collection._url)) {
-                modelOptions.cacheKey = collection._url + '#instanced';
+                cacheKey = collection._url + '#instanced';
+                if (defined(colorBlendMode)) {
+                    cacheKey += colorBlendMode;
+                }
             }
+            modelOptions.cacheKey = cacheKey;
         } else {
+            // TODO : does non-instancing path need to set the cache key?
             modelOptions.vertexShaderLoaded = getVertexShaderNonInstancedCallback(collection);
             modelOptions.fragmentShaderLoaded = getFragmentShaderCallback(collection);
             modelOptions.uniformMapLoaded = getUniformMapNonInstancedCallback(collection, context);
@@ -621,7 +662,24 @@ define([
         }
     }
 
-    function createCommands(collection, drawCommands, pickCommands) {
+    // TODO : also a duplicate of Batched3DModel3DTileContent
+    function cloneShaderProgram(frameState, shaderProgram, modifyFragmentShaderCallback) {
+        var context = frameState.context;
+        var attributeLocations = shaderProgram._attributeLocations;
+        var vs = shaderProgram.vertexShaderSource.sources[0];
+        var fs = shaderProgram.fragmentShaderSource.sources[0];
+        if (defined(modifyFragmentShaderCallback)) {
+            fs = modifyFragmentShaderCallback(fs);
+        }
+        return ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+    }
+
+    function createCommands(collection, frameState, drawCommands, pickCommands) {
         var commandsLength = drawCommands.length;
         var instancesLength = collection.length;
         var allowPicking = collection.allowPicking;
@@ -633,6 +691,7 @@ define([
             drawCommand.instanceCount = instancesLength;
             drawCommand.boundingVolume = boundingVolume;
             drawCommand.cull = cull;
+            drawCommand.shaderProgram = cloneShaderProgram(frameState, drawCommand.shaderProgram);
             collection._drawCommands.push(drawCommand);
 
             if (allowPicking) {
@@ -651,7 +710,7 @@ define([
         };
     }
 
-    function createCommandsNonInstanced(collection, drawCommands, pickCommands) {
+    function createCommandsNonInstanced(collection, frameState, drawCommands, pickCommands) {
         // When instancing is disabled, create commands for every instance.
         var instances = collection._instances;
         var commandsLength = drawCommands.length;
@@ -667,6 +726,7 @@ define([
                 drawCommand.boundingVolume = new BoundingSphere(); // Updated in updateNonInstancedCommands
                 drawCommand.cull = cull;
                 drawCommand.uniformMap = clone(drawCommand.uniformMap);
+                drawCommand.shaderProgram = cloneShaderProgram(frameState, drawCommand.shaderProgram);
                 if (usesBatchTable) {
                     drawCommand.uniformMap.a_batchId = createBatchIdFunction(instances[j].batchId);
                 }
@@ -756,6 +816,22 @@ define([
         }
     }
 
+    ModelInstanceCollection.prototype.updateColorBlendMode = function(frameState, colorBlendMode) {
+        var batchTable = this._batchTable;
+        if (!defined(batchTable) || !batchTable.updateColorBlendMode(colorBlendMode)) {
+            // If the batch table doesn't exist or the color blend mode hasn't changed, return early
+            return;
+        }
+        var drawCommands = this._drawCommands;
+        var length = drawCommands.length;
+        for (var i = 0; i < length; ++i) {
+            var command = drawCommands[i];
+            var program = command.shaderProgram;
+            command.shaderProgram = cloneShaderProgram(frameState, program, batchTable.getUpdatedFragmentShader.bind(batchTable));
+            program.destroy(); // Destroy the old program
+        }
+    };
+
     ModelInstanceCollection.prototype.update = function(frameState) {
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
@@ -799,9 +875,9 @@ define([
             this._modelCommands = modelCommands.draw;
 
             if (instancingSupported) {
-                createCommands(this, modelCommands.draw, modelCommands.pick);
+                createCommands(this, frameState, modelCommands.draw, modelCommands.pick);
             } else {
-                createCommandsNonInstanced(this, modelCommands.draw, modelCommands.pick);
+                createCommandsNonInstanced(this, frameState, modelCommands.draw, modelCommands.pick);
                 updateCommandsNonInstanced(this);
             }
 
@@ -842,8 +918,18 @@ define([
         return false;
     };
 
+    function destroyShaders(collection) {
+        var drawCommands = collection._drawCommands;
+        var length = drawCommands.length;
+        for (var i = 0; i < length; ++i) {
+            drawCommands[i].shaderProgram.destroy();
+        }
+        collection._drawCommands = undefined;
+    }
+
     ModelInstanceCollection.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
+        destroyShaders(this);
         return destroyObject(this);
     };
 

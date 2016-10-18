@@ -14,6 +14,7 @@ define([
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
+        '../Renderer/ShaderProgram',
         '../ThirdParty/when',
         './Cesium3DTileFeature',
         './Cesium3DTileBatchTable',
@@ -34,6 +35,7 @@ define([
         Request,
         RequestScheduler,
         RequestType,
+        ShaderProgram,
         when,
         Cesium3DTileFeature,
         Cesium3DTileBatchTable,
@@ -56,6 +58,9 @@ define([
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
+
+        // Created when the color blend mode changes
+        this._derivedShaderPrograms = undefined;
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
@@ -176,6 +181,40 @@ define([
         return true;
     };
 
+    function getDiffuseUniformName(gltf) {
+        var techniques = gltf.techniques;
+        for (var techniqueName in techniques) {
+            if (techniques.hasOwnProperty(techniqueName)) {
+                var technique = techniques[techniqueName];
+                var parameters = technique.parameters;
+                var uniforms = technique.uniforms;
+                for (var uniformName in uniforms) {
+                    if (uniforms.hasOwnProperty(uniformName)) {
+                        var parameterName = uniforms[uniformName];
+                        var parameter = parameters[parameterName];
+                        var semantic = parameter.semantic;
+                        if (defined(semantic) && (semantic === '_3DTILESDIFFUSE')) {
+                            return uniformName;
+                        }
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+
+    function getFragmentShaderCallback(content) {
+        return function(fs) {
+            var batchTable = content.batchTable;
+            var gltf = content._model.gltf;
+            var diffuseUniformName = getDiffuseUniformName(gltf);
+            var colorBlendMode = content._tileset.colorBlendMode;
+            batchTable.updateColorBlendMode(colorBlendMode);
+            var callback = batchTable.getFragmentShaderCallback(true, diffuseUniformName);
+            return defined(callback) ? callback(fs) : fs;
+        };
+    }
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
@@ -264,8 +303,8 @@ define([
             modelMatrix : this._tile.computedTransform,
             shadows: this._tileset.shadows,
             incrementallyLoadTextures : false,
-            vertexShaderLoaded : batchTable.getVertexShaderCallback(),
-            fragmentShaderLoaded : batchTable.getFragmentShaderCallback(),
+            vertexShaderLoaded : batchTable.getVertexShaderCallback(true),
+            fragmentShaderLoaded : getFragmentShaderCallback(this),
             uniformMapLoaded : batchTable.getUniformMapCallback(),
             pickVertexShaderLoaded : batchTable.getPickVertexShaderCallback(),
             pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
@@ -302,6 +341,59 @@ define([
         return false;
     };
 
+    function cloneShaderProgram(frameState, shaderProgram, modifyFragmentShaderCallback) {
+        var context = frameState.context;
+        var attributeLocations = shaderProgram._attributeLocations;
+        var vs = shaderProgram.vertexShaderSource.sources[0];
+        var fs = shaderProgram.fragmentShaderSource.sources[0];
+        if (defined(modifyFragmentShaderCallback)) {
+            fs = modifyFragmentShaderCallback(fs);
+        }
+        return ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+    }
+
+    function updateColorBlendMode(content, frameState, colorBlendMode) {
+        var batchTable = content.batchTable;
+        if (!batchTable.updateColorBlendMode(colorBlendMode)) {
+            // If the color blend mode hasn't changed, return early
+            return;
+        }
+
+        var model = content._model;
+        var commands = model._nodeCommands;
+        var length = commands.length;
+
+        // TODO : instead of storing derived programs, re-write the renderer resources in Model? Then only one ShaderProgram would be in memory.
+        var hasDerivedPrograms = defined(content._derivedShaderPrograms);
+        if (!hasDerivedPrograms) {
+            content._derivedShaderPrograms = new Array(length);
+        }
+
+        for (var i = 0; i < length; ++i) {
+            var command = commands[i].command;
+            var program = command.shaderProgram;
+            var updatedProgram = cloneShaderProgram(frameState, program, batchTable.getUpdatedFragmentShader.bind(batchTable));
+            if (hasDerivedPrograms) {
+                program.destroy(); // Destroy old program
+            }
+            command.shaderProgram = updatedProgram;
+            content._derivedShaderPrograms[i] = updatedProgram;
+        }
+    }
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    Batched3DModel3DTileContent.prototype.applyStyleWithBatchTable = function(frameState, style, colorBlendMode) {
+        updateColorBlendMode(this, frameState, colorBlendMode);
+        return true;
+    };
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
@@ -329,13 +421,25 @@ define([
         return false;
     };
 
+    function destroyDerivedPrograms(content) {
+        // Destroy derived shader programs
+        var derivedShaderPrograms = content._derivedShaderPrograms;
+        if (defined(derivedShaderPrograms)) {
+            var length = derivedShaderPrograms.length;
+            for (var i = 0; i < length; ++i) {
+                derivedShaderPrograms[i].destroy();
+            }
+        }
+        content._derivedShaderPrograms = undefined;
+    }
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Batched3DModel3DTileContent.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
         this.batchTable = this.batchTable && this.batchTable.destroy();
-
+        destroyDerivedPrograms(this);
         return destroyObject(this);
     };
 
