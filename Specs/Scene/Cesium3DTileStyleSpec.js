@@ -70,11 +70,11 @@ defineSuite([
             expect(style.style).toEqual({
                 show : '${id} < 100',
                 color : "color('red')",
-                size : '${id} / 100'
+                pointSize : '${id} / 100'
             });
             expect(style.show).toEqual(new Expression('${id} < 100'));
             expect(style.color).toEqual(new Expression("color('red')"));
-            expect(style.size).toEqual(new Expression('${id} / 100'));
+            expect(style.pointSize).toEqual(new Expression('${id} / 100'));
             expect(tileStyle.ready).toEqual(true);
         }).otherwise(function() {
             fail('should load style.json');
@@ -97,12 +97,12 @@ defineSuite([
         expect(style.color).toEqual(new Expression('color("#ffffff")'));
     });
 
-    it ('sets size value to default expression', function() {
+    it ('sets pointSize value to default expression', function() {
         var style = new Cesium3DTileStyle({});
-        expect(style.size).toEqual(new Expression('1'));
+        expect(style.pointSize).toEqual(new Expression('1'));
 
         style = new Cesium3DTileStyle();
-        expect(style.size).toEqual(new Expression('1'));
+        expect(style.pointSize).toEqual(new Expression('1'));
     });
 
     it ('sets show value to expression', function() {
@@ -191,24 +191,24 @@ defineSuite([
         expect(style.color).toEqual(undefined);
     });
 
-    it ('sets size value to expression', function() {
+    it ('sets pointSize value to expression', function() {
         var style = new Cesium3DTileStyle({
-            size : '2'
+            pointSize : '2'
         });
-        expect(style.size).toEqual(new Expression('2'));
+        expect(style.pointSize).toEqual(new Expression('2'));
 
         style = new Cesium3DTileStyle({
-            size : '${height} / 10'
+            pointSize : '${height} / 10'
         });
-        expect(style.size).toEqual(new Expression('${height} / 10'));
+        expect(style.pointSize).toEqual(new Expression('${height} / 10'));
 
         style = new Cesium3DTileStyle({
-            size : 2
+            pointSize : 2
         });
-        expect(style.size).toEqual(new Expression('2'));
+        expect(style.pointSize).toEqual(new Expression('2'));
     });
 
-    it ('sets size value to conditional', function() {
+    it ('sets pointSize value to conditional', function() {
         var jsonExp = {
             conditions : [
                 ['${height} > 2', '1.0'],
@@ -217,16 +217,16 @@ defineSuite([
         };
 
         var style = new Cesium3DTileStyle({
-            size : jsonExp
+            pointSize : jsonExp
         });
-        expect(style.size).toEqual(new ConditionsExpression(jsonExp));
+        expect(style.pointSize).toEqual(new ConditionsExpression(jsonExp));
     });
 
-    it ('sets size to undefined if not a number, string, or conditional', function() {
+    it ('sets pointSize to undefined if not a number, string, or conditional', function() {
         var style = new Cesium3DTileStyle({
-            size : true
+            pointSize : true
         });
-        expect(style.size).toEqual(undefined);
+        expect(style.pointSize).toEqual(undefined);
     });
 
     it ('throws on accessing style if not ready', function() {
@@ -256,12 +256,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it ('throws on accessing size if not ready', function() {
+    it ('throws on accessing pointSize if not ready', function() {
         var style = new Cesium3DTileStyle({});
         style._ready = false;
 
         expect(function() {
-            return style.size;
+            return style.pointSize;
         }).toThrowDeveloperError();
     });
 
@@ -318,12 +318,12 @@ defineSuite([
         var style = new Cesium3DTileStyle({
             "show" : "true",
             "color" : "color('#ffffff')",
-            "size" : "1.0"
+            "pointSize" : "1.0"
         });
 
         expect(style.show.evaluate(undefined)).toEqual(true);
         expect(style.color.evaluate(undefined)).toEqual(Color.WHITE);
-        expect(style.size.evaluate(undefined)).toEqual(1.0);
+        expect(style.pointSize.evaluate(undefined)).toEqual(1.0);
     });
 
     it ('applies show style with variable', function() {
@@ -452,27 +452,27 @@ defineSuite([
         expect(style.color.evaluate(feature2)).toEqual(Color.YELLOW);
     });
 
-    it ('applies size style with variable', function() {
+    it ('applies pointSize style with variable', function() {
         var style = new Cesium3DTileStyle({
-            "size" : "${Temperature} / 10.0"
+            "pointSize" : "${Temperature} / 10.0"
         });
 
-        expect(style.size.evaluate(feature1)).toEqual(7.8);
-        expect(style.size.evaluate(feature2)).toEqual(9.2);
+        expect(style.pointSize.evaluate(feature1)).toEqual(7.8);
+        expect(style.pointSize.evaluate(feature2)).toEqual(9.2);
     });
 
-    it ('applies size style with regexp and variables', function() {
+    it ('applies pointSize style with regexp and variables', function() {
         var style = new Cesium3DTileStyle({
-            "size" : "(regExp('^Chest').test(${County})) ? 2.0 : 1.0"
+            "pointSize" : "(regExp('^Chest').test(${County})) ? 2.0 : 1.0"
         });
 
-        expect(style.size.evaluate(feature1)).toEqual(2.0);
-        expect(style.size.evaluate(feature2)).toEqual(1.0);
+        expect(style.pointSize.evaluate(feature1)).toEqual(2.0);
+        expect(style.pointSize.evaluate(feature2)).toEqual(1.0);
     });
 
-    it ('applies size style with complex conditional', function() {
+    it ('applies pointSize style with complex conditional', function() {
         var style = new Cesium3DTileStyle({
-            "size" : {
+            "pointSize" : {
                 "expression" : "${Height}",
                 "conditions" : [
                     ["(${expression} >= 1.0)  && (${expression} < 10.0)", "1"],
@@ -484,13 +484,13 @@ defineSuite([
                 ]
             }
         });
-        expect(style.size.evaluate(feature1)).toEqual(6);
-        expect(style.size.evaluate(feature2)).toEqual(3);
+        expect(style.pointSize.evaluate(feature1)).toEqual(6);
+        expect(style.pointSize.evaluate(feature2)).toEqual(3);
     });
 
-    it ('applies size style with conditional', function() {
+    it ('applies pointSize style with conditional', function() {
         var style = new Cesium3DTileStyle({
-            "size" : {
+            "pointSize" : {
                 "conditions" : [
                     ["(${Height} >= 100.0)", "6"],
                     ["(${Height} >= 70.0)", "5"],
@@ -501,19 +501,19 @@ defineSuite([
                 ]
             }
         });
-        expect(style.size.evaluate(feature1)).toEqual(6);
-        expect(style.size.evaluate(feature2)).toEqual(3);
+        expect(style.pointSize.evaluate(feature1)).toEqual(6);
+        expect(style.pointSize.evaluate(feature2)).toEqual(3);
     });
 
     it('return undefined shader functions when the style is empty', function() {
-        // The default color style is white, the default show style is true, and the default size is 1.0,
+        // The default color style is white, the default show style is true, and the default pointSize is 1.0,
         // but the generated generated shader functions should just be undefined. We don't want all the points to be white.
         var style = new Cesium3DTileStyle({});
         var colorFunction = style.getColorShaderFunction('getColor', '', {});
         var showFunction = style.getShowShaderFunction('getShow', '', {});
-        var sizeFunction = style.getSizeShaderFunction('getSize', '', {});
+        var pointSizeFunction = style.getPointSizeShaderFunction('getPointSize', '', {});
         expect(colorFunction).toBeUndefined();
         expect(showFunction).toBeUndefined();
-        expect(sizeFunction).toBeUndefined();
+        expect(pointSizeFunction).toBeUndefined();
     });
 });

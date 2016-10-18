@@ -61,15 +61,15 @@ define([
         this._readyPromise = when.defer();
         this._color = undefined;
         this._show = undefined;
-        this._size = undefined;
+        this._pointSize = undefined;
         this._meta = undefined;
 
         this._colorShaderFunction = undefined;
         this._showShaderFunction = undefined;
-        this._sizeShaderFunction = undefined;
+        this._pointSizeShaderFunction = undefined;
         this._colorShaderFunctionReady = false;
         this._showShaderFunctionReady = false;
-        this._sizeShaderFunctionReady = false;
+        this._pointSizeShaderFunctionReady = false;
 
         var style = this;
         if (typeof data === 'string') {
@@ -100,13 +100,13 @@ define([
             that._showShaderFunctionReady = true;
         }
 
-        if (!defined(styleJson.size)) {
-            that._sizeShaderFunctionReady = true;
+        if (!defined(styleJson.pointSize)) {
+            that._pointSizeShaderFunctionReady = true;
         }
 
         var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
-        var sizeExpression = defaultValue(styleJson.size, DEFAULT_JSON_NUMBER_EXPRESSION);
+        var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_JSON_NUMBER_EXPRESSION);
 
         var color;
         if (typeof(colorExpression) === 'string') {
@@ -128,16 +128,16 @@ define([
 
         that._show = show;
 
-        var size;
-        if (typeof(sizeExpression) === 'number') {
-            size = new Expression(String(sizeExpression));
-        } else if (typeof(sizeExpression) === 'string') {
-            size = new Expression(sizeExpression);
-        } else if (defined(sizeExpression.conditions)) {
-            size = new ConditionsExpression(sizeExpression);
+        var pointSize;
+        if (typeof(pointSizeExpression) === 'number') {
+            pointSize = new Expression(String(pointSizeExpression));
+        } else if (typeof(pointSizeExpression) === 'string') {
+            pointSize = new Expression(pointSizeExpression);
+        } else if (defined(pointSizeExpression.conditions)) {
+            pointSize = new ConditionsExpression(pointSizeExpression);
         }
 
-        that._size = size;
+        that._pointSize = pointSize;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -300,7 +300,7 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>size</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointSize</code> property.
          * <p>
          * The expression must return or convert to a <code>Number</code>.
          * </p>
@@ -313,14 +313,14 @@ define([
          *
          * @example
          * var style = new Cesium3DTileStyle({
-         *     size : '(${Temperature} > 90) ? 2.0 : 1.0'
+         *     pointSize : '(${Temperature} > 90) ? 2.0 : 1.0'
          * });
-         * style.size.evaluate(feature); // returns a Number
+         * style.pointSize.evaluate(feature); // returns a Number
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
-         * // Override size expression with a custom function
-         * style.size = {
+         * // Override pointSize expression with a custom function
+         * style.pointSize = {
          *     evaluate : function(feature) {
          *         return 1.0;
          *     }
@@ -328,7 +328,7 @@ define([
          *
          * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
-        size : {
+        pointSize : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -336,10 +336,10 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._size;
+                return this._pointSize;
             },
             set : function(value) {
-                this._size = value;
+                this._pointSize = value;
             }
         },
 
@@ -424,7 +424,7 @@ define([
     };
 
     /**
-     * Gets the size shader function for this style.
+     * Gets the pointSize shader function for this style.
      *
      * @param {String} functionName Name to give to the generated function.
      * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
@@ -434,15 +434,15 @@ define([
      *
      * @private
      */
-    Cesium3DTileStyle.prototype.getSizeShaderFunction = function(functionName, attributePrefix, shaderState) {
-        if (this._sizeShaderFunctionReady) {
+    Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function(functionName, attributePrefix, shaderState) {
+        if (this._pointSizeShaderFunctionReady) {
             // Return the cached result, may be undefined
-            return this._sizeShaderFunction;
+            return this._pointSizeShaderFunction;
         }
 
-        this._sizeShaderFunctionReady = true;
-        this._sizeShaderFunction = this.size.getShaderFunction(functionName, attributePrefix, shaderState, 'float');
-        return this._sizeShaderFunction;
+        this._pointSizeShaderFunctionReady = true;
+        this._pointSizeShaderFunction = this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float');
+        return this._pointSizeShaderFunction;
     };
 
     return Cesium3DTileStyle;

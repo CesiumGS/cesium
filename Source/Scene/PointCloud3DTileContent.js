@@ -820,7 +820,7 @@ define([
 
         var colorStyleFunction;
         var showStyleFunction;
-        var sizeStyleFunction;
+        var pointSizeStyleFunction;
         var styleTranslucent = isTranslucent;
 
         if (hasBatchTable) {
@@ -834,7 +834,7 @@ define([
             };
             colorStyleFunction = style.getColorShaderFunction('getColorFromStyle', 'czm_tiles3d_style_', shaderState);
             showStyleFunction = style.getShowShaderFunction('getShowFromStyle', 'czm_tiles3d_style_', shaderState);
-            sizeStyleFunction = style.getSizeShaderFunction('getSizeFromStyle', 'czm_tiles3d_style_', shaderState);
+            pointSizeStyleFunction = style.getPointSizeShaderFunction('getPointSizeFromStyle', 'czm_tiles3d_style_', shaderState);
             styleTranslucent = shaderState.translucent;
         }
 
@@ -842,7 +842,7 @@ define([
 
         var hasColorStyle = defined(colorStyleFunction);
         var hasShowStyle = defined(showStyleFunction);
-        var hasSizeStyle = defined(sizeStyleFunction);
+        var hasPointSizeStyle = defined(pointSizeStyleFunction);
 
         // Get the properties in use by the style
         var styleableProperties = [];
@@ -858,10 +858,10 @@ define([
             getStyleableSemantics(showStyleFunction, styleableSemantics);
             showStyleFunction = modifyStyleFunction(showStyleFunction);
         }
-        if (hasSizeStyle) {
-            getStyleableProperties(sizeStyleFunction, styleableProperties);
-            getStyleableSemantics(sizeStyleFunction, styleableSemantics);
-            sizeStyleFunction = modifyStyleFunction(sizeStyleFunction);
+        if (hasPointSizeStyle) {
+            getStyleableProperties(pointSizeStyleFunction, styleableProperties);
+            getStyleableSemantics(pointSizeStyleFunction, styleableSemantics);
+            pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
         }
 
         var usesColorSemantic = styleableSemantics.indexOf('COLOR') >= 0;
@@ -974,8 +974,8 @@ define([
             vs += showStyleFunction;
         }
 
-        if (hasSizeStyle) {
-            vs += sizeStyleFunction;
+        if (hasPointSizeStyle) {
+            vs += pointSizeStyleFunction;
         }
 
         vs += 'void main() \n' +
@@ -1024,8 +1024,8 @@ define([
             vs += '    float show = float(getShowFromStyle(position, color, normal)); \n';
         }
 
-        if (hasSizeStyle) {
-            vs += '    gl_PointSize = getSizeFromStyle(position, color, normal); \n';
+        if (hasPointSizeStyle) {
+            vs += '    gl_PointSize = getPointSizeFromStyle(position, color, normal); \n';
         } else {
             vs += '    gl_PointSize = u_pointSize; \n';
         }

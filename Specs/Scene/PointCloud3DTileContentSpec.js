@@ -459,9 +459,9 @@ defineSuite([
             });
             expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
-            // Apply size style
+            // Apply pointSize style
             tileset.style = new Cesium3DTileStyle({
-                size : 5.0
+                pointSize : 5.0
             });
             expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         });
