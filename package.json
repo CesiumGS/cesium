@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "almond": "0.3.3",
-    "aws-sdk": "2.6.7",
+    "aws-sdk": "2.6.9",
     "bluebird": "3.4.6",
     "compressible": "2.0.8",
     "compression": "1.6.2",
@@ -67,7 +67,7 @@
     "request": "2.75.0",
     "rimraf": "2.5.4",
     "strip-comments": "0.3.2",
-    "yargs": "6.0.0"
+    "yargs": "6.2.0"
   },
   "scripts": {
     "start": "node server.js",
