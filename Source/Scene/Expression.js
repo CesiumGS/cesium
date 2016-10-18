@@ -18,7 +18,7 @@ define([
     "use strict";
 
     var unaryOperators = ['!', '-', '+'];
-    var binaryOperators = ['+', '-', '*', '/', '%', '==', '!=', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
+    var binaryOperators = ['+', '-', '*', '/', '%', '===', '==', '!==', '!=', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
 
     var variableRegex = /\${(.*?)}/g;
     var backslashRegex = /\\/g;
@@ -531,8 +531,12 @@ define([
                 node.evaluate = node._evaluateDivide;
             } else if (node._value === '%') {
                 node.evaluate = node._evaluateMod;
+            } else if (node._value === '===') {
+                node.evaluate = node._evaluateEqualsStrict;
             } else if (node._value === '==') {
                 node.evaluate = node._evaluateEquals;
+            } else if (node._value === '!==') {
+                node.evaluate = node._evaluateNotEqualsStrict;
             } else if (node._value === '!=') {
                 node.evaluate = node._evaluateNotEquals;
             } else if (node._value === '<') {
@@ -834,6 +838,15 @@ define([
         return left % right;
     };
 
+    Node.prototype._evaluateEqualsStrict = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        if ((right instanceof Color) && (left instanceof Color)) {
+            return Color.equals(left, right);
+        }
+        return left === right;
+    };
+
     Node.prototype._evaluateEquals = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
@@ -842,8 +855,17 @@ define([
         }
 
         // Specifically want to do an abstract equality comparison (==) instead of a strict equality comparison (===)
-        // so that cases like "5 === '5'" return true. Tell jsHint to ignore this line.
+        // so that cases like "5 == '5'" return true. Tell jsHint to ignore this line.
         return left == right; // jshint ignore:line
+    };
+
+    Node.prototype._evaluateNotEqualsStrict = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        if ((right instanceof Color) && (left instanceof Color)) {
+            return !Color.equals(left, right);
+        }
+        return left !== right;
     };
 
     Node.prototype._evaluateNotEquals = function(feature) {
@@ -852,7 +874,9 @@ define([
         if ((right instanceof Color) && (left instanceof Color)) {
             return !Color.equals(left, right);
         }
-        return left !== right;
+        // Specifically want to do an abstract inequality comparison (!=) instead of a strict inequality comparison (!==)
+        // so that cases like "5 != '5'" return false. Tell jsHint to ignore this line.
+        return left != right; // jshint ignore:line
     };
 
     Node.prototype._evaluateConditional = function(feature) {
@@ -1095,9 +1119,13 @@ define([
                 //>>includeEnd('debug');
                 return value + left;
             case ExpressionNodeType.BINARY:
-                // Supported types: ||, &&, ==, !=, <, >, <=, >=, +, -, *, /, %
+                // Supported types: ||, &&, ===, ==, !==, !=, <, >, <=, >=, +, -, *, /, %
                 if (value === '%') {
                     return 'mod(' + left + ', ' + right + ')';
+                } else if (value === '===') {
+                    return '(' + left + ' == ' + right + ')';
+                } else if (value === '!==') {
+                    return '(' + left + ' != ' + right + ')';
                 }
                 return '(' + left + ' ' + value + ' ' + right + ')';
             case ExpressionNodeType.CONDITIONAL:

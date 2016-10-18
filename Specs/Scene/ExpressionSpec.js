@@ -161,14 +161,6 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('2 === 3');
-        }).toThrowDeveloperError();
-
-        expect(function() {
-            return new Expression('2 !== 3');
-        }).toThrowDeveloperError();
-
-        expect(function() {
             return new Expression('2 << 3');
         }).toThrowDeveloperError();
 
@@ -543,6 +535,20 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(2);
     });
 
+    it('evaluates binary equals strict', function() {
+        var expression = new Expression('\'hello\' === \'hello\'');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression('1 === 2');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression('false === true === false');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression('1 === "1"');
+        expect(expression.evaluate(undefined)).toEqual(false);
+    });
+
     it('evaluates binary equals', function() {
         var expression = new Expression('\'hello\' == \'hello\'');
         expect(expression.evaluate(undefined)).toEqual(true);
@@ -551,6 +557,23 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(false);
 
         expression = new Expression('false == true == false');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression('1 == "1"');
+        expect(expression.evaluate(undefined)).toEqual(true);
+    });
+
+    it('evaluates binary not equals strict', function() {
+        var expression = new Expression('\'hello\' !== \'hello\'');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression('1 !== 2');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression('false !== true !== false');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression('1 !== "1"');
         expect(expression.evaluate(undefined)).toEqual(true);
     });
 
@@ -563,6 +586,9 @@ defineSuite([
 
         expression = new Expression('false != true != false');
         expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression('1 != "1"');
+        expect(expression.evaluate(undefined)).toEqual(false);
     });
 
     it('evaluates binary less than', function() {
@@ -1292,10 +1318,24 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
+    it('gets shader expression for binary equals strict', function() {
+        var expression = new Expression('1.0 === 2.0');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = '(1.0 == 2.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
     it('gets shader expression for binary equals', function() {
         var expression = new Expression('1.0 == 2.0');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = '(1.0 == 2.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for binary not equals strict', function() {
+        var expression = new Expression('1.0 !== 2.0');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = '(1.0 != 2.0)';
         expect(shaderExpression).toEqual(expected);
     });
 
