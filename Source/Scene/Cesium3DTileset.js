@@ -26,7 +26,8 @@ define([
         './Cesium3DTileStyleEngine',
         './CullingVolume',
         './DebugCameraPrimitive',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         Color,
         defaultValue,
@@ -54,7 +55,8 @@ define([
         Cesium3DTileStyleEngine,
         CullingVolume,
         DebugCameraPrimitive,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
 
     /**
@@ -76,6 +78,8 @@ define([
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
+     * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      *
      * @example
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -129,6 +133,14 @@ define([
         this._trimTiles = false;
 
         this._refineToVisible = defaultValue(options.refineToVisible, false);
+
+        /**
+         * Determines whether the tileset casts or receives shadows from each light source.
+         *  
+         * @type {ShadowMode}
+         * @default ShadowMode.ENABLED
+         */
+        this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
 
         /**
          * Determines if the tileset will be shown.
@@ -236,6 +248,17 @@ define([
          * @default false
          */
         this.debugShowContentBoundingVolume = defaultValue(options.debugShowContentBoundingVolume, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, renders the viewer request volume for each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowViewerRequestVolume = defaultValue(options.debugShowViewerRequestVolume, false);
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -907,6 +930,11 @@ define([
 
         var root = tileset._root;
         root.updateTransform(tileset._modelMatrix);
+
+        if (!root.insideViewerRequestVolume(frameState)) {
+            return;
+        }
+
         root.distanceToCamera = root.distanceToTile(frameState);
 
         if (getScreenSpaceError(tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
@@ -991,14 +1019,16 @@ define([
                         // With additive refinement, we only request or refine when children are visible
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            // Use parent's geometric error with child's box to see if we already meet the SSE
-                            if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
-                                child.visibilityPlaneMask = child.visibility(cullingVolume, visibilityPlaneMask);
-                                if (isVisible(child.visibilityPlaneMask)) {
-                                    if (child.contentUnloaded) {
-                                        requestContent(tileset, child, outOfCore);
-                                    } else {
-                                        stack.push(child);
+                            if (child.insideViewerRequestVolume(frameState)) {
+                                // Use parent's geometric error with child's box to see if we already meet the SSE
+                                if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
+                                    child.visibilityPlaneMask = child.visibility(cullingVolume, visibilityPlaneMask);
+                                    if (isVisible(child.visibilityPlaneMask)) {
+                                        if (child.contentUnloaded) {
+                                            requestContent(tileset, child, outOfCore);
+                                        } else {
+                                            stack.push(child);
+                                        }
                                     }
                                 }
                             }
@@ -1056,11 +1086,18 @@ define([
                         }
                     } else {
                         // Tile does not meet SSE and its children are loaded.  Refine to them in front-to-back order.
+                        var anyChildrenVisible = false;
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
+                            if (child.insideViewerRequestVolume(frameState)) {
+                                child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
+                            } else {
+                                child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
+                            }
+
                             if (isVisible(child.visibilityPlaneMask)) {
                                 stack.push(child);
+                                anyChildrenVisible = true;
                             } else {
                                 // Touch the child tile even if it is not visible. Since replacement refinement
                                 // requires all child tiles to be loaded to refine to them, we want to keep it in the cache.
@@ -1068,9 +1105,15 @@ define([
                             }
                         }
 
-                        t.replaced = true;
-                        if (defined(t.descendantsWithContent)) {
-                            scratchRefiningTiles.push(t);
+                        if (anyChildrenVisible) {
+                            t.replaced = true;
+                            if (defined(t.descendantsWithContent)) {
+                                scratchRefiningTiles.push(t);
+                            }
+                        } else {
+                            // Even though the children are all loaded they may not be visible if the camera
+                            // is not inside their request volumes.
+                            selectTile(tileset, t, fullyVisible, frameState);
                         }
                     }
                 } else {
@@ -1084,7 +1127,11 @@ define([
                     for (k = 0; k < childrenLength; ++k) {
                         child = children[k];
                         child.updateTransform(t.computedTransform);
-                        child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
+                        if (child.insideViewerRequestVolume(frameState)) {
+                            child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
+                        } else {
+                            child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
+                        }
                         if (isVisible(child.visibilityPlaneMask)) {
                             if (child.contentReady) {
                                 someVisibleChildrenLoaded = true;
@@ -1092,6 +1139,12 @@ define([
                                 allVisibleChildrenLoaded = false;
                             }
                         }
+                    }
+
+                    if (allVisibleChildrenLoaded && !someVisibleChildrenLoaded) {
+                        // No children are visible, select this tile
+                        selectTile(tileset, t, fullyVisible, frameState);
+                        continue;
                     }
 
                     // Only sort children by distance if we are going to refine to them

@@ -741,8 +741,9 @@ define([
 
         var vs = ShadowVolumeVS;
         vs = primitive._primitive._batchTable.getVertexShaderCallback()(vs);
-        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive._primitive, vs);
+        vs = Primitive._appendDistanceDisplayConditionToShader(primitive._primitive, vs);
+        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         vs = Primitive._updateColorAttribute(primitive._primitive, vs);
 
         var fs = ShadowVolumeFS;

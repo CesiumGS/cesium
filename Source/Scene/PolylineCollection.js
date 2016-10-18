@@ -82,6 +82,7 @@ define([
     //POSITION_SIZE_INDEX is needed for when the polyline's position array changes size.
     //When it does, we need to recreate the indicesBuffer.
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX;
+    var DISTANCE_DISPLAY_CONDITION = Polyline.DISTANCE_DISPLAY_CONDITION;
     var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
@@ -376,7 +377,7 @@ define([
         return this._polylines[index];
     };
 
-    function createBatchTable(collection) {
+    function createBatchTable(collection, context) {
         if (defined(collection._batchTable)) {
             collection._batchTable.destroy();
         }
@@ -392,8 +393,28 @@ define([
             normalize : true
         }];
 
+        if (defined(context.floatingPointTexture)) {
+            attributes.push({
+                functionName : 'batchTable_getCenterHigh',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            }, {
+                functionName : 'batchTable_getCenterLowAndRadius',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 4
+            }, {
+                functionName : 'batchTable_getDistanceDisplayCondition',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2
+            });
+        }
+
         collection._batchTable = new BatchTable(attributes, collection._polylines.length);
     }
+
+    var scratchUpdatePolylineEncodedCartesian = new EncodedCartesian3();
+    var scratchUpdatePolylineCartesian4 = new Cartesian4();
+    var scratchNearFarCartesian2 = new Cartesian2();
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -466,6 +487,30 @@ define([
 
                     if (properties[SHOW_INDEX] || properties[WIDTH_INDEX]) {
                         this._batchTable.setBatchedAttribute(polyline._index, 0, new Cartesian2(polyline._width, polyline._show));
+                    }
+
+                    if (this._batchTable.attributes.length > 2) {
+                        if (properties[POSITION_INDEX] || properties[POSITION_SIZE_INDEX]) {
+                            var boundingSphere = frameState.mode === SceneMode.SCENE2D ? polyline._boundingVolume2D : polyline._boundingVolumeWC;
+                            var encodedCenter = EncodedCartesian3.fromCartesian(boundingSphere.center, scratchUpdatePolylineEncodedCartesian);
+                            var low = Cartesian4.fromElements(encodedCenter.low.x, encodedCenter.low.y, encodedCenter.low.z, boundingSphere.radius, scratchUpdatePolylineCartesian4);
+                            this._batchTable.setBatchedAttribute(polyline._index, 2, encodedCenter.high);
+                            this._batchTable.setBatchedAttribute(polyline._index, 3, low);
+                        }
+
+                        if (properties[DISTANCE_DISPLAY_CONDITION]) {
+                            var nearFarCartesian = scratchNearFarCartesian2;
+                            nearFarCartesian.x = 0.0;
+                            nearFarCartesian.y = Number.MAX_VALUE;
+
+                            var distanceDisplayCondition = polyline.distanceDisplayCondition;
+                            if (defined(distanceDisplayCondition)) {
+                                nearFarCartesian.x = distanceDisplayCondition.near;
+                                nearFarCartesian.x = distanceDisplayCondition.far;
+                            }
+
+                            this._batchTable.setBatchedAttribute(polyline._index, 4, nearFarCartesian);
+                        }
                     }
 
                     polyline._clean();
@@ -1105,8 +1150,14 @@ define([
             return;
         }
 
+        var defines = [];
+        if (context.floatingPointTexture) {
+            defines.push('DISTANCE_DISPLAY_CONDITION');
+        }
+
         var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
         var vs = new ShaderSource({
+            defines : defines,
             sources : [PolylineCommon, vsSource]
         });
         var fs = new ShaderSource({
@@ -1271,8 +1322,29 @@ define([
             widthShowCartesian.x = width;
             widthShowCartesian.y = show ? 1.0 : 0.0;
 
+            var boundingSphere = mode === SceneMode.SCENE2D ? polyline._boundingVolume2D : polyline._boundingVolumeWC;
+            var encodedCenter = EncodedCartesian3.fromCartesian(boundingSphere.center, scratchUpdatePolylineEncodedCartesian);
+            var high = encodedCenter.high;
+            var low = Cartesian4.fromElements(encodedCenter.low.x, encodedCenter.low.y, encodedCenter.low.z, boundingSphere.radius, scratchUpdatePolylineCartesian4);
+
+            var nearFarCartesian = scratchNearFarCartesian2;
+            nearFarCartesian.x = 0.0;
+            nearFarCartesian.y = Number.MAX_VALUE;
+
+            var distanceDisplayCondition = polyline.distanceDisplayCondition;
+            if (defined(distanceDisplayCondition)) {
+                nearFarCartesian.x = distanceDisplayCondition.near;
+                nearFarCartesian.y = distanceDisplayCondition.far;
+            }
+
             batchTable.setBatchedAttribute(polylineBatchIndex, 0, widthShowCartesian);
             batchTable.setBatchedAttribute(polylineBatchIndex, 1, colorCartesian);
+
+            if (batchTable.attributes.length > 2) {
+                batchTable.setBatchedAttribute(polylineBatchIndex, 2, high);
+                batchTable.setBatchedAttribute(polylineBatchIndex, 3, low);
+                batchTable.setBatchedAttribute(polylineBatchIndex, 4, nearFarCartesian);
+            }
         }
     };
 
