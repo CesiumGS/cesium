@@ -496,9 +496,10 @@ define([
         var hasBatchTable = defined(batchTable);
 
         var styleableVertexAttributes = [];
+        var styleableShaderAttributes = {};
+        content._styleableShaderAttributes = styleableShaderAttributes;
 
         if (hasStyleableProperties) {
-            var styleableShaderAttributes = {};
             var attributeLocation = numberOfAttributes;
 
             for (var name in styleableProperties) {
@@ -533,8 +534,6 @@ define([
                     ++attributeLocation;
                 }
             }
-
-            content._styleableShaderAttributes = styleableShaderAttributes;
         }
 
         var uniformMap = {
@@ -875,14 +874,12 @@ define([
 
         // Disable vertex attributes that aren't used in the style, enable attributes that are
         var styleableShaderAttributes = content._styleableShaderAttributes;
-        if (defined(styleableShaderAttributes)) {
-            for (name in styleableShaderAttributes) {
-                if (styleableShaderAttributes.hasOwnProperty(name)) {
-                    attribute = styleableShaderAttributes[name];
-                    var enabled = (styleableProperties.indexOf(name) >= 0);
-                    var vertexAttribute = getVertexAttribute(vertexArray, attribute.location);
-                    vertexAttribute.enabled = enabled;
-                }
+        for (name in styleableShaderAttributes) {
+            if (styleableShaderAttributes.hasOwnProperty(name)) {
+                attribute = styleableShaderAttributes[name];
+                var enabled = (styleableProperties.indexOf(name) >= 0);
+                var vertexAttribute = getVertexAttribute(vertexArray, attribute.location);
+                vertexAttribute.enabled = enabled;
             }
         }
 
