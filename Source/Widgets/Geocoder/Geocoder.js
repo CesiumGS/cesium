@@ -70,6 +70,11 @@ value: searchText,\
 valueUpdate: "afterkeydown",\
 disable: isSearchInProgress,\
 css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 }');
+        textBox.addEventListener('focus', function() {
+            setTimeout(function() {
+                textBox.select();
+            }, 0);
+        });
         form.appendChild(textBox);
 
         var searchButton = document.createElement('span');
