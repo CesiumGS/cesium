@@ -235,16 +235,17 @@ define([
         var glyphLength = glyphs.length;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             glyph = glyphs[glyphIndex];
-            dimensions = glyph.dimensions;
             
-            lineWidth += dimensions.width;
-            maxLineWidth = Math.max(maxLineWidth, lineWidth);
-            maxGlyphHeight = Math.max(maxGlyphHeight, dimensions.height);
-            maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
-
             if (text.charAt(glyphIndex) === '\n') {
                 numberOfLines += 1;
                 lineWidth = 0;
+            }
+            else {
+                dimensions = glyph.dimensions;
+                lineWidth += dimensions.width;
+                maxLineWidth = Math.max(maxLineWidth, lineWidth);
+                maxGlyphHeight = Math.max(maxGlyphHeight, dimensions.height);
+                maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
             }
         }
 
