@@ -527,7 +527,8 @@ define([
             !Property.isConstant(granularity) || //
             !Property.isConstant(width) || //
             !Property.isConstant(outlineWidth) || //
-            !Property.isConstant(cornerType)) {
+            !Property.isConstant(cornerType) || //
+            (onTerrain && !Property.isConstant(material))) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
