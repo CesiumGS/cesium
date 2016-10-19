@@ -871,12 +871,8 @@ define([
         }
 
         //Check for a Coordinate Reference System.
-        var crsFunction = defaultCrsFunction;
         var crs = geoJson.crs;
-
-        if (crs === null) {
-            throw new RuntimeError('crs is null.');
-        }
+        var crsFunction = crs !== null ? defaultCrsFunction : null;
 
         if (defined(crs)) {
             if (!defined(crs.properties)) {
@@ -912,7 +908,12 @@ define([
 
         return when(crsFunction, function(crsFunction) {
             that._entityCollection.removeAll();
-            typeHandler(that, geoJson, geoJson, crsFunction, options);
+
+            // null is a valid value for the crs, but means the entire load process becomes a no-op
+            // because we can't assume anything about the coordinates.
+            if (crsFunction !== null) {
+                typeHandler(that, geoJson, geoJson, crsFunction, options);
+            }
 
             return when.all(that._promises, function() {
                 that._promises.length = 0;
