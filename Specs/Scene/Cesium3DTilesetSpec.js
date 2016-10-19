@@ -65,6 +65,10 @@ defineSuite([
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
 
+    var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
+    var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
+    var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
+
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
 
     // 1 tile with translucent features
@@ -430,14 +434,14 @@ defineSuite([
         });
     });
 
-    it('uses dynamic screen space error', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+    function testDynamicScreenSpaceError(url, distance) {
+        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
             scene.renderForSpecs();
             var stats = tileset._statistics;
 
             // Horizon view, only root is visible
             var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, 210.0));
+            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, distance));
 
             // Set dynamic SSE to false (default)
             tileset.dynamicScreenSpaceError = false;
@@ -453,6 +457,24 @@ defineSuite([
             expect(stats.visited).toEqual(0);
             expect(stats.numberOfCommands).toEqual(0);
         });
+    }
+
+    // Adjust distances for each test because the dynamic SSE takes the
+    // bounding volume height into account, which differs for each bounding volume.
+    it('uses dynamic screen space error with region', function() {
+        return testDynamicScreenSpaceError(withTransformRegionUrl, 103.0);
+    });
+
+    it('uses dynamic screen space error for wgs84 tileset', function() {
+        return testDynamicScreenSpaceError(withTransformRegionUrl, 103.0);
+    });
+
+    it('uses dynamic screen space error for local tileset with box', function() {
+        return testDynamicScreenSpaceError(withTransformBoxUrl, 193.0);
+    });
+
+    it('uses dynamic screen space error for local tileset with sphere', function() {
+        return testDynamicScreenSpaceError(withTransformSphereUrl, 145.0);
     });
 
     it('additive refinement - selects root when sse is met', function() {

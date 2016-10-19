@@ -83,6 +83,9 @@ define([
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
      * @param {Boolean} [options.refineToVisible=false] Whether replacement refinement should refine when all visible children are ready. An experimental optimization.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Reduce the screen space error for tiles that are further away from the camera.
+     * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
+     * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
+     * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
      * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
      * @param {Boolean} [options.debugShowPickStatistics=false] For debugging only. Determines if rendering statistics for picking are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
@@ -149,6 +152,11 @@ define([
          * Whether the tileset should should refine based on a dynamic screen space error. Tiles that are further
          * away will be rendered with lower detail than closer tiles. This improves performance by rendering fewer
          * tiles and making less requests, but may result in a slight drop in visual quality for tiles in the distance.
+         * The algorithm is biased towards "street views" where the camera is close to the floor of the tileset and looking
+         * at the horizon. In addition results are more accurate for tightly fitting bounding volumes like box and region.
+         *
+         * @type {Boolean}
+         * @default false
          *
          * @see Fog
          */
@@ -167,6 +175,9 @@ define([
          * Increasing dynamicScreenSpaceErrorDensity has the effect of moving the error midpoint closer to the camera.
          * It is analogous to moving fog closer to the camera.
          *
+         * @type {Number}
+         * @default 0.00278
+         *
          * @see Fog.density
          */
         this.dynamicScreenSpaceErrorDensity = 0.00278;
@@ -175,9 +186,24 @@ define([
          * A factor used to increase the screen space error of tiles for dynamic SSE. As this value increases less tiles
          * are requested for rendering and tiles in the distance will have lower detail. If set to zero, the feature will be disabled.
          *
+         * @type {Number}
+         * @default 4.0
+         *
          * @see Fog.screenSpaceErrorFactor
          */
         this.dynamicScreenSpaceErrorFactor = 4.0;
+
+        /**
+         * A ratio of the tileset's height at which the density starts to falloff. If the camera is below this height the
+         * full computed density is applied, otherwise the density falls off. This has the effect of higher density at
+         * street level views.
+         *
+         * Valid values are between 0.0 and 1.0.
+         *
+         * @type {Number}
+         * @default 0.25
+         */
+        this.dynamicScreenSpaceErrorHeightFalloff = 0.25;
 
         this._dynamicScreenSpaceErrorComputedDensity = 0.0; // Updated based on the camera position and direction
 
@@ -917,7 +943,8 @@ define([
         }
 
         // The range where the density starts to lessen. Start at the quarter height of the tileset.
-        var heightClose = minimumHeight + (maximumHeight - minimumHeight) / 4.0;
+        var heightFalloff = tileset.dynamicScreenSpaceErrorHeightFalloff;
+        var heightClose = minimumHeight + (maximumHeight - minimumHeight) * heightFalloff;
         var heightFar = maximumHeight;
 
         var t = CesiumMath.clamp((height - heightClose) / (heightFar - heightClose), 0.0, 1.0);
