@@ -206,6 +206,7 @@ define([
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : this._buffer,
             structure : structure,
+            includeWebMercatorT : true,
             width : this._width,
             height : this._height,
             nativeRectangle : nativeRectangle,
@@ -232,7 +233,7 @@ define([
                     result.maximumHeight,
                     result.boundingSphere3D,
                     result.occludeePointInScaledSpace,
-                    6,
+                    result.numberOfAttributes,
                     result.orientedBoundingBox,
                     TerrainEncoding.clone(result.encoding),
                     exaggeration);
