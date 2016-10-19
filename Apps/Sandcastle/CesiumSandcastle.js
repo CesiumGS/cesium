@@ -1044,9 +1044,7 @@ require({
         });
     }
 
-    function loadDemoFromFile(index) {
-        var demo = gallery_demos[index];
-
+    function loadDemoFromFile(demo) {
         return requestDemo(demo.name).then(function(value) {
             // Store the file contents for later searching.
             demo.code = value;
@@ -1092,7 +1090,7 @@ require({
                 content : demo.description.replace(/\\n/g, '<br/>')
             });
 
-            addFileToTab(index);
+            addFileToTab(demo);
             return demo;
         });
     }
@@ -1104,10 +1102,10 @@ require({
         loading = false;
     }
 
-    function addFileToGallery(index) {
+    function addFileToGallery(demo) {
         var searchDemos = dom.byId('searchDemos');
-        searchDemos.appendChild(createGalleryButton(index, 'searchDemo'));
-        return loadDemoFromFile(index);
+        searchDemos.appendChild(createGalleryButton(demo, 'searchDemo'));
+        return loadDemoFromFile(demo);
     }
 
     function onShowCallback() {
@@ -1116,8 +1114,7 @@ require({
         };
     }
 
-    function addFileToTab(index) {
-        var demo = gallery_demos[index];
+    function addFileToTab(demo) {
         if (demo.label !== '') {
             var labels = demo.label.split(',');
             for (var j = 0; j < labels.length; j++) {
@@ -1134,13 +1131,12 @@ require({
                 }
                 var tabName = label + 'Demos';
                 var tab = dom.byId(tabName);
-                tab.appendChild(createGalleryButton(index, tabName));
+                tab.appendChild(createGalleryButton(demo, tabName));
             }
         }
     }
 
-    function createGalleryButton(index, tabName) {
-        var demo = gallery_demos[index];
+    function createGalleryButton(demo, tabName) {
         var imgSrc = 'templates/Gallery_tile.jpg';
         if (Cesium.defined(demo.img)) {
             imgSrc = 'gallery/' + demo.img;
@@ -1217,7 +1213,7 @@ require({
         var queryName = queryObject.src.replace('.html', '');
         var promises = [];
         for (i = 0; i < len; ++i) {
-            promises.push(addFileToGallery(i));
+            promises.push(addFileToGallery(gallery_demos[i]));
         }
 
         promise = all(promises).then(function(results) {
@@ -1241,17 +1237,19 @@ require({
 
             var demos = dom.byId('allDemos');
             for (i = 0; i < len; ++i) {
-                if (!/Development/i.test(gallery_demos[i].label)) {
-                    demos.appendChild(createGalleryButton(i, 'all'));
+                var demo = gallery_demos[i];
+                if (!/Development/i.test(demo.label)) {
+                    demos.appendChild(createGalleryButton(demo, 'all'));
                 }
             }
 
             if (!queryInGalleryIndex) {
-                gallery_demos.push({
-                                       name : queryName,
-                                       description : ''
-                                   });
-                return addFileToGallery(gallery_demos.length - 1);
+                var emptyDemo = {
+                    name : queryName,
+                    description : ''
+                };
+                gallery_demos.push(emptyDemo);
+                return addFileToGallery(emptyDemo);
             }
         });
     }
