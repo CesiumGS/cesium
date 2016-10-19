@@ -599,6 +599,28 @@ defineSuite([
         });
     });
 
+    it('Works with point geometry and unknown simplystyle', function() {
+        var geojson = {
+            type : 'Point',
+            coordinates : [102.0, 0.5],
+            properties : {
+                'marker-size' : 'large',
+                'marker-symbol' : 'notAnIcon',
+                'marker-color' : '#ffffff'
+            }
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(geojson).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.billboard).toBeDefined();
+            return when(dataSource._pinBuilder.fromColor(Color.WHITE, 64)).then(function(image) {
+                expect(entity.billboard.image.getValue()).toBe(image);
+            });
+        });
+    });
+
     it('Works with multipoint geometry', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(multiPoint).then(function() {

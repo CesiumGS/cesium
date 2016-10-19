@@ -281,20 +281,25 @@ define([
             canvasOrPromise = dataSource._pinBuilder.fromColor(color, size);
         }
 
-        dataSource._promises.push(when(canvasOrPromise, function(dataUrl) {
-            var billboard = new BillboardGraphics();
-            billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-            billboard.image = new ConstantProperty(dataUrl);
+        var billboard = new BillboardGraphics();
+        billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
 
-            // Clamp to ground if there isn't a height specified
-            if (coordinates.length === 2) {
-                billboard.heightReference = HeightReference.CLAMP_TO_GROUND;
-            }
+        // Clamp to ground if there isn't a height specified
+        if (coordinates.length === 2) {
+            billboard.heightReference = HeightReference.CLAMP_TO_GROUND;
+        }
 
-            var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
-            entity.billboard = billboard;
-            entity.position = new ConstantPositionProperty(crsFunction(coordinates));
-        }));
+        var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
+        entity.billboard = billboard;
+        entity.position = new ConstantPositionProperty(crsFunction(coordinates));
+
+        var promise = when(canvasOrPromise).then(function(image) {
+            billboard.image = new ConstantProperty(image);
+        }).otherwise(function() {
+            billboard.image = new ConstantProperty(dataSource._pinBuilder.fromColor(color, size));
+        });
+
+        dataSource._promises.push(promise);
     }
 
     function processPoint(dataSource, geoJson, geometry, crsFunction, options) {
