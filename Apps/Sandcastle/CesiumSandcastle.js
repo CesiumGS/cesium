@@ -1212,13 +1212,6 @@ require({
         var i;
         var len = gallery_demos.length;
 
-        // Sort alphabetically.  This will eventually be a user option.
-        gallery_demos.sort(function(a, b) {
-            var aName = a.name.toUpperCase();
-            var bName = b.name.toUpperCase();
-            return bName < aName ? 1 : bName > aName ? -1 : 0;
-        });
-
         var queryInGalleryIndex = false;
         var queryName = queryObject.src.replace('.html', '');
         var promises = [];
