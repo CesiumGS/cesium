@@ -678,8 +678,9 @@ define([
     var scratchCartographicMax = new Cartographic();
 
     function computeRectangle(positions, ellipsoid, width, cornerType) {
-        var length = positions.length - 1;
-        if (length === 0) {
+        var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
+        var length = cleanPositions.length - 1;
+        if (length === 0 || width === 0) {
             return new Rectangle();
         }
         var halfWidth = width * 0.5;
