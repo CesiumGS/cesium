@@ -241,7 +241,7 @@ define([
             else {
                 glyph = glyphs[glyphIndex];
                 dimensions = glyph.dimensions;
-                lineWidth += dimensions.width;
+                lineWidth += dimensions.computedWidth;
                 maxLineWidth = Math.max(maxLineWidth, lineWidth);
                 maxGlyphHeight = Math.max(maxGlyphHeight, dimensions.height);
                 maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
