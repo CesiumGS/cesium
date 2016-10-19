@@ -291,7 +291,17 @@ define([
         if(defined(context)){
             id = context + id;
         }
-        var entity = entityCollection.getOrCreateEntity(id);
+
+        // If we have a duplicate ID just generate one. This isn't valid KML but will allow it to load.
+        var entity = entityCollection.getById(id);
+        if (defined(entity)) {
+            id = createGuid();
+            if(defined(context)){
+                id = context + id;
+            }
+        }
+
+        entity = entityCollection.add(new Entity({id : id}));
         if (!defined(entity.kml)) {
             entity.addProperty('kml');
             entity.kml = new KmlFeatureData();

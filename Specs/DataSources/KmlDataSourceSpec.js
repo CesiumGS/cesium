@@ -406,6 +406,23 @@ defineSuite([
         });
     });
 
+    it('Feature: duplicate id', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <Placemark id="Bob">\
+            </Placemark>\
+            <Placemark id="Bob">\
+            </Placemark>\
+        </Document>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities[0].id).toBe('Bob');
+            expect(entities[1].id).not.toBe('Bob');
+        });
+    });
+
     it('Feature: name', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <Placemark>\
