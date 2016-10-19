@@ -542,7 +542,8 @@ define([
             !Property.isConstant(perPositionHeightProperty) || //
             !Property.isConstant(perPositionHeight) || //
             !Property.isConstant(closeTop) || //
-            !Property.isConstant(closeBottom)) {
+            !Property.isConstant(closeBottom) || //
+            (onTerrain && !Property.isConstant(material))) {
 
             if (!this._dynamic) {
                 this._dynamic = true;
