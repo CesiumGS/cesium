@@ -264,7 +264,6 @@ define([
         var heightReference = label._heightReference;
         var verticalOrigin = (heightReference === HeightReference.NONE) ? label._verticalOrigin : VerticalOrigin.BOTTOM;
         if (verticalOrigin === VerticalOrigin.CENTER) {
-            // Subtract maxGlyphDescent for backwards compatibility
             heightOffset += ((totalHeight / 2)  - (maxGlyphHeight/2))  * scale;
         } else if (verticalOrigin === VerticalOrigin.BOTTOM) {
             // Subtract maxGlyphHeight for backwards compatibility
