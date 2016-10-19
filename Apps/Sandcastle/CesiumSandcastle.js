@@ -1102,9 +1102,20 @@ require({
         loading = false;
     }
 
+    function insertSortedById(parentTab, galleryButton) {
+        var child;
+        for (child = parentTab.lastChild; child !== null; child = child.previousSibling) {
+            if (galleryButton.id >= child.id) {
+                parentTab.insertBefore(galleryButton, child.nextSibling);
+                return;
+            }
+        }
+        parentTab.appendChild(galleryButton);
+    }
+
     function addFileToGallery(demo) {
         var searchDemos = dom.byId('searchDemos');
-        searchDemos.appendChild(createGalleryButton(demo, 'searchDemo'));
+        insertSortedById(searchDemos, createGalleryButton(demo, 'searchDemo'));
         return loadDemoFromFile(demo);
     }
 
@@ -1131,7 +1142,7 @@ require({
                 }
                 var tabName = label + 'Demos';
                 var tab = dom.byId(tabName);
-                tab.appendChild(createGalleryButton(demo, tabName));
+                insertSortedById(tab, createGalleryButton(demo, tabName));
             }
         }
     }
@@ -1239,7 +1250,7 @@ require({
             for (i = 0; i < len; ++i) {
                 var demo = gallery_demos[i];
                 if (!/Development/i.test(demo.label)) {
-                    demos.appendChild(createGalleryButton(demo, 'all'));
+                    insertSortedById(demos, createGalleryButton(demo, 'all'));
                 }
             }
 
