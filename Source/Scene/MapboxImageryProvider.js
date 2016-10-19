@@ -31,6 +31,7 @@ define([
      * @param {String} [options.url='https://api.mapbox.com/v4/'] The Mapbox server url.
      * @param {String} options.mapId The Mapbox Map ID.
      * @param {String} [options.accessToken] The public access token for the imagery.
+     * @param {Boolean} [options.retina] Whether or not to request high DPI images.
      * @param {String} [options.format='png'] The format of the image request.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
@@ -68,11 +69,19 @@ define([
         var format = defaultValue(options.format, 'png');
         this._format = format.replace('.', '');
 
+        if (defined(options.retina)) {
+            this._retina = options.retina;
+        } else {
+            this._retina = false;
+        }
+
+        var retinaIdentifier = this._retina ? '@2x' : '';
+
         var templateUrl = url;
         if (!trailingSlashRegex.test(url)) {
             templateUrl += '/';
         }
-        templateUrl += mapId + '/{z}/{x}/{y}.' + this._format;
+        templateUrl += mapId + '/{z}/{x}/{y}' + retinaIdentifier + '.' + this._format;
         if (defined(this._accessToken)) {
             templateUrl += '?access_token=' + this._accessToken;
         }
@@ -119,6 +128,19 @@ define([
         ready : {
             get : function() {
                 return this._imageryProvider.ready;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider will retrieve
+         * high DPI (Retina) images.
+         * @memberof MapboxImageryProvider.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        retina : {
+            get : function() {
+                return this._retina;
             }
         },
 
