@@ -5,6 +5,7 @@ attribute vec4 positionLowAndOutline;
 attribute vec4 compressedAttribute0;        // color, outlineColor, pick color
 attribute vec4 compressedAttribute1;        // show, translucency by distance, some free space
 attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
+attribute vec2 distanceDisplayCondition;    // near, far
 
 varying vec4 v_color;
 varying vec4 v_outlineColor;
@@ -101,7 +102,7 @@ void main()
 
     ///////////////////////////////////////////////////////////////////////////
 
-#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY)
+#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(DISTANCE_DISPLAY_CONDITION)
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -134,6 +135,14 @@ void main()
     // push vertex behind near plane for clipping
     if (translucency < 0.004)
     {
+        positionEC.xyz = vec3(0.0);
+    }
+#endif
+
+#ifdef DISTANCE_DISPLAY_CONDITION
+    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x;
+    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y;
+    if (lengthSq < nearSq || lengthSq > farSq) {
         positionEC.xyz = vec3(0.0);
     }
 #endif

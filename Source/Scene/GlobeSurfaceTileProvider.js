@@ -43,7 +43,8 @@ define([
         './ImageryLayer',
         './ImageryState',
         './QuadtreeTileLoadState',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         BoundingSphere,
         BoxOutlineGeometry,
@@ -88,7 +89,8 @@ define([
         ImageryLayer,
         ImageryState,
         QuadtreeTileLoadState,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
 
     /**
@@ -124,8 +126,7 @@ define([
         this.oceanNormalMap = undefined;
         this.zoomedOutOceanSpecularIntensity = 0.5;
         this.enableLighting = false;
-        this.castShadows = false;
-        this.receiveShadows = false;
+        this.shadows = ShadowMode.RECEIVE_ONLY;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -715,6 +716,9 @@ define([
             u_dayTextureTexCoordsRectangle : function() {
                 return this.properties.dayTextureTexCoordsRectangle;
             },
+            u_dayTextureUseWebMercatorT : function() {
+                return this.properties.dayTextureUseWebMercatorT;
+            },
             u_dayTextureAlpha : function() {
                 return this.properties.dayTextureAlpha;
             },
@@ -771,6 +775,7 @@ define([
                 dayTextures : [],
                 dayTextureTranslationAndScale : [],
                 dayTextureTexCoordsRectangle : [],
+                dayTextureUseWebMercatorT : [],
                 dayTextureAlpha : [],
                 dayTextureBrightness : [],
                 dayTextureContrast : [],
@@ -921,9 +926,9 @@ define([
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
         var enableFog = frameState.fog.enabled;
-        var castShadows = tileProvider.castShadows;
-        var receiveShadows = tileProvider.receiveShadows;
-        
+        var castShadows = ShadowMode.castShadows(tileProvider.shadows);
+        var receiveShadows = ShadowMode.receiveShadows(tileProvider.shadows);
+
         if (showReflectiveOcean) {
             --maxTextures;
         }
@@ -1077,9 +1082,27 @@ define([
                 var imagery = tileImagery.readyImagery;
                 ++imageryIndex;
 
-                if (!defined(imagery) || imagery.state !== ImageryState.READY || imagery.imageryLayer.alpha === 0.0) {
+                if (!defined(imagery) || imagery.imageryLayer.alpha === 0.0) {
                     continue;
                 }
+
+                var texture = tileImagery.useWebMercatorT ? imagery.textureWebMercator : imagery.texture;
+
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(texture)) {
+                    // Our "ready" texture isn't actually ready.  This should never happen.
+                    //
+                    // Side note: It IS possible for it to not be in the READY ImageryState, though.
+                    // This can happen when a single imagery tile is shared by two terrain tiles (common)
+                    // and one of them (A) needs a geographic version of the tile because it is near the poles,
+                    // and the other (B) does not.  B can and will transition the imagery tile to the READY state
+                    // without reprojecting to geographic.  Then, later, A will deem that same tile not-ready-yet
+                    // because it only has the Web Mercator texture, and flip it back to the TRANSITIONING state.
+                    // The imagery tile won't be in the READY state anymore, but it's still READY enough for B's
+                    // purposes.
+                    throw new DeveloperError('readyImagery is not actually ready!');
+                }
+                //>>includeEnd('debug');
 
                 var imageryLayer = imagery.imageryLayer;
 
@@ -1087,9 +1110,10 @@ define([
                     tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                 }
 
-                uniformMapProperties.dayTextures[numberOfDayTextures] = imagery.texture;
+                uniformMapProperties.dayTextures[numberOfDayTextures] = texture;
                 uniformMapProperties.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
                 uniformMapProperties.dayTextureTexCoordsRectangle[numberOfDayTextures] = tileImagery.textureCoordinateRectangle;
+                uniformMapProperties.dayTextureUseWebMercatorT[numberOfDayTextures] = tileImagery.useWebMercatorT;
 
                 uniformMapProperties.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
                 applyAlpha = applyAlpha || uniformMapProperties.dayTextureAlpha[numberOfDayTextures] !== 1.0;

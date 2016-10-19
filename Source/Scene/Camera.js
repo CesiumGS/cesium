@@ -197,6 +197,18 @@ define([
         this._moveStart = new Event();
         this._moveEnd = new Event();
 
+        this._changed = new Event();
+        this._changedPosition = undefined;
+        this._changedDirection = undefined;
+        this._changedFrustum = undefined;
+
+        /**
+         * The amount the camera has to change before the <code>changed</code> event is raised. The value is a percentage in the [0, 1] range.
+         * @type {number}
+         * @default 0.5
+         */
+        this.percentageChanged = 0.5;
+
         this._viewMatrix = new Matrix4();
         this._invViewMatrix = new Matrix4();
         updateViewMatrix(this);
@@ -207,6 +219,7 @@ define([
         this._projection = projection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         this._max2Dfrustum = undefined;
+        this._suspendTerrainAdjustment = false;
 
         // set default view
         rectangleCameraPosition3D(this, Camera.DEFAULT_VIEW_RECTANGLE, this.position, true);
@@ -250,6 +263,151 @@ define([
         Matrix4.multiply(camera._viewMatrix, camera._actualInvTransform, camera._viewMatrix);
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
+
+    Camera.prototype._updateCameraChanged = function() {
+        var camera = this;
+
+        if (camera._changed.numberOfListeners === 0) {
+            return;
+        }
+
+        var percentageChanged = camera.percentageChanged;
+
+        if (camera._mode === SceneMode.SCENE2D) {
+            if (!defined(camera._changedFrustum)) {
+                camera._changedPosition = Cartesian3.clone(camera.position, camera._changedPosition);
+                camera._changedFrustum = camera.frustum.clone();
+                return;
+            }
+
+            var position = camera.position;
+            var lastPosition = camera._changedPosition;
+
+            var frustum = camera.frustum;
+            var lastFrustum = camera._changedFrustum;
+
+            var x0 = position.x + frustum.left;
+            var x1 = position.x + frustum.right;
+            var x2 = lastPosition.x + lastFrustum.left;
+            var x3 = lastPosition.x + lastFrustum.right;
+
+            var y0 = position.y + frustum.bottom;
+            var y1 = position.y + frustum.top;
+            var y2 = lastPosition.y + lastFrustum.bottom;
+            var y3 = lastPosition.y + lastFrustum.top;
+
+            var leftX = Math.max(x0, x2);
+            var rightX = Math.min(x1, x3);
+            var bottomY = Math.max(y0, y2);
+            var topY = Math.min(y1, y3);
+
+            var areaPercentage;
+            if (leftX >= rightX || bottomY >= y1) {
+                areaPercentage = 1.0;
+            } else {
+                var areaRef = lastFrustum;
+                if (x0 < x2 && x1 > x3 && y0 < y2 && y1 > y3) {
+                    areaRef = frustum;
+                }
+                areaPercentage = 1.0 - ((rightX - leftX) * (topY - bottomY)) / ((areaRef.right - areaRef.left) * (areaRef.top - areaRef.bottom));
+            }
+
+            if (areaPercentage > percentageChanged) {
+                camera._changed.raiseEvent(areaPercentage);
+                camera._changedPosition = Cartesian3.clone(camera.position, camera._changedPosition);
+                camera._changedFrustum = camera.frustum.clone(camera._changedFrustum);
+            }
+            return;
+        }
+
+        if (!defined(camera._changedDirection)) {
+            camera._changedPosition = Cartesian3.clone(camera.positionWC, camera._changedPosition);
+            camera._changedDirection = Cartesian3.clone(camera.directionWC, camera._changedDirection);
+            return;
+        }
+
+        var dirAngle = CesiumMath.acosClamped(Cartesian3.dot(camera.directionWC, camera._changedDirection));
+        var dirPercentage = dirAngle / (camera.frustum.fovy * 0.5);
+
+        var distance = Cartesian3.distance(camera.positionWC, camera._changedPosition);
+        var heightPercentage = distance / camera.positionCartographic.height;
+
+        if (dirPercentage > percentageChanged || heightPercentage > percentageChanged) {
+            camera._changed.raiseEvent(Math.max(dirPercentage, heightPercentage));
+            camera._changedPosition = Cartesian3.clone(camera.positionWC, camera._changedPosition);
+            camera._changedDirection = Cartesian3.clone(camera.directionWC, camera._changedDirection);
+        }
+    };
+
+    var scratchAdjustHeightTransform = new Matrix4();
+    var scratchAdjustHeightCartographic = new Cartographic();
+
+    Camera.prototype._adjustHeightForTerrain = function() {
+        var scene = this._scene;
+
+        var screenSpaceCameraController = scene.screenSpaceCameraController;
+        var enableCollisionDetection = screenSpaceCameraController.enableCollisionDetection;
+        var minimumCollisionTerrainHeight = screenSpaceCameraController.minimumCollisionTerrainHeight;
+        var minimumZoomDistance = screenSpaceCameraController.minimumZoomDistance;
+
+        if (this._suspendTerrainAdjustment || !enableCollisionDetection) {
+            return;
+        }
+
+        var mode = this._mode;
+        var globe = scene.globe;
+
+        if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
+            return;
+        }
+
+        var ellipsoid = globe.ellipsoid;
+        var projection = scene.mapProjection;
+
+        var transform;
+        var mag;
+        if (!Matrix4.equals(this.transform, Matrix4.IDENTITY)) {
+            transform = Matrix4.clone(this.transform, scratchAdjustHeightTransform);
+            mag = Cartesian3.magnitude(this.position);
+            this._setTransform(Matrix4.IDENTITY);
+        }
+
+        var cartographic = scratchAdjustHeightCartographic;
+        if (mode === SceneMode.SCENE3D) {
+            ellipsoid.cartesianToCartographic(this.position, cartographic);
+        } else {
+            projection.unproject(this.position, cartographic);
+        }
+
+        var heightUpdated = false;
+        if (cartographic.height < minimumCollisionTerrainHeight) {
+            var height = globe.getHeight(cartographic);
+            if (defined(height)) {
+                height += minimumZoomDistance;
+                if (cartographic.height < height) {
+                    cartographic.height = height;
+                    if (mode === SceneMode.SCENE3D) {
+                        ellipsoid.cartographicToCartesian(cartographic, this.position);
+                    } else {
+                        projection.project(cartographic, this.position);
+                    }
+                    heightUpdated = true;
+                }
+            }
+        }
+
+        if (defined(transform)) {
+            this._setTransform(transform);
+            if (heightUpdated) {
+                Cartesian3.normalize(this.position, this.position);
+                Cartesian3.negate(this.position, this.direction);
+                Cartesian3.multiplyByScalar(this.position, Math.max(mag, minimumZoomDistance), this.position);
+                Cartesian3.normalize(this.direction, this.direction);
+                Cartesian3.cross(this.direction, this.up, this.right);
+                Cartesian3.cross(this.right, this.direction, this.up);
+            }
+        }
+    };
 
     function convertTransformForColumbusView(camera) {
         Transforms.basisTo2D(camera._projection, camera._transform, camera._actualTransform);
@@ -547,6 +705,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Cartographic}
+         * @readonly
          */
         positionCartographic : {
             get : function() {
@@ -705,7 +864,7 @@ define([
         },
 
         /**
-         * Gets the event that will be raised at when the camera has stopped moving.
+         * Gets the event that will be raised when the camera has stopped moving.
          * @memberof Camera.prototype
          * @type {Event}
          * @readonly
@@ -713,6 +872,18 @@ define([
         moveEnd : {
             get : function() {
                 return this._moveEnd;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised when the camera has changed by <code>percentageChanged</code>.
+         * @memberof Camera.prototype
+         * @type {Event}
+         * @readonly
+         */
+        changed : {
+            get : function() {
+                return this._changed;
             }
         }
     });
@@ -754,6 +925,13 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, this.position);
         }
+
+        var globe = this._scene.globe;
+        var globeFinishedUpdating = !defined(globe) || (globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0);
+        if (this._suspendTerrainAdjustment) {
+            this._suspendTerrainAdjustment = !globeFinishedUpdating;
+        }
+        this._adjustHeightForTerrain();
     };
 
     var setTransformPosition = new Cartesian3();
@@ -981,6 +1159,8 @@ define([
         var heading = defaultValue(orientation.heading, 0.0);
         var pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
         var roll = defaultValue(orientation.roll, 0.0);
+
+        this._suspendTerrainAdjustment = true;
 
         if (mode === SceneMode.SCENE3D) {
             setView3D(this, destination, heading, pitch, roll);
@@ -1426,7 +1606,7 @@ define([
      * @see Camera#rotateDown
      * @see Camera#rotateLeft
      * @see Camera#rotateRight
-    */
+     */
     Camera.prototype.rotate = function(axis, angle) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(axis)) {
@@ -2075,7 +2255,7 @@ define([
         var cart = projection.unproject(new Cartesian3(result.y, result.z, 0.0));
 
         if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
-                cart.longitude < -Math.PI || cart.longitude > Math.PI) {
+            cart.longitude < -Math.PI || cart.longitude > Math.PI) {
             return undefined;
         }
 
@@ -2342,7 +2522,6 @@ define([
     };
 
     var scratchFlyToDestination = new Cartesian3();
-    var scratchFlyToCarto = new Cartographic();
     var newOptions = {
         destination : undefined,
         heading : undefined,
@@ -2354,6 +2533,17 @@ define([
         endTransform : undefined,
         maximumHeight : undefined,
         easingFunction : undefined
+    };
+
+    /**
+     * Cancels the current camera flight if one is in progress.
+     * The camera is left at it's current location.
+     */
+    Camera.prototype.cancelFlight = function () {
+        if (defined(this._currentFlight)) {
+            this._currentFlight.cancelTween();
+            this._currentFlight = undefined;
+        }
     };
 
     /**
@@ -2417,6 +2607,8 @@ define([
             return;
         }
 
+        this.cancelFlight();
+
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
         if (defined(orientation.direction)) {
             orientation = directionUpToHeadingPitchRoll(this, destination, orientation, scratchSetViewOptions.orientation);
@@ -2442,45 +2634,22 @@ define([
             destination = this.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
         }
 
-        var sscc = this._scene.screenSpaceCameraController;
-
-        if (defined(sscc) || mode === SceneMode.SCENE2D) {
-            var ellipsoid = this._scene.mapProjection.ellipsoid;
-            var destinationCartographic = ellipsoid.cartesianToCartographic(destination, scratchFlyToCarto);
-            var height = destinationCartographic.height;
-
-            // Make sure camera doesn't zoom outside set limits
-            if (defined(sscc)) {
-                //The computed height for rectangle in 2D/CV is stored in the 'z' component of Cartesian3
-                if (mode !== SceneMode.SCENE3D && isRectangle) {
-                    destination.z = CesiumMath.clamp(destination.z, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
-                } else {
-                    destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
-                }
-            }
-
-            // The max height in 2D might be lower than the max height for sscc.
-            if (mode === SceneMode.SCENE2D) {
-                var maxHeight = ellipsoid.maximumRadius * Math.PI * 2.0;
-                if (isRectangle) {
-                    destination.z = Math.min(destination.z, maxHeight);
-                } else {
-                    destinationCartographic.height = Math.min(destinationCartographic.height, maxHeight);
-                }
-            }
-
-            //Only change if we clamped the height
-            if (destinationCartographic.height !== height) {
-                destination = ellipsoid.cartographicToCartesian(destinationCartographic, scratchFlyToDestination);
-            }
-        }
+        var that = this;
+        var flightTween;
 
         newOptions.destination = destination;
         newOptions.heading = orientation.heading;
         newOptions.pitch = orientation.pitch;
         newOptions.roll = orientation.roll;
         newOptions.duration = options.duration;
-        newOptions.complete = options.complete;
+        newOptions.complete = function () {
+            if(flightTween === that._currentFlight){
+                that._currentFlight = undefined;
+            }
+            if (defined(options.complete)) {
+                options.complete();
+            }
+        };
         newOptions.cancel = options.cancel;
         newOptions.endTransform = options.endTransform;
         newOptions.convert = isRectangle ? false : options.convert;
@@ -2488,7 +2657,8 @@ define([
         newOptions.easingFunction = options.easingFunction;
 
         var scene = this._scene;
-        scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
+        flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
+        this._currentFlight = flightTween;
     };
 
     function distanceToBoundingSphere3D(camera, radius) {

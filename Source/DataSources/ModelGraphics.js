@@ -45,10 +45,11 @@ define([
      * @param {Property} [options.minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
      * @param {Property} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
-     * @param {Property} [options.castShadows=true] A boolean Property specifying whether the model casts shadows from each light source.
-     * @param {Property} [options.receiveShadows=true] A boolean Property specifying whether the model receives shadows from shadow casters in the scene.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
      * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
+     * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -64,16 +65,18 @@ define([
         this._maximumScaleSubscription = undefined;
         this._incrementallyLoadTextures = undefined;
         this._incrementallyLoadTexturesSubscription = undefined;
-        this._castShadows = undefined;
-        this._castShadowsSubscription = undefined;
-        this._receiveShadows = undefined;
-        this._receiveShadowsSubscription = undefined;
+        this._shadows = undefined;
+        this._shadowsSubscription = undefined;
         this._uri = undefined;
         this._uriSubscription = undefined;
         this._runAnimations = undefined;
         this._runAnimationsSubscription = undefined;
         this._nodeTransformations = undefined;
         this._nodeTransformationsSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -139,20 +142,13 @@ define([
         incrementallyLoadTextures : createPropertyDescriptor('incrementallyLoadTextures'),
 
         /**
-         * Get or sets the boolean Property specifying whether the model
-         * casts shadows from each light source.
+         * Get or sets the enum Property specifying whether the model
+         * casts or receives shadows from each light source.
          * @memberof ModelGraphics.prototype
          * @type {Property}
+         * @default ShadowMode.ENABLED
          */
-        castShadows : createPropertyDescriptor('castShadows'),
-
-        /**
-         * Get or sets the boolean Property specifying whether the model
-         * receives shadows from shadow casters in the scene.
-         * @memberof ModelGraphics.prototype
-         * @type {Property}
-         */
-        receiveShadows : createPropertyDescriptor('receiveShadows'),
+        shadows : createPropertyDescriptor('shadows'),
 
         /**
          * Gets or sets the string Property specifying the URI of the glTF asset.
@@ -175,7 +171,22 @@ define([
          * @memberof ModelGraphics.prototype
          * @type {PropertyBag}
          */
-        nodeTransformations : createPropertyDescriptor('nodeTransformations', undefined, createNodeTransformationPropertyBag)
+        nodeTransformations : createPropertyDescriptor('nodeTransformations', undefined, createNodeTransformationPropertyBag),
+
+        /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this model will be displayed.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -193,11 +204,12 @@ define([
         result.minimumPixelSize = this.minimumPixelSize;
         result.maximumScale = this.maximumScale;
         result.incrementallyLoadTextures = this.incrementallyLoadTextures;
-        result.castShadows = this.castShadows;
-        result.receiveShadows = this.receiveShadows;
+        result.shadows = this.shadows;
         result.uri = this.uri;
         result.runAnimations = this.runAnimations;
         result.nodeTransformations = this.nodeTransformations;
+        result.heightReference = this._heightReference;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
 
         return result;
     };
@@ -220,10 +232,11 @@ define([
         this.minimumPixelSize = defaultValue(this.minimumPixelSize, source.minimumPixelSize);
         this.maximumScale = defaultValue(this.maximumScale, source.maximumScale);
         this.incrementallyLoadTextures = defaultValue(this.incrementallyLoadTextures, source.incrementallyLoadTextures);
-        this.castShadows = defaultValue(this.castShadows, source.castShadows);
-        this.receiveShadows = defaultValue(this.receiveShadows, source.receiveShadows);
+        this.shadows = defaultValue(this.shadows, source.shadows);
         this.uri = defaultValue(this.uri, source.uri);
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
 
         var sourceNodeTransformations = source.nodeTransformations;
         if (defined(sourceNodeTransformations)) {

@@ -8,6 +8,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
@@ -22,6 +23,7 @@ define([
         './PolygonGeometryLibrary',
         './PolygonPipeline',
         './Quaternion',
+        './Rectangle',
         './VertexFormat',
         './WindingOrder'
     ], function(
@@ -33,6 +35,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
@@ -47,6 +50,7 @@ define([
         PolygonGeometryLibrary,
         PolygonPipeline,
         Quaternion,
+        Rectangle,
         VertexFormat,
         WindingOrder) {
     'use strict';
@@ -347,14 +351,14 @@ define([
 
     var createGeometryFromPositionsExtrudedPositions = [];
 
-    function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, hierarchy, perPositionHeight, closeTop, closeBottom, vertexFormat) {
+    function createGeometryFromPositionsExtruded(ellipsoid, polygon, granularity, hierarchy, perPositionHeight, closeTop, closeBottom, vertexFormat) {
         var geos = {
             walls : []
         };
         var i;
 
         if (closeTop || closeBottom) {
-            var topGeo = PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight, vertexFormat);
+            var topGeo = PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat);
 
             var edgePoints = topGeo.attributes.position.values;
             var indices = topGeo.indices;
@@ -579,11 +583,18 @@ define([
         this._perPositionHeight = perPositionHeight;
         this._workerName = 'createPolygonGeometry';
 
+        var positions = polygonHierarchy.positions;
+        if (!defined(positions) || positions.length < 3) {
+            this._rectangle = new Rectangle();
+        } else {
+            this._rectangle = Rectangle.fromCartesianArray(positions, ellipsoid);
+        }
+
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 9;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 9;
     }
 
     /**
@@ -650,6 +661,8 @@ define([
      * @param {PolygonGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     PolygonGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -671,6 +684,9 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
+        Rectangle.pack(value._rectangle, array, startingIndex);
+        startingIndex += Rectangle.packedLength;
+
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._granularity;
@@ -680,10 +696,13 @@ define([
         array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
         array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
         array[startingIndex] = value.packedLength;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
+    var scratchRectangle = new Rectangle();
 
     //Only used to avoid inaability to default construct.
     var dummyOptions = {
@@ -716,6 +735,9 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
+        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
+        startingIndex += Rectangle.packedLength;
+
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var granularity = array[startingIndex++];
@@ -741,6 +763,7 @@ define([
         result._perPositionHeight = perPositionHeight;
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;
+        result._rectangle = Rectangle.clone(rectangle);
         result.packedLength = packedLength;
         return result;
     };
@@ -764,29 +787,22 @@ define([
         var closeTop = polygonGeometry._closeTop;
         var closeBottom = polygonGeometry._closeBottom;
 
-        var walls;
-        var topAndBottom;
-        var outerPositions;
-
-        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, ellipsoid);
-        var hierarchy = results.hierarchy;
-        var polygons = results.polygons;
-        var i;
-
-        if (polygons.length === 0) {
+        var outerPositions = polygonHierarchy.positions;
+        if (outerPositions.length < 3) {
             return;
         }
 
-        if (perPositionHeight) {
-            outerPositions = polygons[0].slice();
-            for (i = 0; i < outerPositions.length; i++) {
-                outerPositions[i] = ellipsoid.scaleToGeodeticSurface(outerPositions[i]);
-            }
-        } else {
-            outerPositions = polygons[0];
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
+
+        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, tangentPlane, ellipsoid);
+        var hierarchy = results.hierarchy;
+        var polygons = results.polygons;
+
+        if (hierarchy.length === 0) {
+            return;
         }
 
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
+        outerPositions = hierarchy[0].outerRing;
         var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
 
         var geometry;
@@ -804,11 +820,16 @@ define([
             top: true,
             wall: false
         };
+
+        var i;
+
         if (extrude) {
             options.top = closeTop;
             options.bottom = closeBottom;
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
+
+                var topAndBottom;
                 if (closeTop && closeBottom) {
                     topAndBottom = geometry.topAndBottom;
                     options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
@@ -827,7 +848,7 @@ define([
                     geometries.push(topAndBottom);
                 }
 
-                walls = geometry.walls;
+                var walls = geometry.walls;
                 options.wall = true;
                 for ( var k = 0; k < walls.length; k++) {
                     var wall = walls[k];
@@ -888,6 +909,17 @@ define([
             vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
+
+    defineProperties(PolygonGeometry.prototype, {
+        /**
+         * @private
+         */
+        rectangle : {
+            get : function() {
+                return this._rectangle;
+            }
+        }
+    });
 
     return PolygonGeometry;
 });

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -7,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
         './Billboard',
         './HeightReference',
@@ -14,6 +16,7 @@ define([
         './LabelStyle',
         './VerticalOrigin'
     ], function(
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Color,
@@ -21,6 +24,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        DistanceDisplayCondition,
         NearFarScalar,
         Billboard,
         HeightReference,
@@ -54,6 +58,7 @@ define([
      *
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
      * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
+     * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
      *
      * @see LabelCollection
      * @see LabelCollection#add
@@ -69,6 +74,9 @@ define([
         }
         if (defined(options.pixelOffsetScaleByDistance) && options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
             throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
+        }
+        if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
+            throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
         }
         //>>includeEnd('debug');
 
@@ -89,6 +97,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -99,6 +108,8 @@ define([
         this._actualClampedPosition = undefined;
         this._removeCallbackFunc = undefined;
         this._mode = undefined;
+
+        this._clusterShow = true;
 
         this._updateClamping();
     }
@@ -126,9 +137,9 @@ define([
 
                     var glyphs = this._glyphs;
                     for (var i = 0, len = glyphs.length; i < len; i++) {
-                        var glyph = glyphs[i];
-                        if (defined(glyph.billboard)) {
-                            glyph.billboard.show = value;
+                        var billboard = glyphs[i].billboard;
+                        if (defined(billboard)) {
+                            billboard.show = value;
                         }
                     }
                 }
@@ -158,9 +169,9 @@ define([
                     if (this._heightReference === HeightReference.NONE) {
                         var glyphs = this._glyphs;
                         for (var i = 0, len = glyphs.length; i < len; i++) {
-                            var glyph = glyphs[i];
-                            if (defined(glyph.billboard)) {
-                                glyph.billboard.position = value;
+                            var billboard = glyphs[i].billboard;
+                            if (defined(billboard)) {
+                                billboard.position = value;
                             }
                         }
                     } else {
@@ -188,6 +199,17 @@ define([
 
                 if (value !== this._heightReference) {
                     this._heightReference = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var billboard = glyphs[i].billboard;
+                        if (defined(billboard)) {
+                            billboard.heightReference = value;
+                        }
+                    }
+
+                    repositionAllGlyphs(this);
+
                     this._updateClamping();
                 }
             }
@@ -642,6 +664,36 @@ define([
         },
 
         /**
+         * Gets or sets the condition specifying at what distance from the camera that this label will be displayed.
+         * @memberof Label.prototype
+         * @type {DistanceDisplayCondition}
+         * @default undefined
+         */
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && value.far <= value.near) {
+                    throw new DeveloperError('far must be greater than near');
+                }
+                //>>includeEnd('debug');
+                if (!DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
+                    this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.distanceDisplayCondition = value;
+                        }
+                    }
+                }
+            }
+        },
+
+        /**
          * Gets or sets the user-defined object returned when the label is picked.
          * @memberof Label.prototype
          * @type {Object}
@@ -682,7 +734,38 @@ define([
                 for (var i = 0, len = glyphs.length; i < len; i++) {
                     var glyph = glyphs[i];
                     if (defined(glyph.billboard)) {
-                        glyph.billboard.position = value;
+                        // Set all the private values here, because we already clamped to ground
+                        //  so we don't want to do it again for every glyph
+                        glyph.billboard._position = value;
+                        glyph.billboard._actualPosition = value;
+                        glyph.billboard._clampedPosition = value;
+                    }
+                }
+            }
+        },
+
+        /**
+         * Determines whether or not this label will be shown or hidden because it was clustered.
+         * @memberof Label.prototype
+         * @type {Boolean}
+         * @private
+         */
+        clusterShow : {
+            get : function() {
+                return this._clusterShow;
+            },
+            set : function(value) {
+                if (this._clusterShow !== value) {
+                    this._clusterShow = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            // Set all the private values here, because we already clamped to ground
+                            //  so we don't want to do it again for every glyph
+                            glyph.billboard.clusterShow = value;
+                        }
                     }
                 }
             }
@@ -730,6 +813,62 @@ define([
     };
 
     /**
+     * Gets a label's screen space bounding box centered around screenSpacePosition.
+     * @param {Label} label The label to get the screen space bounding box for.
+     * @param {Cartesian2} screenSpacePosition The screen space center of the label.
+     * @param {BoundingRectangle} [result] The object onto which to store the result.
+     * @returns {BoundingRectangle} The screen space bounding box.
+     *
+     * @private
+     */
+    Label.getScreenSpaceBoundingBox = function(label, screenSpacePosition, result) {
+        var width = 0;
+        var height = 0;
+
+        var glyphs = label._glyphs;
+        var length = glyphs.length;
+        for (var i = 0; i < length; ++i) {
+            var glyph = glyphs[i];
+            var billboard = glyph.billboard;
+            if (!defined(billboard)) {
+                continue;
+            }
+
+            width += billboard.width;
+            height = Math.max(height, billboard.height);
+        }
+
+        var scale = label.scale;
+        width *= scale;
+        height *= scale;
+
+        var x = screenSpacePosition.x;
+        if (label.horizontalOrigin === HorizontalOrigin.RIGHT) {
+            x -= width;
+        } else if (label.horizontalOrigin === HorizontalOrigin.CENTER) {
+            x -= width * 0.5;
+        }
+
+        var y = screenSpacePosition.y;
+        if (label.verticalOrigin === VerticalOrigin.TOP) {
+            y -= height;
+        } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
+            y -= height * 0.5;
+        }
+
+        if (!defined(result)) {
+            result = new BoundingRectangle();
+        }
+
+        result.x = x;
+        result.y = y;
+        result.width = width;
+        result.height = height;
+
+        return result;
+    };
+
+    /**
      * Determines if this label equals another label.  Labels are equal if all their properties
      * are equal.  Labels in different collections can be equal.
      *
@@ -744,6 +883,7 @@ define([
                this._style === other._style &&
                this._verticalOrigin === other._verticalOrigin &&
                this._horizontalOrigin === other._horizontalOrigin &&
+               this._heightReference === other._heightReference &&
                this._text === other._text &&
                this._font === other._font &&
                Cartesian3.equals(this._position, other._position) &&
@@ -753,6 +893,7 @@ define([
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
                NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
+               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
                this._id === other._id;
     };
 

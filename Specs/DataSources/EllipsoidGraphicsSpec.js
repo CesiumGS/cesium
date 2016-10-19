@@ -3,16 +3,20 @@ defineSuite([
         'DataSources/EllipsoidGraphics',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
         EllipsoidGraphics,
         Cartesian3,
         Color,
+        DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
     'use strict';
@@ -27,7 +31,9 @@ defineSuite([
             fill : false,
             outline : false,
             outlineColor : Color.RED,
-            outlineWidth : 4
+            outlineWidth : 4,
+            shadows : ShadowMode.DISABLED,
+            distanceDisplayCondition : new DistanceDisplayCondition()
         };
 
         var ellipsoid = new EllipsoidGraphics(options);
@@ -40,6 +46,8 @@ defineSuite([
         expect(ellipsoid.outline).toBeInstanceOf(ConstantProperty);
         expect(ellipsoid.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(ellipsoid.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(ellipsoid.shadows).toBeInstanceOf(ConstantProperty);
+        expect(ellipsoid.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
 
         expect(ellipsoid.material.color.getValue()).toEqual(options.material);
         expect(ellipsoid.show.getValue()).toEqual(options.show);
@@ -50,6 +58,8 @@ defineSuite([
         expect(ellipsoid.outline.getValue()).toEqual(options.outline);
         expect(ellipsoid.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(ellipsoid.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(ellipsoid.shadows.getValue()).toEqual(options.shadows);
+        expect(ellipsoid.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -64,6 +74,8 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
         var target = new EllipsoidGraphics();
         target.merge(source);
@@ -78,6 +90,8 @@ defineSuite([
         expect(target.outline).toBe(source.outline);
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
+        expect(target.shadows).toBe(source.shadows);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -93,6 +107,8 @@ defineSuite([
         var outline = new ConstantProperty();
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
+        var shadows = new ConstantProperty();
+        var distanecDisplayCondition = new ConstantProperty();
 
         var target = new EllipsoidGraphics();
         target.material = material;
@@ -101,6 +117,9 @@ defineSuite([
         target.stackPartitions = stackPartitions;
         target.slicePartitions = slicePartitions;
         target.subdivisions = subdivisions;
+        target.shadows = shadows;
+        target.distanceDisplayCondition = distanecDisplayCondition;
+
         source.fill = fill;
         source.outline = outline;
         source.outlineColor = outlineColor;
@@ -118,6 +137,8 @@ defineSuite([
         expect(target.outline).toBe(outline);
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
+        expect(target.shadows).toBe(shadows);
+        expect(target.distanceDisplayCondition).toBe(distanecDisplayCondition);
     });
 
     it('clone works', function() {
@@ -132,6 +153,8 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
+        source.shadows = new ConstantProperty();
+        source.distanceDisplayCondition = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -144,6 +167,8 @@ defineSuite([
         expect(result.outline).toBe(source.outline);
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
+        expect(result.shadows).toBe(source.shadows);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge throws if source undefined', function() {
@@ -165,5 +190,7 @@ defineSuite([
         testDefinitionChanged(property, 'outline', true, false);
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
+        testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
+        testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
 });

@@ -158,7 +158,7 @@ define([
         /**
          * @private
          */
-        this.boundingSphereCV = undefined;
+        this.boundingSphereCV = options.boundingSphereCV;
     }
 
     /**

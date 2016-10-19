@@ -64,7 +64,7 @@ define([
      *   url : 'https://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
      * });
      * viewer.terrainProvider = terrainProvider;
-     * 
+     *
      * @see TerrainProvider
      */
     function VRTheWorldTerrainProvider(options) {
@@ -90,7 +90,9 @@ define([
                 elementsPerHeight : 3,
                 stride : 4,
                 elementMultiplier : 256.0,
-                isBigEndian : true
+                isBigEndian : true,
+                lowestEncodedHeight : 0,
+                highestEncodedHeight : 256 * 256 * 256 - 1
             };
 
         var credit = options.credit;

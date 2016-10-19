@@ -162,7 +162,7 @@ defineSuite([
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
-                 expect(upsampled._buffer).toEqual([1, 1, 1, 2, 3, 3, 4, 4, 4, 5, 5, 6, 7, 7, 8, 8]);
+                 expect(upsampled._buffer).toEqual([1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5]);
              });
          });
 
@@ -222,7 +222,7 @@ defineSuite([
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
-                 expect(upsampled._buffer).toEqual([2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 7, 7, 8, 9, 9, 10]);
+                 expect(upsampled._buffer).toEqual([2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0]);
              });
          });
 
@@ -244,6 +244,29 @@ defineSuite([
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
                  expect(upsampled._buffer).toEqual([2, 1, 0, 3, 1, 0, 3, 1, 0, 4, 1, 0, 4, 1, 0, 5, 1, 0, 5, 1, 0, 6, 1, 0, 6, 1, 0, 7, 1, 0, 7, 1, 0, 8, 1, 0, 8, 1, 0, 9, 1, 0, 9, 1, 0, 10, 1, 0]);
+             });
+         });
+
+         it('upsample clamps out of range data', function() {
+             data = new HeightmapTerrainData({
+                 buffer : new Float32Array([-1.0, -2.0, -3.0, -4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]),
+                 width : 4,
+                 height : 4,
+                 structure : {
+                     stride: 1,
+                     elementsPerHeight: 1,
+                     lowestEncodedHeight : 1,
+                     highestEncodedHeight : 7
+                 }
+             });
+
+             return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
+                 return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+             }).then(function(upsampled) {
+                 expect(upsampled.wasCreatedByUpsampling()).toBe(true);
+                 expect(upsampled._width).toBe(4);
+                 expect(upsampled._height).toBe(4);
+                 expect(upsampled._buffer).toEqual([1, 1, 1, 1, 2, 1.5, 2, 1.5, 5, 5.5, 6, 6.5, 7, 7, 7, 7]);
              });
          });
      });

@@ -31,6 +31,7 @@ define([
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
         '../Scene/SceneMode',
@@ -41,9 +42,11 @@ define([
         './BillboardGraphics',
         './CompositePositionProperty',
         './ConstantPositionProperty',
+        './CorridorGraphics',
         './DataSource',
         './DataSourceClock',
         './Entity',
+        './EntityCluster',
         './EntityCollection',
         './LabelGraphics',
         './PathGraphics',
@@ -88,6 +91,7 @@ define([
         RuntimeError,
         TimeInterval,
         TimeIntervalCollection,
+        HeightReference,
         HorizontalOrigin,
         LabelStyle,
         SceneMode,
@@ -98,9 +102,11 @@ define([
         BillboardGraphics,
         CompositePositionProperty,
         ConstantPositionProperty,
+        CorridorGraphics,
         DataSource,
         DataSourceClock,
         Entity,
+        EntityCluster,
         EntityCollection,
         LabelGraphics,
         PathGraphics,
@@ -277,9 +283,14 @@ define([
         return url;
     }
 
-    function getOrCreateEntity(node, entityCollection) {
+    // an optional context is passed to allow for some malformed kmls (those with multiple geometries with same ids) to still parse
+    // correctly, as they do in Google Earth.
+    function getOrCreateEntity(node, entityCollection, context) {
         var id = queryStringAttribute(node, 'id');
-        id = defined(id) ? id : createGuid();
+        id = defined(id) && id.length !== 0 ? id : createGuid();
+        if(defined(context)){
+            id = context + id;
+        }
         var entity = entityCollection.getOrCreateEntity(id);
         if (!defined(entity.kml)) {
             entity.addProperty('kml');
@@ -640,7 +651,6 @@ define([
         var heading = queryNumericValue(node, 'heading', namespaces.kml);
         var color = queryColorValue(node, 'color', namespaces.kml);
 
-
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
         var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false);
         var x = queryNumericValue(iconNode, 'x', namespaces.gx);
@@ -689,19 +699,20 @@ define([
             } else if (hotSpotXUnit === 'insetPixels') {
                 xOffset = (hotSpotX - BILLBOARD_SIZE) * scale;
             } else if (hotSpotXUnit === 'fraction') {
-                xOffset = -BILLBOARD_SIZE * scale * hotSpotX;
+                xOffset = -hotSpotX * BILLBOARD_SIZE * scale;
             }
             xOffset += BILLBOARD_SIZE * 0.5 * scale;
         }
 
         if (defined(hotSpotY)) {
             if (hotSpotYUnit === 'pixels') {
-                yOffset = hotSpotY;
+                yOffset = hotSpotY * scale;
             } else if (hotSpotYUnit === 'insetPixels') {
-                yOffset = -hotSpotY;
+                yOffset = (-hotSpotY + BILLBOARD_SIZE) * scale;
             } else if (hotSpotYUnit === 'fraction') {
-                yOffset = hotSpotY * BILLBOARD_SIZE;
+                yOffset = hotSpotY * BILLBOARD_SIZE * scale;
             }
+
             yOffset -= BILLBOARD_SIZE * 0.5 * scale;
         }
 
@@ -965,9 +976,42 @@ define([
         entity.polyline.positions = new PositionPropertyArray([entityPosition, surfacePosition]);
     }
 
+    function heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode) {
+        if (!defined(altitudeMode) && !defined(gxAltitudeMode) || altitudeMode === 'clampToGround') {
+            return HeightReference.CLAMP_TO_GROUND;
+        }
+
+        if (altitudeMode === 'relativeToGround') {
+            return HeightReference.RELATIVE_TO_GROUND;
+        }
+
+        if (altitudeMode === 'absolute') {
+            return HeightReference.NONE;
+        }
+
+        if (gxAltitudeMode === 'clampToSeaFloor') {
+            console.log('KML - <gx:altitudeMode>:clampToSeaFloor is currently not supported, using <kml:altitudeMode>:clampToGround.');
+            return HeightReference.CLAMP_TO_GROUND;
+        }
+
+        if (gxAltitudeMode === 'relativeToSeaFloor') {
+            console.log('KML - <gx:altitudeMode>:relativeToSeaFloor is currently not supported, using <kml:altitudeMode>:relativeToGround.');
+            return HeightReference.RELATIVE_TO_GROUND;
+        }
+
+        if (defined(altitudeMode)) {
+            console.log('KML - Unknown <kml:altitudeMode>:' + altitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+        } else {
+            console.log('KML - Unknown <gx:altitudeMode>:' + gxAltitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+        }
+
+        // Clamp to ground is the default
+        return HeightReference.CLAMP_TO_GROUND;
+    }
+
     function createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode) {
         if (gxAltitudeMode === 'relativeToSeaFloor' || altitudeMode === 'absolute' || altitudeMode === 'relativeToGround') {
-            //Just return the ellipsoid referenced property until we support MSL and terrain
+            //Just return the ellipsoid referenced property until we support MSL
             return property;
         }
 
@@ -976,7 +1020,7 @@ define([
             console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
         }
 
-        //Clamp to ellipsoid until we support terrain
+        // Clamp to ground is the default
         return new ScaledPositionProperty(property);
     }
 
@@ -986,7 +1030,7 @@ define([
         }
 
         if (gxAltitudeMode === 'relativeToSeaFloor' || altitudeMode === 'absolute' || altitudeMode === 'relativeToGround') {
-            //Just return the ellipsoid referenced property until we support MSL and terrain
+            //Just return the ellipsoid referenced property until we support MSL
             return properties;
         }
 
@@ -995,7 +1039,7 @@ define([
             console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
         }
 
-        //Clamp to ellipsoid until we support terrain.
+        // Clamp to ground is the default
         var propertiesLength = properties.length;
         for (var i = 0; i < propertiesLength; i++) {
             var property = properties[i];
@@ -1004,7 +1048,7 @@ define([
         return properties;
     }
 
-    function processPositionGraphics(dataSource, entity, styleEntity) {
+    function processPositionGraphics(dataSource, entity, styleEntity, heightReference) {
         var label = entity.label;
         if (!defined(label)) {
             label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
@@ -1022,8 +1066,9 @@ define([
             billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
         }
 
+        var scale = 1.0;
         if (defined(billboard.scale)) {
-            var scale = billboard.scale.getValue();
+            scale = billboard.scale.getValue();
             if (scale !== 0) {
                 label.pixelOffset = new Cartesian2((scale * 16) + 1, 0);
             } else {
@@ -1031,6 +1076,11 @@ define([
                 label.pixelOffset = undefined;
                 label.horizontalOrigin = undefined;
             }
+        }
+
+        if (defined(heightReference)) {
+            billboard.heightReference = heightReference;
+            label.heightReference = heightReference;
         }
     }
 
@@ -1057,8 +1107,8 @@ define([
 
         var position = readCoordinate(coordinatesString);
 
-        entity.position = createPositionPropertyFromAltitudeMode(new ConstantPositionProperty(position), altitudeMode, gxAltitudeMode);
-        processPositionGraphics(dataSource, entity, styleEntity);
+        entity.position = position;
+        processPositionGraphics(dataSource, entity, styleEntity, heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode));
 
         if (extrude && isExtrudable(altitudeMode, gxAltitudeMode)) {
             createDropLine(entityCollection, entity, styleEntity);
@@ -1098,11 +1148,24 @@ define([
                 wall.outlineWidth = polyline.width;
             }
         } else {
-            polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
-            entity.polyline = polyline;
-            polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
-            if (!tessellate || canExtrude) {
-                polyline.followSurface = false;
+            if (dataSource._clampToGround && !canExtrude && tessellate) {
+                var corridor = new CorridorGraphics();
+                entity.corridor = corridor;
+                corridor.positions = coordinates;
+                if (defined(polyline)) {
+                    corridor.material = defined(polyline.material) ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE) : Color.WHITE;
+                    corridor.width = defaultValue(polyline.width, 1.0);
+                } else {
+                    corridor.material = Color.WHITE;
+                    corridor.width = 1.0;
+                }
+            } else {
+                polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
+                entity.polyline = polyline;
+                polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
+                if (!tessellate || canExtrude) {
+                    polyline.followSurface = false;
+                }
             }
         }
 
@@ -1131,6 +1194,8 @@ define([
         if (canExtrude) {
             polygon.perPositionHeight = true;
             polygon.extrudedHeight = extrude ? 0 : undefined;
+        } else if (!dataSource._clampToGround) {
+            polygon.height = 0;
         }
 
         if (defined(coordinates)) {
@@ -1175,8 +1240,8 @@ define([
         }
         var property = new SampledPositionProperty();
         property.addSamples(times, coordinates);
-        entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
-        processPositionGraphics(dataSource, entity, styleEntity);
+        entity.position = property;
+        processPositionGraphics(dataSource, entity, styleEntity, heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode));
         processPathGraphics(dataSource, entity, styleEntity);
 
         entity.availability = new TimeIntervalCollection();
@@ -1286,14 +1351,14 @@ define([
         return true;
     }
 
-    function processMultiGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity) {
+    function processMultiGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity, context) {
         var childNodes = geometryNode.childNodes;
         var hasGeometry = false;
         for (var i = 0, len = childNodes.length; i < len; i++) {
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
             if (defined(geometryProcessor)) {
-                var childEntity = getOrCreateEntity(childNode, entityCollection);
+                var childEntity = getOrCreateEntity(childNode, entityCollection, context);
                 childEntity.parent = entity;
                 childEntity.name = entity.name;
                 childEntity.availability = entity.availability;
@@ -1463,8 +1528,16 @@ define([
         }
         entity.availability = availability;
 
+        // Per KML spec "A Feature is visible only if it and all its ancestors are visible."
+        function ancestryIsVisible(parentEntity) {
+            if (!parentEntity) {
+              return true;
+            }
+            return parentEntity.show && ancestryIsVisible(parentEntity.parent);
+        }
+
         var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.kml);
-        entity.show = defaultValue(visibility, true);
+        entity.show = ancestryIsVisible(parent) && defaultValue(visibility, true);
         //var open = queryBooleanValue(featureNode, 'open', namespaces.kml);
 
         var authorNode = queryFirstNode(featureNode, 'author', namespaces.atom);
@@ -1552,7 +1625,9 @@ define([
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
             if (defined(geometryProcessor)) {
-                geometryProcessor(dataSource, entityCollection, childNode, entity, styleEntity);
+                // pass the placemark entity id as a context for case of defining multiple child entities together to handle case
+                // where some malformed kmls reuse the same id across placemarks, which works in GE, but is not technically to spec.
+                geometryProcessor(dataSource, entityCollection, childNode, entity, styleEntity, entity.id);
                 hasGeometry = true;
             }
         }
@@ -1591,13 +1666,13 @@ define([
                     west = CesiumMath.negativePiToPi(CesiumMath.toRadians(west));
                 }
                 if (defined(south)) {
-                    south = CesiumMath.negativePiToPi(CesiumMath.toRadians(south));
+                    south = CesiumMath.clampToLatitudeRange(CesiumMath.toRadians(south));
                 }
                 if (defined(east)) {
                     east = CesiumMath.negativePiToPi(CesiumMath.toRadians(east));
                 }
                 if (defined(north)) {
-                    north = CesiumMath.negativePiToPi(CesiumMath.toRadians(north));
+                    north = CesiumMath.clampToLatitudeRange(CesiumMath.toRadians(north));
                 }
                 geometry.coordinates = new Rectangle(west, south, east, north);
 
@@ -1653,7 +1728,8 @@ define([
         }
     }
 
-    function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+    function processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -1936,23 +2012,24 @@ define([
         }
     }
 
+    // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
     var featureTypes = {
         Document : processDocument,
         Folder : processFolder,
         Placemark : processPlacemark,
         NetworkLink : processNetworkLink,
         GroundOverlay : processGroundOverlay,
-        PhotoOverlay : processUnsupported,
-        ScreenOverlay : processUnsupported,
-        Tour : processUnsupported
+        PhotoOverlay : processUnsupportedFeature,
+        ScreenOverlay : processUnsupportedFeature,
+        Tour : processUnsupportedFeature
     };
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureProocessor = featureTypes[node.localName];
-        if (defined(featureProocessor)) {
-            featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+        var featureProcessor = featureTypes[node.localName];
+        if (defined(featureProcessor)) {
+            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
-            console.log('KML - Unsupported feature node: ' + node.localName);
+            processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         }
     }
 
@@ -2144,6 +2221,8 @@ define([
         this._error = new Event();
         this._loading = new Event();
         this._refresh = new Event();
+        this._unsupportedNode = new Event();
+
         this._clock = undefined;
         this._entityCollection = new EntityCollection(this);
         this._name = undefined;
@@ -2152,6 +2231,7 @@ define([
         this._pinBuilder = new PinBuilder();
         this._promises = [];
         this._networkLinks = new AssociativeArray();
+        this._entityCluster = new EntityCluster();
 
         this._canvas = canvas;
         this._camera = camera;
@@ -2172,6 +2252,7 @@ define([
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
      * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+     * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
      *
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
@@ -2266,6 +2347,16 @@ define([
             }
         },
         /**
+         * Gets an event that will be raised when the data source finds an unsupported node type.
+         * @memberof KmlDataSource.prototype
+         * @type {Event}
+         */
+        unsupportedNodeEvent : {
+            get : function() {
+                return this._unsupportedNode;
+            }
+        },
+        /**
          * Gets whether or not this data source should be displayed.
          * @memberof KmlDataSource.prototype
          * @type {Boolean}
@@ -2277,6 +2368,26 @@ define([
             set : function(value) {
                 this._entityCollection.show = value;
             }
+        },
+
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof KmlDataSource.prototype
+         * @type {EntityCluster}
+         */
+        clustering : {
+            get : function() {
+                return this._entityCluster;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value must be defined.');
+                }
+                //>>includeEnd('debug');
+                this._entityCluster = value;
+            }
         }
     });
 
@@ -2287,6 +2398,7 @@ define([
      * @param {Object} [options] An object with the following properties:
      * @param {Number} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
+     * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
      */
     KmlDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);
@@ -2295,11 +2407,13 @@ define([
         }
         //>>includeEnd('debug');
 
+        options = defaultValue(options, {});
         DataSource.setLoading(this, true);
 
         var oldName = this._name;
         this._name = undefined;
         this._promises = [];
+        this._clampToGround = defaultValue(options.clampToGround, false);
 
         var that = this;
         return load(this, this._entityCollection, data, options).then(function() {

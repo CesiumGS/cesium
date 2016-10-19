@@ -1603,6 +1603,55 @@ defineSuite([
                 pickGeometry(instance);
             });
         }, 'WebGL');
+
+        describe('with native arrays as attributes and indices', function() {
+            var instance;
+            beforeAll(function() {
+                instance = new GeometryInstance({
+                    geometry : new Geometry({
+                        attributes : {
+                            position : new GeometryAttribute({
+                                componentDatatype : ComponentDatatype.DOUBLE,
+                                componentsPerAttribute : 3,
+                                values : [
+                                    1000000.0, 0.0, 0.0,
+                                    1000000.0, 1000000.0, 0.0,
+                                    1000000.0, 0.0, 1000000.0,
+                                    1000000.0, 1000000.0, 1000000.0
+                                ]
+                            })
+                        },
+                        indices : [0, 1, 2, 2, 1, 3],
+                        primitiveType : PrimitiveType.TRIANGLES
+                    }),
+                    modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                        Cartesian3.fromDegrees(0,0)), new Cartesian3(0.0, 0.0, 10000.0), new Matrix4()),
+                    id : 'customWithIndices',
+                    attributes : {
+                        color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
+                    }
+                });
+                geometry = instance.geometry;
+                geometry.boundingSphere = BoundingSphere.fromVertices(instance.geometry.attributes.position.values);
+                geometry.boundingSphereWC = BoundingSphere.transform(geometry.boundingSphere, instance.modelMatrix);
+            });
+
+            it('3D', function() {
+                render3D(instance);
+            });
+
+            it('Columbus view', function() {
+                renderCV(instance);
+            });
+
+            it('2D', function() {
+                render2D(instance);
+            });
+
+            it('pick', function() {
+                pickGeometry(instance);
+            });
+        }, 'WebGL');
     });
 
 }, 'WebGL');

@@ -136,8 +136,8 @@ define([
                 }
             }
 
-            if (defined(that._boundingSphereOffset)) {
-                Cartesian3.add(that._boundingSphereOffset, cartesian, cartesian);
+            if (defined(that.boundingSphere)) {
+                cartesian = that.boundingSphere.center;
             }
 
             var position;
@@ -197,9 +197,8 @@ define([
      * @param {Entity} entity The entity to track with the camera.
      * @param {Scene} scene The scene to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
-     * @param {BoundingSphere} [boundingSphere] An initial bounding sphere for setting the default view.
      */
-    function EntityView(entity, scene, ellipsoid, boundingSphere) {
+    function EntityView(entity, scene, ellipsoid) {
 
         /**
          * The entity to track with the camera.
@@ -220,12 +219,10 @@ define([
         this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         /**
-         * Gets or sets an initial bounding sphere for viewing the entity.
-         * @type {Entity}
+         * The bounding sphere of the object.
+         * @type {BoundingSphere}
          */
-        this.boundingSphere = BoundingSphere.clone(boundingSphere);
-
-        this._boundingSphereOffset = undefined;
+        this.boundingSphere = undefined;
 
         //Shadow copies of the objects so we can detect changes.
         this._lastEntity = undefined;
@@ -265,9 +262,10 @@ define([
     * Should be called each animation frame to update the camera
     * to the latest settings.
     * @param {JulianDate} time The current animation time.
+    * @param {BoundingSphere} current bounding sphere of the object.
     *
     */
-    EntityView.prototype.update = function(time) {
+    EntityView.prototype.update = function(time, boundingSphere) {
         var scene = this.scene;
         var entity = this.entity;
         var ellipsoid = this.ellipsoid;
@@ -308,12 +306,10 @@ define([
         if (objectChanged) {
             var viewFromProperty = entity.viewFrom;
             var hasViewFrom = defined(viewFromProperty);
-            var sphere = this.boundingSphere;
-            this._boundingSphereOffset = undefined;
 
-            if (!hasViewFrom && defined(sphere)) {
+            if (!hasViewFrom && defined(boundingSphere)) {
                 var controller = scene.screenSpaceCameraController;
-                controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, sphere.radius * 0.5);
+                controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, boundingSphere.radius * 0.5);
 
                 //The default HPR is not ideal for high altitude objects so
                 //we scale the pitch as we get further from the earth for a more
@@ -326,8 +322,8 @@ define([
                     scratchHeadingPitchRange.pitch *= factor;
                 }
 
-                camera.viewBoundingSphere(sphere, scratchHeadingPitchRange);
-                this._boundingSphereOffset = Cartesian3.subtract(sphere.center, entity.position.getValue(time), new Cartesian3());
+                camera.viewBoundingSphere(boundingSphere, scratchHeadingPitchRange);
+                this.boundingSphere = boundingSphere;
                 updateLookAt = false;
                 saveCamera = false;
             } else if (!hasViewFrom || !defined(viewFromProperty.getValue(time, offset3D))) {
