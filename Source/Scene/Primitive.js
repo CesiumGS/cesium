@@ -1193,6 +1193,8 @@ define([
 
         for (var i = 0; i < length; ++i) {
             var boundingSphere = boundingSpheres[i];
+            var modelMatrix = defaultValue(primitive.modelMatrix, Matrix4.IDENTITY);
+            boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
             var center = boundingSphere.center;
             var radius = boundingSphere.radius;
 
