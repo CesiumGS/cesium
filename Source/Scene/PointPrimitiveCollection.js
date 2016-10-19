@@ -119,6 +119,7 @@ define([
         this._sp = undefined;
         this._rs = undefined;
         this._vaf = undefined;
+        this._spTranslucent = undefined;
         this._spPick = undefined;
 
         this._pointPrimitives = [];
@@ -876,11 +877,27 @@ define([
                     vs.defines.push('DISTANCE_DISPLAY_CONDITION');
                 }
 
+                fs = new ShaderSource({
+                    defines : ['OPAQUE'],
+                    sources : [PointPrimitiveCollectionFS]
+                });
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._sp,
                     vertexShaderSource : vs,
-                    fragmentShaderSource : PointPrimitiveCollectionFS,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+
+                fs = new ShaderSource({
+                    defines : ['TRANSLUCENT'],
+                    sources : [PointPrimitiveCollectionFS]
+                });
+                this._spTranslucent = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._spTranslucent,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
                     attributeLocations : attributeLocations
                 });
 
@@ -893,21 +910,22 @@ define([
             vaLength = va.length;
 
             colorList.length = vaLength;
-            for (j = 0; j < vaLength; ++j) {
+            for (j = 0; j < vaLength * 2; ++j) {
                 command = colorList[j];
                 if (!defined(command)) {
-                    command = colorList[j] = new DrawCommand({
-                        primitiveType : PrimitiveType.POINTS,
-                        pass : Pass.OPAQUE,
-                        owner : this
-                    });
+                    command = colorList[j] = new DrawCommand();
                 }
 
+                command.primitiveType = PrimitiveType.POINTS;
+                command.pass = (j % 2 === 0) ? Pass.OPAQUE : Pass.TRANSLUCENT;
+                command.owner = this;
+
+                var index = Math.floor(j / 2.0);
                 command.boundingVolume = boundingVolume;
                 command.modelMatrix = modelMatrix;
-                command.shaderProgram = this._sp;
+                command.shaderProgram = (j % 2 === 0) ? this._sp : this._spTranslucent;
                 command.uniformMap = this._uniforms;
-                command.vertexArray = va[j].va;
+                command.vertexArray = va[index].va;
                 command.renderState = this._rs;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
@@ -1016,6 +1034,7 @@ define([
      */
     PointPrimitiveCollection.prototype.destroy = function() {
         this._sp = this._sp && this._sp.destroy();
+        this._spTranslucent = this._spTranslucent && this._spTranslucent.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
         destroyPointPrimitives(this._pointPrimitives);

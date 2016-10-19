@@ -1503,12 +1503,6 @@ define([
             for (j = 0; j < vaLength * 2; ++j) {
                 command = colorList[j];
                 if (!defined(command)) {
-                    /*
-                    command = colorList[j] = new DrawCommand({
-                        pass : (j % 2 === 0) ? Pass.OPAQUE : Pass.TRANSLUCENT,
-                        owner : this
-                    });
-                    */
                     command = colorList[j] = new DrawCommand();
                 }
 
