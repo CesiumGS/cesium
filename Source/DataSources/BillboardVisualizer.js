@@ -148,7 +148,7 @@ define([
             }
 
             billboard.show = show;
-            if (item.textureValue !== textureValue) {
+            if (!defined(billboard.image) || item.textureValue !== textureValue) {
                 billboard.image = textureValue;
                 item.textureValue = textureValue;
             }
