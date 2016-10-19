@@ -185,7 +185,7 @@ defineSuite([
         scene.camera.setView({
             destination : Rectangle.fromDegrees(-0.000001, -0.000001, 0.000001, 0.000001)
         });
-        
+
         // Update scene state
         scene.morphTo2D(0);
         scene.renderForSpecs();
