@@ -214,6 +214,9 @@ define([
         fireTouchEnd : function(element, options) {
             element.dispatchEvent(createTouchEvent('touchend', options));
         },
+        fireTouchCancel : function(element, options) {
+            element.dispatchEvent(createTouchEvent('touchcancel', options));
+        },
         firePointerDown : function(element, options) {
             element.dispatchEvent(createPointerEvent('pointerdown', options));
         },
