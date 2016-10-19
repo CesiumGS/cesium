@@ -313,7 +313,9 @@ define([
      */
     QuadtreePrimitive.prototype.endFrame = function(frameState) {
         var passes = frameState.passes;
-        if (!passes.render) {
+        if (!passes.render || frameState.mode === SceneMode.MORPHING) {
+            // Only process the load queue for a single pass.
+            // Don't process the load queue or update heights during the morph flights.
             return;
         }
 
