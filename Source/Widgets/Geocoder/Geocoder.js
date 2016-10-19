@@ -116,11 +116,13 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
         if (FeatureDetection.supportsPointerEvents()) {
             document.addEventListener('pointerdown', this._onInputBegin, true);
             document.addEventListener('pointerup', this._onInputEnd, true);
+            document.addEventListener('pointercancel', this._onInputEnd, true);
         } else {
             document.addEventListener('mousedown', this._onInputBegin, true);
             document.addEventListener('mouseup', this._onInputEnd, true);
             document.addEventListener('touchstart', this._onInputBegin, true);
             document.addEventListener('touchend', this._onInputEnd, true);
+            document.addEventListener('touchcancel', this._onInputEnd, true);
         }
 
     }
