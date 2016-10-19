@@ -9,6 +9,7 @@ define([
         './CornerType',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './Geometry',
@@ -32,6 +33,7 @@ define([
         CornerType,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Geometry,
@@ -166,7 +168,7 @@ define([
             try {
                 geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
             } catch (e) {
-                console.log('Unable to compute tangents and binormals for polyline volume geometry');
+                deprecationWarning('polyline-volume-tangent-binormal', 'Unable to compute tangents and binormals for polyline volume geometry');
                 //TODO https://github.com/AnalyticalGraphicsInc/cesium/issues/3609
             }
 
