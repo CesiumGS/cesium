@@ -168,6 +168,7 @@ define([
         this._sp = undefined;
         this._rs = undefined;
         this._vaf = undefined;
+        this._spTranslucent = undefined;
         this._spPick = undefined;
 
         this._billboards = [];
@@ -1463,14 +1464,6 @@ define([
                     vs.defines.push('DISTANCE_DISPLAY_CONDITION');
                 }
 
-                this._sp = ShaderProgram.replaceCache({
-                    context : context,
-                    shaderProgram : this._sp,
-                    vertexShaderSource : vs,
-                    fragmentShaderSource : BillboardCollectionFS,
-                    attributeLocations : attributeLocations
-                });
-
                 fs = new ShaderSource({
                     defines : ['OPAQUE'],
                     sources : [BillboardCollectionFS]
@@ -1670,6 +1663,7 @@ define([
 
         this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
         this._sp = this._sp && this._sp.destroy();
+        this._spTranslucent = this._spTranslucent && this._spTranslucent.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
         destroyBillboards(this._billboards);
