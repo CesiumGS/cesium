@@ -219,6 +219,15 @@ define([
         if (!defined(v1)) {
             throw new DeveloperError('v1 is required.');
         }
+        if (!defined(p0)) {
+            throw new DeveloperError('v1 is required.');
+        }
+        if (!defined(p1)) {
+            throw new DeveloperError('v1 is required.');
+        }
+        if (!defined(p2)) {
+            throw new DeveloperError('v1 is required.');
+        }
         //>>includeEnd('debug');
 
         var ray = scratchLineSegmentTriangleRay;

@@ -181,18 +181,21 @@ defineSuite([
     });
 
     it('lineSegmentTriangle throws without p0', function() {
+        //TODO
         expect(function() {
             IntersectionTests.lineSegmentTriangle(new Cartesian3(), new Cartesian3());
         }).toThrowDeveloperError();
     });
 
     it('lineSegmentTriangle throws without p1', function() {
+        //TODO
         expect(function() {
             IntersectionTests.lineSegmentTriangle(new Cartesian3(), new Cartesian3(), new Cartesian3());
         }).toThrowDeveloperError();
     });
 
     it('lineSegmentTriangle throws without p2', function() {
+        //TODO
         expect(function() {
             IntersectionTests.lineSegmentTriangle(new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3());
         }).toThrowDeveloperError();

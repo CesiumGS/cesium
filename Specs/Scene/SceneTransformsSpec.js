@@ -182,6 +182,10 @@ defineSuite([
     });
 
     it('returns correct drawing buffer position in 2D', function() {
+        scene.camera.setView({
+            destination : Rectangle.fromDegrees(-0.000001, -0.000001, 0.000001, 0.000001)
+        });
+        
         // Update scene state
         scene.morphTo2D(0);
         scene.renderForSpecs();
