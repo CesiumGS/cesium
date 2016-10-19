@@ -158,6 +158,7 @@ define([
         timeBarEle.addEventListener('touchstart', this._onTouchStart, false);
         timeBarEle.addEventListener('touchmove', this._onTouchMove, false);
         timeBarEle.addEventListener('touchend', this._onTouchEnd, false);
+        timeBarEle.addEventListener('touchcancel', this._onTouchEnd, false);
 
         this._topDiv.oncontextmenu = function() {
             return false;
@@ -205,6 +206,7 @@ define([
         timeBarEle.removeEventListener('touchstart', this._onTouchStart, false);
         timeBarEle.removeEventListener('touchmove', this._onTouchMove, false);
         timeBarEle.removeEventListener('touchend', this._onTouchEnd, false);
+        timeBarEle.removeEventListener('touchcancel', this._onTouchEnd, false);
         this.container.removeChild(this._topDiv);
         destroyObject(this);
     };
