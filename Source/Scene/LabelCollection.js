@@ -233,14 +233,13 @@ define([
 
         var glyphIndex = 0;
         var glyphLength = glyphs.length;
-        for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-            glyph = glyphs[glyphIndex];
-            
+        for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {          
             if (text.charAt(glyphIndex) === '\n') {
                 numberOfLines += 1;
                 lineWidth = 0;
             }
             else {
+                glyph = glyphs[glyphIndex];
                 dimensions = glyph.dimensions;
                 lineWidth += dimensions.width;
                 maxLineWidth = Math.max(maxLineWidth, lineWidth);
@@ -266,7 +265,7 @@ define([
         var verticalOrigin = (heightReference === HeightReference.NONE) ? label._verticalOrigin : VerticalOrigin.BOTTOM;
         if (verticalOrigin === VerticalOrigin.CENTER) {
             // Subtract maxGlyphDescent for backwards compatibility
-            heightOffset += (totalHeight / 2 * scale) - maxGlyphDescent;
+            heightOffset += ((totalHeight / 2) * scale) - maxGlyphDescent;
         } else if (verticalOrigin === VerticalOrigin.BOTTOM) {
             // Subtract maxGlyphHeight for backwards compatibility
             heightOffset += (totalHeight * scale) - maxGlyphHeight;
@@ -278,9 +277,15 @@ define([
         var maxLineHeight = maxGlyphHeight + maxGlyphDescent;
         var glyphNewlineOffset = 0;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
+
+            if (text.charAt(glyphIndex) === '\n') {
+                glyphNewlineOffset += maxLineHeight * scale;
+                glyphPixelOffset.x = widthOffset;
+                continue;
+            }
+            
             glyph = glyphs[glyphIndex];
             dimensions = glyph.dimensions;
-
             if (verticalOrigin === VerticalOrigin.BOTTOM) {
                 glyphPixelOffset.y = heightOffset - dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
@@ -289,14 +294,7 @@ define([
                 glyphPixelOffset.y = heightOffset - (maxGlyphHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
             }
 
-            if (text.charAt(glyphIndex) === '\n') {
-                glyphNewlineOffset += maxLineHeight * scale;
-                glyphPixelOffset.x = widthOffset;
-                continue;
-            }
             glyphPixelOffset.y -= glyphNewlineOffset;
-
-
             glyphPixelOffset.y *= resolutionScale;
 
             if (defined(glyph.billboard)) {
