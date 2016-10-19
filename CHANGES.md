@@ -13,6 +13,7 @@ Change Log
 * Fixed a bug where creating a custom geometry with attributes and indices that have values that are not a typed array would cause a crash. [#4419](https://github.com/AnalyticalGraphicsInc/cesium/pull/4419)
 * Fixed a bug with rotated, textured rectangles. [#4430](https://github.com/AnalyticalGraphicsInc/cesium/pull/4430)
 * Fixed a bug when morphing from 2D to 3D. [#4388](https://github.com/AnalyticalGraphicsInc/cesium/pull/4388)
+* Fixed a bug where when KML features had duplicate IDs, only one was drawn. [#3941](https://github.com/AnalyticalGraphicsInc/cesium/issues/3941)
 * `GeoJsonDataSource` now treats null crs values as a no-op instead of failing to load.
 * `GeoJsonDataSource` now gracefully handles missing style icons instead of failing to load.
 * Added `Rectangle.simpleIntersection`.
