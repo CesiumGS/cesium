@@ -95,4 +95,41 @@ defineSuite([
         // canvas2 is stroked, so there should be three "edges": outline -> inside -> outline -> outside
         expect(getColorChangeCount(canvas2)).toEqual(3);
     });
+
+    it('background color defaults to transparent', function() {
+        var canvas = writeTextToCanvas('a', {
+            font : '90px "Open Sans"'
+        });
+
+        var context = canvas.getContext('2d');
+        var pixel = context.getImageData(0, 0, 1, 1).data;
+        expect(pixel).toEqual([0,0,0,0]);
+    });
+
+    it('background can be set', function() {
+        var canvas = writeTextToCanvas('a', {
+            font : '90px "Open Sans"',
+            backgroundColor : Color.RED
+        });
+
+        var context = canvas.getContext('2d');
+        var pixel = context.getImageData(0, 0, 1, 1).data;
+        expect(pixel).toEqual([255,0,0,255]);
+    });
+
+    it('border can be set', function() {
+        var canvas1 = writeTextToCanvas('a', {
+            font : '90px "Open Sans"',
+            backgroundColor : Color.RED
+        });
+
+        var canvas2 = writeTextToCanvas('a', {
+            font : '90px "Open Sans"',
+            backgroundColor : Color.RED,
+            padding : 2
+        });
+
+        expect(canvas2.width).toEqual(canvas1.width+4);
+        expect(canvas2.height).toEqual(canvas1.height+4);
+    });
 });

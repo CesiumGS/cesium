@@ -13,6 +13,7 @@ define([
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
         '../Core/RuntimeError',
+        '../Scene/HeightReference',
         '../Scene/VerticalOrigin',
         '../ThirdParty/topojson',
         '../ThirdParty/when',
@@ -21,7 +22,9 @@ define([
         './ColorMaterialProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
+        './CorridorGraphics',
         './DataSource',
+        './EntityCluster',
         './EntityCollection',
         './PolygonGraphics',
         './PolylineGraphics'
@@ -39,6 +42,7 @@ define([
         PinBuilder,
         PolygonHierarchy,
         RuntimeError,
+        HeightReference,
         VerticalOrigin,
         topojson,
         when,
@@ -47,7 +51,9 @@ define([
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        CorridorGraphics,
         DataSource,
+        EntityCluster,
         EntityCollection,
         PolygonGraphics,
         PolylineGraphics) {
@@ -71,6 +77,7 @@ define([
     var defaultStroke = Color.YELLOW;
     var defaultStrokeWidth = 2;
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
+    var defaultClampToGround = false;
 
     var defaultStrokeWidthProperty = new ConstantProperty(defaultStrokeWidth);
     var defaultStrokeMaterialProperty = new ColorMaterialProperty(defaultStroke);
@@ -279,6 +286,11 @@ define([
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(dataUrl);
 
+            // Clamp to ground if there isn't a height specified
+            if (coordinates.length === 2) {
+                billboard.heightReference = HeightReference.CLAMP_TO_GROUND;
+            }
+
             var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
             entity.billboard = billboard;
             entity.position = new ConstantPositionProperty(crsFunction(coordinates));
@@ -324,13 +336,19 @@ define([
             }
         }
 
-        var polyline = new PolylineGraphics();
-        polyline.material = material;
-        polyline.width = widthProperty;
-        polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
-
         var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
-        entity.polyline = polyline;
+        var graphics;
+        if (options.clampToGround) {
+            graphics = new CorridorGraphics();
+            entity.corridor = graphics;
+        } else {
+            graphics = new PolylineGraphics();
+            entity.polyline = graphics;
+        }
+
+        graphics.material = material;
+        graphics.width = widthProperty;
+        graphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
     }
 
     function processLineString(dataSource, geoJson, geometry, crsFunction, options) {
@@ -410,6 +428,8 @@ define([
         polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(coordinatesArrayToCartesianArray(positions, crsFunction), holes));
         if (positions[0].length > 2) {
             polygon.perPositionHeight = new ConstantProperty(true);
+        } else if (!options.clampToGround) {
+            polygon.height = 0;
         }
 
         var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
@@ -494,6 +514,7 @@ define([
         this._entityCollection = new EntityCollection(this);
         this._promises = [];
         this._pinBuilder = new PinBuilder();
+        this._entityCluster = new EntityCluster();
     }
 
     /**
@@ -508,6 +529,7 @@ define([
      * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
+     * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
      *
      * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */
@@ -602,6 +624,20 @@ define([
             set : function(value) {
                 defaultFill = value;
                 defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
+            }
+        },
+        /**
+         * Gets or sets default of whether to clamp to the ground.
+         * @memberof GeoJsonDataSource
+         * @type {Boolean}
+         * @default false
+         */
+        clampToGround : {
+            get : function() {
+                return defaultClampToGround;
+            },
+            set : function(value) {
+                defaultClampToGround = value;
             }
         },
 
@@ -731,6 +767,26 @@ define([
             set : function(value) {
                 this._entityCollection.show = value;
             }
+        },
+
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof GeoJsonDataSource.prototype
+         * @type {EntityCluster}
+         */
+        clustering : {
+            get : function() {
+                return this._entityCluster;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value must be defined.');
+                }
+                //>>includeEnd('debug');
+                this._entityCluster = value;
+            }
         }
     });
 
@@ -748,6 +804,7 @@ define([
      * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
+     * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features clamped to the ground.
      *
      * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
      */
@@ -777,7 +834,8 @@ define([
             markerColor : defaultValue(options.markerColor, defaultMarkerColor),
             strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
             strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
-            fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill))
+            fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill)),
+            clampToGround : defaultValue(options.clampToGround, defaultClampToGround)
         };
 
         var that = this;

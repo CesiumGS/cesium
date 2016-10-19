@@ -37,7 +37,11 @@ define([
         this._owner = options.owner;
         this._debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugOverlappingFrustums = 0;
-        this._dirty = true;
+        this._castShadows = defaultValue(options.castShadows, false);
+        this._receiveShadows = defaultValue(options.receiveShadows, false);
+        
+        this.dirty = true;
+        this.lastDirtyTime = 0;
 
         /**
          * @private
@@ -67,7 +71,7 @@ define([
             set : function(value) {
                 if (this._boundingVolume !== value) {
                     this._boundingVolume = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -83,12 +87,12 @@ define([
          */
         orientedBoundingBox : {
             get : function() {
-                return this._orientedBoundingVolume;
+                return this._orientedBoundingBox;
             },
             set : function(value) {
-                if (this._orientedBoundingVolume !== value) {
-                    this._orientedBoundingVolume = value;
-                    this._dirty = true;
+                if (this._orientedBoundingBox !== value) {
+                    this._orientedBoundingBox = value;
+                    this.dirty = true;
                 }
             }
         },
@@ -107,7 +111,7 @@ define([
             set : function(value) {
                 if (this._cull !== value) {
                     this._cull = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -128,7 +132,7 @@ define([
             set : function(value) {
                 if (this._modelMatrix !== value) {
                     this._modelMatrix = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -146,7 +150,7 @@ define([
             set : function(value) {
                 if (this._primitiveType !== value) {
                     this._primitiveType = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -164,7 +168,7 @@ define([
             set : function(value) {
                 if (this._vertexArray !== value) {
                     this._vertexArray = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -182,7 +186,7 @@ define([
             set : function(value) {
                 if (this._count !== value) {
                     this._count = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -200,7 +204,7 @@ define([
             set : function(value) {
                 if (this._offset !== value) {
                     this._offset = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -209,7 +213,7 @@ define([
          * The number of instances to draw.
          *
          * @type {Number}
-         * @default 1
+         * @default 0
          */
         instanceCount : {
             get : function() {
@@ -218,7 +222,7 @@ define([
             set : function(value) {
                 if (this._instanceCount !== value) {
                     this._instanceCount = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -236,7 +240,43 @@ define([
             set : function(value) {
                 if (this._shaderProgram !== value) {
                     this._shaderProgram = value;
-                    this._dirty = true;
+                    this.dirty = true;
+                }
+            }
+        },
+
+        /**
+         * Whether this command should cast shadows when shadowing is enabled.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        castShadows : {
+            get : function() {
+                return this._castShadows;
+            },
+            set : function(value) {
+                if (this._castShadows !== value) {
+                    this._castShadows = value;
+                    this.dirty = true;
+                }
+            }
+        },
+
+        /**
+         * Whether this command should receive shadows when shadowing is enabled.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        receiveShadows : {
+            get : function() {
+                return this._receiveShadows;
+            },
+            set : function(value) {
+                if (this._receiveShadows !== value) {
+                    this._receiveShadows = value;
+                    this.dirty = true;
                 }
             }
         },
@@ -255,7 +295,7 @@ define([
             set : function(value) {
                 if (this._uniformMap !== value) {
                     this._uniformMap = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -273,7 +313,7 @@ define([
             set : function(value) {
                 if (this._renderState !== value) {
                     this._renderState = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -291,7 +331,7 @@ define([
             set : function(value) {
                 if (this._framebuffer !== value) {
                     this._framebuffer = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -309,7 +349,7 @@ define([
             set : function(value) {
                 if (this._pass !== value) {
                     this._pass = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -328,7 +368,7 @@ define([
             set : function(value) {
                 if (this._executeInClosestFrustum !== value) {
                     this._executeInClosestFrustum = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -351,7 +391,7 @@ define([
             set : function(value) {
                 if (this._owner !== value) {
                     this._owner = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -374,7 +414,7 @@ define([
             set : function(value) {
                 if (this._debugShowBoundingVolume !== value) {
                     this._debugShowBoundingVolume = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -390,10 +430,10 @@ define([
             set : function(value) {
                 if (this._debugOverlappingFrustums !== value) {
                     this._debugOverlappingFrustums = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
-        },
+        }
     });
 
     /**
@@ -425,7 +465,11 @@ define([
         result._owner = command._owner;
         result._debugShowBoundingVolume = command._debugShowBoundingVolume;
         result._debugOverlappingFrustums = command._debugOverlappingFrustums;
-        result._dirty = true;
+        result._castShadows = command._castShadows;
+        result._receiveShadows = command._receiveShadows;
+        
+        result.dirty = true;
+        result.lastDirtyTime = 0;
 
         return result;
     };

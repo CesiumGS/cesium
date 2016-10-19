@@ -27,7 +27,8 @@ define([
         './GlobeSurfaceTileProvider',
         './ImageryLayerCollection',
         './QuadtreePrimitive',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         BoundingSphere,
         buildModuleUrl,
@@ -56,7 +57,8 @@ define([
         GlobeSurfaceTileProvider,
         ImageryLayerCollection,
         QuadtreePrimitive,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
 
     /**
@@ -186,6 +188,16 @@ define([
          *
          */
         this.depthTestAgainstTerrain = false;
+
+        /**
+         * Determines whether the globe casts or receives shadows from each light source. Setting the globe
+         * to cast shadows may impact performance since the terrain is rendered again from the light's perspective.
+         * Currently only terrain that is in view casts shadows. By default the globe does not cast shadows.
+         *
+         * @type {ShadowMode}
+         * @default ShadowMode.RECEIVE_ONLY
+         */
+        this.shadows = ShadowMode.RECEIVE_ONLY;
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
@@ -486,6 +498,7 @@ define([
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
+            tileProvider.shadows = this.shadows;
 
             surface.beginFrame(frameState);
         }

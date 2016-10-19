@@ -21,6 +21,7 @@ var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
+var os = require('os');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
 var karma = require('karma').Server;
@@ -308,7 +309,16 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
     });
 });
 
+function isTravisPullRequest() {
+    return process.env.TRAVIS_PULL_REQUEST !== undefined && process.env.TRAVIS_PULL_REQUEST !== 'false';
+}
+
 gulp.task('deploy-s3', function(done) {
+    if (isTravisPullRequest()) {
+        console.log('Skipping deployment for non-pull request.');
+        return;
+    }
+
     var argv = yargs.usage('Usage: delpoy -b [Bucket Name] -d [Upload Directory]')
         .demand(['b', 'd']).argv;
 
@@ -362,7 +372,8 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
 
     return getCredentials()
     .then(function() {
-        return listAll(s3, bucketName, uploadDirectory, existingBlobs)
+        var prefix = uploadDirectory + '/';
+        return listAll(s3, bucketName, prefix, existingBlobs)
         .then(function() {
             return globby([
                 'Apps/**',
@@ -529,11 +540,11 @@ function getMimeType(filename) {
 }
 
 // get all files currently in bucket asynchronously
-function listAll(s3, bucketName, directory, files, marker) {
+function listAll(s3, bucketName, prefix, files, marker) {
     return s3.listObjectsAsync({
         Bucket : bucketName,
         MaxKeys : 1000,
-        Prefix: directory,
+        Prefix : prefix,
         Marker : marker
     })
     .then(function(data) {
@@ -544,7 +555,7 @@ function listAll(s3, bucketName, directory, files, marker) {
 
         if (data.IsTruncated) {
             // get next page of results
-            return listAll(s3, bucketName, directory, files, files[files.length - 1]);
+            return listAll(s3, bucketName, prefix, files, files[files.length - 1]);
         }
     });
 }
@@ -558,6 +569,11 @@ gulp.task('deploy-set-version', function() {
 });
 
 gulp.task('deploy-status', function() {
+    if (isTravisPullRequest()) {
+        console.log('Skipping deployment status for non-pull request.');
+        return;
+    }
+
     var status = yargs.argv.status;
     var message = yargs.argv.message;
 
@@ -685,19 +701,14 @@ gulp.task('sortRequires', function() {
     var noModulesRegex = /[\s\S]*?define\(function\(\)/;
     var requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
     var splitRegex = /,\s*/;
-    var filesChecked = 0;
 
     var fsReadFile = Promise.promisify(fs.readFile);
     var fsWriteFile = Promise.promisify(fs.writeFile);
 
     var files = globby.sync(filesToSortRequires);
     return Promise.map(files, function(file) {
-        if (filesChecked > 0 && filesChecked % 50 === 0) {
-            console.log('Sorted requires in ' + filesChecked + ' files');
-        }
-        ++filesChecked;
 
-        fsReadFile(file).then(function(contents) {
+        return fsReadFile(file).then(function(contents) {
 
             var result = requiresRegex.exec(contents);
 
@@ -786,15 +797,15 @@ gulp.task('sortRequires', function() {
 
             var outputNames = ']';
             if (sortedNames.length > 0) {
-                outputNames = '\r\n        ' +
-                              sortedNames.join(',\r\n        ') +
-                              '\r\n    ]';
+                outputNames = os.EOL + '        ' +
+                              sortedNames.join(',' + os.EOL + '        ') +
+                              os.EOL + '    ]';
             }
 
             var outputIdentifiers = '(';
             if (sortedIdentifiers.length > 0) {
-                outputIdentifiers = '(\r\n        ' +
-                                    sortedIdentifiers.join(',\r\n        ');
+                outputIdentifiers = '(' + os.EOL + '        ' +
+                                    sortedIdentifiers.join(',' + os.EOL + '        ');
             }
 
             contents = result[1] +

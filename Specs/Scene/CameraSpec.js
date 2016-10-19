@@ -17,6 +17,7 @@ defineSuite([
         'Core/Transforms',
         'Core/WebMercatorProjection',
         'Scene/CameraFlightPath',
+        'Scene/MapMode2D',
         'Scene/OrthographicFrustum',
         'Scene/PerspectiveFrustum',
         'Scene/SceneMode',
@@ -39,6 +40,7 @@ defineSuite([
         Transforms,
         WebMercatorProjection,
         CameraFlightPath,
+        MapMode2D,
         OrthographicFrustum,
         PerspectiveFrustum,
         SceneMode,
@@ -76,7 +78,9 @@ defineSuite([
             drawingBufferWidth : 1024,
             drawingBufferHeight : 768
         };
+        this.mapMode2D = MapMode2D.INFINITE_2D;
     }
+
     beforeEach(function() {
         position = Cartesian3.clone(Cartesian3.UNIT_Z);
         up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -94,6 +98,7 @@ defineSuite([
         camera.minimumZoomDistance = 0.0;
 
         scene.camera = camera;
+        scene.mapMode2D = MapMode2D.INFINITE_2D;
     });
 
     it('constructor throws an exception when there is no canvas', function() {
@@ -218,7 +223,26 @@ defineSuite([
         expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON8);
     });
 
-    it('does not set heading in 2D', function() {
+    it('sets heading in 2D when the map can be rotated', function() {
+        scene.mapMode2D = MapMode2D.ROTATE;
+        camera._mode = SceneMode.SCENE2D;
+
+        var heading = camera.heading;
+        var positionCartographic = camera.positionCartographic;
+
+        var newHeading = CesiumMath.toRadians(45.0);
+        camera.setView({
+            orientation: {
+                heading : newHeading
+            }
+        });
+
+        expect(camera.positionCartographic).toEqual(positionCartographic);
+        expect(camera.heading).not.toEqual(heading);
+        expect(camera.heading).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
+    });
+
+    it('does not set heading in 2D for infinite scrolling mode', function() {
         camera._mode = SceneMode.SCENE2D;
 
         var heading = camera.heading;
@@ -2079,25 +2103,63 @@ defineSuite([
         });
 
         var options = {
+            destination : Cartesian3.fromDegrees(-117.16, 32.71, 15000.0),
+            orientation : {
+                heading : 0,
+                pitch : 1,
+                roll : 2
+            },
+            duration : 3,
+            complete : function() {
+            },
+            cancel : function() {
+            },
+            endTransform : new Matrix4(),
+            convert : true,
+            maximumHeight : 100,
+            easingFunction : function() {
+            }
+        };
+        camera.flyTo(options);
+
+        var args = CameraFlightPath.createTween.calls.argsFor(0);
+        var passedOptions = args[1];
+
+        expect(CameraFlightPath.createTween).toHaveBeenCalled();
+        expect(args[0]).toBe(scene);
+        expect(passedOptions.destination).toBe(options.destination);
+        expect(passedOptions.heading).toBe(options.orientation.heading);
+        expect(passedOptions.pitch).toBe(options.orientation.pitch);
+        expect(passedOptions.roll).toBe(options.orientation.roll);
+        expect(typeof passedOptions.complete).toBe('function'); //complete function is wrapped by camera.
+        expect(passedOptions.cancel).toBe(options.cancel);
+        expect(passedOptions.endTransform).toBe(options.endTransform);
+        expect(passedOptions.convert).toBe(options.convert);
+        expect(passedOptions.maximumHeight).toBe(options.maximumHeight);
+        expect(passedOptions.easingFunction).toBe(options.easingFunction);
+    });
+
+    it('can cancel a flight', function() {
+        spyOn(CameraFlightPath, 'createTween').and.returnValue({
+            startObject : {},
+            stopObject: {},
+            duration : 0.001,
+            cancelTween: jasmine.createSpy('cancelTween')
+        });
+
+        var options = {
             destination : Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
         };
         camera.flyTo(options);
 
-        var expectedOptions = {
-            destination : options.destination,
-            heading : undefined,
-            pitch : undefined,
-            roll : undefined,
-            duration : undefined,
-            complete : undefined,
-            cancel : undefined,
-            endTransform : undefined,
-            convert : undefined,
-            maximumHeight : undefined,
-            easingFunction : undefined
-        };
+        expect(camera._currentFlight).toBeDefined();
 
-        expect(CameraFlightPath.createTween).toHaveBeenCalledWith(scene, expectedOptions);
+        var createdTween = camera._currentFlight;
+        spyOn(createdTween, 'cancelTween');
+        camera.cancelFlight();
+
+        expect(createdTween.cancelTween).toHaveBeenCalled();
+        expect(camera._currentFlight).toBeUndefined();
     });
 
     it('flyTo with heading, pitch and roll', function() {

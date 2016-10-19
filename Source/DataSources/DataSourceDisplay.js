@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EventHelper',
+        '../Scene/GroundPrimitive',
         './BillboardVisualizer',
         './BoundingSphereState',
         './BoxGeometryUpdater',
@@ -15,6 +16,7 @@ define([
         './CylinderGeometryUpdater',
         './EllipseGeometryUpdater',
         './EllipsoidGeometryUpdater',
+        './EntityCluster',
         './GeometryVisualizer',
         './LabelVisualizer',
         './ModelVisualizer',
@@ -33,6 +35,7 @@ define([
         destroyObject,
         DeveloperError,
         EventHelper,
+        GroundPrimitive,
         BillboardVisualizer,
         BoundingSphereState,
         BoxGeometryUpdater,
@@ -41,6 +44,7 @@ define([
         CylinderGeometryUpdater,
         EllipseGeometryUpdater,
         EllipsoidGeometryUpdater,
+        EntityCluster,
         GeometryVisualizer,
         LabelVisualizer,
         ModelVisualizer,
@@ -77,6 +81,8 @@ define([
             throw new DeveloperError('dataSourceCollection is required.');
         }
         //>>includeEnd('debug');
+        
+        GroundPrimitive.initializeTerrainHeights();
 
         var scene = options.scene;
         var dataSourceCollection = options.dataSourceCollection;
@@ -107,9 +113,9 @@ define([
      * @member
      * @type {DataSourceDisplay~VisualizersCallback}
      */
-    DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
+    DataSourceDisplay.defaultVisualizersCallback = function(scene, entityCluster, dataSource) {
         var entities = dataSource.entities;
-        return [new BillboardVisualizer(scene, entities),
+        return [new BillboardVisualizer(entityCluster, entities),
                 new GeometryVisualizer(BoxGeometryUpdater, scene, entities),
                 new GeometryVisualizer(CylinderGeometryUpdater, scene, entities),
                 new GeometryVisualizer(CorridorGeometryUpdater, scene, entities),
@@ -120,9 +126,9 @@ define([
                 new GeometryVisualizer(PolylineVolumeGeometryUpdater, scene, entities),
                 new GeometryVisualizer(RectangleGeometryUpdater, scene, entities),
                 new GeometryVisualizer(WallGeometryUpdater, scene, entities),
-                new LabelVisualizer(scene, entities),
+                new LabelVisualizer(entityCluster, entities),
                 new ModelVisualizer(scene, entities),
-                new PointVisualizer(scene, entities),
+                new PointVisualizer(entityCluster, entities),
                 new PathVisualizer(scene, entities)];
     };
 
@@ -231,6 +237,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!GroundPrimitive._initialized) {
+            this._ready = false;
+            return false;
+        }
+        
         var result = true;
 
         var i;
@@ -292,6 +303,10 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!this._ready) {
+            return BoundingSphereState.PENDING;
+        }
+
         var i;
         var length;
         var dataSource = this._defaultDataSource;
@@ -344,17 +359,45 @@ define([
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var visualizers = this._visualizersCallback(this._scene, dataSource);
+        var scene = this._scene;
+
+        var entityCluster = dataSource.clustering;
+        entityCluster._initialize(scene);
+
+        scene.primitives.add(entityCluster);
+
+        var visualizers = this._visualizersCallback(scene, entityCluster, dataSource);
         dataSource._visualizers = visualizers;
+
+        var length = visualizers.length;
+        for (var i = 0; i < length; ++i) {
+            var visualizer = visualizers[i];
+            var cluster = visualizer._cluster;
+
+            if (defined(cluster) && !defined(cluster._scene)) {
+                cluster._initialize(scene);
+                scene.primitives.add(cluster);
+            }
+        }
     };
 
     DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
+        var scene = this._scene;
+        var entityCluster = dataSource.clustering;
+        scene.primitives.remove(entityCluster);
+
         var visualizers = dataSource._visualizers;
         var length = visualizers.length;
         for (var i = 0; i < length; i++) {
+            var cluster = visualizers[i]._cluster;
+            if (cluster !== entityCluster) {
+                scene.primitives.remove(cluster);
+            }
+
             visualizers[i].destroy();
-            dataSource._visualizers = undefined;
         }
+
+        dataSource._visualizers = undefined;
     };
 
     /**

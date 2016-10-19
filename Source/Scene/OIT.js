@@ -461,60 +461,59 @@ define([
         return getTranslucentShaderProgram(context, shaderProgram, oit._alphaShaderCache, alphaShaderSource);
     }
 
-    OIT.prototype.createDerivedCommands = function(command, context) {
-        var derivedCommands = command.derivedCommands;
-        var oit = derivedCommands.oit;
-
-        if (!defined(oit)) {
-            oit = derivedCommands.oit = {};
+    OIT.prototype.createDerivedCommands = function(command, context, result) {
+        if (!defined(result)) {
+            result = {};
         }
 
         if (this._translucentMRTSupport) {
             var translucentShader;
             var translucentRenderState;
-            if (defined(oit.translucentCommand)) {
-                translucentShader = oit.translucentCommand.shaderProgram;
-                translucentRenderState = oit.translucentCommand.renderState;
+            if (defined(result.translucentCommand)) {
+                translucentShader = result.translucentCommand.shaderProgram;
+                translucentRenderState = result.translucentCommand.renderState;
             }
 
-            oit.translucentCommand = DrawCommand.shallowClone(command, oit.translucentCommand);
+            result.translucentCommand = DrawCommand.shallowClone(command, result.translucentCommand);
 
-            if (!defined(translucentShader) || oit.shaderProgramId !== command.shaderProgram.id) {
-                oit.translucentCommand.shaderProgram = getTranslucentMRTShaderProgram(this, context, command.shaderProgram);
-                oit.translucentCommand.renderState = getTranslucentMRTRenderState(this, context, command.renderState);
-                oit.shaderProgramId = command.shaderProgram.id;
+            if (!defined(translucentShader) || result.shaderProgramId !== command.shaderProgram.id) {
+                result.translucentCommand.shaderProgram = getTranslucentMRTShaderProgram(this, context, command.shaderProgram);
+                result.translucentCommand.renderState = getTranslucentMRTRenderState(this, context, command.renderState);
+                result.shaderProgramId = command.shaderProgram.id;
             } else {
-                oit.translucentCommand.shaderProgram = translucentShader;
-                oit.translucentCommand.renderState = translucentRenderState;
+                result.translucentCommand.shaderProgram = translucentShader;
+                result.translucentCommand.renderState = translucentRenderState;
             }
         } else {
             var colorShader;
             var colorRenderState;
             var alphaShader;
             var alphaRenderState;
-            if (defined(oit.translucentCommand)) {
-                colorShader = oit.translucentCommand.shaderProgram;
-                colorRenderState = oit.translucentCommand.renderState;
-                alphaShader = oit.alphaCommand.shaderProgram;
-                alphaRenderState = oit.alphaCommand.renderState;
+            if (defined(result.translucentCommand)) {
+                colorShader = result.translucentCommand.shaderProgram;
+                colorRenderState = result.translucentCommand.renderState;
+                alphaShader = result.alphaCommand.shaderProgram;
+                alphaRenderState = result.alphaCommand.renderState;
             }
 
-            oit.translucentCommand = DrawCommand.shallowClone(command, oit.translucentCommand);
-            oit.alphaCommand = DrawCommand.shallowClone(command, oit.alphaCommand);
+            result.translucentCommand = DrawCommand.shallowClone(command, result.translucentCommand);
+            result.alphaCommand = DrawCommand.shallowClone(command, result.alphaCommand);
 
-            if (!defined(colorShader) || oit.shaderProgramId !== command.shaderProgram.id) {
-                oit.translucentCommand.shaderProgram = getTranslucentColorShaderProgram(this, context, command.shaderProgram);
-                oit.translucentCommand.renderState = getTranslucentColorRenderState(this, context, command.renderState);
-                oit.alphaCommand.shaderProgram = getTranslucentAlphaShaderProgram(this, context, command.shaderProgram);
-                oit.alphaCommand.renderState = getTranslucentAlphaRenderState(this, context, command.renderState);
-                oit.shaderProgramId = command.shaderProgram.id;
+            if (!defined(colorShader) || result.shaderProgramId !== command.shaderProgram.id) {
+                result.translucentCommand.shaderProgram = getTranslucentColorShaderProgram(this, context, command.shaderProgram);
+                result.translucentCommand.renderState = getTranslucentColorRenderState(this, context, command.renderState);
+                result.alphaCommand.shaderProgram = getTranslucentAlphaShaderProgram(this, context, command.shaderProgram);
+                result.alphaCommand.renderState = getTranslucentAlphaRenderState(this, context, command.renderState);
+                result.shaderProgramId = command.shaderProgram.id;
             } else {
-                oit.translucentCommand.shaderProgram = colorShader;
-                oit.translucentCommand.renderState = colorRenderState;
-                oit.alphaCommand.shaderProgram = alphaShader;
-                oit.alphaCommand.renderState = alphaRenderState;
+                result.translucentCommand.shaderProgram = colorShader;
+                result.translucentCommand.renderState = colorRenderState;
+                result.alphaCommand.shaderProgram = alphaShader;
+                result.alphaCommand.renderState = alphaRenderState;
             }
         }
+
+        return result;
     };
 
     function executeTranslucentCommandsSortedMultipass(oit, scene, executeFunction, passState, commands) {
@@ -526,6 +525,8 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+
         passState.framebuffer = oit._adjustTranslucentFBO;
         oit._adjustTranslucentCommand.execute(context, passState);
         passState.framebuffer = oit._adjustAlphaFBO;
@@ -536,7 +537,7 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            derivedCommand = command.derivedCommands.oit.translucentCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
@@ -544,7 +545,7 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            derivedCommand = command.derivedCommands.oit.alphaCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
@@ -556,6 +557,8 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+
         passState.framebuffer = oit._adjustTranslucentFBO;
         oit._adjustTranslucentCommand.execute(context, passState);
 
@@ -564,7 +567,7 @@ define([
 
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
-            var derivedCommand = command.derivedCommands.oit.translucentCommand;
+            var derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
