@@ -138,7 +138,7 @@ define([
      * var positions = polyline.positions;
      * var modelMatrix = polylines.modelMatrix;
      * var segments = Cesium.PolylinePipeline.wrapLongitude(positions, modelMatrix);
-     * 
+     *
      * @see PolygonPipeline.wrapLongitude
      * @see Polyline
      * @see PolylineCollection
@@ -200,63 +200,6 @@ define([
         };
     };
 
-    var removeDuplicatesEpsilon = CesiumMath.EPSILON10;
-
-    /**
-     * Removes adjacent duplicate positions in an array of positions.
-     *
-     * @param {Cartesian3[]} positions The array of positions.
-     * @returns {Cartesian3[]|undefined} A new array of positions with no adjacent duplicate positions or the input array if no duplicates were found.
-     *
-     * @example
-     * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
-     * var positions = [
-     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
-     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
-     *     new Cesium.Cartesian3(2.0, 2.0, 2.0)];
-     * var nonDuplicatePositions = Cesium.PolylinePipeline.removeDuplicates(positions);
-     */
-    PolylinePipeline.removeDuplicates = function(positions) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
-            throw new DeveloperError('positions is required.');
-        }
-        //>>includeEnd('debug');
-
-        var length = positions.length;
-        if (length < 2) {
-            return positions;
-        }
-
-        var i;
-        var v0;
-        var v1;
-
-        for (i = 1; i < length; ++i) {
-            v0 = positions[i - 1];
-            v1 = positions[i];
-            if (Cartesian3.equalsEpsilon(v0, v1, removeDuplicatesEpsilon)) {
-                break;
-            }
-        }
-
-        if (i === length) {
-            return positions;
-        }
-
-        var cleanedPositions = positions.slice(0, i);
-        for (; i < length; ++i) {
-            // v0 is set by either the previous loop, or the previous clean point.
-            v1 = positions[i];
-            if (!Cartesian3.equalsEpsilon(v0, v1, removeDuplicatesEpsilon)) {
-                cleanedPositions.push(Cartesian3.clone(v1));
-                v0 = v1;
-            }
-        }
-
-        return cleanedPositions;
-    };
-
     /**
      * Subdivides polyline and raises all points to the specified height.  Returns an array of numbers to represent the positions.
      * @param {Cartesian3[]} positions The array of type {Cartesian3} representing positions.
@@ -290,11 +233,13 @@ define([
         var length = positions.length;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var height = defaultValue(options.height, 0);
+        var hasHeightArray = isArray(height);
 
         if (length < 1) {
             return [];
         } else if (length === 1) {
             var p = ellipsoid.scaleToGeodeticSurface(positions[0], scaleFirst);
+            height = hasHeightArray ? height[0] : height;
             if (height !== 0) {
                 var n = ellipsoid.geodeticSurfaceNormal(p, cartesian);
                 Cartesian3.multiplyByScalar(n, height, n);
@@ -320,7 +265,6 @@ define([
         var arrayLength = (numPoints + 1) * 3;
         var newPositions = new Array(arrayLength);
         var offset = 0;
-        var hasHeightArray = isArray(height);
 
         for (i = 0; i < length - 1; i++) {
             var p0 = positions[i];

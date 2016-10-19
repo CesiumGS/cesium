@@ -50,14 +50,14 @@ define([
      * @param {Number} options.length The length of the cylinder.
      * @param {Number} options.topRadius The radius of the top of the cylinder.
      * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
-     * @param {Number} [options.slices=128] The number of edges around perimeter of the cylinder.
+     * @param {Number} [options.slices=128] The number of edges around the perimeter of the cylinder.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @exception {DeveloperError} options.length must be greater than 0.
      * @exception {DeveloperError} options.topRadius must be greater than 0.
      * @exception {DeveloperError} options.bottomRadius must be greater than 0.
      * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
-     * @exception {DeveloperError} options.slices must be greater that 3.
+     * @exception {DeveloperError} options.slices must be greater than or equal to 3.
      *
      * @see CylinderGeometry.createGeometry
      *
@@ -87,10 +87,10 @@ define([
             throw new DeveloperError('options.topRadius must be defined.');
         }
         if (!defined(bottomRadius)) {
-            throw new DeveloperError('options.bottomRadius must must be defined.');
+            throw new DeveloperError('options.bottomRadius must be defined.');
         }
         if (slices < 3) {
-            throw new DeveloperError('options.slices must be greater that 3.');
+            throw new DeveloperError('options.slices must be greater than or equal to 3.');
         }
         //>>includeEnd('debug');
 
@@ -114,6 +114,8 @@ define([
      * @param {CylinderGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     CylinderGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -134,6 +136,8 @@ define([
         array[startingIndex++] = value._topRadius;
         array[startingIndex++] = value._bottomRadius;
         array[startingIndex]   = value._slices;
+
+        return array;
     };
 
     var scratchVertexFormat = new VertexFormat();

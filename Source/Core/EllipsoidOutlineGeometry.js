@@ -43,7 +43,7 @@ define([
      * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
      * @param {Number} [options.stackPartitions=10] The count of stacks for the ellipsoid (1 greater than the number of parallel lines).
      * @param {Number} [options.slicePartitions=8] The count of slices for the ellipsoid (Equal to the number of radial lines).
-     * @param {Number} [options.subdivisions=128] The number of points per line, determining the granularity of the curvature .
+     * @param {Number} [options.subdivisions=128] The number of points per line, determining the granularity of the curvature.
      *
      * @exception {DeveloperError} options.stackPartitions must be greater than or equal to one.
      * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
@@ -96,6 +96,8 @@ define([
      * @param {EllipsoidOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     EllipsoidOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -115,6 +117,8 @@ define([
         array[startingIndex++] = value._stackPartitions;
         array[startingIndex++] = value._slicePartitions;
         array[startingIndex]   = value._subdivisions;
+
+        return array;
     };
 
     var scratchRadii = new Cartesian3();

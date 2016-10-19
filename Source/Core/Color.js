@@ -369,7 +369,7 @@ define([
      * @example
      * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
      * var green = Cesium.Color.fromCssColorString('green');
-     * 
+     *
      * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
      */
     Color.fromCssColorString = function(color, result) {
@@ -394,6 +394,7 @@ define([
             result.red = parseInt(matches[1], 16) / 15;
             result.green = parseInt(matches[2], 16) / 15.0;
             result.blue = parseInt(matches[3], 16) / 15.0;
+            result.alpha = 1.0;
             return result;
         }
 
@@ -402,6 +403,7 @@ define([
             result.red = parseInt(matches[1], 16) / 255.0;
             result.green = parseInt(matches[2], 16) / 255.0;
             result.blue = parseInt(matches[3], 16) / 255.0;
+            result.alpha = 1.0;
             return result;
         }
 
@@ -438,6 +440,8 @@ define([
      * @param {Color} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     Color.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -454,6 +458,8 @@ define([
         array[startingIndex++] = value.green;
         array[startingIndex++] = value.blue;
         array[startingIndex] = value.alpha;
+
+        return array;
     };
 
     /**
@@ -646,7 +652,7 @@ define([
      *
      * @example
      * var rgba = Cesium.Color.BLUE.toRgba();
-     * 
+     *
      * @see Color.fromRgba
      */
     Color.prototype.toRgba = function() {

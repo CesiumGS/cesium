@@ -53,7 +53,7 @@ define([
      * @alias UrlTemplateImageryProvider
      * @constructor
      *
-     * @param {Promise|Object} [options] Object with the following properties:
+     * @param {Promise.<Object>|Object} [options] Object with the following properties:
      * @param {String} options.url  The URL template to use to request tiles.  It has the following keywords:
      * <ul>
      *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
@@ -88,6 +88,19 @@ define([
      *     <li><code>{longitudeProjected}</code>: The longitude of the picked position in the projected coordinates of the tiling scheme.</li>
      *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
      *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@link GetFeatureInfoFormat}.</li>
+     * </ul>
+     * @param {Object} [options.urlSchemeZeroPadding] Gets the URL scheme zero padding for each tile coordinate. The format is '000' where
+     * each coordinate will be padded on the left with zeros to match the width of the passed string of zeros. e.g. Setting:
+     * urlSchemeZeroPadding : { '{x}' : '0000'}
+     * will cause an 'x' value of 12 to return the string '0012' for {x} in the generated URL.
+     * It the passed object has the following keywords:
+     * <ul>
+     *  <li> <code>{z}</code>: The zero padding for the level of the tile in the tiling scheme.</li>
+     *  <li> <code>{x}</code>: The zero padding for the tile X coordinate in the tiling scheme.</li>
+     *  <li> <code>{y}</code>: The zero padding for the the tile Y coordinate in the tiling scheme.</li>
+     *  <li> <code>{reverseX}</code>: The zero padding for the tile reverseX coordinate in the tiling scheme.</li>
+     *  <li> <code>{reverseY}</code>: The zero padding for the tile reverseY coordinate in the tiling scheme.</li>
+     *  <li> <code>{reverseZ}</code>: The zero padding for the reverseZ coordinate of the tile in the tiling scheme.</li>
      * </ul>
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
@@ -127,7 +140,7 @@ define([
      * @example
      * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
      * var tms = new Cesium.UrlTemplateImageryProvider({
-     *     url : '//cesiumjs.org/tilesets/imagery/naturalearthii/{z}/{x}/{reverseY}.jpg',
+     *     url : 'https://cesiumjs.org/tilesets/imagery/naturalearthii/{z}/{x}/{reverseY}.jpg',
      *     credit : '© Analytical Graphics, Inc.',
      *     tilingScheme : new Cesium.GeographicTilingScheme(),
      *     maximumLevel : 5
@@ -170,6 +183,7 @@ define([
         this._errorEvent = new Event();
 
         this._url = undefined;
+        this._urlSchemeZeroPadding = undefined;
         this._pickFeaturesUrl = undefined;
         this._proxy = undefined;
         this._tileWidth = undefined;
@@ -228,6 +242,31 @@ define([
                 return this._url;
             }
         },
+
+        /**
+         * Gets the URL scheme zero padding for each tile coordinate. The format is '000' where each coordinate will be padded on
+         * the left with zeros to match the width of the passed string of zeros. e.g. Setting:
+         * urlSchemeZeroPadding : { '{x}' : '0000'}
+         * will cause an 'x' value of 12 to return the string '0012' for {x} in the generated URL.
+         * It has the following keywords:
+         * <ul>
+         *  <li> <code>{z}</code>: The zero padding for the level of the tile in the tiling scheme.</li>
+         *  <li> <code>{x}</code>: The zero padding for the tile X coordinate in the tiling scheme.</li>
+         *  <li> <code>{y}</code>: The zero padding for the the tile Y coordinate in the tiling scheme.</li>
+         *  <li> <code>{reverseX}</code>: The zero padding for the tile reverseX coordinate in the tiling scheme.</li>
+         *  <li> <code>{reverseY}</code>: The zero padding for the tile reverseY coordinate in the tiling scheme.</li>
+         *  <li> <code>{reverseZ}</code>: The zero padding for the reverseZ coordinate of the tile in the tiling scheme.</li>
+         * </ul>
+         * @memberof UrlTemplateImageryProvider.prototype
+         * @type {Object}
+         * @readonly
+         */
+        urlSchemeZeroPadding : {
+            get : function() {
+                return this._urlSchemeZeroPadding;
+            }
+        },
+
 
         /**
          * Gets the URL template to use to use to pick features.  If this property is not specified,
@@ -487,7 +526,7 @@ define([
      * Reinitializes this instance.  Reinitializing an instance already in use is supported, but it is not
      * recommended because existing tiles provided by the imagery provider will not be updated.
      *
-     * @param {Promise|Object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
+     * @param {Promise.<Object>|Object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
      */
     UrlTemplateImageryProvider.prototype.reinitialize = function(options) {
         var that = this;
@@ -502,6 +541,7 @@ define([
             //>>includeEnd('debug');
             that.enablePickFeatures = defaultValue(properties.enablePickFeatures, that.enablePickFeatures);
             that._url = properties.url;
+            that._urlSchemeZeroPadding = defaultValue(properties.urlSchemeZeroPadding, that.urlSchemeZeroPadding);
             that._pickFeaturesUrl = properties.pickFeaturesUrl;
             that._proxy = properties.proxy;
             that._tileDiscardPolicy = properties.tileDiscardPolicy;
@@ -717,29 +757,48 @@ define([
         return parts;
     }
 
+    function padWithZerosIfNecessary(imageryProvider, key, value) {
+        if (imageryProvider &&
+            imageryProvider.urlSchemeZeroPadding &&
+            imageryProvider.urlSchemeZeroPadding.hasOwnProperty(key) )
+        {
+            var paddingTemplate = imageryProvider.urlSchemeZeroPadding[key];
+            if (typeof paddingTemplate === 'string') {
+                var paddingTemplateWidth = paddingTemplate.length;
+                if (paddingTemplateWidth > 1) {
+                    value = (value.length >= paddingTemplateWidth) ? value : new Array(paddingTemplateWidth - value.toString().length + 1).join('0') + value;
+                }
+            }
+        }
+        return value;
+    }
+
     function xTag(imageryProvider, x, y, level) {
-        return x;
+        return padWithZerosIfNecessary(imageryProvider, '{x}', x);
     }
 
     function reverseXTag(imageryProvider, x, y, level) {
-        return imageryProvider.tilingScheme.getNumberOfXTilesAtLevel(level) - x - 1;
+        var reverseX = imageryProvider.tilingScheme.getNumberOfXTilesAtLevel(level) - x - 1;
+        return padWithZerosIfNecessary(imageryProvider, '{reverseX}', reverseX);
     }
 
     function yTag(imageryProvider, x, y, level) {
-        return y;
+        return padWithZerosIfNecessary(imageryProvider, '{y}', y);
     }
 
     function reverseYTag(imageryProvider, x, y, level) {
-        return imageryProvider.tilingScheme.getNumberOfYTilesAtLevel(level) - y - 1;
+        var reverseY = imageryProvider.tilingScheme.getNumberOfYTilesAtLevel(level) - y - 1;
+        return padWithZerosIfNecessary(imageryProvider, '{reverseY}', reverseY);
     }
 
     function reverseZTag(imageryProvider, x, y, level) {
         var maximumLevel = imageryProvider.maximumLevel;
-        return defined(maximumLevel) && level < maximumLevel ? maximumLevel - level - 1 : level;
+        var reverseZ = defined(maximumLevel) && level < maximumLevel ? maximumLevel - level - 1 : level;
+        return padWithZerosIfNecessary(imageryProvider, '{reverseZ}', reverseZ);
     }
 
     function zTag(imageryProvider, x, y, level) {
-        return level;
+        return padWithZerosIfNecessary(imageryProvider, '{z}', level);
     }
 
     function sTag(imageryProvider, x, y, level) {

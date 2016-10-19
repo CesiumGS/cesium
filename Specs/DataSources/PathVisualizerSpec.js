@@ -3,6 +3,7 @@ defineSuite([
         'DataSources/PathVisualizer',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Matrix4',
         'Core/ReferenceFrame',
@@ -24,6 +25,7 @@ defineSuite([
         PathVisualizer,
         Cartesian3,
         Color,
+        DistanceDisplayCondition,
         JulianDate,
         Matrix4,
         ReferenceFrame,
@@ -111,6 +113,25 @@ defineSuite([
         expect(scene.primitives.length).toEqual(0);
     });
 
+    it('adding and removing an entity path without rendering does not crash.', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+        var positions = [new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)];
+
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
+
+        var position = new SampledPositionProperty();
+        position.addSamples(times, positions);
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        testObject.position = position;
+        testObject.path = new PathGraphics();
+
+        //Before we fixed the issue, the below remove call would cause a crash
+        //when visualizer.update was not called at least once after the entity was added.
+        entityCollection.remove(testObject);
+    });
+
     it('A PathGraphics causes a primitive to be created and updated.', function() {
         var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
         var updateTime = new JulianDate(0.5, 0);
@@ -133,6 +154,7 @@ defineSuite([
         path.material.outlineColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
         path.material.outlineWidth = new ConstantProperty(2.5);
         path.width = new ConstantProperty(12.5);
+        path.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 20.0));
         path.leadTime = new ConstantProperty(25);
         path.trailTime = new ConstantProperty(10);
 
@@ -147,6 +169,7 @@ defineSuite([
         expect(primitive.positions[2]).toEqual(testObject.position.getValue(JulianDate.addSeconds(updateTime, path.leadTime.getValue(), new JulianDate())));
         expect(primitive.show).toEqual(testObject.path.show.getValue(updateTime));
         expect(primitive.width).toEqual(testObject.path.width.getValue(updateTime));
+        expect(primitive.distanceDisplayCondition).toEqual(testObject.path.distanceDisplayCondition.getValue(updateTime));
 
         var material = primitive.material;
         expect(material.uniforms.color).toEqual(testObject.path.material.color.getValue(updateTime));
@@ -349,6 +372,7 @@ defineSuite([
         //internal cache used by the visualizer, instead it just hides it.
         entityCollection.removeAll();
         expect(primitive.show).toEqual(false);
+        expect(primitive.id).toBeUndefined();
     });
 
     it('Visualizer sets entity property.', function() {

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
@@ -14,10 +15,10 @@ define([
         './GeometryAttributes',
         './IndexDatatype',
         './Math',
-        './PolylinePipeline',
         './PolygonPipeline',
         './PrimitiveType'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
@@ -32,7 +33,6 @@ define([
         GeometryAttributes,
         IndexDatatype,
         CesiumMath,
-        PolylinePipeline,
         PolygonPipeline,
         PrimitiveType) {
     'use strict';
@@ -361,6 +361,8 @@ define([
      * @param {CorridorOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     CorridorOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -390,6 +392,8 @@ define([
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._cornerType;
         array[startingIndex]   = value._granularity;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
@@ -470,7 +474,7 @@ define([
         var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
         var extrude = (height !== extrudedHeight);
 
-        var cleanPositions = PolylinePipeline.removeDuplicates(positions);
+        var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
         if ((cleanPositions.length < 2) || (width <= 0)) {
             return;

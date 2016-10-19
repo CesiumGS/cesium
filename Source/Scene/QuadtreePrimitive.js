@@ -193,6 +193,8 @@ define([
         }
 
         this._levelZeroTiles = undefined;
+
+        this._tileProvider.cancelReprojections();
     };
 
     /**
@@ -268,6 +270,7 @@ define([
             return;
         }
 
+        // Gets commands for any texture re-projections and updates the credit display
         this._tileProvider.initialize(frameState);
 
         var debug = this._debug;
@@ -280,8 +283,6 @@ define([
         debug.tilesCulled = 0;
         debug.tilesRendered = 0;
         debug.tilesWaitingForChildren = 0;
-
-        processTileLoadQueue(this, frameState);
 
         this._tileLoadQueue.length = 0;
         this._tileReplacementQueue.markStartOfRenderFrame();
@@ -312,10 +313,14 @@ define([
      */
     QuadtreePrimitive.prototype.endFrame = function(frameState) {
         var passes = frameState.passes;
-        if (!passes.render) {
+        if (!passes.render || frameState.mode === SceneMode.MORPHING) {
+            // Only process the load queue for a single pass.
+            // Don't process the load queue or update heights during the morph flights.
             return;
         }
 
+        // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
+        processTileLoadQueue(this, frameState);
         updateHeights(this, frameState);
 
         var debug = this._debug;

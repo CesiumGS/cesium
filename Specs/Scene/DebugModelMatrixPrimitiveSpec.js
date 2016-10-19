@@ -78,9 +78,9 @@ defineSuite([
             id : 'id'
         }));
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(p);
-        expect(pick.id).toEqual('id');
+        var pick = scene.pickForSpecs();
+        expect(pick.primitive).toBe(p);
+        expect(pick.id).toBe('id');
     });
 
     it('isDestroyed', function() {

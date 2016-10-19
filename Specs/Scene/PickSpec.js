@@ -38,6 +38,7 @@ defineSuite([
     var scene;
     var primitives;
     var camera;
+    var primitiveRectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
 
     beforeAll(function() {
         scene = createScene();
@@ -50,20 +51,16 @@ defineSuite([
     });
 
     beforeEach(function() {
-        camera.lookAtTransform(Matrix4.IDENTITY);
-        camera.position = new Cartesian3(1.03, 0.0, 0.0);
-        camera.direction = new Cartesian3(-1.0, 0.0, 0.0);
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        camera.right = Cartesian3.clone(Cartesian3.UNIT_Y);
-
-        camera.frustum = new PerspectiveFrustum();
-        camera.frustum.near = 0.01;
-        camera.frustum.far = 2.0;
-        camera.frustum.fov = CesiumMath.toRadians(60.0);
-        camera.frustum.aspectRatio = 1.0;
-
         scene.mode = SceneMode.SCENE3D;
         scene.morphTime = SceneMode.getMorphTime(scene.mode);
+
+        camera.setView({
+            destination : primitiveRectangle
+        });
+
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
+        camera.frustum.aspectRatio = 1.0;
     });
 
     afterEach(function() {
@@ -71,14 +68,11 @@ defineSuite([
     });
 
     function createRectangle() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-
         var e = new Primitive({
             geometryInstances: new GeometryInstance({
                 geometry: new RectangleGeometry({
-                    rectangle: Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+                    rectangle: primitiveRectangle,
                     vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                    ellipsoid: ellipsoid,
                     granularity: CesiumMath.toRadians(20.0)
                 })
             }),
@@ -177,14 +171,12 @@ defineSuite([
     it('can drill pick batched Primitives with show attribute', function() {
         var geometry = new RectangleGeometry({
             rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
-            ellipsoid : Ellipsoid.UNIT_SPHERE,
             granularity : CesiumMath.toRadians(20.0),
             vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
         });
 
         var geometryWithHeight = new RectangleGeometry({
             rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
-            ellipsoid : Ellipsoid.UNIT_SPHERE,
             granularity : CesiumMath.toRadians(20.0),
             vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
             height : 0.01
@@ -231,7 +223,6 @@ defineSuite([
     it('can drill pick without ID', function() {
         var geometry = new RectangleGeometry({
             rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
-            ellipsoid : Ellipsoid.UNIT_SPHERE,
             granularity : CesiumMath.toRadians(20.0),
             vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
         });
@@ -264,14 +255,12 @@ defineSuite([
     it('can drill pick batched Primitives without show attribute', function() {
         var geometry = new RectangleGeometry({
             rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
-            ellipsoid : Ellipsoid.UNIT_SPHERE,
             granularity : CesiumMath.toRadians(20.0),
             vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
         });
 
         var geometryWithHeight = new RectangleGeometry({
             rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
-            ellipsoid : Ellipsoid.UNIT_SPHERE,
             granularity : CesiumMath.toRadians(20.0),
             vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
             height : 0.01
@@ -320,58 +309,24 @@ defineSuite([
     });
 
     it('picks in 2D', function() {
-        var ellipsoid = scene.mapProjection.ellipsoid;
-        var maxRadii = ellipsoid.maximumRadius;
-
-        camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
-        Cartesian3.negate(camera.direction, camera.direction);
-        Cartesian3.negate(Cartesian3.UNIT_X, camera.up);
-        Cartesian3.clone(Cartesian3.UNIT_Y, camera.right);
-
-        var frustum = new OrthographicFrustum();
-        frustum.right = maxRadii * Math.PI;
-        frustum.left = -frustum.right;
-        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
-        frustum.bottom = -frustum.top;
-        frustum.near = 0.01 * maxRadii;
-        frustum.far = 60.0 * maxRadii;
-        camera.frustum = frustum;
-
-        scene.mode = SceneMode.SCENE2D;
-        scene.morphTime = SceneMode.getMorphTime(scene.mode);
-
+        scene.morphTo2D(0.0);
+        camera.setView({ destination : primitiveRectangle });
         var rectangle = createRectangle();
         scene.initializeFrame();
         var pickedObject = scene.pick(new Cartesian2(0, 0));
+        expect(pickedObject).toBeDefined();
         expect(pickedObject.primitive).toEqual(rectangle);
+        scene.morphTo3D(0.0);
     });
 
     it('picks in 2D when rotated', function() {
-        var ellipsoid = scene.mapProjection.ellipsoid;
-        var maxRadii = ellipsoid.maximumRadius;
-
-        camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
-        Cartesian3.negate(camera.direction, camera.direction);
-        Cartesian3.negate(Cartesian3.UNIT_X, camera.up);
-        Cartesian3.clone(Cartesian3.UNIT_Y, camera.right);
-
-        var frustum = new OrthographicFrustum();
-        frustum.right = maxRadii * Math.PI;
-        frustum.left = -frustum.right;
-        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
-        frustum.bottom = -frustum.top;
-        frustum.near = 0.01 * maxRadii;
-        frustum.far = 60.0 * maxRadii;
-        camera.frustum = frustum;
-
-        scene.mode = SceneMode.SCENE2D;
-        scene.morphTime = SceneMode.getMorphTime(scene.mode);
-
+        scene.morphTo2D(0.0);
+        camera.setView({ destination : primitiveRectangle });
         var rectangle = createRectangle();
         scene.initializeFrame();
         var pickedObject = scene.pick(new Cartesian2(0.0, 0.0));
+        expect(pickedObject).toBeDefined();
         expect(pickedObject.primitive).toEqual(rectangle);
+        scene.morphTo3D(0.0);
     });
 }, 'WebGL');

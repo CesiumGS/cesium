@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
+        'Core/Rectangle',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
@@ -11,6 +12,7 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         CesiumMath,
+        Rectangle,
         VertexFormat,
         createPackableSpecs) {
     'use strict';
@@ -73,8 +75,8 @@ defineSuite([
             semiMinorAxis : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 16);
-        expect(m.indices.length).toEqual(3 * 22);
+        expect(m.attributes.position.values.length).toEqual(16 * 3); // rows of 1 + 4 + 6 + 4 + 1
+        expect(m.indices.length).toEqual(22 * 3); // rows of 3 + 8 + 8 + 3
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -88,12 +90,14 @@ defineSuite([
             semiMinorAxis : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 16);
-        expect(m.attributes.st.values.length).toEqual(2 * 16);
-        expect(m.attributes.normal.values.length).toEqual(3 * 16);
-        expect(m.attributes.tangent.values.length).toEqual(3 * 16);
-        expect(m.attributes.binormal.values.length).toEqual(3 * 16);
-        expect(m.indices.length).toEqual(3 * 22);
+        var numVertices = 16;
+        var numTriangles = 22;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.st.values.length).toEqual(numVertices * 2);
+        expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
     it('compute texture coordinates with rotation', function() {
@@ -111,9 +115,11 @@ defineSuite([
         var st = m.attributes.st.values;
         var length = st.length;
 
-        expect(positions.length).toEqual(3 * 16);
-        expect(length).toEqual(2 * 16);
-        expect(m.indices.length).toEqual(3 * 22);
+        var numVertices = 16;
+        var numTriangles = 22;
+        expect(positions.length).toEqual(numVertices * 3);
+        expect(length).toEqual(numVertices * 2);
+        expect(m.indices.length).toEqual(numTriangles * 3);
 
         expect(st[length - 2]).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
         expect(st[length - 1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
@@ -130,8 +136,10 @@ defineSuite([
             extrudedHeight : 50000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * (16 + 8) * 2);
-        expect(m.indices.length).toEqual(3 * (22 + 8) * 2);
+        var numVertices = 48; // 16 top + 16 bottom + 8 top edge + 8 bottom edge
+        var numTriangles = 60; // 22 top fill + 22 bottom fill + 2 triangles * 8 sides
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
     it('compute all vertex attributes extruded', function() {
@@ -145,12 +153,14 @@ defineSuite([
             extrudedHeight : 50000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * (16 + 8) * 2);
-        expect(m.attributes.st.values.length).toEqual(2 * (16 + 8) * 2);
-        expect(m.attributes.normal.values.length).toEqual(3 * (16 + 8) * 2);
-        expect(m.attributes.tangent.values.length).toEqual(3 * (16 + 8) * 2);
-        expect(m.attributes.binormal.values.length).toEqual(3 * (16 + 8) * 2);
-        expect(m.indices.length).toEqual(3 * (22 + 8) * 2);
+        var numVertices = 48;
+        var numTriangles = 60;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.st.values.length).toEqual(numVertices * 2);
+        expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
     it('undefined is returned if the minor axis is equal to or less than zero', function() {
@@ -228,8 +238,24 @@ defineSuite([
         expect(sv._vertexFormat.tangent).toBe(VertexFormat.POSITION_ONLY.tangent);
     });
 
+    it('computing rectangle property', function() {
+        var center = Cartesian3.fromDegrees(-75.59777, 40.03883);
+        var ellipse = new EllipseGeometry({
+            center : center,
+            semiMajorAxis : 2000.0,
+            semiMinorAxis : 1000.0
+        });
+
+        var r = ellipse.rectangle;
+        expect(r.north).toEqualEpsilon(0.6989665987920752, CesiumMath.EPSILON7);
+        expect(r.south).toEqualEpsilon(0.6986522252554146, CesiumMath.EPSILON7);
+        expect(r.east).toEqualEpsilon(-1.3190209903056758, CesiumMath.EPSILON7);
+        expect(r.west).toEqualEpsilon(-1.3198389970251112, CesiumMath.EPSILON7);
+    });
+
     var center = Cartesian3.fromDegrees(0,0);
     var ellipsoid = Ellipsoid.WGS84;
+    var rectangle = new Rectangle(-1.5678559428873852e-7, -1.578422502906833e-7, 1.5678559428873852e-7, 1.578422502906833e-7);
     var packableInstance = new EllipseGeometry({
         vertexFormat : VertexFormat.POSITION_AND_ST,
         ellipsoid : ellipsoid,
@@ -239,7 +265,7 @@ defineSuite([
         semiMinorAxis : 1.0,
         stRotation : CesiumMath.PI_OVER_TWO
     });
-    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0];
+    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, rectangle.west, rectangle.south, rectangle.east, rectangle.north, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0];
     createPackableSpecs(EllipseGeometry, packableInstance, packedInstance);
 
 });

@@ -41,7 +41,7 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-    url : '//assets.agi.com/stk-terrain/world',
+    url : 'https://assets.agi.com/stk-terrain/world',
     requestWaterMask : true,
     requestVertexNormals : true
 });
@@ -51,7 +51,7 @@ viewer.terrainProvider = cesiumTerrainProviderMeshes;
 var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 
 var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
-    url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
+    url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
     credit : 'Terrain data courtesy VT MÄK'
 });
 
@@ -65,14 +65,14 @@ Sandcastle.addToolbarMenu([{
     text : 'CesiumTerrainProvider - STK World Terrain - no effects',
     onselect : function() {
         viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-            url : '//assets.agi.com/stk-terrain/world'
+            url : 'https://assets.agi.com/stk-terrain/world'
         });
     }
 }, {
     text : 'CesiumTerrainProvider - STK World Terrain w/ Lighting',
     onselect : function() {
         viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-            url : '//assets.agi.com/stk-terrain/world',
+            url : 'https://assets.agi.com/stk-terrain/world',
             requestVertexNormals : true
         });
         viewer.scene.globe.enableLighting = true;
@@ -81,7 +81,7 @@ Sandcastle.addToolbarMenu([{
     text : 'CesiumTerrainProvider - STK World Terrain w/ Water',
     onselect : function() {
         viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-            url : '//assets.agi.com/stk-terrain/world',
+            url : 'https://assets.agi.com/stk-terrain/world',
             requestWaterMask : true
         });
     }

@@ -19,8 +19,7 @@ defineSuite([
         'Scene/QuadtreeTile',
         'Scene/SingleTileImageryProvider',
         'Scene/WebMapServiceImageryProvider',
-        'Specs/createContext',
-        'Specs/createFrameState',
+        'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
         ImageryLayer,
@@ -42,23 +41,20 @@ defineSuite([
         QuadtreeTile,
         SingleTileImageryProvider,
         WebMapServiceImageryProvider,
-        createContext,
-        createFrameState,
+        createScene,
         pollToPromise) {
     'use strict';
 
-    var context;
-    var frameState;
+    var scene;
     var computeEngine;
 
     beforeAll(function() {
-        context = createContext();
-        frameState = createFrameState(context);
-        computeEngine = new ComputeEngine(context);
+        scene = createScene();
+        computeEngine = new ComputeEngine(scene.context);
     });
 
     afterAll(function() {
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
         computeEngine.destroy();
     });
 
@@ -66,6 +62,8 @@ defineSuite([
         loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
+
+        scene.frameState.commandList.length = 0;
     });
 
     function CustomDiscardPolicy() {
@@ -110,14 +108,14 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                layer._createTexture(context, imagery);
+                layer._createTexture(scene.context, imagery);
                 expect(imagery.state).toEqual(ImageryState.INVALID);
                 imagery.releaseReference();
             });
         });
     });
 
-    it('reprojects web mercator images', function() {
+    function createWebMercatorProvider() {
         loadJsonp.loadAndExecuteScript = function(url, functionName) {
             window[functionName]({
                 "authenticationResultCode" : "ValidCredentials",
@@ -152,11 +150,14 @@ defineSuite([
             loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
-        var provider = new BingMapsImageryProvider({
+        return new BingMapsImageryProvider({
             url : 'http://host.invalid',
             tileDiscardPolicy : new NeverTileDiscardPolicy()
         });
+    }
 
+    it('reprojects web mercator images when necessary', function() {
+        var provider = createWebMercatorProvider();
         var layer = new ImageryLayer(provider);
 
         return pollToPromise(function() {
@@ -169,21 +170,132 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                layer._createTexture(context, imagery);
+                layer._createTexture(scene.context, imagery);
 
                 return pollToPromise(function() {
                     return imagery.state === ImageryState.TEXTURE_LOADED;
                 }).then(function() {
-                    var textureBeforeReprojection = imagery.texture;
-                    layer._reprojectTexture(frameState, imagery);
-                    frameState.commandList[0].execute(computeEngine);
+                    var textureBeforeReprojection = imagery.textureWebMercator;
+                    layer._reprojectTexture(scene.frameState, imagery, true);
+                    layer.queueReprojectionCommands(scene.frameState);
+                    scene.frameState.commandList[0].execute(computeEngine);
 
                     return pollToPromise(function() {
                         return imagery.state === ImageryState.READY;
                     }).then(function() {
+                        expect(imagery.texture).toBeDefined();
                         expect(textureBeforeReprojection).not.toEqual(imagery.texture);
                         imagery.releaseReference();
                     });
+                });
+            });
+        });
+    });
+
+    it('does not reproject web mercator images when not necessary', function() {
+        var provider = createWebMercatorProvider();
+        var layer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 1, 3);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+
+                return pollToPromise(function() {
+                    return imagery.state === ImageryState.TEXTURE_LOADED;
+                }).then(function() {
+                    expect(imagery.textureWebMercator).toBeDefined();
+                    layer._reprojectTexture(scene.frameState, imagery, false);
+                    layer.queueReprojectionCommands(scene.frameState);
+                    expect(scene.frameState.commandList.length).toBe(0);
+
+                    return pollToPromise(function() {
+                        return imagery.state === ImageryState.READY;
+                    }).then(function() {
+                        expect(imagery.texture).not.toBeDefined();
+                        imagery.releaseReference();
+                    });
+                });
+            });
+        });
+    });
+
+    it('reprojects web mercator images later if it becomes necessary later', function() {
+        var provider = createWebMercatorProvider();
+        var layer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 1, 3);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+
+                return pollToPromise(function() {
+                    return imagery.state === ImageryState.TEXTURE_LOADED;
+                }).then(function() {
+                    var textureBeforeReprojection = imagery.textureWebMercator;
+                    layer._reprojectTexture(scene.frameState, imagery, false);
+                    layer.queueReprojectionCommands(scene.frameState);
+                    expect(scene.frameState.commandList.length).toBe(0);
+
+                    return pollToPromise(function() {
+                        return imagery.state === ImageryState.READY;
+                    }).then(function() {
+                        expect(imagery.texture).not.toBeDefined();
+
+                        layer._reprojectTexture(scene.frameState, imagery, true);
+                        layer.queueReprojectionCommands(scene.frameState);
+                        scene.frameState.commandList[0].execute(computeEngine);
+
+                        return pollToPromise(function() {
+                            return imagery.state === ImageryState.READY;
+                        }).then(function() {
+                            expect(imagery.texture).toBeDefined();
+                            expect(textureBeforeReprojection).not.toEqual(imagery.texture);
+                            imagery.releaseReference();
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    it('cancels reprojection', function() {
+        var provider = createWebMercatorProvider();
+        var layer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+
+                return pollToPromise(function() {
+                    return imagery.state === ImageryState.TEXTURE_LOADED;
+                }).then(function() {
+                    layer._reprojectTexture(scene.frameState, imagery);
+                    layer.cancelReprojections();
+                    layer.queueReprojectionCommands(scene.frameState);
+                    expect(scene.frameState.commandList.length).toEqual(0);
                 });
             });
         });
