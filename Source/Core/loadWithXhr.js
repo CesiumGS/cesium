@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../ThirdParty/when',
+        './TrustedServers',
         './defaultValue',
         './defined',
         './DeveloperError',
@@ -8,6 +9,7 @@ define([
         './RuntimeError'
     ], function(
         when,
+        TrustedServers,
         defaultValue,
         defined,
         DeveloperError,
@@ -131,6 +133,10 @@ define([
         }
 
         var xhr = new XMLHttpRequest();
+
+        if (TrustedServers.contains(url)) {
+            xhr.withCredentials = true;
+        }
 
         if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
             xhr.overrideMimeType(overrideMimeType);

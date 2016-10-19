@@ -11,6 +11,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/joinUrls',
@@ -43,6 +44,7 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        getBaseUri,
         getMagic,
         getStringFromTypedArray,
         joinUrls,
@@ -305,7 +307,8 @@ define([
             url : undefined,
             requestType : RequestType.TILES3D,
             gltf : undefined,
-            basePath : undefined
+            basePath : undefined,
+            incrementallyLoadTextures : false
         };
 
         if (gltfFormat === 0) {
@@ -314,7 +317,7 @@ define([
             collectionOptions.url = joinUrls(baseUrl, gltfUrl);
         } else {
             collectionOptions.gltf = gltfView;
-            collectionOptions.basePath = this._url;
+            collectionOptions.basePath = getBaseUri(this._url);
         }
 
         var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');
@@ -466,6 +469,13 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
+    Instanced3DModel3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
     Instanced3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         var oldAddCommand = frameState.addCommand;
         if (frameState.passes.render) {
@@ -477,6 +487,7 @@ define([
         // actually generate commands.
         this.batchTable.update(tileset, frameState);
         this._modelInstanceCollection.transform = this._tile.computedTransform;
+        this._modelInstanceCollection.shadows = this._tileset.shadows;
         this._modelInstanceCollection.update(frameState);
 
         frameState.addCommand = oldAddCommand;

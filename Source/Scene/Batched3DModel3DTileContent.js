@@ -4,8 +4,10 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
@@ -22,8 +24,10 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
+        getBaseUri,
         getMagic,
         getStringFromTypedArray,
         loadArrayBuffer,
@@ -218,7 +222,7 @@ define([
             batchLength = batchTableJsonByteLength;
             batchTableJsonByteLength = batchTableBinaryByteLength;
             batchTableBinaryByteLength = 0;
-            console.log('Warning: b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
+            deprecationWarning('b3dm-legacy-header', 'This b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
         }
 
         this._featuresLength = batchLength;
@@ -256,8 +260,10 @@ define([
             gltf : gltfView,
             cull : false,           // The model is already culled by the 3D tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-            basePath : this._url,
+            basePath : getBaseUri(this._url),
             modelMatrix : this._tile.computedTransform,
+            shadows: this._tileset.shadows,
+            incrementallyLoadTextures : false,
             vertexShaderLoaded : batchTable.getVertexShaderCallback(),
             fragmentShaderLoaded : batchTable.getFragmentShaderCallback(),
             uniformMapLoaded : batchTable.getUniformMapCallback(),
@@ -292,6 +298,13 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
+    Batched3DModel3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
     Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         var oldAddCommand = frameState.addCommand;
         if (frameState.passes.render) {
@@ -303,6 +316,7 @@ define([
         // actually generate commands.
         this.batchTable.update(tileset, frameState);
         this._model.modelMatrix = this._tile.computedTransform;
+        this._model.shadows = this._tileset.shadows;
         this._model.update(frameState);
 
         frameState.addCommand = oldAddCommand;

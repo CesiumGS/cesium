@@ -101,6 +101,18 @@ defineSuite([
         }
     };
 
+    var tileWithViewerRequestVolume = {
+        geometricError : 1,
+        refine : 'replace',
+        children : [],
+        boundingVolume: {
+            box : [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0]
+        },
+        viewerRequestVolume : {
+            box : [0.0, 0.0, 1.0, 2.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 2.0]
+        }
+    };
+
     var tileWithInvalidExtension = {
         geometricError : 1,
         refine : 'replace',
@@ -115,6 +127,7 @@ defineSuite([
 
     var mockTileset = {
         debugShowBoundingVolume : true,
+        debugShowViewerRequestVolume : true,
         modelMatrix : Matrix4.IDENTITY
     };
 
@@ -240,6 +253,15 @@ defineSuite([
             expect(contentBoundingRegion.rectangle).toEqual(rectangle);
         });
 
+        it('tile transform affects viewer request volume', function() {
+            var header = clone(tileWithViewerRequestVolume, true);
+            header.transform = getTileTransform(centerLongitude, centerLatitude);
+            var tile = new Cesium3DTile(mockTileset, '/some_url', header, undefined);
+            var requestVolume = tile._viewerRequestVolume.boundingVolume;
+            var requestVolumeCenter = Cartesian3.fromRadians(centerLongitude, centerLatitude, 1.0);
+            expect(requestVolume.center).toEqualEpsilon(requestVolumeCenter, CesiumMath.EPSILON7);
+        });
+
         it('tile transform changes', function() {
             var mockTileset = {
                 modelMatrix : Matrix4.IDENTITY
@@ -285,6 +307,13 @@ defineSuite([
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
             tile.update(mockTileset, scene.frameState);
             expect(tile._debugBoundingVolume).toBeDefined();
+        });
+
+        it('creates debug bounding volume for viewer request volume', function() {
+            var scene = createScene();
+            var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithViewerRequestVolume, undefined);
+            tile.update(mockTileset, scene.frameState);
+            expect(tile._debugViewerRequestVolume).toBeDefined();
         });
     });
 }, 'WebGL');

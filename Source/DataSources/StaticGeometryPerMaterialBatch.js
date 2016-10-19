@@ -2,18 +2,26 @@
 define([
         '../Core/AssociativeArray',
         '../Core/defined',
+        '../Core/DistanceDisplayCondition',
+        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
         './BoundingSphereState',
-        './MaterialProperty'
+        './MaterialProperty',
+        './Property'
     ], function(
         AssociativeArray,
         defined,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         Primitive,
         BoundingSphereState,
-        MaterialProperty) {
+        MaterialProperty,
+        Property) {
     'use strict';
+
+    var distanceDisplayConditionScratch = new DistanceDisplayCondition();
 
     function Batch(primitives, appearanceType, materialProperty, closed, shadows) {
         this.primitives = primitives;
@@ -54,7 +62,7 @@ define([
         var id = updater.entity.id;
         this.updaters.set(id, updater);
         this.geometry.set(id, updater.createFillGeometryInstance(time));
-        if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant) {
+        if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)) {
             this.updatersWithAttributes.set(id, updater);
         } else {
             var that = this;
@@ -170,6 +178,15 @@ define([
                 var currentShow = attributes.show[0] === 1;
                 if (show !== currentShow) {
                     attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                }
+
+                var distanceDisplayConditionProperty = updater.distanceDisplayConditionProperty;
+                if (!Property.isConstant(distanceDisplayConditionProperty)) {
+                    var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time, distanceDisplayConditionScratch);
+                    if (!DistanceDisplayCondition.equals(distanceDisplayCondition, attributes._lastDistanceDisplayCondition)) {
+                        attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition, attributes._lastDistanceDisplayCondition);
+                        attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
+                    }
                 }
             }
 
