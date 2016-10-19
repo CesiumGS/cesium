@@ -226,6 +226,9 @@ define([
         firePointerMove : function(element, options) {
             element.dispatchEvent(createPointerEvent('pointermove', options));
         },
+        firePointerCancel : function(element, options) {
+            element.dispatchEvent(createPointerEvent('pointercancel', options));
+        },
         fireDeviceOrientation : function(element, options) {
             element.dispatchEvent(createDeviceOrientationEvent('deviceorientation', options));
         },
