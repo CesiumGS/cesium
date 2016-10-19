@@ -4,6 +4,8 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
+        'Core/HeadingPitchRange',
         'Core/Math',
         'Scene/Camera',
         'Scene/Material',
@@ -14,6 +16,8 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Color,
+        DistanceDisplayCondition,
+        HeadingPitchRange,
         CesiumMath,
         Camera,
         Material,
@@ -1219,6 +1223,45 @@ defineSuite([
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         line.width = 0.0;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+    });
+
+    it('renders with a distance display condition', function() {
+        if (!scene.context.floatingPointTexture) {
+            return;
+        }
+
+        var near = 100.0;
+        var far = 10000.0;
+
+        var line = polylines.add({
+            positions : [{
+                x : 10.0,
+                y : -10.0,
+                z : 0.0
+            }, {
+                x : 10.0,
+                y : 10.0,
+                z : 0.0
+            }],
+            width : 7,
+            distanceDisplayCondition : new DistanceDisplayCondition(near, far)
+        });
+
+        scene.primitives.add(polylines);
+        scene.renderForSpecs();
+
+        var boundingSphere = line._boundingVolumeWC;
+        var center = boundingSphere.center;
+        var radius = boundingSphere.radius;
+
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near - 10.0));
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near + 1.0));
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 10.0));
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 

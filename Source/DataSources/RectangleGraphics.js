@@ -41,6 +41,7 @@ define([
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the rectangle texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the rectangle.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the rectangle casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this rectangle will be displayed.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
@@ -76,6 +77,8 @@ define([
         this._outlineWidthSubscription = undefined;
         this._shadows = undefined;
         this._shadowsSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distancedisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -213,7 +216,14 @@ define([
          * @type {Property}
          * @default ShadowMode.DISABLED
          */
-        shadows : createPropertyDescriptor('shadows')
+        shadows : createPropertyDescriptor('shadows'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this rectangle will be displayed.
+         * @memberof RectangleGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -241,6 +251,7 @@ define([
         result.closeTop = this.closeTop;
         result.closeBottom = this.closeBottom;
         result.shadows = this.shadows;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
 
@@ -272,6 +283,7 @@ define([
         this.closeTop = defaultValue(this.closeTop, source.closeTop);
         this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
         this.shadows = defaultValue(this.shadows, source.shadows);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return RectangleGraphics;

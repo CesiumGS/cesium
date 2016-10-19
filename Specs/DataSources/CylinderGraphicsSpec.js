@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/CylinderGraphics',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'Scene/ShadowMode',
@@ -10,6 +11,7 @@ defineSuite([
     ], function(
         CylinderGraphics,
         Color,
+        DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
         ShadowMode,
@@ -30,7 +32,8 @@ defineSuite([
             outline : false,
             outlineColor : Color.RED,
             outlineWidth : 6,
-            shadows : ShadowMode.DISABLED
+            shadows : ShadowMode.DISABLED,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
         };
 
         var cylinder = new CylinderGraphics(options);
@@ -46,6 +49,7 @@ defineSuite([
         expect(cylinder.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(cylinder.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(cylinder.shadows).toBeInstanceOf(ConstantProperty);
+        expect(cylinder.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
 
         expect(cylinder.material.color.getValue()).toEqual(options.material);
         expect(cylinder.show.getValue()).toEqual(options.show);
@@ -59,6 +63,7 @@ defineSuite([
         expect(cylinder.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(cylinder.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(cylinder.shadows.getValue()).toEqual(options.shadows);
+        expect(cylinder.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -74,6 +79,7 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty();
 
         var target = new CylinderGraphics();
         target.merge(source);
@@ -89,6 +95,7 @@ defineSuite([
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.shadows).toBe(source.shadows);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -105,6 +112,7 @@ defineSuite([
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
         var shadows = new ConstantProperty();
+        var distanceDisplayCondition = new ConstantProperty();
 
         var target = new CylinderGraphics();
         target.material = material;
@@ -118,6 +126,7 @@ defineSuite([
         target.outlineColor = outlineColor;
         target.outlineWidth = outlineWidth;
         target.shadows = shadows;
+        target.distanceDisplayCondition = distanceDisplayCondition;
 
         target.merge(source);
 
@@ -132,6 +141,7 @@ defineSuite([
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.shadows).toBe(shadows);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
     });
 
     it('clone works', function() {
@@ -147,6 +157,7 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.shadows = new ConstantProperty();
+        source.distanceDisplayCondition = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -160,6 +171,7 @@ defineSuite([
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.shadows).toBe(source.shadows);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge throws if source undefined', function() {
@@ -182,5 +194,6 @@ defineSuite([
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
+        testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
 });
