@@ -35,6 +35,8 @@ Change Log
 * Fixed a bug that was incorrectly clamping Latitudes in KML <GroundOverlay>(s) to the range -PI..PI. Now correctly clamps to -PI/2..PI/2.
 * Added `CesiumMath.clampToLatitudeRange`. A convenience function to clamp a passed radian angle to valid Latitudes.
 * Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
+* Added `Rectangle.simpleIntersection`.
+* Removed an unnecessary reprojection of Web Mercator imagery tiles to the Geographic projection on load.  This should improve both visual quality and load performance slightly.
 
 ### 1.25 - 2016-09-01
 
