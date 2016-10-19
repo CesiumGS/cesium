@@ -285,14 +285,15 @@ define([
 
     // an optional context is passed to allow for some malformed kmls (those with multiple geometries with same ids) to still parse
     // correctly, as they do in Google Earth.
-    function getOrCreateEntity(node, entityCollection, context) {
+    function createEntity(node, entityCollection, context) {
         var id = queryStringAttribute(node, 'id');
         id = defined(id) && id.length !== 0 ? id : createGuid();
         if(defined(context)){
             id = context + id;
         }
 
-        // If we have a duplicate ID just generate one. This isn't valid KML but will allow it to load.
+        // If we have a duplicate ID just generate one.
+        // This isn't valid KML but Google Earth handles this case.
         var entity = entityCollection.getById(id);
         if (defined(entity)) {
             id = createGuid();
@@ -1368,7 +1369,7 @@ define([
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
             if (defined(geometryProcessor)) {
-                var childEntity = getOrCreateEntity(childNode, entityCollection, context);
+                var childEntity = createEntity(childNode, entityCollection, context);
                 childEntity.parent = entity;
                 childEntity.name = entity.name;
                 childEntity.availability = entity.availability;
@@ -1524,7 +1525,7 @@ define([
     }
 
     function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var entity = getOrCreateEntity(featureNode, entityCollection);
+        var entity = createEntity(featureNode, entityCollection);
         var kmlData = entity.kml;
         var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver);
 
