@@ -163,7 +163,13 @@ define([
         }
 
         if (vertexFormat.tangent || vertexFormat.binormal) {
-            geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+            try {
+                geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+            } catch (e) {
+                console.log('Unable to compute tangents and binormals for polyline volume geometry');
+                //TODO https://github.com/AnalyticalGraphicsInc/cesium/issues/3609
+            }
+
             if (!vertexFormat.tangent) {
                 geometry.attributes.tangent = undefined;
             }

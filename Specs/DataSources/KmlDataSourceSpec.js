@@ -3807,7 +3807,9 @@ defineSuite([
             </Link>\
           </NetworkLink>';
 
-        var camera = createCamera();
+        var camera = createCamera({
+            offset: Cartesian3.fromDegrees(-110, 30, 1000)
+        });
         Camera.clone(options.camera, camera);
 
         var kmlOptions = {
