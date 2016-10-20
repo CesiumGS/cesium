@@ -258,9 +258,9 @@ define([
         }
 
 
-        var LEADING = 1.2; // Traditionally, leading is %20 of the font size.
         var maxLineHeight = maxGlyphHeight + maxGlyphDescent;
-        var totalTextHeight = (maxGlyphHeight * numberOfLines) + (maxGlyphDescent * (numberOfLines-1));
+        var LEADING = 0.2*maxLineHeight; // Traditionally, leading is %20 of the font size.
+        var totalTextHeight = (maxLineHeight * numberOfLines) + (LEADING * (numberOfLines-1));
 
         var topOffset = 0;
         var heightReference = label._heightReference;
@@ -280,7 +280,7 @@ define([
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
 
             if (text.charAt(glyphIndex) === '\n') {
-                glyphNewlineOffset += maxLineHeight * scale;
+                glyphNewlineOffset += (maxLineHeight + LEADING) * scale;
                 glyphPixelOffset.x = widthOffset;
                 continue;
             }
