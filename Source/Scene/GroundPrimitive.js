@@ -425,7 +425,7 @@ define([
 
     function getComputeMinimumHeightFunction(primitive) {
         return function(granularity, ellipsoid) {
-            return primitive._minHeight;
+            return primitive._minHeight - 15;
         };
     }
 
