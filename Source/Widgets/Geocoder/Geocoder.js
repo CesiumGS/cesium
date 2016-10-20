@@ -175,7 +175,7 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
 
         knockout.cleanNode(this._form);
         this._container.removeChild(this._form);
-        this._textBox.removeEventListener(this._onTextBoxFocus, false);
+        this._textBox.removeEventListener('focus', this._onTextBoxFocus, false);
 
         return destroyObject(this);
     };
