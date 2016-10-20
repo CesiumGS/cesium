@@ -70,14 +70,18 @@ value: searchText,\
 valueUpdate: "afterkeydown",\
 disable: isSearchInProgress,\
 css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 }');
-        textBox.addEventListener('focus', function() {
+
+        this._onTextBoxFocus = function() {
             // as of 2016-10-19, setTimeout is required to ensure that the
             // text is focused on Safari 10
             setTimeout(function() {
                 textBox.select();
             }, 0);
-        });
+        };
+
+        textBox.addEventListener('focus', this._onTextBoxFocus, false);
         form.appendChild(textBox);
+        this._textBox = textBox;
 
         var searchButton = document.createElement('span');
         searchButton.className = 'cesium-geocoder-searchButton';
@@ -171,6 +175,7 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
 
         knockout.cleanNode(this._form);
         this._container.removeChild(this._form);
+        this._textBox.removeEventListener(this._onTextBoxFocus, false);
 
         return destroyObject(this);
     };
