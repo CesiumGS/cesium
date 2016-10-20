@@ -62,7 +62,7 @@ npm start -- --help
 ```
 
 While you can use the editor of your choice to develop Cesium, certain files, such as `glsl` and new tests, require that
-the `build` task be executed in order for the changes to take affect.  You can use the `build-watch` script to have this
+the `build` task be executed in order for the changes to take effect.  You can use the `build-watch` script to have this
 happen automatically.
 
 ## Build Scripts
