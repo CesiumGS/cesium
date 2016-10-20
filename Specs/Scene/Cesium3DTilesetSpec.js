@@ -68,6 +68,7 @@ defineSuite([
     var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
     var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
     var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
+    var withBoundingSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithBoundingSphere/';
 
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
 
@@ -461,12 +462,12 @@ defineSuite([
 
     // Adjust distances for each test because the dynamic SSE takes the
     // bounding volume height into account, which differs for each bounding volume.
-    it('uses dynamic screen space error with region', function() {
+    it('uses dynamic screen space error for tileset with region', function() {
         return testDynamicScreenSpaceError(withTransformRegionUrl, 103.0);
     });
 
-    it('uses dynamic screen space error for wgs84 tileset', function() {
-        return testDynamicScreenSpaceError(withTransformRegionUrl, 103.0);
+    it('uses dynamic screen space error for tileset with bounding sphere', function() {
+        return testDynamicScreenSpaceError(withBoundingSphereUrl, 144.0);
     });
 
     it('uses dynamic screen space error for local tileset with box', function() {
