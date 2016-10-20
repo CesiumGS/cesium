@@ -480,7 +480,7 @@ define([
      */
     EntityCluster.prototype.getLabel = function(entity) {
         var labelCollection = this._labelCollection;
-        if (defined(labelCollection) && defined(entity._labelIndex)) {
+        if (defined(labelCollection) && defined(entity._labelCollection) && labelCollection === entity._labelCollection && defined(entity._labelIndex)) {
             return labelCollection.get(entity._labelIndex);
         }
 
@@ -502,6 +502,7 @@ define([
             index = labelCollection.length - 1;
         }
 
+        entity._labelCollection = labelCollection;
         entity._labelIndex = index;
 
         this._clusterDirty = true;
@@ -516,11 +517,12 @@ define([
      * @private
      */
     EntityCluster.prototype.removeLabel = function(entity) {
-        if (!defined(this._labelCollection) || !defined(entity._labelIndex)) {
+        if (!defined(this._labelCollection) || !defined(entity._labelCollection) || this._labelCollection !== entity._labelCollection || !defined(entity._labelIndex)) {
             return;
         }
 
         var index = entity._labelIndex;
+        entity._labelCollection = undefined;
         entity._labelIndex = undefined;
 
         var label = this._labelCollection.get(index);
