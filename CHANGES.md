@@ -19,6 +19,7 @@ Change Log
 * Added `Rectangle.simpleIntersection`.
 * Added the ability to specify retina options, such as `@2x.png`, via the `MapboxImageryProvider` `format` option.
 * Removed an unnecessary reprojection of Web Mercator imagery tiles to the Geographic projection on load.  This should improve both visual quality and load performance slightly.
+* Fix a issue where a billboard entity would not render after toggling the show propery. [#4408](https://github.com/AnalyticalGraphicsInc/cesium/issues/4408)
 * Added `Transforms.northUpEastToFixedFrame` to compute a 4x4 local transformation matrix from a reference frame with an north-west-up axes.
 * Added `Transforms.aircraftHeadingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles. The local frame is north-west-up axed.
 * Added `Transforms.aircraftHeadingPitchRollQuaternion` which is the quaternion rotation from `Transforms.aircraftHeadingPitchRollToFixedFrame`.
