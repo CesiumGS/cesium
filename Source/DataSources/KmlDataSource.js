@@ -1089,7 +1089,7 @@ define([
             }
         }
 
-        if (defined(heightReference)) {
+        if (defined(heightReference) && dataSource._clampToGround) {
             billboard.heightReference = heightReference;
             label.heightReference = heightReference;
         }

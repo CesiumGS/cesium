@@ -1133,11 +1133,8 @@ defineSuite([
             crs : null
         };
 
-        return GeoJsonDataSource.load(featureWithNullCrs).then(function() {
-            fail('should not be called');
-        }).otherwise(function(error) {
-            expect(error).toBeInstanceOf(RuntimeError);
-            expect(error.message).toContain('crs is null.');
+        return GeoJsonDataSource.load(featureWithNullCrs).then(function(dataSource) {
+            expect(dataSource.entities.values.length).toBe(0);
         });
     });
 
