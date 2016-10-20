@@ -545,6 +545,7 @@ define([
      * operation is performed.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     * @exception {DeveloperError} The index is out of range.
      *
      *
      * @example
@@ -561,6 +562,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
+        }
+        if (index < 0 || this._labels.length <= index) {
+            throw new DeveloperError('index out of range.');
         }
         //>>includeEnd('debug');
 
