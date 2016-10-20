@@ -608,7 +608,7 @@ define([
      */
     EntityCluster.prototype.getPoint = function(entity) {
         var pointCollection = this._pointCollection;
-        if (defined(pointCollection) && defined(entity._pointIndex)) {
+        if (defined(pointCollection) && defined(entity._pointCollection) && pointCollection === entity._pointCollection && defined(entity._pointIndex)) {
             return pointCollection.get(entity._pointIndex);
         }
 
@@ -628,6 +628,7 @@ define([
             index = pointCollection.length - 1;
         }
 
+        entity._pointCollection = pointCollection;
         entity._pointIndex = index;
 
         this._clusterDirty = true;
@@ -642,11 +643,12 @@ define([
      * @private
      */
     EntityCluster.prototype.removePoint = function(entity) {
-        if (!defined(this._pointCollection) || !defined(entity._pointIndex)) {
+        if (!defined(this._pointCollection) || !defined(entity._pointCollection) || this._pointCollection !== entity._pointCollection && !defined(entity._pointIndex)) {
             return;
         }
 
         var index = entity._pointIndex;
+        entity._pointCollection = undefined;
         entity._pointIndex = undefined;
 
         var point = this._pointCollection.get(index);
