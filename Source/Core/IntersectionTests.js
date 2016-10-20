@@ -220,13 +220,13 @@ define([
             throw new DeveloperError('v1 is required.');
         }
         if (!defined(p0)) {
-            throw new DeveloperError('v1 is required.');
+            throw new DeveloperError('p0 is required.');
         }
         if (!defined(p1)) {
-            throw new DeveloperError('v1 is required.');
+            throw new DeveloperError('p1 is required.');
         }
         if (!defined(p2)) {
-            throw new DeveloperError('v1 is required.');
+            throw new DeveloperError('p2 is required.');
         }
         //>>includeEnd('debug');
 
