@@ -19,6 +19,7 @@ Change Log
 * Added `Rectangle.simpleIntersection`.
 * Added the ability to specify retina options, such as `@2x.png`, via the `MapboxImageryProvider` `format` option.
 * Removed an unnecessary reprojection of Web Mercator imagery tiles to the Geographic projection on load.  This should improve both visual quality and load performance slightly.
+* Add `clusterBillboards`, `clusterLabels`, and `cluserPoints` properties to `EntityCluster` to selectively cluster screen space entities.
 
 ### 1.26 - 2016-10-03
 
