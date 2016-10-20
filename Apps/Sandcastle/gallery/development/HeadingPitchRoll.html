@@ -133,8 +133,8 @@
             });
 
             document.addEventListener("keypress", function(e) {
-                switch (e.key) {
-                    case 'ArrowDown':
+                switch (e.keyCode) {
+                    case 40:
                         if (e.shiftKey) {
                             // speed down
                             speed -= 10;
@@ -149,7 +149,7 @@
                             }
                         }
                         break;
-                    case 'ArrowUp':
+                    case 38:
                         if (e.shiftKey) {
                             // speed up
                             speed += 10;
@@ -164,7 +164,7 @@
                             }
                         }
                         break;
-                    case 'ArrowRight':
+                    case 39:
                         if (e.shiftKey) {
                             // roll right until Math.PI/2
                             hpRoll.roll += Cesium.Math.RADIANS_PER_DEGREE;
@@ -179,7 +179,7 @@
                             }
                         }
                         break;
-                    case 'ArrowLeft':
+                    case 37:
                         if (e.shiftKey) {
                             // roll left until
                             hpRoll.roll -= Cesium.Math.RADIANS_PER_DEGREE;
