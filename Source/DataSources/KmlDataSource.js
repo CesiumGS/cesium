@@ -1539,6 +1539,17 @@ define([
         }
         entity.availability = availability;
 
+        if (defined(parent)) {
+            var parentAvailability = parent.availability;
+            if (defined(parentAvailability)) {
+                if (defined(availability)) {
+                    availability.intersect(parentAvailability);
+                } else {
+                    entity.availability = parentAvailability;
+                }
+            }
+        }
+
         // Per KML spec "A Feature is visible only if it and all its ancestors are visible."
         function ancestryIsVisible(parentEntity) {
             if (!parentEntity) {
@@ -1934,11 +1945,21 @@ define([
                 var promise = when(load(dataSource, networkLinkCollection, linkUrl), function(rootElement) {
                     var entities = dataSource._entityCollection;
                     var newEntities = networkLinkCollection.values;
+                    var networkLinkAvailability = networkEntity.availability;
                     entities.suspendEvents();
                     for (var i = 0; i < newEntities.length; i++) {
                         var newEntity = newEntities[i];
                         if (!defined(newEntity.parent)) {
                             newEntity.parent = networkEntity;
+
+                            if (defined(networkLinkAvailability)) {
+                                var childAvailability = newEntity.availability;
+                                if (defined(childAvailability)) {
+                                    childAvailability.intersect(networkLinkAvailability);
+                                } else {
+                                    newEntity.availability = networkLinkAvailability;
+                                }
+                            }
                         }
                         entities.add(newEntity);
                     }
@@ -2545,6 +2566,7 @@ define([
             }
 
             var networkLinkEntity = networkLink.entity;
+            var networkLinkAvailability = networkLinkEntity.availability;
             var entityCollection = dataSource._entityCollection;
             var newEntities = newEntityCollection.values;
 
@@ -2575,6 +2597,15 @@ define([
                 var newEntity = newEntities[i];
                 if (!defined(newEntity.parent)) {
                     newEntity.parent = networkLinkEntity;
+
+                    if (defined(networkLinkAvailability)) {
+                        var childAvailability = newEntity.availability;
+                        if (defined(childAvailability)) {
+                            childAvailability.intersect(networkLinkAvailability);
+                        } else {
+                            newEntity.availability = networkLinkAvailability;
+                        }
+                    }
                 }
                 entityCollection.add(newEntity);
             }
