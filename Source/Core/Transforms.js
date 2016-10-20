@@ -579,7 +579,6 @@ define([
         return Quaternion.fromRotationMatrix(rotation, result);
     };
 
-
     var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
     var gmstConstant1 = 8640184.812866;
     var gmstConstant2 = 0.093104;
