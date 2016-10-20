@@ -71,6 +71,8 @@ valueUpdate: "afterkeydown",\
 disable: isSearchInProgress,\
 css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 }');
         textBox.addEventListener('focus', function() {
+            // as of 2016-10-19, setTimeout is required to ensure that the
+            // text is focused on Safari 10
             setTimeout(function() {
                 textBox.select();
             }, 0);
