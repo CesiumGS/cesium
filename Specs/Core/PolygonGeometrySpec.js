@@ -4,7 +4,9 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/GeometryPipeline',
         'Core/Math',
+        'Core/Rectangle',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
@@ -12,7 +14,9 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
+        GeometryPipeline,
         CesiumMath,
+        Rectangle,
         VertexFormat,
         createPackableSpecs) {
     'use strict';
@@ -182,7 +186,7 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.attributes.position.values.length).toEqual(14 * 3); // 4 points * 3 rectangles + 2 points duplicated at corner
+        expect(p.attributes.position.values.length).toEqual(12 * 3); // 4 points * 3 rectangles
         expect(p.indices.length).toEqual(10 * 3);
     });
 
@@ -221,7 +225,7 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.attributes.position.values.length).toEqual(14 * 3);
+        expect(p.attributes.position.values.length).toEqual(12 * 3);
         expect(p.indices.length).toEqual(10 * 3);
     });
 
@@ -257,7 +261,7 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.attributes.position.values.length).toEqual(14 * 3);
+        expect(p.attributes.position.values.length).toEqual(12 * 3);
         expect(p.indices.length).toEqual(10 * 3);
     });
 
@@ -577,8 +581,8 @@ defineSuite([
             extrudedHeight: 30000
         }));
 
-        // (4 points * 3 rectangles * 3 to duplicate for normals + 2 duplicated at corner) * 2 for top and bottom
-        expect(p.attributes.position.values.length).toEqual(76 * 3);
+        // (4 points * 3 rectangles * 3 to duplicate for normals) * 2 for top and bottom
+        expect(p.attributes.position.values.length).toEqual(72 * 3);
         // 10 top + 10 bottom + 2 triangles * 12 walls
         expect(p.indices.length).toEqual(44 * 3);
     });
@@ -596,20 +600,69 @@ defineSuite([
         expect(geometry).toBeUndefined();
     });
 
+    it('computes normals for perPositionHeight', function() {
+        var geometry = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+                positions: [new Cartesian3(1333485.211963876, -4654510.505548239, 4138557.5850382405),
+                            new Cartesian3(1333441.3994441305, -4654261.147368878, 4138322.784348336),
+                            new Cartesian3(1333521.9333286814, -4654490.298890729, 4138567.564118971)],
+                extrudedHeight: 56,
+                vertexFormat: VertexFormat.POSITION_AND_NORMAL,
+                perPositionHeight: true,
+                closeBottom: false
+            })
+        );
+
+        var normals = geometry.attributes.normal.values;
+
+        geometry = GeometryPipeline.computeNormal(geometry);
+        var expectedNormals = geometry.attributes.normal.values;
+
+        var notEqualCount = 0;
+        for (var i = 0; i < expectedNormals.length; i++) {
+            if (!CesiumMath.equalsEpsilon(normals[i], expectedNormals[i], CesiumMath.EPSILON6)) {
+                notEqualCount++;
+            }
+        }
+
+        //Exactly 2 normals will be different due to weird triangles on the walls of the extrusion
+        //PolygonGeometry needs major changes to how extruded walls are computed with perPositionHeight in order to improve this
+        expect(notEqualCount).toEqual(6);
+    });
+
+    it('computing rectangle property', function() {
+        var p = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -100.5, 30.0, 92,
+                    -100.0, 30.0, 92,
+                    -100.0, 30.5, 92,
+                    -100.5, 30.5, 92
+                ])},
+            granularity: CesiumMath.PI
+        });
+
+        var r = p.rectangle;
+        expect(CesiumMath.toDegrees(r.north)).toEqualEpsilon(30.5, CesiumMath.EPSILON13);
+        expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(30.0, CesiumMath.EPSILON13);
+        expect(CesiumMath.toDegrees(r.east)).toEqualEpsilon(-100.0, CesiumMath.EPSILON13);
+        expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-100.5, CesiumMath.EPSILON13);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
-        -124.0, 35.0,
-        -110.0, 35.0,
-        -110.0, 40.0
+        -12.4, 3.5,
+        -12.0, 3.5,
+        -12.0, 4.0
     ]);
     var holePositions0 = Cartesian3.fromDegreesArray([
-        -122.0, 36.0,
-        -122.0, 39.0,
-        -112.0, 39.0
+        -12.2, 3.5,
+        -12.2, 3.6,
+        -12.3, 3.6
     ]);
     var holePositions1 = Cartesian3.fromDegreesArray([
-        -120.0, 36.5,
-        -114.0, 36.5,
-        -114.0, 38.5
+        -12.20, 3.5,
+        -12.25, 3.5,
+        -12.25, 3.55
     ]);
     var hierarchy = {
         positions : positions,
@@ -636,6 +689,7 @@ defineSuite([
             array.push(positions[i].x, positions[i].y, positions[i].z);
         }
     }
+    var rectangle = new Rectangle(-0.21642082724729672, 0.06108652381980151, -0.20943951023931984, 0.06981317007977318);
     var packedInstance = [3.0, 1.0];
     addPositions(packedInstance, positions);
     packedInstance.push(3.0, 1.0);
@@ -643,6 +697,8 @@ defineSuite([
     packedInstance.push(3.0, 0.0);
     addPositions(packedInstance, holePositions1);
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
-    packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 51);
+    packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    packedInstance.push(rectangle.west, rectangle.south, rectangle.east, rectangle.north);
+    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 55);
     createPackableSpecs(PolygonGeometry, polygon, packedInstance);
 });

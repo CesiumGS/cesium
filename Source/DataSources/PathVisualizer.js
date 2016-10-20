@@ -273,6 +273,7 @@ define([
         this._referenceFrame = referenceFrame;
         scene.primitives.add(this._polylineCollection);
     }
+
     PolylineUpdater.prototype.update = function(time) {
         if (this._referenceFrame === ReferenceFrame.INERTIAL) {
             var toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
@@ -368,6 +369,7 @@ define([
         polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions.slice());
         polyline.material = MaterialProperty.getValue(time, pathGraphics._material, polyline.material);
         polyline.width = Property.getValueOrDefault(pathGraphics._width, time, defaultWidth);
+        polyline.distanceDisplayCondition = Property.getValueOrUndefined(pathGraphics._distanceDisplayCondition, time, polyline.distanceDisplayCondition);
     };
 
     PolylineUpdater.prototype.removeObject = function(item) {
@@ -376,6 +378,7 @@ define([
             this._unusedIndexes.push(item.index);
             item.polyline = undefined;
             polyline.show = false;
+            polyline.id = undefined;
             item.index = undefined;
         }
     };

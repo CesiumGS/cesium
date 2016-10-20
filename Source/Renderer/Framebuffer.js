@@ -240,7 +240,7 @@ define([
 
     defineProperties(Framebuffer.prototype, {
         /**
-         * The status of the framebuffer. If the status is not WebGLConstants.COMPLETE,
+         * The status of the framebuffer. If the status is not WebGLConstants.FRAMEBUFFER_COMPLETE,
          * a {@link DeveloperError} will be thrown when attempting to render to the framebuffer.
          * @memberof Framebuffer.prototype
          * @type {Number}

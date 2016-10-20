@@ -104,7 +104,7 @@ define([
      *     eastSkirtHeight : 1.0,
      *     northSkirtHeight : 1.0
      * });
-     * 
+     *
      * @see TerrainData
      * @see HeightmapTerrainData
      */
@@ -273,6 +273,7 @@ define([
             maximumHeight : this._maximumHeight,
             quantizedVertices : this._quantizedVertices,
             octEncodedNormals : this._encodedNormals,
+            includeWebMercatorT : true,
             indices : this._indices,
             westIndices : this._westIndices,
             southIndices : this._southIndices,
@@ -305,7 +306,7 @@ define([
             var maximumHeight = result.maximumHeight;
             var boundingSphere = defaultValue(result.boundingSphere, that._boundingSphere);
             var obb = defaultValue(result.orientedBoundingBox, that._orientedBoundingBox);
-            var occlusionPoint = defaultValue(result.occludeePointInScaledSpace, that._horizonOcclusionPoint);
+            var occlusionPoint = that._horizonOcclusionPoint;
             var stride = result.vertexStride;
             var terrainEncoding = TerrainEncoding.clone(result.encoding);
 

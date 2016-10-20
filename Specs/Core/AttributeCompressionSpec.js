@@ -79,23 +79,21 @@ defineSuite([
     it('throws oct decode result undefined', function() {
         var result;
         expect(function() {
-            AttributeCompression.octDecode(Cartesian2.ZERO, result);
+            AttributeCompression.octDecode(0, 0, result);
         }).toThrowDeveloperError();
     });
 
     it('throws oct decode x out of bounds', function() {
         var result = new Cartesian3();
-        var invalidSNorm = new Cartesian2(256, 0);
         expect(function() {
-            AttributeCompression.octDecode(invalidSNorm, result);
+            AttributeCompression.octDecode(256, 0, result);
         }).toThrowDeveloperError();
     });
 
     it('throws oct decode y out of bounds', function() {
         var result = new Cartesian3();
-        var invalidSNorm = new Cartesian2(0, 256);
         expect(function() {
-            AttributeCompression.octDecode(invalidSNorm, result);
+            AttributeCompression.octDecode(0, 256, result);
         }).toThrowDeveloperError();
     });
 
@@ -167,6 +165,77 @@ defineSuite([
         Cartesian3.normalize(normal, normal);
         AttributeCompression.octEncode(normal, encoded);
         expect(AttributeCompression.octDecode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+    });
+
+    it('oct encoding high precision', function() {
+        var rangeMax = 4294967295;
+        var epsilon = CesiumMath.EPSILON8;
+
+        var encoded = new Cartesian2();
+        var result = new Cartesian3();
+        var normal = new Cartesian3(0.0, 0.0, 1.0);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, 0.0, -1.0);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, 1.0, 0.0);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, -1.0, 0.0);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 0.0, 0.0);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 0.0, 0.0);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, -1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, -1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, -1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, -1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
+        expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
     });
 
     it('octFloat encoding', function() {
@@ -421,24 +490,49 @@ defineSuite([
 
     it('compresses texture coordinates', function() {
         var coords = new Cartesian2(0.5, 0.5);
-        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqual(coords);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqualEpsilon(coords, 1.0 / 4096.0);
     });
-    
+
     it('compress texture coordinates throws without texture coordinates', function() {
         expect(function() {
             AttributeCompression.compressTextureCoordinates(undefined);
         }).toThrowDeveloperError();
     });
-    
+
     it('decompress texture coordinates throws without encoded texture coordinates', function() {
         expect(function() {
             AttributeCompression.decompressTextureCoordinates(undefined, new Cartesian2());
         }).toThrowDeveloperError();
     });
-    
+
     it('decompress texture coordinates throws without result', function() {
         expect(function() {
             AttributeCompression.decompressTextureCoordinates(0.0, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('compresses/decompresses 1.0', function() {
+        var coords = new Cartesian2(1.0, 1.0);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqual(coords);
+    });
+
+    it('compresses/decompresses 0.0', function() {
+        var coords = new Cartesian2(1.0, 1.0);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqual(coords);
+    });
+
+    it('compresses/decompresses 0.5 / 1.0', function() {
+        var coords = new Cartesian2(0.5, 1.0);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqualEpsilon(coords, 1.0 / 4095.0);
+    });
+
+    it('compresses/decompresses 1.0 / 0.5', function() {
+        var coords = new Cartesian2(1.0, 0.5);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqualEpsilon(coords, 1.0 / 4095.0);
+    });
+
+    it('compresses/decompresses values very close but not equal to 1.0', function() {
+        var coords = new Cartesian2(0.99999999999999, 0.99999999999999);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqualEpsilon(coords, 1.0 / 4095.0);
     });
 });

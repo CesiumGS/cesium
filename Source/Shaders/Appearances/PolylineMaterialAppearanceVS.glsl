@@ -6,6 +6,7 @@ attribute vec3 nextPosition3DHigh;
 attribute vec3 nextPosition3DLow;
 attribute vec2 expandAndWidth;
 attribute vec2 st;
+attribute float batchId;
 
 varying float v_width;
 varying vec2 v_st;

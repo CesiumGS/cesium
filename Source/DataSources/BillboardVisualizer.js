@@ -5,14 +5,18 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
-        '../Scene/BillboardCollection',
+        '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
         './BoundingSphereState',
+        './EntityCluster',
         './Property'
     ], function(
         AssociativeArray,
@@ -20,19 +24,24 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
         NearFarScalar,
-        BillboardCollection,
+        HeightReference,
         HorizontalOrigin,
         VerticalOrigin,
         BoundingSphereState,
+        EntityCluster,
         Property) {
     'use strict';
 
     var defaultColor = Color.WHITE;
     var defaultEyeOffset = Cartesian3.ZERO;
+    var defaultHeightReference = HeightReference.NONE;
     var defaultPixelOffset = Cartesian2.ZERO;
     var defaultScale = 1.0;
     var defaultRotation = 0.0;
@@ -49,6 +58,7 @@ define([
     var translucencyByDistance = new NearFarScalar();
     var pixelOffsetScaleByDistance = new NearFarScalar();
     var boundingRectangle = new BoundingRectangle();
+    var distanceDisplayCondition = new DistanceDisplayCondition();
 
     function EntityData(entity) {
         this.entity = entity;
@@ -61,24 +71,29 @@ define([
      * @alias BillboardVisualizer
      * @constructor
      *
-     * @param {Scene} scene The scene the primitives will be rendered in.
+     * @param {EntityCluster} entityCluster The entity cluster to manage the collection of billboards and optionally cluster with other entities.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    function BillboardVisualizer(scene, entityCollection) {
+    function BillboardVisualizer(entityCluster, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
+        if (!defined(entityCluster)) {
+            throw new DeveloperError('entityCluster is required.');
         }
         if (!defined(entityCollection)) {
             throw new DeveloperError('entityCollection is required.');
         }
         //>>includeEnd('debug');
 
+        if (!defined(entityCluster.minimumClusterSize)) {
+            deprecationWarning('BillboardVisualizer scene constructor parameter', 'The scene is no longer a parameter the BillboardVisualizer. An EntityCluster is required.');
+            entityCluster = new EntityCluster({
+                enabled : false
+            });
+        }
+
         entityCollection.collectionChanged.addEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
 
-        this._scene = scene;
-        this._unusedIndexes = [];
-        this._billboardCollection = undefined;
+        this._cluster = entityCluster;
         this._entityCollection = entityCollection;
         this._items = new AssociativeArray();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
@@ -99,7 +114,8 @@ define([
         //>>includeEnd('debug');
 
         var items = this._items.values;
-        var unusedIndexes = this._unusedIndexes;
+        var cluster = this._cluster;
+
         for (var i = 0, len = items.length; i < len; i++) {
             var item = items[i];
             var entity = item.entity;
@@ -116,38 +132,30 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                returnBillboard(item, unusedIndexes);
+                returnPrimitive(item, entity, cluster);
                 continue;
             }
 
+            if (!Property.isConstant(entity._position)) {
+                cluster._clusterDirty = true;
+            }
+
             if (!defined(billboard)) {
-                var billboardCollection = this._billboardCollection;
-                if (!defined(billboardCollection)) {
-                    billboardCollection = new BillboardCollection();
-                    this._billboardCollection = billboardCollection;
-                    this._scene.primitives.add(billboardCollection);
-                }
-
-                var length = unusedIndexes.length;
-                if (length > 0) {
-                    billboard = billboardCollection.get(unusedIndexes.pop());
-                } else {
-                    billboard = billboardCollection.add();
-                }
-
+                billboard = cluster.getBillboard(entity);
                 billboard.id = entity;
                 billboard.image = undefined;
                 item.billboard = billboard;
             }
 
             billboard.show = show;
-            if (item.textureValue !== textureValue) {
+            if (!defined(billboard.image) || item.textureValue !== textureValue) {
                 billboard.image = textureValue;
                 item.textureValue = textureValue;
             }
             billboard.position = position;
             billboard.color = Property.getValueOrDefault(billboardGraphics._color, time, defaultColor, color);
             billboard.eyeOffset = Property.getValueOrDefault(billboardGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
+            billboard.heightReference = Property.getValueOrDefault(billboardGraphics._heightReference, time, defaultHeightReference);
             billboard.pixelOffset = Property.getValueOrDefault(billboardGraphics._pixelOffset, time, defaultPixelOffset, pixelOffset);
             billboard.scale = Property.getValueOrDefault(billboardGraphics._scale, time, defaultScale);
             billboard.rotation = Property.getValueOrDefault(billboardGraphics._rotation, time, defaultRotation);
@@ -160,6 +168,7 @@ define([
             billboard.translucencyByDistance = Property.getValueOrUndefined(billboardGraphics._translucencyByDistance, time, translucencyByDistance);
             billboard.pixelOffsetScaleByDistance = Property.getValueOrUndefined(billboardGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
             billboard.sizeInMeters = Property.getValueOrDefault(billboardGraphics._sizeInMeters, defaultSizeInMeters);
+            billboard.distanceDisplayCondition = Property.getValueOrUndefined(billboardGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
 
             var subRegion = Property.getValueOrUndefined(billboardGraphics._imageSubRegion, time, boundingRectangle);
             if (defined(subRegion)) {
@@ -195,7 +204,15 @@ define([
             return BoundingSphereState.FAILED;
         }
 
-        result.center = Cartesian3.clone(item.billboard.position, result.center);
+        var billboard = item.billboard;
+        if (billboard.heightReference === HeightReference.NONE) {
+            result.center = Cartesian3.clone(billboard.position, result.center);
+        } else {
+            if (!defined(billboard._clampedPosition)) {
+                return BoundingSphereState.PENDING;
+            }
+            result.center = Cartesian3.clone(billboard._clampedPosition, result.center);
+        }
         result.radius = 0;
         return BoundingSphereState.DONE;
     };
@@ -214,17 +231,14 @@ define([
      */
     BillboardVisualizer.prototype.destroy = function() {
         this._entityCollection.collectionChanged.removeEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
-        if (defined(this._billboardCollection)) {
-            this._scene.primitives.remove(this._billboardCollection);
-        }
         return destroyObject(this);
     };
 
     BillboardVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
         var i;
         var entity;
-        var unusedIndexes = this._unusedIndexes;
         var items = this._items;
+        var cluster = this._cluster;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];
@@ -240,28 +254,22 @@ define([
                     items.set(entity.id, new EntityData(entity));
                 }
             } else {
-                returnBillboard(items.get(entity.id), unusedIndexes);
+                returnPrimitive(items.get(entity.id), entity, cluster);
                 items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            returnBillboard(items.get(entity.id), unusedIndexes);
+            returnPrimitive(items.get(entity.id), entity, cluster);
             items.remove(entity.id);
         }
     };
 
-    function returnBillboard(item, unusedIndexes) {
+    function returnPrimitive(item, entity, cluster) {
         if (defined(item)) {
-            var billboard = item.billboard;
-            if (defined(billboard)) {
-                item.textureValue = undefined;
-                item.billboard = undefined;
-                billboard.show = false;
-                billboard.image = undefined;
-                unusedIndexes.push(billboard._index);
-            }
+            item.billboard = undefined;
+            cluster.removeBillboard(entity);
         }
     }
 

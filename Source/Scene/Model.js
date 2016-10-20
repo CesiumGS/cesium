@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/clone',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -12,6 +13,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/FeatureDetection',
         '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
@@ -30,6 +32,7 @@ define([
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -45,7 +48,8 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './getModelAccessor',
+        './getBinaryAccessor',
+        './HeightReference',
         './ModelAnimationCache',
         './ModelAnimationCollection',
         './ModelMaterial',
@@ -53,12 +57,14 @@ define([
         './ModelMesh',
         './ModelNode',
         './Pass',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         clone,
         combine,
         ComponentDatatype,
@@ -67,6 +73,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
         FeatureDetection,
         getAbsoluteUri,
         getBaseUri,
@@ -85,6 +92,7 @@ define([
         Quaternion,
         Queue,
         RuntimeError,
+        Transforms,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -100,7 +108,8 @@ define([
         gltfDefaults,
         Uri,
         when,
-        getModelAccessor,
+        getBinaryAccessor,
+        HeightReference,
         ModelAnimationCache,
         ModelAnimationCollection,
         ModelMaterial,
@@ -108,7 +117,8 @@ define([
         ModelMesh,
         ModelNode,
         Pass,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -305,8 +315,12 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+     * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
+     * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
+     * @param {DistanceDisplayCondition} [options.istanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -400,6 +414,7 @@ define([
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
+        this._clampedModelMatrix = undefined;
 
         /**
          * A uniform scale applied to this model before the {@link Model#modelMatrix}.
@@ -448,6 +463,27 @@ define([
         this._id = options.id;
 
         /**
+         * Returns the height reference of the model
+         *
+         * @memberof Model.prototype
+         *
+         * @type {HeightReference}
+         *
+         * @default HeightReference.NONE
+         */
+        this.heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+        this._heightReference = this.heightReference;
+        this._heightChanged = false;
+        this._removeUpdateHeightCallback = undefined;
+        var scene = options.scene;
+        this._scene = scene;
+        if (defined(scene)) {
+            scene.terrainProviderChanged.addEventListener(function() {
+                this._heightChanged = true;
+            }, this);
+        }
+
+        /**
          * Used for picking primitives that wrap a model.
          *
          * @private
@@ -469,6 +505,16 @@ define([
         this._defaultTexture = undefined;
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
+
+        /**
+         * Determines whether the model casts or receives shadows from each light source.
+         *
+         * @type {ShadowMode}
+         *
+         * @default ShadowMode.ENABLED
+         */
+        this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
+        this._shadows = this.shadows;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -497,6 +543,8 @@ define([
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
 
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
+
         // Undocumented options
         this._precreatedAttributes = options.precreatedAttributes;
         this._vertexShaderLoaded = options.vertexShaderLoaded;
@@ -520,6 +568,8 @@ define([
         this._state = ModelState.NEEDS_LOAD;
         this._loadResources = undefined;
 
+        this._mode = undefined;
+
         this._perNodeShowDirty = false;            // true when the Cesium API was used to change a node's show property
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
         this._dirty = false;                       // true when the model was transformed this frame
@@ -536,8 +586,11 @@ define([
             materialsById : undefined     // Indexed with the material's property name
         };
 
-        this._uniformMaps = {};       // Not cached since it can be targeted by glTF animation
-        this._rendererResources = {   // Cached between models with the same url/cache-key
+        this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
+        this._extensionsUsed = undefined; // Cached used extensions in a hash-map so we don't have to search the gltf array
+        this._quantizedUniforms = {};     // Quantized uniforms for each program for WEB3D_quantized_attributes
+        this._programPrimitives = {};
+        this._rendererResources = {       // Cached between models with the same url/cache-key
             buffers : {},
             vertexArrays : {},
             programs : {},
@@ -666,7 +719,12 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                var nonUniformScale = Matrix4.getScale(this.modelMatrix, boundingSphereCartesian3Scratch);
+                var modelMatrix = this.modelMatrix;
+                if ((this.heightReference !== HeightReference.NONE) && this._clampedModelMatrix) {
+                    modelMatrix = this._clampedModelMatrix;
+                }
+
+                var nonUniformScale = Matrix4.getScale(modelMatrix, boundingSphereCartesian3Scratch);
                 var scale = defined(this.maximumScale) ? Math.min(this.maximumScale, this.scale) : this.scale;
                 Cartesian3.multiplyByScalar(nonUniformScale, scale, nonUniformScale);
 
@@ -806,6 +864,26 @@ define([
             get : function() {
                 return this._dirty;
             }
+        },
+
+        /**
+         * Gets or sets the condition specifying at what distance from the camera that this model will be displayed.
+         * @memberof Model.prototype
+         * @type {DistanceDisplayCondition}
+         * @default undefined
+         */
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && value.far <= value.near) {
+                    throw new DeveloperError('far must be greater than near');
+                }
+                //>>includeEnd('debug');
+                this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
+            }
         }
     });
 
@@ -884,8 +962,10 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+     *
      * @returns {Model} The newly created model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
@@ -1046,10 +1126,28 @@ define([
     var aMinScratch = new Cartesian3();
     var aMaxScratch = new Cartesian3();
 
+    function getAccessorMinMax(gltf, accessorId) {
+        var accessor = gltf.accessors[accessorId];
+        var extensions = accessor.extensions;
+        var accessorMin = accessor.min;
+        var accessorMax = accessor.max;
+        // If this accessor is quantized, we should use the decoded min and max
+        if (defined(extensions)) {
+            var quantizedAttributes = extensions.WEB3D_quantized_attributes;
+            if (defined(quantizedAttributes)) {
+                accessorMin = quantizedAttributes.decodedMin;
+                accessorMax = quantizedAttributes.decodedMax;
+            }
+        }
+        return {
+            min : accessorMin,
+            max : accessorMax
+        };
+    }
+
     function computeBoundingSphere(gltf) {
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
-        var gltfAccessors = gltf.accessors;
         var rootNodes = gltf.scenes[gltf.scene].nodes;
         var rootNodesLength = rootNodes.length;
 
@@ -1074,11 +1172,11 @@ define([
                         var primitives = gltfMeshes[meshes[j]].primitives;
                         var primitivesLength = primitives.length;
                         for (var m = 0; m < primitivesLength; ++m) {
-                            var position = primitives[m].attributes.POSITION;
-                            if (defined(position)) {
-                                var accessor = gltfAccessors[position];
-                                var aMin = Cartesian3.fromArray(accessor.min, 0, aMinScratch);
-                                var aMax = Cartesian3.fromArray(accessor.max, 0, aMaxScratch);
+                            var positionAccessor = primitives[m].attributes.POSITION;
+                            if (defined(positionAccessor)) {
+                                var minMax = getAccessorMinMax(gltf, positionAccessor);
+                                var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
+                                var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
                                 if (defined(min) && defined(max)) {
                                     Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
                                     Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
@@ -1120,7 +1218,7 @@ define([
             var loadResources = model._loadResources;
             loadResources.buffers[id] = new Uint8Array(arrayBuffer);
             --loadResources.pendingBufferLoads;
-         };
+        };
     }
 
     function parseBuffers(model) {
@@ -1166,7 +1264,7 @@ define([
                 bufferView : undefined
             };
             --loadResources.pendingShaderLoads;
-         };
+        };
     }
 
     function parseShaders(model) {
@@ -1353,11 +1451,27 @@ define([
         var runtimeMeshesByName = {};
         var runtimeMaterialsById = model._runtime.materialsById;
         var meshes = model.gltf.meshes;
+        var usesQuantizedAttributes = usesExtension(model, 'WEB3D_quantized_attributes');
 
         for (var id in meshes) {
             if (meshes.hasOwnProperty(id)) {
                 var mesh = meshes[id];
                 runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
+                if (usesQuantizedAttributes) {
+                    // Cache primitives according to their program
+                    var primitives = mesh.primitives;
+                    var primitivesLength = primitives.length;
+                    for (var i = 0; i < primitivesLength; i++) {
+                        var primitive = primitives[i];
+                        var programId = getProgramForPrimitive(model, primitive);
+                        var programPrimitives = model._programPrimitives[programId];
+                        if (!defined(programPrimitives)) {
+                            programPrimitives = [];
+                            model._programPrimitives[programId] = programPrimitives;
+                        }
+                        programPrimitives.push(primitive);
+                    }
+                }
             }
         }
 
@@ -1372,10 +1486,22 @@ define([
             parsePrograms(model);
             parseTextures(model);
         }
-
         parseMaterials(model);
         parseMeshes(model);
         parseNodes(model);
+    }
+
+    function usesExtension(model, extension) {
+        var cachedExtensionsUsed = model._extensionsUsed;
+        if (!defined(cachedExtensionsUsed)) {
+            var extensionsUsed = model.gltf.extensionsUsed;
+            cachedExtensionsUsed = {};
+            var extensionsLength = extensionsUsed.length;
+            for (var i = 0; i < extensionsLength; i++) {
+                cachedExtensionsUsed[extensionsUsed[i]] = true;
+            }
+        }
+        return defined(cachedExtensionsUsed[extension]);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1431,11 +1557,25 @@ define([
         }
     }
 
-    function createAttributeLocations(attributes) {
+    function createAttributeLocations(model, attributes) {
         var attributeLocations = {};
         var length = attributes.length;
+        var i;
 
-        for (var i = 0; i < length; ++i) {
+        // Set the position attribute to the 0th index. In some WebGL implementations the shader
+        // will not work correctly if the 0th attribute is not active. For example, some glTF models
+        // list the normal attribute first but derived shaders like the cast-shadows shader do not use
+        // the normal attribute.
+        for (i = 1; i < length; ++i) {
+            var attribute = attributes[i];
+            if (/position/i.test(attribute)) {
+                attributes[i] = attributes[0];
+                attributes[0] = attribute;
+                break;
+            }
+        }
+
+        for (i = 0; i < length; ++i) {
             attributeLocations[attributes[i]] = i;
         }
 
@@ -1454,6 +1594,129 @@ define([
         return getStringFromTypedArray(loadResources.getBuffer(bufferView));
     }
 
+    function replaceAllButFirstInString(string, find, replace) {
+        var index = string.indexOf(find);
+        return string.replace(new RegExp(find, 'g'), function(match, offset, all) {
+            return index === offset ? match : replace;
+        });
+    }
+
+    function getProgramForPrimitive(model, primitive) {
+        var gltf = model.gltf;
+        var materialId = primitive.material;
+        var material = gltf.materials[materialId];
+        var techniqueId = material.technique;
+        var technique = gltf.techniques[techniqueId];
+        return technique.program;
+    }
+
+    function getQuantizedAttributes(model, accessorId) {
+        var gltf = model.gltf;
+        var accessor = gltf.accessors[accessorId];
+        var extensions = accessor.extensions;
+        if (defined(extensions)) {
+            return extensions.WEB3D_quantized_attributes;
+        }
+        return undefined;
+    }
+
+    function getAttributeVariableName(model, primitive, attributeSemantic) {
+        var gltf = model.gltf;
+        var materialId = primitive.material;
+        var material = gltf.materials[materialId];
+        var techniqueId = material.technique;
+        var technique = gltf.techniques[techniqueId];
+        for (var parameter in technique.parameters) {
+            if (technique.parameters.hasOwnProperty(parameter)) {
+                var semantic = technique.parameters[parameter].semantic;
+                if (semantic === attributeSemantic) {
+                    var attributes = technique.attributes;
+                    for (var attributeVarName in attributes) {
+                        if (attributes.hasOwnProperty(attributeVarName)) {
+                            var name = attributes[attributeVarName];
+                            if (name === parameter) {
+                                return attributeVarName;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+
+    function modifyShaderForQuantizedAttributes(shader, programName, model, context) {
+        var quantizedUniforms = {};
+        model._quantizedUniforms[programName] = quantizedUniforms;
+
+        var primitives = model._programPrimitives[programName];
+        for (var i = 0; i < primitives.length; i++) {
+            var primitive = primitives[i];
+            if (getProgramForPrimitive(model, primitive) === programName) {
+                for (var attributeSemantic in primitive.attributes) {
+                    if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
+                        var decodeUniformVarName = 'czm_u_dec_' + attributeSemantic.toLowerCase();
+                        var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
+                        var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
+                        if (!defined(quantizedUniforms[decodeUniformVarName]) && !defined(quantizedUniforms[decodeUniformVarNameScale])) {
+                            var accessorId = primitive.attributes[attributeSemantic];
+                            var quantizedAttributes = getQuantizedAttributes(model, accessorId);
+                            if (defined(quantizedAttributes)) {
+                                var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
+                                var decodeMatrix = quantizedAttributes.decodeMatrix;
+                                var newMain = 'czm_decoded_' + attributeSemantic;
+                                var decodedAttributeVarName = attributeVarName.replace('a_', 'czm_a_dec_');
+                                var size = Math.floor(Math.sqrt(decodeMatrix.length));
+
+                                // replace usages of the original attribute with the decoded version, but not the declaration
+                                shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
+                                // declare decoded attribute
+                                var variableType;
+                                if (size > 2) {
+                                    variableType = 'vec' + (size - 1);
+                                } else {
+                                    variableType = 'float';
+                                }
+                                shader = variableType + ' ' + decodedAttributeVarName + ';\n' + shader;
+                                // splice decode function into the shader - attributes are pre-multiplied with the decode matrix
+                                // uniform in the shader (32-bit floating point)
+                                var decode = '';
+                                if (size === 5) {
+                                    // separate scale and translate since glsl doesn't have mat5
+                                    shader = 'uniform mat4 ' + decodeUniformVarNameScale + ';\n' + shader;
+                                    shader = 'uniform vec4 ' + decodeUniformVarNameTranslate + ';\n' + shader;
+                                    decode = '\n' +
+                                             'void main() {\n' +
+                                             '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameScale + ' * ' + attributeVarName + ' + ' + decodeUniformVarNameTranslate + ';\n' +
+                                             '    ' + newMain + '();\n' +
+                                             '}\n';
+
+                                    quantizedUniforms[decodeUniformVarNameScale] = {mat : 4};
+                                    quantizedUniforms[decodeUniformVarNameTranslate] = {vec : 4};
+                                }
+                                else {
+                                    shader = 'uniform mat' + size + ' ' + decodeUniformVarName + ';\n' + shader;
+                                    decode = '\n' +
+                                             'void main() {\n' +
+                                             '    ' + decodedAttributeVarName + ' = ' + variableType + '(' + decodeUniformVarName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
+                                             '    ' + newMain + '();\n' +
+                                             '}\n';
+
+                                    quantizedUniforms[decodeUniformVarName] = {mat : size};
+                                }
+                                shader = ShaderSource.replaceMain(shader, newMain);
+                                shader += decode;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // This is not needed after the program is processed, free the memory
+        model._programPrimitives[programName] = undefined;
+        return shader;
+    }
+
     function modifyShader(shader, programName, callback) {
         if (defined(callback)) {
             shader = callback(shader, programName);
@@ -1466,12 +1729,9 @@ define([
         var shaders = model._loadResources.shaders;
         var program = programs[id];
 
-        var attributeLocations = createAttributeLocations(program.attributes);
+        var attributeLocations = createAttributeLocations(model, program.attributes);
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
-
-        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
         // Add pre-created attributes to attributeLocations
         var attributesLength = program.attributes.length;
@@ -1483,6 +1743,13 @@ define([
                 }
             }
         }
+
+        if (usesExtension(model, 'WEB3D_quantized_attributes')) {
+            vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
+        }
+
+        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
+        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -1827,49 +2094,49 @@ define([
         var animations = model.gltf.animations;
         var accessors = model.gltf.accessors;
 
-         for (var animationId in animations) {
-             if (animations.hasOwnProperty(animationId)) {
-                 var animation = animations[animationId];
-                 var channels = animation.channels;
-                 var parameters = animation.parameters;
-                 var samplers = animation.samplers;
+        for (var animationId in animations) {
+            if (animations.hasOwnProperty(animationId)) {
+                var animation = animations[animationId];
+                var channels = animation.channels;
+                var parameters = animation.parameters;
+                var samplers = animation.samplers;
 
-                 var parameterValues = {};
+                var parameterValues = {};
 
-                 for (var name in parameters) {
-                     if (parameters.hasOwnProperty(name)) {
-                         parameterValues[name] = ModelAnimationCache.getAnimationParameterValues(model, accessors[parameters[name]]);
-                     }
-                 }
+                for (var name in parameters) {
+                    if (parameters.hasOwnProperty(name)) {
+                        parameterValues[name] = ModelAnimationCache.getAnimationParameterValues(model, accessors[parameters[name]]);
+                    }
+                }
 
-                 // Find start and stop time for the entire animation
-                 var startTime = Number.MAX_VALUE;
-                 var stopTime = -Number.MAX_VALUE;
+                // Find start and stop time for the entire animation
+                var startTime = Number.MAX_VALUE;
+                var stopTime = -Number.MAX_VALUE;
 
-                 var length = channels.length;
-                 var channelEvaluators = new Array(length);
+                var length = channels.length;
+                var channelEvaluators = new Array(length);
 
-                 for (var i = 0; i < length; ++i) {
-                     var channel = channels[i];
-                     var target = channel.target;
-                     var sampler = samplers[channel.sampler];
-                     var times = parameterValues[sampler.input];
+                for (var i = 0; i < length; ++i) {
+                    var channel = channels[i];
+                    var target = channel.target;
+                    var sampler = samplers[channel.sampler];
+                    var times = parameterValues[sampler.input];
 
-                     startTime = Math.min(startTime, times[0]);
-                     stopTime = Math.max(stopTime, times[times.length - 1]);
+                    startTime = Math.min(startTime, times[0]);
+                    stopTime = Math.max(stopTime, times[times.length - 1]);
 
-                     var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, parameterValues);
-                     // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
-                     channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.id], target.path, spline);
-                 }
+                    var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, parameterValues);
+                    // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
+                    channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.id], target.path, spline);
+                }
 
-                 model._runtime.animations[animationId] = {
-                     startTime : startTime,
-                     stopTime : stopTime,
-                     channelEvaluators : channelEvaluators
-                 };
-             }
-         }
+                model._runtime.animations[animationId] = {
+                    startTime : startTime,
+                    stopTime : stopTime,
+                    channelEvaluators : channelEvaluators
+                };
+            }
+        }
     }
 
     function createVertexArrays(model, context) {
@@ -1918,13 +2185,13 @@ define([
                             if (defined(attributeLocation)) {
                                 var a = accessors[primitiveAttributes[attributeName]];
                                 attributes.push({
-                                    index                  : attributeLocation,
-                                    vertexBuffer           : rendererBuffers[a.bufferView],
-                                    componentsPerAttribute : getModelAccessor(a).componentsPerAttribute,
-                                    componentDatatype      : a.componentType,
-                                    normalize              : false,
-                                    offsetInBytes          : a.byteOffset,
-                                    strideInBytes          : a.byteStride
+                                    index : attributeLocation,
+                                    vertexBuffer : rendererBuffers[a.bufferView],
+                                    componentsPerAttribute : getBinaryAccessor(a).componentsPerAttribute,
+                                    componentDatatype : a.componentType,
+                                    normalize : false,
+                                    offsetInBytes : a.byteOffset,
+                                    strideInBytes : a.byteStride
                                 });
                             }
                         }
@@ -1981,87 +2248,92 @@ define([
 
     function createRenderStates(model, context) {
         var loadResources = model._loadResources;
+        var techniques = model.gltf.techniques;
 
         if (loadResources.createRenderStates) {
             loadResources.createRenderStates = false;
-            var rendererRenderStates = model._rendererResources.renderStates;
-            var techniques = model.gltf.techniques;
             for (var id in techniques) {
                 if (techniques.hasOwnProperty(id)) {
-                    var technique = techniques[id];
-                    var states = technique.states;
-
-                    var booleanStates = getBooleanStates(states);
-                    var statesFunctions = defaultValue(states.functions, defaultValue.EMPTY_OBJECT);
-                    var blendColor = defaultValue(statesFunctions.blendColor, [0.0, 0.0, 0.0, 0.0]);
-                    var blendEquationSeparate = defaultValue(statesFunctions.blendEquationSeparate, [
-                        WebGLConstants.FUNC_ADD,
-                        WebGLConstants.FUNC_ADD]);
-                    var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
-                        WebGLConstants.ONE,
-                        WebGLConstants.ONE,
-                        WebGLConstants.ZERO,
-                        WebGLConstants.ZERO]);
-                    var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
-                    var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
-                    var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
-                    var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
-
-                    rendererRenderStates[id] = RenderState.fromCache({
-                        frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
-                        cull : {
-                            enabled : booleanStates[WebGLConstants.CULL_FACE],
-                            face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLConstants.BACK
-                        },
-                        lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
-                        polygonOffset : {
-                            enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
-                            factor : polygonOffset[0],
-                            units : polygonOffset[1]
-                        },
-                        scissorTest : {
-                            enabled : booleanStates[WebGLConstants.SCISSOR_TEST],
-                            rectangle : {
-                                x : scissor[0],
-                                y : scissor[1],
-                                width : scissor[2],
-                                height : scissor[3]
-                            }
-                        },
-                        depthRange : {
-                            near : depthRange[0],
-                            far : depthRange[1]
-                        },
-                        depthTest : {
-                            enabled : booleanStates[WebGLConstants.DEPTH_TEST],
-                            func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLConstants.LESS
-                        },
-                        colorMask : {
-                            red : colorMask[0],
-                            green : colorMask[1],
-                            blue : colorMask[2],
-                            alpha : colorMask[3]
-                        },
-                        depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
-                        blending : {
-                            enabled : booleanStates[WebGLConstants.BLEND],
-                            color : {
-                                red : blendColor[0],
-                                green : blendColor[1],
-                                blue : blendColor[2],
-                                alpha : blendColor[3]
-                            },
-                            equationRgb : blendEquationSeparate[0],
-                            equationAlpha : blendEquationSeparate[1],
-                            functionSourceRgb : blendFuncSeparate[0],
-                            functionSourceAlpha : blendFuncSeparate[1],
-                            functionDestinationRgb : blendFuncSeparate[2],
-                            functionDestinationAlpha : blendFuncSeparate[3]
-                        }
-                    });
+                    createRenderStateForTechnique(model, id, context);
                 }
             }
         }
+    }
+
+    function createRenderStateForTechnique(model, id, context) {
+        var rendererRenderStates = model._rendererResources.renderStates;
+        var techniques = model.gltf.techniques;
+        var technique = techniques[id];
+        var states = technique.states;
+
+        var booleanStates = getBooleanStates(states);
+        var statesFunctions = defaultValue(states.functions, defaultValue.EMPTY_OBJECT);
+        var blendColor = defaultValue(statesFunctions.blendColor, [0.0, 0.0, 0.0, 0.0]);
+        var blendEquationSeparate = defaultValue(statesFunctions.blendEquationSeparate, [
+            WebGLConstants.FUNC_ADD,
+            WebGLConstants.FUNC_ADD]);
+        var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
+            WebGLConstants.ONE,
+            WebGLConstants.ZERO,
+            WebGLConstants.ONE,
+            WebGLConstants.ZERO]);
+        var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
+        var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
+        var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
+        var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
+
+        rendererRenderStates[id] = RenderState.fromCache({
+            frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
+            cull : {
+                enabled : booleanStates[WebGLConstants.CULL_FACE],
+                face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLConstants.BACK
+            },
+            lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
+            polygonOffset : {
+                enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
+                factor : polygonOffset[0],
+                units : polygonOffset[1]
+            },
+            scissorTest : {
+                enabled : booleanStates[WebGLConstants.SCISSOR_TEST],
+                rectangle : {
+                    x : scissor[0],
+                    y : scissor[1],
+                    width : scissor[2],
+                    height : scissor[3]
+                }
+            },
+            depthRange : {
+                near : depthRange[0],
+                far : depthRange[1]
+            },
+            depthTest : {
+                enabled : booleanStates[WebGLConstants.DEPTH_TEST],
+                func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLConstants.LESS
+            },
+            colorMask : {
+                red : colorMask[0],
+                green : colorMask[1],
+                blue : colorMask[2],
+                alpha : colorMask[3]
+            },
+            depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
+            blending : {
+                enabled : booleanStates[WebGLConstants.BLEND],
+                color : {
+                    red : blendColor[0],
+                    green : blendColor[1],
+                    blue : blendColor[2],
+                    alpha : blendColor[3]
+                },
+                equationRgb : blendEquationSeparate[0],
+                equationAlpha : blendEquationSeparate[1],
+                functionSourceRgb : blendFuncSeparate[0],
+                functionDestinationRgb : blendFuncSeparate[1],
+                functionSourceAlpha : blendFuncSeparate[2],
+                functionDestinationAlpha : blendFuncSeparate[3]
+            }
+        });
     }
 
     // This doesn't support LOCAL, which we could add if it is ever used.
@@ -2129,7 +2401,7 @@ define([
         },
         MODELINVERSETRANSPOSE : function(uniformState, model) {
             return function() {
-                return uniformState.inverseTranposeModel;
+                return uniformState.inverseTransposeModel;
             };
         },
         MODELVIEWINVERSETRANSPOSE : function(uniformState, model) {
@@ -2471,6 +2743,90 @@ define([
         }
     }
 
+    function scaleFromMatrix5Array(matrix) {
+        return [matrix[0], matrix[1], matrix[2], matrix[3],
+                matrix[5], matrix[6], matrix[7], matrix[8],
+                matrix[10], matrix[11], matrix[12], matrix[13],
+                matrix[15], matrix[16], matrix[17], matrix[18]];
+    }
+
+    function translateFromMatrix5Array(matrix) {
+        return [matrix[20], matrix[21], matrix[22], matrix[23]];
+    }
+
+    function createUniformsForQuantizedAttributes(model, primitive, context) {
+        var gltf = model.gltf;
+        var accessors = gltf.accessors;
+        var programId = getProgramForPrimitive(model, primitive);
+        var quantizedUniforms = model._quantizedUniforms[programId];
+        var setUniforms = {};
+        var uniformMap = {};
+
+        for (var attribute in primitive.attributes) {
+            if (primitive.attributes.hasOwnProperty(attribute)) {
+                var accessorId = primitive.attributes[attribute];
+                var a = accessors[accessorId];
+                var extensions = a.extensions;
+
+                if (defined(extensions)) {
+                    var quantizedAttributes = extensions.WEB3D_quantized_attributes;
+                    if (defined(quantizedAttributes)) {
+                        var decodeMatrix = quantizedAttributes.decodeMatrix;
+                        var uniformVariable = 'czm_u_dec_' + attribute.toLowerCase();
+
+                        switch (a.type) {
+                            case 'SCALAR':
+                                uniformMap[uniformVariable] = getMat2UniformFunction(decodeMatrix, model).func;
+                                setUniforms[uniformVariable] = true;
+                                break;
+                            case 'VEC2':
+                                uniformMap[uniformVariable] = getMat3UniformFunction(decodeMatrix, model).func;
+                                setUniforms[uniformVariable] = true;
+                                break;
+                            case 'VEC3':
+                                uniformMap[uniformVariable] = getMat4UniformFunction(decodeMatrix, model).func;
+                                setUniforms[uniformVariable] = true;
+                                break;
+                            case 'VEC4':
+                                // VEC4 attributes are split into scale and translate because there is no mat5 in GLSL
+                                var uniformVariableScale = uniformVariable + '_scale';
+                                var uniformVariableTranslate = uniformVariable + '_translate';
+                                uniformMap[uniformVariableScale] = getMat4UniformFunction(scaleFromMatrix5Array(decodeMatrix), model).func;
+                                uniformMap[uniformVariableTranslate] = getVec4UniformFunction(translateFromMatrix5Array(decodeMatrix), model).func;
+                                setUniforms[uniformVariableScale] = true;
+                                setUniforms[uniformVariableTranslate] = true;
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // If there are any unset quantized uniforms in this program, they should be set to the identity
+        for (var quantizedUniform in quantizedUniforms) {
+            if (quantizedUniforms.hasOwnProperty(quantizedUniform)) {
+                if (!setUniforms[quantizedUniform]) {
+                    var properties = quantizedUniforms[quantizedUniform];
+                    if (defined(properties.mat)) {
+                        if (properties.mat === 2) {
+                            uniformMap[quantizedUniform] = getMat2UniformFunction(Matrix2.IDENTITY, model).func;
+                        } else if (properties.mat === 3) {
+                            uniformMap[quantizedUniform] = getMat3UniformFunction(Matrix3.IDENTITY, model).func;
+                        } else if (properties.mat === 4) {
+                            uniformMap[quantizedUniform] = getMat4UniformFunction(Matrix4.IDENTITY, model).func;
+                        }
+                    }
+                    if (defined(properties.vec)) {
+                        if (properties.vec === 4) {
+                            uniformMap[quantizedUniform] = getVec4UniformFunction([0, 0, 0, 0], model).func;
+                        }
+                    }
+                }
+            }
+        }
+        return uniformMap;
+    }
+
     function createPickColorFunction(color) {
         return function() {
             return color;
@@ -2483,7 +2839,7 @@ define([
         };
     }
 
-    function createCommand(model, gltfNode, runtimeNode, context) {
+    function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
@@ -2523,10 +2879,10 @@ define([
                 var programId = technique.program;
 
                 var boundingSphere;
-                var positionAttribute = primitive.attributes.POSITION;
-                if (defined(positionAttribute)) {
-                    var a = accessors[positionAttribute];
-                    boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
+                var positionAccessor = primitive.attributes.POSITION;
+                if (defined(positionAccessor)) {
+                    var minMax = getAccessorMinMax(gltf, positionAccessor);
+                    boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
                 }
 
                 var vertexArray = rendererVertexArrays[id + '.primitive.' + i];
@@ -2539,8 +2895,7 @@ define([
                 else {
                     var positions = accessors[primitive.attributes.POSITION];
                     count = positions.count;
-                    var accessorInfo = getModelAccessor(positions);
-                    offset = (positions.byteOffset / (accessorInfo.componentsPerAttribute*ComponentDatatype.getSizeInBytes(positions.componentType)));
+                    offset = 0;
                 }
 
                 var um = uniformMaps[primitive.material];
@@ -2557,6 +2912,12 @@ define([
                     uniformMap = model._uniformMapLoaded(uniformMap, programId, runtimeNode);
                 }
 
+                // Add uniforms for decoding quantized attributes if used
+                if (usesExtension(model, 'WEB3D_quantized_attributes')) {
+                    var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive, context);
+                    uniformMap = combine(uniformMap, quantizedUniformMap);
+                }
+
                 var rs = rendererRenderStates[material.technique];
 
                 // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
@@ -2568,6 +2929,9 @@ define([
                     mesh : runtimeMeshesByName[mesh.name]
                 };
 
+                var castShadows = ShadowMode.castShadows(model._shadows);
+                var receiveShadows = ShadowMode.receiveShadows(model._shadows);
+                
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     cull : model.cull,
@@ -2577,6 +2941,8 @@ define([
                     count : count,
                     offset : offset,
                     shaderProgram : rendererPrograms[technique.program],
+                    castShadows : castShadows,
+                    receiveShadows : receiveShadows,
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
@@ -2623,11 +2989,27 @@ define([
                     });
                 }
 
+                var command2D;
+                var pickCommand2D;
+                if (!scene3DOnly) {
+                    command2D = DrawCommand.shallowClone(command);
+                    command2D.boundingVolume = new BoundingSphere();
+                    command2D.modelMatrix = new Matrix4();
+
+                    if (allowPicking) {
+                        pickCommand2D = DrawCommand.shallowClone(pickCommand);
+                        pickCommand2D.boundingVolume = new BoundingSphere();
+                        pickCommand2D.modelMatrix = new Matrix4();
+                    }
+                }
+
                 var nodeCommand = {
                     show : true,
                     boundingSphere : boundingSphere,
                     command : command,
-                    pickCommand : pickCommand
+                    pickCommand : pickCommand,
+                    command2D : command2D,
+                    pickCommand2D : pickCommand2D
                 };
                 runtimeNode.commands.push(nodeCommand);
                 nodeCommands.push(nodeCommand);
@@ -2635,7 +3017,7 @@ define([
         }
     }
 
-    function createRuntimeNodes(model, context) {
+    function createRuntimeNodes(model, context, scene3DOnly) {
         var loadResources = model._loadResources;
 
         if (!loadResources.finishedEverythingButTextureCreation()) {
@@ -2693,7 +3075,7 @@ define([
                 }
 
                 if (defined(gltfNode.meshes)) {
-                    createCommand(model, gltfNode, runtimeNode, context);
+                    createCommand(model, gltfNode, runtimeNode, context, scene3DOnly);
                 }
 
                 var children = gltfNode.children;
@@ -2714,6 +3096,7 @@ define([
 
     function createResources(model, frameState) {
         var context = frameState.context;
+        var scene3DOnly = frameState.scene3DOnly;
 
         if (model._loadRendererResourcesFromCache) {
             var resources = model._rendererResources;
@@ -2745,14 +3128,13 @@ define([
         if (!model._loadRendererResourcesFromCache) {
             createVertexArrays(model, context); // using glTF meshes
             createRenderStates(model, context); // using glTF materials/techniques/states
-
             // Long-term, we might not cache render states if they could change
             // due to an animation, e.g., a uniform going from opaque to transparent.
             // Could use copy-on-write if it is worth it.  Probably overkill.
         }
 
-        createUniformMaps(model, context);  // using glTF materials/techniques
-        createRuntimeNodes(model, context); // using glTF scene
+        createUniformMaps(model, context);               // using glTF materials/techniques
+        createRuntimeNodes(model, context, scene3DOnly); // using glTF scene
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2774,8 +3156,9 @@ define([
     }
 
     var scratchNodeStack = [];
+    var scratchComputedMatrixIn2D = new Matrix4();
 
-    function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded) {
+    function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
         var maxDirtyNumber = model._maxDirtyNumber;
         var allowPicking = model.allowPicking;
 
@@ -2784,6 +3167,10 @@ define([
 
         var nodeStack = scratchNodeStack;
         var computedModelMatrix = model._computedModelMatrix;
+
+        if (model._mode !== SceneMode.SCENE3D) {
+            computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
+        }
 
         for (var i = 0; i < length; ++i) {
             var n = rootNodes[i];
@@ -2817,6 +3204,23 @@ define([
                                 var pickCommand = primitiveCommand.pickCommand;
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
                                 BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
+                            }
+
+                            // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
+                            // will be clipped by the viewport. We create a second command that translates the model
+                            // model matrix to the opposite side of the map so the part that was clipped in one viewport
+                            // is drawn in the other.
+                            command = primitiveCommand.command2D;
+                            if (defined(command) && model._mode === SceneMode.SCENE2D) {
+                                Matrix4.clone(nodeMatrix, command.modelMatrix);
+                                command.modelMatrix[13] -= CesiumMath.sign(command.modelMatrix[13]) * 2.0 * CesiumMath.PI * projection.ellipsoid.maximumRadius;
+                                BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
+
+                                if (allowPicking) {
+                                    var pickCommand2D = primitiveCommand.pickCommand2D;
+                                    Matrix4.clone(command.modelMatrix, pickCommand2D.modelMatrix);
+                                    BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
+                                }
                             }
                         }
                     }
@@ -2959,8 +3363,25 @@ define([
             var nodeCommands = model._nodeCommands;
             var length = nodeCommands.length;
 
-            for (var i = 0; i < length; i++) {
+            for (var i = 0; i < length; ++i) {
                 nodeCommands[i].command.debugShowBoundingVolume = debugShowBoundingVolume;
+            }
+        }
+    }
+
+    function updateShadows(model) {
+        if (model.shadows !== model._shadows) {
+            model._shadows = model.shadows;
+
+            var castShadows = ShadowMode.castShadows(model.shadows);
+            var receiveShadows = ShadowMode.receiveShadows(model.shadows);
+            var nodeCommands = model._nodeCommands;
+            var length = nodeCommands.length;
+
+            for (var i = 0; i < length; i++) {
+                var nodeCommand = nodeCommands[i];
+                nodeCommand.command.castShadows = castShadows;
+                nodeCommand.command.receiveShadows = receiveShadows;
             }
         }
     }
@@ -2974,6 +3395,7 @@ define([
     }
 
     var scratchPosition = new Cartesian3();
+    var scratchCartographic = new Cartographic();
 
     function getScale(model, frameState) {
         var scale = model.scale;
@@ -2982,13 +3404,20 @@ define([
             // Compute size of bounding sphere in pixels
             var context = frameState.context;
             var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
-            var m = model.modelMatrix;
+            var m = defined(model._clampedModelMatrix) ? model._clampedModelMatrix : model.modelMatrix;
             scratchPosition.x = m[12];
             scratchPosition.y = m[13];
             scratchPosition.z = m[14];
 
             if (defined(model._rtcCenter)) {
                 Cartesian3.add(model._rtcCenter, scratchPosition, scratchPosition);
+            }
+
+            if (model._mode !== SceneMode.SCENE3D) {
+                var projection = frameState.mapProjection;
+                var cartographic = projection.ellipsoid.cartesianToCartographic(scratchPosition, scratchCartographic);
+                projection.project(cartographic, scratchPosition);
+                Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
             }
 
             var radius = model.boundingSphere.radius;
@@ -3022,7 +3451,7 @@ define([
                 var extension = extensionsUsed[index];
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
-                    extension !== 'KHR_materials_common') {
+                    extension !== 'KHR_materials_common' && extension !== 'WEB3D_quantized_attributes') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
             }
@@ -3077,6 +3506,104 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
+        return function (clampedPosition) {
+            if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
+                var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
+                clampedCart.height += cartoPosition.height;
+                ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
+            }
+
+            var clampedModelMatrix = model._clampedModelMatrix;
+
+            // Modify clamped model matrix to use new height
+            Matrix4.clone(model.modelMatrix, clampedModelMatrix);
+            clampedModelMatrix[12] = clampedPosition.x;
+            clampedModelMatrix[13] = clampedPosition.y;
+            clampedModelMatrix[14] = clampedPosition.z;
+
+            model._heightChanged = true;
+        };
+    }
+
+    function updateClamping(model) {
+        if (defined(model._removeUpdateHeightCallback)) {
+            model._removeUpdateHeightCallback();
+            model._removeUpdateHeightCallback = undefined;
+        }
+
+        var scene = model._scene;
+        if (!defined(scene) || (model.heightReference === HeightReference.NONE)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (model.heightReference !== HeightReference.NONE) {
+                throw new DeveloperError('Height reference is not supported without a scene.');
+            }
+            //>>includeEnd('debug');
+            model._clampedModelMatrix = undefined;
+            return;
+        }
+
+        var globe = scene.globe;
+        var ellipsoid = globe.ellipsoid;
+
+        // Compute cartographic position so we don't recompute every update
+        var modelMatrix = model.modelMatrix;
+        scratchPosition.x = modelMatrix[12];
+        scratchPosition.y = modelMatrix[13];
+        scratchPosition.z = modelMatrix[14];
+        var cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
+
+        if (!defined(model._clampedModelMatrix)) {
+            model._clampedModelMatrix = Matrix4.clone(modelMatrix, new Matrix4());
+        }
+
+        // Install callback to handle updating of terrain tiles
+        var surface = globe._surface;
+        model._removeUpdateHeightCallback = surface.updateHeight(cartoPosition, getUpdateHeightCallback(model, ellipsoid, cartoPosition));
+
+        // Set the correct height now
+        var height = globe.getHeight(cartoPosition);
+        if (defined(height)) {
+            // Get callback with cartoPosition being the non-clamped position
+            var cb = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
+
+            // Compute the clamped cartesian and call updateHeight callback
+            Cartographic.clone(cartoPosition, scratchCartographic);
+            scratchCartographic.height = height;
+            ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+            cb(scratchPosition);
+        }
+    }
+
+    var scratchDisplayConditionCartesian = new Cartesian3();
+    var scratchDistanceDisplayConditionCartographic = new Cartographic();
+
+    function distanceDisplayConditionVisible(model, frameState) {
+        var distance2;
+        var ddc = model.distanceDisplayCondition;
+        var nearSquared = ddc.near * ddc.near;
+        var farSquared = ddc.far * ddc.far;
+
+        if (frameState.mode === SceneMode.SCENE2D) {
+            var frustum2DWidth = frameState.camera.frustum.right - frameState.camera.frustum.left;
+            distance2 = frustum2DWidth * 0.5;
+            distance2 = distance2 * distance2;
+        } else {
+            // Distance to center of primitive's reference frame
+            var position = Matrix4.getTranslation(model.modelMatrix, scratchDisplayConditionCartesian);
+            if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+                var projection = frameState.mapProjection;
+                var ellipsoid = projection.ellipsoid;
+                var cartographic = ellipsoid.cartesianToCartographic(position, scratchDistanceDisplayConditionCartographic);
+                position = projection.project(cartographic, position);
+                Cartesian3.fromElements(position.z, position.x, position.y, position);
+            }
+            distance2 = Cartesian3.distanceSquared(position, frameState.camera.positionWC);
+        }
+
+        return (distance2 >= nearSquared) && (distance2 <= farSquared);
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -3088,7 +3615,7 @@ define([
      * @exception {RuntimeError} Failed to load external reference.
      */
     Model.prototype.update = function(frameState) {
-        if (frameState.mode !== SceneMode.SCENE3D) {
+        if (frameState.mode === SceneMode.MORPHING) {
             return;
         }
 
@@ -3193,34 +3720,50 @@ define([
             }
         }
 
-        var show = this.show && (this.scale !== 0.0);
+        var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
+        var show = this.show && displayConditionPassed && (this.scale !== 0.0);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
             this._cesiumAnimationsDirty = false;
             this._dirty = false;
+            var modelMatrix = this.modelMatrix;
+
+            var modeChanged = frameState.mode !== this._mode;
+            this._mode = frameState.mode;
 
             // Model's model matrix needs to be updated
-            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) ||
+            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
                 (this._scale !== this.scale) ||
                 (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
-                (this._maximumScale !== this.maximumScale);
+                (this._maximumScale !== this.maximumScale) ||
+                (this._heightReference !== this.heightReference) || this._heightChanged ||
+                modeChanged;
 
             if (modelTransformChanged || justLoaded) {
-                Matrix4.clone(this.modelMatrix, this._modelMatrix);
+                Matrix4.clone(modelMatrix, this._modelMatrix);
+
+                updateClamping(this);
+
+                if (defined(this._clampedModelMatrix)) {
+                    modelMatrix = this._clampedModelMatrix;
+                }
+
                 this._scale = this.scale;
                 this._minimumPixelSize = this.minimumPixelSize;
                 this._maximumScale = this.maximumScale;
+                this._heightReference = this.heightReference;
+                this._heightChanged = false;
 
                 var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
-                Matrix4.multiplyByUniformScale(this.modelMatrix, scale, computedModelMatrix);
+                Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
                 Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
             }
 
             // Update modelMatrix throughout the graph as needed
             if (animated || modelTransformChanged || justLoaded) {
-                updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded);
+                updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
                 this._dirty = true;
 
                 if (animated || justLoaded) {
@@ -3236,6 +3779,7 @@ define([
             updatePickIds(this, context);
             updateWireframe(this);
             updateShowBoundingVolume(this);
+            updateShadows(this);
         }
 
         if (justLoaded) {
@@ -3260,11 +3804,21 @@ define([
             var i;
             var nc;
 
+            var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
+            var boundingVolume;
+
             if (passes.render) {
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        commandList.push(nc.command);
+                        var command = nc.command;
+                        commandList.push(command);
+
+                        boundingVolume = command.boundingVolume;
+                        if (frameState.mode === SceneMode.SCENE2D &&
+                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                            commandList.push(nc.command2D);
+                        }
                     }
                 }
             }
@@ -3273,7 +3827,14 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        commandList.push(nc.pickCommand);
+                        var pickCommand = nc.pickCommand;
+                        commandList.push(pickCommand);
+
+                        boundingVolume = pickCommand.boundingVolume;
+                        if (frameState.mode === SceneMode.SCENE2D &&
+                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                            commandList.push(nc.pickCommand2D);
+                        }
                     }
                 }
             }

@@ -4,9 +4,11 @@ define([
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
+        './Cartographic',
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
@@ -21,6 +23,7 @@ define([
         './PolygonGeometryLibrary',
         './PolygonPipeline',
         './Quaternion',
+        './Rectangle',
         './VertexFormat',
         './WindingOrder'
     ], function(
@@ -28,9 +31,11 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Cartographic,
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
@@ -45,6 +50,7 @@ define([
         PolygonGeometryLibrary,
         PolygonPipeline,
         Quaternion,
+        Rectangle,
         VertexFormat,
         WindingOrder) {
     'use strict';
@@ -85,6 +91,20 @@ define([
         return result;
     }
 
+    var scratchCarto1 = new Cartographic();
+    var scratchCarto2 = new Cartographic();
+    function adjustPosHeightsForNormal(position, p1, p2, ellipsoid) {
+        var carto1 = ellipsoid.cartesianToCartographic(position, scratchCarto1);
+        var height = carto1.height;
+        var p1Carto = ellipsoid.cartesianToCartographic(p1, scratchCarto2);
+        p1Carto.height = height;
+        ellipsoid.cartographicToCartesian(p1Carto, p1);
+
+        var p2Carto = ellipsoid.cartesianToCartographic(p2, scratchCarto2);
+        p2Carto.height = height - 100;
+        ellipsoid.cartographicToCartesian(p2Carto, p2);
+    }
+
     var scratchBoundingRectangle = new BoundingRectangle();
     var scratchPosition = new Cartesian3();
     var scratchNormal = new Cartesian3();
@@ -92,6 +112,9 @@ define([
     var scratchBinormal = new Cartesian3();
     var p1Scratch = new Cartesian3();
     var p2Scratch = new Cartesian3();
+    var scratchPerPosNormal = new Cartesian3();
+    var scratchPerPosTangent = new Cartesian3();
+    var scratchPerPosBinormal = new Cartesian3();
 
     var appendTextureCoordinatesOrigin = new Cartesian2();
     var appendTextureCoordinatesCartesian2 = new Cartesian2();
@@ -109,8 +132,10 @@ define([
             var tangentPlane = options.tangentPlane;
             var ellipsoid = options.ellipsoid;
             var stRotation = options.stRotation;
-            var top = options.top || options.wall;
-            var bottom = options.bottom || options.wall;
+            var wall = options.wall;
+            var top = options.top || wall;
+            var bottom = options.bottom || wall;
+            var perPositionHeight = options.perPositionHeight;
 
             var origin = appendTextureCoordinatesOrigin;
             origin.x = boundingRectangle.x;
@@ -120,7 +145,14 @@ define([
             var length = flatPositions.length;
 
             var textureCoordinates = vertexFormat.st ? new Float32Array(2 * (length / 3)) : undefined;
-            var normals = vertexFormat.normal ? new Float32Array(length) : undefined;
+            var normals;
+            if (vertexFormat.normal) {
+                if (perPositionHeight && top && !wall) {
+                    normals = geometry.attributes.normal.values;
+                } else {
+                    normals = new Float32Array(length);
+                }
+            }
             var tangents = vertexFormat.tangent ? new Float32Array(length) : undefined;
             var binormals = vertexFormat.binormal ? new Float32Array(length) : undefined;
 
@@ -172,12 +204,15 @@ define([
                     var attrIndex1 = attrIndex + 1;
                     var attrIndex2 = attrIndex + 2;
 
-                    if (options.wall) {
+                    if (wall) {
                         if (i + 3 < length) {
                             var p1 = Cartesian3.fromArray(flatPositions, i + 3, p1Scratch);
 
                             if (recomputeNormal) {
                                 var p2 = Cartesian3.fromArray(flatPositions, i + length, p2Scratch);
+                                if (perPositionHeight) {
+                                    adjustPosHeightsForNormal(position, p1, p2, ellipsoid);
+                                }
                                 Cartesian3.subtract(p1, position, p1);
                                 Cartesian3.subtract(p2, position, p2);
                                 normal = Cartesian3.normalize(Cartesian3.cross(p2, p1, normal), normal);
@@ -198,6 +233,15 @@ define([
                     } else {
                         normal = ellipsoid.geodeticSurfaceNormal(position, normal);
                         if (vertexFormat.tangent || vertexFormat.binormal) {
+                            if (perPositionHeight) {
+                                scratchPerPosNormal = Cartesian3.fromArray(normals, attrIndex, scratchPerPosNormal);
+                                scratchPerPosTangent = Cartesian3.cross(Cartesian3.UNIT_Z, scratchPerPosNormal, scratchPerPosTangent);
+                                scratchPerPosTangent = Cartesian3.normalize(Matrix3.multiplyByVector(textureMatrix, scratchPerPosTangent, scratchPerPosTangent), scratchPerPosTangent);
+                                if (vertexFormat.binormal) {
+                                    scratchPerPosBinormal = Cartesian3.normalize(Cartesian3.cross(scratchPerPosNormal, scratchPerPosTangent, scratchPerPosBinormal), scratchPerPosBinormal);
+                                }
+                            }
+
                             tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
                             tangent = Cartesian3.normalize(Matrix3.multiplyByVector(textureMatrix, tangent, tangent), tangent);
                             if (vertexFormat.binormal) {
@@ -216,7 +260,8 @@ define([
                             normals[attrIndex1 + bottomOffset] = -normal.y;
                             normals[attrIndex2 + bottomOffset] = -normal.z;
                         }
-                        if (top) {
+
+                        if ((top && !perPositionHeight) || wall) {
                             normals[attrIndex] = normal.x;
                             normals[attrIndex1] = normal.y;
                             normals[attrIndex2] = normal.z;
@@ -235,9 +280,15 @@ define([
                         }
 
                         if(top) {
-                            tangents[attrIndex] = tangent.x;
-                            tangents[attrIndex1] = tangent.y;
-                            tangents[attrIndex2] = tangent.z;
+                            if (perPositionHeight) {
+                                tangents[attrIndex] = scratchPerPosTangent.x;
+                                tangents[attrIndex1] = scratchPerPosTangent.y;
+                                tangents[attrIndex2] = scratchPerPosTangent.z;
+                            } else {
+                                tangents[attrIndex] = tangent.x;
+                                tangents[attrIndex1] = tangent.y;
+                                tangents[attrIndex2] = tangent.z;
+                            }
                         }
                     }
 
@@ -248,9 +299,15 @@ define([
                             binormals[attrIndex2 + bottomOffset] = binormal.z;
                         }
                         if (top) {
-                            binormals[attrIndex] = binormal.x;
-                            binormals[attrIndex1] = binormal.y;
-                            binormals[attrIndex2] = binormal.z;
+                            if (perPositionHeight) {
+                                binormals[attrIndex] = scratchPerPosBinormal.x;
+                                binormals[attrIndex1] = scratchPerPosBinormal.y;
+                                binormals[attrIndex2] = scratchPerPosBinormal.z;
+                            } else {
+                                binormals[attrIndex] = binormal.x;
+                                binormals[attrIndex1] = binormal.y;
+                                binormals[attrIndex2] = binormal.z;
+                            }
                         }
                     }
                     attrIndex += 3;
@@ -294,14 +351,14 @@ define([
 
     var createGeometryFromPositionsExtrudedPositions = [];
 
-    function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, hierarchy, perPositionHeight, closeTop, closeBottom) {
+    function createGeometryFromPositionsExtruded(ellipsoid, polygon, granularity, hierarchy, perPositionHeight, closeTop, closeBottom, vertexFormat) {
         var geos = {
             walls : []
         };
         var i;
 
         if (closeTop || closeBottom) {
-            var topGeo = PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight);
+            var topGeo = PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat);
 
             var edgePoints = topGeo.attributes.position.values;
             var indices = topGeo.indices;
@@ -330,6 +387,11 @@ define([
                 }
 
                 topGeo.attributes.position.values = topBottomPositions;
+                if (perPositionHeight) {
+                    var normals = topGeo.attributes.normal.values;
+                    topGeo.attributes.normal.values = new Float32Array(topBottomPositions.length);
+                    topGeo.attributes.normal.values.set(normals);
+                }
                 topGeo.indices = newIndices;
             } else if (closeBottom) {
                 numPositions = edgePoints.length / 3;
@@ -521,11 +583,18 @@ define([
         this._perPositionHeight = perPositionHeight;
         this._workerName = 'createPolygonGeometry';
 
+        var positions = polygonHierarchy.positions;
+        if (!defined(positions) || positions.length < 3) {
+            this._rectangle = new Rectangle();
+        } else {
+            this._rectangle = Rectangle.fromCartesianArray(positions, ellipsoid);
+        }
+
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 9;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 9;
     }
 
     /**
@@ -592,6 +661,8 @@ define([
      * @param {PolygonGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     PolygonGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -613,6 +684,9 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
+        Rectangle.pack(value._rectangle, array, startingIndex);
+        startingIndex += Rectangle.packedLength;
+
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._granularity;
@@ -622,10 +696,13 @@ define([
         array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
         array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
         array[startingIndex] = value.packedLength;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
+    var scratchRectangle = new Rectangle();
 
     //Only used to avoid inaability to default construct.
     var dummyOptions = {
@@ -658,6 +735,9 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
+        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
+        startingIndex += Rectangle.packedLength;
+
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var granularity = array[startingIndex++];
@@ -683,6 +763,7 @@ define([
         result._perPositionHeight = perPositionHeight;
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;
+        result._rectangle = Rectangle.clone(rectangle);
         result.packedLength = packedLength;
         return result;
     };
@@ -706,35 +787,29 @@ define([
         var closeTop = polygonGeometry._closeTop;
         var closeBottom = polygonGeometry._closeBottom;
 
-        var walls;
-        var topAndBottom;
-        var outerPositions;
-
-        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, ellipsoid);
-        var hierarchy = results.hierarchy;
-        var polygons = results.polygons;
-        var i;
-
-        if (polygons.length === 0) {
+        var outerPositions = polygonHierarchy.positions;
+        if (outerPositions.length < 3) {
             return;
         }
 
-        if (perPositionHeight) {
-            outerPositions = polygons[0].slice();
-            for (i = 0; i < outerPositions.length; i++) {
-                outerPositions[i] = ellipsoid.scaleToGeodeticSurface(outerPositions[i]);
-            }
-        } else {
-            outerPositions = polygons[0];
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
+
+        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, tangentPlane, ellipsoid);
+        var hierarchy = results.hierarchy;
+        var polygons = results.polygons;
+
+        if (hierarchy.length === 0) {
+            return;
         }
 
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
+        outerPositions = hierarchy[0].outerRing;
         var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
 
         var geometry;
         var geometries = [];
 
         var options = {
+            perPositionHeight: perPositionHeight,
             vertexFormat: vertexFormat,
             geometry: undefined,
             tangentPlane: tangentPlane,
@@ -745,11 +820,16 @@ define([
             top: true,
             wall: false
         };
+
+        var i;
+
         if (extrude) {
             options.top = closeTop;
             options.bottom = closeBottom;
             for (i = 0; i < polygons.length; i++) {
-                geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom);
+                geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
+
+                var topAndBottom;
                 if (closeTop && closeBottom) {
                     topAndBottom = geometry.topAndBottom;
                     options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
@@ -768,7 +848,7 @@ define([
                     geometries.push(topAndBottom);
                 }
 
-                walls = geometry.walls;
+                var walls = geometry.walls;
                 options.wall = true;
                 for ( var k = 0; k < walls.length; k++) {
                     var wall = walls[k];
@@ -780,7 +860,7 @@ define([
         } else {
             for (i = 0; i < polygons.length; i++) {
                 geometry = new GeometryInstance({
-                    geometry : PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight)
+                    geometry : PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight, vertexFormat)
                 });
                 geometry.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
                 options.geometry = geometry.geometry;
@@ -829,6 +909,17 @@ define([
             vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
+
+    defineProperties(PolygonGeometry.prototype, {
+        /**
+         * @private
+         */
+        rectangle : {
+            get : function() {
+                return this._rectangle;
+            }
+        }
+    });
 
     return PolygonGeometry;
 });
