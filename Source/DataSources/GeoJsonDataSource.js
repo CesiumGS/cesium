@@ -285,7 +285,7 @@ define([
         billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
 
         // Clamp to ground if there isn't a height specified
-        if (coordinates.length === 2) {
+        if (coordinates.length === 2 && options.clampToGround) {
             billboard.heightReference = HeightReference.CLAMP_TO_GROUND;
         }
 
