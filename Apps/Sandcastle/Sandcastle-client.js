@@ -1,5 +1,5 @@
 (function() {
-    "use strict";
+    'use strict';
     /*global console,Sandcastle,window*/
 
     window.parent.postMessage('reload', '*');
@@ -8,11 +8,21 @@
         return value !== undefined;
     }
 
+    function print(value) {
+        if (value === null) {
+            return 'null';
+        } else if (defined(value)) {
+            return value.toString();
+        } else {
+            return 'undefined';
+        }
+    }
+
     console.originalLog = console.log;
     console.log = function(d1) {
         console.originalLog.apply(console, arguments);
         window.parent.postMessage({
-            'log' : defined(d1) ? d1.toString() : 'undefined'
+            'log' : print(d1)
         }, '*');
     };
 

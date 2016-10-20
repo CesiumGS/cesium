@@ -5,15 +5,17 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/Intersect',
-        'Core/Rectangle'
+        'Core/Rectangle',
+        'Specs/createPackableSpecs'
     ], function(
         BoundingRectangle,
         Cartesian2,
         Ellipsoid,
         GeographicProjection,
         Intersect,
-        Rectangle) {
-    "use strict";
+        Rectangle,
+        createPackableSpecs) {
+    'use strict';
 
     it('default constructor sets expected values', function() {
         var rectangle = new BoundingRectangle();
@@ -253,4 +255,6 @@ defineSuite([
             BoundingRectangle.intersect(left, undefined);
         }).toThrowDeveloperError();
     });
+
+    createPackableSpecs(BoundingRectangle, new BoundingRectangle(1, 2, 3, 4), [1, 2, 3, 4]);
 });

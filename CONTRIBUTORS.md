@@ -1,4 +1,4 @@
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
+﻿See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
 
 ## [Corporate CLA](http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt)
 
@@ -30,6 +30,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Sarah Chow](https://github.com/slchow)
    * [Brendan Flood](https://github.com/bflood-agi)
    * [Thomas Pedbereznak](https://github.com/TomPed)
+   * [Rob Taglang](https://github.com/lasalvavida)
+   * [Todd Smith](https://github.com/tsmith717)
+   * [Josh Becker](https://github.com/JoshuaStorm)
+   * [Kangning Li](https://github.com/likangning93)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -46,10 +50,20 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Aviture](http://aviture.us.com)
    * [Mike Macaulay](https://github.com/mmacaula)
    * [Nathan Schulte](https://github.com/nmschulte)
+   * [Jed Fong](https://github.com/jedfong)
+   * [Brandon McAllister](https://github.com/bmcallis)
 * [Inovaworks](http://www.inovaworks.com/)
    * [Sergio Flores](https://github.com/relfos)
 * [CubeWerx Inc.](http://www.cubewerx.com/)
    * [Keith Pomakis](https://github.com/pomakis)
+* [Vricon](https://www.vricon.com/)
+   * [Erik Andersson](https://github.com/e-andersson)
+* [Simulation Curriculum](http://www.simulationcurriculum.com/)
+   * [Dave Whipps](https://github.com/dwhipps)
+* [Geoscan](https://www.geoscan.aero)
+   * [Andrey Orlov](https://github.com/AndreyOrlov)
+* [The Imagineers](https://www.theimagineers.com/)
+   * [Heerco Grond](https://github.com/HeercoGrond)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -82,5 +96,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Eric Putnam](https://github.com/eputnam)
 * [Dmitriy Pushkov](https://github.com/ezze)
 * [Max Limper](https://github.com/mlimper)
-
-Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
+* [Sanuj Sharma](https://github.com/sanuj)
+* [Allen Korenevsky](https://github.com/theplatapi)
+* [Samy Beaudoux](https://github.com/vrittis)
+* [Mati Ostrovsky](https://github.com/mati-o)
+* [Tom Novacek](https://github.com/novacto2)
+* [Olivier Guyot-Roullot](https://github.com/theOgrable)
+* [Andy Fry](https://github.com/andyfry01)
+* [Jorge Piera Llodra](https://github.com/jorpiell)
+* [Tom Payne](https://github.com/twpayne)

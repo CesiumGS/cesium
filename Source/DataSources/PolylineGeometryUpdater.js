@@ -8,6 +8,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
+        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/GeometryInstance',
@@ -18,6 +20,7 @@ define([
         '../Scene/PolylineCollection',
         '../Scene/PolylineColorAppearance',
         '../Scene/PolylineMaterialAppearance',
+        '../Scene/ShadowMode',
         './BoundingSphereState',
         './ColorMaterialProperty',
         './ConstantProperty',
@@ -32,6 +35,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         Ellipsoid,
         Event,
         GeometryInstance,
@@ -42,18 +47,21 @@ define([
         PolylineCollection,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
+        ShadowMode,
         BoundingSphereState,
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
         Property) {
-    "use strict";
+    'use strict';
 
     //We use this object to create one polyline collection per-scene.
     var polylineCollections = {};
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
+    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
+    var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
     function GeometryOptions(entity) {
         this.id = entity;
@@ -91,6 +99,8 @@ define([
         this._geometryChanged = new Event();
         this._showProperty = undefined;
         this._materialProperty = undefined;
+        this._shadowsProperty = undefined;
+        this._distanceDisplayConditionProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'polyline', entity.polyline, undefined);
     }
@@ -194,6 +204,31 @@ define([
             value : undefined
         },
         /**
+         * Gets the property specifying whether the geometry
+         * casts or receives shadows from each light source.
+         * @memberof PolylineGeometryUpdater.prototype
+         * 
+         * @type {Property}
+         * @readonly
+         */
+        shadowsProperty : {
+            get : function() {
+                return this._shadowsProperty;
+            }
+        },
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
+         * @memberof PolylineGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        distanceDisplayConditionProperty : {
+            get : function() {
+                return this._distanceDisplayConditionProperty;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
@@ -278,6 +313,8 @@ define([
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time));
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
+        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
 
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
@@ -287,11 +324,13 @@ define([
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
                 show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute,
                 color : color
             };
         } else {
             attributes = {
-                show : show
+                show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute
             };
         }
 
@@ -366,6 +405,8 @@ define([
         var isColorMaterial = material instanceof ColorMaterialProperty;
         this._materialProperty = material;
         this._showProperty = defaultValue(show, defaultShow);
+        this._shadowsProperty = defaultValue(polyline.shadows, defaultShadows);
+        this._distanceDisplayConditionProperty = defaultValue(polyline.distanceDisplayCondition, defaultDistanceDisplayCondition);
         this._fillEnabled = true;
 
         var width = polyline.width;
@@ -486,6 +527,7 @@ define([
         line.positions = positions.slice();
         line.material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, line.material);
         line.width = Property.getValueOrDefault(polyline._width, time, 1);
+        line.distanceDisplayCondition = Property.getValueOrUndefined(polyline._distanceDisplayCondition, time, line.distanceDisplayCondition);
     };
 
     DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {

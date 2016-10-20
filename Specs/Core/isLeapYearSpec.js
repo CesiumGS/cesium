@@ -3,7 +3,7 @@ defineSuite([
         'Core/isLeapYear'
     ], function(
         isLeapYear) {
-    "use strict";
+    'use strict';
 
     it('Check for valid leap years', function() {
         expect(isLeapYear(2000)).toEqual(true);

@@ -13,7 +13,7 @@ define([
         DeveloperError,
         EllipseOutlineGeometry,
         Ellipsoid) {
-    "use strict";
+    'use strict';
 
     /**
      * A description of the outline of a circle on the ellipsoid.
@@ -52,9 +52,6 @@ define([
         if (!defined(radius)) {
             throw new DeveloperError('radius is required.');
         }
-        if (radius <= 0.0) {
-            throw new DeveloperError('radius must be greater than zero.');
-        }
         //>>includeEnd('debug');
 
         var ellipseGeometryOptions = {
@@ -83,6 +80,8 @@ define([
      * @param {CircleOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     CircleOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -90,7 +89,7 @@ define([
             throw new DeveloperError('value is required');
         }
         //>>includeEnd('debug');
-        EllipseOutlineGeometry.pack(value._ellipseGeometry, array, startingIndex);
+        return EllipseOutlineGeometry.pack(value._ellipseGeometry, array, startingIndex);
     };
 
     var scratchEllipseGeometry = new EllipseOutlineGeometry({
@@ -142,7 +141,7 @@ define([
      * Computes the geometric representation of an outline of a circle on an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {CircleOutlineGeometry} circleGeometry A description of the circle.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     CircleOutlineGeometry.createGeometry = function(circleGeometry) {
         return EllipseOutlineGeometry.createGeometry(circleGeometry._ellipseGeometry);

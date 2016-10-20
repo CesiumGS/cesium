@@ -13,7 +13,7 @@ defineSuite([
         Cartographic,
         Ellipsoid,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     it('construct0', function() {
         var projection = new WebMercatorProjection();

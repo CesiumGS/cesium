@@ -1,6 +1,6 @@
 /*global define*/
 define(function() {
-    "use strict";
+    'use strict';
 
     /**
      * A simple proxy that appends the desired resource as the sole query parameter
@@ -22,7 +22,8 @@ define(function() {
      * @returns {String} proxied resource
      */
     DefaultProxy.prototype.getURL = function(resource) {
-        return this.proxy + '?' + encodeURIComponent(resource);
+        var prefix = this.proxy.indexOf('?') === -1 ? '?' : '';
+        return this.proxy + prefix + encodeURIComponent(resource);
     };
 
     return DefaultProxy;

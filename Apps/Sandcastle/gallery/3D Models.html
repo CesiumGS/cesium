@@ -25,12 +25,12 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    scene3DOnly: true,
     infoBox : false,
-    selectionIndicator : false
+    selectionIndicator : false,
+    shadows : true
 });
 
 function createModel(url, height) {
@@ -64,6 +64,11 @@ var options = [{
     text : 'Ground vehicle',
     onselect : function() {
         createModel('../../SampleData/models/CesiumGround/Cesium_Ground.glb', 0);
+    }
+}, {
+    text : 'Hot Air Balloon',
+    onselect : function() {
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', 1000.0);
     }
 }, {
     text : 'Milk truck',

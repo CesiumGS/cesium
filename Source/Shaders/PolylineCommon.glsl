@@ -59,11 +59,11 @@ vec4 getPolylineWindowCoordinates(vec4 position, vec4 previous, vec4 next, float
     float expandWidth = width * 0.5;
     vec2 direction;
 
-    if (czm_equalsEpsilon(normalize(previous.xyz - position.xyz), vec3(0.0), czm_epsilon1) || czm_equalsEpsilon(prevWC, -nextWC, czm_epsilon1))
+    if (czm_equalsEpsilon(previous.xyz - position.xyz, vec3(0.0), czm_epsilon1) || czm_equalsEpsilon(prevWC, -nextWC, czm_epsilon1))
     {
         direction = vec2(-nextWC.y, nextWC.x);
     }
-    else if (czm_equalsEpsilon(normalize(next.xyz - position.xyz), vec3(0.0), czm_epsilon1) || clipped)
+    else if (czm_equalsEpsilon(next.xyz - position.xyz, vec3(0.0), czm_epsilon1) || clipped)
     {
         direction = vec2(prevWC.y, -prevWC.x);
     }

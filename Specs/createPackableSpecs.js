@@ -1,21 +1,24 @@
 /*global define*/
 define([
         'Core/defaultValue',
-        'Core/defined'
+        'Core/defined',
+        'Core/Math'
     ], function(
         defaultValue,
-        defined) {
-    "use strict";
+        defined,
+        CesiumMath) {
+    'use strict';
 
     function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
         namePrefix = defaultValue(namePrefix, '');
 
         it(namePrefix + ' can pack', function() {
             var packedArray = [];
-            packable.pack(instance, packedArray);
+            var returnArray = packable.pack(instance, packedArray);
+            expect(returnArray).toBe(packedArray);
             var packedLength = defined(packable.packedLength) ? packable.packedLength : instance.packedLength;
             expect(packedArray.length).toEqual(packedLength);
-            expect(packedArray).toEqual(packedInstance);
+            expect(packedArray).toEqualEpsilon(packedInstance, CesiumMath.EPSILON15);
         });
 
         it(namePrefix + ' can roundtrip', function() {
@@ -34,7 +37,7 @@ define([
             var packedArray = [0];
             var expected = packedArray.concat(packedInstance);
             packable.pack(instance, packedArray, 1);
-            expect(packedArray).toEqual(expected);
+            expect(packedArray).toEqualEpsilon(expected, CesiumMath.EPSILON15);
         });
 
         it(namePrefix + ' can unpack with startingIndex', function() {

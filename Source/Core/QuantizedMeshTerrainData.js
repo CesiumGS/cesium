@@ -31,7 +31,7 @@ define([
         TaskProcessor,
         TerrainEncoding,
         TerrainMesh) {
-    "use strict";
+    'use strict';
 
     /**
      * Terrain data for a single tile where the terrain data is represented as a quantized mesh.  A quantized
@@ -104,7 +104,7 @@ define([
      *     eastSkirtHeight : 1.0,
      *     northSkirtHeight : 1.0
      * });
-     * 
+     *
      * @see TerrainData
      * @see HeightmapTerrainData
      */
@@ -237,6 +237,8 @@ define([
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
      *
+     * @private
+     *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
@@ -271,6 +273,7 @@ define([
             maximumHeight : this._maximumHeight,
             quantizedVertices : this._quantizedVertices,
             octEncodedNormals : this._encodedNormals,
+            includeWebMercatorT : true,
             indices : this._indices,
             westIndices : this._westIndices,
             southIndices : this._southIndices,
@@ -303,7 +306,7 @@ define([
             var maximumHeight = result.maximumHeight;
             var boundingSphere = defaultValue(result.boundingSphere, that._boundingSphere);
             var obb = defaultValue(result.orientedBoundingBox, that._orientedBoundingBox);
-            var occlusionPoint = defaultValue(result.occludeePointInScaledSpace, that._horizonOcclusionPoint);
+            var occlusionPoint = that._horizonOcclusionPoint;
             var stride = result.vertexStride;
             var terrainEncoding = TerrainEncoding.clone(result.encoding);
 
@@ -320,7 +323,8 @@ define([
                     occlusionPoint,
                     stride,
                     obb,
-                    terrainEncoding);
+                    terrainEncoding,
+                    exaggeration);
 
             // Free memory received from server after mesh is created.
             that._quantizedVertices = undefined;
@@ -408,7 +412,8 @@ define([
             isEastChild : isEastChild,
             isNorthChild : isNorthChild,
             childRectangle : childRectangle,
-            ellipsoid : ellipsoid
+            ellipsoid : ellipsoid,
+            exaggeration : mesh.exaggeration
         });
 
         if (!defined(upsamplePromise)) {

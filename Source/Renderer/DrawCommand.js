@@ -1,11 +1,15 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
         '../Core/PrimitiveType'
     ], function(
         defaultValue,
+        defined,
+        defineProperties,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents a command to the renderer for drawing.
@@ -15,6 +19,37 @@ define([
     function DrawCommand(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        this._boundingVolume = options.boundingVolume;
+        this._orientedBoundingBox = options.orientedBoundingBox;
+        this._cull = defaultValue(options.cull, true);
+        this._modelMatrix = options.modelMatrix;
+        this._primitiveType = defaultValue(options.primitiveType, PrimitiveType.TRIANGLES);
+        this._vertexArray = options.vertexArray;
+        this._count = options.count;
+        this._offset = defaultValue(options.offset, 0);
+        this._instanceCount = defaultValue(options.instanceCount, 0);
+        this._shaderProgram = options.shaderProgram;
+        this._uniformMap = options.uniformMap;
+        this._renderState = options.renderState;
+        this._framebuffer = options.framebuffer;
+        this._pass = options.pass;
+        this._executeInClosestFrustum = defaultValue(options.executeInClosestFrustum, false);
+        this._owner = options.owner;
+        this._debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+        this._debugOverlappingFrustums = 0;
+        this._castShadows = defaultValue(options.castShadows, false);
+        this._receiveShadows = defaultValue(options.receiveShadows, false);
+        
+        this.dirty = true;
+        this.lastDirtyTime = 0;
+
+        /**
+         * @private
+         */
+        this.derivedCommands = {};
+    }
+
+    defineProperties(DrawCommand.prototype, {
         /**
          * The bounding volume of the geometry in world space.  This is used for culling and frustum selection.
          * <p>
@@ -29,7 +64,17 @@ define([
          *
          * @see DrawCommand#debugShowBoundingVolume
          */
-        this.boundingVolume = options.boundingVolume;
+        boundingVolume : {
+            get : function() {
+                return this._boundingVolume;
+            },
+            set : function(value) {
+                if (this._boundingVolume !== value) {
+                    this._boundingVolume = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * The oriented bounding box of the geometry in world space. If this is defined, it is used instead of
@@ -40,7 +85,17 @@ define([
          *
          * @see DrawCommand#debugShowBoundingVolume
          */
-        this.orientedBoundingBox = options.orientedBoundingBox;
+        orientedBoundingBox : {
+            get : function() {
+                return this._orientedBoundingBox;
+            },
+            set : function(value) {
+                if (this._orientedBoundingBox !== value) {
+                    this._orientedBoundingBox = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * When <code>true</code>, the renderer frustum and horizon culls the command based on its {@link DrawCommand#boundingVolume}.
@@ -49,7 +104,17 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.cull = defaultValue(options.cull, true);
+        cull : {
+            get : function() {
+                return this._cull;
+            },
+            set : function(value) {
+                if (this._cull !== value) {
+                    this._cull = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * The transformation from the geometry in model space to world space.
@@ -60,7 +125,17 @@ define([
          * @type {Matrix4}
          * @default undefined
          */
-        this.modelMatrix = options.modelMatrix;
+        modelMatrix : {
+            get : function() {
+                return this._modelMatrix;
+            },
+            set : function(value) {
+                if (this._modelMatrix !== value) {
+                    this._modelMatrix = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * The type of geometry in the vertex array.
@@ -68,7 +143,17 @@ define([
          * @type {PrimitiveType}
          * @default PrimitiveType.TRIANGLES
          */
-        this.primitiveType = defaultValue(options.primitiveType, PrimitiveType.TRIANGLES);
+        primitiveType : {
+            get : function() {
+                return this._primitiveType;
+            },
+            set : function(value) {
+                if (this._primitiveType !== value) {
+                    this._primitiveType = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * The vertex array.
@@ -76,7 +161,17 @@ define([
          * @type {VertexArray}
          * @default undefined
          */
-        this.vertexArray = options.vertexArray;
+        vertexArray : {
+            get : function() {
+                return this._vertexArray;
+            },
+            set : function(value) {
+                if (this._vertexArray !== value) {
+                    this._vertexArray = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * The number of vertices to draw in the vertex array.
@@ -84,7 +179,17 @@ define([
          * @type {Number}
          * @default undefined
          */
-        this.count = options.count;
+        count : {
+            get : function() {
+                return this._count;
+            },
+            set : function(value) {
+                if (this._count !== value) {
+                    this._count = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * The offset to start drawing in the vertex array.
@@ -92,15 +197,35 @@ define([
          * @type {Number}
          * @default 0
          */
-        this.offset = defaultValue(options.offset, 0);
+        offset : {
+            get : function() {
+                return this._offset;
+            },
+            set : function(value) {
+                if (this._offset !== value) {
+                    this._offset = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * The number of instances to draw.
          *
          * @type {Number}
-         * @default 1
+         * @default 0
          */
-        this.instanceCount = defaultValue(options.instanceCount, 0);
+        instanceCount : {
+            get : function() {
+                return this._instanceCount;
+            },
+            set : function(value) {
+                if (this._instanceCount !== value) {
+                    this._instanceCount = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * The shader program to apply.
@@ -108,7 +233,53 @@ define([
          * @type {ShaderProgram}
          * @default undefined
          */
-        this.shaderProgram = options.shaderProgram;
+        shaderProgram : {
+            get : function() {
+                return this._shaderProgram;
+            },
+            set : function(value) {
+                if (this._shaderProgram !== value) {
+                    this._shaderProgram = value;
+                    this.dirty = true;
+                }
+            }
+        },
+
+        /**
+         * Whether this command should cast shadows when shadowing is enabled.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        castShadows : {
+            get : function() {
+                return this._castShadows;
+            },
+            set : function(value) {
+                if (this._castShadows !== value) {
+                    this._castShadows = value;
+                    this.dirty = true;
+                }
+            }
+        },
+
+        /**
+         * Whether this command should receive shadows when shadowing is enabled.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        receiveShadows : {
+            get : function() {
+                return this._receiveShadows;
+            },
+            set : function(value) {
+                if (this._receiveShadows !== value) {
+                    this._receiveShadows = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * An object with functions whose names match the uniforms in the shader program
@@ -117,7 +288,17 @@ define([
          * @type {Object}
          * @default undefined
          */
-        this.uniformMap = options.uniformMap;
+        uniformMap : {
+            get : function() {
+                return this._uniformMap;
+            },
+            set : function(value) {
+                if (this._uniformMap !== value) {
+                    this._uniformMap = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * The render state.
@@ -125,7 +306,17 @@ define([
          * @type {RenderState}
          * @default undefined
          */
-        this.renderState = options.renderState;
+        renderState : {
+            get : function() {
+                return this._renderState;
+            },
+            set : function(value) {
+                if (this._renderState !== value) {
+                    this._renderState = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * The framebuffer to draw to.
@@ -133,7 +324,17 @@ define([
          * @type {Framebuffer}
          * @default undefined
          */
-        this.framebuffer = options.framebuffer;
+        framebuffer : {
+            get : function() {
+                return this._framebuffer;
+            },
+            set : function(value) {
+                if (this._framebuffer !== value) {
+                    this._framebuffer = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * The pass when to render.
@@ -141,7 +342,17 @@ define([
          * @type {Pass}
          * @default undefined
          */
-        this.pass = options.pass;
+        pass : {
+            get : function() {
+                return this._pass;
+            },
+            set : function(value) {
+                if (this._pass !== value) {
+                    this._pass = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * Specifies if this command is only to be executed in the frustum closest
@@ -150,7 +361,17 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.executeInClosestFrustum = defaultValue(options.executeInClosestFrustum, false);
+        executeInClosestFrustum : {
+            get : function() {
+                return this._executeInClosestFrustum;
+            },
+            set : function(value) {
+                if (this._executeInClosestFrustum !== value) {
+                    this._executeInClosestFrustum = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * The object who created this command.  This is useful for debugging command
@@ -163,7 +384,17 @@ define([
          *
          * @see Scene#debugCommandFilter
          */
-        this.owner = options.owner;
+        owner : {
+            get : function() {
+                return this._owner;
+            },
+            set : function(value) {
+                if (this._owner !== value) {
+                    this._owner = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -176,30 +407,81 @@ define([
          *
          * @see DrawCommand#boundingVolume
          */
-        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+        debugShowBoundingVolume : {
+            get : function() {
+                return this._debugShowBoundingVolume;
+            },
+            set : function(value) {
+                if (this._debugShowBoundingVolume !== value) {
+                    this._debugShowBoundingVolume = value;
+                    this.dirty = true;
+                }
+            }
+        },
 
         /**
          * Used to implement Scene.debugShowFrustums.
          * @private
          */
-        this.debugOverlappingFrustums = 0;
+        debugOverlappingFrustums : {
+            get : function() {
+                return this._debugOverlappingFrustums;
+            },
+            set : function(value) {
+                if (this._debugOverlappingFrustums !== value) {
+                    this._debugOverlappingFrustums = value;
+                    this.dirty = true;
+                }
+            }
+        }
+    });
 
-        /**
-         * @private
-         */
-        this.oit = undefined;
-    }
+    /**
+     * @private
+     */
+    DrawCommand.shallowClone = function(command, result) {
+        if (!defined(command)) {
+            return undefined;
+        }
+        if (!defined(result)) {
+            result = new DrawCommand();
+        }
+
+        result._boundingVolume = command._boundingVolume;
+        result._orientedBoundingBox = command._orientedBoundingBox;
+        result._cull = command._cull;
+        result._modelMatrix = command._modelMatrix;
+        result._primitiveType = command._primitiveType;
+        result._vertexArray = command._vertexArray;
+        result._count = command._count;
+        result._offset = command._offset;
+        result._instanceCount = command._instanceCount;
+        result._shaderProgram = command._shaderProgram;
+        result._uniformMap = command._uniformMap;
+        result._renderState = command._renderState;
+        result._framebuffer = command._framebuffer;
+        result._pass = command._pass;
+        result._executeInClosestFrustum = command._executeInClosestFrustum;
+        result._owner = command._owner;
+        result._debugShowBoundingVolume = command._debugShowBoundingVolume;
+        result._debugOverlappingFrustums = command._debugOverlappingFrustums;
+        result._castShadows = command._castShadows;
+        result._receiveShadows = command._receiveShadows;
+        
+        result.dirty = true;
+        result.lastDirtyTime = 0;
+
+        return result;
+    };
 
     /**
      * Executes the draw command.
      *
      * @param {Context} context The renderer context in which to draw.
      * @param {PassState} [passState] The state for the current render pass.
-     * @param {RenderState} [renderState] The render state that will override the render state of the command.
-     * @param {ShaderProgram} [shaderProgram] The shader program that will override the shader program of the command.
      */
-    DrawCommand.prototype.execute = function(context, passState, renderState, shaderProgram) {
-        context.draw(this, passState, renderState, shaderProgram);
+    DrawCommand.prototype.execute = function(context, passState) {
+        context.draw(this, passState);
     };
 
     return DrawCommand;

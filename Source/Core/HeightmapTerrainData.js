@@ -27,7 +27,7 @@ define([
         TerrainEncoding,
         TerrainMesh,
         TerrainProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
@@ -73,6 +73,14 @@ define([
      * @param {Boolean} [options.structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
      *                  stride property is greater than 1.  If this property is false, the first element is the
      *                  low-order element.  If it is true, the first element is the high-order element.
+     * @param {Number} [options.structure.lowestEncodedHeight] The lowest value that can be stored in the height buffer.  Any heights that are lower
+     *                 than this value after encoding with the `heightScale` and `heightOffset` are clamped to this value.  For example, if the height
+     *                 buffer is a `Uint16Array`, this value should be 0 because a `Uint16Array` cannot store negative numbers.  If this parameter is
+     *                 not specified, no minimum value is enforced.
+     * @param {Number} [options.structure.highestEncodedHeight] The highest value that can be stored in the height buffer.  Any heights that are higher
+     *                 than this value after encoding with the `heightScale` and `heightOffset` are clamped to this value.  For example, if the height
+     *                 buffer is a `Uint16Array`, this value should be `256 * 256 - 1` or 65535 because a `Uint16Array` cannot store numbers larger
+     *                 than 65535.  If this parameter is not specified, no maximum value is enforced.
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
@@ -82,16 +90,14 @@ define([
      * var heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
      * var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
      * var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
-     * var structure = Cesium.HeightmapTessellator.DEFAULT_STRUCTURE;
      * var terrainData = new Cesium.HeightmapTerrainData({
      *   buffer : heightBuffer,
      *   width : 65,
      *   height : 65,
      *   childTileMask : childTileMask,
-     *   structure : structure,
      *   waterMask : waterMask
      * });
-     * 
+     *
      * @see TerrainData
      * @see QuantizedMeshTerrainData
      */
@@ -156,6 +162,8 @@ define([
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
      *
+     * @private
+     *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
@@ -198,6 +206,7 @@ define([
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : this._buffer,
             structure : structure,
+            includeWebMercatorT : true,
             width : this._width,
             height : this._height,
             nativeRectangle : nativeRectangle,
@@ -224,9 +233,10 @@ define([
                     result.maximumHeight,
                     result.boundingSphere3D,
                     result.occludeePointInScaledSpace,
-                    6,
+                    result.numberOfAttributes,
                     result.orientedBoundingBox,
-                    TerrainEncoding.clone(result.encoding));
+                    TerrainEncoding.clone(result.encoding),
+                    exaggeration);
 
             // Free memory received from server after mesh is created.
             that._buffer = undefined;
@@ -261,7 +271,8 @@ define([
             var buffer = this._mesh.vertices;
             var encoding = this._mesh.encoding;
             var skirtHeight = this._skirtHeight;
-            heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, rectangle, width, height, longitude, latitude);
+            var exaggeration = this._mesh.exaggeration;
+            heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, rectangle, width, height, longitude, latitude, exaggeration);
         } else {
             heightSample = interpolateHeight(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, rectangle, width, height, longitude, latitude);
             heightSample = heightSample * heightScale + heightOffset;
@@ -335,6 +346,7 @@ define([
 
         var heightOffset = structure.heightOffset;
         var heightScale = structure.heightScale;
+        var exaggeration = meshData.exaggeration;
 
         var elementsPerHeight = structure.elementsPerHeight;
         var elementMultiplier = structure.elementMultiplier;
@@ -346,7 +358,13 @@ define([
             var latitude = CesiumMath.lerp(destinationRectangle.north, destinationRectangle.south, j / (height - 1));
             for (var i = 0; i < width; ++i) {
                 var longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
-                var heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude);
+                var heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude, exaggeration);
+
+                // Use conditionals here instead of Math.min and Math.max so that an undefined
+                // lowestEncodedHeight or highestEncodedHeight has no effect.
+                heightSample = heightSample < structure.lowestEncodedHeight ? structure.lowestEncodedHeight : heightSample;
+                heightSample = heightSample > structure.highestEncodedHeight ? structure.highestEncodedHeight : heightSample;
+
                 setHeight(heights, elementsPerHeight, elementMultiplier, divisor, stride, isBigEndian, j * width + i, heightSample);
             }
         }
@@ -444,7 +462,8 @@ define([
         return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
     }
 
-    function interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude) {
+    function interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude, exaggeration) {
+        // returns a height encoded according to the structure's heightScale and heightOffset.
         var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
         var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
 
@@ -478,10 +497,10 @@ define([
         southInteger = height - 1 - southInteger;
         northInteger = height - 1 - northInteger;
 
-        var southwestHeight = (encoding.decodeHeight(buffer, southInteger * width + westInteger) - heightOffset) / heightScale;
-        var southeastHeight = (encoding.decodeHeight(buffer, southInteger * width + eastInteger) - heightOffset) / heightScale;
-        var northwestHeight = (encoding.decodeHeight(buffer, northInteger * width + westInteger) - heightOffset) / heightScale;
-        var northeastHeight = (encoding.decodeHeight(buffer, northInteger * width + eastInteger) - heightOffset) / heightScale;
+        var southwestHeight = (encoding.decodeHeight(buffer, southInteger * width + westInteger) / exaggeration - heightOffset) / heightScale;
+        var southeastHeight = (encoding.decodeHeight(buffer, southInteger * width + eastInteger) / exaggeration - heightOffset) / heightScale;
+        var northwestHeight = (encoding.decodeHeight(buffer, northInteger * width + westInteger) / exaggeration - heightOffset) / heightScale;
+        var northeastHeight = (encoding.decodeHeight(buffer, northInteger * width + eastInteger) / exaggeration - heightOffset) / heightScale;
 
         return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
     }
@@ -521,18 +540,19 @@ define([
 
         var i;
         if (isBigEndian) {
-            for (i = 0; i < elementsPerHeight; ++i) {
-                heights[index + i] = height / divisor;
+            for (i = 0; i < elementsPerHeight - 1; ++i) {
+                heights[index + i] = (height / divisor) | 0;
                 height -= heights[index + i] * divisor;
                 divisor /= elementMultiplier;
             }
         } else {
-            for (i = elementsPerHeight - 1; i >= 0; --i) {
-                heights[index + i] = height / divisor;
+            for (i = elementsPerHeight - 1; i > 0; --i) {
+                heights[index + i] = (height / divisor) | 0;
                 height -= heights[index + i] * divisor;
                 divisor /= elementMultiplier;
             }
         }
+        heights[index + i] = height;
     }
 
     return HeightmapTerrainData;

@@ -11,7 +11,7 @@ define([
         TerrainQuantization,
         ShaderProgram,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     function GlobeSurfaceShader(numberOfDayTextures, flags, shaderProgram) {
         this.numberOfDayTextures = numberOfDayTextures;
@@ -35,8 +35,7 @@ define([
 
     function getPositionMode(sceneMode) {
         var getPosition3DMode = 'vec4 getPosition(vec3 position, float height, vec2 textureCoordinates) { return getPosition3DMode(position, height, textureCoordinates); }';
-        var getPosition2DMode = 'vec4 getPosition(vec3 position, float height, vec2 textureCoordinates) { return getPosition2DMode(position, height, textureCoordinates); }';
-        var getPositionColumbusViewMode = 'vec4 getPosition(vec3 position, float height, vec2 textureCoordinates) { return getPositionColumbusViewMode(position, height, textureCoordinates); }';
+        var getPositionColumbusViewAnd2DMode = 'vec4 getPosition(vec3 position, float height, vec2 textureCoordinates) { return getPositionColumbusViewMode(position, height, textureCoordinates); }';
         var getPositionMorphingMode = 'vec4 getPosition(vec3 position, float height, vec2 textureCoordinates) { return getPositionMorphingMode(position, height, textureCoordinates); }';
 
         var positionMode;
@@ -46,10 +45,8 @@ define([
             positionMode = getPosition3DMode;
             break;
         case SceneMode.SCENE2D:
-            positionMode = getPosition2DMode;
-            break;
         case SceneMode.COLUMBUS_VIEW:
-            positionMode = getPositionColumbusViewMode;
+            positionMode = getPositionColumbusViewAnd2DMode;
             break;
         case SceneMode.MORPHING:
             positionMode = getPositionMorphingMode;
@@ -151,13 +148,16 @@ define([
                 }
             }
 
+            vs.defines.push('INCLUDE_WEB_MERCATOR_Y');
+            fs.defines.push('INCLUDE_WEB_MERCATOR_Y');
+
             if (enableFog) {
                 vs.defines.push('FOG');
                 fs.defines.push('FOG');
             }
 
             var computeDayColor = '\
-    vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates)\n\
+    vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates)\n\
     {\n\
         vec4 color = initialColor;\n';
 
@@ -166,7 +166,7 @@ define([
     color = sampleAndBlend(\n\
         color,\n\
         u_dayTextures[' + i + '],\n\
-        textureCoordinates,\n\
+        u_dayTextureUseWebMercatorT[' + i + '] ? textureCoordinates.xz : textureCoordinates.xy,\n\
         u_dayTextureTexCoordsRectangle[' + i + '],\n\
         u_dayTextureTranslationAndScale[' + i + '],\n\
         ' + (applyAlpha ? 'u_dayTextureAlpha[' + i + ']' : '1.0') + ',\n\
@@ -241,6 +241,9 @@ define([
     };
 
     GlobeSurfaceShaderSet.prototype.destroy = function() {
+        var flags;
+        var shader;
+
         var shadersByTexturesFlags = this._shadersByTexturesFlags;
         for (var textureCount in shadersByTexturesFlags) {
             if (shadersByTexturesFlags.hasOwnProperty(textureCount)) {
@@ -249,14 +252,22 @@ define([
                     continue;
                 }
 
-                for (var flags in shadersByFlags) {
+                for (flags in shadersByFlags) {
                     if (shadersByFlags.hasOwnProperty(flags)) {
-                        var shader = shadersByFlags[flags];
+                        shader = shadersByFlags[flags];
                         if (defined(shader)) {
                             shader.shaderProgram.destroy();
                         }
                     }
                 }
+            }
+        }
+
+        var pickShaderPrograms = this._pickShaderPrograms;
+        for (flags in pickShaderPrograms) {
+            if (pickShaderPrograms.hasOwnProperty(flags)) {
+                shader = pickShaderPrograms[flags];
+                shader.destroy();
             }
         }
 

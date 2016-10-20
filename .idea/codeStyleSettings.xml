@@ -12,7 +12,6 @@
         </XML>
         <codeStyleSettings language="JavaScript">
           <option name="KEEP_BLANK_LINES_IN_CODE" value="1" />
-          <option name="ALIGN_MULTILINE_PARAMETERS_IN_CALLS" value="true" />
           <option name="ALIGN_MULTILINE_BINARY_OPERATION" value="true" />
           <option name="ALIGN_MULTILINE_TERNARY_OPERATION" value="true" />
           <option name="ALIGN_MULTILINE_ARRAY_INITIALIZER_EXPRESSION" value="true" />

@@ -9,7 +9,7 @@ defineSuite([
         defined,
         JulianDate,
         TimeStandard) {
-    "use strict";
+    'use strict';
 
     var officialLeapSeconds;
 

@@ -5,6 +5,8 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/DistanceDisplayCondition',
+        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/JulianDate',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
@@ -21,6 +23,7 @@ defineSuite([
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/Globe',
         'Scene/PrimitiveCollection',
+        'Scene/ShadowMode',
         'Specs/createDynamicProperty',
         'Specs/createScene'
     ], function(
@@ -29,6 +32,8 @@ defineSuite([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         JulianDate,
         ShowGeometryInstanceAttribute,
         TimeInterval,
@@ -45,9 +50,10 @@ defineSuite([
         TimeIntervalCollectionProperty,
         Globe,
         PrimitiveCollection,
+        ShadowMode,
         createDynamicProperty,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     beforeAll(function(){
@@ -91,6 +97,8 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.shadowsProperty).toBe(undefined);
+        expect(updater.distanceDisplayConditionProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -129,6 +137,8 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
+        expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -194,6 +204,7 @@ defineSuite([
         polyline.width = new ConstantProperty(options.width);
         polyline.followSurface = new ConstantProperty(options.followSurface);
         polyline.granularity = new ConstantProperty(options.granularity);
+        polyline.distanceDisplayCondition = options.distanceDisplayCondition;
 
         var updater = new PolylineGeometryUpdater(entity, scene);
 
@@ -213,6 +224,9 @@ defineSuite([
             expect(attributes.color).toBeUndefined();
         }
         expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.show));
+        if (options.distanceDisplayCondition) {
+            expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+        }
     }
 
     it('Creates expected per-color geometry', function() {
@@ -232,6 +246,17 @@ defineSuite([
             width : 4,
             followSurface : true,
             granularity : 0.5
+        });
+    });
+
+    it('Creates expected distance display condition geometry', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            width : 3,
+            followSurface : false,
+            granularity : 1.0,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
         });
     });
 

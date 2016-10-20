@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         GeometryAttribute,
         ComponentDatatype) {
-    "use strict";
+    'use strict';
 
     it('constructor', function() {
         var color = new GeometryAttribute({

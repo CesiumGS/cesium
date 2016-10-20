@@ -2,24 +2,33 @@
 define([
         '../Core/AssociativeArray',
         '../Core/defined',
+        '../Core/DistanceDisplayCondition',
+        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
         './BoundingSphereState',
-        './MaterialProperty'
+        './MaterialProperty',
+        './Property'
     ], function(
         AssociativeArray,
         defined,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         Primitive,
         BoundingSphereState,
-        MaterialProperty) {
-    "use strict";
+        MaterialProperty,
+        Property) {
+    'use strict';
 
-    function Batch(primitives, appearanceType, materialProperty, closed) {
+    var distanceDisplayConditionScratch = new DistanceDisplayCondition();
+
+    function Batch(primitives, appearanceType, materialProperty, closed, shadows) {
         this.primitives = primitives;
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
         this.closed = closed;
+        this.shadows = shadows;
         this.updaters = new AssociativeArray();
         this.createPrimitive = true;
         this.primitive = undefined;
@@ -53,7 +62,7 @@ define([
         var id = updater.entity.id;
         this.updaters.set(id, updater);
         this.geometry.set(id, updater.createFillGeometryInstance(time));
-        if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant) {
+        if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)) {
             this.updatersWithAttributes.set(id, updater);
         } else {
             var that = this;
@@ -68,10 +77,8 @@ define([
 
     Batch.prototype.remove = function(updater) {
         var id = updater.entity.id;
-        var createPrimitive = this.updaters.remove(id);
-
-        if (createPrimitive) {
-            this.geometry.remove(id);
+        this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
+        if (this.updaters.remove(id)) {
             this.updatersWithAttributes.remove(id);
             var unsubscribe = this.subscriptions.get(id);
             if (defined(unsubscribe)) {
@@ -79,8 +86,7 @@ define([
                 this.subscriptions.remove(id);
             }
         }
-        this.createPrimitive = createPrimitive;
-        return createPrimitive;
+        return this.createPrimitive;
     };
 
     Batch.prototype.update = function(time) {
@@ -125,7 +131,8 @@ define([
                         material : this.material,
                         translucent : this.material.isTranslucent(),
                         closed : this.closed
-                    })
+                    }),
+                    shadows : this.shadows
                 });
 
                 primitives.add(primitive);
@@ -172,6 +179,15 @@ define([
                 if (show !== currentShow) {
                     attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                 }
+
+                var distanceDisplayConditionProperty = updater.distanceDisplayConditionProperty;
+                if (!Property.isConstant(distanceDisplayConditionProperty)) {
+                    var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time, distanceDisplayConditionScratch);
+                    if (!DistanceDisplayCondition.equals(distanceDisplayCondition, attributes._lastDistanceDisplayCondition)) {
+                        attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition, attributes._lastDistanceDisplayCondition);
+                        attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
+                    }
+                }
             }
 
             this.updateShows(primitive);
@@ -214,7 +230,7 @@ define([
             return BoundingSphereState.PENDING;
         }
         var attributes = primitive.getGeometryInstanceAttributes(entity);
-        if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
+        if (!defined(attributes) || !defined(attributes.boundingSphere) ||
             (defined(attributes.show) && attributes.show[0] === 0)) {
             return BoundingSphereState.FAILED;
         }
@@ -238,11 +254,12 @@ define([
     /**
      * @private
      */
-    function StaticGeometryPerMaterialBatch(primitives, appearanceType, closed) {
+    function StaticGeometryPerMaterialBatch(primitives, appearanceType, closed, shadows) {
         this._items = [];
         this._primitives = primitives;
         this._appearanceType = appearanceType;
         this._closed = closed;
+        this._shadows = shadows;
     }
     StaticGeometryPerMaterialBatch.prototype.add = function(time, updater) {
         var items = this._items;
@@ -254,7 +271,7 @@ define([
                 return;
             }
         }
-        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, this._closed);
+        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, this._closed, this._shadows);
         batch.add(time, updater);
         items.push(batch);
     };

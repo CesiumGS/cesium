@@ -3,7 +3,7 @@ defineSuite([
         'ThirdParty/knockout'
     ], function(
         knockout) {
-    "use strict";
+    'use strict';
 
     it('can track all properties', function() {
         var obj = {

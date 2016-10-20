@@ -7,7 +7,7 @@ define([
         defined,
         Ellipsoid,
         WallOutlineGeometry) {
-    "use strict";
+    'use strict';
 
     function createWallOutlineGeometry(wallGeometry, offset) {
         if (defined(offset)) {

@@ -15,7 +15,7 @@ define([
         EventHelper,
         JulianDate,
         knockout) {
-    "use strict";
+    'use strict';
 
     /**
      * A view model which exposes a {@link Clock} for user interfaces.
@@ -35,168 +35,120 @@ define([
         this._eventHelper = new EventHelper();
         this._eventHelper.add(clock.onTick, this.synchronize, this);
 
-        var startTime = knockout.observable(clock.startTime);
-        startTime.equalityComparer = JulianDate.equals;
-
         /**
-         * Gets the current system time.  This property is observable.
+         * Gets the current system time.
+         * This property is observable.
          * @type {JulianDate}
-         * @default JulianDate()
          */
         this.systemTime = knockout.observable(JulianDate.now());
         this.systemTime.equalityComparer = JulianDate.equals;
 
-        knockout.track(this, ['systemTime']);
-
         /**
-         * Gets or sets the start time of the clock.  This property is observable.
+         * Gets or sets the start time of the clock.
+         * See {@link Clock#startTime}.
+         * This property is observable.
          * @type {JulianDate}
-         * @default undefined
          */
-        this.startTime = undefined;
-        knockout.defineProperty(this, 'startTime', {
-            get : startTime,
-            set : function(value) {
-                startTime(value);
-                clock.startTime = value;
-            }
-        });
-
-        var stopTime = knockout.observable(clock.stopTime);
-        stopTime.equalityComparer = JulianDate.equals;
+        this.startTime = knockout.observable(clock.startTime);
+        this.startTime.equalityComparer = JulianDate.equals;
+        this.startTime.subscribe(function(value) {
+            clock.startTime = value;
+            this.synchronize();
+        }, this);
 
         /**
-         * Gets or sets the stop time of the clock.  This property is observable.
+         * Gets or sets the stop time of the clock.
+         * See {@link Clock#stopTime}.
+         * This property is observable.
          * @type {JulianDate}
-         * @default undefined
          */
-        this.stopTime = undefined;
-        knockout.defineProperty(this, 'stopTime', {
-            get : stopTime,
-            set : function(value) {
-                clock.stopTime = value;
-                stopTime(value);
-            }
-        });
-
-        var currentTime = knockout.observable(clock.currentTime);
-        currentTime.equalityComparer = JulianDate.equals;
+        this.stopTime = knockout.observable(clock.stopTime);
+        this.stopTime.equalityComparer = JulianDate.equals;
+        this.stopTime.subscribe(function(value) {
+            clock.stopTime = value;
+            this.synchronize();
+        }, this);
 
         /**
-         * Gets or sets the current time.  This property is observable.
+         * Gets or sets the current time.
+         * See {@link Clock#currentTime}.
+         * This property is observable.
          * @type {JulianDate}
-         * @default undefined
          */
-        this.currentTime = undefined;
-        knockout.defineProperty(this, 'currentTime', {
-            get : currentTime,
-            set : function(value) {
-                clock.currentTime = value;
-                currentTime(value);
-            }
-        });
+        this.currentTime = knockout.observable(clock.currentTime);
+        this.currentTime.equalityComparer = JulianDate.equals;
+        this.currentTime.subscribe(function(value) {
+            clock.currentTime = value;
+            this.synchronize();
+        }, this);
 
-        var multiplier = knockout.observable(clock.multiplier);
         /**
-         * Gets or sets how much time advances when tick is called, negative values allow for advancing backwards.
-         * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
-         * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
-         * elapsed system time since the last call to tick.  This property is observable.
+         * Gets or sets the clock multiplier.
+         * See {@link Clock#multiplier}.
+         * This property is observable.
          * @type {Number}
-         * @default undefined
          */
-        this.multiplier = undefined;
-        knockout.defineProperty(this, 'multiplier', {
-            get : multiplier,
-            set : function(value) {
-                clock.multiplier = value;
-                multiplier(value);
-            }
-        });
-
-        var clockStep = knockout.observable(clock.clockStep);
-        clockStep.equalityComparer = function(a, b) {
-            return a === b;
-        };
+        this.multiplier = knockout.observable(clock.multiplier);
+        this.multiplier.subscribe(function(value) {
+            clock.multiplier = value;
+            this.synchronize();
+        }, this);
 
         /**
-         * Gets or sets whether calls to <code>Clock.tick</code> are frame dependent or system clock dependent.
+         * Gets or sets the clock step setting.
+         * See {@link Clock#clockStep}.
          * This property is observable.
          * @type {ClockStep}
-         * @default undefined
          */
-        this.clockStep = undefined;
-        knockout.defineProperty(this, 'clockStep', {
-            get : clockStep,
-            set : function(value) {
-                clockStep(value);
-                clock.clockStep = value;
-            }
-        });
-
-        var clockRange = knockout.observable(clock.clockRange);
-        clockRange.equalityComparer = function(a, b) {
-            return a === b;
-        };
+        this.clockStep = knockout.observable(clock.clockStep);
+        this.clockStep.subscribe(function(value) {
+            clock.clockStep = value;
+            this.synchronize();
+        }, this);
 
         /**
-         * Gets or sets how tick should behave when <code>startTime</code> or <code>stopTime</code> is reached.
+         * Gets or sets the clock range setting.
+         * See {@link Clock#clockRange}.
          * This property is observable.
          * @type {ClockRange}
-         * @default undefined
          */
-        this.clockRange = undefined;
-        knockout.defineProperty(this, 'clockRange', {
-            get : clockRange,
-            set : function(value) {
-                clockRange(value);
-                clock.clockRange = value;
-            }
-        });
-
-        var canAnimate = knockout.observable(clock.canAnimate);
+        this.clockRange = knockout.observable(clock.clockRange);
+        this.clockRange.subscribe(function(value) {
+            clock.clockRange = value;
+            this.synchronize();
+        }, this);
 
         /**
-         * Gets or sets whether or not <code>Clock.tick</code> can advance time.
-         * This could be false if data is being buffered, for example.
-         * The clock will only tick when both <code>canAnimate</code> and <code>shouldAnimate</code> are true.
+         * Gets or sets whether the clock can animate.
+         * See {@link Clock#canAnimate}.
          * This property is observable.
          * @type {Boolean}
-         * @default undefined
          */
-        this.canAnimate = undefined;
-        knockout.defineProperty(this, 'canAnimate', {
-            get : canAnimate,
-            set : function(value) {
-                canAnimate(value);
-                clock.canAnimate = value;
-            }
-        });
-
-        var shouldAnimate = knockout.observable(clock.shouldAnimate);
+        this.canAnimate = knockout.observable(clock.canAnimate);
+        this.canAnimate.subscribe(function(value) {
+            clock.canAnimate = value;
+            this.synchronize();
+        }, this);
 
         /**
-         * Gets or sets whether or not <code>Clock.tick</code> should attempt to advance time.
-         * The clock will only tick when both <code>canAnimate</code> and <code>shouldAnimate</code> are true.
+         * Gets or sets whether the clock should animate.
+         * See {@link Clock#shouldAnimate}.
          * This property is observable.
          * @type {Boolean}
-         * @default undefined
          */
-        this.shouldAnimate = undefined;
-        knockout.defineProperty(this, 'shouldAnimate', {
-            get : shouldAnimate,
-            set : function(value) {
-                shouldAnimate(value);
-                clock.shouldAnimate = value;
-            }
-        });
+        this.shouldAnimate = knockout.observable(clock.shouldAnimate);
+        this.shouldAnimate.subscribe(function(value) {
+            clock.shouldAnimate = value;
+            this.synchronize();
+        }, this);
+
+        knockout.track(this, ['systemTime', 'startTime', 'stopTime', 'currentTime', 'multiplier', 'clockStep', 'clockRange', 'canAnimate', 'shouldAnimate']);
     }
 
     defineProperties(ClockViewModel.prototype, {
         /**
          * Gets the underlying Clock.
          * @memberof ClockViewModel.prototype
-         *
          * @type {Clock}
          */
         clock : {
@@ -214,24 +166,15 @@ define([
     ClockViewModel.prototype.synchronize = function() {
         var clock = this._clock;
 
-        var startTime = clock.startTime;
-        var stopTime = clock.stopTime;
-        var currentTime = clock.currentTime;
-        var multiplier = clock.multiplier;
-        var clockStep = clock.clockStep;
-        var clockRange = clock.clockRange;
-        var canAnimate = clock.canAnimate;
-        var shouldAnimate = clock.shouldAnimate;
-
         this.systemTime = JulianDate.now();
-        this.startTime = startTime;
-        this.stopTime = stopTime;
-        this.currentTime = currentTime;
-        this.multiplier = multiplier;
-        this.clockStep = clockStep;
-        this.clockRange = clockRange;
-        this.canAnimate = canAnimate;
-        this.shouldAnimate = shouldAnimate;
+        this.startTime = clock.startTime;
+        this.stopTime = clock.stopTime;
+        this.currentTime = clock.currentTime;
+        this.multiplier = clock.multiplier;
+        this.clockStep = clock.clockStep;
+        this.clockRange = clock.clockRange;
+        this.canAnimate = clock.canAnimate;
+        this.shouldAnimate = clock.shouldAnimate;
     };
 
     /**

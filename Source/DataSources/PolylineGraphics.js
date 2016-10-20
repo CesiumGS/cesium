@@ -15,7 +15,7 @@ define([
         Event,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a polyline defined as a line strip. The first two positions define a line segment,
@@ -32,6 +32,8 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polyline.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the polyline.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if followSurface is true.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polyline casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polyline will be displayed.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
@@ -50,6 +52,10 @@ define([
         this._widthSubscription = undefined;
         this._width = undefined;
         this._widthSubscription = undefined;
+        this._shadows = undefined;
+        this._shadowsSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -116,7 +122,23 @@ define([
          * @type {Property}
          * @default Cesium.Math.RADIANS_PER_DEGREE
          */
-        granularity : createPropertyDescriptor('granularity')
+        granularity : createPropertyDescriptor('granularity'),
+        
+        /**
+         * Get or sets the enum Property specifying whether the polyline
+         * casts or receives shadows from each light source.
+         * @memberof PolylineGraphics.prototype
+         * @type {Property}
+         * @default ShadowMode.DISABLED
+         */
+        shadows : createPropertyDescriptor('shadows'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this polyline will be displayed.
+         * @memberof PolylineGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -135,6 +157,8 @@ define([
         result.width = this.width;
         result.followSurface = this.followSurface;
         result.granularity = this.granularity;
+        result.shadows = this.shadows;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
 
@@ -157,6 +181,8 @@ define([
         this.width = defaultValue(this.width, source.width);
         this.followSurface = defaultValue(this.followSurface, source.followSurface);
         this.granularity = defaultValue(this.granularity, source.granularity);
+        this.shadows = defaultValue(this.shadows, source.shadows);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return PolylineGraphics;

@@ -18,6 +18,7 @@ defineSuite([
         'Scene/CameraFlightPath',
         'Scene/ImageryLayerCollection',
         'Scene/SceneMode',
+        'Scene/ShadowMode',
         'Specs/createViewer',
         'Specs/DomEventSimulator',
         'Specs/MockDataSource',
@@ -52,6 +53,7 @@ defineSuite([
         CameraFlightPath,
         ImageryLayerCollection,
         SceneMode,
+        ShadowMode,
         createViewer,
         DomEventSimulator,
         MockDataSource,
@@ -67,7 +69,7 @@ defineSuite([
         SceneModePicker,
         SelectionIndicator,
         Timeline) {
-    "use strict";
+    'use strict';
 
     var testProvider = {
         isReady : function() {
@@ -352,6 +354,20 @@ defineSuite([
         expect(viewer.selectionIndicator).toBeUndefined();
         viewer.resize();
         viewer.render();
+    });
+
+    it('can set shadows', function() {
+        viewer = createViewer(container, {
+            shadows : true
+        });
+        expect(viewer.shadows).toBe(true);
+    });
+
+    it('can set terrain shadows', function() {
+        viewer = createViewer(container, {
+            terrainShadows : ShadowMode.ENABLED
+        });
+        expect(viewer.terrainShadows).toBe(ShadowMode.ENABLED);
     });
 
     it('can set terrainProvider', function() {
@@ -673,8 +689,8 @@ defineSuite([
         dataSource.clock.stopTime = JulianDate.fromIso8601('2014-08-21T02:00Z');
         dataSource.clock.currentTime = JulianDate.fromIso8601('2014-08-02T00:00Z');
         dataSource.clock.clockRange = ClockRange.UNBOUNDED;
-        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK;
-        dataSource.clock.multiplier = 20.0;
+        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+        dataSource.clock.multiplier = 10.0;
 
         dataSource.changedEvent.raiseEvent(dataSource);
 
@@ -684,6 +700,13 @@ defineSuite([
         expect(viewer.clock.clockRange).toEqual(dataSource.clock.clockRange);
         expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
         expect(viewer.clock.multiplier).toEqual(dataSource.clock.multiplier);
+
+        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK;
+        dataSource.clock.multiplier = 1.0;
+
+        dataSource.changedEvent.raiseEvent(dataSource);
+
+        expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
     });
 
     it('can manually control the clock tracking', function() {

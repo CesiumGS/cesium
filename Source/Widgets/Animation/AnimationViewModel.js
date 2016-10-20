@@ -23,23 +23,11 @@ define([
         sprintf,
         createCommand,
         ToggleButtonViewModel) {
-    "use strict";
+    'use strict';
 
     var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     var realtimeShuttleRingAngle = 15;
     var maxShuttleRingAngle = 105;
-
-    function cancelRealtime(clockViewModel) {
-        if (clockViewModel.clockStep === ClockStep.SYSTEM_CLOCK) {
-            clockViewModel.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-            clockViewModel.multiplier = 1;
-        }
-    }
-
-    function unpause(clockViewModel) {
-        cancelRealtime(clockViewModel);
-        clockViewModel.shouldAnimate = true;
-    }
 
     function numberComparator(left, right) {
         return left - right;
@@ -284,10 +272,9 @@ define([
         var pauseCommand = createCommand(function() {
             var clockViewModel = that._clockViewModel;
             if (clockViewModel.shouldAnimate) {
-                cancelRealtime(clockViewModel);
                 clockViewModel.shouldAnimate = false;
             } else if (that._canAnimate) {
-                unpause(clockViewModel);
+                clockViewModel.shouldAnimate = true;
             }
         });
 
@@ -300,7 +287,6 @@ define([
 
         var playReverseCommand = createCommand(function() {
             var clockViewModel = that._clockViewModel;
-            cancelRealtime(clockViewModel);
             var multiplier = clockViewModel.multiplier;
             if (multiplier > 0) {
                 clockViewModel.multiplier = -multiplier;
@@ -317,7 +303,6 @@ define([
 
         var playForwardCommand = createCommand(function() {
             var clockViewModel = that._clockViewModel;
-            cancelRealtime(clockViewModel);
             var multiplier = clockViewModel.multiplier;
             if (multiplier < 0) {
                 clockViewModel.multiplier = -multiplier;
@@ -333,15 +318,12 @@ define([
         });
 
         var playRealtimeCommand = createCommand(function() {
-            var clockViewModel = that._clockViewModel;
-            clockViewModel.clockStep = ClockStep.SYSTEM_CLOCK;
-            clockViewModel.multiplier = 1.0;
-            clockViewModel.shouldAnimate = true;
+            that._clockViewModel.clockStep = ClockStep.SYSTEM_CLOCK;
         }, knockout.getObservable(this, '_isSystemTimeAvailable'));
 
         this._playRealtimeViewModel = new ToggleButtonViewModel(playRealtimeCommand, {
             toggled : knockout.computed(function() {
-                return clockViewModel.shouldAnimate && clockViewModel.clockStep === ClockStep.SYSTEM_CLOCK;
+                return clockViewModel.clockStep === ClockStep.SYSTEM_CLOCK;
             }),
             tooltip : knockout.computed(function() {
                 return that._isSystemTimeAvailable ? 'Today (real-time)' : 'Current time not in range';
@@ -350,7 +332,6 @@ define([
 
         this._slower = createCommand(function() {
             var clockViewModel = that._clockViewModel;
-            cancelRealtime(clockViewModel);
             var shuttleRingTicks = that._allShuttleRingTicks;
             var multiplier = clockViewModel.multiplier;
             var index = getTypicalMultiplierIndex(multiplier, shuttleRingTicks) - 1;
@@ -361,7 +342,6 @@ define([
 
         this._faster = createCommand(function() {
             var clockViewModel = that._clockViewModel;
-            cancelRealtime(clockViewModel);
             var shuttleRingTicks = that._allShuttleRingTicks;
             var multiplier = clockViewModel.multiplier;
             var index = getTypicalMultiplierIndex(multiplier, shuttleRingTicks) + 1;

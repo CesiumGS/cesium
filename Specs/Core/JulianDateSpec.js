@@ -9,7 +9,7 @@ defineSuite([
         CesiumMath,
         TimeConstants,
         TimeStandard) {
-    "use strict";
+    'use strict';
 
     // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
     it('Construct a default date', function() {
@@ -135,7 +135,7 @@ defineSuite([
         var date = new Date('December 31, 2021 18:00:00 UTC');
         var julianDate = JulianDate.fromDate(date);
         expect(julianDate.dayNumber).toEqual(2459580);
-        expect(julianDate.secondsOfDay).toEqual(21636);
+        expect(julianDate.secondsOfDay).toEqual(21637);
     });
 
     it('Construct a date from a JavaScript Date (4)', function() {
@@ -149,7 +149,7 @@ defineSuite([
         var jsDate = new Date('11/17/2039 12:00:00 AM UTC');
         var julianDate = JulianDate.fromDate(jsDate);
         expect(julianDate.dayNumber).toEqual(2466109);
-        expect(julianDate.secondsOfDay).toEqual(43236);
+        expect(julianDate.secondsOfDay).toEqual(43237);
     });
 
     it('Fail to construct from an undefined JavaScript Date', function() {
@@ -724,7 +724,7 @@ defineSuite([
 
     it('toDate works on date later than all leap seconds', function() {
         var expectedDate = new Date('11/17/2039 12:00:00 AM UTC');
-        var date = JulianDate.toDate(new JulianDate(2466109, 43236.0, TimeStandard.TAI));
+        var date = JulianDate.toDate(new JulianDate(2466109, 43237.0, TimeStandard.TAI));
         expect(date).toEqual(expectedDate);
     });
 
@@ -1036,7 +1036,7 @@ defineSuite([
     });
 
     it('computeTaiMinusUtc works after all leap seconds', function() {
-        var date = new JulianDate(2556109, 43236.0, TimeStandard.TAI);
-        expect(JulianDate.computeTaiMinusUtc(date)).toEqual(36);
+        var date = new JulianDate(2556109, 43237.0, TimeStandard.TAI);
+        expect(JulianDate.computeTaiMinusUtc(date)).toEqual(37);
     });
 });

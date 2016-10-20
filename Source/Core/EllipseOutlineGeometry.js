@@ -29,7 +29,7 @@ define([
         IndexDatatype,
         CesiumMath,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     var scratchCartesian1 = new Cartesian3();
     var boundingSphereCenter = new Cartesian3();
@@ -67,9 +67,6 @@ define([
     var topBoundingSphere = new BoundingSphere();
     var bottomBoundingSphere = new BoundingSphere();
     function computeExtrudedEllipse(options) {
-        var numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
-        numberOfVerticalLines = Math.max(numberOfVerticalLines, 0);
-
         var center = options.center;
         var ellipsoid = options.ellipsoid;
         var semiMajorAxis = options.semiMajorAxis;
@@ -93,6 +90,9 @@ define([
         positions = attributes.position.values;
         var boundingSphere = BoundingSphere.union(topBoundingSphere, bottomBoundingSphere);
         var length = positions.length/3;
+        var numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
+        numberOfVerticalLines = CesiumMath.clamp(numberOfVerticalLines, 0, length/2);
+
         var indices = IndexDatatype.createTypedArray(length, length * 2 + numberOfVerticalLines * 2);
 
         length /= 2;
@@ -109,11 +109,8 @@ define([
         if (numberOfVerticalLines > 0) {
             var numSideLines = Math.min(numberOfVerticalLines, length);
             numSide = Math.round(length / numSideLines);
-        }
 
-
-        var maxI = Math.min(numSide * numberOfVerticalLines, length);
-        if (numberOfVerticalLines > 0) {
+            var maxI = Math.min(numSide * numberOfVerticalLines, length);
             for (i = 0; i < maxI; i += numSide) {
                 indices[index++] = i;
                 indices[index++] = i + length;
@@ -181,9 +178,6 @@ define([
         if (!defined(semiMinorAxis)) {
             throw new DeveloperError('semiMinorAxis is required.');
         }
-        if (semiMajorAxis <= 0.0 || semiMinorAxis <= 0.0) {
-            throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
-        }
         if (semiMajorAxis < semiMinorAxis) {
             throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
         }
@@ -217,6 +211,8 @@ define([
      * @param {EllipseOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     EllipseOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -245,6 +241,8 @@ define([
         array[startingIndex++] = defaultValue(value._extrudedHeight, 0.0);
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex]   = value._numberOfVerticalLines;
+
+        return array;
     };
 
     var scratchCenter = new Cartesian3();
@@ -323,9 +321,13 @@ define([
      * Computes the geometric representation of an outline of an ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {EllipseOutlineGeometry} ellipseGeometry A description of the ellipse.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     EllipseOutlineGeometry.createGeometry = function(ellipseGeometry) {
+        if ((ellipseGeometry._semiMajorAxis <= 0.0) || (ellipseGeometry._semiMinorAxis <= 0.0)) {
+            return;
+        }
+
         ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
         var options = {
             center : ellipseGeometry._center,

@@ -35,7 +35,7 @@ define([
         PrimitiveType,
         Rectangle,
         RectangleGeometryLibrary) {
-    "use strict";
+    'use strict';
 
     var bottomBoundingSphere = new BoundingSphere();
     var topBoundingSphere = new BoundingSphere();
@@ -122,13 +122,11 @@ define([
         var height = options.height;
         var width = options.width;
 
-        geo = PolygonPipeline.scaleToGeodeticHeight(geo, maxHeight, ellipsoid, false);
-        var topPositions = geo.attributes.position.values;
+        var topPositions = PolygonPipeline.scaleToGeodeticHeight(geo.attributes.position.values, maxHeight, ellipsoid, false);
         var length = topPositions.length;
         var positions = new Float64Array(length*2);
         positions.set(topPositions);
-        geo = PolygonPipeline.scaleToGeodeticHeight(geo, minHeight, ellipsoid);
-        var bottomPositions = geo.attributes.position.values;
+        var bottomPositions = PolygonPipeline.scaleToGeodeticHeight(geo.attributes.position.values, minHeight, ellipsoid);
         positions.set(bottomPositions, length);
         geo.attributes.position.values = positions;
 
@@ -232,6 +230,8 @@ define([
      * @param {RectangleOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     RectangleOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -257,6 +257,8 @@ define([
         array[startingIndex++] = value._rotation;
         array[startingIndex++] = defined(value._extrudedHeight) ? 1.0 : 0.0;
         array[startingIndex] = defaultValue(value._extrudedHeight, 0.0);
+
+        return array;
     };
 
     var scratchRectangle = new Rectangle();
@@ -321,7 +323,7 @@ define([
      * Computes the geometric representation of an outline of an rectangle, including its vertices, indices, and a bounding sphere.
      *
      * @param {RectangleOutlineGeometry} rectangleGeometry A description of the rectangle outline.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      *
      * @exception {DeveloperError} Rotated rectangle is invalid.
      */
@@ -337,6 +339,11 @@ define([
         var geometry;
         var boundingSphere;
         rectangle = rectangleGeometry._rectangle;
+
+        if ((CesiumMath.equalsEpsilon(rectangle.north, rectangle.south, CesiumMath.EPSILON10) ||
+             (CesiumMath.equalsEpsilon(rectangle.east, rectangle.west, CesiumMath.EPSILON10)))) {
+            return undefined;
+        }
         if (defined(extrudedHeight)) {
             geometry = constructExtrudedRectangle(options);
             var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
@@ -344,7 +351,7 @@ define([
             boundingSphere = BoundingSphere.union(topBS, bottomBS);
         } else {
             geometry = constructRectangle(options);
-            geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, surfaceHeight, ellipsoid, false);
+            geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
             boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
         }
 

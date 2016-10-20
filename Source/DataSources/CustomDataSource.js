@@ -1,15 +1,21 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/Event',
         './DataSource',
+        './EntityCluster',
         './EntityCollection'
     ], function(
+        defined,
         defineProperties,
+        DeveloperError,
         Event,
         DataSource,
+        EntityCluster,
         EntityCollection) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link DataSource} implementation which can be used to manually manage a group of entities.
@@ -39,6 +45,7 @@ define([
         this._isLoading = false;
         this._loading = new Event();
         this._entityCollection = new EntityCollection(this);
+        this._entityCluster = new EntityCluster();
     }
 
     defineProperties(CustomDataSource.prototype, {
@@ -125,6 +132,39 @@ define([
         loadingEvent : {
             get : function() {
                 return this._loading;
+            }
+        },
+        /**
+         * Gets whether or not this data source should be displayed.
+         * @memberof CustomDataSource.prototype
+         * @type {Boolean}
+         */
+        show : {
+            get : function() {
+                return this._entityCollection.show;
+            },
+            set : function(value) {
+                this._entityCollection.show = value;
+            }
+        },
+
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof CustomDataSource.prototype
+         * @type {EntityCluster}
+         */
+        clustering : {
+            get : function() {
+                return this._entityCluster;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value must be defined.');
+                }
+                //>>includeEnd('debug');
+                this._entityCluster = value;
             }
         }
     });

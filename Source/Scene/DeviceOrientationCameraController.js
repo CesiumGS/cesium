@@ -15,7 +15,7 @@ define([
         CesiumMath,
         Matrix3,
         Quaternion) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
@@ -38,10 +38,19 @@ define([
         this._gamma = undefined;
 
         var that = this;
+
         function callback(e) {
-            that._alpha = CesiumMath.toRadians(defaultValue(e.alpha, 0.0));
-            that._beta = CesiumMath.toRadians(defaultValue(e.beta, 0.0));
-            that._gamma = CesiumMath.toRadians(defaultValue(e.gamma, 0.0));
+            var alpha = e.alpha;
+            if (!defined(alpha)) {
+                that._alpha = undefined;
+                that._beta = undefined;
+                that._gamma = undefined;
+                return;
+            }
+
+            that._alpha = CesiumMath.toRadians(alpha);
+            that._beta = CesiumMath.toRadians(e.beta);
+            that._gamma = CesiumMath.toRadians(e.gamma);
         }
 
         window.addEventListener('deviceorientation', callback, false);

@@ -5,10 +5,13 @@ defineSuite([
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/CornerType',
+        'Core/DistanceDisplayCondition',
+        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/JulianDate',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
+        'DataSources/CheckerboardMaterialProperty',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/CorridorGraphics',
@@ -18,7 +21,9 @@ defineSuite([
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
+        'Scene/GroundPrimitive',
         'Scene/PrimitiveCollection',
+        'Scene/ShadowMode',
         'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
         'Specs/createScene'
@@ -28,10 +33,13 @@ defineSuite([
         Color,
         ColorGeometryInstanceAttribute,
         CornerType,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         JulianDate,
         ShowGeometryInstanceAttribute,
         TimeInterval,
         TimeIntervalCollection,
+        CheckerboardMaterialProperty,
         ColorMaterialProperty,
         ConstantProperty,
         CorridorGraphics,
@@ -41,18 +49,22 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
+        GroundPrimitive,
         PrimitiveCollection,
+        ShadowMode,
         createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var time;
+    var groundPrimitiveSupported;
 
     beforeAll(function() {
         scene = createScene();
         time = JulianDate.now();
+        groundPrimitiveSupported = GroundPrimitive.isSupported(scene);
     });
 
     afterAll(function() {
@@ -60,6 +72,21 @@ defineSuite([
     });
 
     function createBasicCorridor() {
+        var corridor = new CorridorGraphics();
+        corridor.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 1
+        ]));
+        corridor.width = new ConstantProperty(1);
+        corridor.height = new ConstantProperty(0);
+        var entity = new Entity();
+        entity.corridor = corridor;
+        return entity;
+    }
+
+    function createBasicCorridorWithoutHeight() {
         var corridor = new CorridorGraphics();
         corridor.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
             0, 0,
@@ -87,6 +114,8 @@ defineSuite([
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.shadowsProperty).toBe(undefined);
+        expect(updater.distanceDisplayConditionProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -127,6 +156,8 @@ defineSuite([
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
+        expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -211,6 +242,15 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
+    it('A time-varying color causes ground geometry to be dynamic', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        var color = new SampledProperty(Color);
+        color.addSample(time, Color.WHITE);
+        entity.corridor.material = new ColorMaterialProperty(color);
+        expect(updater.isDynamic).toBe(true);
+    });
+
     function validateGeometryInstance(options) {
         var entity = createBasicCorridor();
 
@@ -221,11 +261,11 @@ defineSuite([
         corridor.outline = new ConstantProperty(options.outline);
         corridor.outlineColor = new ConstantProperty(options.outlineColor);
         corridor.cornerType = new ConstantProperty(options.cornerType);
-
         corridor.width = new ConstantProperty(options.width);
         corridor.height = new ConstantProperty(options.height);
         corridor.extrudedHeight = new ConstantProperty(options.extrudedHeight);
         corridor.granularity = new ConstantProperty(options.granularity);
+        corridor.distanceDisplayCondition = options.distanceDisplayCondition;
 
         var updater = new CorridorGeometryUpdater(entity, scene);
 
@@ -247,6 +287,9 @@ defineSuite([
                 expect(attributes.color).toBeUndefined();
             }
             expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
         }
 
         if (options.outline) {
@@ -260,6 +303,9 @@ defineSuite([
             attributes = instance.attributes;
             expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.outlineColor));
             expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
         }
     }
 
@@ -290,6 +336,22 @@ defineSuite([
             outline : true,
             outlineColor : Color.BLUE,
             cornerType : CornerType.BEVELED
+        });
+    });
+
+    it('Creates expected distance display condition geometry', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            height : 431,
+            extrudedHeight : 123,
+            granularity : 0.97,
+            width : 12,
+            fill : true,
+            outline : true,
+            outlineColor : Color.BLUE,
+            cornerType : CornerType.MITERED,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
         });
     });
 
@@ -361,6 +423,51 @@ defineSuite([
         expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(outline.getValue(time2)));
     });
 
+    it('Checks that an entity without height and extrudedHeight and with a color material is on terrain', function() {
+        var entity = createBasicCorridor();
+        entity.corridor.height = undefined;
+        entity.corridor.outline = new ConstantProperty(true);
+
+        var updater = new CorridorGeometryUpdater(entity, scene);
+
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+            expect(updater.outlineEnabled).toBe(false);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+            expect(updater.outlineEnabled).toBe(true);
+        }
+    });
+
+    it('Checks that an entity with height isn\'t on terrain', function() {
+        var entity = createBasicCorridor();
+        entity.corridor.height = new ConstantProperty(1);
+
+        var updater = new CorridorGeometryUpdater(entity, scene);
+
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('Checks that an entity with extrudedHeight isn\'t on terrain', function() {
+        var entity = createBasicCorridor();
+        entity.corridor.height = undefined;
+        entity.corridor.extrudedHeight = new ConstantProperty(1);
+
+        var updater = new CorridorGeometryUpdater(entity, scene);
+
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('Checks that an entity with a non-color material isn\'t on terrain', function() {
+        var entity = createBasicCorridor();
+        entity.corridor.height = undefined;
+        entity.corridor.material = new GridMaterialProperty(Color.BLUE);
+
+        var updater = new CorridorGeometryUpdater(entity, scene);
+
+        expect(updater.onTerrain).toBe(false);
+    });
+
     it('createFillGeometryInstance obeys Entity.show is false.', function() {
         var entity = createBasicCorridor();
         entity.show = false;
@@ -403,12 +510,15 @@ defineSuite([
 
         var updater = new CorridorGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
+        var groundPrimitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
+        expect(groundPrimitives.length).toBe(0);
 
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2);
+        expect(groundPrimitives.length).toBe(0);
 
         var options = dynamicUpdater._options;
         expect(options.id).toEqual(entity);
@@ -422,21 +532,65 @@ defineSuite([
         entity.show = false;
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
+        expect(groundPrimitives.length).toBe(0);
         entity.show = true;
 
         //If a dynamic show returns false, the primitive should go away.
         corridor.show.setValue(false);
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
+        expect(groundPrimitives.length).toBe(0);
 
         corridor.show.setValue(true);
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2);
+        expect(groundPrimitives.length).toBe(0);
 
         //If a dynamic position returns undefined, the primitive should go away.
         corridor.positions.setValue(undefined);
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
+        expect(groundPrimitives.length).toBe(0);
+
+        dynamicUpdater.destroy();
+        updater.destroy();
+    });
+
+    it('dynamic updater on terrain', function() {
+        var corridor = new CorridorGraphics();
+        corridor.positions = createDynamicProperty(Cartesian3.fromRadiansArray([
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 1
+        ]));
+        corridor.show = createDynamicProperty(true);
+        corridor.outline = createDynamicProperty(true);
+        corridor.fill = createDynamicProperty(true);
+        corridor.width = createDynamicProperty(6);
+        corridor.granularity = createDynamicProperty(2);
+        corridor.cornerType = createDynamicProperty(CornerType.MITERED);
+
+        var entity = new Entity();
+        entity.corridor = corridor;
+
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        var primitives = new PrimitiveCollection();
+        var groundPrimitives = new PrimitiveCollection();
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, groundPrimitives);
+        expect(dynamicUpdater.isDestroyed()).toBe(false);
+        expect(primitives.length).toBe(0);
+        expect(groundPrimitives.length).toBe(0);
+
+        dynamicUpdater.update(time);
+
+        if (groundPrimitiveSupported) {
+            expect(primitives.length).toBe(0);
+            expect(groundPrimitives.length).toBe(1);
+        } else {
+            expect(primitives.length).toBe(2);
+            expect(groundPrimitives.length).toBe(0);
+        }
 
         dynamicUpdater.destroy();
         updater.destroy();
@@ -542,6 +696,60 @@ defineSuite([
         expect(function() {
             return new CorridorGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('fill is true sets onTerrain to true', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        entity.corridor.fill = true;
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+        }
+    });
+
+    it('fill is false sets onTerrain to false', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        entity.corridor.fill = false;
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('a defined height sets onTerrain to false', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        entity.corridor.fill = true;
+        entity.corridor.height = 0;
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('a defined extrudedHeight sets onTerrain to false', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        entity.corridor.fill = true;
+        entity.corridor.extrudedHeight = 12;
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('color material sets onTerrain to true', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        entity.corridor.fill = true;
+        entity.corridor.material = new ColorMaterialProperty(Color.WHITE);
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+        }
+    });
+
+    it('non-color material sets onTerrain to false', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        entity.corridor.fill = true;
+        entity.corridor.material = new CheckerboardMaterialProperty();
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
     });
 
     var entity = createBasicCorridor();

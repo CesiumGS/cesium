@@ -19,7 +19,7 @@ define([
         RenderState,
         Texture,
         PassThrough) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

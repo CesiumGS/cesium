@@ -11,7 +11,7 @@ defineSuite([
         Camera,
         createScene,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var scene;
     beforeAll(function() {
@@ -38,6 +38,7 @@ defineSuite([
         expect(viewModel.flightDuration).toBe(flightDuration);
         expect(viewModel.url).toBe(url);
         expect(viewModel.key).toBe(key);
+        expect(viewModel.keepExpanded).toBe(false);
     });
 
     it('can get and set flight duration', function() {

@@ -23,7 +23,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * Creates tweens for camera flights.
@@ -60,9 +60,9 @@ define([
 
     function createHeightFunction(camera, destination, startHeight, endHeight, optionAltitude) {
         var altitude = optionAltitude;
-        var maxHeight;
+        var maxHeight = Math.max(startHeight, endHeight);
 
-        if (!defined(optionAltitude)) {
+        if (!defined(altitude)) {
             var start = camera.position;
             var end = destination;
             var up = camera.up;
@@ -73,11 +73,10 @@ define([
             var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratchCart2));
             var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right), scratchCart2));
 
-            maxHeight = Math.max(startHeight, endHeight);
             altitude = Math.min(getAltitude(frustum, verticalDistance, horizontalDistance) * 0.20, 1000000000.0);
         }
 
-        if ((defined(optionAltitude) && optionAltitude < altitude) || maxHeight < altitude) {
+        if (maxHeight < altitude) {
             var power = 8.0;
             var factor = 1000000.0;
 
@@ -152,10 +151,6 @@ define([
         var startRoll = adjustAngleForLERP(camera.roll, roll);
 
         var destCart = ellipsoid.cartesianToCartographic(destination, scratchEndCart);
-        if (destCart.height <= 0.0) {
-            destCart.height = startCart.height;
-        }
-
         startCart.longitude = CesiumMath.zeroToTwoPi(startCart.longitude);
         destCart.longitude = CesiumMath.zeroToTwoPi(destCart.longitude);
 

@@ -33,7 +33,7 @@ defineSuite([
         ImageryState,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -253,6 +253,93 @@ defineSuite([
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('evaluation of schema zero padding for X Y Z as 0000', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: 'made/up/tms/server/{z}/{reverseZ}/{reverseY}/{y}/{reverseX}/{x}.PNG',
+            urlSchemeZeroPadding: {
+                '{x}'        : '0000',
+                '{y}'        : '0000',
+                '{z}'        : '0000'
+            },
+            tilingScheme: new GeographicTilingScheme(),
+            maximumLevel: 6
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(url).toEqual('made/up/tms/server/0002/3/2/0001/4/0003.PNG');
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(3, 1, 2).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('evaluation of schema zero padding for reverseX reverseY reverseZ as 0000', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: 'made/up/tms/server/{z}/{reverseZ}/{reverseY}/{y}/{reverseX}/{x}.PNG',
+            urlSchemeZeroPadding: {
+                '{reverseX}' : '0000',
+                '{reverseY}' : '0000',
+                '{reverseZ}' : '0000'
+            },
+            tilingScheme: new GeographicTilingScheme(),
+            maximumLevel: 6
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(url).toEqual('made/up/tms/server/2/0003/0002/1/0004/3.PNG');
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(3, 1, 2).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('evaluation of schema zero padding for x y z as 0000 and large x and y', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: 'made/up/tms/server/{z}/{reverseZ}/{reverseY}/{y}/{reverseX}/{x}.PNG',
+            urlSchemeZeroPadding: {
+                '{x}' : '0000',
+                '{y}' : '0000',
+                '{z}' : '0000'
+            },
+            tilingScheme: new GeographicTilingScheme(),
+            maximumLevel: 6
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(url).toEqual('made/up/tms/server/0005/0/21/0010/51/0012.PNG');
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(12, 10, 5).then(function(image) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });

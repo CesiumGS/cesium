@@ -11,7 +11,7 @@ define([
         defined,
         DeveloperError,
         EllipsoidOutlineGeometry) {
-    "use strict";
+    'use strict';
 
     /**
      * A description of the outline of a sphere.
@@ -63,6 +63,8 @@ define([
      * @param {SphereOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     SphereOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -71,7 +73,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        EllipsoidOutlineGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
+        return EllipsoidOutlineGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
     };
 
     var scratchEllipsoidGeometry = new EllipsoidOutlineGeometry();

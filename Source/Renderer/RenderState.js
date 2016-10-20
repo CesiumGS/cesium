@@ -19,7 +19,7 @@ define([
         WindingOrder,
         ContextLimits,
         WebGLConstants) {
-    "use strict";
+    'use strict';
 
     function validateBlendEquation(blendEquation) {
         return ((blendEquation === WebGLConstants.FUNC_ADD) ||
@@ -754,7 +754,7 @@ define([
             applyBlending(gl, renderState, passState);
         }
 
-        if (previousRenderState !== renderState || previousPassState.context !== passState.context) {
+        if (previousRenderState !== renderState || previousPassState !== passState || previousPassState.context !== passState.context) {
             applyViewport(gl, renderState, passState);
         }
     };

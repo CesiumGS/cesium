@@ -37,7 +37,7 @@ define([
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery using the Bing Maps Imagery REST API.
@@ -87,11 +87,11 @@ define([
      *
      * @example
      * var bing = new Cesium.BingMapsImageryProvider({
-     *     url : '//dev.virtualearth.net',
+     *     url : 'https://dev.virtualearth.net',
      *     key : 'get-yours-at-https://www.bingmapsportal.com/',
      *     mapStyle : Cesium.BingMapsStyle.AERIAL
      * });
-     * 
+     *
      * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
@@ -105,6 +105,7 @@ define([
         //>>includeEnd('debug');
 
         this._key = BingMapsApi.getKey(options.key);
+        this._keyErrorCredit = BingMapsApi.getErrorCredit(options.key);
 
         this._url = options.url;
         this._tileProtocol = options.tileProtocol;
@@ -116,17 +117,13 @@ define([
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
-         * By default, this is set to 1.3 for the "aerial" and "aerial with labels" map styles and 1.0 for
-         * all others.  Changing this value after creating an {@link ImageryLayer} for this provider will have
+         * Changing this value after creating an {@link ImageryLayer} for this provider will have
          * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
          *
          * @type {Number}
          * @default 1.0
          */
         this.defaultGamma = 1.0;
-        if (this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) {
-            this.defaultGamma = 1.3;
-        }
 
         this._tilingScheme = new WebMercatorTilingScheme({
             numberOfLevelZeroTilesX : 2,
@@ -507,7 +504,13 @@ define([
         }
 
         var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
-        return getRectangleAttribution(this._attributionList, level, rectangle);
+        var result = getRectangleAttribution(this._attributionList, level, rectangle);
+
+        if (defined(this._keyErrorCredit)) {
+            result.push(this._keyErrorCredit);
+        }
+
+        return result;
     };
 
     /**

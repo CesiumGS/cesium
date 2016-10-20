@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents a {@link Packable} number that always interpolates values
@@ -34,7 +34,7 @@ define([
      * //a SampledProperty(Number) instead.  Note, the actual
      * //return value is in radians, not degrees.
      * property.getValue(time2);
-     * 
+     *
      * @see PackableForInterpolation
      */
     var Rotation = {
@@ -50,6 +50,8 @@ define([
          * @param {Rotation} value The value to pack.
          * @param {Number[]} array The array to pack into.
          * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+         *
+         * @returns {Number[]} The array that was packed into
          */
         pack : function(value, array, startingIndex) {
             //>>includeStart('debug', pragmas.debug);
@@ -64,6 +66,8 @@ define([
 
             startingIndex = defaultValue(startingIndex, 0);
             array[startingIndex] = value;
+
+            return array;
         },
 
         /**

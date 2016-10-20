@@ -3,7 +3,7 @@ defineSuite([
         'Core/Math'
     ], function(
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     it('sign of -2', function() {
         expect(CesiumMath.sign(-2)).toEqual(-1);
@@ -153,6 +153,20 @@ defineSuite([
     it('convertLongitudeRange throws for undefined', function() {
         expect(function() {
             CesiumMath.convertLongitudeRange();
+        }).toThrowDeveloperError();
+    });
+
+    it('clampToLatitudeRange (1)', function() {
+        expect(CesiumMath.clampToLatitudeRange(Math.PI)).toEqual(CesiumMath.PI_OVER_TWO);
+    });
+
+    it('clampToLatitudeRange (2)', function() {
+        expect(CesiumMath.clampToLatitudeRange(-Math.PI)).toEqual(-CesiumMath.PI_OVER_TWO);
+    });
+
+    it('clampToLatitudeRange throws for undefined', function() {
+        expect(function() {
+            CesiumMath.clampToLatitudeRange();
         }).toThrowDeveloperError();
     });
 

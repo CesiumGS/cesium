@@ -7,7 +7,7 @@ define([
         defaultValue,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents a scalar value's lower and upper bound at a near distance and far distance in eye space.
@@ -84,6 +84,8 @@ define([
      * @param {NearFarScalar} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     NearFarScalar.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -101,6 +103,8 @@ define([
         array[startingIndex++] = value.nearValue;
         array[startingIndex++] = value.far;
         array[startingIndex] = value.farValue;
+
+        return array;
     };
 
     /**

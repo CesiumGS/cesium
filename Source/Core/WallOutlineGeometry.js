@@ -29,7 +29,7 @@ define([
         CesiumMath,
         PrimitiveType,
         WallGeometryLibrary) {
-    "use strict";
+    'use strict';
 
     var scratchCartesian3Position1 = new Cartesian3();
     var scratchCartesian3Position2 = new Cartesian3();
@@ -81,9 +81,6 @@ define([
         if (!defined(wallPositions)) {
             throw new DeveloperError('options.positions is required.');
         }
-        if (wallPositions.length < 2) {
-            throw new DeveloperError('options.positions length must be greater than or equal to 2.');
-        }
         if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
             throw new DeveloperError('options.positions and options.maximumHeights must have the same length.');
         }
@@ -123,6 +120,8 @@ define([
      * @param {WallOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     WallOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -170,6 +169,8 @@ define([
         startingIndex += Ellipsoid.packedLength;
 
         array[startingIndex]   = value._granularity;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
@@ -277,7 +278,7 @@ define([
      *   maximumHeight : 10000.0
      * });
      * var geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
-     * 
+     *
      * @see WallOutlineGeometry#createGeometry
      */
     WallOutlineGeometry.fromConstantHeights = function(options) {
@@ -338,7 +339,7 @@ define([
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, false);
         if (!defined(pos)) {
-            return undefined;
+            return;
         }
 
         var bottomPositions = pos.bottomPositions;

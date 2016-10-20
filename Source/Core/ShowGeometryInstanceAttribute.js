@@ -11,7 +11,7 @@ define([
         defined,
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Value and type information for per-instance geometry attribute that determines if the geometry instance will be shown.
@@ -26,7 +26,6 @@ define([
      * var instance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.BoxGeometry({
      *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0),
      *     minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0),
      *     maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0)
      *   }),

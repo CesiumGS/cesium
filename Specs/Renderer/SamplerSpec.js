@@ -11,7 +11,7 @@ defineSuite([
         TextureMinificationFilter,
         TextureWrap,
         createContext) {
-    "use strict";
+    'use strict';
 
     var context;
 

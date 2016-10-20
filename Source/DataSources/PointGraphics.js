@@ -13,7 +13,7 @@ define([
         DeveloperError,
         Event,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a graphical point located at the position of the containing {@link Entity}.
@@ -29,6 +29,8 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the point.
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this point will be displayed.
      */
     function PointGraphics(options) {
         this._color = undefined;
@@ -45,6 +47,10 @@ define([
         this._scaleByDistanceSubscription = undefined;
         this._translucencyByDistance = undefined;
         this._translucencyByDistanceSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -121,7 +127,22 @@ define([
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        translucencyByDistance : createPropertyDescriptor('translucencyByDistance')
+        translucencyByDistance : createPropertyDescriptor('translucencyByDistance'),
+
+        /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof PointGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this point will be displayed.
+         * @memberof PointGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -141,6 +162,8 @@ define([
         result.show = this.show;
         result.scaleByDistance = this.scaleByDistance;
         result.translucencyByDistance = this._translucencyByDistance;
+        result.heightReference = this.heightReference;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
 
@@ -164,6 +187,8 @@ define([
         this.show = defaultValue(this.show, source.show);
         this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return PointGraphics;

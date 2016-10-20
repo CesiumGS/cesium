@@ -11,7 +11,7 @@ defineSuite([
         Cartesian3,
         VertexFormat,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws without maximum corner', function() {
         expect(function() {
@@ -36,8 +36,8 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY
         }));
 
-        expect(m.attributes.position.values.length).toEqual(8 * 3);
-        expect(m.indices.length).toEqual(12 * 3);
+        expect(m.attributes.position.values.length).toEqual(8 * 3); // 8 corners
+        expect(m.indices.length).toEqual(12 * 3); // 6 sides x 2 triangles per side
     });
 
     it('constructor computes all vertex attributes', function() {
@@ -49,13 +49,15 @@ defineSuite([
             vertexFormat : VertexFormat.ALL
         }));
 
-        expect(m.attributes.position.values.length).toEqual(6 * 4 * 3);
-        expect(m.attributes.normal.values.length).toEqual(6 * 4 * 3);
-        expect(m.attributes.tangent.values.length).toEqual(6 * 4 * 3);
-        expect(m.attributes.binormal.values.length).toEqual(6 * 4 * 3);
-        expect(m.attributes.st.values.length).toEqual(6 * 4 * 2);
+        var numVertices = 24; //3 points x 8 corners
+        var numTriangles = 12; //6 sides x 2 triangles per side
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.st.values.length).toEqual(numVertices * 2);
 
-        expect(m.indices.length).toEqual(12 * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
 
         expect(m.boundingSphere.center).toEqual(Cartesian3.ZERO);
         expect(m.boundingSphere.radius).toEqual(Cartesian3.magnitude(maximumCorner) * 0.5);
@@ -97,6 +99,18 @@ defineSuite([
         var m = BoxGeometry.fromAxisAlignedBoundingBox(new AxisAlignedBoundingBox(min, max));
         expect(m._minimum).toEqual(min);
         expect(m._maximum).toEqual(max);
+    });
+
+    it('undefined is returned if min and max are equal', function() {
+        var box = new BoxGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(250000.0, 250000.0, 250000.0)
+        });
+
+        var geometry = BoxGeometry.createGeometry(box);
+
+        expect(geometry).toBeUndefined();
     });
 
     createPackableSpecs(BoxGeometry, new BoxGeometry({

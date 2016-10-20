@@ -7,7 +7,7 @@ defineSuite([
         createViewer,
         PerformanceWatchdog,
         viewerPerformanceWatchdogMixin) {
-    "use strict";
+    'use strict';
 
     var container;
     var viewer;

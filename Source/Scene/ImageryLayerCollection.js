@@ -21,7 +21,7 @@ define([
         Rectangle,
         when,
         ImageryLayer) {
-    "use strict";
+    'use strict';
 
     /**
      * An ordered collection of imagery layers.
@@ -457,6 +457,32 @@ define([
 
             return features;
         });
+    };
+
+    /**
+     * Updates frame state to execute any queued texture re-projections.
+     *
+     * @private
+     *
+     * @param {FrameState} frameState The frameState.
+     */
+    ImageryLayerCollection.prototype.queueReprojectionCommands = function(frameState) {
+        var layers = this._layers;
+        for (var i = 0, len = layers.length; i < len; ++i) {
+            layers[i].queueReprojectionCommands(frameState);
+        }
+    };
+
+    /**
+     * Cancels re-projection commands queued for the next frame.
+     *
+     * @private
+     */
+    ImageryLayerCollection.prototype.cancelReprojections = function() {
+        var layers = this._layers;
+        for (var i = 0, len = layers.length; i < len; ++i) {
+            layers[i].cancelReprojections();
+        }
     };
 
     /**

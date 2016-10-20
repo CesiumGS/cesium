@@ -13,7 +13,7 @@ define([
         DeveloperError,
         EllipsoidGeometry,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     /**
      * A description of a sphere centered at the origin.
@@ -65,6 +65,8 @@ define([
      * @param {SphereGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     SphereGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -73,7 +75,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        EllipsoidGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
+        return EllipsoidGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
     };
 
     var scratchEllipsoidGeometry = new EllipsoidGeometry();

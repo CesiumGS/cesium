@@ -17,7 +17,7 @@ define([
         DeveloperError,
         objectToQuery,
         queryToObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Requests a resource using JSONP.
