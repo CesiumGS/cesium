@@ -476,14 +476,6 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContent.prototype.applyStyleWithBatchTable = function(frameState, style, colorBlendMode) {
-        this._modelInstanceCollection.updateColorBlendMode(frameState, colorBlendMode);
-        return true;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
     Instanced3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         var oldAddCommand = frameState.addCommand;
         if (frameState.passes.render) {

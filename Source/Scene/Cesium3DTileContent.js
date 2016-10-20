@@ -218,25 +218,6 @@ define([
     };
 
     /**
-     * Apply a style to the content using a batch table.
-     * <p>
-     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-     * not part of the public Cesium API.
-     * </p>
-     *
-     * @param {FrameSate} frameState The frame state.
-     * @param {Cesium3DTileStyle} style The style.
-     * @param {Cesium3DTileColorBlendMode} colorBlendMode The color blend mode.
-     *
-     * @returns {Boolean} <code>true</code> if this content is styled with a batch table; otherwise, <code>false</code>.
-     *
-     * @private
-     */
-    Cesium3DTileContent.prototype.applyStyleWithBatchTable = function(frameState, style, colorBlendMode) {
-        DeveloperError.throwInstantiationError();
-    };
-
-    /**
      * Called by the tile during tileset traversal to get the draw commands needed to render this content.
      * When the tile's content is in the PROCESSING state, this creates WebGL resources to ultimately
      * move to the READY state.

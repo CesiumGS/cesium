@@ -1062,10 +1062,9 @@ define([
         var drawFS = fs;
 
         if (hasBatchTable) {
-            // TODO : for now point clouds always use color highlighting when batched.
-            batchTable.updateColorBlendMode(Cesium3DTileColorBlendMode.HIGHLIGHT);
+            // Batched points always use the HIGHLIGHT color blend mode
             drawVS = batchTable.getVertexShaderCallback(false)(drawVS);
-            drawFS = batchTable.getFragmentShaderCallback(false)(drawFS);
+            drawFS = batchTable.getFragmentShaderCallback(false, Cesium3DTileColorBlendMode.HIGHLIGHT)(drawFS);
         }
 
         var pickVS = vs;
@@ -1118,13 +1117,6 @@ define([
             createShaders(this, frameState, style);
             return true;
         }
-        return false;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    PointCloud3DTileContent.prototype.applyStyleWithBatchTable = function(frameState, style, colorBlendMode) {
         return false;
     };
 

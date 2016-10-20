@@ -22,6 +22,7 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Cesium3DTile',
+        './Cesium3DTileColorBlendMode',
         './Cesium3DTileRefine',
         './Cesium3DTileStyleEngine',
         './CullingVolume',
@@ -51,6 +52,7 @@ define([
         Uri,
         when,
         Cesium3DTile,
+        Cesium3DTileColorBlendMode,
         Cesium3DTileRefine,
         Cesium3DTileStyleEngine,
         CullingVolume,
@@ -153,6 +155,14 @@ define([
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
         this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
         this._styleEngine = new Cesium3DTileStyleEngine();
+
+        /**
+         * Defines how per-feature colors blend with the source colors.
+         *
+         * @type {Cesium3DTileColorBlendMode}
+         * @default Cesium3DTileColorBlendMode.HIGHLIGHT
+         */
+        this.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
 
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
@@ -543,23 +553,6 @@ define([
             },
             set : function(value) {
                 this._styleEngine.style = value;
-            }
-        },
-
-        /**
-         * Defines how per-feature colors blend with the source colors.
-         *
-         * @memberof Cesium3DTileset.prototype
-         *
-         * @type {Cesium3DTileColorBlendMode}
-         * @default Cesium3DTileColorBlendMode.HIGHLIGHT
-         */
-        colorBlendMode : {
-            get : function() {
-                return this._styleEngine.colorBlendMode;
-            },
-            set : function(value) {
-                this._styleEngine.colorBlendMode = value;
             }
         },
 
