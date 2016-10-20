@@ -693,8 +693,8 @@ define([
         var lat, lon;
         if (cornerType === CornerType.ROUNDED) {
             // Compute start cap
-            var first = positions[0];
-            Cartesian3.subtract(first, positions[1], scratchCartesianOffset);
+            var first = cleanPositions[0];
+            Cartesian3.subtract(first, cleanPositions[1], scratchCartesianOffset);
             Cartesian3.normalize(scratchCartesianOffset, scratchCartesianOffset);
             Cartesian3.multiplyByScalar(scratchCartesianOffset, halfWidth, scratchCartesianOffset);
             Cartesian3.add(first, scratchCartesianOffset, scratchCartesianEnds);
@@ -710,13 +710,13 @@ define([
 
         // Compute the rest
         for (var i = 0; i < length; ++i) {
-            computeOffsetPoints(positions[i], positions[i+1], ellipsoid, halfWidth,
+            computeOffsetPoints(cleanPositions[i], cleanPositions[i+1], ellipsoid, halfWidth,
                 scratchCartographicMin, scratchCartographicMax);
         }
 
         // Compute ending point
-        var last = positions[length];
-        Cartesian3.subtract(last, positions[length-1], scratchCartesianOffset);
+        var last = cleanPositions[length];
+        Cartesian3.subtract(last, cleanPositions[length-1], scratchCartesianOffset);
         Cartesian3.normalize(scratchCartesianOffset, scratchCartesianOffset);
         Cartesian3.multiplyByScalar(scratchCartesianOffset, halfWidth, scratchCartesianOffset);
         Cartesian3.add(last, scratchCartesianOffset, scratchCartesianEnds);
