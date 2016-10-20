@@ -24,10 +24,14 @@
     </style>
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay">
-        <h1>Loading...</h1></div>
+        <h1>Loading...</h1>
+    </div>
     <div id="toolbar">
         <table>
             <tbody>
+                <tr>
+                    <td>Click on the 3D window then use the keyboard to change settings.</td>
+                </tr>
                 <tr>
                     <td>Heading: <span id='heading'></span>°</td>
                 </tr>
@@ -69,25 +73,24 @@
             var canvas = viewer.canvas;
             canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
             canvas.onclick = function() {
-                    canvas.focus();
-                    };
+                 canvas.focus();
+            };
 
             var scene = viewer.scene;
-            // viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
             var pathPosition = new Cesium.SampledPositionProperty();
             var entityPath = viewer.entities.add({
-                position: pathPosition,
-                name: 'path',
-                path: {
-                    show: true,
-                    leadTime: 0,
-                    trailTime: 60,
-                    width: 10,
-                    resolution: 1,
-                    material: new Cesium.PolylineGlowMaterialProperty({
-                        glowPower: 0.3,
-                        color: Cesium.Color.PALEGOLDENROD
+                position : pathPosition,
+                name : 'path',
+                path : {
+                    show : true,
+                    leadTime : 0,
+                    trailTime : 60,
+                    width : 10,
+                    resolution : 1,
+                    material : new Cesium.PolylineGlowMaterialProperty({
+                        glowPower : 0.3,
+                        color : Cesium.Color.PALEGOLDENROD
                     })
                 }
             });
@@ -99,22 +102,22 @@
 
             var hpRoll = new Cesium.HeadingPitchRoll();
             var hpRange = new Cesium.HeadingPitchRange();
-            var speed = 100.0;
+            var speed = 10;
 
             var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 5000.0);
             var speedVector = new Cesium.Cartesian3();
 
             var planePrimitive = scene.primitives.add(Cesium.Model.fromGltf({
-                url: '../../SampleData/models/CesiumAir/Cesium_Air.glb',
-                modelMatrix: Cesium.Transforms.aircraftHeadingPitchRollToFixedFrame(position, hpRoll),
-                minimumPixelSize: 128
+                url : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
+                modelMatrix : Cesium.Transforms.aircraftHeadingPitchRollToFixedFrame(position, hpRoll),
+                minimumPixelSize : 128
             }));
 
             planePrimitive.readyPromise.then(function(model) {
                 // Play and loop all animations at half-speed
                 model.activeAnimations.addAll({
-                    speedup: 0.5,
-                    loop: Cesium.ModelAnimationLoop.REPEAT
+                    speedup : 0.5,
+                    loop : Cesium.ModelAnimationLoop.REPEAT
                 });
 
                 // Zoom to model
@@ -128,22 +131,19 @@
                 hpRange.range = r * 50.0;
                 camera.lookAt(center, hpRange);
                 update();
-            }).otherwise(function(error) {
-                window.alert(error);
             });
 
-            document.addEventListener("keypress", function(e) {
+            document.addEventListener('keyup', function(e) {
+                var deltaRadians = Cesium.Math.toRadians(3.0);
+
                 switch (e.keyCode) {
                     case 40:
                         if (e.shiftKey) {
                             // speed down
-                            speed -= 10;
-                            if (speed < 10) {
-                                speed = 10;
-                            }
+                            speed = Math.max(--speed, 1);
                         } else {
                             // pitch down until
-                            hpRoll.pitch -= Cesium.Math.RADIANS_PER_DEGREE;
+                            hpRoll.pitch -= deltaRadians;
                             if (hpRoll.pitch < -Cesium.Math.TWO_PI) {
                                 hpRoll.pitch += Cesium.Math.TWO_PI;
                             }
@@ -152,13 +152,10 @@
                     case 38:
                         if (e.shiftKey) {
                             // speed up
-                            speed += 10;
-                            if (speed > 340) {
-                                speed = 340;
-                            }
+                            speed = Math.max(speed++, 100);
                         } else {
                             // pitch up until Math.PI/2
-                            hpRoll.pitch += Cesium.Math.RADIANS_PER_DEGREE;
+                            hpRoll.pitch += deltaRadians;
                             if (hpRoll.pitch > Cesium.Math.TWO_PI) {
                                 hpRoll.pitch -= Cesium.Math.TWO_PI;
                             }
@@ -167,13 +164,13 @@
                     case 39:
                         if (e.shiftKey) {
                             // roll right until Math.PI/2
-                            hpRoll.roll += Cesium.Math.RADIANS_PER_DEGREE;
+                            hpRoll.roll += deltaRadians;
                             if (hpRoll.roll > Cesium.Math.TWO_PI) {
                                 hpRoll.roll -= Cesium.Math.TWO_PI;
                             }
                         } else {
                             // turn right
-                            hpRoll.heading += Cesium.Math.RADIANS_PER_DEGREE;
+                            hpRoll.heading += deltaRadians;
                             if (hpRoll.heading > Cesium.Math.TWO_PI) {
                                 hpRoll.heading -= Cesium.Math.TWO_PI;
                             }
@@ -182,13 +179,13 @@
                     case 37:
                         if (e.shiftKey) {
                             // roll left until
-                            hpRoll.roll -= Cesium.Math.RADIANS_PER_DEGREE;
+                            hpRoll.roll -= deltaRadians;
                             if (hpRoll.roll < 0.0) {
                                 hpRoll.roll += Cesium.Math.TWO_PI;
                             }
                         } else {
                             // turn left
-                            hpRoll.heading -= Cesium.Math.RADIANS_PER_DEGREE;
+                            hpRoll.heading -= deltaRadians;
                             if (hpRoll.heading < 0.0) {
                                 hpRoll.heading += Cesium.Math.TWO_PI;
                             }
@@ -202,8 +199,9 @@
             var pitchSpan = document.getElementById('pitch');
             var rollSpan = document.getElementById('roll');
             var speedSpan = document.getElementById('speed');
+            var fromBehind = document.getElementById('fromBehind');
 
-            function update() {
+            viewer.scene.preRender.addEventListener(function(scene, time) {
                 headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(1);
                 pitchSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.pitch).toFixed(1);
                 rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
@@ -212,17 +210,17 @@
                 speedVector = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.UNIT_X, speed / 10, speedVector);
                 position = Cesium.Matrix4.multiplyByPoint(planePrimitive.modelMatrix, speedVector, position);
                 pathPosition.addSample(Cesium.JulianDate.now(), position);
-                Cesium.Transforms.aircraftHeadingPitchRollToFixedFrame(position, hpRoll,undefined,planePrimitive.modelMatrix);
+                Cesium.Transforms.aircraftHeadingPitchRollToFixedFrame(position, hpRoll, undefined, planePrimitive.modelMatrix);
 
-                if (document.getElementById('fromBehind').checked) {
+                if (fromBehind.checked) {
                     // Zoom to model
                     Cesium.Matrix4.multiplyByPoint(planePrimitive.modelMatrix, planePrimitive.boundingSphere.center, center);
                     hpRange.heading = hpRoll.heading;
                     hpRange.pitch = hpRoll.pitch;
                     camera.lookAt(center, hpRange);
                 }
-                setTimeout(update, 100);
-            }
+            });
+
             //Sandcastle_End
             Sandcastle.finishedLoading();
         }
