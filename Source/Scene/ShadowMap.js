@@ -951,9 +951,9 @@ define([
         this.frustum = undefined;
         this.positionCartographic = new Cartographic();
         this.positionWC = new Cartesian3();
-        this.directionWC = new Cartesian3();
-        this.upWC = new Cartesian3();
-        this.rightWC = new Cartesian3();
+        this.directionWC = Cartesian3.clone(Cartesian3.UNIT_Z);
+        this.upWC = Cartesian3.clone(Cartesian3.UNIT_Y);
+        this.rightWC = Cartesian3.clone(Cartesian3.UNIT_X);
         this.viewProjectionMatrix = new Matrix4();
     }
 
@@ -1316,8 +1316,9 @@ define([
         var far;
         if (shadowMap._fitNearFar) {
             // shadowFar can be very large, so limit to shadowMap.maximumDistance
+            // Push the far plane slightly further than the near plane to avoid degenerate frustum
             near = Math.min(frameState.shadowHints.nearPlane, shadowMap.maximumDistance);
-            far = Math.min(frameState.shadowHints.farPlane, shadowMap.maximumDistance);
+            far = Math.min(frameState.shadowHints.farPlane, shadowMap.maximumDistance + 1.0);
         } else {
             near = camera.frustum.near;
             far = shadowMap.maximumDistance;
