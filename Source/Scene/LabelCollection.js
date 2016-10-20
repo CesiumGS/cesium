@@ -257,23 +257,25 @@ define([
             widthOffset -= maxLineWidth * scale;
         }
 
-        var heightOffset = 0;
 
-        var totalHeight = (maxGlyphHeight * numberOfLines) + (maxGlyphDescent * (numberOfLines-1));
+        var LEADING = 1.2; // Traditionally, leading is %20 of the font size.
+        var maxLineHeight = maxGlyphHeight + maxGlyphDescent;
+        var totalTextHeight = (maxGlyphHeight * numberOfLines) + (maxGlyphDescent * (numberOfLines-1));
 
+        var topOffset = 0;
         var heightReference = label._heightReference;
         var verticalOrigin = (heightReference === HeightReference.NONE) ? label._verticalOrigin : VerticalOrigin.BOTTOM;
         if (verticalOrigin === VerticalOrigin.CENTER) {
-            heightOffset += ((totalHeight / 2)  - (maxGlyphHeight/2))  * scale;
+            topOffset += ((totalTextHeight / 2)  - (maxGlyphHeight/2))  * scale;
         } else if (verticalOrigin === VerticalOrigin.BOTTOM) {
             // Subtract maxGlyphHeight for backwards compatibility
-            heightOffset += (totalHeight * scale) - maxGlyphHeight;
+            topOffset += (totalTextHeight * scale) - maxGlyphHeight;
         }
 
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
 
-        var maxLineHeight = maxGlyphHeight + maxGlyphDescent;
+
         var glyphNewlineOffset = 0;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
 
@@ -286,11 +288,11 @@ define([
             glyph = glyphs[glyphIndex];
             dimensions = glyph.dimensions;
             if (verticalOrigin === VerticalOrigin.BOTTOM) {
-                glyphPixelOffset.y = heightOffset - dimensions.descent * scale;
+                glyphPixelOffset.y = topOffset - dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = heightOffset - (maxGlyphHeight - dimensions.height) * scale - dimensions.descent * scale;
+                glyphPixelOffset.y = topOffset - (maxGlyphHeight - dimensions.height) * scale - dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                glyphPixelOffset.y = heightOffset - (maxGlyphHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
+                glyphPixelOffset.y = topOffset - (maxGlyphHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
             }
 
             glyphPixelOffset.y -= glyphNewlineOffset;
