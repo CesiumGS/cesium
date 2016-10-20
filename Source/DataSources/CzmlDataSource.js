@@ -1998,6 +1998,7 @@ define([
         processPoint, //
         processPolygon, //
         processPolyline, //
+        processProperties, //
         processRectangle, //
         processPosition, //
         processViewFrom, //
