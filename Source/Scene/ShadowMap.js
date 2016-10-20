@@ -1316,6 +1316,7 @@ define([
         var far;
         if (shadowMap._fitNearFar) {
             // shadowFar can be very large, so limit to shadowMap.maximumDistance
+            // Push the far plane slightly further than the near plane to avoid degenerate frustum
             near = Math.min(frameState.shadowHints.nearPlane, shadowMap.maximumDistance);
             far = Math.min(frameState.shadowHints.farPlane, shadowMap.maximumDistance + 1.0);
         } else {
