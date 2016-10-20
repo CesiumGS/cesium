@@ -16,6 +16,7 @@ Change Log
 * Fixed a bug where when KML features had duplicate IDs, only one was drawn. [#3941](https://github.com/AnalyticalGraphicsInc/cesium/issues/3941)
 * `GeoJsonDataSource` now treats null crs values as a no-op instead of failing to load.
 * `GeoJsonDataSource` now gracefully handles missing style icons instead of failing to load.
+* Improve `Geocoder` usability by selecting text on click [#4464](https://github.com/AnalyticalGraphicsInc/cesium/pull/4464)
 * Added `Rectangle.simpleIntersection`.
 * Added the ability to specify retina options, such as `@2x.png`, via the `MapboxImageryProvider` `format` option.
 * Removed an unnecessary reprojection of Web Mercator imagery tiles to the Geographic projection on load.  This should improve both visual quality and load performance slightly.
