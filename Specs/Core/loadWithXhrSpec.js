@@ -188,7 +188,7 @@ defineSuite([
                 return loadWithXhr({
                     url : 'Data/Models/Box/ReadMe.txt'
                 }).then(function(result) {
-                    expect(result).toBe('CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed.\n');
+                    expect(result).toStartWith('CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed.');
                 });
             });
 
@@ -197,7 +197,7 @@ defineSuite([
                     url : 'Data/Models/Box/ReadMe.txt',
                     responseType : 'text'
                 }).then(function(result) {
-                    expect(result).toBe('CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed.\n');
+                    expect(result).toStartWith('CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed.');
                 });
             });
 
