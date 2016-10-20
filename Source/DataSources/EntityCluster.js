@@ -516,7 +516,7 @@ define([
          * @memberof EntityCluster.prototype
          * @type {Boolean}
          */
-	clusterPoint : {
+	clusterPoints : {
 	    get : function() {
 		return this._clusterPoints;
 	    },
