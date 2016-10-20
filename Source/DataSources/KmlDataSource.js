@@ -1952,8 +1952,8 @@ define([
                         if (!defined(newEntity.parent)) {
                             newEntity.parent = networkEntity;
 
-                            var childAvailability = newEntity.availability;
                             if (defined(networkLinkAvailability)) {
+                                var childAvailability = newEntity.availability;
                                 if (defined(childAvailability)) {
                                     childAvailability.intersect(networkLinkAvailability);
                                 } else {
@@ -2598,8 +2598,8 @@ define([
                 if (!defined(newEntity.parent)) {
                     newEntity.parent = networkLinkEntity;
 
-                    var childAvailability = newEntity.availability;
                     if (defined(networkLinkAvailability)) {
+                        var childAvailability = newEntity.availability;
                         if (defined(childAvailability)) {
                             childAvailability.intersect(networkLinkAvailability);
                         } else {
