@@ -2219,7 +2219,7 @@ defineSuite([
             expect(entities.length).toBe(2);
             var interval = entities[0].availability;
             expect(interval.start).toEqual(start);
-            expect(interval.stop).toEqual(Iso8601.MAXIMUM_VALUE)
+            expect(interval.stop).toEqual(Iso8601.MAXIMUM_VALUE);
 
             expect(entities[0].availability).toEqual(entities[1].availability);
         });
@@ -2248,7 +2248,7 @@ defineSuite([
             expect(entities.length).toBe(2);
             var interval = entities[0].availability;
             expect(interval.start).toEqual(startFolder);
-            expect(interval.stop).toEqual(Iso8601.MAXIMUM_VALUE)
+            expect(interval.stop).toEqual(Iso8601.MAXIMUM_VALUE);
 
             interval = entities[1].availability;
             expect(interval.start).toEqual(startFeature);
@@ -3568,13 +3568,13 @@ defineSuite([
           </NetworkLink>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
-            var start = JulianDate.fromIso8601('2000-01-01');
+            var start = JulianDate.fromIso8601('2000-01-03');
 
             var entities = dataSource.entities.values;
             expect(entities.length).toBe(2);
             var interval = entities[0].availability;
-            expect(interval.start.toEqual(start);
-            expect(interval.stop).toEqual(Iso8601.MAXIMUM_VALUE)
+            expect(interval.start).toEqual(start);
+            expect(interval.stop).toEqual(Iso8601.MAXIMUM_VALUE);
 
             expect(entities[0].availability).toEqual(entities[1].availability);
         });
