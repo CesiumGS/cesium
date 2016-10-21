@@ -101,16 +101,15 @@ defineSuite([
         Color.unpack(backgroundColor, 0, scene.backgroundColor);
 
         sunShadowMap = scene.shadowMap;
-        var hpr = new HeadingPitchRoll(0.0, 0.0, 0.0);
 
         var boxOrigin = new Cartesian3.fromRadians(longitude, latitude, boxHeight);
-        var boxTransform = Transforms.headingPitchRollToFixedFrame(boxOrigin, hpr);
+        var boxTransform = Transforms.headingPitchRollToFixedFrame(boxOrigin, new HeadingPitchRoll());
 
         var floorOrigin = new Cartesian3.fromRadians(longitude, latitude, floorHeight);
-        var floorTransform = Transforms.headingPitchRollToFixedFrame(floorOrigin, hpr);
+        var floorTransform = Transforms.headingPitchRollToFixedFrame(floorOrigin, new HeadingPitchRoll());
 
         var roomOrigin = new Cartesian3.fromRadians(longitude, latitude, height);
-        var roomTransform = Transforms.headingPitchRollToFixedFrame(roomOrigin, hpr);
+        var roomTransform = Transforms.headingPitchRollToFixedFrame(roomOrigin, new HeadingPitchRoll());
 
         var modelPromises = [];
         modelPromises.push(loadModel({
@@ -661,11 +660,10 @@ defineSuite([
             new HeadingPitchRange(0, CesiumMath.PI_OVER_TWO, 0.1)
         ];
 
-        var hpr = new HeadingPitchRoll(0.0, 0.0, 0.0);
         for (var i = 0; i < 6; ++i) {
             var box = scene.primitives.add(Model.fromGltf({
                 url : boxUrl,
-                modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], hpr),
+                modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], new HeadingPitchRoll()),
                 scale : 0.2
             }));
             scene.render(); // Model is pre-loaded, render one frame to make it ready

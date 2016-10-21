@@ -585,8 +585,7 @@ function updateModels() {
 }
 
 function createModel(url, origin) {
-    var hpr = new HeadingPitchRoll(0.0, 0.0, 0.0);
-    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, new HeadingPitchRoll());
 
     var model = scene.primitives.add(Cesium.Model.fromGltf({
         url : url,
@@ -607,8 +606,7 @@ function createModel(url, origin) {
 }
 
 function createBoxRTC(origin) {
-    var hpr = new HeadingPitchRoll(0.0, 0.0, 0.0);
-    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, new HeadingPitchRoll());
 
     var boxGeometry = Cesium.BoxGeometry.createGeometry(Cesium.BoxGeometry.fromDimensions({
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -647,8 +645,7 @@ function createBoxRTC(origin) {
 }
 
 function createBox(origin) {
-    var hpr = new HeadingPitchRoll(0.0, 0.0, 0.0);
-    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, new HeadingPitchRoll());
 
     var box = new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
@@ -673,8 +670,7 @@ function createBox(origin) {
 }
 
 function createSphere(origin) {
-    var hpr = new HeadingPitchRoll(0.0, 0.0, 0.0);
-    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, new HeadingPitchRoll());
 
     var sphere = new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
