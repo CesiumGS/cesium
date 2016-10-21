@@ -119,7 +119,7 @@ define([
             granXSin = granularityX * sinRotation;
 
             if (center.longitude < nwCorner.longitude) {
-                center.longitude += 2 * CesiumMath.2_PI;
+                center.longitude += CesiumMath.TWO_PI;
             }
 
             nwCartesian = proj.project(nwCorner, nwCartesian);
