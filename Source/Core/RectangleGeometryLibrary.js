@@ -118,6 +118,10 @@ define([
             granYSin = granularityY * sinRotation;
             granXSin = granularityX * sinRotation;
 
+            if (center.longitude < nwCorner.longitude) {
+                center.longitude += 2 * Math.PI;
+            }
+
             nwCartesian = proj.project(nwCorner, nwCartesian);
             centerCartesian = proj.project(center, centerCartesian);
 
