@@ -182,7 +182,7 @@ var scene = viewer.scene;
 
 var height = 250000.0;
 var origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
-var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, new HeadingPitchRoll());
+var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, new Cesium.HeadingPitchRoll());
 
 var model = scene.primitives.add(Cesium.Model.fromGltf({
     url : modelUrl,
