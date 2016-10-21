@@ -799,6 +799,39 @@ defineSuite([
         expect(center).toEqual(translation);
     });
 
+    it('primitive without display condition properly transforms boundingSphere', function() {
+        var translation = new Cartesian3(10, 20, 30);
+
+        var cylinder = new GeometryInstance({
+            id : 'cylinder',
+            vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+            geometry : new CylinderGeometry({
+                length : 10,
+                topRadius : 10,
+                bottomRadius : 10
+            }),
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0),
+                show : new ShowGeometryInstanceAttribute(true)
+            }
+        });
+
+        primitive = new Primitive({
+            geometryInstances : cylinder,
+            appearance : new PerInstanceColorAppearance(),
+            modelMatrix : Matrix4.fromTranslation(translation, new Matrix4()),
+            asynchronous : false
+        });
+
+        scene.primitives.add(primitive);
+        scene.frameState.scene3DOnly = true;
+        scene.renderForSpecs();
+
+        var boundingSphere = primitive.getGeometryInstanceAttributes('cylinder').boundingSphere;
+        var center = boundingSphere.center;
+        expect(center).toEqual(translation);
+    });
+
     it('getGeometryInstanceAttributes returns same object each time', function() {
         primitive = new Primitive({
             geometryInstances : rectangleInstance1,

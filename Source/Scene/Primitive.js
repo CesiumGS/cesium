@@ -1173,7 +1173,8 @@ define([
     var scratchBoundingSphereCenter2D = new Cartesian3();
 
     function updateBatchTableBoundingSpheres(primitive, frameState) {
-        if (!defined(primitive._batchTableAttributeIndices.distanceDisplayCondition) || primitive._batchTableBoundingSpheresUpdated) {
+        var hasDistanceDisplayCondition = defined(primitive._batchTableAttributeIndices.distanceDisplayCondition);
+        if (!hasDistanceDisplayCondition && primitive._batchTableBoundingSpheresUpdated) {
             return;
         }
 
@@ -1195,20 +1196,22 @@ define([
             var boundingSphere = boundingSpheres[i];
             var modelMatrix = defaultValue(primitive.modelMatrix, Matrix4.IDENTITY);
             boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
-            var center = boundingSphere.center;
-            var radius = boundingSphere.radius;
 
-            var encodedCenter = EncodedCartesian3.fromCartesian(center, scratchBoundingSphereCenterEncoded);
-            batchTable.setBatchedAttribute(i, center3DHighIndex, encodedCenter.high);
-            batchTable.setBatchedAttribute(i, center3DLowIndex, encodedCenter.low);
+            if (hasDistanceDisplayCondition) {
+                var center = boundingSphere.center;
+                var radius = boundingSphere.radius;
 
-            var cartographic = ellipsoid.cartesianToCartographic(center, scratchBoundingSphereCartographic);
-            var center2D = projection.project(cartographic, scratchBoundingSphereCenter2D);
-            encodedCenter = EncodedCartesian3.fromCartesian(center2D, scratchBoundingSphereCenterEncoded);
-            batchTable.setBatchedAttribute(i, center2DHighIndex, encodedCenter.high);
-            batchTable.setBatchedAttribute(i, center2DLowIndex, encodedCenter.low);
+                var encodedCenter = EncodedCartesian3.fromCartesian(center, scratchBoundingSphereCenterEncoded);
+                batchTable.setBatchedAttribute(i, center3DHighIndex, encodedCenter.high);
+                batchTable.setBatchedAttribute(i, center3DLowIndex, encodedCenter.low);
 
-            batchTable.setBatchedAttribute(i, radiusIndex, radius);
+                var cartographic = ellipsoid.cartesianToCartographic(center, scratchBoundingSphereCartographic);
+                var center2D = projection.project(cartographic, scratchBoundingSphereCenter2D);
+                encodedCenter = EncodedCartesian3.fromCartesian(center2D, scratchBoundingSphereCenterEncoded);
+                batchTable.setBatchedAttribute(i, center2DHighIndex, encodedCenter.high);
+                batchTable.setBatchedAttribute(i, center2DLowIndex, encodedCenter.low);
+                batchTable.setBatchedAttribute(i, radiusIndex, radius);
+            }
         }
 
         primitive._batchTableBoundingSpheresUpdated = true;
