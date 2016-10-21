@@ -427,4 +427,28 @@ defineSuite([
         expect(cluster._labelCollection).toBeDefined();
     });
 
+    it('is robust to PointCollection changes', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity1 = new Entity();
+        var point1 = cluster.getPoint(entity1);
+        point1.id = entity1;
+        point1.pixelSize = 1;
+        point1.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        var entity2 = new Entity();
+        var point2 = cluster.getPoint(entity2);
+        point2.id = entity2;
+        point2.pixelSize = 1;
+        point2.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        cluster.destroy();
+        expect(cluster._pointCollection).not.toBeDefined();
+
+        expect(cluster.getPoint(entity1)).toBeDefined();
+        expect(cluster.getPoint(entity2)).toBeDefined();
+        expect(cluster._pointCollection).toBeDefined();
+    });
+
 }, 'WebGL');
