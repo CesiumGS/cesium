@@ -11,6 +11,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/Math',
         '../Core/PixelFormat',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
@@ -38,6 +39,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        CesiumMath,
         PixelFormat,
         ContextLimits,
         DrawCommand,
@@ -535,9 +537,9 @@ define([
     };
 
     function modifyDiffuse(source, colorBlendMode, diffuseUniformName) {
-        // If the color mode is highlight and the glTF does not specify the _3DTILESDIFFUSE semantic, return a basic highlight shader.
+        // If the glTF does not specify the _3DTILESDIFFUSE semantic, return a basic highlight shader.
         // Otherwise if _3DTILESDIFFUSE is defined prefer the shader below that can switch the color mode at runtime.
-        if ((colorBlendMode === Cesium3DTileColorBlendMode.HIGHLIGHT) && !defined(diffuseUniformName)) {
+        if (!defined(diffuseUniformName)) {
             source = ShaderSource.replaceMain(source, 'tile_main');
             return source +
                    'void tile_color(vec4 tile_featureColor) \n' +
@@ -673,13 +675,16 @@ define([
     };
 
     function getColorBlend(batchTable) {
-        var colorBlendMode = batchTable._content._tileset.colorBlendMode;
+        var tileset = batchTable._content._tileset;
+        var colorBlendMode = tileset.colorBlendMode;
+        var colorBlendAmount = tileset.colorBlendAmount;
         if (colorBlendMode === Cesium3DTileColorBlendMode.HIGHLIGHT) {
             return 0.0;
         } else if (colorBlendMode === Cesium3DTileColorBlendMode.REPLACE) {
             return 1.0;
         } else if (colorBlendMode === Cesium3DTileColorBlendMode.MIX) {
-            return 0.5; // TODO : make this globally settable
+            // The value 0.0 is reserved for highlight, so clamp to just above 0.0.
+            return CesiumMath.clamp(colorBlendAmount, CesiumMath.EPSILON4, 1.0);
         }
     }
 
@@ -832,7 +837,7 @@ define([
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
-    function updateDerivedCommands(derivedCommands, command) {
+    function updateDerivedCommandsShadows(derivedCommands, command) {
         for (var name in derivedCommands) {
             if (derivedCommands.hasOwnProperty(name)) {
                 var derivedCommand = derivedCommands[name];
@@ -859,7 +864,7 @@ define([
                 derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
             }
 
-            updateDerivedCommands(derivedCommands, command);
+            updateDerivedCommandsShadows(derivedCommands, command);
 
             // If the command was originally opaque:
             //    * If the styling applied to the tile is all opaque, use the original command

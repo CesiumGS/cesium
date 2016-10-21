@@ -164,6 +164,16 @@ define([
          */
         this.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
 
+        /**
+         * Defines the value used to linearly interpolate between the source color and feature color when the colorBlendMode is MIX.
+         * A value of 0.0 results in the source color while a value of 1.0 results in the feature color, with any value in-between
+         * resulting in a mix of the source color and feature color.
+         *
+         * @type {Number}
+         * @default 0.5
+         */
+        this.colorBlendAmount = 0.5;
+
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
         /**
