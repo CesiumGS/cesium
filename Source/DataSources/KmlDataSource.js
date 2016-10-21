@@ -469,6 +469,14 @@ define([
             if (defined(blob)) {
                 hrefResolved = true;
                 href = blob;
+            } else {
+                // Needed for multiple levels of KML files in a KMZ
+                var tmpHref = getAbsoluteUri(href, sourceUri);
+                blob = uriResolver[tmpHref];
+                if (defined(blob)) {
+                    hrefResolved = true;
+                    href = blob;
+                }
             }
         }
         if (!hrefResolved && defined(sourceUri)) {
@@ -1930,19 +1938,39 @@ define([
         if (defined(link)) {
             var href = queryStringValue(link, 'href', namespaces.kml);
             if (defined(href)) {
+                var newSourceUri = href;
                 href = resolveHref(href, undefined, sourceUri, uriResolver);
-                var viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
-                var viewBoundScale = defaultValue(queryStringValue(link, 'viewBoundScale', namespaces.kml), 1.0);
-                var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
-                var viewFormat = defaultValue(queryStringValue(link, 'viewFormat', namespaces.kml), defaultViewFormat);
-                var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
-                var queryString = makeQueryString(viewFormat, httpQuery);
+                var linkUrl;
 
+                // We need to pass in the original path if resolveHref returns a data uri because the network link
+                //  references a document in a KMZ archive
+                if (/^data:/.test(href)) {
+                    // No need to build a query string for a data uri, just use as is
+                    linkUrl = href;
+
+                    // So if sourceUri isn't the kmz file, then its another kml in the archive, so resolve it
+                    if (!/\.kmz/i.test(sourceUri)) {
+                        newSourceUri = getAbsoluteUri(newSourceUri, sourceUri);
+                    }
+                } else {
+                    newSourceUri = href; // Not a data uri so use the fully qualified uri
+                    var viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
+                    var viewBoundScale = defaultValue(queryStringValue(link, 'viewBoundScale', namespaces.kml), 1.0);
+                    var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
+                    var viewFormat = defaultValue(queryStringValue(link, 'viewFormat', namespaces.kml), defaultViewFormat);
+                    var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
+                    var queryString = makeQueryString(viewFormat, httpQuery);
+
+                    linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, queryString, false),
+                        viewBoundScale, dataSource._lastCameraView.bbox);
+                }
+
+                var options = {
+                    sourceUri : newSourceUri,
+                    uriResolver : uriResolver
+                };
                 var networkLinkCollection = new EntityCollection();
-                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, queryString, false),
-                                                            viewBoundScale, dataSource._lastCameraView.bbox);
-
-                var promise = when(load(dataSource, networkLinkCollection, linkUrl), function(rootElement) {
+                var promise = when(load(dataSource, networkLinkCollection, linkUrl, options), function(rootElement) {
                     var entities = dataSource._entityCollection;
                     var newEntities = networkLinkCollection.values;
                     var networkLinkAvailability = networkEntity.availability;
@@ -2110,22 +2138,38 @@ define([
         zip.createReader(new zip.BlobReader(blob), function(reader) {
             reader.getEntries(function(entries) {
                 var promises = [];
-                var foundKML = false;
                 var uriResolver = {};
+                var docEntry;
+                var docDefer;
                 for (var i = 0; i < entries.length; i++) {
                     var entry = entries[i];
                     if (!entry.directory) {
                         var innerDefer = when.defer();
                         promises.push(innerDefer.promise);
-                        if (!foundKML && /\.kml$/i.test(entry.filename)) {
-                            //Only the first KML file found in the zip is used.
-                            //https://developers.google.com/kml/documentation/kmzarchives
-                            foundKML = true;
-                            loadXmlFromZip(reader, entry, uriResolver, innerDefer);
+                        if (/\.kml$/i.test(entry.filename)) {
+                            // We use the first KML document we come across
+                            //  https://developers.google.com/kml/documentation/kmzarchives
+                            // Unless we come across a .kml file at the root of the archive because GE does this
+                            if (!defined(docEntry) || !/\//i.test(entry.filename)) {
+                                if (defined(docEntry)) {
+                                    // We found one at the root so load the initial kml as a data uri
+                                    loadDataUriFromZip(reader, docEntry, uriResolver, docDefer);
+                                }
+                                docEntry = entry;
+                                docDefer = innerDefer;
+                            } else {
+                                // Wasn't the first kml and wasn't at the root
+                                loadDataUriFromZip(reader, entry, uriResolver, innerDefer);
+                            }
                         } else {
                             loadDataUriFromZip(reader, entry, uriResolver, innerDefer);
                         }
                     }
+                }
+
+                // Now load the root KML document
+                if (defined(docEntry)) {
+                    loadXmlFromZip(reader, docEntry, uriResolver, docDefer);
                 }
                 when.all(promises).then(function() {
                     reader.close();
@@ -2147,6 +2191,7 @@ define([
     function load(dataSource, entityCollection, data, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var sourceUri = options.sourceUri;
+        var uriResolver = options.uriResolver;
 
         var promise = data;
         if (typeof data === 'string') {
@@ -2187,11 +2232,11 @@ define([
                             //Return the error
                             throw new RuntimeError(msg);
                         }
-                        return loadKml(dataSource, entityCollection, kml, sourceUri, undefined);
+                        return loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver);
                     });
                 });
             } else {
-                return when(loadKml(dataSource, entityCollection, dataToLoad, sourceUri, undefined));
+                return when(loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver));
             }
         }).otherwise(function(error) {
             dataSource._error.raiseEvent(dataSource, error);
