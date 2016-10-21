@@ -166,15 +166,15 @@ define([
                 if (!Cartesian3.equals(position, value)) {
                     Cartesian3.clone(value, position);
 
-                    if (this._heightReference === HeightReference.NONE) {
-                        var glyphs = this._glyphs;
-                        for (var i = 0, len = glyphs.length; i < len; i++) {
-                            var billboard = glyphs[i].billboard;
-                            if (defined(billboard)) {
-                                billboard.position = value;
-                            }
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var billboard = glyphs[i].billboard;
+                        if (defined(billboard)) {
+                            billboard.position = value;
                         }
-                    } else {
+                    }
+
+                    if (this._heightReference !== HeightReference.NONE) {
                         this._updateClamping();
                     }
                 }
