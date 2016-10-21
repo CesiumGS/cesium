@@ -365,9 +365,9 @@ defineSuite([
         var expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
         var expectedZ = Matrix3.getColumn(expectedRotation, 2, new Cartesian3());
 
-        Cartesian3.fromElements(expectedX.z, -expectedX.y, expectedX.x, expectedX);
-        Cartesian3.fromElements(expectedY.z, -expectedY.y, expectedY.x, expectedY);
-        Cartesian3.fromElements(expectedZ.z, -expectedZ.y, expectedZ.x, expectedZ);
+        Cartesian3.fromElements(expectedX.z, expectedX.x, expectedX.y, expectedX);
+        Cartesian3.fromElements(expectedY.z, expectedY.x, expectedY.y, expectedY);
+        Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
         scratchHeadingPitchRoll.heading = heading;
         scratchHeadingPitchRoll.pitch = pitch;
@@ -396,9 +396,9 @@ defineSuite([
         var expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
         var expectedZ = Matrix3.getColumn(expectedRotation, 2, new Cartesian3());
 
-        Cartesian3.fromElements(expectedX.z, -expectedX.y, expectedX.x, expectedX);
-        Cartesian3.fromElements(expectedY.z, -expectedY.y, expectedY.x, expectedY);
-        Cartesian3.fromElements(expectedZ.z, -expectedZ.y, expectedZ.x, expectedZ);
+        Cartesian3.fromElements(expectedX.z, expectedX.x, expectedX.y, expectedX);
+        Cartesian3.fromElements(expectedY.z, expectedY.x, expectedY.y, expectedY);
+        Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
         scratchHeadingPitchRoll.heading = heading;
         scratchHeadingPitchRoll.pitch = pitch;

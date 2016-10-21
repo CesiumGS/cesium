@@ -529,7 +529,7 @@ define([
         //>>includeEnd('debug');
         var hprQuaternion = Quaternion.fromHeadingPitchRoll(headingPitchRoll.heading, headingPitchRoll.pitch, headingPitchRoll.roll, scratchHPRQuaternion);
         var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
-        result = Transforms.northWestUpToFixedFrame(origin, ellipsoid, result);
+        result = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid, result);
         return Matrix4.multiply(result, hprMatrix, result);
     };
 
