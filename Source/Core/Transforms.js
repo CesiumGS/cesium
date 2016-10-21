@@ -537,36 +537,6 @@ define([
         return Quaternion.fromRotationMatrix(rotation, result);
     };
 
-    /**
-     * Computes a quaternion from a reference frame with axes computed from the heading-pitch-roll angles
-     * centered at the provided origin. Heading is the rotation from the local north
-     * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
-     * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
-     *
-     * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, roll angles to apply.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
-     *
-     * @example
-     * // Get the quaternion from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var hpr = new HeadingPitchRoll(0.0, 0.0, 0.0);
-     * var hpr.heading = -Cesium.Math.PI_OVER_TWO;
-     * var hpr.pitch = Cesium.Math.PI_OVER_FOUR;
-     * var hpr.roll = 0.0;
-     * var quaternion = Cesium.Transforms.aircraftHeadingPitchRollQuaternion(center, hpr);
-     *
-     *
-     */
-    Transforms.aircraftHeadingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, result) {
-        // checks for required parameters happen in the called functions
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, scratchENUMatrix4);
-        var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
-        return Quaternion.fromRotationMatrix(rotation, result);
-    };
-
     var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
     var gmstConstant1 = 8640184.812866;
     var gmstConstant2 = 0.093104;
@@ -1049,6 +1019,8 @@ define([
 
         return result;
     };
+
+    Transforms.aircraftHeadingPitchRollQuaternion = Transforms.headingPitchRollQuaternion;
 
     return Transforms;
 });
