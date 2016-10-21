@@ -378,4 +378,29 @@ defineSuite([
         expect(cluster._clusterBillboardCollection).toBeDefined();
         expect(cluster._clusterBillboardCollection.length).toEqual(1);
     });
+
+    it('is robust to BillboardCollection changes', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity1 = new Entity();
+        var billboard1 = cluster.getBillboard(entity1);
+        billboard1.id = entity1;
+        billboard1.image = createBillboardImage();
+        billboard1.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        var entity2 = new Entity();
+        var billboard2 = cluster.getBillboard(entity2);
+        billboard2.id = entity2;
+        billboard2.image = createBillboardImage();
+        billboard2.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        cluster.destroy();
+        expect(cluster._billboardCollection).not.toBeDefined();
+
+        expect(cluster.getBillboard(entity1)).toBeDefined();
+        expect(cluster.getBillboard(entity2)).toBeDefined();
+        expect(cluster._billboardCollection).toBeDefined();
+    });
+
 }, 'WebGL');
