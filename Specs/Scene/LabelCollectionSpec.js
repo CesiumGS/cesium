@@ -1463,6 +1463,25 @@ defineSuite([
             expect(label.pixelOffset.y).toEqual(yOffset);
         });
 
+
+        it('Correctly updates billboard position when height reference changes', function() {
+            var position1 = new Cartesian3(1.0, 2.0, 3.0);
+            var label = labels.add({
+                position : position1,
+                text : 'abc'
+            });
+
+            scene.renderForSpecs();
+            var glyph = label._glyphs[0];
+            var billboard = glyph.billboard;
+            expect(billboard.position).toEqual(label.position);
+
+            label._clampedPosition = undefined;
+
+            expect(billboard.position).toEqual(label.position);
+        });
+
+
         it('should set vertexTranslate of billboards correctly when font size changes', function() {
             var label = labels.add({
                 text : 'apl',
