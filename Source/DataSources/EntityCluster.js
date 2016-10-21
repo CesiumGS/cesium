@@ -536,7 +536,7 @@ define([
      */
     EntityCluster.prototype.getLabel = function(entity) {
         var labelCollection = this._labelCollection;
-        if (defined(labelCollection) && defined(entity._labelIndex)) {
+        if (defined(labelCollection) && defined(entity._labelCollection) && labelCollection === entity._labelCollection && defined(entity._labelIndex)) {
             return labelCollection.get(entity._labelIndex);
         }
 
@@ -558,6 +558,7 @@ define([
             index = labelCollection.length - 1;
         }
 
+        entity._labelCollection = labelCollection;
         entity._labelIndex = index;
 
         this._clusterDirty = true;
@@ -572,11 +573,12 @@ define([
      * @private
      */
     EntityCluster.prototype.removeLabel = function(entity) {
-        if (!defined(this._labelCollection) || !defined(entity._labelIndex)) {
+        if (!defined(this._labelCollection) || !defined(entity._labelCollection) || this._labelCollection !== entity._labelCollection || !defined(entity._labelIndex)) {
             return;
         }
 
         var index = entity._labelIndex;
+        entity._labelCollection = undefined;
         entity._labelIndex = undefined;
 
         var label = this._labelCollection.get(index);
@@ -598,7 +600,7 @@ define([
      */
     EntityCluster.prototype.getBillboard = function(entity) {
         var billboardCollection = this._billboardCollection;
-        if (defined(billboardCollection) && defined(entity._billboardIndex)) {
+        if (defined(billboardCollection) && defined(entity._billboardCollection) && billboardCollection === entity._billboardCollection && defined(entity._billboardIndex)) {
             return billboardCollection.get(entity._billboardIndex);
         }
 
@@ -620,6 +622,7 @@ define([
             index = billboardCollection.length - 1;
         }
 
+        entity._billboardCollection = billboardCollection;
         entity._billboardIndex = index;
 
         this._clusterDirty = true;
@@ -634,11 +637,12 @@ define([
      * @private
      */
     EntityCluster.prototype.removeBillboard = function(entity) {
-        if (!defined(this._billboardCollection) || !defined(entity._billboardIndex)) {
+        if (!defined(this._billboardCollection) || !defined(entity._billboardCollection) || !defined(entity._billboardIndex)) {
             return;
         }
 
         var index = entity._billboardIndex;
+        entity._billboardCollection = undefined;
         entity._billboardIndex = undefined;
 
         var billboard = this._billboardCollection.get(index);
@@ -660,7 +664,7 @@ define([
      */
     EntityCluster.prototype.getPoint = function(entity) {
         var pointCollection = this._pointCollection;
-        if (defined(pointCollection) && defined(entity._pointIndex)) {
+        if (defined(pointCollection) && defined(entity._pointCollection) && pointCollection === entity._pointCollection && defined(entity._pointIndex)) {
             return pointCollection.get(entity._pointIndex);
         }
 
@@ -680,6 +684,7 @@ define([
             index = pointCollection.length - 1;
         }
 
+        entity._pointCollection = pointCollection;
         entity._pointIndex = index;
 
         this._clusterDirty = true;
@@ -694,11 +699,12 @@ define([
      * @private
      */
     EntityCluster.prototype.removePoint = function(entity) {
-        if (!defined(this._pointCollection) || !defined(entity._pointIndex)) {
+        if (!defined(this._pointCollection) || !defined(entity._pointCollection) || this._pointCollection !== entity._pointCollection && !defined(entity._pointIndex)) {
             return;
         }
 
         var index = entity._pointIndex;
+        entity._pointCollection = undefined;
         entity._pointIndex = undefined;
 
         var point = this._pointCollection.get(index);

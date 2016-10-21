@@ -35,6 +35,7 @@ Change Log
     * `HeadingPitchRoll.clone` function to duplicate HeadingPitchRoll instance.
     * `HeadingPitchRoll.equals` and `HeadingPitchRoll.equalsEpsilon` functions for comparing two instances.
 * Added `Matrix3.fromHeadingPitchRoll` Computes a 3x3 rotation matrix from the provided headingPitchRoll.
+* `DataSource`s with billboards, labels, and/or points can now be added and removed multiple times. [#4409](https://github.com/AnalyticalGraphicsInc/cesium/issues/4409)
 
 ### 1.26 - 2016-10-03
 
