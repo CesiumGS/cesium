@@ -1547,16 +1547,7 @@ define([
         }
         entity.availability = availability;
 
-        if (defined(parent)) {
-            var parentAvailability = parent.availability;
-            if (defined(parentAvailability)) {
-                if (defined(availability)) {
-                    availability.intersect(parentAvailability);
-                } else {
-                    entity.availability = parentAvailability;
-                }
-            }
-        }
+        mergeAvailabilityWithParent(entity);
 
         // Per KML spec "A Feature is visible only if it and all its ancestors are visible."
         function ancestryIsVisible(parentEntity) {
@@ -1974,21 +1965,12 @@ define([
                 var promise = load(dataSource, networkLinkCollection, linkUrl, options).then(function(rootElement) {
                     var entities = dataSource._entityCollection;
                     var newEntities = networkLinkCollection.values;
-                    var networkLinkAvailability = networkEntity.availability;
                     entities.suspendEvents();
                     for (var i = 0; i < newEntities.length; i++) {
                         var newEntity = newEntities[i];
                         if (!defined(newEntity.parent)) {
                             newEntity.parent = networkEntity;
-
-                            if (defined(networkLinkAvailability)) {
-                                var childAvailability = newEntity.availability;
-                                if (defined(childAvailability)) {
-                                    childAvailability.intersect(networkLinkAvailability);
-                                } else {
-                                    newEntity.availability = networkLinkAvailability;
-                                }
-                            }
+                            mergeAvailabilityWithParent(newEntity);
                         }
 
                         entities.add(newEntity);
@@ -2551,6 +2533,21 @@ define([
         });
     };
 
+    function mergeAvailabilityWithParent(child) {
+        var parent = child.parent;
+        if (defined(parent)) {
+            var parentAvailability = parent.availability;
+            if (defined(parentAvailability)) {
+                var childAvailability = child.availability;
+                if (defined(childAvailability)) {
+                    childAvailability.intersect(parentAvailability);
+                } else {
+                    child.availability = parentAvailability;
+                }
+            }
+        }
+    }
+
     function getNetworkLinkUpdateCallback(dataSource, networkLink, newEntityCollection, networkLinks, processedHref) {
         return function(rootElement) {
             if (!networkLinks.contains(networkLink.id)) {
@@ -2604,7 +2601,6 @@ define([
             }
 
             var networkLinkEntity = networkLink.entity;
-            var networkLinkAvailability = networkLinkEntity.availability;
             var entityCollection = dataSource._entityCollection;
             var newEntities = newEntityCollection.values;
 
@@ -2635,15 +2631,7 @@ define([
                 var newEntity = newEntities[i];
                 if (!defined(newEntity.parent)) {
                     newEntity.parent = networkLinkEntity;
-
-                    if (defined(networkLinkAvailability)) {
-                        var childAvailability = newEntity.availability;
-                        if (defined(childAvailability)) {
-                            childAvailability.intersect(networkLinkAvailability);
-                        } else {
-                            newEntity.availability = networkLinkAvailability;
-                        }
-                    }
+                    mergeAvailabilityWithParent(newEntity);
                 }
                 entityCollection.add(newEntity);
             }
