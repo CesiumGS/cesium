@@ -371,6 +371,21 @@ defineSuite([
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
     });
 
+    it('headingPitchRollQuaternion works with a HeadingPitchRoll object and without a result parameter', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var heading = CesiumMath.toRadians(20.0);
+        var pitch = CesiumMath.toRadians(30.0);
+        var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
+
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
+        var expected = Matrix4.getRotation(transform, new Matrix3());
+
+        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE);
+        var actual = Matrix3.fromQuaternion(quaternion);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
+    });
+
     it('headingPitchRollQuaternion works with a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
@@ -383,6 +398,23 @@ defineSuite([
 
         var result = new Quaternion();
         var quaternion = Transforms.headingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
+        var actual = Matrix3.fromQuaternion(quaternion);
+        expect(quaternion).toBe(result);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
+    });
+
+    it('headingPitchRollQuaternion works with a HeadingPitchRoll object and a result parameter', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var heading = CesiumMath.toRadians(20.0);
+        var pitch = CesiumMath.toRadians(30.0);
+        var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
+
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
+        var expected = Matrix4.getRotation(transform, new Matrix3());
+
+        var result = new Quaternion();
+        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, result);
         var actual = Matrix3.fromQuaternion(quaternion);
         expect(quaternion).toBe(result);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);

@@ -492,6 +492,7 @@ define([
         return Matrix4.multiply(result, hprMatrix, result);
     };
 
+    var scratchHPR = new HeadingPitchRoll();
     var scratchENUMatrix4 = new Matrix4();
     var scratchHPRMatrix3 = new Matrix3();
 
@@ -502,9 +503,7 @@ define([
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {Number} heading The heading angle in radians.
-     * @param {Number} pitch The pitch angle in radians.
-     * @param {Number} roll The roll angle in radians.
+     * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
@@ -515,11 +514,25 @@ define([
      * var heading = -Cesium.Math.PI_OVER_TWO;
      * var pitch = Cesium.Math.PI_OVER_FOUR;
      * var roll = 0.0;
-     * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, heading, pitch, roll);
+     * var hpr = new HeadingPitchRoll(heading, pitch, roll);
+     * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, hpr);
      */
-    Transforms.headingPitchRollQuaternion = function(origin, heading, pitch, roll, ellipsoid, result) {
+    Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, pitch, roll, ellipsoid, result) {
+        var hpr;
+        if (typeof headingPitchRoll === 'object') {
+            // Shift arguments using assignment to encourage JIT optimization.
+            hpr = headingPitchRoll;
+            ellipsoid = pitch;
+            result = roll;
+        } else {
+            deprecationWarning('headingPitchRollQuaternion', 'headingPitchRollQuaternion with separate heading, pitch, and roll arguments was deprecated in 1.27.  It will be removed in 1.30.  Use a HeadingPitchRoll object.');
+            scratchHPR.heading = headingPitchRoll;
+            scratchHPR.pitch = pitch;
+            scratchHPR.roll = roll;
+            hpr = scratchHPR;
+        }
         // checks for required parameters happen in the called functions
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, ellipsoid, scratchENUMatrix4);
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, ellipsoid, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
     };
