@@ -1194,8 +1194,10 @@ define([
 
         for (var i = 0; i < length; ++i) {
             var boundingSphere = boundingSpheres[i];
-            var modelMatrix = defaultValue(primitive.modelMatrix, Matrix4.IDENTITY);
-            boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
+            var modelMatrix = primitive.modelMatrix;
+            if (defined(modelMatrix)) {
+                boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
+            }
 
             if (hasDistanceDisplayCondition) {
                 var center = boundingSphere.center;

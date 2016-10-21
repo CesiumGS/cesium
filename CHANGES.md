@@ -9,6 +9,7 @@ Change Log
     * 
 * Fixed a crash that would occur when using dynamic `distanceDisplayCondition` properties. [#4403](https://github.com/AnalyticalGraphicsInc/cesium/pull/4403)
 * Fixed a bug affected models with multiple meshes without indices. [#4237](https://github.com/AnalyticalGraphicsInc/cesium/issues/4237)
+* Fixed `BoundingSphere` computation for `Primitive` instances with a modelMatrix. [#4431](https://github.com/AnalyticalGraphicsInc/cesium/issues/4431) and [#4428](https://github.com/AnalyticalGraphicsInc/cesium/issues/4428)
 * Fixed a glTF transparency bug where `blendFuncSeparate` parameters were loaded in the wrong order. [#4435](https://github.com/AnalyticalGraphicsInc/cesium/pull/4435)
 * Fixed a bug where creating a custom geometry with attributes and indices that have values that are not a typed array would cause a crash. [#4419](https://github.com/AnalyticalGraphicsInc/cesium/pull/4419)
 * Fixed a bug with rotated, textured rectangles. [#4430](https://github.com/AnalyticalGraphicsInc/cesium/pull/4430)
