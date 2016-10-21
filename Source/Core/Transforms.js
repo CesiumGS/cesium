@@ -7,6 +7,7 @@ define([
         './Cartographic',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './EarthOrientationParameters',
         './EarthOrientationParametersSample',
@@ -28,6 +29,7 @@ define([
         Cartographic,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         EarthOrientationParameters,
         EarthOrientationParametersSample,
@@ -457,9 +459,7 @@ define([
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {Number} heading The heading angle in radians.
-     * @param {Number} pitch The pitch angle in radians.
-     * @param {Number} roll The roll angle in radians.
+     * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
@@ -472,7 +472,19 @@ define([
      * var roll = 0.0;
      * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, heading, pitch, roll);
      */
-    Transforms.headingPitchRollToFixedFrame = function(origin, heading, pitch, roll, ellipsoid, result) {
+    Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, pitch, roll, ellipsoid, result) {
+        var heading;
+        if (typeof headingPitchRoll === 'object') {
+            // Shift arguments using assignments to encourage JIT optimization.
+            ellipsoid = pitch;
+            result = roll;
+            heading = headingPitchRoll.heading;
+            pitch = headingPitchRoll.pitch;
+            roll = headingPitchRoll.roll;
+        } else {
+            deprecationWarning('headingPitchRollToFixedFrame', 'headingPitchRollToFixedFrame with separate heading, pitch, and roll arguments was deprecated in 1.27.  It will be removed in 1.30.  Use a HeadingPitchRoll object.');
+            heading = headingPitchRoll;
+        }
         // checks for required parameters happen in the called functions
         var hprQuaternion = Quaternion.fromHeadingPitchRoll(heading, pitch, roll, scratchHPRQuaternion);
         var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
@@ -480,43 +492,7 @@ define([
         return Matrix4.multiply(result, hprMatrix, result);
     };
 
-    /**
-     * Computes a 4x4 transformation matrix from a reference frame with axes computed from the heading-pitch-roll angles
-     * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local north
-     * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
-     * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
-     *
-     * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, roll angles to apply.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
-     *
-     * @example
-     * // Get the transform from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var hpr = new HeadingPitchRoll(0.0, 0.0, 0.0);
-     * var hpr.heading = -Cesium.Math.PI_OVER_TWO;
-     * var hpr.pitch = Cesium.Math.PI_OVER_FOUR;
-     * var hpr.roll = 0.0;
-     * var transform = Cesium.Transforms.aircraftHeadingPitchRollToFixedFrame(center, hpr);
-     */
-    Transforms.aircraftHeadingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, result) {
-        // checks for required parameters happen in the called functions
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(origin)) {
-            throw new DeveloperError('origin is required.');
-        }
-        if (!defined(headingPitchRoll)) {
-            throw new DeveloperError('headingPitchRoll is required.');
-        }
-        //>>includeEnd('debug');
-        var hprQuaternion = Quaternion.fromHeadingPitchRoll(headingPitchRoll.heading, headingPitchRoll.pitch, headingPitchRoll.roll, scratchHPRQuaternion);
-        var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
-        result = Transforms.northWestUpToFixedFrame(origin, ellipsoid, result);
-        return Matrix4.multiply(result, hprMatrix, result);
-    };
-
+    var scratchHPR = new HeadingPitchRoll();
     var scratchENUMatrix4 = new Matrix4();
     var scratchHPRMatrix3 = new Matrix3();
 
@@ -527,9 +503,7 @@ define([
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {Number} heading The heading angle in radians.
-     * @param {Number} pitch The pitch angle in radians.
-     * @param {Number} roll The roll angle in radians.
+     * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
@@ -540,41 +514,25 @@ define([
      * var heading = -Cesium.Math.PI_OVER_TWO;
      * var pitch = Cesium.Math.PI_OVER_FOUR;
      * var roll = 0.0;
-     * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, heading, pitch, roll);
+     * var hpr = new HeadingPitchRoll(heading, pitch, roll);
+     * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, hpr);
      */
-    Transforms.headingPitchRollQuaternion = function(origin, heading, pitch, roll, ellipsoid, result) {
+    Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, pitch, roll, ellipsoid, result) {
+        var hpr;
+        if (typeof headingPitchRoll === 'object') {
+            // Shift arguments using assignment to encourage JIT optimization.
+            hpr = headingPitchRoll;
+            ellipsoid = pitch;
+            result = roll;
+        } else {
+            deprecationWarning('headingPitchRollQuaternion', 'headingPitchRollQuaternion with separate heading, pitch, and roll arguments was deprecated in 1.27.  It will be removed in 1.30.  Use a HeadingPitchRoll object.');
+            scratchHPR.heading = headingPitchRoll;
+            scratchHPR.pitch = pitch;
+            scratchHPR.roll = roll;
+            hpr = scratchHPR;
+        }
         // checks for required parameters happen in the called functions
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, ellipsoid, scratchENUMatrix4);
-        var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
-        return Quaternion.fromRotationMatrix(rotation, result);
-    };
-
-    /**
-     * Computes a quaternion from a reference frame with axes computed from the heading-pitch-roll angles
-     * centered at the provided origin. Heading is the rotation from the local north
-     * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
-     * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
-     *
-     * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, roll angles to apply.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
-     *
-     * @example
-     * // Get the quaternion from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var hpr = new HeadingPitchRoll(0.0, 0.0, 0.0);
-     * var hpr.heading = -Cesium.Math.PI_OVER_TWO;
-     * var hpr.pitch = Cesium.Math.PI_OVER_FOUR;
-     * var hpr.roll = 0.0;
-     * var quaternion = Cesium.Transforms.aircraftHeadingPitchRollQuaternion(center, hpr);
-     *
-     *
-     */
-    Transforms.aircraftHeadingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, result) {
-        // checks for required parameters happen in the called functions
-        var transform = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, scratchENUMatrix4);
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, ellipsoid, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
     };
