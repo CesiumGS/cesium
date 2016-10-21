@@ -420,36 +420,6 @@ defineSuite([
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
     });
 
-    it('aircraftHeadingPitchRollQuaternion works without a result parameter', function() {
-        var origin = new Cartesian3(1.0, 0.0, 0.0);
-        scratchHeadingPitchRoll.heading = CesiumMath.toRadians(20.0);
-        scratchHeadingPitchRoll.pitch = CesiumMath.toRadians(30.0);
-        scratchHeadingPitchRoll.roll = CesiumMath.toRadians(40.0);
-
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, scratchHeadingPitchRoll, Ellipsoid.UNIT_SPHERE);
-        var expected = Matrix4.getRotation(transform, new Matrix3());
-
-        var quaternion = Transforms.aircraftHeadingPitchRollQuaternion(origin, scratchHeadingPitchRoll, Ellipsoid.UNIT_SPHERE);
-        var actual = Matrix3.fromQuaternion(quaternion);
-        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
-    });
-
-    it('aircraftHeadingPitchRollQuaternion works with a result parameter', function() {
-        var origin = new Cartesian3(1.0, 0.0, 0.0);
-        scratchHeadingPitchRoll.heading = CesiumMath.toRadians(20.0);
-        scratchHeadingPitchRoll.pitch = CesiumMath.toRadians(30.0);
-        scratchHeadingPitchRoll.roll = CesiumMath.toRadians(40.0);
-
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, scratchHeadingPitchRoll, Ellipsoid.UNIT_SPHERE);
-        var expected = Matrix4.getRotation(transform, new Matrix3());
-
-        var result = new Quaternion();
-        var quaternion = Transforms.aircraftHeadingPitchRollQuaternion(origin, scratchHeadingPitchRoll, Ellipsoid.UNIT_SPHERE, result);
-        var actual = Matrix3.fromQuaternion(quaternion);
-        expect(quaternion).toBe(result);
-        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
-    });
-
     it('computeTemeToPseudoFixedMatrix works before noon', function() {
         var time = JulianDate.fromDate(new Date('June 29, 2015 12:00:00 UTC'));
         var t = Transforms.computeTemeToPseudoFixedMatrix(time);
@@ -977,18 +947,6 @@ defineSuite([
     it('headingPitchRollToFixedFrame throws without an roll', function() {
         expect(function() {
             Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, 0.0, 0.0, undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('aircraftHeadingPitchRollQuaternion throws without an origin', function() {
-        expect(function() {
-            Transforms.aircraftHeadingPitchRollQuaternion(undefined, scratchHeadingPitchRoll);
-        }).toThrowDeveloperError();
-    });
-
-    it('aircraftHeadingPitchRollQuaternion throws without an headingPitchRoll', function() {
-        expect(function() {
-            Transforms.aircraftHeadingPitchRollQuaternion(Cartesian3.ZERO, undefined);
         }).toThrowDeveloperError();
     });
 

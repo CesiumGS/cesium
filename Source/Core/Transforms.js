@@ -1020,7 +1020,5 @@ define([
         return result;
     };
 
-    Transforms.aircraftHeadingPitchRollQuaternion = Transforms.headingPitchRollQuaternion;
-
     return Transforms;
 });
