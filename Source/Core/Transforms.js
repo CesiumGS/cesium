@@ -553,7 +553,7 @@ define([
      */
     Transforms.aircraftHeadingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, result) {
         // checks for required parameters happen in the called functions
-        var transform = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, scratchENUMatrix4);
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
     };
@@ -1040,8 +1040,6 @@ define([
 
         return result;
     };
-
-    Transforms.aircraftHeadingPitchRollToFixedFrame = Transforms.headingPitchRollToFixedFrame;
 
     return Transforms;
 });
