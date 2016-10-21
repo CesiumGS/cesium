@@ -7,6 +7,7 @@ define([
         './Cartographic',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './EarthOrientationParameters',
         './EarthOrientationParametersSample',
@@ -28,6 +29,7 @@ define([
         Cartographic,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         EarthOrientationParameters,
         EarthOrientationParametersSample,
@@ -456,10 +458,12 @@ define([
      * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
      *
+     * You should pass a HeadingPitchRoll object.  Passing separate heading, pitch, and roll values is deprecated.
+     *
      * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {Number} heading The heading angle in radians.
-     * @param {Number} pitch The pitch angle in radians.
-     * @param {Number} roll The roll angle in radians.
+     * @param {HeadingPitchRoll|Number} hprOrHeading A HeadingPitchRoll or the heading angle in radians.
+     * @param {Number?} pitch The pitch angle in radians if a HeadingPitchRoll object was not passed.
+     * @param {Number?} roll The roll angle in radians if a HeadingPitchRoll object was not passed.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
@@ -472,7 +476,19 @@ define([
      * var roll = 0.0;
      * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, heading, pitch, roll);
      */
-    Transforms.headingPitchRollToFixedFrame = function(origin, heading, pitch, roll, ellipsoid, result) {
+    Transforms.headingPitchRollToFixedFrame = function(origin, hprOrHeading, pitch, roll, ellipsoid, result) {
+        var heading;
+        if (typeof hprOrHeading === 'object') {
+            // Shift arguments using assignments to encourage JIT optimization.
+            ellipsoid = pitch;
+            result = roll;
+            heading = hprOrHeading.heading;
+            pitch = hprOrHeading.pitch;
+            roll = hprOrHeading.roll;
+        } else {
+            deprecationWarning('headingPitchRollToFixedFrame', 'headingPitchRollToFixedFrame with separate heading, pitch, and roll arguments was deprecated in 1.27.  It will be removed in 1.30.  Use a HeadingPitchRoll object.');
+            heading = hprOrHeading;
+        }
         // checks for required parameters happen in the called functions
         var hprQuaternion = Quaternion.fromHeadingPitchRoll(heading, pitch, roll, scratchHPRQuaternion);
         var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
