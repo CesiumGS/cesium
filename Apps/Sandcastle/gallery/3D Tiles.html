@@ -395,6 +395,30 @@ Sandcastle.addToolbarButton('SSE--', function() {
     console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
 });
 
+Sandcastle.addToolbarButton('Dynamic SSE on/off', function() {
+    tileset.dynamicScreenSpaceError = !tileset.dynamicScreenSpaceError;
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE density++', function() {
+    tileset.dynamicScreenSpaceErrorDensity = Math.min(tileset.dynamicScreenSpaceErrorDensity + 0.005, 1.0);
+    console.log('New dynamic SSE density: ' + tileset.dynamicScreenSpaceErrorDensity);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE density--', function() {
+    tileset.dynamicScreenSpaceErrorDensity = Math.max(tileset.dynamicScreenSpaceErrorDensity - 0.005, 0);
+    console.log('New dynamic SSE density: ' + tileset.dynamicScreenSpaceErrorDensity);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE factor++', function() {
+    tileset.dynamicScreenSpaceErrorFactor = tileset.dynamicScreenSpaceErrorFactor + 1.0;
+    console.log('New dynamic SSE factor: ' + tileset.dynamicScreenSpaceErrorFactor);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE factor--', function() {
+    tileset.dynamicScreenSpaceErrorFactor = Math.max(tileset.dynamicScreenSpaceErrorFactor - 1.0, 0);
+    console.log('New dynamic SSE factor: ' + tileset.dynamicScreenSpaceErrorFactor);
+});
+
 Sandcastle.addToolbarButton('Trim tiles (cache)', function() {
     tileset.trimLoadedTiles();
 });
