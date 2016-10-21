@@ -86,6 +86,7 @@ define([
             registerListener(screenSpaceEventHandler, 'pointerdown', element, handlePointerDown);
             registerListener(screenSpaceEventHandler, 'pointerup', element, handlePointerUp);
             registerListener(screenSpaceEventHandler, 'pointermove', element, handlePointerMove);
+            registerListener(screenSpaceEventHandler, 'pointercancel', element, handlePointerUp);
         } else {
             registerListener(screenSpaceEventHandler, 'mousedown', element, handleMouseDown);
             registerListener(screenSpaceEventHandler, 'mouseup', alternateElement, handleMouseUp);
@@ -93,6 +94,7 @@ define([
             registerListener(screenSpaceEventHandler, 'touchstart', element, handleTouchStart);
             registerListener(screenSpaceEventHandler, 'touchend', alternateElement, handleTouchEnd);
             registerListener(screenSpaceEventHandler, 'touchmove', alternateElement, handleTouchMove);
+            registerListener(screenSpaceEventHandler, 'touchcancel', alternateElement, handleTouchEnd);
         }
 
         registerListener(screenSpaceEventHandler, 'dblclick', element, handleDblClick);

@@ -301,6 +301,7 @@ Sandcastle.addToolbarMenu([{
 }]);
 
 Sandcastle.reset = function() {
+    scene.completeMorph();
     viewer.entities.removeAll();
     scene.primitives.removeAll();
     scene.tweens.removeAll();
@@ -321,7 +322,7 @@ Sandcastle.reset = function() {
 
         cameraChanged.style.display = 'none';
     }
-    
+
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
     clock.multiplier = 1.0;
