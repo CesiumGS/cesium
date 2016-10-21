@@ -874,6 +874,23 @@ defineSuite([
         expect(primitive.getGeometryInstanceAttributes('unknown')).not.toBeDefined();
     });
 
+    it('has a smaller minimum height to avoid z fighting', function() {
+        primitive = new GroundPrimitive({
+            geometryInstances : rectangleInstance
+        });
+
+        spyOn(RectangleGeometry, 'createShadowVolume').and.callThrough();
+
+        var frameState = scene.frameState;
+        primitive.update(frameState);
+
+        expect(RectangleGeometry.createShadowVolume).toHaveBeenCalled();
+        var args = RectangleGeometry.createShadowVolume.calls.allArgs();
+        var minFunction = args[0][1];
+        var value = minFunction(rectangle._granularity, rectangle._ellipsoid);
+        expect(value).toEqual(primitive._minHeight - 15);
+    });
+
     it('isDestroyed', function() {
         primitive = new GroundPrimitive();
         expect(primitive.isDestroyed()).toEqual(false);
