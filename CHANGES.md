@@ -30,6 +30,7 @@ Change Log
     * `HeadingPitchRoll.clone` function to duplicate HeadingPitchRoll instance.
     * `HeadingPitchRoll.equals` and `HeadingPitchRoll.equalsEpsilon` functions for comparing two instances.
 * Added `Matrix3.fromHeadingPitchRoll` Computes a 3x3 rotation matrix from the provided headingPitchRoll.
+* `Transforms.headingPitchRollToFixedFrame` and `Transforms.headingPitchRollQuaternion` now take a `HeadingPitchRoll` object in addition to separate heading, pitch, and roll values.  Separate values will be deprecated in 1.30.
 
 ### 1.26 - 2016-10-03
 
