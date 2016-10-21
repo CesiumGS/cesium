@@ -46,7 +46,6 @@ defineSuite([
     var negativeX = new Cartesian4(-1, 0, 0, 0);
     var negativeY = new Cartesian4(0, -1, 0, 0);
     var negativeZ = new Cartesian4(0, 0, -1, 0);
-    var scratchHeadingPitchRoll = new Quaternion();
 
     it('eastNorthUpToFixedFrame works without a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
