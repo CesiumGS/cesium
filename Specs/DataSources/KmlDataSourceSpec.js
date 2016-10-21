@@ -338,7 +338,7 @@ defineSuite([
             expect(spy.calls.count()).toEqual(3);
             for (var i = 0; i < nodeNames.length; i++) {
                 var args = spy.calls.argsFor(i);
-                expect(args.length).toEqual(7);
+                expect(args.length).toEqual(8);
                 expect(args[0]).toBe(dataSource);
                 expect(args[2].localName).toEqual(nodeNames[i]);
                 expect(args[3]).toBeInstanceOf(EntityCollection);
@@ -3593,6 +3593,15 @@ defineSuite([
             expect(interval.stop).toEqual(Iso8601.MAXIMUM_VALUE);
 
             expect(entities[0].availability).toEqual(entities[1].availability);
+        });
+    });
+
+    it('NetworkLink: within a kmz file', function() {
+        return KmlDataSource.load('Data/KML/multilevel.kmz', options).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities.length).toBe(3);
+            expect(entities[3].billboard).not.toBeNull();
+            expect(entities[3].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1,2,3));
         });
     });
 

@@ -878,7 +878,7 @@ define([
 
     //Asynchronously processes an external style file.
     function processExternalStyles(dataSource, uri, styleCollection) {
-        return when(loadXML(proxyUrl(uri, dataSource._proxy)), function(styleKml) {
+        return loadXML(proxyUrl(uri, dataSource._proxy)).then(function(styleKml) {
             return processStyles(dataSource, styleKml, styleCollection, uri, true);
         });
     }
@@ -1532,8 +1532,8 @@ define([
         entity.description = tmp;
     }
 
-    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var entity = createEntity(featureNode, entityCollection);
+    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver, context) {
+        var entity = createEntity(featureNode, entityCollection, context);
         var kmlData = entity.kml;
         var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver);
 
@@ -1619,7 +1619,7 @@ define([
         Model : processUnsupportedGeometry
     };
 
-    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context) {
         var featureTypeNames = Object.keys(featureTypes);
         var featureTypeNamesLength = featureTypeNames.length;
 
@@ -1633,19 +1633,19 @@ define([
                 var child = childNodes[q];
                 if (child.localName === featureName &&
                     ((namespaces.kml.indexOf(child.namespaceURI) !== -1) || (namespaces.gx.indexOf(child.namespaceURI) !== -1))) {
-                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver);
+                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver, context);
                 }
             }
         }
     }
 
-    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
-        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context) {
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context);
+        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver, context);
     }
 
-    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, context) {
+        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, context);
         var entity = r.entity;
         var styleEntity = r.styleEntity;
 
@@ -1668,8 +1668,8 @@ define([
         }
     }
 
-    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, context) {
+        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, context);
         var entity = r.entity;
 
         var geometry;
@@ -1758,8 +1758,8 @@ define([
         }
     }
 
-    function processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context) {
+        dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -1926,8 +1926,8 @@ define([
         return queryString;
     }
 
-    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context) {
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context);
         var networkEntity = r.entity;
 
         var link = queryFirstNode(node, 'Link', namespaces.kml);
@@ -1967,10 +1967,11 @@ define([
 
                 var options = {
                     sourceUri : newSourceUri,
-                    uriResolver : uriResolver
+                    uriResolver : uriResolver,
+                    context : networkEntity.id
                 };
                 var networkLinkCollection = new EntityCollection();
-                var promise = when(load(dataSource, networkLinkCollection, linkUrl, options), function(rootElement) {
+                var promise = load(dataSource, networkLinkCollection, linkUrl, options).then(function(rootElement) {
                     var entities = dataSource._entityCollection;
                     var newEntities = networkLinkCollection.values;
                     var networkLinkAvailability = networkEntity.availability;
@@ -1989,6 +1990,7 @@ define([
                                 }
                             }
                         }
+
                         entities.add(newEntity);
                     }
                     entities.resumeEvents();
@@ -2084,16 +2086,16 @@ define([
         Tour : processUnsupportedFeature
     };
 
-    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
+    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver, context) {
         var featureProcessor = featureTypes[node.localName];
         if (defined(featureProcessor)) {
-            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context);
         } else {
-            processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+            processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context);
         }
     }
 
-    function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver) {
+    function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context) {
         var deferred = when.defer();
 
         entityCollection.removeAll();
@@ -2111,7 +2113,7 @@ define([
         }
 
         var styleCollection = new EntityCollection(dataSource);
-        when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
+        when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver, context), function() {
             var element = kml.documentElement;
             if (element.localName === 'kml') {
                 var childNodes = element.childNodes;
@@ -2124,7 +2126,7 @@ define([
                 }
             }
             entityCollection.suspendEvents();
-            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
+            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver, context);
             entityCollection.resumeEvents();
 
             deferred.resolve(kml.documentElement);
@@ -2192,6 +2194,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var sourceUri = options.sourceUri;
         var uriResolver = options.uriResolver;
+        var context = options.context;
 
         var promise = data;
         if (typeof data === 'string') {
@@ -2199,50 +2202,52 @@ define([
             sourceUri = defaultValue(sourceUri, data);
         }
 
-        return when(promise, function(dataToLoad) {
-            if (dataToLoad instanceof Blob) {
-                return isZipFile(dataToLoad).then(function(isZip) {
-                    if (isZip) {
-                        return loadKmz(dataSource, entityCollection, dataToLoad, sourceUri);
-                    }
-                    return when(readBlobAsText(dataToLoad)).then(function(text) {
-                        //There's no official way to validate if a parse was successful.
-                        //The following check detects the error on various browsers.
-
-                        //IE raises an exception
-                        var kml;
-                        var error;
-                        try {
-                            kml = parser.parseFromString(text, 'application/xml');
-                        } catch (e) {
-                            error = e.toString();
+        return when(promise)
+            .then(function(dataToLoad) {
+                if (dataToLoad instanceof Blob) {
+                    return isZipFile(dataToLoad).then(function(isZip) {
+                        if (isZip) {
+                            return loadKmz(dataSource, entityCollection, dataToLoad, sourceUri);
                         }
+                        return readBlobAsText(dataToLoad).then(function(text) {
+                            //There's no official way to validate if a parse was successful.
+                            //The following check detects the error on various browsers.
 
-                        //The parse succeeds on Chrome and Firefox, but the error
-                        //handling is different in each.
-                        if (defined(error) || kml.body || kml.documentElement.tagName === 'parsererror') {
-                            //Firefox has error information as the firstChild nodeValue.
-                            var msg = defined(error) ? error : kml.documentElement.firstChild.nodeValue;
-
-                            //Chrome has it in the body text.
-                            if (!msg) {
-                                msg = kml.body.innerText;
+                            //IE raises an exception
+                            var kml;
+                            var error;
+                            try {
+                                kml = parser.parseFromString(text, 'application/xml');
+                            } catch (e) {
+                                error = e.toString();
                             }
 
-                            //Return the error
-                            throw new RuntimeError(msg);
-                        }
-                        return loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver);
+                            //The parse succeeds on Chrome and Firefox, but the error
+                            //handling is different in each.
+                            if (defined(error) || kml.body || kml.documentElement.tagName === 'parsererror') {
+                                //Firefox has error information as the firstChild nodeValue.
+                                var msg = defined(error) ? error : kml.documentElement.firstChild.nodeValue;
+
+                                //Chrome has it in the body text.
+                                if (!msg) {
+                                    msg = kml.body.innerText;
+                                }
+
+                                //Return the error
+                                throw new RuntimeError(msg);
+                            }
+                            return loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context);
+                        });
                     });
-                });
-            } else {
-                return when(loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver));
-            }
-        }).otherwise(function(error) {
-            dataSource._error.raiseEvent(dataSource, error);
-            console.log(error);
-            return when.reject(error);
-        });
+                } else {
+                    return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context);
+                }
+            })
+            .otherwise(function(error) {
+                dataSource._error.raiseEvent(dataSource, error);
+                console.log(error);
+                return when.reject(error);
+            });
     }
 
     /**
@@ -2767,7 +2772,7 @@ define([
                     var newEntityCollection = new EntityCollection();
                     var href = joinUrls(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString), false);
                     href = processNetworkLinkQueryString(that._camera, that._canvas, href, networkLink.viewBoundScale, lastCameraView.bbox);
-                    load(that, newEntityCollection, href)
+                    load(that, newEntityCollection, href, {context: entity.id})
                         .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks, href))
                         .otherwise(function(error) {
                             var msg = 'NetworkLink ' + networkLink.href + ' refresh failed: ' + error;
