@@ -3596,6 +3596,22 @@ defineSuite([
         });
     });
 
+    it('NetworkLink: within a kmz file', function() {
+        return KmlDataSource.load('Data/KML/multilevel.kmz', options).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities.length).toBe(3);
+            expect(entities[1].billboard).not.toBeNull();
+            expect(entities[1].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1,2,3));
+
+            // The root network link is loaded, then the children
+            //  since its done recursively the lowest level entities
+            //  end up in the collection first.
+            expect(entities[0].parent).toBeUndefined();
+            expect(entities[2].parent).toBe(entities[0]);
+            expect(entities[1].parent).toBe(entities[2]);
+        });
+    });
+
     it('can load a KML file with explicit namespaces', function() {
         return KmlDataSource.load('Data/KML/namespaced.kml', options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toBe(3);

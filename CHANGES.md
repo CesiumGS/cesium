@@ -15,7 +15,8 @@ Change Log
 * Fixed a bug with rotated, textured rectangles. [#4430](https://github.com/AnalyticalGraphicsInc/cesium/pull/4430)
 * Fixed a bug when morphing from 2D to 3D. [#4388](https://github.com/AnalyticalGraphicsInc/cesium/pull/4388)
 * Fixed a bug where when KML features had duplicate IDs, only one was drawn. [#3941](https://github.com/AnalyticalGraphicsInc/cesium/issues/3941)
-* Fixed `KmlDataSource` features to respect `timespan` and `timestamp` properties of it's parents (eg. Folders or NetworkLinks).
+* Fixed `KmlDataSource` features to respect `timespan` and `timestamp` properties of it's parents (eg. Folders or NetworkLinks). [#4041](https://github.com/AnalyticalGraphicsInc/cesium/issues/4041)
+* Added the ability for KML files to load network links to other KML files within the same KMZ archive. [#4477](https://github.com/AnalyticalGraphicsInc/cesium/issues/4477)
 * `GeoJsonDataSource` now treats null crs values as a no-op instead of failing to load.
 * `GeoJsonDataSource` now gracefully handles missing style icons instead of failing to load.
 * Improve `Geocoder` usability by selecting text on click [#4464](https://github.com/AnalyticalGraphicsInc/cesium/pull/4464)
