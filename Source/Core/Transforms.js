@@ -496,43 +496,6 @@ define([
         return Matrix4.multiply(result, hprMatrix, result);
     };
 
-    /**
-     * Computes a 4x4 transformation matrix from a reference frame with axes computed from the heading-pitch-roll angles
-     * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local north
-     * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
-     * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
-     *
-     * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, roll angles to apply.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
-     *
-     * @example
-     * // Get the transform from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var hpr = new HeadingPitchRoll(0.0, 0.0, 0.0);
-     * var hpr.heading = -Cesium.Math.PI_OVER_TWO;
-     * var hpr.pitch = Cesium.Math.PI_OVER_FOUR;
-     * var hpr.roll = 0.0;
-     * var transform = Cesium.Transforms.aircraftHeadingPitchRollToFixedFrame(center, hpr);
-     */
-    Transforms.aircraftHeadingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, result) {
-        // checks for required parameters happen in the called functions
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(origin)) {
-            throw new DeveloperError('origin is required.');
-        }
-        if (!defined(headingPitchRoll)) {
-            throw new DeveloperError('headingPitchRoll is required.');
-        }
-        //>>includeEnd('debug');
-        var hprQuaternion = Quaternion.fromHeadingPitchRoll(headingPitchRoll.heading, headingPitchRoll.pitch, headingPitchRoll.roll, scratchHPRQuaternion);
-        var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
-        result = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid, result);
-        return Matrix4.multiply(result, hprMatrix, result);
-    };
-
     var scratchENUMatrix4 = new Matrix4();
     var scratchHPRMatrix3 = new Matrix3();
 
@@ -1077,6 +1040,8 @@ define([
 
         return result;
     };
+
+    Transforms.aircraftHeadingPitchRollToFixedFrame = Transforms.headingPitchRollToFixedFrame;
 
     return Transforms;
 });
