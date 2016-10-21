@@ -1532,7 +1532,7 @@ define([
         entity.description = tmp;
     }
 
-    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver, context) {
+    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
         var entity = createEntity(featureNode, entityCollection, context);
         var kmlData = entity.kml;
         var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver);
@@ -1619,7 +1619,7 @@ define([
         Model : processUnsupportedGeometry
     };
 
-    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context) {
+    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
         var featureTypeNames = Object.keys(featureTypes);
         var featureTypeNamesLength = featureTypeNames.length;
 
@@ -1633,19 +1633,19 @@ define([
                 var child = childNodes[q];
                 if (child.localName === featureName &&
                     ((namespaces.kml.indexOf(child.namespaceURI) !== -1) || (namespaces.gx.indexOf(child.namespaceURI) !== -1))) {
-                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver, context);
+                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
                 }
             }
         }
     }
 
-    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context);
-        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver, context);
+    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
     }
 
-    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, context) {
-        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, context);
+    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         var entity = r.entity;
         var styleEntity = r.styleEntity;
 
@@ -1668,8 +1668,8 @@ define([
         }
     }
 
-    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, context) {
-        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, context);
+    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         var entity = r.entity;
 
         var geometry;
@@ -1758,8 +1758,8 @@ define([
         }
     }
 
-    function processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context) {
-        dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context);
+    function processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -1926,8 +1926,8 @@ define([
         return queryString;
     }
 
-    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context);
+    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         var networkEntity = r.entity;
 
         var link = queryFirstNode(node, 'Link', namespaces.kml);
@@ -2065,11 +2065,7 @@ define([
                     }
                 });
 
-                // _promises is only defined during the initial load to make sure we wait for all
-                //  NetworkLinks to finish loading.
-                if (defined(dataSource._promises)) {
-                    dataSource._promises.push(promise);
-                }
+                promises.push(promise);
             }
         }
     }
@@ -2086,20 +2082,19 @@ define([
         Tour : processUnsupportedFeature
     };
 
-    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver, context) {
+    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
         var featureProcessor = featureTypes[node.localName];
         if (defined(featureProcessor)) {
-            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context);
+            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         } else {
-            processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, context);
+            processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         }
     }
 
     function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context) {
-        var deferred = when.defer();
-
         entityCollection.removeAll();
 
+        var promises = [];
         var documentElement = kml.documentElement;
         var document = documentElement.localName === 'Document' ? documentElement : queryFirstNode(documentElement, 'Document', namespaces.kml);
         var name = queryStringValue(document, 'name', namespaces.kml);
@@ -2113,7 +2108,7 @@ define([
         }
 
         var styleCollection = new EntityCollection(dataSource);
-        when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver, context), function() {
+        return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver, context)).then(function() {
             var element = kml.documentElement;
             if (element.localName === 'kml') {
                 var childNodes = element.childNodes;
@@ -2126,13 +2121,13 @@ define([
                 }
             }
             entityCollection.suspendEvents();
-            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver, context);
+            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
             entityCollection.resumeEvents();
 
-            deferred.resolve(kml.documentElement);
+            return when.all(promises).then(function() {
+                return kml.documentElement;
+            });
         });
-
-        return deferred.promise;
     }
 
     function loadKmz(dataSource, entityCollection, blob, sourceUri) {
@@ -2311,7 +2306,6 @@ define([
         this._isLoading = false;
         this._proxy = options.proxy;
         this._pinBuilder = new PinBuilder();
-        this._promises = [];
         this._networkLinks = new AssociativeArray();
         this._entityCluster = new EntityCluster();
 
@@ -2494,67 +2488,61 @@ define([
 
         var oldName = this._name;
         this._name = undefined;
-        this._promises = [];
         this._clampToGround = defaultValue(options.clampToGround, false);
 
         var that = this;
         return load(this, this._entityCollection, data, options).then(function() {
-            return when.all(that._promises, function() {
-                var clock;
+            var clock;
 
-                var availability = that._entityCollection.computeAvailability();
+            var availability = that._entityCollection.computeAvailability();
 
-                var start = availability.start;
-                var stop = availability.stop;
-                var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
-                var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
-                if (!isMinStart || !isMaxStop) {
-                    var date;
+            var start = availability.start;
+            var stop = availability.stop;
+            var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
+            var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
+            if (!isMinStart || !isMaxStop) {
+                var date;
 
-                    //If start is min time just start at midnight this morning, local time
-                    if (isMinStart) {
-                        date = new Date();
-                        date.setHours(0, 0, 0, 0);
-                        start = JulianDate.fromDate(date);
-                    }
-
-                    //If stop is max value just stop at midnight tonight, local time
-                    if (isMaxStop) {
-                        date = new Date();
-                        date.setHours(24, 0, 0, 0);
-                        stop = JulianDate.fromDate(date);
-                    }
-
-                    clock = new DataSourceClock();
-                    clock.startTime = start;
-                    clock.stopTime = stop;
-                    clock.currentTime = JulianDate.clone(start);
-                    clock.clockRange = ClockRange.LOOP_STOP;
-                    clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-                    clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
+                //If start is min time just start at midnight this morning, local time
+                if (isMinStart) {
+                    date = new Date();
+                    date.setHours(0, 0, 0, 0);
+                    start = JulianDate.fromDate(date);
                 }
 
-                var changed = false;
-                if (clock !== that._clock) {
-                    that._clock = clock;
-                    changed = true;
+                //If stop is max value just stop at midnight tonight, local time
+                if (isMaxStop) {
+                    date = new Date();
+                    date.setHours(24, 0, 0, 0);
+                    stop = JulianDate.fromDate(date);
                 }
 
-                if (oldName !== that._name) {
-                    changed = true;
-                }
+                clock = new DataSourceClock();
+                clock.startTime = start;
+                clock.stopTime = stop;
+                clock.currentTime = JulianDate.clone(start);
+                clock.clockRange = ClockRange.LOOP_STOP;
+                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+                clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
+            }
 
-                if (changed) {
-                    that._changed.raiseEvent(that);
-                }
+            var changed = false;
+            if (clock !== that._clock) {
+                that._clock = clock;
+                changed = true;
+            }
 
-                DataSource.setLoading(that, false);
+            if (oldName !== that._name) {
+                changed = true;
+            }
 
-                // We don't need to add anymore
-                that._promises = undefined;
+            if (changed) {
+                that._changed.raiseEvent(that);
+            }
 
-                return that;
-            });
+            DataSource.setLoading(that, false);
+
+            return that;
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);

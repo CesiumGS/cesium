@@ -338,7 +338,7 @@ defineSuite([
             expect(spy.calls.count()).toEqual(3);
             for (var i = 0; i < nodeNames.length; i++) {
                 var args = spy.calls.argsFor(i);
-                expect(args.length).toEqual(8);
+                expect(args.length).toEqual(7);
                 expect(args[0]).toBe(dataSource);
                 expect(args[2].localName).toEqual(nodeNames[i]);
                 expect(args[3]).toBeInstanceOf(EntityCollection);
@@ -3600,8 +3600,15 @@ defineSuite([
         return KmlDataSource.load('Data/KML/multilevel.kmz', options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toBe(3);
-            expect(entities[3].billboard).not.toBeNull();
-            expect(entities[3].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1,2,3));
+            expect(entities[1].billboard).not.toBeNull();
+            expect(entities[1].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1,2,3));
+
+            // The root network link is loaded, then the children
+            //  since its done recursively the lowest level entities
+            //  end up in the collection first.
+            expect(entities[0].parent).toBeUndefined();
+            expect(entities[2].parent).toBe(entities[0]);
+            expect(entities[1].parent).toBe(entities[2]);
         });
     });
 
