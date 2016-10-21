@@ -459,7 +459,7 @@ define([
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {HeadingPitchRoll} hprOrHeading A HeadingPitchRoll or the heading angle in radians.
+     * @param {HeadingPitchRoll} headingPitchRoll A HeadingPitchRoll or the heading angle in radians.
      * @param {Number?} pitch The pitch angle in radians if a HeadingPitchRoll object was not passed.
      * @param {Number?} roll The roll angle in radians if a HeadingPitchRoll object was not passed.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
@@ -474,18 +474,18 @@ define([
      * var roll = 0.0;
      * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, heading, pitch, roll);
      */
-    Transforms.headingPitchRollToFixedFrame = function(origin, hprOrHeading, pitch, roll, ellipsoid, result) {
+    Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, pitch, roll, ellipsoid, result) {
         var heading;
-        if (typeof hprOrHeading === 'object') {
+        if (typeof headingPitchRoll === 'object') {
             // Shift arguments using assignments to encourage JIT optimization.
             ellipsoid = pitch;
             result = roll;
-            heading = hprOrHeading.heading;
-            pitch = hprOrHeading.pitch;
-            roll = hprOrHeading.roll;
+            heading = headingPitchRoll.heading;
+            pitch = headingPitchRoll.pitch;
+            roll = headingPitchRoll.roll;
         } else {
             deprecationWarning('headingPitchRollToFixedFrame', 'headingPitchRollToFixedFrame with separate heading, pitch, and roll arguments was deprecated in 1.27.  It will be removed in 1.30.  Use a HeadingPitchRoll object.');
-            heading = hprOrHeading;
+            heading = headingPitchRoll;
         }
         // checks for required parameters happen in the called functions
         var hprQuaternion = Quaternion.fromHeadingPitchRoll(heading, pitch, roll, scratchHPRQuaternion);
