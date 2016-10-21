@@ -107,7 +107,7 @@ define([
 
         this._tileToUpdateHeights = [];
         this._lastTileIndex = 0;
-        this._updateHeightsTimeSlice = 2.0;
+        this._updateHeightsTimeSlice = 15.0;
 
         /**
          * Gets or sets the maximum screen-space error, in pixels, that is allowed.
@@ -606,7 +606,6 @@ define([
 
     function updateHeights(primitive, frameState) {
         var tilesToUpdateHeights = primitive._tileToUpdateHeights;
-        var terrainProvider = primitive._tileProvider.terrainProvider;
 
         var startTime = getTimestamp();
         var timeSlice = primitive._updateHeightsTimeSlice;
@@ -625,51 +624,30 @@ define([
             for (var i = primitive._lastTileIndex; i < customDataLength; ++i) {
                 var data = customData[i];
 
-                if (tile.level > data.level) {
-                    if (!defined(data.position)) {
-                        data.position = ellipsoid.cartographicToCartesian(data.positionCartographic);
-                    }
-
-                    if (mode === SceneMode.SCENE3D) {
-                        Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
-                        Cartesian3.normalize(data.position, scratchRay.direction);
-                    } else {
-                        Cartographic.clone(data.positionCartographic, scratchCartographic);
-
-                        // minimum height for the terrain set, need to get this information from the terrain provider
-                        scratchCartographic.height = -11500.0;
-                        projection.project(scratchCartographic, scratchPosition);
-                        Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
-                        Cartesian3.clone(scratchPosition, scratchRay.origin);
-                        Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
-                    }
-
-                    var position = tile.data.pick(scratchRay, mode, projection, false, scratchPosition);
-                    if (defined(position)) {
-                        data.callback(position);
-                    }
-
-                    data.level = tile.level;
-                } else if (tile.level === data.level) {
-                    var children = tile.children;
-                    var childrenLength = children.length;
-
-                    var child;
-                    for (var j = 0; j < childrenLength; ++j) {
-                        child = children[j];
-                        if (Rectangle.contains(child.rectangle, data.positionCartographic)) {
-                            break;
-                        }
-                    }
-
-                    var tileDataAvailable = terrainProvider.getTileDataAvailable(child.x, child.y, child.level);
-                    var parentTile = tile.parent;
-                    if ((defined(tileDataAvailable) && !tileDataAvailable) ||
-                        (defined(parentTile) && defined(parentTile.data) && defined(parentTile.data.terrainData) &&
-                         !parentTile.data.terrainData.isChildAvailable(parentTile.x, parentTile.y, child.x, child.y))) {
-                        data.removeFunc();
-                    }
+                if (!defined(data.position)) {
+                    data.position = ellipsoid.cartographicToCartesian(data.positionCartographic);
                 }
+
+                if (mode === SceneMode.SCENE3D) {
+                    Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
+                    Cartesian3.normalize(data.position, scratchRay.direction);
+                } else {
+                    Cartographic.clone(data.positionCartographic, scratchCartographic);
+
+                    // minimum height for the terrain set, need to get this information from the terrain provider
+                    scratchCartographic.height = -11500.0;
+                    projection.project(scratchCartographic, scratchPosition);
+                    Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
+                    Cartesian3.clone(scratchPosition, scratchRay.origin);
+                    Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
+                }
+
+                var position = tile.data.pick(scratchRay, mode, projection, false, scratchPosition);
+                if (defined(position)) {
+                    data.callback(position);
+                }
+
+                data.level = tile.level;
 
                 if (getTimestamp() >= endTime) {
                     timeSliceMax = true;
