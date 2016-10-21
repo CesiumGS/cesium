@@ -458,10 +458,8 @@ define([
      * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
      *
-     * You should pass a HeadingPitchRoll object.  Passing separate heading, pitch, and roll values is deprecated.
-     *
      * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {HeadingPitchRoll|Number} hprOrHeading A HeadingPitchRoll or the heading angle in radians.
+     * @param {HeadingPitchRoll} hprOrHeading A HeadingPitchRoll or the heading angle in radians.
      * @param {Number?} pitch The pitch angle in radians if a HeadingPitchRoll object was not passed.
      * @param {Number?} roll The roll angle in radians if a HeadingPitchRoll object was not passed.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
