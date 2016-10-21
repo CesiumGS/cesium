@@ -245,6 +245,7 @@ defineSuite([
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
         var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
@@ -255,7 +256,7 @@ defineSuite([
         Cartesian3.fromElements(expectedY.z, expectedY.x, expectedY.y, expectedY);
         Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
-        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
         var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
         var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
@@ -300,6 +301,7 @@ defineSuite([
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
         var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
@@ -311,7 +313,7 @@ defineSuite([
         Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
         var result = new Matrix4();
-        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
+        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, result);
         var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
         var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
         var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
@@ -359,8 +361,9 @@ defineSuite([
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
         var quaternion = Transforms.headingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
@@ -373,8 +376,9 @@ defineSuite([
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
         var result = new Quaternion();
@@ -856,8 +860,9 @@ defineSuite([
         var heading = CesiumMath.toRadians(90.0);
         var pitch = CesiumMath.toRadians(45.0);
         var roll = 0.0;
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, ellipsoid);
+        var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, hpr, ellipsoid);
         var modelMatrix2D = Transforms.basisTo2D(projection, modelMatrix, new Matrix4());
 
         var translation2D = Cartesian3.fromCartesian4(Matrix4.getColumn(modelMatrix2D, 3, new Cartesian4()));
@@ -876,8 +881,9 @@ defineSuite([
         var heading = CesiumMath.toRadians(90.0);
         var pitch = CesiumMath.toRadians(45.0);
         var roll = 0.0;
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, ellipsoid);
+        var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, hpr, ellipsoid);
         var modelMatrix2D = Transforms.basisTo2D(projection, modelMatrix, new Matrix4());
 
         var rotation2D = Matrix4.getRotation(modelMatrix2D, new Matrix3());
@@ -886,11 +892,11 @@ defineSuite([
         var enuInverse = Matrix4.inverseTransformation(enu, enu);
 
         var hprPlusTranslate = Matrix4.multiply(enuInverse, modelMatrix, new Matrix4());
-        var hpr = Matrix4.getRotation(hprPlusTranslate, new Matrix3());
+        var hpr2 = Matrix4.getRotation(hprPlusTranslate, new Matrix3());
 
-        var row0 = Matrix3.getRow(hpr, 0, new Cartesian3());
-        var row1 = Matrix3.getRow(hpr, 1, new Cartesian3());
-        var row2 = Matrix3.getRow(hpr, 2, new Cartesian3());
+        var row0 = Matrix3.getRow(hpr2, 0, new Cartesian3());
+        var row1 = Matrix3.getRow(hpr2, 1, new Cartesian3());
+        var row2 = Matrix3.getRow(hpr2, 2, new Cartesian3());
 
         var expected = new Matrix3();
         Matrix3.setRow(expected, 0, row2, expected);
