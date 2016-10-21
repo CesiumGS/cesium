@@ -403,4 +403,28 @@ defineSuite([
         expect(cluster._billboardCollection).toBeDefined();
     });
 
+    it('is robust to LabelCollection changes', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity1 = new Entity();
+        var label1 = cluster.getLabel(entity1);
+        label1.id = entity1;
+        label1.text = 'a';
+        label1.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        var entity2 = new Entity();
+        var label2 = cluster.getLabel(entity2);
+        label2.id = entity2;
+        label2.text = 'b';
+        label2.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        cluster.destroy();
+        expect(cluster._labelCollection).not.toBeDefined();
+
+        expect(cluster.getLabel(entity1)).toBeDefined();
+        expect(cluster.getLabel(entity2)).toBeDefined();
+        expect(cluster._labelCollection).toBeDefined();
+    });
+
 }, 'WebGL');
