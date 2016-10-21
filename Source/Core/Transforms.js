@@ -459,9 +459,7 @@ define([
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {HeadingPitchRoll} headingPitchRoll A HeadingPitchRoll or the heading angle in radians.
-     * @param {Number?} pitch The pitch angle in radians if a HeadingPitchRoll object was not passed.
-     * @param {Number?} roll The roll angle in radians if a HeadingPitchRoll object was not passed.
+     * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
