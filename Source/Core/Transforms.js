@@ -470,7 +470,8 @@ define([
      * var heading = -Cesium.Math.PI_OVER_TWO;
      * var pitch = Cesium.Math.PI_OVER_FOUR;
      * var roll = 0.0;
-     * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, heading, pitch, roll);
+     * var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+     * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
      */
     Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, pitch, roll, ellipsoid, result) {
         var heading;
