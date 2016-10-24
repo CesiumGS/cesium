@@ -255,6 +255,13 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
+    Vector3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
         if (this._featuresLength === 0) {
             return;
