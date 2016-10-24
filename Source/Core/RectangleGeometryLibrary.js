@@ -109,7 +109,7 @@ define([
         var granYSin = 0.0;
         var granXSin = 0.0;
 
-        if (defined(rotation) && rotation !== 0) { // rotation doesn't work when center is on/near IDL
+        if (defined(rotation) && rotation !== 0) {
             var cosRotation = Math.cos(rotation);
             granYCos *= cosRotation;
             granXCos *= cosRotation;
@@ -117,6 +117,10 @@ define([
             var sinRotation = Math.sin(rotation);
             granYSin = granularityY * sinRotation;
             granXSin = granularityX * sinRotation;
+
+            if (center.longitude < nwCorner.longitude) {
+                center.longitude += CesiumMath.TWO_PI;
+            }
 
             nwCartesian = proj.project(nwCorner, nwCartesian);
             centerCartesian = proj.project(center, centerCartesian);
