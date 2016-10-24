@@ -316,11 +316,12 @@ define([
         var batchesCopyCount = batchesArrayCopy.length;
         for (i = 0; i < batchesCopyCount; ++i) {
             var batch = batchesArrayCopy[i];
-            if (batch.geometry.length === 0) {
-                batches.remove(batch.key);
-            } else if (batch.isDirty) {
+            if (batch.isDirty) {
                 isUpdated = batchesArrayCopy[i].update(time) && isUpdated;
                 batch.isDirty = false;
+            }
+            if (batch.geometry.length === 0) {
+                batches.remove(batch.key);
             }
         }
 

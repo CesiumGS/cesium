@@ -65,6 +65,11 @@ defineSuite([
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
 
+    var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
+    var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
+    var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
+    var withBoundingSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithBoundingSphere/';
+
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
 
     // 1 tile with translucent features
@@ -428,6 +433,49 @@ defineSuite([
             expect(selectedTiles[3]).toBe(lrTile);
             expect(selectedTiles[4]).toBe(urTile);
         });
+    });
+
+    function testDynamicScreenSpaceError(url, distance) {
+        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+
+            // Horizon view, only root is visible
+            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, distance));
+
+            // Set dynamic SSE to false (default)
+            tileset.dynamicScreenSpaceError = false;
+            scene.renderForSpecs();
+            expect(stats.visited).toEqual(1);
+            expect(stats.numberOfCommands).toEqual(1);
+
+            // Set dynamic SSE to true, now the root is not rendered
+            tileset.dynamicScreenSpaceError = true;
+            tileset.dynamicScreenSpaceErrorDensity = 1.0;
+            tileset.dynamicScreenSpaceErrorFactor = 10.0;
+            scene.renderForSpecs();
+            expect(stats.visited).toEqual(0);
+            expect(stats.numberOfCommands).toEqual(0);
+        });
+    }
+
+    // Adjust distances for each test because the dynamic SSE takes the
+    // bounding volume height into account, which differs for each bounding volume.
+    it('uses dynamic screen space error for tileset with region', function() {
+        return testDynamicScreenSpaceError(withTransformRegionUrl, 103.0);
+    });
+
+    it('uses dynamic screen space error for tileset with bounding sphere', function() {
+        return testDynamicScreenSpaceError(withBoundingSphereUrl, 144.0);
+    });
+
+    it('uses dynamic screen space error for local tileset with box', function() {
+        return testDynamicScreenSpaceError(withTransformBoxUrl, 193.0);
+    });
+
+    it('uses dynamic screen space error for local tileset with sphere', function() {
+        return testDynamicScreenSpaceError(withTransformSphereUrl, 145.0);
     });
 
     it('additive refinement - selects root when sse is met', function() {
@@ -1247,10 +1295,10 @@ defineSuite([
             // ${id} < 10 will always evaluate to true
             tileset.style = new Cesium3DTileStyle({
                 color : {
-                    conditions : {
-                        '${id} < 10' : 'color("red")',
-                        'true' : 'color("blue")'
-                    }
+                    conditions : [
+                        ['${id} < 10', 'color("red")'],
+                        ['true', 'color("blue")']
+                    ]
                 }
             });
             var color = scene.renderForSpecs();
@@ -1262,10 +1310,10 @@ defineSuite([
             // ${id}>= 10 will always evaluate to false
             tileset.style = new Cesium3DTileStyle({
                 color : {
-                    conditions : {
-                        '${id} >= 10' : 'color("red")',
-                        'true' : 'color("blue")'
-                    }
+                    conditions : [
+                        ['${id} >= 10', 'color("red")'],
+                        ['true', 'color("blue")']
+                    ]
                 }
             });
             color = scene.renderForSpecs();

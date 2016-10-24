@@ -66,13 +66,16 @@ define([
         this._mapId = mapId;
         this._accessToken = MapboxApi.getAccessToken(options.accessToken);
         var format = defaultValue(options.format, 'png');
-        this._format = format.replace('.', '');
+        if (!/\./.test(format)) {
+            format = '.' + format;
+        }
+        this._format = format;
 
         var templateUrl = url;
         if (!trailingSlashRegex.test(url)) {
             templateUrl += '/';
         }
-        templateUrl += mapId + '/{z}/{x}/{y}.' + this._format;
+        templateUrl += mapId + '/{z}/{x}/{y}' + this._format;
         if (defined(this._accessToken)) {
             templateUrl += '?access_token=' + this._accessToken;
         }

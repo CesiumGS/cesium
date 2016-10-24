@@ -100,31 +100,32 @@ var tilesets = [{
                 //viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
                 //viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
-                var properties = tileset.properties;
-                if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
-                    tileset.style = new Cesium.Cesium3DTileStyle({
-//                      "color" : "color('#BAA5EC')",
-//                      "color" : "color('cyan', 0.5)",
-//                      "color" : "rgb(100, 255, 190)",
-//                      "color" : "hsla(0.9, 0.6, 0.7, 0.75)",
-                        "color" : {
-                            "conditions" : {
-                                "${Height} >= 83" : "color('purple', 0.5)",
-                                "${Height} >= 80" : "color('red')",
-                                "${Height} >= 70" : "color('orange')",
-                                "${Height} >= 12" : "color('yellow')",
-                                "${Height} >= 7" : "color('lime')",
-                                "${Height} >= 1" : "color('cyan')",
-                                "true" : "color('blue')"
-                            }
-                        },
-//                      "show": false
-//                      "show" : "${Height} >= 0",
-                        "meta" : {
-                            "description" : "'Building id ${id} has height ${Height}.'"
-                        }
-                    });
+        var properties = tileset.properties;
+        if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
+            tileset.style = new Cesium.Cesium3DTileStyle({
+//              "color" : "color('#BAA5EC')",
+//              "color" : "color('cyan', 0.5)",
+//              "color" : "rgb(100, 255, 190)",
+//              "color" : "hsla(0.9, 0.6, 0.7, 0.75)",
+                "color" : {
+                    "conditions" : [
+                        ["${Height} >= 83", "color('purple', 0.5)"],
+                        ["${Height} >= 80", "color('red')"],
+                        ["${Height} >= 70", "color('orange')"],
+                        ["${Height} >= 12", "color('yellow')"],
+                        ["${Height} >= 7", "color('lime')"],
+                        ["${Height} >= 1", "color('cyan')"],
+                        ["true", "color('blue')"]
+                    ]
+                },
+//              "show": false,
+//              "show" : "${Height} >= 0",
+                "meta" : {
+                    "description" : "'Building id ${id} has height ${Height}.'"
                 }
+            });
+            addStyleUI();
+        }
 
                 tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
                     if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
@@ -410,9 +411,30 @@ Sandcastle.addToolbarButton('Request Volume on/off', function() {
             console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
         });
 
-        Sandcastle.addToolbarButton('Trim tiles (cache)', function() {
-            tileset.trimLoadedTiles();
-        });
+Sandcastle.addToolbarButton('Dynamic SSE on/off', function() {
+    tileset.dynamicScreenSpaceError = !tileset.dynamicScreenSpaceError;
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE density++', function() {
+    tileset.dynamicScreenSpaceErrorDensity = Math.min(tileset.dynamicScreenSpaceErrorDensity + 0.005, 1.0);
+    console.log('New dynamic SSE density: ' + tileset.dynamicScreenSpaceErrorDensity);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE density--', function() {
+    tileset.dynamicScreenSpaceErrorDensity = Math.max(tileset.dynamicScreenSpaceErrorDensity - 0.005, 0);
+    console.log('New dynamic SSE density: ' + tileset.dynamicScreenSpaceErrorDensity);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE factor++', function() {
+    tileset.dynamicScreenSpaceErrorFactor = tileset.dynamicScreenSpaceErrorFactor + 1.0;
+    console.log('New dynamic SSE factor: ' + tileset.dynamicScreenSpaceErrorFactor);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE factor--', function() {
+    tileset.dynamicScreenSpaceErrorFactor = Math.max(tileset.dynamicScreenSpaceErrorFactor - 1.0, 0);
+    console.log('New dynamic SSE factor: ' + tileset.dynamicScreenSpaceErrorFactor);
+});
+
 
         Sandcastle.addToolbarButton('Picking on/off', function() {
             pickingEnabled = !pickingEnabled;
@@ -430,14 +452,14 @@ Sandcastle.addToolbarButton('Request Volume on/off', function() {
             return color.toCssColorString();
         }
 
-        function styleFunction(name) {
-            var conditions = {};
-            var intervalSize = Math.floor(100/numberofColors);
-            for (var i = numberofColors; i >= 0; --i) {
-                var cond = '${' + name + '} > ' + (i * intervalSize);
-                conditions[cond] = getRandomColor();
-            }
-            conditions['true'] = getRandomColor();
+function styleFunction(name) {
+    var conditions = [];
+    var intervalSize = Math.floor(100/numberofColors);
+    for (var i = numberofColors; i >= 0; --i) {
+        var cond = '${' + name + '} > ' + (i * intervalSize);
+        conditions.push([cond, getRandomColor()]);
+    }
+    conditions.push(['true', getRandomColor()]);
 
     tileset.style = new Cesium.Cesium3DTileStyle({
         color : {
@@ -504,9 +526,9 @@ Sandcastle.addToolbarButton('Request Volume on/off', function() {
             });
             styleElements.push(button);
 
-            var leftOperand = 0;
-            var rightOperand = 0;
-            var op = '===';
+    var leftOperand = 0;
+    var rightOperand = 0;
+    var op = '==';
 
             // Left operand (properties and literals)
 
@@ -520,12 +542,12 @@ Sandcastle.addToolbarButton('Request Volume on/off', function() {
 
             // Operator
 
-            var ops = ['<', '<=', '>', '>=', '===', '!=='];
-            var operators = [{
-                text : 'Operator',
-                onselect : function() {
-                }
-            }];
+    var ops = ['<', '<=', '>', '>=', '==', '!='];
+    var operators = [{
+        text : 'Operator',
+        onselect : function() {
+        }
+    }];
 
             function getOperatorFunction(operator) {
                 return function() {

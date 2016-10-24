@@ -380,6 +380,7 @@ defineSuite([
             var oldFog = scene.fog;
             scene.fog = new Fog();
             switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+            scene.camera.lookUp(1.2); // Horizon-view
 
             return updateUntilDone(scene.globe).then(function() {
                 expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
@@ -402,6 +403,7 @@ defineSuite([
             var oldFog = scene.fog;
             scene.fog = new Fog();
             switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+            scene.camera.lookUp(1.2); // Horizon-view
 
             return updateUntilDone(scene.globe).then(function() {
                 expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);

@@ -214,6 +214,9 @@ define([
         fireTouchEnd : function(element, options) {
             element.dispatchEvent(createTouchEvent('touchend', options));
         },
+        fireTouchCancel : function(element, options) {
+            element.dispatchEvent(createTouchEvent('touchcancel', options));
+        },
         firePointerDown : function(element, options) {
             element.dispatchEvent(createPointerEvent('pointerdown', options));
         },
@@ -222,6 +225,9 @@ define([
         },
         firePointerMove : function(element, options) {
             element.dispatchEvent(createPointerEvent('pointermove', options));
+        },
+        firePointerCancel : function(element, options) {
+            element.dispatchEvent(createPointerEvent('pointercancel', options));
         },
         fireDeviceOrientation : function(element, options) {
             element.dispatchEvent(createDeviceOrientationEvent('deviceorientation', options));

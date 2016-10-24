@@ -268,6 +268,15 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
+    it('A time-varying color causes ground geometry to be dynamic', function() {
+        var entity = createBasicEllipseWithoutHeight();
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        var color = new SampledProperty(Color);
+        color.addSample(time, Color.WHITE);
+        entity.ellipse.material = new ColorMaterialProperty(color);
+        expect(updater.isDynamic).toBe(true);
+    });
+
     function validateGeometryInstance(options) {
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(options.center);
