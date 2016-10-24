@@ -117,7 +117,7 @@ define([
         this._translucentRenderState = undefined;
 
         this._highlightColor = Color.clone(Color.WHITE);
-        this._pointSize = 2.0;
+        this._pointSize = 1.0;
         this._quantizedVolumeScale = undefined;
         this._quantizedVolumeOffset = undefined;
 
