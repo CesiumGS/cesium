@@ -121,9 +121,13 @@ define([
     }
 
     function chooseOrbit(eccentricity, tolerance) {
+        //>>includeStart('debug', pragmas.debug);
         if (eccentricity < 0) {
             throw new DeveloperError('eccentricity cannot be negative.');
-        } else if (eccentricity <= tolerance) {
+        }
+        //>>includeEnd('debug')
+
+        if (eccentricity <= tolerance) {
             return 'Circular';
         } else if (eccentricity < 1.0 - tolerance) {
             return 'Elliptical';

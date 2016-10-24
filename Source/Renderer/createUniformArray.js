@@ -181,7 +181,9 @@ define([
                     changed = true;
                 }
             } else {
+                //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Invalid vec3 value.');
+                //>>includeEnd('debug');
             }
 
             j += 3;

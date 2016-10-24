@@ -822,12 +822,20 @@ define([
         var uniformValue = materialUniforms[uniformId];
         var uniformType = getUniformType(uniformValue);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(uniformType)) {
             throw new DeveloperError('fabric: uniform \'' + uniformId + '\' has invalid type.');
-        } else if (uniformType === 'channels') {
-            if (replaceToken(material, uniformId, uniformValue, false) === 0 && strict) {
+        }
+        //>>includeEnd('debug');
+
+        var replacedTokenCount;
+        if (uniformType === 'channels') {
+            replacedTokenCount = replaceToken(material, uniformId, uniformValue, false);
+            //>>includeStart('debug', pragmas.debug);
+            if (replacedTokenCount === 0 && strict) {
                 throw new DeveloperError('strict: shader source does not use channels \'' + uniformId + '\'.');
             }
+            //>>includeEnd('debug');
         } else {
             // Since webgl doesn't allow texture dimension queries in glsl, create a uniform to do it.
             // Check if the shader source actually uses texture dimensions before creating the uniform.
@@ -851,9 +859,13 @@ define([
             }
 
             var newUniformId = uniformId + '_' + material._count++;
-            if (replaceToken(material, uniformId, newUniformId) === 1 && strict) {
+            replacedTokenCount = replaceToken(material, uniformId, newUniformId);
+            //>>includeStart('debug', pragmas.debug);
+            if (replacedTokenCount === 1 && strict) {
                 throw new DeveloperError('strict: shader source does not use uniform \'' + uniformId + '\'.');
             }
+            //>>includeEnd('debug');
+
             // Set uniform value
             material.uniforms[uniformId] = uniformValue;
 
