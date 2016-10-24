@@ -161,7 +161,9 @@ define([
                     geometry.indices = triangleFanToLines(indices);
                     break;
                 default:
+                    //>>includeStart('debug', pragmas.debug);
                     throw new DeveloperError('geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN.');
+                    //>>includeEnd('debug');
             }
 
             geometry.primitiveType = PrimitiveType.LINES;
@@ -635,9 +637,11 @@ define([
             var value = Cartesian3.fromArray(values3D, i, scratchProjectTo2DCartesian3);
 
             var lonLat = ellipsoid.cartesianToCartographic(value, scratchProjectTo2DCartographic);
+            //>>includeStart('debug', pragmas.debug);
             if (!defined(lonLat)) {
                 throw new DeveloperError('Could not project point (' + value.x + ', ' + value.y + ', ' + value.z + ') to 2D.');
             }
+            //>>includeEnd('debug');
 
             var projectedLonLat = projection.project(lonLat, scratchProjectTo2DCartesian3);
 

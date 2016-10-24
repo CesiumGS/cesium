@@ -146,7 +146,9 @@ define([
         case ComponentDatatype.DOUBLE:
             return Float64Array.BYTES_PER_ELEMENT;
         default:
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('componentDatatype is not a valid value.');
+            //>>includeEnd('debug');
         }
     };
 
@@ -247,7 +249,9 @@ define([
         case ComponentDatatype.DOUBLE:
             return new Float64Array(valuesOrLength);
         default:
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('componentDatatype is not a valid value.');
+            //>>includeEnd('debug');
         }
     };
 
@@ -293,7 +297,9 @@ define([
         case ComponentDatatype.DOUBLE:
             return new Float64Array(buffer, byteOffset, length);
         default:
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('componentDatatype is not a valid value.');
+            //>>includeEnd('debug');
         }
     };
 
@@ -324,7 +330,9 @@ define([
             case 'DOUBLE':
                 return ComponentDatatype.DOUBLE;
             default:
+                //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('name is not a valid value.');
+                //>>includeEnd('debug');
         }
     };
 

@@ -613,9 +613,11 @@ define([
         var components = template.components;
 
         // Make sure source and components do not exist in the same template.
+        //>>includeStart('debug', pragmas.debug);
         if (defined(components) && defined(template.source)) {
             throw new DeveloperError('fabric: cannot have source and components in the same template.');
         }
+        //>>includeEnd('debug');
 
         // Make sure all template and components properties are valid.
         checkForValidProperties(template, templateProperties, invalidNameError, true);
