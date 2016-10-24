@@ -60,6 +60,9 @@ define([
      * @param {Boolean} [options.enabled=false] Whether or not to enable clustering.
      * @param {Number} [options.pixelRange=80] The pixel range to extend the screen space bounding box.
      * @param {Number} [options.minimumClusterSize=2] The minimum number of screen space objects that can be clustered.
+     * @param {Boolean} [options.clusterBillboards=true] Whether or not to cluster the billboards of an entity.
+     * @param {Boolean} [options.clusterLabels=true] Whether or not to cluster the labels of an entity.
+     * @param {Boolean} [options.clusterPoints=true] Whether or not to cluster the points of an entity.
      *
      * @alias EntityCluster
      * @constructor
@@ -72,6 +75,9 @@ define([
         this._enabled = defaultValue(options.enabled, false);
         this._pixelRange = defaultValue(options.pixelRange, 80);
         this._minimumClusterSize = defaultValue(options.minimumClusterSize, 2);
+        this._clusterBillboards = defaultValue(options.clusterBillboards, true);
+        this._clusterLabels = defaultValue(options.clusterLabels, true);
+        this._clusterPoints = defaultValue(options.clusterPoints, true);
 
         this._labelCollection = undefined;
         this._billboardCollection = undefined;
@@ -89,8 +95,6 @@ define([
         this._previousHeight = undefined;
 
         this._enabledDirty = false;
-        this._pixelRangeDirty = false;
-        this._minimumClusterSizeDirty = false;
         this._clusterDirty = false;
 
         this._cluster = undefined;
@@ -117,17 +121,17 @@ define([
     var labelBoundingBoxScratch = new BoundingRectangle();
 
     function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
-        if (defined(item._labelCollection)) {
+        if (defined(item._labelCollection) && entityCluster._clusterLabels) {
             result = Label.getScreenSpaceBoundingBox(item, coord, result);
-        } else if (defined(item._billboardCollection)) {
+        } else if (defined(item._billboardCollection) && entityCluster._clusterBillboards) {
             result = Billboard.getScreenSpaceBoundingBox(item, coord, result);
-        } else if (defined(item._pointPrimitiveCollection)) {
+        } else if (defined(item._pointPrimitiveCollection) && entityCluster._clusterPoints) {
             result = PointPrimitive.getScreenSpaceBoundingBox(item, coord, result);
         }
 
         expandBoundingBox(result, pixelRange);
 
-        if (!defined(item._labelCollection) && defined(item.id) && defined(item.id._label) && defined(entityCluster._labelCollection)) {
+        if (entityCluster._clusterLabels && !defined(item._labelCollection) && defined(item.id) && defined(item.id._label) && defined(entityCluster._labelCollection)) {
             var labelIndex = item.id._labelIndex;
             var label = entityCluster._labelCollection.get(labelIndex);
             var labelBBox = Label.getScreenSpaceBoundingBox(label, coord, labelBoundingBoxScratch);
@@ -164,7 +168,7 @@ define([
         entityCluster._clusterEvent.raiseEvent(ids, cluster);
     }
 
-    function getScreenSpacePositions(collection, points, scene, occluder) {
+    function getScreenSpacePositions(collection, points, scene, occluder, entityCluster) {
         if (!defined(collection)) {
             return;
         }
@@ -178,7 +182,10 @@ define([
                 continue;
             }
 
-            if (defined(item._labelCollection) && (defined(item.id._billboard) || defined(item.id._point))) {
+            var canClusterLabels = entityCluster._clusterLabels && defined(item._labelCollection);
+            var canClusterBillboards = entityCluster._clusterBillboards && defined(item.id._billboard);
+            var canClusterPoints = entityCluster._clusterPoints && defined(item.id._point);
+            if (canClusterLabels && (canClusterPoints || canClusterBillboards)) {
                 continue;
             }
 
@@ -212,7 +219,8 @@ define([
             var billboardCollection = entityCluster._billboardCollection;
             var pointCollection = entityCluster._pointCollection;
 
-            if (!defined(labelCollection) && !defined(billboardCollection) && !defined(pointCollection)) {
+            if ((!defined(labelCollection) && !defined(billboardCollection) && !defined(pointCollection)) ||
+		(!entityCluster._clusterBillboards && !entityCluster._clusterLabels && !entityCluster._clusterPoints)) {
                 return;
             }
 
@@ -256,9 +264,15 @@ define([
             var occluder = new EllipsoidalOccluder(ellipsoid, cameraPosition);
 
             var points = [];
-            getScreenSpacePositions(labelCollection, points, scene, occluder);
-            getScreenSpacePositions(billboardCollection, points, scene, occluder);
-            getScreenSpacePositions(pointCollection, points, scene, occluder);
+            if (entityCluster._clusterLabels) {
+                getScreenSpacePositions(labelCollection, points, scene, occluder, entityCluster);
+            }
+            if (entityCluster._clusterBillboards) {
+        	getScreenSpacePositions(billboardCollection, points, scene, occluder, entityCluster);
+            }
+            if (entityCluster._clusterPoints) {
+        	getScreenSpacePositions(pointCollection, points, scene, occluder, entityCluster);
+            }
 
             var i;
             var j;
@@ -441,7 +455,7 @@ define([
                 return this._pixelRange;
             },
             set : function(value) {
-                this._pixelRangeDirty = value !== this._pixelRange;
+                this._clusterDirty = this._clusterDirty || value !== this._pixelRange;
                 this._pixelRange = value;
             }
         },
@@ -455,7 +469,7 @@ define([
                 return this._minimumClusterSize;
             },
             set : function(value) {
-                this._minimumClusterSizeDirty = value !== this._minimumClusterSize;
+                this._clusterDirty = this._clusterDirty || value !== this._minimumClusterSize;
                 this._minimumClusterSize = value;
             }
         },
@@ -468,7 +482,49 @@ define([
             get : function() {
                 return this._clusterEvent;
             }
-        }
+        },
+	/**
+         * Gets or sets whether clustering billboard entities is enabled.
+         * @memberof EntityCluster.prototype
+         * @type {Boolean}
+         */
+	clusterBillboards : {
+	    get : function() {
+		return this._clusterBillboards;
+	    },
+	    set : function(value) {
+		this._clusterDirty = this._clusterDirty || value !== this._clusterBillboards;
+		this._clusterBillboards = value;
+	    }
+	},
+	/**
+         * Gets or sets whether clustering labels entities is enabled.
+         * @memberof EntityCluster.prototype
+         * @type {Boolean}
+         */
+	clusterLabels : {
+	    get : function() {
+		return this._clusterLabels;
+	    },
+	    set : function(value) {
+		this._clusterDirty = this._clusterDirty || value !== this._clusterLabels;
+		this._clusterLabels = value;
+	    }
+	},
+	/**
+         * Gets or sets whether clustering point entities is enabled.
+         * @memberof EntityCluster.prototype
+         * @type {Boolean}
+         */
+	clusterPoints : {
+	    get : function() {
+		return this._clusterPoints;
+	    },
+	    set : function(value) {
+		this._clusterDirty = this._clusterDirty || value !== this._clusterPoints;
+		this._clusterPoints = value;
+	    }
+	}
     });
 
     /**
@@ -708,12 +764,6 @@ define([
         if (this._enabledDirty) {
             this._enabledDirty = false;
             updateEnable(this);
-            this._clusterDirty = true;
-        }
-
-        if (this._pixelRangeDirty || this._minimumClusterSizeDirty) {
-            this._pixelRangeDirty = false;
-            this._minimumClusterSizeDirty = false;
             this._clusterDirty = true;
         }
 
