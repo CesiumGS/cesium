@@ -4,6 +4,8 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/DistanceDisplayCondition',
+        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/JulianDate',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
@@ -29,6 +31,8 @@ defineSuite([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         JulianDate,
         ShowGeometryInstanceAttribute,
         TimeInterval,
@@ -103,6 +107,7 @@ defineSuite([
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.distanceDisplayConditionProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -166,6 +171,7 @@ defineSuite([
         expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
         expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
+        expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
     });
 
     it('Ellipse material is correctly exposed.', function() {
@@ -281,6 +287,7 @@ defineSuite([
         ellipse.height = new ConstantProperty(options.height);
         ellipse.extrudedHeight = new ConstantProperty(options.extrudedHeight);
         ellipse.granularity = new ConstantProperty(options.granularity);
+        ellipse.distanceDisplayCondition = options.distanceDisplayCondition;
         entity.ellipse = ellipse;
 
         var updater = new EllipseGeometryUpdater(entity, scene);
@@ -307,6 +314,9 @@ defineSuite([
                 expect(attributes.color).toBeUndefined();
             }
             expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
         }
 
         if (options.outline) {
@@ -324,6 +334,9 @@ defineSuite([
             attributes = instance.attributes;
             expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.outlineColor));
             expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
         }
     }
 
@@ -362,6 +375,26 @@ defineSuite([
             outline : true,
             outlineColor : Color.BLUE,
             numberOfVerticalLines : 15
+        });
+    });
+
+    it('Creates expected distance display condition geometry', function() {
+        validateGeometryInstance({
+            center : new Cartesian3(4, 5, 6),
+            rotation : 1,
+            semiMajorAxis : 3,
+            semiMinorAxis : 2,
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            height : 123,
+            extrudedHeight : 431,
+            granularity : 0.97,
+            stRotation : 12,
+            fill : true,
+            outline : true,
+            outlineColor : Color.BLUE,
+            numberOfVerticalLines : 15,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
         });
     });
 
