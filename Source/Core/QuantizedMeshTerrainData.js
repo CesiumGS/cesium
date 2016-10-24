@@ -104,7 +104,7 @@ define([
      *     eastSkirtHeight : 1.0,
      *     northSkirtHeight : 1.0
      * });
-     * 
+     *
      * @see TerrainData
      * @see HeightmapTerrainData
      */
@@ -273,6 +273,7 @@ define([
             maximumHeight : this._maximumHeight,
             quantizedVertices : this._quantizedVertices,
             octEncodedNormals : this._encodedNormals,
+            includeWebMercatorT : true,
             indices : this._indices,
             westIndices : this._westIndices,
             southIndices : this._southIndices,

@@ -1110,7 +1110,8 @@ function createSpecList() {
 }
 
 function createGalleryList() {
-    var demos = [];
+    var demoObjects = [];
+    var demoJSONs = [];
     var output = path.join('Apps', 'Sandcastle', 'gallery', 'gallery-index.js');
 
     var fileList = ['Apps/Sandcastle/gallery/**/*.html'];
@@ -1129,12 +1130,27 @@ function createGalleryList() {
             demoObject.img = demo + '.jpg';
         }
 
-        demos.push(JSON.stringify(demoObject, null, 2));
+        demoObjects.push(demoObject);
     });
+
+    demoObjects.sort(function(a, b) {
+      if (a.name < b.name) {
+        return -1;
+      } else if (a.name > b.name) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+
+    var i;
+    for (i = 0; i < demoObjects.length; ++i) {
+      demoJSONs[i] = JSON.stringify(demoObjects[i], null, 2);
+    }
 
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
-var gallery_demos = [' + demos.join(', ') + '];';
+var gallery_demos = [' + demoJSONs.join(', ') + '];';
 
     fs.writeFileSync(output, contents);
 }
