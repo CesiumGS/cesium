@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/SceneTransforms',
+        'Scene/SceneMode',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
@@ -10,6 +11,7 @@ defineSuite([
         'Specs/createScene'
     ], function(
         SceneTransforms,
+        SceneMode,
         Cartesian2,
         Cartesian3,
         Ellipsoid,
@@ -32,6 +34,7 @@ defineSuite([
     });
 
     beforeEach(function() {
+        scene.mode = SceneMode.SCENE3D;
         scene.camera.position = defaultCamera.position.clone();
         scene.camera.direction = defaultCamera.direction.clone();
         scene.camera.up = defaultCamera.up.clone();
@@ -179,6 +182,10 @@ defineSuite([
     });
 
     it('returns correct drawing buffer position in 2D', function() {
+        scene.camera.setView({
+            destination : Rectangle.fromDegrees(-0.000001, -0.000001, 0.000001, 0.000001)
+        });
+
         // Update scene state
         scene.morphTo2D(0);
         scene.renderForSpecs();

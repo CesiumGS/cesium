@@ -736,9 +736,12 @@ define([
                     if (defined(glyph.billboard)) {
                         // Set all the private values here, because we already clamped to ground
                         //  so we don't want to do it again for every glyph
-                        glyph.billboard._position = value;
-                        glyph.billboard._actualPosition = value;
+
                         glyph.billboard._clampedPosition = value;
+
+                        value = defaultValue(value, this._position);
+                        Cartesian3.clone(value, glyph.billboard._position);
+                        Cartesian3.clone(value, glyph.billboard._actualPosition);
                     }
                 }
             }
