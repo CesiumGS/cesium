@@ -586,7 +586,6 @@ define([
 
         // The color blend mode is intended for the RGB channels so alpha is always just multiplied.
         // gl_FragColor is multiplied by the tile color only when tile_colorBlend is 0.0 (highlight)
-        // TODO : handle if the main function pre-multiplied alpha
         var applyHighlight =
             '    gl_FragColor.a *= tile_featureColor.a; \n' +
             '    float highlight = ceil(tile_colorBlend); \n' +
