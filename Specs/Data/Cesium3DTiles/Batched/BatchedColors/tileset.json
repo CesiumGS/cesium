@@ -8,15 +8,15 @@
       "maximum": 9
     },
     "Longitude": {
-      "minimum": -1.3196999322068488,
-      "maximum": -1.3196621776924713
+      "minimum": -1.3196962229287068,
+      "maximum": -1.319660981377494
     },
     "Latitude": {
-      "minimum": 0.69886178805515,
-      "maximum": 0.6988834368683413
+      "minimum": 0.6988617298544142,
+      "maximum": 0.6988852320112072
     },
     "Height": {
-      "minimum": 8,
+      "minimum": 6,
       "maximum": 14
     }
   },
