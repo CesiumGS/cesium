@@ -134,7 +134,9 @@ define([
                 this._gl.uniform3f(this._location, v.x, v.y, v.z);
             }
         } else {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Invalid vec3 value for uniform "' + this._activethis.name + '".');
+            //>>includeEnd('debug');
         }
     };
 
@@ -167,7 +169,9 @@ define([
                 this._gl.uniform4f(this._location, v.x, v.y, v.z, v.w);
             }
         } else {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Invalid vec4 value for uniform "' + this._activethis.name + '".');
+            //>>includeEnd('debug');
         }
     };
 
