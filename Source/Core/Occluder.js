@@ -137,6 +137,7 @@ define([
      * @returns {Occluder} The occluder derived from an object's position and radius, as well as the camera position.
      */
     Occluder.fromBoundingSphere = function(occluderBoundingSphere, cameraPosition, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(occluderBoundingSphere)) {
             throw new DeveloperError('occluderBoundingSphere is required.');
         }
@@ -144,6 +145,7 @@ define([
         if (!defined(cameraPosition)) {
             throw new DeveloperError('camera position is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Occluder(occluderBoundingSphere, cameraPosition);
@@ -267,9 +269,11 @@ define([
      * @see Occluder#isVisible
      */
     Occluder.prototype.computeVisibility = function(occludeeBS) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(occludeeBS)) {
             throw new DeveloperError('occludeeBS is required.');
         }
+        //>>includeEnd('debug');
 
         // If the occludee radius is larger than the occluders, this will return that
         // the entire ocludee is visible, even though that may not be the case, though this should
@@ -362,9 +366,11 @@ define([
         var occluderRadius = occluderBoundingSphere.radius;
         var numPositions = positions.length;
 
+        //>>includeStart('debug', pragmas.debug);
         if (Cartesian3.equals(occluderPosition, occludeePosition)) {
             throw new DeveloperError('occludeePosition must be different than occluderBoundingSphere.center');
         }
+        //>>includeEnd('debug');
 
         // Compute a plane with a normal from the occluder to the occludee position.
         var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePos, occluderPosition, occludeePointScratch), occludeePointScratch);

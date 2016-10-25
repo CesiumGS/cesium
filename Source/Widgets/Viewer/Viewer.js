@@ -499,9 +499,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         // SceneModePicker
         // By default, we silently disable the scene mode picker if scene3DOnly is true,
         // but if sceneModePicker is explicitly set to true, throw an error.
+        //>>includeStart('debug', pragmas.debug);
         if ((options.sceneModePicker === true) && scene3DOnly) {
             throw new DeveloperError('options.sceneModePicker is not available when options.scene3DOnly is set to true.');
         }
+        //>>includeEnd('debug');
 
         var sceneModePicker;
         if (!scene3DOnly && (!defined(options.sceneModePicker) || options.sceneModePicker !== false)) {
