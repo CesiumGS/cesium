@@ -482,6 +482,10 @@ define([
                 Cartesian2.clone(positions.values[1], touch2StartEvent.position2);
 
                 action(touch2StartEvent);
+
+                // Touch-enabled devices, in particular iOS can have many default behaviours for 
+                // "pinch" events, which can still be executed unless we prevent them here.
+                event.preventDefault();
             }
         }
     }

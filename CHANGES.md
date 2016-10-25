@@ -35,6 +35,7 @@ Change Log
     * `HeadingPitchRoll.equals` and `HeadingPitchRoll.equalsEpsilon` functions for comparing two instances.
 * Added `Matrix3.fromHeadingPitchRoll` Computes a 3x3 rotation matrix from the provided headingPitchRoll.
 * `Transforms.headingPitchRollToFixedFrame` and `Transforms.headingPitchRollQuaternion` now take a `HeadingPitchRoll` object in addition to separate heading, pitch, and roll values.  Separate values will be deprecated in 1.30.
+* Prevent execution of default device/browser behaviour when handling "pinch" touch event/gesture.
 * Fixed a crash when zooming from touch input on viewer initialization. [#4177](https://github.com/AnalyticalGraphicsInc/cesium/issues/4177)
 
 ### 1.26 - 2016-10-03
