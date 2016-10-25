@@ -590,17 +590,21 @@ define([
     }
 
     function invalidNameError(property, properties) {
+        //>>includeStart('debug', pragmas.debug);
         var errorString = 'fabric: property name \'' + property + '\' is not valid. It should be ';
         for ( var i = 0; i < properties.length; i++) {
             var propertyName = '\'' + properties[i] + '\'';
             errorString += (i === properties.length - 1) ? ('or ' + propertyName + '.') : (propertyName + ', ');
         }
         throw new DeveloperError(errorString);
+        //>>includeEnd('debug');
     }
 
     function duplicateNameError(property, properties) {
+        //>>includeStart('debug', pragmas.debug);
         var errorString = 'fabric: uniforms and materials cannot share the same property \'' + property + '\'';
         throw new DeveloperError(errorString);
+        //>>includeEnd('debug');
     }
 
     var templateProperties = ['type', 'materials', 'uniforms', 'components', 'source'];
@@ -958,9 +962,12 @@ define([
 
                 // Replace each material id with an czm_getMaterial method call.
                 var materialMethodCall = newMethodName + '(materialInput)';
-                if (replaceToken(material, subMaterialId, materialMethodCall) === 0 && strict) {
+                var tokensReplacedCount = replaceToken(material, subMaterialId, materialMethodCall);
+                //>>includeStart('debug', pragmas.debug);
+                if (tokensReplacedCount === 0 && strict) {
                     throw new DeveloperError('strict: shader source does not use material \'' + subMaterialId + '\'.');
                 }
+                //>>includeEnd('debug');
             }
         }
     }

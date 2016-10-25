@@ -758,6 +758,7 @@ define([
     });
 
     function validateFramebuffer(context, framebuffer) {
+        //>>includeStart('debug', pragmas.debug);
         if (context.validateFramebuffer) {
             var gl = context._gl;
             var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
@@ -783,6 +784,7 @@ define([
                 throw new DeveloperError(message);
             }
         }
+        //>>includeEnd('debug');
     }
 
     function applyRenderState(context, renderState, passState, clear) {
