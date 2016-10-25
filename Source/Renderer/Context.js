@@ -757,6 +757,11 @@ define([
         }
     });
 
+    /**
+     * Validates a framebuffer.
+     * Available in debug builds only.
+     * @private
+     */
     function validateFramebuffer(context, framebuffer) {
         //>>includeStart('debug', pragmas.debug);
         if (context.validateFramebuffer) {
