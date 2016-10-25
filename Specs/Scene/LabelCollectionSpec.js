@@ -15,6 +15,7 @@ defineSuite([
         'Renderer/ContextLimits',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
+        'Scene/Globe',
         'Scene/Label',
         'Scene/LabelStyle',
         'Scene/OrthographicFrustum',
@@ -37,6 +38,7 @@ defineSuite([
         ContextLimits,
         HeightReference,
         HorizontalOrigin,
+        Globe,
         Label,
         LabelStyle,
         OrthographicFrustum,
@@ -1461,6 +1463,30 @@ defineSuite([
 
             expect(label.pixelOffset.x).toEqual(xOffset);
             expect(label.pixelOffset.y).toEqual(yOffset);
+        });
+
+        it('Correctly updates billboard position when height reference changes', function() {
+            scene.globe = new Globe();
+            var labelsWithScene = new LabelCollection({scene : scene});
+            scene.primitives.add(labelsWithScene);
+
+            var position1 = new Cartesian3(1.0, 2.0, 3.0);
+            var label = labelsWithScene.add({
+                position : position1,
+                text : 'abc',
+                heightReference : HeightReference.CLAMP_TO_GROUND
+            });
+
+            scene.renderForSpecs();
+            var glyph = label._glyphs[0];
+            var billboard = glyph.billboard;
+            expect(billboard.position).toEqual(label.position);
+
+            label.heightReference = HeightReference.NONE;
+            scene.renderForSpecs();
+
+            expect(billboard.position).toEqual(label.position);
+            scene.primitives.remove(labelsWithScene);
         });
 
         it('should set vertexTranslate of billboards correctly when font size changes', function() {

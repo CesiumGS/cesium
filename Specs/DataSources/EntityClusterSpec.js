@@ -90,6 +90,9 @@ defineSuite([
         expect(cluster.enabled).toEqual(false);
         expect(cluster.pixelRange).toEqual(80);
         expect(cluster.minimumClusterSize).toEqual(2);
+        expect(cluster.clusterBillboards).toEqual(true);
+        expect(cluster.clusterLabels).toEqual(true);
+        expect(cluster.clusterPoints).toEqual(true);
 
         cluster.enabled = true;
         expect(cluster.enabled).toEqual(true);
@@ -105,12 +108,18 @@ defineSuite([
         var options = {
             enabled : true,
             pixelRange : 30,
-            minimumClusterSize : 5
+            minimumClusterSize : 5,
+            clusterBillboards : false,
+            clusterLabels : false,
+            clusterPoints : false
         };
         cluster = new EntityCluster(options);
         expect(cluster.enabled).toEqual(options.enabled);
         expect(cluster.pixelRange).toEqual(options.pixelRange);
         expect(cluster.minimumClusterSize).toEqual(options.minimumClusterSize);
+        expect(cluster.clusterBillboards).toEqual(options.clusterBillboards);
+        expect(cluster.clusterLabels).toEqual(options.clusterLabels);
+        expect(cluster.clusterPoints).toEqual(options.clusterPoints);
     });
 
     function createBillboardImage() {
@@ -152,7 +161,7 @@ defineSuite([
         expect(cluster._clusterLabelCollection).toBeDefined();
         expect(cluster._clusterLabelCollection.length).toEqual(1);
 
-        cluster.enabled = false;
+        cluster.clusterBillboards = false;
         cluster.update(frameState);
 
         expect(cluster._clusterLabelCollection).not.toBeDefined();
@@ -185,7 +194,7 @@ defineSuite([
         expect(cluster._clusterLabelCollection).toBeDefined();
         expect(cluster._clusterLabelCollection.length).toEqual(1);
 
-        cluster.enabled = false;
+        cluster.clusterLabels = false;
         cluster.update(frameState);
 
         expect(cluster._clusterLabelCollection).not.toBeDefined();
@@ -218,7 +227,7 @@ defineSuite([
         expect(cluster._clusterLabelCollection).toBeDefined();
         expect(cluster._clusterLabelCollection.length).toEqual(1);
 
-        cluster.enabled = false;
+        cluster.clusterPoints = false;
         cluster.update(frameState);
 
         expect(cluster._clusterLabelCollection).not.toBeDefined();

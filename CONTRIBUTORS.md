@@ -104,3 +104,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Olivier Guyot-Roullot](https://github.com/theOgrable)
 * [Andy Fry](https://github.com/andyfry01)
 * [Dylan Brown](https://github.com/Dylan-Brown)
+* [Jorge Piera Llodra](https://github.com/jorpiell)
+* [Tom Payne](https://github.com/twpayne)
+* [Leesa Fini](https://github.com/leesafini)

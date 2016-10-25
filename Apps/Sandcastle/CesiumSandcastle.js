@@ -1044,9 +1044,7 @@ require({
         });
     }
 
-    function loadDemoFromFile(index) {
-        var demo = gallery_demos[index];
-
+    function loadDemoFromFile(demo) {
         return requestDemo(demo.name).then(function(value) {
             // Store the file contents for later searching.
             demo.code = value;
@@ -1092,7 +1090,7 @@ require({
                 content : demo.description.replace(/\\n/g, '<br/>')
             });
 
-            addFileToTab(index);
+            addFileToTab(demo);
             return demo;
         });
     }
@@ -1104,10 +1102,21 @@ require({
         loading = false;
     }
 
-    function addFileToGallery(index) {
+    function insertSortedById(parentTab, galleryButton) {
+        var child;
+        for (child = parentTab.lastChild; child !== null; child = child.previousSibling) {
+            if (galleryButton.id >= child.id) {
+                parentTab.insertBefore(galleryButton, child.nextSibling);
+                return;
+            }
+        }
+        parentTab.appendChild(galleryButton);
+    }
+
+    function addFileToGallery(demo) {
         var searchDemos = dom.byId('searchDemos');
-        createGalleryButton(index, searchDemos, 'searchDemo');
-        return loadDemoFromFile(index);
+        insertSortedById(searchDemos, createGalleryButton(demo, 'searchDemo'));
+        return loadDemoFromFile(demo);
     }
 
     function onShowCallback() {
@@ -1116,8 +1125,7 @@ require({
         };
     }
 
-    function addFileToTab(index) {
-        var demo = gallery_demos[index];
+    function addFileToTab(demo) {
         if (demo.label !== '') {
             var labels = demo.label.split(',');
             for (var j = 0; j < labels.length; j++) {
@@ -1134,13 +1142,12 @@ require({
                 }
                 var tabName = label + 'Demos';
                 var tab = dom.byId(tabName);
-                createGalleryButton(index, tab, tabName);
+                insertSortedById(tab, createGalleryButton(demo, tabName));
             }
         }
     }
 
-    function createGalleryButton(index, tab, tabName) {
-        var demo = gallery_demos[index];
+    function createGalleryButton(demo, tabName) {
         var imgSrc = 'templates/Gallery_tile.jpg';
         if (Cesium.defined(demo.img)) {
             imgSrc = 'gallery/' + demo.img;
@@ -1150,7 +1157,6 @@ require({
         demoLink.id = demo.name + tabName;
         demoLink.className = 'linkButton';
         demoLink.href = 'gallery/' + encodeURIComponent(demo.name) + '.html';
-        tab.appendChild(demoLink);
 
         if (demo.name === "Hello World") {
             newDemo = demo;
@@ -1184,13 +1190,15 @@ require({
                       '<img src="' + imgSrc + '" class="demoTileThumbnail" alt="" onDragStart="return false;" />'
         }).placeAt(demoLink);
 
-        on(dom.byId(demoLink.id), 'mouseover', function() {
+        on(demoLink, 'mouseover', function() {
             scheduleGalleryTooltip(demo);
         });
 
-        on(dom.byId(demoLink.id), 'mouseout', function() {
+        on(demoLink, 'mouseout', function() {
             closeGalleryTooltip();
         });
+
+        return demoLink;
     }
 
     var promise;
@@ -1212,18 +1220,11 @@ require({
         var i;
         var len = gallery_demos.length;
 
-        // Sort alphabetically.  This will eventually be a user option.
-        gallery_demos.sort(function(a, b) {
-            var aName = a.name.toUpperCase();
-            var bName = b.name.toUpperCase();
-            return bName < aName ? 1 : bName > aName ? -1 : 0;
-        });
-
         var queryInGalleryIndex = false;
         var queryName = queryObject.src.replace('.html', '');
         var promises = [];
         for (i = 0; i < len; ++i) {
-            promises.push(addFileToGallery(i));
+            promises.push(addFileToGallery(gallery_demos[i]));
         }
 
         promise = all(promises).then(function(results) {
@@ -1247,17 +1248,19 @@ require({
 
             var demos = dom.byId('allDemos');
             for (i = 0; i < len; ++i) {
-                if (!/Development/i.test(gallery_demos[i].label)) {
-                    createGalleryButton(i, demos, 'all');
+                var demo = gallery_demos[i];
+                if (!/Development/i.test(demo.label)) {
+                    insertSortedById(demos, createGalleryButton(demo, 'all'));
                 }
             }
 
             if (!queryInGalleryIndex) {
-                gallery_demos.push({
-                                       name : queryName,
-                                       description : ''
-                                   });
-                return addFileToGallery(gallery_demos.length - 1);
+                var emptyDemo = {
+                    name : queryName,
+                    description : ''
+                };
+                gallery_demos.push(emptyDemo);
+                return addFileToGallery(emptyDemo);
             }
         });
     }
