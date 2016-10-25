@@ -1377,10 +1377,12 @@ define([
             // Convert to uniform map of functions for the renderer
             for (var name in appearanceUniforms) {
                 if (appearanceUniforms.hasOwnProperty(name)) {
+                    //>>includeStart('debug', pragmas.debug);
                     if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
                         // Later, we could rename uniforms behind-the-scenes if needed.
                         throw new DeveloperError('Appearance and material have a uniform with the same name: ' + name);
                     }
+                    //>>includeEnd('debug');
 
                     appearanceUniformMap[name] = getUniformFunction(appearanceUniforms, name);
                 }
@@ -1569,9 +1571,11 @@ define([
             throw this._error;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (defined(this.rtcCenter) && !frameState.scene3DOnly) {
             throw new DeveloperError('RTC rendering is only available for 3D only scenes.');
         }
+        //>>includeEnd('debug');
 
         if (this._state === PrimitiveState.FAILED) {
             return;

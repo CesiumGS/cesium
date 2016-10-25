@@ -138,9 +138,11 @@ define([
      * @see BoxGeometry.createGeometry
      */
     BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(boundingBox)) {
             throw new DeveloperError('boundingBox is required.');
         }
+        //>>includeEnd('debug');
 
         return new BoxGeometry({
             minimum : boundingBox.minimum,

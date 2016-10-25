@@ -147,10 +147,12 @@ define([
             east = Math.max(longitude, longitude0, longitude1, longitude2);
             west = Math.min(longitude, longitude0, longitude1, longitude2);
 
+            //>>includeStart('debug', pragmas.debug);
             if (north < -CesiumMath.PI_OVER_TWO || north > CesiumMath.PI_OVER_TWO ||
                     south < -CesiumMath.PI_OVER_TWO || south > CesiumMath.PI_OVER_TWO) {
                 throw new DeveloperError('Rotated rectangle is invalid.  It crosses over either the north or south pole.');
             }
+            //>>includeEnd('debug')
 
             rectangle.north = north;
             rectangle.south = south;

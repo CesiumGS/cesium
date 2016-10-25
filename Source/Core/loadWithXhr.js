@@ -120,7 +120,9 @@ define([
             case 'json':
                 return JSON.parse(decodeDataUriText(isBase64, data));
             default:
+                //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Unhandled responseType: ' + responseType);
+                //>>includeEnd('debug');
         }
     }
 

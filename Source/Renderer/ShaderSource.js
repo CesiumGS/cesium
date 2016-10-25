@@ -124,6 +124,7 @@ define([
             }
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (badNodes.length !== 0) {
             var message = 'A circular dependency was found in the following built-in functions/structs/constants: \n';
             for (j = 0; j < badNodes.length; ++j) {
@@ -131,6 +132,7 @@ define([
             }
             throw new DeveloperError(message);
         }
+        //>>includeEnd('debug');
     }
 
     function getBuiltinsAndAutomaticUniforms(shaderSource) {
@@ -169,9 +171,12 @@ define([
         // Extract existing shader version from sources
         var version;
         combinedSources = combinedSources.replace(/#version\s+(.*?)\n/gm, function(match, group1) {
+            //>>includeStart('debug', pragmas.debug);
             if (defined(version) && version !== group1) {
                 throw new DeveloperError('inconsistent versions found: ' + version + ' and ' + group1);
             }
+            //>>includeEnd('debug');
+
             // Extract #version to put at the top
             version = group1;
 
