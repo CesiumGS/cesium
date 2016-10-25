@@ -107,7 +107,7 @@ var speedVector = new Cesium.Cartesian3();
 
 var planePrimitive = scene.primitives.add(Cesium.Model.fromGltf({
     url : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
-    modelMatrix : Cesium.Transforms.aircraftHeadingPitchRollToFixedFrame(position, hpRoll),
+    modelMatrix : Cesium.Transforms.headingPitchRollToFixedFrame(position, hpRoll),
     minimumPixelSize : 128
 }));
 
@@ -208,7 +208,7 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
     speedVector = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.UNIT_X, speed / 10, speedVector);
     position = Cesium.Matrix4.multiplyByPoint(planePrimitive.modelMatrix, speedVector, position);
     pathPosition.addSample(Cesium.JulianDate.now(), position);
-    Cesium.Transforms.aircraftHeadingPitchRollToFixedFrame(position, hpRoll, undefined, planePrimitive.modelMatrix);
+    Cesium.Transforms.headingPitchRollToFixedFrame(position, hpRoll, undefined, planePrimitive.modelMatrix);
 
     if (fromBehind.checked) {
         // Zoom to model

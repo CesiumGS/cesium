@@ -158,6 +158,7 @@ define([
         timeBarEle.addEventListener('touchstart', this._onTouchStart, false);
         timeBarEle.addEventListener('touchmove', this._onTouchMove, false);
         timeBarEle.addEventListener('touchend', this._onTouchEnd, false);
+        timeBarEle.addEventListener('touchcancel', this._onTouchEnd, false);
 
         this._topDiv.oncontextmenu = function() {
             return false;
@@ -205,6 +206,7 @@ define([
         timeBarEle.removeEventListener('touchstart', this._onTouchStart, false);
         timeBarEle.removeEventListener('touchmove', this._onTouchMove, false);
         timeBarEle.removeEventListener('touchend', this._onTouchEnd, false);
+        timeBarEle.removeEventListener('touchcancel', this._onTouchEnd, false);
         this.container.removeChild(this._topDiv);
         destroyObject(this);
     };
@@ -535,7 +537,7 @@ define([
             this._mainTicSpan = -1;
         }
 
-        tics += '<span class="cesium-timeline-icon16" style="left:' + scrubX + 'px;bottom:0;background-position: 0px 0px;"></span>';
+        tics += '<span class="cesium-timeline-icon16" style="left:' + scrubX + 'px;bottom:0;background-position: 0 0;"></span>';
         timeBar.innerHTML = tics;
         this._scrubElement = timeBar.lastChild;
 
@@ -619,7 +621,7 @@ define([
         return function(e) {
             timeline._mouseMode = timelineMouseMode.none;
             if (timeline._scrubElement) {
-                timeline._scrubElement.style.backgroundPosition = '0px 0px';
+                timeline._scrubElement.style.backgroundPosition = '0 0';
             }
             timeline._timelineDrag = 0;
             timeline._timelineDragLocation = undefined;

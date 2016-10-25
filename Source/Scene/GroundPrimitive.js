@@ -1065,7 +1065,9 @@ define([
                     }
                     //>>includeEnd('debug');
                 } else {
+                    //>>includeStart('debug', pragmas.debug);
                     throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
+                    //>>includeEnd('debug');
                 }
             }
 
