@@ -268,9 +268,9 @@ define([
         if (!defined(date)) {
             throw new DeveloperError(iso8601ErrorMessage);
         }
-        //>>includeEnd('debug');
 
         var dashCount;
+        //>>includeEnd('debug');
 
         //First match the date against possible regular expressions.
         tokens = date.match(matchCalendarDate);
@@ -318,8 +318,8 @@ define([
                             var weekNumber = +tokens[2];
                             var dayOfWeek = +tokens[3] || 0;
 
-                            dashCount = date.split('-').length - 1;
                             //>>includeStart('debug', pragmas.debug);
+                            dashCount = date.split('-').length - 1;
                             if (dashCount > 0 &&
                                ((!defined(tokens[3]) && dashCount !== 1) ||
                                (defined(tokens[3]) && dashCount !== 2))) {
@@ -358,8 +358,8 @@ define([
         if (defined(time)) {
             tokens = time.match(matchHoursMinutesSeconds);
             if (tokens !== null) {
-                dashCount = time.split(':').length - 1;
                 //>>includeStart('debug', pragmas.debug);
+                dashCount = time.split(':').length - 1;
                 if (dashCount > 0 && dashCount !== 2 && dashCount !== 3) {
                     throw new DeveloperError(iso8601ErrorMessage);
                 }
@@ -373,8 +373,8 @@ define([
             } else {
                 tokens = time.match(matchHoursMinutes);
                 if (tokens !== null) {
-                    dashCount = time.split(':').length - 1;
                     //>>includeStart('debug', pragmas.debug);
+                    dashCount = time.split(':').length - 1;
                     if (dashCount > 2) {
                         throw new DeveloperError(iso8601ErrorMessage);
                     }

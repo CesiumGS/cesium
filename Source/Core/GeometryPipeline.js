@@ -160,10 +160,10 @@ define([
                 case PrimitiveType.TRIANGLE_FAN:
                     geometry.indices = triangleFanToLines(indices);
                     break;
+                //>>includeStart('debug', pragmas.debug);
                 default:
-                    //>>includeStart('debug', pragmas.debug);
                     throw new DeveloperError('geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN.');
-                    //>>includeEnd('debug');
+                //>>includeEnd('debug');
             }
 
             geometry.primitiveType = PrimitiveType.LINES;
