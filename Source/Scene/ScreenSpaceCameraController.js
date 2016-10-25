@@ -284,8 +284,9 @@ define([
         this._rotateMousePosition = new Cartesian2(-1.0, -1.0);
         this._rotateStartPosition = new Cartesian3();
         this._strafeStartPosition = new Cartesian3();
-        this._zoomMouseStart = new Cartesian2();
+        this._zoomMouseStart = new Cartesian2(-1.0, -1.0);
         this._zoomWorldPosition = new Cartesian3();
+        this._useZoomWorldPosition = false;
         this._tiltCVOffMap = false;
         this._looking = false;
         this._rotating = false;
@@ -483,26 +484,31 @@ define([
         var camera = scene.camera;
         var mode = scene.mode;
 
-        var pickedPosition;
-        if (defined(object._globe)) {
-            pickedPosition = mode !== SceneMode.SCENE2D ? pickGlobe(object, startPosition, scratchPickCartesian) : camera.getPickRay(startPosition, scratchZoomPickRay).origin;
-        }
-
-        if (!defined(pickedPosition)) {
-            camera.zoomIn(distance);
-            return;
-        }
-
         var sameStartPosition = Cartesian2.equals(startPosition, object._zoomMouseStart);
         var zoomingOnVector = object._zoomingOnVector;
         var rotatingZoom = object._rotatingZoom;
+        var pickedPosition;
 
         if (!sameStartPosition) {
             object._zoomMouseStart = Cartesian2.clone(startPosition, object._zoomMouseStart);
-            object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
+
+            if (defined(object._globe)) {
+                pickedPosition = mode !== SceneMode.SCENE2D ? pickGlobe(object, startPosition, scratchPickCartesian) : camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+            }
+            if (defined(pickedPosition)) {
+                object._useZoomWorldPosition = true;
+                object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
+            } else {
+                object._useZoomWorldPosition = false;
+            }
 
             zoomingOnVector = object._zoomingOnVector = false;
             rotatingZoom = object._rotatingZoom = false;
+        }
+
+        if (!object._useZoomWorldPosition) {
+            camera.zoomIn(distance);
+            return;
         }
 
         var zoomOnVector = mode === SceneMode.COLUMBUS_VIEW;
@@ -631,7 +637,7 @@ define([
                         var pickedNormal = Cartesian3.normalize(object._zoomWorldPosition, scratchPickNormal);
                         var dotProduct = Cartesian3.dot(pickedNormal, positionNormal);
 
-                        if (dotProduct > 0.0) {
+                        if (dotProduct > 0.0 && dotProduct < 1.0) {
                             var angle = CesiumMath.acosClamped(dotProduct);
                             var axis = Cartesian3.cross(pickedNormal, positionNormal, scratchZoomAxis);
 

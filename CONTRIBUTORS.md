@@ -103,6 +103,7 @@
 * [Tom Novacek](https://github.com/novacto2)
 * [Olivier Guyot-Roullot](https://github.com/theOgrable)
 * [Andy Fry](https://github.com/andyfry01)
+* [Judy Weng](http://github.com/JudyWeng)
 * [Jorge Piera Llodra](https://github.com/jorpiell)
 * [Tom Payne](https://github.com/twpayne)
 * [Leesa Fini](https://github.com/leesafini)

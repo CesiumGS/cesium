@@ -408,6 +408,7 @@ define([
          *
          * @memberof ShadowMap.prototype
          * @type {Number}
+         * @default 2048
          */
         size : {
             get : function() {
