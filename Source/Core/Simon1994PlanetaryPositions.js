@@ -80,6 +80,7 @@ define([
             inclination = -inclination;
             longitudeOfNode += CesiumMath.PI;
         }
+
         //>>includeStart('debug', pragmas.debug);
         if (inclination < 0 || inclination > CesiumMath.PI) {
             throw new DeveloperError('The inclination is out of range. Inclination must be greater than or equal to zero and less than or equal to Pi radians.');
@@ -91,17 +92,20 @@ define([
         var rightAscensionOfAscendingNode = longitudeOfNode;
         var trueAnomaly = meanAnomalyToTrueAnomaly(meanLongitude - longitudeOfPerigee, eccentricity);
         var type = chooseOrbit(eccentricity, 0.0);
+
         //>>includeStart('debug', pragmas.debug);
         if (type === 'Hyperbolic' && Math.abs(CesiumMath.negativePiToPi(trueAnomaly)) >= Math.acos(- 1.0 / eccentricity)) {
             throw new DeveloperError('The true anomaly of the hyperbolic orbit lies outside of the bounds of the hyperbola.');
         }
         //>>includeEnd('debug')
+
         perifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscensionOfAscendingNode, perifocalToEquatorial);
         var semilatus = radiusOfPeriapsis * (1.0 + eccentricity);
         var costheta = Math.cos(trueAnomaly);
         var sintheta = Math.sin(trueAnomaly);
 
         var denom = (1.0 + eccentricity * costheta);
+
         //>>includeStart('debug', pragmas.debug);
         if (denom <= CesiumMath.Epsilon10) {
             throw new DeveloperError('elements cannot be converted to cartesian');
@@ -145,6 +149,7 @@ define([
             throw new DeveloperError('eccentricity out of range.');
         }
         //>>includeEnd('debug')
+
         var eccentricAnomaly = meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity);
         return eccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity);
     }
@@ -158,6 +163,7 @@ define([
             throw new DeveloperError('eccentricity out of range.');
         }
         //>>includeEnd('debug')
+
         var revs = Math.floor(meanAnomaly / CesiumMath.TWO_PI);
 
         // Find angle in current revolution
@@ -234,6 +240,7 @@ define([
             throw new DeveloperError('inclination out of range');
         }
         //>>includeEnd('debug')
+
         var cosap = Math.cos(argumentOfPeriapsis);
         var sinap = Math.sin(argumentOfPeriapsis);
 
