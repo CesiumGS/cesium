@@ -5,6 +5,8 @@ defineSuite([
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/CornerType',
+        'Core/DistanceDisplayCondition',
+        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/JulianDate',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
@@ -31,6 +33,8 @@ defineSuite([
         Color,
         ColorGeometryInstanceAttribute,
         CornerType,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         JulianDate,
         ShowGeometryInstanceAttribute,
         TimeInterval,
@@ -111,6 +115,7 @@ defineSuite([
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
         expect(updater.shadowsProperty).toBe(undefined);
+        expect(updater.distanceDisplayConditionProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -152,6 +157,7 @@ defineSuite([
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
         expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
+        expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -246,11 +252,11 @@ defineSuite([
         corridor.outline = new ConstantProperty(options.outline);
         corridor.outlineColor = new ConstantProperty(options.outlineColor);
         corridor.cornerType = new ConstantProperty(options.cornerType);
-
         corridor.width = new ConstantProperty(options.width);
         corridor.height = new ConstantProperty(options.height);
         corridor.extrudedHeight = new ConstantProperty(options.extrudedHeight);
         corridor.granularity = new ConstantProperty(options.granularity);
+        corridor.distanceDisplayCondition = options.distanceDisplayCondition;
 
         var updater = new CorridorGeometryUpdater(entity, scene);
 
@@ -272,6 +278,9 @@ defineSuite([
                 expect(attributes.color).toBeUndefined();
             }
             expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
         }
 
         if (options.outline) {
@@ -285,6 +294,9 @@ defineSuite([
             attributes = instance.attributes;
             expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.outlineColor));
             expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
         }
     }
 
@@ -315,6 +327,22 @@ defineSuite([
             outline : true,
             outlineColor : Color.BLUE,
             cornerType : CornerType.BEVELED
+        });
+    });
+
+    it('Creates expected distance display condition geometry', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            height : 431,
+            extrudedHeight : 123,
+            granularity : 0.97,
+            width : 12,
+            fill : true,
+            outline : true,
+            outlineColor : Color.BLUE,
+            cornerType : CornerType.MITERED,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
         });
     });
 

@@ -4,6 +4,8 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/DistanceDisplayCondition',
+        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/JulianDate',
         'Core/PolygonHierarchy',
         'Core/ShowGeometryInstanceAttribute',
@@ -30,6 +32,8 @@ defineSuite([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         JulianDate,
         PolygonHierarchy,
         ShowGeometryInstanceAttribute,
@@ -109,6 +113,7 @@ defineSuite([
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
         expect(updater.shadowsProperty).toBe(undefined);
+        expect(updater.distanceDisplayConditionProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.onTerrain).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
@@ -151,6 +156,7 @@ defineSuite([
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
         expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
+        expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -264,6 +270,7 @@ defineSuite([
         polygon.height = new ConstantProperty(options.height);
         polygon.extrudedHeight = new ConstantProperty(options.extrudedHeight);
         polygon.granularity = new ConstantProperty(options.granularity);
+        polygon.distanceDisplayCondition = options.distanceDisplayCondition;
 
         var updater = new PolygonGeometryUpdater(entity, scene);
 
@@ -287,6 +294,9 @@ defineSuite([
                 expect(attributes.color).toBeUndefined();
             }
             expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
         }
 
         if (options.outline) {
@@ -300,6 +310,9 @@ defineSuite([
             attributes = instance.attributes;
             expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.outlineColor));
             expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
         }
     }
 
@@ -334,6 +347,24 @@ defineSuite([
             perPositionHeight : false,
             closeTop: false,
             closeBottom: true
+        });
+    });
+
+    it('Creates expected distance display condition geometry', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            height : 431,
+            extrudedHeight : 123,
+            granularity : 0.97,
+            stRotation : 12,
+            fill : true,
+            outline : true,
+            outlineColor : Color.BLUE,
+            perPositionHeight : false,
+            closeTop: true,
+            closeBottom: false,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
         });
     });
 
