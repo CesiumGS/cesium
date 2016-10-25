@@ -32,6 +32,7 @@ Change Log
     * `HeadingPitchRoll.clone` function to duplicate HeadingPitchRoll instance.
     * `HeadingPitchRoll.equals` and `HeadingPitchRoll.equalsEpsilon` functions for comparing two instances.
 * Added `Matrix3.fromHeadingPitchRoll` Computes a 3x3 rotation matrix from the provided headingPitchRoll.
+* Fix warning when using Webpack. [#4467](https://github.com/AnalyticalGraphicsInc/cesium/pull/4467)
 
 ### 1.26 - 2016-10-03
 
