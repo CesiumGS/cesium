@@ -29,32 +29,32 @@
         'use strict';
 //Sandcastle_Begin
 
-        var viewer = new Cesium.Viewer('cesiumContainer', {
-            scene3DOnly : true,
-            shadows : true
-        });
-        var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-            url : 'https://assets.agi.com/stk-terrain/world',
-            requestWaterMask : true,
-            requestVertexNormals : true
-        });
-        viewer.terrainProvider = cesiumTerrainProviderMeshes;
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    scene3DOnly : true,
+    shadows : true
+});
+var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
+    url : 'https://assets.agi.com/stk-terrain/world',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+viewer.terrainProvider = cesiumTerrainProviderMeshes;
 
-        viewer.scene.globe.depthTestAgainstTerrain = true;
+viewer.scene.globe.depthTestAgainstTerrain = true;
 
-        viewer.extend(Cesium.viewerCesiumInspectorMixin);
+viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
-        viewer.scene.camera.setView({
-            destination : new Cesium.Cartesian3(4401474.366791085, 580205.784567315, 4569699.393603603),
-            orientation : {
-                direction : new Cesium.Cartesian3(-0.4827023520286348, 0.8293835575592474, -0.2812851823263897),
-                up : new Cesium.Cartesian3(0.5280482156151897, 0.5318550203510545, 0.6620387596757412)
-            }
-        });
+viewer.scene.camera.setView({
+    destination : new Cesium.Cartesian3(4401474.366791085, 580205.784567315, 4569699.393603603),
+    orientation : {
+        direction : new Cesium.Cartesian3(-0.4827023520286348, 0.8293835575592474, -0.2812851823263897),
+        up : new Cesium.Cartesian3(0.5280482156151897, 0.5318550203510545, 0.6620387596757412)
+    }
+});
 
-        var scene = viewer.scene;
-        scene.fog.enabled = false;
-        scene.debugShowFramesPerSecond = true;
+var scene = viewer.scene;
+scene.fog.enabled = false;
+scene.debugShowFramesPerSecond = true;
 
 var tilesets = [{
     //name : 'Tileset', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/'
