@@ -527,6 +527,40 @@ define([
 	}
     });
 
+    function createGetEntity(collectionProperty, CollectionConstructor, unusedIndicesProperty, entityIndexProperty) {
+        return function(entity) {
+            var context = this;
+            var collection = context[collectionProperty];
+            if (defined(collection) && defined(entity[entityIndexProperty])) {
+                return collection.get(entity[entityIndexProperty]);
+            }
+
+            if (!defined(collection)) {
+                collection = context[collectionProperty] = new CollectionConstructor({
+                    scene : context._scene
+                });
+            }
+
+            var index;
+            var entityItem;
+
+            var unusedIndices = context[unusedIndicesProperty];
+            if (unusedIndices.length > 0) {
+                index = unusedIndices.pop();
+                entityItem = collection.get(index);
+            } else {
+                entityItem = collection.add();
+                index = collection.length - 1;
+            }
+
+            entity[entityIndexProperty] = index;
+
+            context._clusterDirty = true;
+
+            return entityItem;
+        };
+    }
+
     /**
      * Returns a new {@link Label}.
      * @param {Entity} entity The entity that will use the returned {@link Label} for visualization.
@@ -534,36 +568,8 @@ define([
      *
      * @private
      */
-    EntityCluster.prototype.getLabel = function(entity) {
-        var labelCollection = this._labelCollection;
-        if (defined(labelCollection) && defined(entity._labelIndex)) {
-            return labelCollection.get(entity._labelIndex);
-        }
+    EntityCluster.prototype.getLabel = createGetEntity('_labelCollection', LabelCollection, '_unusedLabelIndices', '_labelIndex');
 
-        if (!defined(labelCollection)) {
-            labelCollection = this._labelCollection = new LabelCollection({
-                scene : this._scene
-            });
-        }
-
-        var index;
-        var label;
-
-        var unusedIndices = this._unusedLabelIndices;
-        if (unusedIndices.length > 0) {
-            index = unusedIndices.pop();
-            label = labelCollection.get(index);
-        } else {
-            label = labelCollection.add();
-            index = labelCollection.length - 1;
-        }
-
-        entity._labelIndex = index;
-
-        this._clusterDirty = true;
-
-        return label;
-    };
 
     /**
      * Removes the {@link Label} associated with an entity so it can be reused by another entity.
@@ -596,36 +602,8 @@ define([
      *
      * @private
      */
-    EntityCluster.prototype.getBillboard = function(entity) {
-        var billboardCollection = this._billboardCollection;
-        if (defined(billboardCollection) && defined(entity._billboardIndex)) {
-            return billboardCollection.get(entity._billboardIndex);
-        }
+    EntityCluster.prototype.getBillboard = createGetEntity('_billboardCollection', BillboardCollection, '_unusedBillboardIndices', '_billboardIndex');
 
-        if (!defined(billboardCollection)) {
-            billboardCollection = this._billboardCollection = new BillboardCollection({
-                scene : this._scene
-            });
-        }
-
-        var index;
-        var billboard;
-
-        var unusedIndices = this._unusedBillboardIndices;
-        if (unusedIndices.length > 0) {
-            index = unusedIndices.pop();
-            billboard = billboardCollection.get(index);
-        } else {
-            billboard = billboardCollection.add();
-            index = billboardCollection.length - 1;
-        }
-
-        entity._billboardIndex = index;
-
-        this._clusterDirty = true;
-
-        return billboard;
-    };
 
     /**
      * Removes the {@link Billboard} associated with an entity so it can be reused by another entity.
@@ -658,34 +636,7 @@ define([
      *
      * @private
      */
-    EntityCluster.prototype.getPoint = function(entity) {
-        var pointCollection = this._pointCollection;
-        if (defined(pointCollection) && defined(entity._pointIndex)) {
-            return pointCollection.get(entity._pointIndex);
-        }
-
-        if (!defined(pointCollection)) {
-            pointCollection = this._pointCollection = new PointPrimitiveCollection();
-        }
-
-        var index;
-        var point;
-
-        var unusedIndices = this._unusedPointIndices;
-        if (unusedIndices.length > 0) {
-            index = unusedIndices.pop();
-            point = pointCollection.get(index);
-        } else {
-            point = pointCollection.add();
-            index = pointCollection.length - 1;
-        }
-
-        entity._pointIndex = index;
-
-        this._clusterDirty = true;
-
-        return point;
-    };
+    EntityCluster.prototype.getPoint = createGetEntity('_pointCollection', PointPrimitiveCollection, '_unusedPointIndices', '_pointIndex');
 
     /**
      * Removes the {@link Point} associated with an entity so it can be reused by another entity.
