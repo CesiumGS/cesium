@@ -6,7 +6,7 @@ Change Log
 * Deprecated
     * 
 * Breaking changes
-    * 
+    * The `scene` parameter for creating `BillboardVisualizer`, `LabelVisualizer`, and `PointVisualizer` has been removed. Instead, pass an instance of `EntityCluster`.
 * Fixed a crash that would occur when using dynamic `distanceDisplayCondition` properties. [#4403](https://github.com/AnalyticalGraphicsInc/cesium/pull/4403)
 * Fixed several bugs that lead to billboards and labels being improperly clamped to terrain. [#4396](https://github.com/AnalyticalGraphicsInc/cesium/issues/4396), [#4062](https://github.com/AnalyticalGraphicsInc/cesium/issues/4062)
 * Fixed a bug affected models with multiple meshes without indices. [#4237](https://github.com/AnalyticalGraphicsInc/cesium/issues/4237)
