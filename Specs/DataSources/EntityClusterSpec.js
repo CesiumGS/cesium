@@ -6,6 +6,9 @@ defineSuite([
         'Core/defineProperties',
         'Core/Ellipsoid',
         'Core/Event',
+        'Core/JulianDate',
+        'DataSources/CustomDataSource',
+        'DataSources/DataSourceDisplay',
         'DataSources/Entity',
         'Scene/SceneTransforms',
         'Specs/createCanvas',
@@ -18,6 +21,9 @@ defineSuite([
         defineProperties,
         Ellipsoid,
         Event,
+        JulianDate,
+        CustomDataSource,
+        DataSourceDisplay,
         Entity,
         SceneTransforms,
         createCanvas,
@@ -386,5 +392,59 @@ defineSuite([
 
         expect(cluster._clusterBillboardCollection).toBeDefined();
         expect(cluster._clusterBillboardCollection.length).toEqual(1);
+    });
+
+    it('renders billboards with invisible labels that are not clustered', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+        cluster.minimumClusterSize = 3;
+
+        var dataSource = new CustomDataSource('test');
+        dataSource.clustering = cluster;
+        dataSource._visualizers = DataSourceDisplay.defaultVisualizersCallback(scene, cluster, dataSource);
+
+        var entityCollection = dataSource.entities;
+
+        entityCollection.add({
+            position : SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.9),
+            billboard : {
+                image : createBillboardImage()
+            },
+            label : {
+                show : true
+            }
+        });
+
+        entityCollection.add({
+            position : SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.9),
+            billboard : {
+                image : createBillboardImage()
+            },
+            label : {
+                show : true
+            }
+        });
+
+        var visualizers = dataSource._visualizers;
+        var length = visualizers.length;
+        for (var i = 0; i < length; i++) {
+            visualizers[i].update(JulianDate.now());
+        }
+
+        var frameState = scene.frameState;
+        cluster.update(frameState);
+
+        expect(cluster._clusterBillboardCollection).not.toBeDefined();
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+
+        cluster.enabled = true;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+        expect(cluster._clusterBillboardCollection).not.toBeDefined();
+
+        expect(cluster._labelCollection).not.toBeDefined();
+        expect(cluster._billboardCollection).toBeDefined();
+        expect(cluster._billboardCollection.length).toEqual(2);
     });
 }, 'WebGL');

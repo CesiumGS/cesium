@@ -40,6 +40,7 @@ Change Log
 * Fixed a crash when zooming from touch input on viewer initialization. [#4177](https://github.com/AnalyticalGraphicsInc/cesium/issues/4177)
 * Fix warning when using Webpack. [#4467](https://github.com/AnalyticalGraphicsInc/cesium/pull/4467)
 * Fix primitive bounding sphere bug that would cause a crash when loading data sources. [#4431](https://github.com/AnalyticalGraphicsInc/cesium/issues/4431)
+* Fix a crash when clustering is enabled, an entity has a label graphics defined, but the label isn't visible. [#4414](https://github.com/AnalyticalGraphicsInc/cesium/issues/4414)
 
 ### 1.26 - 2016-10-03
 
