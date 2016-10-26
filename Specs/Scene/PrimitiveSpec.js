@@ -1027,6 +1027,42 @@ defineSuite([
         });
     });
 
+    it('can mix valid and invalid geometry', function() {
+        var instances = [];
+        instances.push(rectangleInstance1);
+        instances.push(new GeometryInstance({
+            geometry : PolygonGeometry.fromPositions({
+                positions : []
+            }),
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(1.0, 0.0, 1.0, 1.0),
+            },
+            id : 'invalid'
+        }));
+        instances.push(rectangleInstance2);
+
+        primitive = new Primitive({
+            geometryInstances : instances,
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
+        });
+
+        var frameState = scene.frameState;
+
+        return pollToPromise(function() {
+            primitive.update(frameState);
+            if (frameState.afterRender.length > 0) {
+                frameState.afterRender[0]();
+            }
+            return primitive.ready;
+        }).then(function() {
+            expect(primitive.getGeometryInstanceAttributes('rectangle1').boundingSphere).toBeDefined();
+            expect(primitive.getGeometryInstanceAttributes('rectangle2').boundingSphere).toBeDefined();
+            expect(primitive.getGeometryInstanceAttributes('invalid').boundingSphere).not.toBeDefined();
+        });
+    });
+
     it('shader validation', function() {
         primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],

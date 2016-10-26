@@ -5,7 +5,6 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
@@ -20,7 +19,6 @@ define([
         Color,
         defaultValue,
         defined,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
@@ -70,13 +68,6 @@ define([
             throw new DeveloperError('entityCollection is required.');
         }
         //>>includeEnd('debug');
-
-        if (!defined(entityCluster.minimumClusterSize)) {
-            deprecationWarning('BillboardVisualizer scene constructor parameter', 'The scene is no longer a parameter the BillboardVisualizer. An EntityCluster is required.');
-            entityCluster = new EntityCluster({
-                enabled : false
-            });
-        }
 
         entityCollection.collectionChanged.addEventListener(PointVisualizer.prototype._onCollectionChanged, this);
 
