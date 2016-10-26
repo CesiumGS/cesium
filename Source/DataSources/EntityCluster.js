@@ -87,6 +87,8 @@ define([
         this._clusterLabelCollection = undefined;
         this._clusterPointCollection = undefined;
 
+        this._collectionIndicesByEntity = Object.create(null);
+
         this._unusedLabelIndices = [];
         this._unusedBillboardIndices = [];
         this._unusedPointIndices = [];
@@ -531,8 +533,14 @@ define([
         return function(entity) {
             var context = this;
             var collection = context[collectionProperty];
-            if (defined(collection) && defined(entity[entityIndexProperty])) {
-                return collection.get(entity[entityIndexProperty]);
+            var entityIndices = context._collectionIndicesByEntity[entity.id];
+
+            if (!defined(entityIndices)) {
+                entityIndices = context._collectionIndicesByEntity[entity.id] = Object.create(null);
+            }
+
+            if (defined(collection) && defined(entityIndices[entityIndexProperty])) {
+                return collection.get(entityIndices[entityIndexProperty]);
             }
 
             if (!defined(collection)) {
@@ -553,7 +561,7 @@ define([
                 index = collection.length - 1;
             }
 
-            entity[entityIndexProperty] = index;
+            entityIndices[entityIndexProperty] = index;
 
             context._clusterDirty = true;
 
@@ -568,7 +576,7 @@ define([
      *
      * @private
      */
-    EntityCluster.prototype.getLabel = createGetEntity('_labelCollection', LabelCollection, '_unusedLabelIndices', '_labelIndex');
+    EntityCluster.prototype.getLabel = createGetEntity('_labelCollection', LabelCollection, '_unusedLabelIndices', 'labelIndex');
 
 
     /**
@@ -578,12 +586,13 @@ define([
      * @private
      */
     EntityCluster.prototype.removeLabel = function(entity) {
-        if (!defined(this._labelCollection) || !defined(entity._labelIndex)) {
+        var entityIndices = this._collectionIndicesByEntity[entity.id];
+        if (!defined(this._labelCollection) || !defined(entityIndices.labelIndex)) {
             return;
         }
 
-        var index = entity._labelIndex;
-        entity._labelIndex = undefined;
+        var index = entityIndices.labelIndex;
+        entityIndices.labelIndex = undefined;
 
         var label = this._labelCollection.get(index);
         label.show = false;
@@ -602,7 +611,7 @@ define([
      *
      * @private
      */
-    EntityCluster.prototype.getBillboard = createGetEntity('_billboardCollection', BillboardCollection, '_unusedBillboardIndices', '_billboardIndex');
+    EntityCluster.prototype.getBillboard = createGetEntity('_billboardCollection', BillboardCollection, '_unusedBillboardIndices', 'billboardIndex');
 
 
     /**
@@ -612,12 +621,13 @@ define([
      * @private
      */
     EntityCluster.prototype.removeBillboard = function(entity) {
-        if (!defined(this._billboardCollection) || !defined(entity._billboardIndex)) {
+        var entityIndices = this._collectionIndicesByEntity[entity.id];
+        if (!defined(this._billboardCollection) || !defined(entityIndices.billboardIndex)) {
             return;
         }
 
-        var index = entity._billboardIndex;
-        entity._billboardIndex = undefined;
+        var index = entityIndices.billboardIndex;
+        entityIndices.billboardIndex = undefined;
 
         var billboard = this._billboardCollection.get(index);
         billboard.id = undefined;
@@ -636,7 +646,7 @@ define([
      *
      * @private
      */
-    EntityCluster.prototype.getPoint = createGetEntity('_pointCollection', PointPrimitiveCollection, '_unusedPointIndices', '_pointIndex');
+    EntityCluster.prototype.getPoint = createGetEntity('_pointCollection', PointPrimitiveCollection, '_unusedPointIndices', 'pointIndex');
 
     /**
      * Removes the {@link Point} associated with an entity so it can be reused by another entity.
@@ -645,12 +655,13 @@ define([
      * @private
      */
     EntityCluster.prototype.removePoint = function(entity) {
-        if (!defined(this._pointCollection) || !defined(entity._pointIndex)) {
+        var entityIndices = this._collectionIndicesByEntity[entity.id];
+        if (!defined(this._pointCollection) || !defined(entityIndices.pointIndex)) {
             return;
         }
 
-        var index = entity._pointIndex;
-        entity._pointIndex = undefined;
+        var index = entityIndices.pointIndex;
+        entityIndices.pointIndex = undefined;
 
         var point = this._pointCollection.get(index);
         point.show = false;
