@@ -6,7 +6,7 @@ Change Log
 * Deprecated
     * 
 * Breaking changes
-    * 
+    * The `scene` parameter for creating `BillboardVisualizer`, `LabelVisualizer`, and `PointVisualizer` has been removed. Instead, pass an instance of `EntityCluster`.
 * Fixed a crash that would occur when using dynamic `distanceDisplayCondition` properties. [#4403](https://github.com/AnalyticalGraphicsInc/cesium/pull/4403)
 * Fixed several bugs that lead to billboards and labels being improperly clamped to terrain. [#4396](https://github.com/AnalyticalGraphicsInc/cesium/issues/4396), [#4062](https://github.com/AnalyticalGraphicsInc/cesium/issues/4062)
 * Fixed a bug affected models with multiple meshes without indices. [#4237](https://github.com/AnalyticalGraphicsInc/cesium/issues/4237)
@@ -39,6 +39,7 @@ Change Log
 * Prevent execution of default device/browser behaviour when handling "pinch" touch event/gesture.
 * Fixed a crash when zooming from touch input on viewer initialization. [#4177](https://github.com/AnalyticalGraphicsInc/cesium/issues/4177)
 * Fix warning when using Webpack. [#4467](https://github.com/AnalyticalGraphicsInc/cesium/pull/4467)
+* Fix primitive bounding sphere bug that would cause a crash when loading data sources. [#4431](https://github.com/AnalyticalGraphicsInc/cesium/issues/4431)
 * Fix a crash when clustering is enabled, an entity has a label graphics defined, but the label isn't visible. [#4414](https://github.com/AnalyticalGraphicsInc/cesium/issues/4414)
 
 ### 1.26 - 2016-10-03
