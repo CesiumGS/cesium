@@ -82,8 +82,10 @@ define([
                 case 'vec4':
                     getColor = 'vec4 getColor() { return ' + varyingName + '; }\n';
                     break;
+                //>>includeStart('debug', pragmas.debug);
                 default:
                     throw new DeveloperError('options.glslDatatype must be float, vec2, vec3, or vec4.');
+                //>>includeEnd('debug');
             }
         }
 

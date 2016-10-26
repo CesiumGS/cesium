@@ -22,5 +22,8 @@ float czm_getSpecular(vec3 lightDirectionEC, vec3 toEyeEC, vec3 normalEC, float 
 {
     vec3 toReflectedLight = reflect(-lightDirectionEC, normalEC);
     float specular = max(dot(toReflectedLight, toEyeEC), 0.0);
-    return pow(specular, shininess);
+
+    // pow has undefined behavior if both parameters <= 0.
+    // Prevent this by making sure shininess is at least czm_epsilon2.
+    return pow(specular, max(shininess, czm_epsilon2));
 }

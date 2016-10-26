@@ -28,9 +28,11 @@ define([
      * viewer.extend(Cesium.viewerCesiumInspectorMixin);
      */
     function viewerCesiumInspectorMixin(viewer) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
+        //>>includeEnd('debug');
 
         var cesiumInspectorContainer = document.createElement('div');
         cesiumInspectorContainer.className = 'cesium-viewer-cesiumInspectorContainer';

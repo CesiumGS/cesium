@@ -903,9 +903,11 @@ define([
     }
 
     function parseBinaryGltfHeader(uint8Array) {
+        //>>includeStart('debug', pragmas.debug);
         if (!containsGltfMagic(uint8Array)) {
             throw new DeveloperError('bgltf is not a valid Binary glTF file.');
         }
+        //>>includeEnd('debug');
 
         var view = new DataView(uint8Array.buffer, uint8Array.byteOffset, uint8Array.byteLength);
         var byteOffset = 0;
@@ -2274,8 +2276,8 @@ define([
             WebGLConstants.FUNC_ADD]);
         var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
             WebGLConstants.ONE,
-            WebGLConstants.ONE,
             WebGLConstants.ZERO,
+            WebGLConstants.ONE,
             WebGLConstants.ZERO]);
         var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
         var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
@@ -2329,8 +2331,8 @@ define([
                 equationRgb : blendEquationSeparate[0],
                 equationAlpha : blendEquationSeparate[1],
                 functionSourceRgb : blendFuncSeparate[0],
-                functionSourceAlpha : blendFuncSeparate[1],
-                functionDestinationRgb : blendFuncSeparate[2],
+                functionDestinationRgb : blendFuncSeparate[1],
+                functionSourceAlpha : blendFuncSeparate[2],
                 functionDestinationAlpha : blendFuncSeparate[3]
             }
         });
@@ -2895,8 +2897,7 @@ define([
                 else {
                     var positions = accessors[primitive.attributes.POSITION];
                     count = positions.count;
-                    var accessorInfo = getBinaryAccessor(positions);
-                    offset = (positions.byteOffset / (accessorInfo.componentsPerAttribute*ComponentDatatype.getSizeInBytes(positions.componentType)));
+                    offset = 0;
                 }
 
                 var um = uniformMaps[primitive.material];
