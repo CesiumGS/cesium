@@ -786,6 +786,13 @@ define([
         var textureMatrix = textureMatrixScratch;
         var tangentRotationMatrix = tangentRotationMatrixScratch;
         if (defined(stRotation)) {
+
+            // Someone down the line does not like zeros in the textureMatrix. This appears to fix the
+            // issue with scaling the texture inside the Rectangle, but it's not  obvious why
+            if (stRotation === 0.0) {
+                stRotation = CesiumMath.EPSILON20;
+            }
+
             // negate angle for a counter-clockwise rotation
             Matrix2.fromRotation(-stRotation, textureMatrix);
             var center = Rectangle.center(rectangle, centerScratch);
