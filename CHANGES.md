@@ -28,6 +28,7 @@ Change Log
 * Add `clusterBillboards`, `clusterLabels`, and `cluserPoints` properties to `EntityCluster` to selectively cluster screen space entities.
 * Fix a issue where a billboard entity would not render after toggling the show propery. [#4408](https://github.com/AnalyticalGraphicsInc/cesium/issues/4408)
 * Added `Transforms.northUpEastToFixedFrame` to compute a 4x4 local transformation matrix from a reference frame with an north-west-up axes.
+* Fixed `RectangleGeometry` rotation when the rectangle is close to the international date line [#3874](https://github.com/AnalyticalGraphicsInc/cesium/issues/3874)
 * Added `HeadingPitchRoll` :
     * `HeadingPitchRoll.fromQuaternion` function for retrieving heading-pitch-roll angles from a quaternion.
     * `HeadingPitchRoll.fromDegrees` function that returns a new HeadingPitchRoll instance from angles given in degrees.
@@ -35,7 +36,9 @@ Change Log
     * `HeadingPitchRoll.equals` and `HeadingPitchRoll.equalsEpsilon` functions for comparing two instances.
 * Added `Matrix3.fromHeadingPitchRoll` Computes a 3x3 rotation matrix from the provided headingPitchRoll.
 * `Transforms.headingPitchRollToFixedFrame` and `Transforms.headingPitchRollQuaternion` now take a `HeadingPitchRoll` object in addition to separate heading, pitch, and roll values.  Separate values will be deprecated in 1.30.
+* Prevent execution of default device/browser behaviour when handling "pinch" touch event/gesture.
 * Fixed a crash when zooming from touch input on viewer initialization. [#4177](https://github.com/AnalyticalGraphicsInc/cesium/issues/4177)
+* Fix warning when using Webpack. [#4467](https://github.com/AnalyticalGraphicsInc/cesium/pull/4467)
 
 ### 1.26 - 2016-10-03
 
