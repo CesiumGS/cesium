@@ -147,8 +147,10 @@ define([
 
         if (!defined(item._labelCollection) && defined(item.id) && defined(item.id._label)) {
             var labelIndex = item.id._labelIndex;
-            var label = entityCluster._labelCollection.get(labelIndex);
-            label.clusterShow = true;
+            if (defined(labelIndex)) {
+                var label = entityCluster._labelCollection.get(labelIndex);
+                label.clusterShow = true;
+            }
         }
     }
 
