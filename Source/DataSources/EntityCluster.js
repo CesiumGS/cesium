@@ -801,6 +801,8 @@ define([
         this._clusterLabelCollection = undefined;
         this._clusterPointCollection = undefined;
 
+        this._collectionIndicesByEntity = undefined;
+
         this._unusedLabelIndices = [];
         this._unusedBillboardIndices = [];
         this._unusedPointIndices = [];
