@@ -87,7 +87,7 @@ define([
         this._clusterLabelCollection = undefined;
         this._clusterPointCollection = undefined;
 
-        this._collectionIndicesByEntity = Object.create(null);
+        this._collectionIndicesByEntity = {};
 
         this._unusedLabelIndices = [];
         this._unusedBillboardIndices = [];
@@ -531,12 +531,15 @@ define([
 
     function createGetEntity(collectionProperty, CollectionConstructor, unusedIndicesProperty, entityIndexProperty) {
         return function(entity) {
-            var context = this;
-            var collection = context[collectionProperty];
-            var entityIndices = context._collectionIndicesByEntity[entity.id];
+            var collection = this[collectionProperty];
+            var entityIndices = this._collectionIndicesByEntity[entity.id];
 
             if (!defined(entityIndices)) {
-                entityIndices = context._collectionIndicesByEntity[entity.id] = Object.create(null);
+                entityIndices = this._collectionIndicesByEntity[entity.id] = {
+                    billboardIndex: undefined,
+                    labelIndex: undefined,
+                    pointIndex: undefined
+                };
             }
 
             if (defined(collection) && defined(entityIndices[entityIndexProperty])) {
@@ -544,15 +547,15 @@ define([
             }
 
             if (!defined(collection)) {
-                collection = context[collectionProperty] = new CollectionConstructor({
-                    scene : context._scene
+                collection = this[collectionProperty] = new CollectionConstructor({
+                    scene : this._scene
                 });
             }
 
             var index;
             var entityItem;
 
-            var unusedIndices = context[unusedIndicesProperty];
+            var unusedIndices = this[unusedIndicesProperty];
             if (unusedIndices.length > 0) {
                 index = unusedIndices.pop();
                 entityItem = collection.get(index);
@@ -563,7 +566,7 @@ define([
 
             entityIndices[entityIndexProperty] = index;
 
-            context._clusterDirty = true;
+            this._clusterDirty = true;
 
             return entityItem;
         };
