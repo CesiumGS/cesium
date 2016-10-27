@@ -101,6 +101,7 @@ var tilesets = [{
                 //viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
         var properties = tileset.properties;
+                /*
         if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
             tileset.style = new Cesium.Cesium3DTileStyle({
 //              "color" : "color('#BAA5EC')",
@@ -126,6 +127,16 @@ var tilesets = [{
             });
             addStyleUI();
         }
+        */
+
+                tileset.style = new Cesium.Cesium3DTileStyle({
+                    "color" : "rgb(100, 255, 190)",
+                    "outlineColor" : "rgb(255, 0, 0)",
+                    "outlineWidth" : "10",
+                    "labelStyle" : "2",
+                    "font" : "'50px cursive'"
+                });
+                addStyleUI();
 
                 tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
                     if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
@@ -453,6 +464,7 @@ Sandcastle.addToolbarButton('Dynamic SSE factor--', function() {
         }
 
 function styleFunction(name) {
+    /*
     var conditions = [];
     var intervalSize = Math.floor(100/numberofColors);
     for (var i = numberofColors; i >= 0; --i) {
@@ -466,6 +478,15 @@ function styleFunction(name) {
             conditions : conditions
         },
         show : '${' + name + '} >= 0'
+    });
+    */
+
+    var r = Math.floor(Math.random() * 255);
+    var g = Math.floor(Math.random() * 255);
+    var b = Math.floor(Math.random() * 255);
+    tileset.style = new Cesium.Cesium3DTileStyle({
+        color : 'rgb(' + r + ', ' + g + ', ' + b + ')',
+        outlineColor : 'rgb(' + b + ', ' + g + ', ' + r + ')'
     });
 
             currentPropertyName = name;

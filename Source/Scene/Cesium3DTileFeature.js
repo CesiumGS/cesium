@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/defined',
         '../Core/defineProperties'
     ], function(
         Color,
+        defined,
         defineProperties) {
     'use strict';
 
@@ -44,6 +46,7 @@ define([
     function Cesium3DTileFeature(tileset, content, batchId) {
         this._content = content;
         this._batchTable = content.batchTable;
+        this._labelCollection = content._labelCollection;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
 
@@ -69,10 +72,19 @@ define([
          */
         show : {
             get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.show;
+                }
                 return this._batchTable.getShow(this._batchId);
             },
             set : function(value) {
-                this._batchTable.setShow(this._batchId, value);
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.show = value;
+                } else {
+                    this._batchTable.setShow(this._batchId, value);
+                }
             }
         },
 
@@ -92,13 +104,87 @@ define([
          */
         color : {
             get : function() {
-                if (!this._color) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.fillColor;
+                }
+
+                if (!defined(this._color)) {
                     this._color = new Color();
                 }
                 return this._batchTable.getColor(this._batchId, this._color);
             },
             set : function(value) {
-                this._batchTable.setColor(this._batchId, value);
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.fillColor = value;
+                } else {
+                    this._batchTable.setColor(this._batchId, value);
+                }
+            }
+        },
+
+        font : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.font;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.font = value;
+                }
+            }
+        },
+
+        outlineColor : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.outlineColor;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.outlineColor = value;
+                }
+            }
+        },
+
+        outlineWidth : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.outlineWidth;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.outlineWidth = value;
+                }
+            }
+        },
+
+        labelStyle : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.style;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.style = value;
+                }
             }
         }
     });
