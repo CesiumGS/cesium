@@ -133,8 +133,8 @@ define([
 
         expandBoundingBox(result, pixelRange);
 
-        if (entityCluster._clusterLabels && !defined(item._labelCollection) && defined(item.id) && defined(item.id._label) && defined(entityCluster._labelCollection)) {
-            var labelIndex = item.id._labelIndex;
+        if (entityCluster._clusterLabels && !defined(item._labelCollection) && defined(item.id) && hasLabelIndex(entityCluster, item.id) && defined(item.id._label)) {
+            var labelIndex = entityCluster._collectionIndicesByEntity[item.id];
             var label = entityCluster._labelCollection.get(labelIndex);
             var labelBBox = Label.getScreenSpaceBoundingBox(label, coord, labelBoundingBoxScratch);
             expandBoundingBox(labelBBox, pixelRange);
@@ -147,8 +147,8 @@ define([
     function addNonClusteredItem(item, entityCluster) {
         item.clusterShow = true;
 
-        if (!defined(item._labelCollection) && defined(item.id) && defined(item.id._label)) {
-            var labelIndex = item.id._labelIndex;
+        if (!defined(item._labelCollection) && defined(item.id) && hasLabelIndex(entityCluster, item.id) && defined(item.id._label)) {
+            var labelIndex = entityCluster._collectionIndicesByEntity[item.id];
             var label = entityCluster._labelCollection.get(labelIndex);
             label.clusterShow = true;
         }
@@ -168,6 +168,10 @@ define([
         cluster.billboard.position = cluster.label.position = cluster.point.position = position;
         
         entityCluster._clusterEvent.raiseEvent(ids, cluster);
+    }
+
+    function hasLabelIndex(entityCluster, entityId) {
+        return defined(entityCluster) && defined(entityCluster._collectionIndicesByEntity[entityId]) && defined(entityCluster._collectionIndicesByEntity[entityId].labelIndex);
     }
 
     function getScreenSpacePositions(collection, points, scene, occluder, entityCluster) {
