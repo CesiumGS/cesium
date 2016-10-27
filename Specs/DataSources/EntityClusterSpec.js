@@ -304,6 +304,35 @@ defineSuite([
         expect(cluster._collectionIndicesByEntity[entity.id]).toBeUndefined();
     });
 
+    it('can destroy cluster and re-add entities', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity1 = new Entity();
+        var billboard = cluster.getBillboard(entity1);
+        billboard.id = entity1;
+
+        var entity2 = new Entity();
+        var label = cluster.getLabel(entity2);
+        label.id = entity2;
+
+        var entity3 = new Entity();
+        var point = cluster.getPoint(entity3);
+        point.id = entity3;
+
+        cluster.destroy();
+        expect(cluster._billboardCollection).not.toBeDefined();
+        expect(cluster._labelCollection).not.toBeDefined();
+        expect(cluster._pointCollection).not.toBeDefined();
+
+        expect(cluster.getBillboard(entity1)).toBeDefined();
+        expect(cluster.getLabel(entity2)).toBeDefined();
+        expect(cluster.getPoint(entity3)).toBeDefined();
+        expect(cluster._billboardCollection).toBeDefined();
+        expect(cluster._labelCollection).toBeDefined();
+        expect(cluster._pointCollection).toBeDefined();
+    });
+
 
     it('does not remove entity collection indices when at least one of billboard, label and point remain', function() {
         cluster = new EntityCluster();

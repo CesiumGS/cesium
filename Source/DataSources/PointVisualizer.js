@@ -248,6 +248,10 @@ define([
      */
     PointVisualizer.prototype.destroy = function() {
         this._entityCollection.collectionChanged.removeEventListener(PointVisualizer.prototype._onCollectionChanged, this);
+        var entities = this._entityCollection.values;
+        for (var i = 0; i < entities.length; i++) {
+            this._cluster.removePoint(entities[i]);
+        }
         return destroyObject(this);
     };
 

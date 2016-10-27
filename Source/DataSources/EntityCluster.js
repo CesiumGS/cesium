@@ -536,6 +536,11 @@ define([
     function createGetEntity(collectionProperty, CollectionConstructor, unusedIndicesProperty, entityIndexProperty) {
         return function(entity) {
             var collection = this[collectionProperty];
+
+            if (!defined(this._collectionIndicesByEntity)) {
+                this._collectionIndicesByEntity = {};
+            }
+
             var entityIndices = this._collectionIndicesByEntity[entity.id];
 
             if (!defined(entityIndices)) {
@@ -601,7 +606,7 @@ define([
      * @private
      */
     EntityCluster.prototype.removeLabel = function(entity) {
-        var entityIndices = this._collectionIndicesByEntity[entity.id];
+        var entityIndices = this._collectionIndicesByEntity && this._collectionIndicesByEntity[entity.id];
         if (!defined(this._labelCollection) || !defined(entityIndices) || !defined(entityIndices.labelIndex)) {
             return;
         }
@@ -637,7 +642,7 @@ define([
      * @private
      */
     EntityCluster.prototype.removeBillboard = function(entity) {
-        var entityIndices = this._collectionIndicesByEntity[entity.id];
+        var entityIndices = this._collectionIndicesByEntity && this._collectionIndicesByEntity[entity.id];
         if (!defined(this._billboardCollection) || !defined(entityIndices) || !defined(entityIndices.billboardIndex)) {
             return;
         }
@@ -672,7 +677,7 @@ define([
      * @private
      */
     EntityCluster.prototype.removePoint = function(entity) {
-        var entityIndices = this._collectionIndicesByEntity[entity.id];
+        var entityIndices = this._collectionIndicesByEntity && this._collectionIndicesByEntity[entity.id];
         if (!defined(this._pointCollection) || !defined(entityIndices) || !defined(entityIndices.pointIndex)) {
             return;
         }
