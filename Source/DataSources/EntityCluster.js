@@ -572,6 +572,14 @@ define([
         };
     }
 
+    function removeEntityIndicesIfUnused(entityCluster, entityId) {
+        var indices = entityCluster._collectionIndicesByEntity[entityId];
+
+        if (!defined(indices.billboardIndex) && !defined(indices.labelIndex) && !defined(indices.pointIndex)) {
+            delete entityCluster._collectionIndicesByEntity[entityId];
+        }
+    }
+
     /**
      * Returns a new {@link Label}.
      * @param {Entity} entity The entity that will use the returned {@link Label} for visualization.
@@ -590,12 +598,13 @@ define([
      */
     EntityCluster.prototype.removeLabel = function(entity) {
         var entityIndices = this._collectionIndicesByEntity[entity.id];
-        if (!defined(this._labelCollection) || !defined(entityIndices.labelIndex)) {
+        if (!defined(this._labelCollection) || !defined(entityIndices) || !defined(entityIndices.labelIndex)) {
             return;
         }
 
         var index = entityIndices.labelIndex;
         entityIndices.labelIndex = undefined;
+        removeEntityIndicesIfUnused(this, entity.id);
 
         var label = this._labelCollection.get(index);
         label.show = false;
@@ -625,12 +634,13 @@ define([
      */
     EntityCluster.prototype.removeBillboard = function(entity) {
         var entityIndices = this._collectionIndicesByEntity[entity.id];
-        if (!defined(this._billboardCollection) || !defined(entityIndices.billboardIndex)) {
+        if (!defined(this._billboardCollection) || !defined(entityIndices) || !defined(entityIndices.billboardIndex)) {
             return;
         }
 
         var index = entityIndices.billboardIndex;
         entityIndices.billboardIndex = undefined;
+        removeEntityIndicesIfUnused(this, entity.id);
 
         var billboard = this._billboardCollection.get(index);
         billboard.id = undefined;
@@ -659,12 +669,13 @@ define([
      */
     EntityCluster.prototype.removePoint = function(entity) {
         var entityIndices = this._collectionIndicesByEntity[entity.id];
-        if (!defined(this._pointCollection) || !defined(entityIndices.pointIndex)) {
+        if (!defined(this._pointCollection) || !defined(entityIndices) || !defined(entityIndices.pointIndex)) {
             return;
         }
 
         var index = entityIndices.pointIndex;
         entityIndices.pointIndex = undefined;
+        removeEntityIndicesIfUnused(this, entity.id);
 
         var point = this._pointCollection.get(index);
         point.show = false;
