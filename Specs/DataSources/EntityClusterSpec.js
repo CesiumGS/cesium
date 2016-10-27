@@ -239,6 +239,116 @@ defineSuite([
         expect(cluster._clusterLabelCollection).not.toBeDefined();
     });
 
+    it('clusters points that have labels', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        var point = cluster.getPoint(entity);
+        point.id = entity;
+        point.pixelSize = 1;
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        entity = new Entity();
+        point = cluster.getPoint(entity);
+        point.id = entity;
+        point.pixelSize = 1;
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+
+        var frameState = scene.frameState;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+
+        point.id.label = cluster.getLabel(entity);
+
+        cluster.enabled = true;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).toBeDefined();
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+
+        cluster.clusterPoints = false;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+    });
+
+    it('records entity collection indices on getting billboard, label and point', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        cluster.getBillboard(entity);
+        cluster.getLabel(entity);
+        cluster.getPoint(entity);
+
+        expect(cluster._collectionIndicesByEntity[entity.id].billboardIndex).toBeDefined();
+        expect(cluster._collectionIndicesByEntity[entity.id].labelIndex).toBeDefined();
+        expect(cluster._collectionIndicesByEntity[entity.id].pointIndex).toBeDefined();
+    });
+
+    it('removes entity collection indices when billboard, label and point have been removed', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        cluster.getBillboard(entity);
+        cluster.getLabel(entity);
+        cluster.getPoint(entity);
+
+        cluster.removeBillboard(entity);
+        cluster.removeLabel(entity);
+        cluster.removePoint(entity);
+
+        expect(cluster._collectionIndicesByEntity[entity.id]).toBeUndefined();
+    });
+
+    it('can destroy cluster and re-add entities', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity1 = new Entity();
+        var billboard = cluster.getBillboard(entity1);
+        billboard.id = entity1;
+
+        var entity2 = new Entity();
+        var label = cluster.getLabel(entity2);
+        label.id = entity2;
+
+        var entity3 = new Entity();
+        var point = cluster.getPoint(entity3);
+        point.id = entity3;
+
+        cluster.destroy();
+        expect(cluster._billboardCollection).not.toBeDefined();
+        expect(cluster._labelCollection).not.toBeDefined();
+        expect(cluster._pointCollection).not.toBeDefined();
+
+        expect(cluster.getBillboard(entity1)).toBeDefined();
+        expect(cluster.getLabel(entity2)).toBeDefined();
+        expect(cluster.getPoint(entity3)).toBeDefined();
+        expect(cluster._billboardCollection).toBeDefined();
+        expect(cluster._labelCollection).toBeDefined();
+        expect(cluster._pointCollection).toBeDefined();
+    });
+
+
+    it('does not remove entity collection indices when at least one of billboard, label and point remain', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        cluster.getBillboard(entity);
+        cluster.getLabel(entity);
+        cluster.getPoint(entity);
+
+        cluster.removeBillboard(entity);
+        cluster.removeLabel(entity);
+
+        expect(cluster._collectionIndicesByEntity[entity.id]).toBeDefined();
+    });
+
     it('pixel range', function() {
         cluster = new EntityCluster();
         cluster._initialize(scene);
