@@ -233,6 +233,41 @@ defineSuite([
         expect(cluster._clusterLabelCollection).not.toBeDefined();
     });
 
+    it('clusters points that have labels', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        var point = cluster.getPoint(entity);
+        point.id = entity;
+        point.pixelSize = 1;
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        entity = new Entity();
+        point = cluster.getPoint(entity);
+        point.id = entity;
+        point.pixelSize = 1;
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+
+        var frameState = scene.frameState;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+
+        point.id.label = cluster.getLabel(entity);
+
+        cluster.enabled = true;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).toBeDefined();
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+
+        cluster.clusterPoints = false;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+    });
+
     it('records entity collection indices on getting billboard, label and point', function() {
         cluster = new EntityCluster();
         cluster._initialize(scene);
