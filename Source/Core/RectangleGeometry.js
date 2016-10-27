@@ -802,6 +802,7 @@ define([
         options.textureMatrix = textureMatrix;
         options.tangentRotationMatrix = tangentRotationMatrix;
         options.size = options.width * options.height;
+        options.stRotation = stRotation;
 
         var geometry;
         var boundingSphere;
