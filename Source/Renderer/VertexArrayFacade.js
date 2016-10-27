@@ -122,6 +122,7 @@ define([
             };
             attrs.push(attr);
 
+            //>>includeStart('debug', pragmas.debug);
             if ((attr.componentsPerAttribute !== 1) && (attr.componentsPerAttribute !== 2) && (attr.componentsPerAttribute !== 3) && (attr.componentsPerAttribute !== 4)) {
                 throw new DeveloperError('attribute.componentsPerAttribute must be in the range [1, 4].');
             }
@@ -134,6 +135,7 @@ define([
             if (!BufferUsage.validate(attr.usage)) {
                 throw new DeveloperError('Attribute must have a valid usage or not specify it.');
             }
+            //>>includeEnd('debug');
         }
 
         // Verify all attribute names are unique.
@@ -141,9 +143,11 @@ define([
         for ( var j = 0; j < attrs.length; ++j) {
             var currentAttr = attrs[j];
             var index = currentAttr.index;
+            //>>includeStart('debug', pragmas.debug);
             if (uniqueIndices[index]) {
                 throw new DeveloperError('Index ' + index + ' is used by more than one attribute.');
             }
+            //>>includeEnd('debug');
             uniqueIndices[index] = true;
         }
 

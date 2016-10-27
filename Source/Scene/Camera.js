@@ -2729,11 +2729,11 @@ define([
         if (!defined(boundingSphere)) {
             throw new DeveloperError('boundingSphere is required.');
         }
-        //>>includeEnd('debug');
 
         if (this._mode === SceneMode.MORPHING) {
             throw new DeveloperError('viewBoundingSphere is not supported while morphing.');
         }
+        //>>includeEnd('debug');
 
         offset = adjustBoundingSphereOffset(this, boundingSphere, offset);
         this.lookAt(boundingSphere.center, offset);

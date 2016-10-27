@@ -667,8 +667,9 @@ define([
         var i = 1;
         while (i < buffer.length) {
             if (buffer[i++] === 1.0) {
-                result[count++] = BoundingSphere.unpack(buffer, i);
+                result[count] = BoundingSphere.unpack(buffer, i);
             }
+            ++count;
             i += BoundingSphere.packedLength;
         }
 

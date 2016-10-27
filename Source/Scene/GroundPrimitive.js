@@ -11,7 +11,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeographicTilingScheme',
@@ -51,7 +50,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         GeographicTilingScheme,
@@ -1065,7 +1063,9 @@ define([
                     }
                     //>>includeEnd('debug');
                 } else {
+                    //>>includeStart('debug', pragmas.debug);
                     throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
+                    //>>includeEnd('debug');
                 }
             }
 
