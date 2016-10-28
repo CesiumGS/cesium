@@ -75,6 +75,7 @@ defineSuite([
     var withBoundingSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithBoundingSphere/';
 
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
+    var instancedRedMaterialUrl = './Data/Cesium3DTiles/Instanced/InstancedRedMaterial';
 
     // 1 tile where each feature is a different source color
     var colorsUrl = './Data/Cesium3DTiles/Batched/BatchedColors/';
@@ -1509,8 +1510,14 @@ defineSuite([
         });
     });
 
-    it('sets colorBlendMode for textured features', function() {
+    it('sets colorBlendMode for textured tileset', function() {
         return testColorBlendMode(texturedUrl);
+    });
+
+    it('sets colorBlendMode for instanced tileset', function() {
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 36.0));
+        return testColorBlendMode(instancedRedMaterialUrl);
     });
 
     ///////////////////////////////////////////////////////////////////////////

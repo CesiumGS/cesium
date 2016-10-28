@@ -549,12 +549,6 @@ define([
                    '} \n';
         }
 
-        //>>includeStart('debug', pragmas.debug);
-        if (((colorBlendMode === Cesium3DTileColorBlendMode.REPLACE) || (colorBlendMode === Cesium3DTileColorBlendMode.MIX)) && !defined(diffuseUniformName)) {
-            throw new DeveloperError('The glTF diffuse parameter must have a _3DTILESDIFFUSE semantic to support the replace or mix color blend mode');
-        }
-        //>>includeEnd('debug');
-
         // Find the diffuse uniform
         var regex = new RegExp('uniform\\s+(vec[34]|sampler2D)\\s+' + diffuseUniformName + ';');
         var uniformMatch = source.match(regex);

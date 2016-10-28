@@ -5,6 +5,11 @@ define([
         defined) {
     'use strict';
 
+    /**
+     * Get the diffuse uniform with the _3DTILESDIFFUSE semantic.
+     *
+     * @private
+     */
     function getDiffuseUniformName(gltf) {
         var techniques = gltf.techniques;
         for (var techniqueName in techniques) {
