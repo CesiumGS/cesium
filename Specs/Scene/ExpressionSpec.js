@@ -814,6 +814,24 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(false);
     });
 
+    it('evaluates abs function', function() {
+        var expression = new Expression('abs(-1)');
+        expect(expression.evaluate(undefined)).toEqual(1);
+
+        expression = new Expression('abs(1)');
+        expect(expression.evaluate(undefined)).toEqual(1);
+    });
+
+    it('throws if abs function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('abs()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('abs(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates ternary conditional', function() {
         var expression = new Expression('true ? "first" : "second"');
         expect(expression.evaluate(undefined)).toEqual('first');

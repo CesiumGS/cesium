@@ -338,6 +338,14 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'abs') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'Boolean') {
             if (args.length === 0) {
                 return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
@@ -567,6 +575,8 @@ define([
                 node.evaluate = node._evaluateNaN;
             } else if (node._value === 'isFinite') {
                 node.evaluate = node._evaluateIsFinite;
+            } else if (node._value === 'abs') {
+                node.evaluate = node._evaluateAbsoluteValue;
             } else if (node._value === 'Boolean') {
                 node.evaluate = node._evaluateBooleanConversion;
             } else if (node._value === 'Number') {
@@ -894,6 +904,10 @@ define([
         return isFinite(this._left.evaluate(feature));
     };
 
+    Node.prototype._evaluateAbsoluteValue = function(feature) {
+        return Math.abs(this._left.evaluate(feature));
+    };
+
     Node.prototype._evaluateBooleanConversion = function(feature) {
         return Boolean(this._left.evaluate(feature));
     };
@@ -1111,6 +1125,8 @@ define([
                     return 'bool(' + left + ')';
                 } else if (value === 'Number') {
                     return 'float(' + left + ')';
+                } else if (value === 'abs') {
+                    return 'abs(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
                 else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
