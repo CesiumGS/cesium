@@ -12,7 +12,6 @@ define([
         '../Core/PixelFormat',
         '../Core/RuntimeError',
         '../Renderer/Framebuffer',
-        '../Renderer/RenderState',
         '../Renderer/Texture',
         '../ThirdParty/when'
     ], function(
@@ -28,7 +27,6 @@ define([
         PixelFormat,
         RuntimeError,
         Framebuffer,
-        RenderState,
         Texture,
         when) {
     'use strict';

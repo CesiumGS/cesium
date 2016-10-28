@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Core/loadJsonp',
-        'Core/DefaultProxy',
-        'Core/RequestErrorEvent'
+        'Core/DefaultProxy'
     ], function(
         loadJsonp,
-        DefaultProxy,
-        RequestErrorEvent) {
+        DefaultProxy) {
     'use strict';
 
     it('throws with no url', function() {

@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Core/OrientedBoundingBox',
-        'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Ellipsoid',
-        'Core/EllipsoidTangentPlane',
         'Core/Intersect',
         'Core/Math',
         'Core/Matrix3',
@@ -16,12 +14,10 @@ defineSuite([
         'Core/Rectangle'
     ], function(
         OrientedBoundingBox,
-        BoundingRectangle,
         BoundingSphere,
         Cartesian3,
         Cartesian4,
         Ellipsoid,
-        EllipsoidTangentPlane,
         Intersect,
         CesiumMath,
         Matrix3,

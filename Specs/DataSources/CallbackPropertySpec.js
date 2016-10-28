@@ -1,11 +1,9 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/CallbackProperty',
-        'Core/Cartesian3',
         'Core/JulianDate'
     ], function(
         CallbackProperty,
-        Cartesian3,
         JulianDate) {
     'use strict';
 

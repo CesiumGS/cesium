@@ -2,12 +2,10 @@
 define([
         '../ThirdParty/Uri',
         './defined',
-        './defineProperties',
         './DeveloperError'
     ], function(
         Uri,
         defined,
-        defineProperties,
         DeveloperError) {
     'use strict';
     
