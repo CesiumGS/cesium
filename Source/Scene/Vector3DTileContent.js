@@ -186,6 +186,9 @@ define([
         return true;
     };
 
+    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+    var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
@@ -193,16 +196,101 @@ define([
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
+        var magic = getMagic(uint8Array, byteOffset);
+        if (magic !== 'vctr') {
+            throw new DeveloperError('Invalid Vector tile.  Expected magic=vctr.  Read magic=' + magic);
+        }
 
-        var text = getStringFromTypedArray(uint8Array, byteOffset);
-        var json = JSON.parse(text);
+        var view = new DataView(arrayBuffer);
+        byteOffset += sizeOfUint32;  // Skip magic number
 
-        var labels = json.labels;
-        var length = labels.length;
+        //>>includeStart('debug', pragmas.debug);
+        var version = view.getUint32(byteOffset, true);
+        if (version !== 1) {
+            throw new DeveloperError('Only Vector tile version 1 is supported.  Version ' + version + ' is not.');
+        }
+        //>>includeEnd('debug');
+        byteOffset += sizeOfUint32;
 
+        var byteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+
+        if (byteLength === 0) {
+            this.state = Cesium3DTileContentState.PROCESSING;
+            this._contentReadyToProcessPromise.resolve(this);
+            this.state = Cesium3DTileContentState.READY;
+            this._readyPromise.resolve(this);
+            return;
+        }
+
+        var featureTableJSONByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+
+        /*
+        //>>includeStart('debug', pragmas.debug);
+        if (featureTableJSONByteLength === 0) {
+            throw new DeveloperError('Feature table must have a byte length greater than zero');
+        }
+        //>>includeEnd('debug');
+        */
+
+        var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+        var batchTableJSONByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+        var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+        var textByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+        var positionByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+
+        // padding for byte alignment
+        byteOffset += 7 * sizeOfUint32;
+
+        // TODO:
+        var featureTableJson;
+        var featureTableBinary;
+        if (featureTableJSONByteLength > 0) {
+            var featureTableString = getStringFromTypedArray(uint8Array, byteOffset, featureTableJSONByteLength);
+            featureTableJson = JSON.parse(featureTableString);
+            byteOffset += featureTableJSONByteLength;
+
+            featureTableBinary = new Uint8Array(arrayBuffer, byteOffset, featureTableBinaryByteLength);
+            byteOffset += featureTableBinaryByteLength;
+        }
+
+        var batchTableJson;
+        var batchTableBinary;
+        if (batchTableJSONByteLength > 0) {
+            // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
+            // arraybuffer/string compressed in memory and then decompress it when it is first accessed.
+            //
+            // We could also make another request for it, but that would make the property set/get
+            // API async, and would double the number of numbers in some cases.
+            var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableJSONByteLength);
+            batchTableJson = JSON.parse(batchTableString);
+            byteOffset += batchTableJSONByteLength;
+
+            if (batchTableBinaryByteLength > 0) {
+                // Has a batch table binary
+                batchTableBinary = new Uint8Array(arrayBuffer, byteOffset, batchTableBinaryByteLength);
+                // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+                batchTableBinary = new Uint8Array(batchTableBinary);
+                byteOffset += batchTableBinaryByteLength;
+            }
+        }
+
+        var textString = getStringFromTypedArray(uint8Array, byteOffset, textByteLength);
+        var text = JSON.parse(textString);
+        byteOffset += textByteLength;
+
+        var positions = new Float64Array(arrayBuffer, byteOffset, positionByteLength / sizeOfFloat64);
+
+        var length = text.length;
         this._featuresLength = length;
 
-        var batchTable = new Cesium3DTileBatchTable(this, length, json.batchTable, undefined);
+        var batchTable = new Cesium3DTileBatchTable(this, length, batchTableJson, batchTableBinary);
         this.batchTable = batchTable;
 
         var labelCollection = new LabelCollection({
@@ -211,13 +299,11 @@ define([
         var polylineCollection = new PolylineCollection();
 
         for (var i = 0; i < length; ++i) {
-            var label = labels[i];
-            var labelText = label.text;
-            var cartographicArray = label.position;
+            var labelText = text[i];
 
-            var lon = cartographicArray[0];
-            var lat = cartographicArray[1];
-            var alt = defaultValue(cartographicArray[2], 0.0);
+            var lon = positions[i * 3];
+            var lat = positions[i * 3 + 1];
+            var alt = positions[i * 3 + 2];
 
             var cartographic = new Cartographic(lon, lat, alt);
             var position = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
