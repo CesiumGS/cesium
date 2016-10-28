@@ -1622,14 +1622,14 @@ defineSuite([
             });
             scene.renderForSpecs();
 
-            var originalDimensions = label._glyphs[0].dimensions;
+            var originalBbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
 
             label.text = 'apl\napl\napl';
             scene.renderForSpecs();
+            var newlinesBbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
 
-            var dimensions = label._glyphs[0].dimensions;
-            expect(dimensions.width).toBeLessThan(originalDimensions.width);
-            expect(dimensions.height).toBeGreaterThan(originalDimensions.height);
+            expect(newlinesBbox.width).toBeLessThan(originalBbox.width);
+            expect(newlinesBbox.height).toBeGreaterThan(originalBbox.height);
         });
 
     }, 'WebGL');
