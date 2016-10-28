@@ -109,3 +109,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Jorge Piera Llodra](https://github.com/jorpiell)
 * [Tom Payne](https://github.com/twpayne)
 * [Leesa Fini](https://github.com/leesafini)
+* [Victor Malaret](https://github.com/malaretv)
