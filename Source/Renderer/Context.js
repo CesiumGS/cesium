@@ -757,7 +757,13 @@ define([
         }
     });
 
+    /**
+     * Validates a framebuffer.
+     * Available in debug builds only.
+     * @private
+     */
     function validateFramebuffer(context, framebuffer) {
+        //>>includeStart('debug', pragmas.debug);
         if (context.validateFramebuffer) {
             var gl = context._gl;
             var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
@@ -783,6 +789,7 @@ define([
                 throw new DeveloperError(message);
             }
         }
+        //>>includeEnd('debug');
     }
 
     function applyRenderState(context, renderState, passState, clear) {
