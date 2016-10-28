@@ -148,6 +148,8 @@ define([
 
         this._refineToVisible = defaultValue(options.refineToVisible, false);
 
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
+
         /**
          * Whether the tileset should should refine based on a dynamic screen space error. Tiles that are further
          * away will be rendered with lower detail than closer tiles. This improves performance by rendering fewer
@@ -752,6 +754,12 @@ define([
             get : function() {
                 return this._styleEngine;
             }
+        },
+
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            }
         }
     });
 
@@ -1124,6 +1132,12 @@ define([
             t.selected = false;
             t.replaced = false;
             ++stats.visited;
+
+            var displayCondition = tileset.distanceDisplayCondition;
+            var distanceToCamera = t.distanceToCamera;
+            if (defined(displayCondition) && (distanceToCamera < displayCondition.near || distanceToCamera > displayCondition.far)) {
+                continue;
+            }
 
             var visibilityPlaneMask = t.visibilityPlaneMask;
             var fullyVisible = (visibilityPlaneMask === CullingVolume.MASK_INSIDE);

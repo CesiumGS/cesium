@@ -298,6 +298,8 @@ define([
         });
         var polylineCollection = new PolylineCollection();
 
+        var displayCondition = this._tileset.distanceDisplayCondition;
+
         for (var i = 0; i < length; ++i) {
             var labelText = text[i];
 
@@ -314,10 +316,12 @@ define([
             labelCollection.add({
                 text : labelText,
                 position : offsetPosition,
-                horizontalOrigin : HorizontalOrigin.CENTER
+                horizontalOrigin : HorizontalOrigin.CENTER,
+                distanceDisplayCondition : displayCondition
             });
             polylineCollection.add({
-                positions : [position, offsetPosition]
+                positions : [position, offsetPosition],
+                distanceDisplayCondition : displayCondition
             });
 
             this.batchTable.setColor(i, Color.WHITE);
