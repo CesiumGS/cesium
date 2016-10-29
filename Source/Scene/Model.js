@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/clone',
+        '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -66,6 +67,7 @@ define([
         Cartesian4,
         Cartographic,
         clone,
+        Color,
         combine,
         ComponentDatatype,
         defaultValue,
@@ -321,6 +323,8 @@ define([
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      * @param {DistanceDisplayCondition} [options.istanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
+     * @param {Color} [options.blendColor=Color.RED] A color that blends with the model's rendered color.
+     * @param {Number} [options.blendAmount=0.0] Value used to mix between the render color and blend color. A value of 0.0 results in no blending while a value of 1.0 results in a solid blend color.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -515,6 +519,24 @@ define([
          */
         this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
         this._shadows = this.shadows;
+
+        /**
+         * A color that blends with the model's rendered color.
+         *
+         * @type {Color}
+         *
+         * @default Color.RED
+         */
+        this.blendColor = defaultValue(options.blendColor, Color.RED);
+
+        /**
+         * Value used to mix between the render color and blend color. A value of 0.0 results in no blending while a value of 1.0 results in a solid blend color.
+         *
+         * @type {Number}
+         *
+         * @default 0.0
+         */
+        this.blendAmount = defaultValue(options.blendAmount, 0.0);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -1719,6 +1741,19 @@ define([
         return shader;
     }
 
+    function modifyShaderForBlendColor(shader) {
+        shader = ShaderSource.replaceMain(shader, 'czm_blend_main');
+        shader +=
+            'uniform vec4 czm_blendColor; \n' +
+            'uniform float czm_blendAmount; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_blend_main(); \n' +
+            '    gl_FragColor.rgb = mix(gl_FragColor.rgb, czm_blendColor.rgb, czm_blendAmount); \n' +
+            '} \n';
+        return shader;
+    }
+
     function modifyShader(shader, programName, callback) {
         if (defined(callback)) {
             shader = callback(shader, programName);
@@ -1750,8 +1785,10 @@ define([
             vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
         }
 
+        var blendFS = modifyShaderForBlendColor(fs);
+
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
+        var drawFS = modifyShader(blendFS, id, model._fragmentShaderLoaded);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -2841,6 +2878,18 @@ define([
         };
     }
 
+    function createBlendColorFunction(model) {
+        return function() {
+            return model.blendColor;
+        };
+    }
+
+    function createBlendAmountFunction(model) {
+        return function() {
+            return model.blendAmount;
+        };
+    }
+
     function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
@@ -2908,6 +2957,11 @@ define([
 
                     uniformMap = combine(uniformMap, jointUniformMap);
                 }
+
+                uniformMap = combine(uniformMap, {
+                    czm_blendColor : createBlendColorFunction(model),
+                    czm_blendAmount : createBlendAmountFunction(model)
+                });
 
                 // Allow callback to modify the uniformMap
                 if (defined(model._uniformMapLoaded)) {

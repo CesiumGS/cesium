@@ -41,6 +41,7 @@ Change Log
 * Fix warning when using Webpack. [#4467](https://github.com/AnalyticalGraphicsInc/cesium/pull/4467)
 * Fix primitive bounding sphere bug that would cause a crash when loading data sources. [#4431](https://github.com/AnalyticalGraphicsInc/cesium/issues/4431)
 * Fix a crash when clustering is enabled, an entity has a label graphics defined, but the label isn't visible. [#4414](https://github.com/AnalyticalGraphicsInc/cesium/issues/4414)
+* Added the ability to blend a `Model` with a color. [#4547](https://github.com/AnalyticalGraphicsInc/cesium/pull/4547)
 
 ### 1.26 - 2016-10-03
 

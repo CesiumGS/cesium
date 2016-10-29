@@ -6,6 +6,7 @@ defineSuite([
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
         'Core/clone',
+        'Core/Color',
         'Core/combine',
         'Core/defaultValue',
         'Core/defined',
@@ -38,6 +39,7 @@ defineSuite([
         Cartesian4,
         CesiumTerrainProvider,
         clone,
+        Color,
         combine,
         defaultValue,
         defined,
@@ -1866,6 +1868,34 @@ defineSuite([
 
             m.show = false;
             primitives.remove(m);
+        });
+    });
+
+    it('renders with a blend color', function() {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            // Model is originally red
+            var sourceColor = scene.renderForSpecs();
+            expect(sourceColor[0]).toBeGreaterThan(0);
+            expect(sourceColor[1]).toEqual(0);
+
+            model.blendColor = Color.LIME;
+
+            model.blendAmount = 0.0;
+            var blendColor = scene.renderForSpecs();
+            expect(blendColor).toEqual(sourceColor);
+
+            model.blendAmount = 0.5;
+            blendColor = scene.renderForSpecs();
+            expect(blendColor[0]).toBeGreaterThan(0);
+            expect(blendColor[1]).toBeGreaterThan(0);
+
+            model.blendAmount = 1.0;
+            blendColor = scene.renderForSpecs();
+            expect(blendColor[0]).toEqual(0);
+            expect(blendColor[1]).toEqual(255);
         });
     });
 
