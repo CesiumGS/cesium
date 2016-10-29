@@ -927,9 +927,10 @@ require({
 
     registry.byId('buttonImport').on('click', function() {
         gistId = document.getElementById("gistId").value;
-        if (gistId.indexOf('/') !== -1) {
-            var index = gistId.lastIndexOf('/');
-            gistId = gistId.substring(index + 1);
+        var gistParameter = '&gist=';
+        var gistIndex = gistId.indexOf(gistParameter);
+        if (gistIndex !== -1) {
+            gistId = gistId.substring(gistIndex + gistParameter.length);
         }
         window.location.href = Cesium.getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + gistId;
     });
