@@ -168,6 +168,8 @@ require({
     var gistHtml;
     var sandcastleUrl = '';
 
+    var defaultHtml = '<style>\n@import url(../templates/bucket.css);\n</style>\n<div id=\"cesiumContainer\" class=\"fullSize\"></div>\n<div id=\"loadingOverlay\"><h1>Loading...</h1></div>\n<div id=\"toolbar\"></div>';
+
     var galleryErrorMsg = document.createElement('span');
     galleryErrorMsg.className = 'galleryError';
     galleryErrorMsg.style.display = 'none';
@@ -728,7 +730,8 @@ require({
                     .then(function(data) {
                         var files = data.data.files;
                         var code = files['Cesium-Sandcastle.js'].content;
-                        var html = files['Cesium-Sandcastle.html'].content;
+                        var htmlFile = files['Cesium-Sandcastle.html'];
+                        var html = Cesium.defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
                         jsEditor.setValue(code);
                         htmlEditor.setValue(html);
                         demoCode = code.replace(/\s/g, '');
