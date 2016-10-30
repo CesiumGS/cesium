@@ -45,6 +45,8 @@ var tilesets = [{
 }, {
     name : 'Translucent/Opaque', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/'
 }, {
+    name : 'Multi-color', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedColors/'
+}, {
     name : 'Request Volume', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/'
 }, {
     name : 'Batched', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/'
@@ -501,6 +503,26 @@ function addStyleUI() {
     });
     styleElements.push(button);
 
+    function setColorBlendMode(colorBlendMode) {
+        return function() {
+            tileset.colorBlendMode = colorBlendMode;
+        };
+    }
+
+    var menu = Sandcastle.addToolbarMenu([{
+        text : 'Color Blend Mode'
+    }, {
+        text : 'Highlight',
+        onselect : setColorBlendMode(Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT)
+    }, {
+        text : 'Replace',
+        onselect : setColorBlendMode(Cesium.Cesium3DTileColorBlendMode.REPLACE)
+    }, {
+        text : 'Mix',
+        onselect : setColorBlendMode(Cesium.Cesium3DTileColorBlendMode.MIX)
+    }]);
+    styleElements.push(menu);
+
     button = Sandcastle.addToolbarButton('colors++', function() {
         ++numberofColors;
         styleFunction(currentPropertyName);
@@ -550,7 +572,7 @@ function addStyleUI() {
        });
     }
 
-    var menu = Sandcastle.addToolbarMenu(operators);
+    menu = Sandcastle.addToolbarMenu(operators);
     styleElements.push(menu);
 
     // Right operand

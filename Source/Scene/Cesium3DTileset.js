@@ -24,6 +24,7 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Cesium3DTile',
+        './Cesium3DTileColorBlendMode',
         './Cesium3DTileRefine',
         './Cesium3DTileStyleEngine',
         './CullingVolume',
@@ -58,6 +59,7 @@ define([
         Uri,
         when,
         Cesium3DTile,
+        Cesium3DTileColorBlendMode,
         Cesium3DTileRefine,
         Cesium3DTileStyleEngine,
         CullingVolume,
@@ -226,6 +228,24 @@ define([
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
         this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
         this._styleEngine = new Cesium3DTileStyleEngine();
+
+        /**
+         * Defines how per-feature colors blend with the source colors.
+         *
+         * @type {Cesium3DTileColorBlendMode}
+         * @default Cesium3DTileColorBlendMode.HIGHLIGHT
+         */
+        this.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
+
+        /**
+         * Defines the value used to linearly interpolate between the source color and feature color when the colorBlendMode is MIX.
+         * A value of 0.0 results in the source color while a value of 1.0 results in the feature color, with any value in-between
+         * resulting in a mix of the source color and feature color.
+         *
+         * @type {Number}
+         * @default 0.5
+         */
+        this.colorBlendAmount = 0.5;
 
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 

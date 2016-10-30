@@ -18,6 +18,7 @@ define([
         './Cesium3DTileFeature',
         './Cesium3DTileBatchTable',
         './Cesium3DTileContentState',
+        './getDiffuseUniformName',
         './Model'
     ], function(
         Color,
@@ -38,6 +39,7 @@ define([
         Cesium3DTileFeature,
         Cesium3DTileBatchTable,
         Cesium3DTileContentState,
+        getDiffuseUniformName,
         Model) {
     'use strict';
 
@@ -176,6 +178,17 @@ define([
         return true;
     };
 
+    function getFragmentShaderCallback(content) {
+        return function(fs) {
+            var batchTable = content.batchTable;
+            var gltf = content._model.gltf;
+            var diffuseUniformName = getDiffuseUniformName(gltf);
+            var colorBlendMode = content._tileset.colorBlendMode;
+            var callback = batchTable.getFragmentShaderCallback(true, colorBlendMode, diffuseUniformName);
+            return defined(callback) ? callback(fs) : fs;
+        };
+    }
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
@@ -264,8 +277,8 @@ define([
             modelMatrix : this._tile.computedTransform,
             shadows: this._tileset.shadows,
             incrementallyLoadTextures : false,
-            vertexShaderLoaded : batchTable.getVertexShaderCallback(),
-            fragmentShaderLoaded : batchTable.getFragmentShaderCallback(),
+            vertexShaderLoaded : batchTable.getVertexShaderCallback(true),
+            fragmentShaderLoaded : getFragmentShaderCallback(this),
             uniformMapLoaded : batchTable.getUniformMapCallback(),
             pickVertexShaderLoaded : batchTable.getPickVertexShaderCallback(),
             pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
@@ -335,7 +348,6 @@ define([
     Batched3DModel3DTileContent.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
         this.batchTable = this.batchTable && this.batchTable.destroy();
-
         return destroyObject(this);
     };
 

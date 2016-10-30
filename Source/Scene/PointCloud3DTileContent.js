@@ -30,6 +30,7 @@ define([
         '../ThirdParty/when',
         './BlendingState',
         './Cesium3DTileBatchTable',
+        './Cesium3DTileColorBlendMode',
         './Cesium3DTileContentState',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
@@ -65,6 +66,7 @@ define([
         when,
         BlendingState,
         Cesium3DTileBatchTable,
+        Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
@@ -115,7 +117,7 @@ define([
         this._translucentRenderState = undefined;
 
         this._highlightColor = Color.clone(Color.WHITE);
-        this._pointSize = 2.0;
+        this._pointSize = 1.0;
         this._quantizedVolumeScale = undefined;
         this._quantizedVolumeOffset = undefined;
 
@@ -1060,8 +1062,9 @@ define([
         var drawFS = fs;
 
         if (hasBatchTable) {
-            drawVS = batchTable.getVertexShaderCallback()(drawVS, false);
-            drawFS = batchTable.getFragmentShaderCallback()(drawFS, false);
+            // Batched points always use the HIGHLIGHT color blend mode
+            drawVS = batchTable.getVertexShaderCallback(false)(drawVS);
+            drawFS = batchTable.getFragmentShaderCallback(false, Cesium3DTileColorBlendMode.HIGHLIGHT)(drawFS);
         }
 
         var pickVS = vs;
