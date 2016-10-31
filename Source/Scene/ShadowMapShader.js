@@ -233,7 +233,7 @@ define([
             fsSource += '    shadowParameters.depthBias *= max(depth * 0.01, 1.0); \n';
         } else if (!polygonOffsetSupported) {
             // If polygon offset isn't supported push the depth back based on view, however this
-            // causing light leaking at further away views
+            // causes light leaking at further away views
             fsSource += '    shadowParameters.depthBias *= mix(1.0, 100.0, depth * 0.0015); \n';
         }
 
