@@ -19,7 +19,6 @@ define([
         '../Core/getAbsoluteUri',
         '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
-        '../Core/isArray',
         '../Core/Iso8601',
         '../Core/JulianDate',
         '../Core/LagrangePolynomialApproximation',
@@ -103,7 +102,6 @@ define([
         getAbsoluteUri,
         getFilenameFromUri,
         HermitePolynomialApproximation,
-        isArray,
         Iso8601,
         JulianDate,
         LagrangePolynomialApproximation,
@@ -659,7 +657,7 @@ define([
             return;
         }
 
-        if (isArray(packetData)) {
+        if (Array.isArray(packetData)) {
             for (var i = 0, len = packetData.length; i < len; i++) {
                 processProperty(type, object, propertyName, packetData[i], interval, sourceUri, entityCollection);
             }
@@ -819,7 +817,7 @@ define([
             return;
         }
 
-        if (isArray(packetData)) {
+        if (Array.isArray(packetData)) {
             for (var i = 0, len = packetData.length; i < len; i++) {
                 processPositionProperty(object, propertyName, packetData[i], interval, sourceUri, entityCollection);
             }
@@ -940,7 +938,7 @@ define([
             return;
         }
 
-        if (isArray(packetData)) {
+        if (Array.isArray(packetData)) {
             for (var i = 0, len = packetData.length; i < len; i++) {
                 processMaterialProperty(object, propertyName, packetData[i], interval, sourceUri, entityCollection);
             }
@@ -1010,7 +1008,7 @@ define([
             return;
         }
 
-        if (isArray(packetData)) {
+        if (Array.isArray(packetData)) {
             for (var i = 0, length = packetData.length; i < length; ++i) {
                 processArrayPacketData(object, propertyName, packetData[i], entityCollection);
             }
@@ -1057,7 +1055,7 @@ define([
             return;
         }
 
-        if (isArray(positionsData)) {
+        if (Array.isArray(positionsData)) {
             for (var i = 0, length = positionsData.length; i < length; i++) {
                 processPositionsPacketData(object, propertyName, positionsData[i], entityCollection);
             }
@@ -1074,7 +1072,7 @@ define([
         }
 
         var intervals;
-        if (isArray(packetData)) {
+        if (Array.isArray(packetData)) {
             var length = packetData.length;
             for (var i = 0; i < length; i++) {
                 if (!defined(intervals)) {
@@ -1416,7 +1414,7 @@ define([
 
         var nodeTransformationsData = modelData.nodeTransformations;
         if (defined(nodeTransformationsData)) {
-            if (isArray(nodeTransformationsData)) {
+            if (Array.isArray(nodeTransformationsData)) {
                 for (var i = 0, len = nodeTransformationsData.length; i < len; i++) {
                     processNodeTransformations(model, nodeTransformationsData[i], interval, sourceUri, entityCollection);
                 }
@@ -2054,7 +2052,7 @@ define([
     CzmlDataSource._processCzml = function(czml, entityCollection, sourceUri, updaterFunctions, dataSource) {
         updaterFunctions = defined(updaterFunctions) ? updaterFunctions : CzmlDataSource.updaters;
 
-        if (isArray(czml)) {
+        if (Array.isArray(czml)) {
             for (var i = 0, len = czml.length; i < len; i++) {
                 processCzmlPacket(czml[i], entityCollection, updaterFunctions, sourceUri, dataSource);
             }

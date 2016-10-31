@@ -15,7 +15,6 @@ define([
         '../Core/DeveloperError',
         '../Core/GeographicTilingScheme',
         '../Core/GeometryInstance',
-        '../Core/isArray',
         '../Core/loadJson',
         '../Core/Math',
         '../Core/Matrix3',
@@ -54,7 +53,6 @@ define([
         DeveloperError,
         GeographicTilingScheme,
         GeometryInstance,
-        isArray,
         loadJson,
         CesiumMath,
         Matrix3,
@@ -248,7 +246,7 @@ define([
         });
 
         var readOnlyAttributes;
-        if (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length > 1) {
+        if (defined(this.geometryInstances) && Array.isArray(this.geometryInstances) && this.geometryInstances.length > 1) {
             readOnlyAttributes = readOnlyInstanceAttributesScratch;
         }
 
@@ -1023,7 +1021,7 @@ define([
             var geometry;
             var instanceType;
 
-            var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var instances = Array.isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var length = instances.length;
             var groundInstances = new Array(length);
 
@@ -1128,7 +1126,7 @@ define([
         this._primitive.update(frameState);
 
         if (this.debugShowShadowVolume && !defined(this._debugPrimitive) && defined(this.geometryInstances)) {
-            var debugInstances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var debugInstances = Array.isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var debugLength = debugInstances.length;
             var debugVolumeInstances = new Array(debugLength);
 

@@ -8,7 +8,6 @@ define([
         './Ellipsoid',
         './EllipsoidGeodesic',
         './IntersectionTests',
-        './isArray',
         './Math',
         './Matrix4',
         './Plane'
@@ -21,7 +20,6 @@ define([
         Ellipsoid,
         EllipsoidGeodesic,
         IntersectionTests,
-        isArray,
         CesiumMath,
         Matrix4,
         Plane) {
@@ -233,7 +231,7 @@ define([
         var length = positions.length;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var height = defaultValue(options.height, 0);
-        var hasHeightArray = isArray(height);
+        var hasHeightArray = Array.isArray(height);
 
         if (length < 1) {
             return [];

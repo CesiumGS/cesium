@@ -1,12 +1,10 @@
 /*global define*/
 define([
         './defined',
-        './DeveloperError',
-        './isArray'
+        './DeveloperError'
     ], function(
         defined,
-        DeveloperError,
-        isArray) {
+        DeveloperError) {
     'use strict';
 
     /**
@@ -57,7 +55,7 @@ define([
             if (typeof resultValue === 'string') {
                 // expand the single value to an array
                 result[name] = [resultValue, value];
-            } else if (isArray(resultValue)) {
+            } else if (Array.isArray(resultValue)) {
                 resultValue.push(value);
             } else {
                 result[name] = value;

@@ -9,7 +9,6 @@ define([
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
         '../../Core/Fullscreen',
-        '../../Core/isArray',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
         '../../Core/ScreenSpaceEventType',
@@ -53,7 +52,6 @@ define([
         DeveloperError,
         EventHelper,
         Fullscreen,
-        isArray,
         Matrix4,
         Rectangle,
         ScreenSpaceEventType,
@@ -1721,7 +1719,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
 
             //Zoom target is already an array, just copy it and return.
-            if (isArray(zoomTarget)) {
+            if (Array.isArray(zoomTarget)) {
                 that._zoomTarget = zoomTarget.slice(0);
                 return;
             }
@@ -1734,7 +1732,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 zoomTarget = zoomTarget.entities.values;
             }
 
-            if (isArray(zoomTarget)) {
+            if (Array.isArray(zoomTarget)) {
                 that._zoomTarget = zoomTarget.slice(0);
             } else {
                 //Single entity

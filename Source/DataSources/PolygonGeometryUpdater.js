@@ -11,7 +11,6 @@ define([
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/Event',
         '../Core/GeometryInstance',
-        '../Core/isArray',
         '../Core/Iso8601',
         '../Core/oneTimeWarning',
         '../Core/PolygonGeometry',
@@ -40,7 +39,6 @@ define([
         DistanceDisplayConditionGeometryInstanceAttribute,
         Event,
         GeometryInstance,
-        isArray,
         Iso8601,
         oneTimeWarning,
         PolygonGeometry,
@@ -554,7 +552,7 @@ define([
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
 
             var hierarchyValue = hierarchy.getValue(Iso8601.MINIMUM_VALUE);
-            if (isArray(hierarchyValue)) {
+            if (Array.isArray(hierarchyValue)) {
                 hierarchyValue = new PolygonHierarchy(hierarchyValue);
             }
 
@@ -645,7 +643,7 @@ define([
             return;
         }
 
-        if (isArray(hierarchy)) {
+        if (Array.isArray(hierarchy)) {
             options.polygonHierarchy = new PolygonHierarchy(hierarchy);
         } else {
             options.polygonHierarchy = hierarchy;
