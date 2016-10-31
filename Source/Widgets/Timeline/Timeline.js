@@ -4,6 +4,7 @@ define([
         '../../Core/defined',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/Iso8601',
         '../../Core/JulianDate',
         '../getElement',
         './TimelineHighlightRange',
@@ -13,6 +14,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        Iso8601,
         JulianDate,
         getElement,
         TimelineHighlightRange,
@@ -250,6 +252,11 @@ define([
             throw new DeveloperError('Start time must come before end time.');
         }
         //>>includeEnd('debug');
+
+        var timesValid = JulianDate.greaterThanOrEquals(startTime, Iso8601.MINIMUM_VALUE) && JulianDate.lessThanOrEquals(stopTime, Iso8601.MAXIMUM_VALUE);
+        if (!timesValid) {
+            return;
+        }
 
         this._startJulian = startTime;
         this._endJulian = stopTime;
