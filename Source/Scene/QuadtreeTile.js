@@ -111,9 +111,11 @@ define([
      * tile in the northwest corner and followed by the tile (if any) to its east.
      */
     QuadtreeTile.createLevelZeroTiles = function(tilingScheme) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
         }
+        //>>includeEnd('debug');
 
         var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
         var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);

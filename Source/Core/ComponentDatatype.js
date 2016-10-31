@@ -145,8 +145,10 @@ define([
             return Float32Array.BYTES_PER_ELEMENT;
         case ComponentDatatype.DOUBLE:
             return Float64Array.BYTES_PER_ELEMENT;
+        //>>includeStart('debug', pragmas.debug);
         default:
             throw new DeveloperError('componentDatatype is not a valid value.');
+        //>>includeEnd('debug');
         }
     };
 
@@ -246,8 +248,10 @@ define([
             return new Float32Array(valuesOrLength);
         case ComponentDatatype.DOUBLE:
             return new Float64Array(valuesOrLength);
+        //>>includeStart('debug', pragmas.debug);
         default:
             throw new DeveloperError('componentDatatype is not a valid value.');
+        //>>includeEnd('debug');
         }
     };
 
@@ -292,8 +296,10 @@ define([
             return new Float32Array(buffer, byteOffset, length);
         case ComponentDatatype.DOUBLE:
             return new Float64Array(buffer, byteOffset, length);
+        //>>includeStart('debug', pragmas.debug);
         default:
             throw new DeveloperError('componentDatatype is not a valid value.');
+        //>>includeEnd('debug');
         }
     };
 
@@ -323,8 +329,10 @@ define([
                 return ComponentDatatype.FLOAT;
             case 'DOUBLE':
                 return ComponentDatatype.DOUBLE;
+            //>>includeStart('debug', pragmas.debug);
             default:
                 throw new DeveloperError('name is not a valid value.');
+            //>>includeEnd('debug');
         }
     };
 

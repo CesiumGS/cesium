@@ -42,9 +42,11 @@ define([
             baseUrlString = getBaseUrlFromCesiumScript();
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(baseUrlString)) {
             throw new DeveloperError('Unable to determine Cesium base URL automatically, try defining a global variable called CESIUM_BASE_URL.');
         }
+        //>>includeEnd('debug');
 
         baseUrl = new Uri(getAbsoluteUri(baseUrlString));
 

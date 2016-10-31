@@ -17,6 +17,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
+        './getDiffuseUniformName',
         './Model',
         './SceneMode',
         './ShadowMode'
@@ -38,6 +39,7 @@ define([
         DrawCommand,
         ShaderSource,
         when,
+        getDiffuseUniformName,
         Model,
         SceneMode,
         ShadowMode) {
@@ -302,7 +304,7 @@ define([
             vertexShaderCached = instancedSource;
 
             if (usesBatchTable) {
-                instancedSource = collection._batchTable.getVertexShaderCallback()(instancedSource);
+                instancedSource = collection._batchTable.getVertexShaderCallback(true)(instancedSource);
             }
 
             return instancedSource;
@@ -311,8 +313,12 @@ define([
 
     function getFragmentShaderCallback(collection) {
         return function(fs) {
-            if (defined(collection._batchTable)) {
-                fs = collection._batchTable.getFragmentShaderCallback()(fs);
+            var batchTable = collection._batchTable;
+            if (defined(batchTable)) {
+                var gltf = collection._model.gltf;
+                var diffuseUniformName = getDiffuseUniformName(gltf);
+                var colorBlendMode = batchTable._content._tileset.colorBlendMode;
+                fs = batchTable.getFragmentShaderCallback(true, colorBlendMode, diffuseUniformName)(fs);
             }
             return fs;
         };
@@ -386,7 +392,7 @@ define([
     function getVertexShaderNonInstancedCallback(collection) {
         return function(vs) {
             if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getVertexShaderCallback()(vs);
+                vs = collection._batchTable.getVertexShaderCallback(true)(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;
             }
@@ -580,6 +586,7 @@ define([
                 modelOptions.cacheKey = collection._url + '#instanced';
             }
         } else {
+            // TODO : does non-instancing path need to set the cache key?
             modelOptions.vertexShaderLoaded = getVertexShaderNonInstancedCallback(collection);
             modelOptions.fragmentShaderLoaded = getFragmentShaderCallback(collection);
             modelOptions.uniformMapLoaded = getUniformMapNonInstancedCallback(collection, context);

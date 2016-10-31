@@ -77,7 +77,6 @@ define([
                 if (tile.lastStyleTime !== lastStyleTime) {
                     tile.lastStyleTime = lastStyleTime;
                     styleCompositeContent(this, frameState, tile.content, stats);
-
                     ++stats.numberOfTilesStyled;
                 }
             }

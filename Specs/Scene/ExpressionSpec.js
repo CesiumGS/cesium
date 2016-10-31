@@ -814,6 +814,24 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(false);
     });
 
+    it('evaluates abs function', function() {
+        var expression = new Expression('abs(-1)');
+        expect(expression.evaluate(undefined)).toEqual(1);
+
+        expression = new Expression('abs(1)');
+        expect(expression.evaluate(undefined)).toEqual(1);
+    });
+
+    it('throws if abs function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('abs()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('abs(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates ternary conditional', function() {
         var expression = new Expression('true ? "first" : "second"');
         expect(expression.evaluate(undefined)).toEqual('first');
@@ -1560,6 +1578,13 @@ defineSuite([
         expected = 'vec4(czm_HSLToRGB(vec3(1.0, property, 0.5)), 0.5)';
         expect(shaderExpression).toEqual(expected);
         expect(shaderState.translucent).toBe(true);
+    });
+
+    it('gets shader expression for abs', function() {
+        var expression = new Expression('abs(-1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'abs(-1.0)';
+        expect(shaderExpression).toEqual(expected);
     });
 
     it('throws when getting shader expression for regex', function() {
