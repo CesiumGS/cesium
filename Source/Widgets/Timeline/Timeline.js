@@ -251,12 +251,10 @@ define([
         if (JulianDate.lessThanOrEquals(stopTime, startTime)) {
             throw new DeveloperError('Start time must come before end time.');
         }
-        //>>includeEnd('debug');
-
-        var timesValid = JulianDate.greaterThanOrEquals(startTime, Iso8601.MINIMUM_VALUE) && JulianDate.lessThanOrEquals(stopTime, Iso8601.MAXIMUM_VALUE);
-        if (!timesValid) {
-            return;
+        if (!JulianDate.validIso8601([startTime, stopTime])) {
+            throw new DeveloperError('startTime and stopTime must be valid ISO8601 dates.');
         }
+        //>>includeEnd('debug');
 
         this._startJulian = startTime;
         this._endJulian = stopTime;
@@ -311,7 +309,15 @@ define([
             centerSec += (centerSec - this._timeBarSecondsSpan * 0.5);
         }
         var centerSecFlip = this._timeBarSecondsSpan - centerSec;
-        this.zoomTo(JulianDate.addSeconds(this._startJulian, centerSec - (centerSec * amount), new JulianDate()), JulianDate.addSeconds(this._endJulian, (centerSecFlip * amount) - centerSecFlip, new JulianDate()));
+
+        var newStartTime = JulianDate.addSeconds(this._startJulian, centerSec - (centerSec * amount), new JulianDate());
+        var newEndTime = JulianDate.addSeconds(this._endJulian, (centerSecFlip * amount) - centerSecFlip, new JulianDate());
+
+        if (!JulianDate.validIso8601([newStartTime, newEndTime])) {
+            return;
+        }
+
+        this.zoomTo(newStartTime, newEndTime);
     };
 
     function twoDigits(num) {
@@ -658,7 +664,14 @@ define([
                 timeline._mouseX = e.clientX;
                 if (dx !== 0) {
                     var dsec = dx * timeline._timeBarSecondsSpan / timeline._topDiv.clientWidth;
-                    timeline.zoomTo(JulianDate.addSeconds(timeline._startJulian, dsec, new JulianDate()), JulianDate.addSeconds(timeline._endJulian, dsec, new JulianDate()));
+                    var newStartTime = JulianDate.addSeconds(timeline._startJulian, dsec, new JulianDate());
+                    var newEndTime = JulianDate.addSeconds(timeline._endJulian, dsec, new JulianDate());
+
+                    if (!JulianDate.validIso8601([newStartTime, newEndTime])) {
+                        return;
+                    }
+
+                    timeline.zoomTo(newStartTime, newEndTime);
                 }
             } else if (timeline._mouseMode === timelineMouseMode.zoom) {
                 dx = timeline._mouseX - e.clientX;
@@ -762,8 +775,13 @@ define([
                         dx = timeline._touchState.centerX - newCenter;
                         newStartTime = JulianDate.addSeconds(timeline._startJulian, dx * timeline._timeBarSecondsSpan / timeline._topDiv.clientWidth, new JulianDate());
                     }
+                    var newEndTime = JulianDate.addSeconds(newStartTime, timeline._timeBarSecondsSpan * zoom, new JulianDate());
 
-                    timeline.zoomTo(newStartTime, JulianDate.addSeconds(newStartTime, timeline._timeBarSecondsSpan * zoom, new JulianDate()));
+                    if (!JulianDate.validIso8601([newStartTime, newEndTime])) {
+                        return;
+                    }
+
+                    timeline.zoomTo(newStartTime, newEndTime);
                     timeline._touchState.centerX = newCenter;
                     timeline._touchState.spanX = newSpan;
                 }

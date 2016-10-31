@@ -1039,4 +1039,20 @@ defineSuite([
         var date = new JulianDate(2556109, 43237.0, TimeStandard.TAI);
         expect(JulianDate.computeTaiMinusUtc(date)).toEqual(37);
     });
+
+    it('validIso8601 return false for array where one date is out of range', function() {
+        var validEarly = JulianDate.fromIso8601('0002-01-01T00:00:00Z');
+        var validLate = JulianDate.fromIso8601('9999-01-01T00:00:00Z');
+        var fourYearsInSeconds = 3600 * 24 * 356 * 4;
+        var invalid = JulianDate.addSeconds(validEarly, -fourYearsInSeconds, new JulianDate());
+        var invalid2 = JulianDate.addSeconds(validLate, fourYearsInSeconds, new JulianDate());
+        expect(JulianDate.validIso8601([validEarly, invalid])).toEqual(false);
+        expect(JulianDate.validIso8601([validEarly, invalid2])).toEqual(false);
+    });
+
+    it('validIso8601 return false for array where one date is out of range', function() {
+        var valid1 = JulianDate.fromIso8601('0002-01-01T00:00:00Z');
+        var valid2 = JulianDate.fromIso8601('2002-01-01T00:00:00Z');
+        expect(JulianDate.validIso8601([valid1, valid2])).toEqual(true);
+    });
 });
