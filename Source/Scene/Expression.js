@@ -4,6 +4,7 @@ define([
        '../Core/defined',
        '../Core/defineProperties',
        '../Core/DeveloperError',
+       '../Core/isArray',
        '../ThirdParty/jsep',
        './ExpressionNodeType'
     ], function(
@@ -11,12 +12,13 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        isArray,
         jsep,
         ExpressionNodeType) {
     "use strict";
 
     var unaryOperators = ['!', '-', '+'];
-    var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
+    var binaryOperators = ['+', '-', '*', '/', '%', '===', '==', '!==', '!=', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
 
     var variableRegex = /\${(.*?)}/g;
     var backslashRegex = /\\/g;
@@ -24,6 +26,22 @@ define([
     var replacementRegex = /@#%/g;
 
     var scratchColor = new Color();
+
+    var ScratchStorage = {
+        scratchColorIndex : 0,
+        scratchColors : [new Color()],
+        reset : function() {
+            this.scratchColorIndex = 0;
+        },
+        getColor : function() {
+            if (this.scratchColorIndex >= this.scratchColors.length) {
+                this.scratchColors.push(new Color());
+            }
+            var scratchColor = this.scratchColors[this.scratchColorIndex];
+            ++this.scratchColorIndex;
+            return scratchColor;
+        }
+    };
 
     /**
      * Evaluates an expression defined using the
@@ -103,7 +121,12 @@ define([
      * @returns {Boolean|Number|String|Color|RegExp} The result of evaluating the expression.
      */
     Expression.prototype.evaluate = function(feature) {
-        return this._runtimeAst.evaluate(feature);
+        ScratchStorage.reset();
+        var result = this._runtimeAst.evaluate(feature);
+        if (result instanceof Color) {
+            return Color.clone(result);
+        }
+        return result;
     };
 
     /**
@@ -114,7 +137,51 @@ define([
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      */
     Expression.prototype.evaluateColor = function(feature, result) {
-        return this._runtimeAst.evaluate(feature, result);
+        ScratchStorage.reset();
+        var color = this._runtimeAst.evaluate(feature);
+        return Color.clone(color, result);
+    };
+
+    /**
+     * Gets the shader function for this expression.
+     * Returns undefined if the shader function can't be generated from this expression.
+     *
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+     * @param {String} returnType The return type of the generated function.
+     *
+     * @returns {String} The shader function.
+     *
+     * @private
+     */
+    Expression.prototype.getShaderFunction = function(functionName, attributePrefix, shaderState, returnType) {
+        var shaderExpression = this.getShaderExpression(attributePrefix, shaderState);
+        if (!defined(shaderExpression)) {
+            return undefined;
+        }
+
+        shaderExpression = returnType + ' ' + functionName + '() \n' +
+            '{ \n' +
+            '    return ' + shaderExpression + '; \n' +
+            '} \n';
+
+        return shaderExpression;
+    };
+
+    /**
+     * Gets the shader expression for this expression.
+     * Returns undefined if the shader expression can't be generated from this expression.
+     *
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+     *
+     * @returns {String} The shader expression.
+     *
+     * @private
+     */
+    Expression.prototype.getShaderExpression = function(attributePrefix, shaderState) {
+        return this._runtimeAst.getShaderExpression(attributePrefix, shaderState);
     };
 
     function Node(type, value, left, right, test) {
@@ -269,6 +336,14 @@ define([
                     return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
                 }
             }
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'abs') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'Boolean') {
@@ -465,8 +540,12 @@ define([
             } else if (node._value === '%') {
                 node.evaluate = node._evaluateMod;
             } else if (node._value === '===') {
+                node.evaluate = node._evaluateEqualsStrict;
+            } else if (node._value === '==') {
                 node.evaluate = node._evaluateEquals;
             } else if (node._value === '!==') {
+                node.evaluate = node._evaluateNotEqualsStrict;
+            } else if (node._value === '!=') {
                 node.evaluate = node._evaluateNotEquals;
             } else if (node._value === '<') {
                 node.evaluate = node._evaluateLessThan;
@@ -496,6 +575,8 @@ define([
                 node.evaluate = node._evaluateNaN;
             } else if (node._value === 'isFinite') {
                 node.evaluate = node._evaluateIsFinite;
+            } else if (node._value === 'abs') {
+                node.evaluate = node._evaluateAbsoluteValue;
             } else if (node._value === 'Boolean') {
                 node.evaluate = node._evaluateBooleanConversion;
             } else if (node._value === 'Number') {
@@ -530,10 +611,8 @@ define([
         return this._value;
     };
 
-    Node.prototype._evaluateLiteralColor = function(feature, result) {
-        if (!defined(result)) {
-            result = new Color();
-        }
+    Node.prototype._evaluateLiteralColor = function(feature) {
+        var result = ScratchStorage.getColor();
         var args = this._left;
         if (this._value === 'color') {
             if (!defined(args)) {
@@ -542,7 +621,7 @@ define([
                 Color.fromCssColorString(args[0].evaluate(feature, result), result);
                 result.alpha = args[1].evaluate(feature, result);
             } else {
-                Color.fromCssColorString(this._left[0].evaluate(feature, result), result);
+                Color.fromCssColorString(args[0].evaluate(feature, result), result);
             }
         } else if (this._value === 'rgb') {
             Color.fromBytes(
@@ -605,32 +684,32 @@ define([
     }
 
     // PERFORMANCE_IDEA: Determine if parent property needs to be computed before runtime
-    Node.prototype._evaluateMemberDot = function(feature, result) {
+    Node.prototype._evaluateMemberDot = function(feature) {
         if(checkFeature(this._left)) {
             return feature.getProperty(this._right);
         }
-        var property = this._left.evaluate(feature, result);
+        var property = this._left.evaluate(feature);
         if (!defined(property)) {
             return undefined;
         }
         return property[this._right];
     };
 
-    Node.prototype._evaluateMemberBrackets = function(feature, result) {
+    Node.prototype._evaluateMemberBrackets = function(feature) {
         if(checkFeature(this._left)) {
-            return feature.getProperty(this._right.evaluate(feature, result));
+            return feature.getProperty(this._right.evaluate(feature));
         }
-        var property = this._left.evaluate(feature, result);
+        var property = this._left.evaluate(feature);
         if (!defined(property)) {
             return undefined;
         }
-        return property[this._right.evaluate(feature, result)];
+        return property[this._right.evaluate(feature)];
     };
 
-    Node.prototype._evaluateArray = function(feature, result) {
+    Node.prototype._evaluateArray = function(feature) {
         var array = [];
-        for (var i = 0; i<this._value.length; i++) {
-            array[i] = this._value[i].evaluate(feature, result);
+        for (var i = 0; i < this._value.length; i++) {
+            array[i] = this._value[i].evaluate(feature);
         }
         return array;
     };
@@ -638,44 +717,44 @@ define([
     // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
     // that we can assign if we know the types before runtime
 
-    Node.prototype._evaluateNot = function(feature, result) {
-        return !(this._left.evaluate(feature, result));
+    Node.prototype._evaluateNot = function(feature) {
+        return !(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateNegative = function(feature, result) {
-        return -(this._left.evaluate(feature, result));
+    Node.prototype._evaluateNegative = function(feature) {
+        return -(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluatePositive = function(feature, result) {
-        return +(this._left.evaluate(feature, result));
+    Node.prototype._evaluatePositive = function(feature) {
+        return +(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateLessThan = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluateLessThan = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         return left < right;
     };
 
-    Node.prototype._evaluateLessThanOrEquals = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluateLessThanOrEquals = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         return left <= right;
     };
 
-    Node.prototype._evaluateGreaterThan = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluateGreaterThan = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         return left > right;
     };
 
-    Node.prototype._evaluateGreaterThanOrEquals = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluateGreaterThanOrEquals = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         return left >= right;
     };
 
-    Node.prototype._evaluateOr = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
+    Node.prototype._evaluateOr = function(feature) {
+        var left = this._left.evaluate(feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(left) !== 'boolean') {
             throw new DeveloperError('Error: Operation is undefined.');
@@ -687,7 +766,7 @@ define([
             return true;
         }
 
-        var right = this._right.evaluate(feature, result);
+        var right = this._right.evaluate(feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(right) !== 'boolean') {
             throw new DeveloperError('Error: Operation is undefined.');
@@ -696,8 +775,8 @@ define([
         return left || right;
     };
 
-    Node.prototype._evaluateAnd = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
+    Node.prototype._evaluateAnd = function(feature) {
+        var left = this._left.evaluate(feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(left) !== 'boolean') {
             throw new DeveloperError('Error: Operation is undefined.');
@@ -709,7 +788,7 @@ define([
             return false;
         }
 
-        var right = this._right.evaluate(feature, result);
+        var right = this._right.evaluate(feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(right) !== 'boolean') {
             throw new DeveloperError('Error: Operation is undefined.');
@@ -718,108 +797,135 @@ define([
         return left && right;
     };
 
-    Node.prototype._evaluatePlus = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluatePlus = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.add(left, right, scratchColor);
+            return Color.add(left, right, ScratchStorage.getColor());
         }
         return left + right;
     };
 
-    Node.prototype._evaluateMinus = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluateMinus = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.subtract(left, right, scratchColor);
+            return Color.subtract(left, right, ScratchStorage.getColor());
         }
         return left - right;
     };
 
-    Node.prototype._evaluateTimes = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluateTimes = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.multiply(left, right, scratchColor);
+            return Color.multiply(left, right, ScratchStorage.getColor());
         } else if ((right instanceof Color) && (typeof(left) === 'number')) {
-            return Color.multiplyByScalar(right, left, scratchColor);
+            return Color.multiplyByScalar(right, left, ScratchStorage.getColor());
         } else if ((left instanceof Color) && (typeof(right) === 'number')) {
-            return Color.multiplyByScalar(left, right, scratchColor);
+            return Color.multiplyByScalar(left, right, ScratchStorage.getColor());
         }
         return left * right;
     };
 
-    Node.prototype._evaluateDivide = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluateDivide = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.divide(left, right, scratchColor);
+            return Color.divide(left, right, ScratchStorage.getColor());
         } else if ((left instanceof Color) && (typeof(right) === 'number')) {
-            return Color.divideByScalar(left, right, scratchColor);
+            return Color.divideByScalar(left, right, ScratchStorage.getColor());
         }
         return left / right;
     };
 
-    Node.prototype._evaluateMod = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluateMod = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.mod(left, right, scratchColor);
+            return Color.mod(left, right, ScratchStorage.getColor());
         }
         return left % right;
     };
 
-    Node.prototype._evaluateEquals = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluateEqualsStrict = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Color) && (left instanceof Color)) {
             return Color.equals(left, right);
         }
         return left === right;
     };
 
-    Node.prototype._evaluateNotEquals = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluateEquals = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        if ((right instanceof Color) && (left instanceof Color)) {
+            return Color.equals(left, right);
+        }
+
+        // Specifically want to do an abstract equality comparison (==) instead of a strict equality comparison (===)
+        // so that cases like "5 == '5'" return true. Tell jsHint to ignore this line.
+        return left == right; // jshint ignore:line
+    };
+
+    Node.prototype._evaluateNotEqualsStrict = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Color) && (left instanceof Color)) {
             return !Color.equals(left, right);
         }
         return left !== right;
     };
 
-    Node.prototype._evaluateConditional = function(feature, result) {
-        if (this._test.evaluate(feature, result)) {
-            return this._left.evaluate(feature, result);
+    Node.prototype._evaluateNotEquals = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        if ((right instanceof Color) && (left instanceof Color)) {
+            return !Color.equals(left, right);
         }
-        return this._right.evaluate(feature, result);
+        // Specifically want to do an abstract inequality comparison (!=) instead of a strict inequality comparison (!==)
+        // so that cases like "5 != '5'" return false. Tell jsHint to ignore this line.
+        return left != right; // jshint ignore:line
     };
 
-    Node.prototype._evaluateNaN = function(feature, result) {
-        return isNaN(this._left.evaluate(feature, result));
+    Node.prototype._evaluateConditional = function(feature) {
+        if (this._test.evaluate(feature)) {
+            return this._left.evaluate(feature);
+        }
+        return this._right.evaluate(feature);
     };
 
-    Node.prototype._evaluateIsFinite = function(feature, result) {
-        return isFinite(this._left.evaluate(feature, result));
+    Node.prototype._evaluateNaN = function(feature) {
+        return isNaN(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateBooleanConversion = function(feature, result) {
-        return Boolean(this._left.evaluate(feature, result));
+    Node.prototype._evaluateIsFinite = function(feature) {
+        return isFinite(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateNumberConversion = function(feature, result) {
-        return Number(this._left.evaluate(feature, result));
+    Node.prototype._evaluateAbsoluteValue = function(feature) {
+        return Math.abs(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateStringConversion = function(feature, result) {
-        return String(this._left.evaluate(feature, result));
+    Node.prototype._evaluateBooleanConversion = function(feature) {
+        return Boolean(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateRegExp = function(feature, result) {
-        var pattern = this._value.evaluate(feature, result);
+    Node.prototype._evaluateNumberConversion = function(feature) {
+        return Number(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateStringConversion = function(feature) {
+        return String(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateRegExp = function(feature) {
+        var pattern = this._value.evaluate(feature);
         var flags = '';
 
         if (defined(this._left)) {
-            flags = this._left.evaluate(feature, result);
+            flags = this._left.evaluate(feature);
         }
 
         var exp;
@@ -833,13 +939,13 @@ define([
         return exp;
     };
 
-    Node.prototype._evaluateRegExpTest = function(feature, result) {
-        return this._left.evaluate(feature, result).test(this._right.evaluate(feature, result));
+    Node.prototype._evaluateRegExpTest = function(feature) {
+        return this._left.evaluate(feature).test(this._right.evaluate(feature));
     };
 
-    Node.prototype._evaluateRegExpMatch = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluateRegExpMatch = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if (left instanceof RegExp) {
             return left.test(right);
         } else if (right instanceof RegExp) {
@@ -849,9 +955,9 @@ define([
         }
     };
 
-    Node.prototype._evaluateRegExpNotMatch = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
-        var right = this._right.evaluate(feature, result);
+    Node.prototype._evaluateRegExpNotMatch = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if (left instanceof RegExp) {
             return !(left.test(right));
         } else if (right instanceof RegExp) {
@@ -861,16 +967,16 @@ define([
         }
     };
 
-    Node.prototype._evaluateRegExpExec = function(feature, result) {
-        var exec = this._left.evaluate(feature, result).exec(this._right.evaluate(feature, result));
+    Node.prototype._evaluateRegExpExec = function(feature) {
+        var exec = this._left.evaluate(feature).exec(this._right.evaluate(feature));
         if (!defined(exec)) {
             return null;
         }
         return exec[1];
     };
 
-    Node.prototype._evaluateToString = function(feature, result) {
-        var left = this._left.evaluate(feature, result);
+    Node.prototype._evaluateToString = function(feature) {
+        var left = this._left.evaluate(feature);
         if ((left instanceof RegExp) || (left instanceof Color)) {
             return String(left);
         }
@@ -879,6 +985,276 @@ define([
             throw new DeveloperError('Error: Unexpected function call "' + this._value + '".');
         }
         //>>includeEnd('debug');
+    };
+
+    function convertHSLToRGB(ast) {
+        // Check if the color contains any nested expressions to see if the color can be converted here.
+        // E.g. "hsl(0.9, 0.6, 0.7)" is able to convert directly to rgb, "hsl(0.9, 0.6, ${Height})" is not.
+        var channels = ast._left;
+        var length = channels.length;
+        for (var i = 0; i < length; ++i) {
+            if (channels[i]._type !== ExpressionNodeType.LITERAL_NUMBER) {
+                return undefined;
+            }
+        }
+        var h = channels[0]._value;
+        var s = channels[1]._value;
+        var l = channels[2]._value;
+        var a = (length === 4) ? channels[3]._value : 1.0;
+        return Color.fromHsl(h, s, l, a, scratchColor);
+    }
+
+    function convertRGBToColor(ast) {
+        // Check if the color contains any nested expressions to see if the color can be converted here.
+        // E.g. "rgb(255, 255, 255)" is able to convert directly to Color, "rgb(255, 255, ${Height})" is not.
+        var channels = ast._left;
+        var length = channels.length;
+        for (var i = 0; i < length; ++i) {
+            if (channels[i]._type !== ExpressionNodeType.LITERAL_NUMBER) {
+                return undefined;
+            }
+        }
+        var color = scratchColor;
+        color.red = channels[0]._value / 255.0;
+        color.green = channels[1]._value / 255.0;
+        color.blue = channels[2]._value / 255.0;
+        color.alpha = (length === 4) ? channels[3]._value : 1.0;
+        return color;
+    }
+
+    function numberToString(number) {
+        if (number % 1 === 0) {
+            // Add a .0 to whole numbers
+            return number.toFixed(1);
+        } else {
+            return number.toString();
+        }
+    }
+
+    function colorToVec3(color) {
+        var r = numberToString(color.red);
+        var g = numberToString(color.green);
+        var b = numberToString(color.blue);
+        return 'vec3(' + r + ', ' + g + ', ' + b + ')';
+    }
+
+    function colorToVec4(color) {
+        var r = numberToString(color.red);
+        var g = numberToString(color.green);
+        var b = numberToString(color.blue);
+        var a = numberToString(color.alpha);
+        return 'vec4(' + r + ', ' + g + ', ' + b + ', ' + a + ')';
+    }
+
+    function getExpressionArray(array, attributePrefix, shaderState) {
+        var length = array.length;
+        var expressions = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            var shader = array[i].getShaderExpression(attributePrefix, shaderState);
+            if (!defined(shader)) {
+                // If any of the expressions are not valid, the array is not valid
+                return undefined;
+            }
+            expressions[i] = shader;
+        }
+        return expressions;
+    }
+
+    Node.prototype.getShaderExpression = function(attributePrefix, shaderState) {
+        var color;
+        var left;
+        var right;
+        var test;
+
+        var type = this._type;
+        var value = this._value;
+
+        // Right may be a string if it's a member variable: e.g. "${property.name}"
+        if (typeof(this._right) === 'string') {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Error generating style shader: string members are not supported.');
+            //>>includeEnd('debug');
+            // Return undefined when not in debug. Tell jsHint to ignore this line.
+            return; // jshint ignore:line
+        }
+
+        if (defined(this._left)) {
+            if (isArray(this._left)) {
+                // Left can be an array if the type is LITERAL_COLOR
+                left = getExpressionArray(this._left, attributePrefix, shaderState);
+            } else {
+                left = this._left.getShaderExpression(attributePrefix, shaderState);
+            }
+            if (!defined(left)) {
+                // If the left side is not valid shader code, then the expression is not valid
+                return undefined;
+            }
+        }
+
+        if (defined(this._right)) {
+            right = this._right.getShaderExpression(attributePrefix, shaderState);
+            if (!defined(right)) {
+                // If the right side is not valid shader code, then the expression is not valid
+                return undefined;
+            }
+        }
+
+        if (defined(this._test)) {
+            test = this._test.getShaderExpression(attributePrefix, shaderState);
+            if (!defined(test)) {
+                // If the test is not valid shader code, then the expression is not valid
+                return undefined;
+            }
+        }
+
+        if (isArray(this._value)) {
+            // For ARRAY type
+            value = getExpressionArray(this._value, attributePrefix, shaderState);
+            if (!defined(value)) {
+                // If the values are not valid shader code, then the expression is not valid
+                return undefined;
+            }
+        }
+
+        switch (type) {
+            case ExpressionNodeType.VARIABLE:
+                return attributePrefix + value;
+            case ExpressionNodeType.UNARY:
+                // Supported types: +, -, !, Boolean, Number
+                if (value === 'Boolean') {
+                    return 'bool(' + left + ')';
+                } else if (value === 'Number') {
+                    return 'float(' + left + ')';
+                } else if (value === 'abs') {
+                    return 'abs(' + left + ')';
+                }
+                //>>includeStart('debug', pragmas.debug);
+                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
+                    throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
+                }
+                //>>includeEnd('debug');
+                return value + left;
+            case ExpressionNodeType.BINARY:
+                // Supported types: ||, &&, ===, ==, !==, !=, <, >, <=, >=, +, -, *, /, %
+                if (value === '%') {
+                    return 'mod(' + left + ', ' + right + ')';
+                } else if (value === '===') {
+                    return '(' + left + ' == ' + right + ')';
+                } else if (value === '!==') {
+                    return '(' + left + ' != ' + right + ')';
+                }
+                return '(' + left + ' ' + value + ' ' + right + ')';
+            case ExpressionNodeType.CONDITIONAL:
+                return '(' + test + ' ? ' + left + ' : ' + right + ')';
+            case ExpressionNodeType.MEMBER:
+                // This is intended for accessing the components of vec2, vec3, and vec4 properties. String members aren't supported.
+                return left + '[int(' + right + ')]';
+            case ExpressionNodeType.FUNCTION_CALL:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
+                //>>includeEnd('debug');
+            case ExpressionNodeType.ARRAY:
+                if (value.length === 4) {
+                    return 'vec4(' + value[0] + ', ' + value[1] + ', ' + value[2] + ', ' + value[3] + ')';
+                } else if (value.length === 3) {
+                    return 'vec3(' + value[0] + ', ' + value[1] + ', ' + value[2] + ')';
+                } else if (value.length === 2) {
+                    return 'vec2(' + value[0] + ', ' + value[1] + ')';
+                }
+                //>>includeStart('debug', pragmas.debug);
+                else {
+                    throw new DeveloperError('Error generating style shader: Invalid array length. Array length should be 2, 3, or 4.');
+                }
+                //>>includeEnd('debug');
+                break;
+            case ExpressionNodeType.REGEX:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: Regular expressions are not supported.');
+                //>>includeEnd('debug');
+            case ExpressionNodeType.VARIABLE_IN_STRING:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: Converting a variable to a string is not supported.');
+                //>>includeEnd('debug');
+            case ExpressionNodeType.LITERAL_NULL:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: null is not supported.');
+                //>>includeEnd('debug');
+            case ExpressionNodeType.LITERAL_BOOLEAN:
+                return value ? 'true' : 'false';
+            case ExpressionNodeType.LITERAL_NUMBER:
+                return numberToString(value);
+            case ExpressionNodeType.LITERAL_STRING:
+                // The only supported strings are css color strings
+                color = Color.fromCssColorString(value, scratchColor);
+                if (defined(color)) {
+                    return colorToVec3(color);
+                }
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: String literals are not supported.');
+                //>>includeEnd('debug');
+            case ExpressionNodeType.LITERAL_COLOR:
+                var args = left;
+                if (value === 'color') {
+                    if (!defined(args)) {
+                        return 'vec4(1.0)';
+                    } else if (args.length > 1) {
+                        var rgb = args[0];
+                        var alpha = args[1];
+                        if (alpha !== '1.0') {
+                            shaderState.translucent = true;
+                        }
+                        return 'vec4(' + rgb + ', ' + alpha + ')';
+                    } else {
+                        return 'vec4(' + args[0] + ', 1.0)';
+                    }
+                } else if (value === 'rgb') {
+                    color = convertRGBToColor(this);
+                    if (defined(color)) {
+                        return colorToVec4(color);
+                    } else {
+                        return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, 1.0)';
+                    }
+                } else if (value === 'rgba') {
+                    if (args[3] !== '1.0') {
+                        shaderState.translucent = true;
+                    }
+                    color = convertRGBToColor(this);
+                    if (defined(color)) {
+                        return colorToVec4(color);
+                    } else {
+                        return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, ' + args[3] + ')';
+                    }
+                } else if (value === 'hsl') {
+                    color = convertHSLToRGB(this);
+                    if (defined(color)) {
+                        return colorToVec4(color);
+                    } else {
+                        return 'vec4(czm_HSLToRGB(vec3(' + args[0] + ', ' + args[1] + ', ' + args[2] + ')), 1.0)';
+                    }
+                } else if (value === 'hsla') {
+                    color = convertHSLToRGB(this);
+                    if (defined(color)) {
+                        if (color.alpha !== 1.0) {
+                            shaderState.translucent = true;
+                        }
+                        return colorToVec4(color);
+                    } else {
+                        if (args[3] !== '1.0') {
+                            shaderState.translucent = true;
+                        }
+                        return 'vec4(czm_HSLToRGB(vec3(' + args[0] + ', ' + args[1] + ', ' + args[2] + ')), ' + args[3] + ')';
+                    }
+                }
+                break;
+            case ExpressionNodeType.LITERAL_REGEX:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: Regular expressions are not supported.');
+                //>>includeEnd('debug');
+            case ExpressionNodeType.LITERAL_UNDEFINED:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error generating style shader: undefined is not supported.');
+                //>>includeEnd('debug');
+        }
     };
 
     return Expression;

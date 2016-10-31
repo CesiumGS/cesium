@@ -1,5 +1,7 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -22,13 +24,19 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Cesium3DTile',
+        './Cesium3DTileColorBlendMode',
         './Cesium3DTileRefine',
         './Cesium3DTileStyleEngine',
         './CullingVolume',
         './DebugCameraPrimitive',
         './SceneMode',
-        './ShadowMode'
+        './ShadowMode',
+        './TileBoundingRegion',
+        './TileBoundingSphere',
+        './TileOrientedBoundingBox'
     ], function(
+        Cartesian3,
+        Cartographic,
         Color,
         defaultValue,
         defined,
@@ -51,12 +59,16 @@ define([
         Uri,
         when,
         Cesium3DTile,
+        Cesium3DTileColorBlendMode,
         Cesium3DTileRefine,
         Cesium3DTileStyleEngine,
         CullingVolume,
         DebugCameraPrimitive,
         SceneMode,
-        ShadowMode) {
+        ShadowMode,
+        TileBoundingRegion,
+        TileBoundingSphere,
+        TileOrientedBoundingBox) {
     'use strict';
 
     /**
@@ -72,6 +84,10 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
      * @param {Boolean} [options.refineToVisible=false] Whether replacement refinement should refine when all visible children are ready. An experimental optimization.
+     * @param {Boolean} [options.dynamicScreenSpaceError=false] Reduce the screen space error for tiles that are further away from the camera.
+     * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
+     * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
+     * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
      * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
      * @param {Boolean} [options.debugShowPickStatistics=false] For debugging only. Determines if rendering statistics for picking are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
@@ -135,6 +151,65 @@ define([
         this._refineToVisible = defaultValue(options.refineToVisible, false);
 
         /**
+         * Whether the tileset should should refine based on a dynamic screen space error. Tiles that are further
+         * away will be rendered with lower detail than closer tiles. This improves performance by rendering fewer
+         * tiles and making less requests, but may result in a slight drop in visual quality for tiles in the distance.
+         * The algorithm is biased towards "street views" where the camera is close to the floor of the tileset and looking
+         * at the horizon. In addition results are more accurate for tightly fitting bounding volumes like box and region.
+         *
+         * @type {Boolean}
+         * @default false
+         *
+         * @see Fog
+         */
+        this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false);
+
+        /**
+         * A scalar that determines the density used to adjust the dynamic SSE, similar to {@link Fog}. Increasing this
+         * value has the effect of increasing the maximum screen space error for all tiles, but in a non-linear fashion.
+         * The error starts at 0.0 and increases exponentially until a midpoint is reached, and then approaches 1.0 asymptotically.
+         * This has the effect of keeping high detail in the closer tiles and lower detail in the further tiles, with all tiles
+         * beyond a certain distance all roughly having an error of 1.0.
+         *
+         * The dynamic error is in the range [0.0, 1.0) and is multiplied by dynamicScreenSpaceErrorFactor to produce the
+         * final dynamic error. This dynamic error is then subtracted from the tile's actual screen space error.
+         *
+         * Increasing dynamicScreenSpaceErrorDensity has the effect of moving the error midpoint closer to the camera.
+         * It is analogous to moving fog closer to the camera.
+         *
+         * @type {Number}
+         * @default 0.00278
+         *
+         * @see Fog.density
+         */
+        this.dynamicScreenSpaceErrorDensity = 0.00278;
+
+        /**
+         * A factor used to increase the screen space error of tiles for dynamic SSE. As this value increases less tiles
+         * are requested for rendering and tiles in the distance will have lower detail. If set to zero, the feature will be disabled.
+         *
+         * @type {Number}
+         * @default 4.0
+         *
+         * @see Fog.screenSpaceErrorFactor
+         */
+        this.dynamicScreenSpaceErrorFactor = 4.0;
+
+        /**
+         * A ratio of the tileset's height at which the density starts to falloff. If the camera is below this height the
+         * full computed density is applied, otherwise the density falls off. This has the effect of higher density at
+         * street level views.
+         *
+         * Valid values are between 0.0 and 1.0.
+         *
+         * @type {Number}
+         * @default 0.25
+         */
+        this.dynamicScreenSpaceErrorHeightFalloff = 0.25;
+
+        this._dynamicScreenSpaceErrorComputedDensity = 0.0; // Updated based on the camera position and direction
+
+        /**
          * Determines whether the tileset casts or receives shadows from each light source.
          *  
          * @type {ShadowMode}
@@ -153,6 +228,25 @@ define([
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
         this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
         this._styleEngine = new Cesium3DTileStyleEngine();
+
+        /**
+         * Defines how per-feature colors set from the Cesium API or declarative styling blend with the source colors from
+         * the original feature, e.g. glTF material or per-point color in the tile.
+         *
+         * @type {Cesium3DTileColorBlendMode}
+         * @default Cesium3DTileColorBlendMode.HIGHLIGHT
+         */
+        this.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
+
+        /**
+         * Defines the value used to linearly interpolate between the source color and feature color when the colorBlendMode is MIX.
+         * A value of 0.0 results in the source color while a value of 1.0 results in the feature color, with any value in-between
+         * resulting in a mix of the source color and feature color.
+         *
+         * @type {Number}
+         * @default 0.5
+         */
+        this.colorBlendAmount = 0.5;
 
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
@@ -523,11 +617,11 @@ define([
          * @example
          * tileset.style = new Cesium.Cesium3DTileStyle({
          *    color : {
-         *        conditions : {
-         *            '${Height} >= 100' : 'color("purple", 0.5)',
-         *            '${Height} >= 50' : 'color("red")',
-         *            'true' : 'color("blue")'
-         *        }
+         *        conditions : [
+         *            ['${Height} >= 100', 'color("purple", 0.5)'],
+         *            ['${Height} >= 50', 'color("red")'],
+         *            ['true', 'color("blue")']
+         *        ]
          *    },
          *    show : '${Height} > 0',
          *    meta : {
@@ -811,7 +905,86 @@ define([
         }
     }
 
-    function getScreenSpaceError(geometricError, tile, frameState) {
+    var scratchPositionNormal = new Cartesian3();
+    var scratchCartographic = new Cartographic();
+    var scratchMatrix = new Matrix4();
+    var scratchCenter = new Cartesian3();
+    var scratchPosition = new Cartesian3();
+    var scratchDirection = new Cartesian3();
+
+    function updateDynamicScreenSpaceError(tileset, frameState) {
+        var up;
+        var direction;
+        var height;
+        var minimumHeight;
+        var maximumHeight;
+
+        var camera = frameState.camera;
+        var root = tileset._root;
+        var tileBoundingVolume = root.contentBoundingVolume;
+
+        if (tileBoundingVolume instanceof TileBoundingRegion) {
+            up = Cartesian3.normalize(camera.positionWC, scratchPositionNormal);
+            direction = camera.directionWC;
+            height = camera.positionCartographic.height;
+            minimumHeight = tileBoundingVolume.minimumHeight;
+            maximumHeight = tileBoundingVolume.maximumHeight;
+        } else {
+            // Transform camera position and direction into the local coordinate system of the tileset
+            var transformLocal = Matrix4.inverseTransformation(root.computedTransform, scratchMatrix);
+            var ellipsoid = frameState.mapProjection.ellipsoid;
+            var boundingVolume = tileBoundingVolume.boundingVolume;
+            var centerLocal = Matrix4.multiplyByPoint(transformLocal, boundingVolume.center, scratchCenter);
+            if (Cartesian3.magnitude(centerLocal) > ellipsoid.minimumRadius) {
+                // The tileset is defined in WGS84. Approximate the minimum and maximum height.
+                var centerCartographic = Cartographic.fromCartesian(centerLocal, ellipsoid, scratchCartographic);
+                up = Cartesian3.normalize(camera.positionWC, scratchPositionNormal);
+                direction = camera.directionWC;
+                height = camera.positionCartographic.height;
+                minimumHeight = 0.0;
+                maximumHeight = centerCartographic.height * 2.0;
+            } else {
+                // The tileset is defined in local coordinates (z-up)
+                var positionLocal = Matrix4.multiplyByPoint(transformLocal, camera.positionWC, scratchPosition);
+                up = Cartesian3.UNIT_Z;
+                direction = Matrix4.multiplyByPointAsVector(transformLocal, camera.directionWC, scratchDirection);
+                direction = Cartesian3.normalize(direction, direction);
+                height = positionLocal.z;
+                if (tileBoundingVolume instanceof TileOrientedBoundingBox) {
+                    // Assuming z-up, the last component stores the half-height of the box
+                    var boxHeight = root._header.boundingVolume.box[11];
+                    minimumHeight = centerLocal.z - boxHeight;
+                    maximumHeight = centerLocal.z + boxHeight;
+                } else if (tileBoundingVolume instanceof TileBoundingSphere) {
+                    var radius = boundingVolume.radius;
+                    minimumHeight = centerLocal.z - radius;
+                    maximumHeight = centerLocal.z + radius;
+                }
+            }
+        }
+
+        // The range where the density starts to lessen. Start at the quarter height of the tileset.
+        var heightFalloff = tileset.dynamicScreenSpaceErrorHeightFalloff;
+        var heightClose = minimumHeight + (maximumHeight - minimumHeight) * heightFalloff;
+        var heightFar = maximumHeight;
+
+        var t = CesiumMath.clamp((height - heightClose) / (heightFar - heightClose), 0.0, 1.0);
+
+        // Increase density as the camera tilts towards the horizon
+        var dot = Math.abs(Cartesian3.dot(direction, up));
+        var horizonFactor = 1.0 - dot;
+
+        // Weaken the horizon factor as the camera height increases, implying the camera is further away from the tileset.
+        // The goal is to increase density for the "street view", not when viewing the tileset from a distance.
+        horizonFactor = horizonFactor * (1.0 - t);
+
+        var density = tileset.dynamicScreenSpaceErrorDensity;
+        density *= horizonFactor;
+
+        tileset._dynamicScreenSpaceErrorComputedDensity = density;
+    }
+
+    function getScreenSpaceError(tileset, geometricError, tile, frameState) {
         // TODO: screenSpaceError2D like QuadtreePrimitive.js
         if (geometricError === 0.0) {
             // Leaf nodes do not have any error so save the computation
@@ -819,11 +992,21 @@ define([
         }
 
         // Avoid divide by zero when viewer is inside the tile
+        var camera = frameState.camera;
         var distance = Math.max(tile.distanceToCamera, CesiumMath.EPSILON7);
         var height = frameState.context.drawingBufferHeight;
-        var sseDenominator = frameState.camera.frustum.sseDenominator;
+        var sseDenominator = camera.frustum.sseDenominator;
 
-        return (geometricError * height) / (distance * sseDenominator);
+        var error = (geometricError * height) / (distance * sseDenominator);
+
+        if (tileset.dynamicScreenSpaceError) {
+            var density = tileset._dynamicScreenSpaceErrorComputedDensity;
+            var factor = tileset.dynamicScreenSpaceErrorFactor;
+            var dynamicError = CesiumMath.fog(distance, density) * factor;
+            error -= dynamicError;
+        }
+
+        return error;
     }
 
     function computeDistanceToCamera(children, frameState) {
@@ -937,7 +1120,7 @@ define([
 
         root.distanceToCamera = root.distanceToTile(frameState);
 
-        if (getScreenSpaceError(tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
+        if (getScreenSpaceError(tileset, tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
             // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
             return;
         }
@@ -969,7 +1152,7 @@ define([
             touch(tileset, t, outOfCore);
 
             // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
-            var sse = getScreenSpaceError(t.geometricError, t, frameState);
+            var sse = getScreenSpaceError(tileset, t.geometricError, t, frameState);
             // PERFORMANCE_IDEA: refine also based on (1) occlusion/VMSSE and/or (2) center of viewport
 
             var children = t.children;
@@ -1021,7 +1204,7 @@ define([
                             child = children[k];
                             if (child.insideViewerRequestVolume(frameState)) {
                                 // Use parent's geometric error with child's box to see if we already meet the SSE
-                                if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
+                                if (getScreenSpaceError(tileset, t.geometricError, child, frameState) > maximumScreenSpaceError) {
                                     child.visibilityPlaneMask = child.visibility(cullingVolume, visibilityPlaneMask);
                                     if (isVisible(child.visibilityPlaneMask)) {
                                         if (child.contentUnloaded) {
@@ -1485,6 +1668,10 @@ define([
 
         if (outOfCore) {
             processTiles(this, frameState);
+        }
+
+        if (this.dynamicScreenSpaceError) {
+            updateDynamicScreenSpaceError(this, frameState);
         }
 
         selectTiles(this, frameState, outOfCore);

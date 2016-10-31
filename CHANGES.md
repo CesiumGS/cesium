@@ -10,16 +10,63 @@ Change Log
    * `Cesium3DTileContent`
    * `Cesium3DTileFeature`
 
+### 1.27 - 2016-11-01
+
+* Deprecated
+    * 
+* Breaking changes
+    * 
+* Fixed a crash that would occur when using dynamic `distanceDisplayCondition` properties. [#4403](https://github.com/AnalyticalGraphicsInc/cesium/pull/4403)
+* Fixed several bugs that lead to billboards and labels being improperly clamped to terrain. [#4396](https://github.com/AnalyticalGraphicsInc/cesium/issues/4396), [#4062](https://github.com/AnalyticalGraphicsInc/cesium/issues/4062)
+* Fixed a bug affected models with multiple meshes without indices. [#4237](https://github.com/AnalyticalGraphicsInc/cesium/issues/4237)
+* Fixed `BoundingSphere` computation for `Primitive` instances with a modelMatrix. [#4428](https://github.com/AnalyticalGraphicsInc/cesium/issues/4428)
+* Fixed a glTF transparency bug where `blendFuncSeparate` parameters were loaded in the wrong order. [#4435](https://github.com/AnalyticalGraphicsInc/cesium/pull/4435)
+* Fixed a bug where creating a custom geometry with attributes and indices that have values that are not a typed array would cause a crash. [#4419](https://github.com/AnalyticalGraphicsInc/cesium/pull/4419)
+* `KmlDataSource` and `GeoJsonDataSource` were not honoring the `clampToGround` option for billboards and labels and was instead always clamping, reducing performance in cases when it was unneeded.
+* Fixed a bug with rotated, textured rectangles. [#4430](https://github.com/AnalyticalGraphicsInc/cesium/pull/4430)
+* Fixed a bug when morphing from 2D to 3D. [#4388](https://github.com/AnalyticalGraphicsInc/cesium/pull/4388)
+* Fixed a bug where when KML features had duplicate IDs, only one was drawn. [#3941](https://github.com/AnalyticalGraphicsInc/cesium/issues/3941)
+* Fixed `KmlDataSource` features to respect `timespan` and `timestamp` properties of it's parents (eg. Folders or NetworkLinks). [#4041](https://github.com/AnalyticalGraphicsInc/cesium/issues/4041)
+* Added the ability for KML files to load network links to other KML files within the same KMZ archive. [#4477](https://github.com/AnalyticalGraphicsInc/cesium/issues/4477)
+* `GeoJsonDataSource` now treats null crs values as a no-op instead of failing to load.
+* `GeoJsonDataSource` now gracefully handles missing style icons instead of failing to load.
+* Improve `Geocoder` usability by selecting text on click [#4464](https://github.com/AnalyticalGraphicsInc/cesium/pull/4464)
+* Added `Rectangle.simpleIntersection`.
+* Added the ability to specify retina options, such as `@2x.png`, via the `MapboxImageryProvider` `format` option.
+* Removed an unnecessary reprojection of Web Mercator imagery tiles to the Geographic projection on load.  This should improve both visual quality and load performance slightly.
+* Add `clusterBillboards`, `clusterLabels`, and `cluserPoints` properties to `EntityCluster` to selectively cluster screen space entities.
+* Fix a issue where a billboard entity would not render after toggling the show propery. [#4408](https://github.com/AnalyticalGraphicsInc/cesium/issues/4408)
+* Added `Transforms.northUpEastToFixedFrame` to compute a 4x4 local transformation matrix from a reference frame with an north-west-up axes.
+* Added `HeadingPitchRoll` :
+    * `HeadingPitchRoll.fromQuaternion` function for retrieving heading-pitch-roll angles from a quaternion.
+    * `HeadingPitchRoll.fromDegrees` function that returns a new HeadingPitchRoll instance from angles given in degrees.
+    * `HeadingPitchRoll.clone` function to duplicate HeadingPitchRoll instance.
+    * `HeadingPitchRoll.equals` and `HeadingPitchRoll.equalsEpsilon` functions for comparing two instances.
+* Added `Matrix3.fromHeadingPitchRoll` Computes a 3x3 rotation matrix from the provided headingPitchRoll.
+* `Transforms.headingPitchRollToFixedFrame` and `Transforms.headingPitchRollQuaternion` now take a `HeadingPitchRoll` object in addition to separate heading, pitch, and roll values.  Separate values will be deprecated in 1.30.
+* Prevent execution of default device/browser behaviour when handling "pinch" touch event/gesture.
+* Fixed a crash when zooming from touch input on viewer initialization. [#4177](https://github.com/AnalyticalGraphicsInc/cesium/issues/4177)
+
 ### 1.26 - 2016-10-03
 
+* Deprecated
+    * The `scene` parameter for creating `BillboardVisualizer`, `LabelVisualizer`, and `PointVisualizer` has been deprecated and will be removed in 1.28. Instead, pass an instance of `EntityCluster`.
 * Breaking changes
     * Vertex texture fetch is now required to be supported to render polylines. Maximum vertex texture image units must be greater than zero.
     * Removed `castShadows` and `receiveShadows` properties from `Model`, `Primitive`, and `Globe`. Instead, use `shadows` with the `ShadowMode` enum, e.g. `model.shadows = ShadowMode.ENABLED`.
     * `Viewer.terrainShadows` now uses the `ShadowMode` enum instead of a Boolean, e.g. `viewer.terrainShadows = ShadowMode.RECEIVE_ONLY`.
+* Added support for clustering `Billboard`, `Label` and `Point` entities. [#4240](https://github.com/AnalyticalGraphicsInc/cesium/pull/4240)
+* Added `DistanceDisplayCondition`s to all primitives to determine the range interval from the camera for when it will be visible.
 * Removed the default gamma correction for Bing Maps aerial imagery, because it is no longer an improvement to current versions of the tiles.  To restore the previous look, set the `defaultGamma` property of your `BingMapsImageryProvider` instance to 1.3.
-* Fixed billboard rotation when sized in meters. [#3979](https://github.com/AnalyticalGraphicsInc/cesium/issues/3979)
-* Fixed timeline touch events. [#4305](https://github.com/AnalyticalGraphicsInc/cesium/pull/4305)
 * Fixed a bug that could lead to incorrect terrain heights when using `HeightmapTerrainData` with an encoding in which actual heights were equal to the minimum representable height.
+* Fixed a bug in `AttributeCompression.compressTextureCoordinates` and `decompressTextureCoordinates` that could cause a small inaccuracy in the encoded texture coordinates.
+* Fixed a bug where viewing a model with transparent geometry would cause a crash. [#4378](https://github.com/AnalyticalGraphicsInc/cesium/issues/4378)
+* Added `TrustedServer` collection that controls which servers should have `withCredential` set to `true` on XHR Requests.
+* Fixed billboard rotation when sized in meters. [#3979](https://github.com/AnalyticalGraphicsInc/cesium/issues/3979)
+* Added `backgroundColor` and `borderWidth` properties to `writeTextToCanvas`.
+* Fixed timeline touch events. [#4305](https://github.com/AnalyticalGraphicsInc/cesium/pull/4305)
+* Fixed a bug that was incorrectly clamping Latitudes in KML <GroundOverlay>(s) to the range -PI..PI. Now correctly clamps to -PI/2..PI/2.
+* Added `CesiumMath.clampToLatitudeRange`. A convenience function to clamp a passed radian angle to valid Latitudes.
 * Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
 
 ### 1.25 - 2016-09-01

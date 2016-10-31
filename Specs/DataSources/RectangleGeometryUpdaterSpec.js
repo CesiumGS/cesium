@@ -4,6 +4,8 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/DistanceDisplayCondition',
+        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/JulianDate',
         'Core/Rectangle',
         'Core/ShowGeometryInstanceAttribute',
@@ -28,6 +30,8 @@ defineSuite([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         JulianDate,
         Rectangle,
         ShowGeometryInstanceAttribute,
@@ -99,6 +103,7 @@ defineSuite([
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
         expect(updater.shadowsProperty).toBe(undefined);
+        expect(updater.distanceDisplayCondition).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -140,6 +145,7 @@ defineSuite([
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
         expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
+        expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -233,6 +239,15 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
+    it('A time-varying color causes ground geometry to be dynamic', function() {
+        var entity = createBasicRectangleWithoutHeight();
+        var updater = new RectangleGeometryUpdater(entity, scene);
+        var color = new SampledProperty(Color);
+        color.addSample(time, Color.WHITE);
+        entity.rectangle.material = new ColorMaterialProperty(color);
+        expect(updater.isDynamic).toBe(true);
+    });
+
     function validateGeometryInstance(options) {
         var entity = createBasicRectangle();
 
@@ -249,6 +264,7 @@ defineSuite([
         rectangle.granularity = new ConstantProperty(options.granularity);
         rectangle.closeTop = new ConstantProperty(options.closeTop);
         rectangle.closeBottom = new ConstantProperty(options.closeBottom);
+        rectangle.distanceDisplayCondition = options.distanceDisplayCondition;
 
         var updater = new RectangleGeometryUpdater(entity, scene);
 
@@ -273,6 +289,9 @@ defineSuite([
                 expect(attributes.color).toBeUndefined();
             }
             expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
         }
 
         if (options.outline) {
@@ -285,6 +304,9 @@ defineSuite([
             attributes = instance.attributes;
             expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.outlineColor));
             expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
         }
     }
 
@@ -319,6 +341,24 @@ defineSuite([
             outlineColor : Color.BLUE,
             closeTop : false,
             closeBottom : true
+        });
+    });
+
+    it('Creates expected distance display condition geometry', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            height : 431,
+            extrudedHeight : 123,
+            granularity : 0.97,
+            rotation : 1,
+            stRotation : 12,
+            fill : true,
+            outline : true,
+            outlineColor : Color.BLUE,
+            closeTop : false,
+            closeBottom : true,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
         });
     });
 

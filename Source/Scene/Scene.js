@@ -224,7 +224,7 @@ define([
             creditContainer = document.createElement('div');
             creditContainer.style.position = 'absolute';
             creditContainer.style.bottom = '0';
-            creditContainer.style['text-shadow'] = '0px 0px 2px #000000';
+            creditContainer.style['text-shadow'] = '0 0 2px #000000';
             creditContainer.style.color = '#ffffff';
             creditContainer.style['font-size'] = '10px';
             creditContainer.style['padding-right'] = '5px';
@@ -1113,15 +1113,13 @@ define([
         var lightShadowMaps = frameState.shadowHints.lightShadowMaps;
         var lightShadowsEnabled = shadowsEnabled && (lightShadowMaps.length > 0);
 
+        // Update derived commands when any shadow maps become dirty
         var shadowsDirty = false;
-        if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
-            // Update derived commands when any shadow maps become dirty
-            var lastDirtyTime = frameState.shadowHints.lastDirtyTime;
-            if (command.lastDirtyTime !== lastDirtyTime) {
-                command.lastDirtyTime = lastDirtyTime;
-                command.dirty = true;
-                shadowsDirty = true;
-            }
+        var lastDirtyTime = frameState.shadowHints.lastDirtyTime;
+        if (command.lastDirtyTime !== lastDirtyTime) {
+            command.lastDirtyTime = lastDirtyTime;
+            command.dirty = true;
+            shadowsDirty = true;
         }
 
         if (command.dirty) {
@@ -1136,7 +1134,8 @@ define([
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
                 if (lightShadowsEnabled && command.receiveShadows) {
-                    derivedCommands.oit = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit);
+                    derivedCommands.oit = defined(derivedCommands.oit) ? derivedCommands.oit : {};
+                    derivedCommands.oit.shadows = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
                 }
@@ -2148,8 +2147,14 @@ define([
         var shadowMaps = frameState.shadowMaps;
         var length = shadowMaps.length;
 
-        frameState.shadowHints.shadowsEnabled = (length > 0) && !frameState.passes.pick && (scene.mode === SceneMode.SCENE3D);
-        if (!frameState.shadowHints.shadowsEnabled) {
+        var shadowsEnabled = (length > 0) && !frameState.passes.pick && (scene.mode === SceneMode.SCENE3D);
+        if (shadowsEnabled !== frameState.shadowHints.shadowsEnabled) {
+            // Update derived commands when shadowsEnabled changes
+            ++frameState.shadowHints.lastDirtyTime;
+            frameState.shadowHints.shadowsEnabled = shadowsEnabled;
+        }
+
+        if (!shadowsEnabled) {
             return;
         }
 

@@ -84,9 +84,11 @@ define([
         var swTile = tilingScheme.positionToTileXY(Rectangle.southwest(rectangle), minimumLevel);
         var neTile = tilingScheme.positionToTileXY(Rectangle.northeast(rectangle), minimumLevel);
         var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
+        //>>includeStart('debug', pragmas.debug);
         if (tileCount > 4) {
             throw new DeveloperError('The rectangle and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
         }
+        //>>includeEnd('debug');
 
         var credit = defaultValue(options.credit, defaultCredit);
         if (typeof credit === 'string') {

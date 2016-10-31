@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
@@ -13,6 +14,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/EncodedCartesian3',
         '../Core/FeatureDetection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
@@ -45,6 +47,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         clone,
         Color,
         combine,
@@ -54,6 +57,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        EncodedCartesian3,
         FeatureDetection,
         Geometry,
         GeometryAttribute,
@@ -353,6 +357,8 @@ define([
         this._batchTableAttributeIndices = undefined;
         this._instanceBoundingSpheres = undefined;
         this._instanceBoundingSpheresCV = undefined;
+        this._batchTableBoundingSpheresUpdated = false;
+        this._batchTableBoundingSphereAttributeIndices = undefined;
     }
 
     defineProperties(Primitive.prototype, {
@@ -545,9 +551,9 @@ define([
         var length = names.length;
 
         var allowPicking = primitive.allowPicking;
-        var attributesLength = allowPicking ? length + 1 : length;
-        var attributes = new Array(attributesLength);
+        var attributes = [];
         var attributeIndices = {};
+        var boundingSphereAttributeIndices = {};
 
         var firstInstance = instances[0];
         var instanceAttributes = firstInstance.attributes;
@@ -561,23 +567,53 @@ define([
             attribute = instanceAttributes[name];
 
             attributeIndices[name] = i;
-            attributes[i] = {
+            attributes.push({
                 functionName : 'czm_batchTable_' + name,
                 componentDatatype : attribute.componentDatatype,
                 componentsPerAttribute : attribute.componentsPerAttribute,
                 normalize : attribute.normalize
-            };
+            });
+        }
+
+        if (names.indexOf('distanceDisplayCondition') !== -1) {
+            attributes.push({
+                functionName : 'czm_batchTable_boundingSphereCenter3DHigh',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            },{
+                functionName : 'czm_batchTable_boundingSphereCenter3DLow',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            },{
+                functionName : 'czm_batchTable_boundingSphereCenter2DHigh',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            },{
+                functionName : 'czm_batchTable_boundingSphereCenter2DLow',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            },{
+                functionName : 'czm_batchTable_boundingSphereRadius',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 1
+            });
+            boundingSphereAttributeIndices.center3DHigh = attributes.length - 5;
+            boundingSphereAttributeIndices.center3DLow = attributes.length - 4;
+            boundingSphereAttributeIndices.center2DHigh = attributes.length - 3;
+            boundingSphereAttributeIndices.center2DLow = attributes.length - 2;
+            boundingSphereAttributeIndices.radius = attributes.length - 1;
         }
 
         if (allowPicking) {
-            attributes[attributesLength - 1] = {
+            attributes.push({
                 functionName : 'czm_batchTable_pickColor',
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 4,
                 normalize : true
-            };
+            });
         }
 
+        var attributesLength = attributes.length;
         var batchTable = new BatchTable(attributes, numberOfInstances);
 
         for (i = 0; i < numberOfInstances; ++i) {
@@ -617,6 +653,7 @@ define([
 
         primitive._batchTable = batchTable;
         primitive._batchTableAttributeIndices = attributeIndices;
+        primitive._batchTableBoundingSphereAttributeIndices = boundingSphereAttributeIndices;
     }
 
     function cloneAttribute(attribute) {
@@ -784,6 +821,66 @@ define([
         var vsPick = source.replace(/attribute\s+vec4\s+pickColor;/g, '');
         vsPick = vsPick.replace(/(\b)pickColor(\b)/g, '$1czm_batchTable_pickColor(batchId)$2');
         return vsPick;
+    };
+
+    Primitive._appendDistanceDisplayConditionToShader = function(primitive, vertexShaderSource, scene3DOnly) {
+        if (!defined(primitive._batchTableAttributeIndices.distanceDisplayCondition)) {
+            return vertexShaderSource;
+        }
+
+        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_distanceDisplayCondition_main');
+        var distanceDisplayConditionMain =
+            'void main() \n' +
+            '{ \n' +
+            '    czm_non_distanceDisplayCondition_main(); \n' +
+            '    vec2 distanceDisplayCondition = czm_batchTable_distanceDisplayCondition(batchId);\n' +
+            '    vec3 boundingSphereCenter3DHigh = czm_batchTable_boundingSphereCenter3DHigh(batchId);\n' +
+            '    vec3 boundingSphereCenter3DLow = czm_batchTable_boundingSphereCenter3DLow(batchId);\n' +
+            '    vec3 boundingSphereCenter2DHigh = czm_batchTable_boundingSphereCenter2DHigh(batchId);\n' +
+            '    vec3 boundingSphereCenter2DLow = czm_batchTable_boundingSphereCenter2DLow(batchId);\n' +
+            '    float boundingSphereRadius = czm_batchTable_boundingSphereRadius(batchId);\n';
+
+        if (!scene3DOnly) {
+            distanceDisplayConditionMain +=
+                '    vec4 centerRTE;\n' +
+                '    if (czm_morphTime == 1.0)\n' +
+                '    {\n' +
+                '        centerRTE = czm_translateRelativeToEye(boundingSphereCenter3DHigh, boundingSphereCenter3DLow);\n' +
+                '    }\n' +
+                '    else if (czm_morphTime == 0.0)\n' +
+                '    {\n' +
+                '        centerRTE = czm_translateRelativeToEye(boundingSphereCenter2DHigh.zxy, boundingSphereCenter2DLow.zxy);\n' +
+                '    }\n' +
+                '    else\n' +
+                '    {\n' +
+                '        centerRTE = czm_columbusViewMorph(\n' +
+                '                czm_translateRelativeToEye(boundingSphereCenter2DHigh.zxy, boundingSphereCenter2DLow.zxy),\n' +
+                '                czm_translateRelativeToEye(boundingSphereCenter3DHigh, boundingSphereCenter3DLow),\n' +
+                '                czm_morphTime);\n' +
+                '    }\n';
+        } else {
+            distanceDisplayConditionMain +=
+                '    vec4 centerRTE = czm_translateRelativeToEye(boundingSphereCenter3DHigh, boundingSphereCenter3DLow);\n';
+        }
+
+        distanceDisplayConditionMain +=
+            '    float radiusSq = boundingSphereRadius * boundingSphereRadius; \n' +
+            '    float distanceSq; \n' +
+            '    if (czm_sceneMode == czm_sceneMode2D) \n' +
+            '    { \n' +
+            '        distanceSq = czm_eyeHeight2D.y - radiusSq; \n' +
+            '    } \n' +
+            '    else \n' +
+            '    { \n' +
+            '        distanceSq = dot(centerRTE.xyz, centerRTE.xyz) - radiusSq; \n' +
+            '    } \n' +
+            '    distanceSq = max(distanceSq, 0.0); \n' +
+            '    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x; \n' +
+            '    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y; \n' +
+            '    float show = (distanceSq >= nearSq && distanceSq <= farSq) ? 1.0 : 0.0; \n' +
+            '    gl_Position *= show; \n' +
+            '}';
+        return renamedVS + '\n' + distanceDisplayConditionMain;
     };
 
     function modifyForEncodedNormals(primitive, vertexShaderSource) {
@@ -1071,6 +1168,57 @@ define([
         }
     }
 
+    var scratchBoundingSphereCenterEncoded = new EncodedCartesian3();
+    var scratchBoundingSphereCartographic = new Cartographic();
+    var scratchBoundingSphereCenter2D = new Cartesian3();
+
+    function updateBatchTableBoundingSpheres(primitive, frameState) {
+        var hasDistanceDisplayCondition = defined(primitive._batchTableAttributeIndices.distanceDisplayCondition);
+        if (!hasDistanceDisplayCondition && primitive._batchTableBoundingSpheresUpdated) {
+            return;
+        }
+
+        var indices = primitive._batchTableBoundingSphereAttributeIndices;
+        var center3DHighIndex = indices.center3DHigh;
+        var center3DLowIndex = indices.center3DLow;
+        var center2DHighIndex = indices.center2DHigh;
+        var center2DLowIndex = indices.center2DLow;
+        var radiusIndex = indices.radius;
+
+        var projection = frameState.mapProjection;
+        var ellipsoid = projection.ellipsoid;
+
+        var batchTable = primitive._batchTable;
+        var boundingSpheres = primitive._instanceBoundingSpheres;
+        var length = boundingSpheres.length;
+
+        for (var i = 0; i < length; ++i) {
+            var boundingSphere = boundingSpheres[i];
+            var modelMatrix = primitive.modelMatrix;
+            if (defined(modelMatrix)) {
+                boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
+            }
+
+            if (hasDistanceDisplayCondition) {
+                var center = boundingSphere.center;
+                var radius = boundingSphere.radius;
+
+                var encodedCenter = EncodedCartesian3.fromCartesian(center, scratchBoundingSphereCenterEncoded);
+                batchTable.setBatchedAttribute(i, center3DHighIndex, encodedCenter.high);
+                batchTable.setBatchedAttribute(i, center3DLowIndex, encodedCenter.low);
+
+                var cartographic = ellipsoid.cartesianToCartographic(center, scratchBoundingSphereCartographic);
+                var center2D = projection.project(cartographic, scratchBoundingSphereCenter2D);
+                encodedCenter = EncodedCartesian3.fromCartesian(center2D, scratchBoundingSphereCenterEncoded);
+                batchTable.setBatchedAttribute(i, center2DHighIndex, encodedCenter.high);
+                batchTable.setBatchedAttribute(i, center2DLowIndex, encodedCenter.low);
+                batchTable.setBatchedAttribute(i, radiusIndex, radius);
+            }
+        }
+
+        primitive._batchTableBoundingSpheresUpdated = true;
+    }
+
     function createVertexArray(primitive, frameState) {
         var attributeLocations = primitive._attributeLocations;
         var geometries = primitive._geometries;
@@ -1178,10 +1326,11 @@ define([
         var attributeLocations = primitive._attributeLocations;
 
         var vs = primitive._batchTable.getVertexShaderCallback()(appearance.vertexShaderSource);
-        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive, vs);
+        vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs, frameState.scene3DOnly);
         vs = Primitive._updateColorAttribute(primitive, vs);
         vs = modifyForEncodedNormals(primitive, vs);
+        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         var fs = appearance.getFragmentShaderSource();
 
         // Create pick program
@@ -1228,10 +1377,12 @@ define([
             // Convert to uniform map of functions for the renderer
             for (var name in appearanceUniforms) {
                 if (appearanceUniforms.hasOwnProperty(name)) {
+                    //>>includeStart('debug', pragmas.debug);
                     if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
                         // Later, we could rename uniforms behind-the-scenes if needed.
                         throw new DeveloperError('Appearance and material have a uniform with the same name: ' + name);
                     }
+                    //>>includeEnd('debug');
 
                     appearanceUniformMap[name] = getUniformFunction(appearanceUniforms, name);
                 }
@@ -1420,9 +1571,11 @@ define([
             throw this._error;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (defined(this.rtcCenter) && !frameState.scene3DOnly) {
             throw new DeveloperError('RTC rendering is only available for 3D only scenes.');
         }
+        //>>includeEnd('debug');
 
         if (this._state === PrimitiveState.FAILED) {
             return;
@@ -1448,6 +1601,7 @@ define([
         }
 
         if (this._state === PrimitiveState.COMBINED) {
+            updateBatchTableBoundingSpheres(this, frameState);
             createVertexArray(this, frameState);
         }
 
@@ -1554,6 +1708,7 @@ define([
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
      * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
      * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
+     * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(100.0, 10000.0);
      */
     Primitive.prototype.getGeometryInstanceAttributes = function(id) {
         //>>includeStart('debug', pragmas.debug);

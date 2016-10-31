@@ -8,7 +8,9 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Matrix4',
         'Core/RequestScheduler',
+        'Renderer/ContextLimits',
         'Scene/Cesium3DTile',
+        'Scene/Cesium3DTileColorBlendMode',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
@@ -26,7 +28,9 @@ defineSuite([
         loadWithXhr,
         Matrix4,
         RequestScheduler,
+        ContextLimits,
         Cesium3DTile,
+        Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
         Cesium3DTileRefine,
         Cesium3DTileStyle,
@@ -65,7 +69,19 @@ defineSuite([
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
 
+    var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
+    var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
+    var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
+    var withBoundingSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithBoundingSphere/';
+
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
+    var instancedRedMaterialUrl = './Data/Cesium3DTiles/Instanced/InstancedRedMaterial';
+
+    // 1 tile where each feature is a different source color
+    var colorsUrl = './Data/Cesium3DTiles/Batched/BatchedColors/';
+
+    // 1 tile where each feature has a reddish texture
+    var texturedUrl = './Data/Cesium3DTiles/Batched/BatchedTextured/';
 
     // 1 tile with translucent features
     var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/';
@@ -428,6 +444,49 @@ defineSuite([
             expect(selectedTiles[3]).toBe(lrTile);
             expect(selectedTiles[4]).toBe(urTile);
         });
+    });
+
+    function testDynamicScreenSpaceError(url, distance) {
+        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+
+            // Horizon view, only root is visible
+            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, distance));
+
+            // Set dynamic SSE to false (default)
+            tileset.dynamicScreenSpaceError = false;
+            scene.renderForSpecs();
+            expect(stats.visited).toEqual(1);
+            expect(stats.numberOfCommands).toEqual(1);
+
+            // Set dynamic SSE to true, now the root is not rendered
+            tileset.dynamicScreenSpaceError = true;
+            tileset.dynamicScreenSpaceErrorDensity = 1.0;
+            tileset.dynamicScreenSpaceErrorFactor = 10.0;
+            scene.renderForSpecs();
+            expect(stats.visited).toEqual(0);
+            expect(stats.numberOfCommands).toEqual(0);
+        });
+    }
+
+    // Adjust distances for each test because the dynamic SSE takes the
+    // bounding volume height into account, which differs for each bounding volume.
+    it('uses dynamic screen space error for tileset with region', function() {
+        return testDynamicScreenSpaceError(withTransformRegionUrl, 103.0);
+    });
+
+    it('uses dynamic screen space error for tileset with bounding sphere', function() {
+        return testDynamicScreenSpaceError(withBoundingSphereUrl, 144.0);
+    });
+
+    it('uses dynamic screen space error for local tileset with box', function() {
+        return testDynamicScreenSpaceError(withTransformBoxUrl, 193.0);
+    });
+
+    it('uses dynamic screen space error for local tileset with sphere', function() {
+        return testDynamicScreenSpaceError(withTransformSphereUrl, 145.0);
     });
 
     it('additive refinement - selects root when sse is met', function() {
@@ -912,7 +971,6 @@ defineSuite([
 
     it('debugShowViewerRequestVolume', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithViewerRequestVolumeUrl).then(function(tileset) {
-            console.log('start');
             tileset.debugShowViewerRequestVolume = true;
             scene.renderForSpecs();
             var stats = tileset._statistics;
@@ -1247,10 +1305,10 @@ defineSuite([
             // ${id} < 10 will always evaluate to true
             tileset.style = new Cesium3DTileStyle({
                 color : {
-                    conditions : {
-                        '${id} < 10' : 'color("red")',
-                        'true' : 'color("blue")'
-                    }
+                    conditions : [
+                        ['${id} < 10', 'color("red")'],
+                        ['true', 'color("blue")']
+                    ]
                 }
             });
             var color = scene.renderForSpecs();
@@ -1262,10 +1320,10 @@ defineSuite([
             // ${id}>= 10 will always evaluate to false
             tileset.style = new Cesium3DTileStyle({
                 color : {
-                    conditions : {
-                        '${id} >= 10' : 'color("red")',
-                        'true' : 'color("blue")'
-                    }
+                    conditions : [
+                        ['${id} >= 10', 'color("red")'],
+                        ['true', 'color("blue")']
+                    ]
                 }
             });
             color = scene.renderForSpecs();
@@ -1317,6 +1375,149 @@ defineSuite([
             tileset.makeStyleDirty();
             expect(scene.renderForSpecs()).toEqual(showColor);
         });
+    });
+
+    function testColorBlendMode(url) {
+        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+            // Check that the feature is red
+            var color = scene.renderForSpecs();
+            var sourceRed = color[0];
+            expect(color[0]).toBeGreaterThan(0);
+            expect(color[1]).toEqual(0);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+
+            // Use HIGHLIGHT blending
+            tileset.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
+
+            // Style with dark yellow. Expect the red channel to be darker than before.
+            tileset.style = new Cesium3DTileStyle({
+                color : 'rgb(128, 128, 0)'
+            });
+            color = scene.renderForSpecs();
+            expect(color[0]).toBeGreaterThan(0);
+            expect(color[0]).toBeLessThan(sourceRed);
+            expect(color[1]).toEqual(0);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+
+            // Style with yellow + alpha. Expect the red channel to be darker than before.
+            tileset.style = new Cesium3DTileStyle({
+                color : 'rgba(255, 255, 0, 0.5)'
+            });
+            color = scene.renderForSpecs();
+            expect(color[0]).toBeGreaterThan(0);
+            expect(color[0]).toBeLessThan(sourceRed);
+            expect(color[1]).toEqual(0);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+
+            // Use REPLACE blending
+            tileset.colorBlendMode = Cesium3DTileColorBlendMode.REPLACE;
+
+            // Style with dark yellow. Expect the red and green channels to be roughly dark yellow.
+            tileset.style = new Cesium3DTileStyle({
+                color : 'rgb(128, 128, 0)'
+            });
+            color = scene.renderForSpecs();
+            var replaceRed = color[0];
+            var replaceGreen = color[1];
+            expect(color[0]).toBeGreaterThan(0);
+            expect(color[0]).toBeLessThan(255);
+            expect(color[1]).toEqual(color[0]);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+
+            // Style with yellow + alpha. Expect the red and green channels to be a shade of yellow.
+            tileset.style = new Cesium3DTileStyle({
+                color : 'rgba(255, 255, 0, 0.5)'
+            });
+            color = scene.renderForSpecs();
+            expect(color[0]).toBeGreaterThan(0);
+            expect(color[0]).toBeLessThan(255);
+            expect(color[1]).toEqual(color[0]);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+
+            // Use MIX blending
+            tileset.colorBlendMode = Cesium3DTileColorBlendMode.MIX;
+            tileset.colorBlendAmount = 0.5;
+
+            // Style with dark yellow. Expect color to be a mix of the source and style colors.
+            tileset.style = new Cesium3DTileStyle({
+                color : 'rgb(128, 128, 0)'
+            });
+            color = scene.renderForSpecs();
+            var mixRed = color[0];
+            var mixGreen = color[1];
+            expect(color[0]).toBeGreaterThan(replaceRed);
+            expect(color[0]).toBeLessThan(sourceRed);
+            expect(color[1]).toBeGreaterThan(0);
+            expect(color[1]).toBeLessThan(replaceGreen);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+
+            // Set colorBlendAmount to 0.25. Expect color to be closer to the source color.
+            tileset.colorBlendAmount = 0.25;
+            color = scene.renderForSpecs();
+            expect(color[0]).toBeGreaterThan(mixRed);
+            expect(color[0]).toBeLessThan(sourceRed);
+            expect(color[1]).toBeGreaterThan(0);
+            expect(color[1]).toBeLessThan(mixGreen);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+
+            // Set colorBlendAmount to 0.0. Expect color to equal the source color
+            tileset.colorBlendAmount = 0.0;
+            color = scene.renderForSpecs();
+            expect(color[0]).toEqual(sourceRed);
+            expect(color[1]).toEqual(0);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+
+            // Set colorBlendAmount to 1.0. Expect color to equal the style color
+            tileset.colorBlendAmount = 1.0;
+            color = scene.renderForSpecs();
+            expect(color[0]).toEqual(replaceRed);
+            expect(color[1]).toEqual(replaceGreen);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+
+            // Style with yellow + alpha. Expect color to be a mix of the source and style colors.
+            tileset.colorBlendAmount = 0.5;
+            tileset.style = new Cesium3DTileStyle({
+                color : 'rgba(255, 255, 0, 0.5)'
+            });
+            color = scene.renderForSpecs();
+            expect(color[0]).toBeGreaterThan(0);
+            expect(color[1]).toBeGreaterThan(0);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+        });
+    }
+
+    it('sets colorBlendMode', function() {
+        return testColorBlendMode(colorsUrl);
+    });
+
+    it('sets colorBlendMode when vertex texture fetch is not supported', function() {
+        // Disable VTF
+        var maximumVertexTextureImageUnits = ContextLimits.maximumVertexTextureImageUnits;
+        ContextLimits._maximumVertexTextureImageUnits = 0;
+        return testColorBlendMode(colorsUrl).then(function() {
+            // Re-enable VTF
+            ContextLimits._maximumVertexTextureImageUnits = maximumVertexTextureImageUnits;
+        });
+    });
+
+    it('sets colorBlendMode for textured tileset', function() {
+        return testColorBlendMode(texturedUrl);
+    });
+
+    it('sets colorBlendMode for instanced tileset', function() {
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 36.0));
+        return testColorBlendMode(instancedRedMaterialUrl);
     });
 
     ///////////////////////////////////////////////////////////////////////////

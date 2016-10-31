@@ -13,6 +13,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/FeatureDetection',
         '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
@@ -76,6 +77,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
         FeatureDetection,
         getAbsoluteUri,
         getBaseUri,
@@ -330,6 +332,7 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
+     * @param {DistanceDisplayCondition} [options.istanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -549,6 +552,8 @@ define([
          */
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
+
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
 
         // Undocumented options
         this._precreatedAttributes = options.precreatedAttributes;
@@ -869,6 +874,26 @@ define([
             get : function() {
                 return this._dirty;
             }
+        },
+
+        /**
+         * Gets or sets the condition specifying at what distance from the camera that this model will be displayed.
+         * @memberof Model.prototype
+         * @type {DistanceDisplayCondition}
+         * @default undefined
+         */
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && value.far <= value.near) {
+                    throw new DeveloperError('far must be greater than near');
+                }
+                //>>includeEnd('debug');
+                this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
+            }
         }
     });
 
@@ -888,9 +913,11 @@ define([
     }
 
     function parseBinaryGltfHeader(uint8Array) {
+        //>>includeStart('debug', pragmas.debug);
         if (!containsGltfMagic(uint8Array)) {
             throw new DeveloperError('bgltf is not a valid Binary glTF file.');
         }
+        //>>includeEnd('debug');
 
         var view = new DataView(uint8Array.buffer, uint8Array.byteOffset, uint8Array.byteLength);
         var byteOffset = 0;
@@ -2403,8 +2430,8 @@ define([
             WebGLConstants.FUNC_ADD]);
         var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
             WebGLConstants.ONE,
-            WebGLConstants.ONE,
             WebGLConstants.ZERO,
+            WebGLConstants.ONE,
             WebGLConstants.ZERO]);
         var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
         var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
@@ -2458,8 +2485,8 @@ define([
                 equationRgb : blendEquationSeparate[0],
                 equationAlpha : blendEquationSeparate[1],
                 functionSourceRgb : blendFuncSeparate[0],
-                functionSourceAlpha : blendFuncSeparate[1],
-                functionDestinationRgb : blendFuncSeparate[2],
+                functionDestinationRgb : blendFuncSeparate[1],
+                functionSourceAlpha : blendFuncSeparate[2],
                 functionDestinationAlpha : blendFuncSeparate[3]
             }
         });
@@ -3024,8 +3051,7 @@ define([
                 else {
                     var positions = accessors[primitive.attributes.POSITION];
                     count = positions.count;
-                    var accessorInfo = getBinaryAccessor(positions);
-                    offset = (positions.byteOffset / (accessorInfo.componentsPerAttribute*ComponentDatatype.getSizeInBytes(positions.componentType)));
+                    offset = 0;
                 }
 
                 var um = uniformMaps[primitive.material];
@@ -3705,6 +3731,35 @@ define([
         }
     }
 
+    var scratchDisplayConditionCartesian = new Cartesian3();
+    var scratchDistanceDisplayConditionCartographic = new Cartographic();
+
+    function distanceDisplayConditionVisible(model, frameState) {
+        var distance2;
+        var ddc = model.distanceDisplayCondition;
+        var nearSquared = ddc.near * ddc.near;
+        var farSquared = ddc.far * ddc.far;
+
+        if (frameState.mode === SceneMode.SCENE2D) {
+            var frustum2DWidth = frameState.camera.frustum.right - frameState.camera.frustum.left;
+            distance2 = frustum2DWidth * 0.5;
+            distance2 = distance2 * distance2;
+        } else {
+            // Distance to center of primitive's reference frame
+            var position = Matrix4.getTranslation(model.modelMatrix, scratchDisplayConditionCartesian);
+            if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+                var projection = frameState.mapProjection;
+                var ellipsoid = projection.ellipsoid;
+                var cartographic = ellipsoid.cartesianToCartographic(position, scratchDistanceDisplayConditionCartographic);
+                position = projection.project(cartographic, position);
+                Cartesian3.fromElements(position.z, position.x, position.y, position);
+            }
+            distance2 = Cartesian3.distanceSquared(position, frameState.camera.positionWC);
+        }
+
+        return (distance2 >= nearSquared) && (distance2 <= farSquared);
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -3821,7 +3876,8 @@ define([
             }
         }
 
-        var show = this.show && (this.scale !== 0.0);
+        var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
+        var show = this.show && displayConditionPassed && (this.scale !== 0.0);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;

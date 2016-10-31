@@ -199,6 +199,25 @@ define([
     };
 
     /**
+     * Apply a style to the content using a shader instead of a batch table. Currently this is only
+     * applicable for {@link PointCloud3DTileContent}.
+     * <p>
+     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+     * not part of the public Cesium API.
+     * </p>
+     *
+     * @param {FrameSate} frameState The frame state.
+     * @param {Cesium3DTileStyle} style The style.
+     *
+     * @returns {Boolean} <code>true</code> if this content is styled with a shader; otherwise, <code>false</code>.
+     *
+     * @private
+     */
+    Cesium3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
+        DeveloperError.throwInstantiationError();
+    };
+
+    /**
      * Called by the tile during tileset traversal to get the draw commands needed to render this content.
      * When the tile's content is in the PROCESSING state, this creates WebGL resources to ultimately
      * move to the READY state.

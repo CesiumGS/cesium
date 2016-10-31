@@ -11,6 +11,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/Math',
         '../Core/PixelFormat',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
@@ -22,6 +23,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         './BlendingState',
+        './Cesium3DTileColorBlendMode',
         './CullFace',
         './getBinaryAccessor',
         './Pass'
@@ -37,6 +39,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        CesiumMath,
         PixelFormat,
         ContextLimits,
         DrawCommand,
@@ -48,6 +51,7 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         BlendingState,
+        Cesium3DTileColorBlendMode,
         CullFace,
         getBinaryAccessor,
         Pass) {
@@ -478,18 +482,15 @@ define([
     /**
      * @private
      */
-    Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function() {
+    Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function(handleTranslucent) {
         if (this.featuresLength === 0) {
             return;
         }
 
         var that = this;
-        // TODO: remove handleTranslucent? need vector render order
-        return function(source, handleTranslucent) {
+        return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
             var newMain;
-
-            handleTranslucent = defaultValue(handleTranslucent, true);
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per-feature show/hide in the vertex shader
@@ -541,55 +542,101 @@ define([
         };
     };
 
-    Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function() {
+    function modifyDiffuse(source, colorBlendMode, diffuseUniformName) {
+        // If the glTF does not specify the _3DTILESDIFFUSE semantic, return a basic highlight shader.
+        // Otherwise if _3DTILESDIFFUSE is defined prefer the shader below that can switch the color mode at runtime.
+        if (!defined(diffuseUniformName)) {
+            source = ShaderSource.replaceMain(source, 'tile_main');
+            return source +
+                   'void tile_color(vec4 tile_featureColor) \n' +
+                   '{ \n' +
+                   '    tile_main(); \n' +
+                   '    gl_FragColor *= tile_featureColor; \n' +
+                   '} \n';
+        }
+
+        // Find the diffuse uniform
+        var regex = new RegExp('uniform\\s+(vec[34]|sampler2D)\\s+' + diffuseUniformName + ';');
+        var uniformMatch = source.match(regex);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(uniformMatch)) {
+            throw new DeveloperError('Could not find uniform declaration for ' + diffuseUniformName + ' of type vec3, vec4, or sampler2D');
+        }
+        //>>includeEnd('debug');
+
+        var declaration = uniformMatch[0];
+        var type = uniformMatch[1];
+
+        source = ShaderSource.replaceMain(source, 'tile_main');
+        source = source.replace(declaration, ''); // Remove uniform declaration for now so the replace below don't affect it
+        source = source.replace('void tile_main()', 'void tile_main(vec4 tile_diffuse)');
+
+        // If the tile color is white, use the source color. This implies the feature has not been styled.
+        // Highlight: tile_colorBlend is 0.0 and the source color is used
+        // Replace: tile_colorBlend is 1.0 and the tile color is used
+        // Mix: tile_colorBlend is between 0.0 and 1.0, causing the source color and tile color to mix
+        var finalDiffuseFunction =
+            'vec4 tile_diffuse_final(vec4 sourceDiffuse, vec4 tileDiffuse) \n' +
+            '{ \n' +
+            '    vec4 blendDiffuse = mix(sourceDiffuse, tileDiffuse, tile_colorBlend); \n' +
+            '    vec4 diffuse = (tileDiffuse.rgb == vec3(1.0)) ? sourceDiffuse : blendDiffuse; \n' +
+            '    return vec4(diffuse.rgb, sourceDiffuse.a); \n' +
+            '} \n';
+
+        // The color blend mode is intended for the RGB channels so alpha is always just multiplied.
+        // gl_FragColor is multiplied by the tile color only when tile_colorBlend is 0.0 (highlight)
+        var applyHighlight =
+            '    gl_FragColor.a *= tile_featureColor.a; \n' +
+            '    float highlight = ceil(tile_colorBlend); \n' +
+            '    gl_FragColor.rgb *= mix(tile_featureColor.rgb, vec3(1.0), highlight); \n';
+
+        var setColor;
+        if (type === 'vec3' || type === 'vec4') {
+            var sourceDiffuse = (type === 'vec3') ? ('vec4(' + diffuseUniformName + ', 1.0)') : diffuseUniformName;
+            var replaceDiffuse = (type === 'vec3') ? 'tile_diffuse.xyz' : 'tile_diffuse';
+            regex = new RegExp(diffuseUniformName, 'g');
+            source = source.replace(regex, replaceDiffuse);
+            setColor =
+                '    vec4 source = ' + sourceDiffuse + '; \n' +
+                '    vec4 diffuse = tile_diffuse_final(source, tile_featureColor); \n' +
+                '    tile_main(diffuse); \n';
+        } else if (type === 'sampler2D') {
+            regex = new RegExp('texture2D\\(' + diffuseUniformName + '.*?\\)', 'g');
+            source = source.replace(regex, 'tile_diffuse_final($&, tile_diffuse)');
+            setColor = '    tile_main(tile_featureColor); \n';
+        }
+
+        source =
+            'uniform float tile_colorBlend; \n' +
+            finalDiffuseFunction +
+            declaration + '\n' +
+            source + '\n' +
+            'void tile_color(vec4 tile_featureColor) \n' +
+            '{ \n' +
+            setColor +
+            applyHighlight +
+            '} \n';
+
+        return source;
+    }
+
+    Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function(handleTranslucent, colorBlendMode, diffuseUniformName) {
         if (this.featuresLength === 0) {
             return;
         }
-
-        // TODO: remove handleTranslucent? need vector render order
-        return function(source, handleTranslucent) {
-            //TODO: generate entire shader at runtime?
-            //var diffuse = 'diffuse = u_diffuse;';
-            //var diffuseTexture = 'diffuse = texture2D(u_diffuse, v_texcoord0);';
-            //if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-            //    source = 'varying vec3 tile_featureColor; \n' + source;
-            //    source = source.replace(diffuse, 'diffuse.rgb = tile_featureColor;');
-            //    source = source.replace(diffuseTexture, 'diffuse.rgb = texture2D(u_diffuse, v_texcoord0).rgb * tile_featureColor;');
-            //} else {
-            //    source =
-            //        'uniform sampler2D tile_batchTexture; \n' +
-            //        'varying vec2 tile_featureSt; \n' +
-            //        source;
-            //
-            //    var readColor =
-            //        'vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
-            //        'if (featureProperties.a == 0.0) { \n' +
-            //        '    discard; \n' +
-            //        '}';
-            //
-            //    source = source.replace(diffuse, readColor + 'diffuse.rgb = featureProperties.rgb;');
-            //    source = source.replace(diffuseTexture, readColor + 'diffuse.rgb = texture2D(u_diffuse, v_texcoord0).rgb * featureProperties.rgb;');
-            //}
-            //
-            //return source;
-
-            // TODO: support both "replace" and "highlight" color?  Highlight is below, replace is commented out above
-            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
-            var newMain;
-
-            handleTranslucent = defaultValue(handleTranslucent, true);
-
+        return function(source) {
+            source = modifyDiffuse(source, colorBlendMode, diffuseUniformName);
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per-feature show/hide already happened in the fragment shader
-                newMain =
+                source +=
                     'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    tile_main(); \n' +
-                    '    gl_FragColor *= tile_featureColor; \n' +
+                    '    tile_color(tile_featureColor); \n' +
                     '}';
             } else {
-                newMain =
+                source +=
                     'uniform sampler2D tile_batchTexture; \n' +
                     'uniform bool tile_translucentCommand; \n' +
                     'varying vec2 tile_featureSt; \n' +
@@ -601,7 +648,7 @@ define([
                     '    } \n';
 
                 if (handleTranslucent) {
-                    newMain +=
+                    source +=
                         '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
                         '    if (czm_pass == czm_passTranslucent) \n' +
                         '    { \n' +
@@ -618,15 +665,28 @@ define([
                         '        } \n' +
                         '    } \n';
                 }
-                newMain +=
-                    '    tile_main(); \n' +
-                    '    gl_FragColor *= featureProperties; \n' +
-                    '}';
-            }
 
-            return renamedSource + '\n' + newMain;
+                source +=
+                    '    tile_color(featureProperties); \n' +
+                    '} \n';
+            }
+            return source;
         };
     };
+
+    function getColorBlend(batchTable) {
+        var tileset = batchTable._content._tileset;
+        var colorBlendMode = tileset.colorBlendMode;
+        var colorBlendAmount = tileset.colorBlendAmount;
+        if (colorBlendMode === Cesium3DTileColorBlendMode.HIGHLIGHT) {
+            return 0.0;
+        } else if (colorBlendMode === Cesium3DTileColorBlendMode.REPLACE) {
+            return 1.0;
+        } else if (colorBlendMode === Cesium3DTileColorBlendMode.MIX) {
+            // The value 0.0 is reserved for highlight, so clamp to just above 0.0.
+            return CesiumMath.clamp(colorBlendAmount, CesiumMath.EPSILON4, 1.0);
+        }
+    }
 
     Cesium3DTileBatchTable.prototype.getUniformMapCallback = function() {
         if (this.featuresLength === 0) {
@@ -645,6 +705,9 @@ define([
                 },
                 tile_textureStep : function() {
                     return that._textureStep;
+                },
+                tile_colorBlend : function() {
+                    return getColorBlend(that);
                 }
             };
 
@@ -774,6 +837,16 @@ define([
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
+    function updateDerivedCommandsShadows(derivedCommands, command) {
+        for (var name in derivedCommands) {
+            if (derivedCommands.hasOwnProperty(name)) {
+                var derivedCommand = derivedCommands[name];
+                derivedCommand.castShadows = command.castShadows;
+                derivedCommand.receiveShadows = command.receiveShadows;
+            }
+        }
+    }
+
     Cesium3DTileBatchTable.prototype.getAddCommand = function() {
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
@@ -791,12 +864,7 @@ define([
                 derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
             }
 
-            derivedCommands.originalCommand.castShadows = command.castShadows;
-            derivedCommands.originalCommand.receiveShadows = command.receiveShadows;
-            derivedCommands.back.castShadows = command.castShadows;
-            derivedCommands.back.receiveShadows = command.receiveShadows;
-            derivedCommands.front.castShadows = command.castShadows;
-            derivedCommands.front.receiveShadows = command.receiveShadows;
+            updateDerivedCommandsShadows(derivedCommands, command);
 
             // If the command was originally opaque:
             //    * If the styling applied to the tile is all opaque, use the original command
