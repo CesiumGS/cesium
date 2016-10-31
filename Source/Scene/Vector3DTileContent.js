@@ -303,17 +303,11 @@ define([
         var quantizedOffset = Cartesian3.unpack(featureTableJson.QUANTIZED_VOLUME_OFFSET);
         var quantizedScale = Cartesian3.unpack(featureTableJson.QUANTIZED_VOLUME_SCALE);
 
-        //var featureTable = new Cesium3DTileFeatureTable(featureTableJson, featureTableBinary);
-
-        // TODO: get feature colors
-        //var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
-        var randomColors = [Color.WHITE.withAlpha(0.5)];
-        var tempLength = counts.length;
         var n;
-        var color;
+        var color = Color.WHITE.withAlpha(0.5);
+        var tempLength = counts.length;
         var batchIds = new Array(tempLength);
         for (n = 0; n < tempLength; ++n) {
-            color = color = randomColors[n % randomColors.length];
             batchTable.setColor(n, color);
             batchIds[n] = n;
         }
@@ -335,17 +329,14 @@ define([
             });
         }
 
-        // TODO: get feature colors/widths
-        //randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
         tempLength = polylineCounts.length;
         var widths = new Array(tempLength);
         batchIds = new Array(tempLength);
         for (n = 0; n < tempLength; ++n) {
-            color = randomColors[n % randomColors.length];
-            batchTable.setColor(n + numberOfPolygons, color);
-
+            var id = n + numberOfPolygons;
+            batchTable.setColor(id, color);
             widths[n] = 2.0;
-            batchIds[n] = numberOfPolygons + n;
+            batchIds[n] = id;
         }
 
         if (polylinePositions.length > 0) {

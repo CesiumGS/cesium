@@ -81,12 +81,13 @@ define([
      * so that the positions for polygon n are in [c, c + counts[n]] where c = sum{counts[0], counts[n - 1]} and they are the outer ring of
      * the polygon in counter-clockwise order.
      * @param {Number[]} options.counts The number or positions in the each polygon.
-     * @param {Uint32Array | Uint32Array} options.indices The indices of the triangulated polygons. The indices must be contiguous so that
+     * @param {Uint16Array|Uint32Array} options.indices The indices of the triangulated polygons. The indices must be contiguous so that
      * the indices for polygon n are in [i, i + indexCounts[n]] where i = sum{indexCounts[0], indexCounts[n - 1]}.
      * @param {Number[]} options.indexCounts The number of indices for each polygon.
      * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
      * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
+     * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
      * @param {Number} [options.quantizedOffset] The quantized offset. If undefined, the positions should be in Float32Array and are not quantized.
      * @param {Number} [options.quantizedScale] The quantized scale. If undefined, the positions should be in Float32Array and are not quantized.
      * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.

@@ -38,10 +38,27 @@ define([
         GroundPolylineBatchVS,
         PolylineCommon,
         BlendingState,
-        Pass
-    ) {
+        Pass) {
     'use strict';
 
+    /**
+     * Renders a batch of polylines that have been subdivided to be draped on terrain.
+     *
+     * @alias GroundPolylineBatch
+     * @constructor
+     * @private
+     *
+     * @param {Object} options An object with following properties:
+     * @param {Float32Array|Uint16Array} options.positions The positions of the polylines
+     * @param {Number[]} options.counts The number or positions in the each polyline.
+     * @param {Number[]} options.widths The width of each polyline.
+     * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
+     * @param {Number} [options.quantizedOffset] The quantized offset. If undefined, the positions should be in Float32Array and are not quantized.
+     * @param {Number} [options.quantizedScale] The quantized scale. If undefined, the positions should be in Float32Array and are not quantized.
+     * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polylines.
+     * @param {Number[]} options.batchIds The batch ids for each polyline.
+     * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polylines.
+     */
     function GroundPolylineBatch(options) {
         // these arrays are all released after the first update.
         this._positions = options.positions;
@@ -404,10 +421,23 @@ define([
         frameState.commandList.push(primitive._pickCommand);
     }
 
+    /**
+     * Colors the entire tile when enabled is true. The resulting color will be (polyline batch table color * color).
+     * @private
+     *
+     * @param {Boolean} enabled Whether to enable debug coloring.
+     * @param {Color} color The debug color.
+     */
     GroundPolylineBatch.prototype.applyDebugSettings = function(enabled, color) {
         this._highlightColor = enabled ? color : this._constantColor;
     };
 
+    /**
+     * Updates the batches and queues the commands for rendering
+     * @private
+     *
+     * @param {FrameState} frameState The current frame state.
+     */
     GroundPolylineBatch.prototype.update = function(frameState) {
         var context = frameState.context;
 
@@ -426,10 +456,34 @@ define([
         }
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <p>
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * </p>
+     * @private
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     */
     GroundPolylineBatch.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <p>
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * </p>
+     * @private
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
     GroundPolylineBatch.prototype.destroy = function() {
         this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.destroy();
