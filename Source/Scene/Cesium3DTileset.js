@@ -230,7 +230,8 @@ define([
         this._styleEngine = new Cesium3DTileStyleEngine();
 
         /**
-         * Defines how per-feature colors blend with the source colors.
+         * Defines how per-feature colors set from the Cesium API or declarative styling blend with the source colors from
+         * the original feature, e.g. glTF material or per-point color in the tile.
          *
          * @type {Cesium3DTileColorBlendMode}
          * @default Cesium3DTileColorBlendMode.HIGHLIGHT
