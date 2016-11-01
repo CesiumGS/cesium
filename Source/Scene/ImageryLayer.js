@@ -18,6 +18,8 @@ define([
         '../Core/Rectangle',
         '../Core/TerrainProvider',
         '../Core/TileProviderError',
+        '../Core/WebMercatorProjection',
+        '../Core/WebMercatorTilingScheme',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
@@ -60,6 +62,8 @@ define([
         Rectangle,
         TerrainProvider,
         TileProviderError,
+        WebMercatorProjection,
+        WebMercatorTilingScheme,
         Buffer,
         BufferUsage,
         ClearCommand,
@@ -356,6 +360,7 @@ define([
     var imageryBoundsScratch = new Rectangle();
     var tileImageryBoundsScratch = new Rectangle();
     var clippedRectangleScratch = new Rectangle();
+    var terrainRectangleScratch = new Rectangle();
 
     /**
      * Computes the intersection of this layer's rectangle with the imagery provider's availability rectangle,
@@ -414,6 +419,13 @@ define([
             surfaceTile.imagery.splice(insertionPoint, 0, this._skeletonPlaceholder);
             return true;
         }
+
+        // Use Web Mercator for our texture coordinate computations if this imagery layer uses
+        // that projection and the terrain tile falls entirely inside the valid bounds of the
+        // projection.
+        var useWebMercatorT = imageryProvider.tilingScheme instanceof WebMercatorTilingScheme &&
+                              tile.rectangle.north < WebMercatorProjection.MaximumLatitude &&
+                              tile.rectangle.south > -WebMercatorProjection.MaximumLatitude;
 
         // Compute the rectangle of the imagery from this imageryProvider that overlaps
         // the geometry tile.  The ImageryProvider and ImageryLayer both have the
@@ -491,8 +503,8 @@ define([
         // of the northwest tile, we don't actually need the northernmost or westernmost tiles.
 
         // We define "very close" as being within 1/512 of the width of the tile.
-        var veryCloseX = tile.rectangle.height / 512.0;
-        var veryCloseY = tile.rectangle.width / 512.0;
+        var veryCloseX = tile.rectangle.width / 512.0;
+        var veryCloseY = tile.rectangle.height / 512.0;
 
         var northwestTileRectangle = imageryTilingScheme.tileXYToRectangle(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
         if (Math.abs(northwestTileRectangle.south - tile.rectangle.north) < veryCloseY && northwestTileCoordinates.y < southeastTileCoordinates.y) {
@@ -513,9 +525,22 @@ define([
         // Create TileImagery instances for each imagery tile overlapping this terrain tile.
         // We need to do all texture coordinate computations in the imagery tile's tiling scheme.
 
-        var terrainRectangle = tile.rectangle;
+        var terrainRectangle = Rectangle.clone(tile.rectangle, terrainRectangleScratch);
         var imageryRectangle = imageryTilingScheme.tileXYToRectangle(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
         var clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
+
+        var imageryTileXYToRectangle;
+        if (useWebMercatorT) {
+            imageryTilingScheme.rectangleToNativeRectangle(terrainRectangle, terrainRectangle);
+            imageryTilingScheme.rectangleToNativeRectangle(imageryRectangle, imageryRectangle);
+            imageryTilingScheme.rectangleToNativeRectangle(clippedImageryRectangle, clippedImageryRectangle);
+            imageryTilingScheme.rectangleToNativeRectangle(imageryBounds, imageryBounds);
+            imageryTileXYToRectangle = imageryTilingScheme.tileXYToNativeRectangle.bind(imageryTilingScheme);
+            veryCloseX = terrainRectangle.width / 512.0;
+            veryCloseY = terrainRectangle.height / 512.0;
+        } else {
+            imageryTileXYToRectangle = imageryTilingScheme.tileXYToRectangle.bind(imageryTilingScheme);
+        }
 
         var minU;
         var maxU = 0.0;
@@ -526,11 +551,11 @@ define([
         // If this is the northern-most or western-most tile in the imagery tiling scheme,
         // it may not start at the northern or western edge of the terrain tile.
         // Calculate where it does start.
-        if (!this.isBaseLayer() && Math.abs(clippedImageryRectangle.west - tile.rectangle.west) >= veryCloseX) {
+        if (!this.isBaseLayer() && Math.abs(clippedImageryRectangle.west - terrainRectangle.west) >= veryCloseX) {
             maxU = Math.min(1.0, (clippedImageryRectangle.west - terrainRectangle.west) / terrainRectangle.width);
         }
 
-        if (!this.isBaseLayer() && Math.abs(clippedImageryRectangle.north - tile.rectangle.north) >= veryCloseY) {
+        if (!this.isBaseLayer() && Math.abs(clippedImageryRectangle.north - terrainRectangle.north) >= veryCloseY) {
             minV = Math.max(0.0, (clippedImageryRectangle.north - terrainRectangle.south) / terrainRectangle.height);
         }
 
@@ -539,8 +564,12 @@ define([
         for ( var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
             minU = maxU;
 
-            imageryRectangle = imageryTilingScheme.tileXYToRectangle(i, northwestTileCoordinates.y, imageryLevel);
-            clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
+            imageryRectangle = imageryTileXYToRectangle(i, northwestTileCoordinates.y, imageryLevel);
+            clippedImageryRectangle = Rectangle.simpleIntersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
+
+            if (!defined(clippedImageryRectangle)) {
+                continue;
+            }
 
             maxU = Math.min(1.0, (clippedImageryRectangle.east - terrainRectangle.west) / terrainRectangle.width);
 
@@ -548,7 +577,7 @@ define([
             // and there are more imagery tiles to the east of this one, the maxU
             // should be 1.0 to make sure rounding errors don't make the last
             // image fall shy of the edge of the terrain tile.
-            if (i === southeastTileCoordinates.x && (this.isBaseLayer() || Math.abs(clippedImageryRectangle.east - tile.rectangle.east) < veryCloseX)) {
+            if (i === southeastTileCoordinates.x && (this.isBaseLayer() || Math.abs(clippedImageryRectangle.east - terrainRectangle.east) < veryCloseX)) {
                 maxU = 1.0;
             }
 
@@ -557,21 +586,26 @@ define([
             for ( var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
                 maxV = minV;
 
-                imageryRectangle = imageryTilingScheme.tileXYToRectangle(i, j, imageryLevel);
-                clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
+                imageryRectangle = imageryTileXYToRectangle(i, j, imageryLevel);
+                clippedImageryRectangle = Rectangle.simpleIntersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
+
+                if (!defined(clippedImageryRectangle)) {
+                    continue;
+                }
+                
                 minV = Math.max(0.0, (clippedImageryRectangle.south - terrainRectangle.south) / terrainRectangle.height);
 
                 // If this is the southern-most imagery tile mapped to this terrain tile,
                 // and there are more imagery tiles to the south of this one, the minV
                 // should be 0.0 to make sure rounding errors don't make the last
                 // image fall shy of the edge of the terrain tile.
-                if (j === southeastTileCoordinates.y && (this.isBaseLayer() || Math.abs(clippedImageryRectangle.south - tile.rectangle.south) < veryCloseY)) {
+                if (j === southeastTileCoordinates.y && (this.isBaseLayer() || Math.abs(clippedImageryRectangle.south - terrainRectangle.south) < veryCloseY)) {
                     minV = 0.0;
                 }
 
                 var texCoordsRectangle = new Cartesian4(minU, minV, maxU, maxV);
-                var imagery = this.getImageryFromCache(i, j, imageryLevel, imageryRectangle);
-                surfaceTile.imagery.splice(insertionPoint, 0, new TileImagery(imagery, texCoordsRectangle));
+                var imagery = this.getImageryFromCache(i, j, imageryLevel);
+                surfaceTile.imagery.splice(insertionPoint, 0, new TileImagery(imagery, texCoordsRectangle, useWebMercatorT));
                 ++insertionPoint;
             }
         }
@@ -593,6 +627,13 @@ define([
     ImageryLayer.prototype._calculateTextureTranslationAndScale = function(tile, tileImagery) {
         var imageryRectangle = tileImagery.readyImagery.rectangle;
         var terrainRectangle = tile.rectangle;
+
+        if (tileImagery.useWebMercatorT) {
+            var tilingScheme = tileImagery.readyImagery.imageryLayer.imageryProvider.tilingScheme;
+            imageryRectangle = tilingScheme.rectangleToNativeRectangle(imageryRectangle, imageryBoundsScratch);
+            terrainRectangle = tilingScheme.rectangleToNativeRectangle(terrainRectangle, terrainRectangleScratch);
+        }
+
         var terrainWidth = terrainRectangle.width;
         var terrainHeight = terrainRectangle.height;
 
@@ -703,7 +744,11 @@ define([
             pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
         });
 
-        imagery.texture = texture;
+        if (imageryProvider.tilingScheme instanceof WebMercatorTilingScheme) {
+            imagery.textureWebMercator = texture;
+        } else {
+            imagery.texture = texture;
+        }
         imagery.image = undefined;
         imagery.state = ImageryState.TEXTURE_LOADED;
     };
@@ -748,17 +793,21 @@ define([
      *
      * @param {FrameState} frameState The frameState.
      * @param {Imagery} imagery The imagery instance to reproject.
+     * @param {Boolean} [needGeographicProjection=true] True to reproject to geographic, or false if Web Mercator is fine.
      */
-    ImageryLayer.prototype._reprojectTexture = function(frameState, imagery) {
-        var texture = imagery.texture;
+    ImageryLayer.prototype._reprojectTexture = function(frameState, imagery, needGeographicProjection) {
+        var texture = imagery.textureWebMercator || imagery.texture;
         var rectangle = imagery.rectangle;
         var context = frameState.context;
+
+        needGeographicProjection = defaultValue(needGeographicProjection, true);
 
         // Reproject this texture if it is not already in a geographic projection and
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
-        if (!(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
+        if (needGeographicProjection &&
+            !(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
             rectangle.width / texture.width > 1e-5) {
                 var that = this;
                 imagery.addReference();
@@ -771,7 +820,6 @@ define([
                         reprojectToGeographic(command, context, texture, imagery.rectangle);
                     },
                     postExecute : function(outputTexture) {
-                        texture.destroy();
                         imagery.texture = outputTexture;
                         finalizeReprojectTexture(that, context, imagery, outputTexture);
                         imagery.releaseReference();

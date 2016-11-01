@@ -6,7 +6,6 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
@@ -25,7 +24,6 @@ define([
         Color,
         defaultValue,
         defined,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
@@ -85,13 +83,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(entityCluster.minimumClusterSize)) {
-            deprecationWarning('BillboardVisualizer scene constructor parameter', 'The scene is no longer a parameter the BillboardVisualizer. An EntityCluster is required.');
-            entityCluster = new EntityCluster({
-                enabled : false
-            });
-        }
-
         entityCollection.collectionChanged.addEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
 
         this._cluster = entityCluster;
@@ -134,7 +125,7 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                cluster.removeLabel(entity);
+                returnPrimitive(item, entity, cluster);
                 continue;
             }
 
@@ -215,6 +206,10 @@ define([
      */
     LabelVisualizer.prototype.destroy = function() {
         this._entityCollection.collectionChanged.removeEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
+        var entities = this._entityCollection.values;
+        for (var i = 0; i < entities.length; i++) {
+            this._cluster.removeLabel(entities[i]);
+        }
         return destroyObject(this);
     };
 
@@ -238,17 +233,24 @@ define([
                     items.set(entity.id, new EntityData(entity));
                 }
             } else {
-                cluster.removeLabel(entity);
+                returnPrimitive(items.get(entity.id), entity, cluster);
                 items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            cluster.removeLabel(entity);
+            returnPrimitive(items.get(entity.id), entity, cluster);
             items.remove(entity.id);
         }
     };
+
+    function returnPrimitive(item, entity, cluster) {
+        if (defined(item)) {
+            item.label = undefined;
+            cluster.removeLabel(entity);
+        }
+    }
 
     return LabelVisualizer;
 });

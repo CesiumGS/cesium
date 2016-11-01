@@ -17,6 +17,7 @@ defineSuite([
         'Core/Math',
         'Core/Matrix4',
         'Core/PolygonGeometry',
+        'Core/CylinderGeometry',
         'Core/PrimitiveType',
         'Core/Rectangle',
         'Core/RectangleGeometry',
@@ -49,6 +50,7 @@ defineSuite([
         CesiumMath,
         Matrix4,
         PolygonGeometry,
+        CylinderGeometry,
         PrimitiveType,
         Rectangle,
         RectangleGeometry,
@@ -761,6 +763,75 @@ defineSuite([
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
+    it('primitive with display condition properly transforms boundingSphere', function() {
+        var near = 10000.0;
+        var far = 1000000.0;
+        var translation = new Cartesian3(10, 20, 30);
+
+        var cylinder = new GeometryInstance({
+            id : 'cylinder',
+            vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+            geometry : new CylinderGeometry({
+                length : 10,
+                topRadius : 10,
+                bottomRadius : 10
+            }),
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0),
+                show : new ShowGeometryInstanceAttribute(true),
+                distanceDisplayCondition : new DistanceDisplayConditionGeometryInstanceAttribute(near, far)
+            }
+        });
+
+        primitive = new Primitive({
+            geometryInstances : cylinder,
+            appearance : new PerInstanceColorAppearance(),
+            modelMatrix : Matrix4.fromTranslation(translation, new Matrix4()),
+            asynchronous : false
+        });
+
+        scene.primitives.add(primitive);
+        scene.frameState.scene3DOnly = true;
+        scene.renderForSpecs();
+
+        var boundingSphere = primitive.getGeometryInstanceAttributes('cylinder').boundingSphere;
+        var center = boundingSphere.center;
+        expect(center).toEqual(translation);
+    });
+
+    it('primitive without display condition properly transforms boundingSphere', function() {
+        var translation = new Cartesian3(10, 20, 30);
+
+        var cylinder = new GeometryInstance({
+            id : 'cylinder',
+            vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+            geometry : new CylinderGeometry({
+                length : 10,
+                topRadius : 10,
+                bottomRadius : 10
+            }),
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0),
+                show : new ShowGeometryInstanceAttribute(true)
+            }
+        });
+
+        primitive = new Primitive({
+            geometryInstances : cylinder,
+            appearance : new PerInstanceColorAppearance(),
+            modelMatrix : Matrix4.fromTranslation(translation, new Matrix4()),
+            asynchronous : false
+        });
+
+        scene.primitives.add(primitive);
+        scene.frameState.scene3DOnly = true;
+        scene.renderForSpecs();
+
+        var boundingSphere = primitive.getGeometryInstanceAttributes('cylinder').boundingSphere;
+        var center = boundingSphere.center;
+        expect(center).toEqual(translation);
+    });
+
     it('getGeometryInstanceAttributes returns same object each time', function() {
         primitive = new Primitive({
             geometryInstances : rectangleInstance1,
@@ -953,6 +1024,42 @@ defineSuite([
                 expect(arg).toBe(primitive);
                 expect(primitive.ready).toBe(true);
             });
+        });
+    });
+
+    it('can mix valid and invalid geometry', function() {
+        var instances = [];
+        instances.push(rectangleInstance1);
+        instances.push(new GeometryInstance({
+            geometry : PolygonGeometry.fromPositions({
+                positions : []
+            }),
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(1.0, 0.0, 1.0, 1.0),
+            },
+            id : 'invalid'
+        }));
+        instances.push(rectangleInstance2);
+
+        primitive = new Primitive({
+            geometryInstances : instances,
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
+        });
+
+        var frameState = scene.frameState;
+
+        return pollToPromise(function() {
+            primitive.update(frameState);
+            if (frameState.afterRender.length > 0) {
+                frameState.afterRender[0]();
+            }
+            return primitive.ready;
+        }).then(function() {
+            expect(primitive.getGeometryInstanceAttributes('rectangle1').boundingSphere).toBeDefined();
+            expect(primitive.getGeometryInstanceAttributes('rectangle2').boundingSphere).toBeDefined();
+            expect(primitive.getGeometryInstanceAttributes('invalid').boundingSphere).not.toBeDefined();
         });
     });
 

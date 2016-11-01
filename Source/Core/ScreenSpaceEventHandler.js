@@ -86,6 +86,7 @@ define([
             registerListener(screenSpaceEventHandler, 'pointerdown', element, handlePointerDown);
             registerListener(screenSpaceEventHandler, 'pointerup', element, handlePointerUp);
             registerListener(screenSpaceEventHandler, 'pointermove', element, handlePointerMove);
+            registerListener(screenSpaceEventHandler, 'pointercancel', element, handlePointerUp);
         } else {
             registerListener(screenSpaceEventHandler, 'mousedown', element, handleMouseDown);
             registerListener(screenSpaceEventHandler, 'mouseup', alternateElement, handleMouseUp);
@@ -93,6 +94,7 @@ define([
             registerListener(screenSpaceEventHandler, 'touchstart', element, handleTouchStart);
             registerListener(screenSpaceEventHandler, 'touchend', alternateElement, handleTouchEnd);
             registerListener(screenSpaceEventHandler, 'touchmove', alternateElement, handleTouchMove);
+            registerListener(screenSpaceEventHandler, 'touchcancel', alternateElement, handleTouchEnd);
         }
 
         registerListener(screenSpaceEventHandler, 'dblclick', element, handleDblClick);
@@ -480,6 +482,10 @@ define([
                 Cartesian2.clone(positions.values[1], touch2StartEvent.position2);
 
                 action(touch2StartEvent);
+
+                // Touch-enabled devices, in particular iOS can have many default behaviours for 
+                // "pinch" events, which can still be executed unless we prevent them here.
+                event.preventDefault();
             }
         }
     }

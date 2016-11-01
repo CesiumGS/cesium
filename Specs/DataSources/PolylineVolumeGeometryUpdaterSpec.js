@@ -69,7 +69,7 @@ defineSuite([
 
     function createBasicPolylineVolume() {
         var polylineVolume = new PolylineVolumeGraphics();
-        polylineVolume.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
+        polylineVolume.positions = new ConstantProperty(Cartesian3.fromDegreesArray([
             0, 0,
             1, 0,
             1, 1,

@@ -20,7 +20,7 @@
 <style>
     @import url(../templates/bucket.css);
     
-    #viewChanged {
+    #viewChanged, #cameraChanged {
         display: none;
         background-color: red;
         color: white;
@@ -28,7 +28,11 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"><div id="viewChanged">View Changed</div></div><script id="cesium_sandcastle_script">
+<div id="toolbar">
+    <div id="viewChanged">View Changed</div>
+    <div id="cameraChanged">Camera Changed</div>
+</div>
+<script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
@@ -190,6 +194,8 @@ function cameraEvents() {
     });
 }
 
+var cameraChanged = document.getElementById('cameraChanged');
+
 var removeChanged;
 
 function cameraChanges() {
@@ -198,7 +204,8 @@ function cameraChanges() {
     var i = 0;
     removeChanged = viewer.camera.changed.addEventListener(function(percentage) {
         ++i;
-        console.log('camera changed: ' + i + ', ' + percentage);
+        cameraChanged.innerText = 'Camera Changed: ' + i + ', ' + percentage.toFixed(6);
+        cameraChanged.style.display = 'block';
     });
 }
 
@@ -294,6 +301,7 @@ Sandcastle.addToolbarMenu([{
 }]);
 
 Sandcastle.reset = function() {
+    scene.completeMorph();
     viewer.entities.removeAll();
     scene.primitives.removeAll();
     scene.tweens.removeAll();
@@ -311,8 +319,10 @@ Sandcastle.reset = function() {
     if (Cesium.defined(removeChanged)) {
         removeChanged();
         removeChanged = undefined;
+
+        cameraChanged.style.display = 'none';
     }
-    
+
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
     clock.multiplier = 1.0;

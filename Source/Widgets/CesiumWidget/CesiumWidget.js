@@ -499,9 +499,11 @@ define([
                 return this._targetFrameRate;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
                 if (value <= 0) {
                     throw new DeveloperError('targetFrameRate must be greater than 0, or undefined.');
                 }
+                //>>includeEnd('debug');
                 this._targetFrameRate = value;
             }
         },
@@ -551,9 +553,11 @@ define([
                 return this._resolutionScale;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
                 if (value <= 0) {
                     throw new DeveloperError('resolutionScale must be greater than 0.');
                 }
+                //>>includeEnd('debug');
                 this._resolutionScale = value;
                 this._forceResize = true;
             }

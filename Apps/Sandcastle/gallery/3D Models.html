@@ -40,7 +40,8 @@ function createModel(url, height) {
     var heading = Cesium.Math.toRadians(135);
     var pitch = 0;
     var roll = 0;
-    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, heading, pitch, roll);
+    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
     var entity = viewer.entities.add({
         name : url,
