@@ -31,13 +31,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor throws with invalid width', function() {
+    it('constructor does not throw with invalid width', function() {
         expect(function() {
             return new PolylineGeometry({
                 positions : [Cartesian3.ZERO, Cartesian3.UNIT_X],
                 width : -1
             });
-        }).toThrowDeveloperError();
+        }).not.toThrowDeveloperError();
     });
 
     it('constructor throws with invalid number of colors', function() {
