@@ -42,7 +42,7 @@ define([
     /**
      * @private
      */
-    function SceneTransitioner(scene, ellipsoid) {
+    function SceneTransitioner(scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');

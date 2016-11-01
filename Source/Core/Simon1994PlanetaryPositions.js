@@ -67,15 +67,13 @@ define([
     }
 
     var epoch = new JulianDate(2451545, 0, TimeStandard.TAI); //Actually TDB (not TAI)
-    var GravitationalParameterOfEarth = 3.98600435e14;
-    var GravitationalParameterOfSun = GravitationalParameterOfEarth * (1.0 + 0.012300034) * 328900.56;
     var MetersPerKilometer = 1000.0;
     var RadiansPerDegree = CesiumMath.RADIANS_PER_DEGREE;
     var RadiansPerArcSecond = CesiumMath.RADIANS_PER_ARCSECOND;
     var MetersPerAstronomicalUnit = 1.49597870e+11; // IAU 1976 value
 
     var perifocalToEquatorial = new Matrix3();
-    function elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee, longitudeOfNode, meanLongitude, gravitationalParameter, result) {
+    function elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee, longitudeOfNode, meanLongitude, result) {
         if (inclination < 0.0) {
             inclination = -inclination;
             longitudeOfNode += CesiumMath.PI;
@@ -376,7 +374,7 @@ define([
         var longitudeOfNode = 174.87317577 * RadiansPerDegree - 8679.27034 * RadiansPerArcSecond * t;
 
         return elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee,
-                longitudeOfNode, meanLongitude, GravitationalParameterOfSun, result);
+                longitudeOfNode, meanLongitude, result);
     }
 
     /**
@@ -482,7 +480,7 @@ define([
         var longitudeOfNode = longitudeOfNodeConstant + longitudeOfNodeSecPart * RadiansPerArcSecond;
 
         return elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee,
-                                   longitudeOfNode, meanLongitude, GravitationalParameterOfEarth, result);
+                                   longitudeOfNode, meanLongitude, result);
     }
 
     /**

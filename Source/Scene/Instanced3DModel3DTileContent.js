@@ -425,11 +425,15 @@ define([
             instanceTranslationRotationScale.scale = instanceScale;
 
             // Get the batchId
-            var batchId = featureTable.getProperty('BATCH_ID', i , ComponentDatatype.UNSIGNED_SHORT);
-            if (!defined(batchId)) {
+            var batchId;
+            if (defined(featureTable.BATCH_ID)) {
+                var componentType = defaultValue(featureTable.BATCH_ID.componentType, ComponentDatatype.UNSIGNED_SHORT);
+                batchId = featureTable.getProperty('BATCH_ID', i, componentType);
+            } else {
                 // If BATCH_ID semantic is undefined, batchId is just the instance number
                 batchId = i;
             }
+
             // Create the model matrix and the instance
             Matrix4.fromTranslationRotationScale(instanceTranslationRotationScale, instanceTransform);
             var modelMatrix = instanceTransform.clone();

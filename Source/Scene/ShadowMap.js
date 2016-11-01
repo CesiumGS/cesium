@@ -185,8 +185,9 @@ define([
         this._needsUpdate = true;
 
         // In IE11 polygon offset is not functional.
+        // TODO : Also disabled for Chrome (ANGLE) temporarily. Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
         var polygonOffsetSupported = true;
-        if (FeatureDetection.isInternetExplorer) {
+        if (FeatureDetection.isInternetExplorer() || (FeatureDetection.isChrome() && FeatureDetection.isWindows())) {
             polygonOffsetSupported = false;
         }
         this._polygonOffsetSupported = polygonOffsetSupported;

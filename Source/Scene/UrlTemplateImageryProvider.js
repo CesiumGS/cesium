@@ -12,6 +12,7 @@ define([
         '../Core/Event',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
+        '../Core/isArray',
         '../Core/loadJson',
         '../Core/loadText',
         '../Core/loadWithXhr',
@@ -36,6 +37,7 @@ define([
         Event,
         freezeObject,
         GeographicTilingScheme,
+        isArray,
         loadJson,
         loadText,
         loadWithXhr,
@@ -550,7 +552,7 @@ define([
             that._getFeatureInfoFormats = properties.getFeatureInfoFormats;
 
             that._subdomains = properties.subdomains;
-            if (Array.isArray(that._subdomains)) {
+            if (isArray(that._subdomains)) {
                 that._subdomains = that._subdomains.slice();
             } else if (defined(that._subdomains) && that._subdomains.length > 0) {
                 that._subdomains = that._subdomains.split('');
