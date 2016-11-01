@@ -8,6 +8,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/freezeObject',
+        '../Core/isArray',
         '../Core/objectToQuery',
         '../Core/queryToObject',
         '../Core/Rectangle',
@@ -24,6 +25,7 @@ define([
         DeveloperError,
         Event,
         freezeObject,
+        isArray,
         objectToQuery,
         queryToObject,
         Rectangle,
@@ -153,7 +155,7 @@ define([
         this._credit = typeof credit === 'string' ? new Credit(credit) : credit;
 
         this._subdomains = options.subdomains;
-        if (Array.isArray(this._subdomains)) {
+        if (isArray(this._subdomains)) {
             this._subdomains = this._subdomains.slice();
         } else if (defined(this._subdomains) && this._subdomains.length > 0) {
             this._subdomains = this._subdomains.split('');

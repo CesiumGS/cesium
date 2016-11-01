@@ -134,6 +134,7 @@ define([
         var hasPositionVarying = defined(positionVaryingName);
 
         var usesDepthTexture = shadowMap._usesDepthTexture;
+        var polygonOffsetSupported = shadowMap._polygonOffsetSupported;
         var isPointLight = shadowMap._isPointLight;
         var isSpotLight = shadowMap._isSpotLight;
         var hasCascades = shadowMap._numberOfCascades > 1;
@@ -230,7 +231,9 @@ define([
         if (isTerrain) {
             // Scale depth bias based on view distance to reduce z-fighting in distant terrain
             fsSource += '    shadowParameters.depthBias *= max(depth * 0.01, 1.0); \n';
-        } else {
+        } else if (!polygonOffsetSupported) {
+            // If polygon offset isn't supported push the depth back based on view, however this
+            // causes light leaking at further away views
             fsSource += '    shadowParameters.depthBias *= mix(1.0, 100.0, depth * 0.0015); \n';
         }
 
