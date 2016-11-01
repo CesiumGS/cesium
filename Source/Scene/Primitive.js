@@ -1194,6 +1194,10 @@ define([
 
         for (var i = 0; i < length; ++i) {
             var boundingSphere = boundingSpheres[i];
+            if (!defined(boundingSphere)) {
+                continue;
+            }
+
             var modelMatrix = primitive.modelMatrix;
             if (defined(modelMatrix)) {
                 boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);

@@ -323,7 +323,7 @@ defineSuite([
     it('Fails bounding sphere for entity without billboard.', function() {
         var entityCollection = new EntityCollection();
         var testObject = entityCollection.getOrCreateEntity('test');
-        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
         visualizer.update(JulianDate.now());
         var result = new BoundingSphere();
         var state = visualizer.getBoundingSphere(testObject, result);
