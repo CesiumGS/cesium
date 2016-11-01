@@ -5,6 +5,7 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/JulianDate',
+        '../../Core/FeatureDetection',
         '../getElement',
         './TimelineHighlightRange',
         './TimelineTrack'
@@ -14,6 +15,7 @@ define([
         destroyObject,
         DeveloperError,
         JulianDate,
+        FeatureDetection,
         getElement,
         TimelineHighlightRange,
         TimelineTrack) {
@@ -150,15 +152,24 @@ define([
         this._onTouchEnd = createTouchEndCallback(this);
 
         var timeBarEle = this._timeBarEle;
-        document.addEventListener('mouseup', this._onMouseUp, false);
-        document.addEventListener('mousemove', this._onMouseMove, false);
-        timeBarEle.addEventListener('mousedown', this._onMouseDown, false);
-        timeBarEle.addEventListener('DOMMouseScroll', this._onMouseWheel, false); // Mozilla mouse wheel
-        timeBarEle.addEventListener('mousewheel', this._onMouseWheel, false);
-        timeBarEle.addEventListener('touchstart', this._onTouchStart, false);
-        timeBarEle.addEventListener('touchmove', this._onTouchMove, false);
-        timeBarEle.addEventListener('touchend', this._onTouchEnd, false);
-        timeBarEle.addEventListener('touchcancel', this._onTouchEnd, false);
+        if (FeatureDetection.supportsPointerEvents()) {
+            document.addEventListener('pointerup', this._onMouseUp, false);
+            document.addEventListener('pointermove', this._onMouseMove, false);
+            timeBarEle.addEventListener('pointerdown', this._onMouseDown, false);
+            timeBarEle.addEventListener('pointerup', this._onMouseUp, false);
+            timeBarEle.addEventListener('pointermove', this._onMouseMove, false);
+            timeBarEle.addEventListener('pointercancel', this._onMouseUp, false);
+        } else {
+            document.addEventListener('mouseup', this._onMouseUp, false);
+            document.addEventListener('mousemove', this._onMouseMove, false);
+            timeBarEle.addEventListener('mousedown', this._onMouseDown, false);
+            timeBarEle.addEventListener('DOMMouseScroll', this._onMouseWheel, false); // Mozilla mouse wheel
+            timeBarEle.addEventListener('mousewheel', this._onMouseWheel, false);
+            timeBarEle.addEventListener('touchstart', this._onTouchStart, false);
+            timeBarEle.addEventListener('touchmove', this._onTouchMove, false);
+            timeBarEle.addEventListener('touchend', this._onTouchEnd, false);
+            timeBarEle.addEventListener('touchcancel', this._onTouchEnd, false);
+        }
 
         this._topDiv.oncontextmenu = function() {
             return false;
