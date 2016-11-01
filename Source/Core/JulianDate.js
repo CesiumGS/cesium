@@ -976,10 +976,15 @@ define([
         var MINIMUM_VALUE = JulianDate.fromIso8601('0000-01-01T00:00:00Z');
         var MAXIMUM_VALUE = JulianDate.fromIso8601('9999-12-31T24:00:00Z');
 
-        return julianDates.every(function(julian) {
-            return JulianDate.greaterThanOrEquals(julian, MINIMUM_VALUE) && JulianDate.lessThanOrEquals(julian, MAXIMUM_VALUE);
+        var datesAllValid = true;
 
-        });
+        for (var i = 0; i < julianDates.length; i++) {
+            var julian = julianDates[i];
+            datesAllValid = datesAllValid && JulianDate.greaterThanOrEquals(julian, MINIMUM_VALUE) && JulianDate.lessThanOrEquals(julian, MAXIMUM_VALUE);
+        }
+
+        return datesAllValid;
+
     };
 
     /**
