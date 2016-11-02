@@ -17,7 +17,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
-        './getDiffuseUniformName',
+        './getAttributeOrUniformBySemantic',
         './Model',
         './SceneMode',
         './ShadowMode'
@@ -39,7 +39,7 @@ define([
         DrawCommand,
         ShaderSource,
         when,
-        getDiffuseUniformName,
+        getAttributeOrUniformBySemantic,
         Model,
         SceneMode,
         ShadowMode) {
@@ -304,7 +304,7 @@ define([
             vertexShaderCached = instancedSource;
 
             if (usesBatchTable) {
-                instancedSource = collection._batchTable.getVertexShaderCallback(true)(instancedSource);
+                instancedSource = collection._batchTable.getVertexShaderCallback(true, 'a_batchId')(instancedSource);
             }
 
             return instancedSource;
@@ -316,7 +316,7 @@ define([
             var batchTable = collection._batchTable;
             if (defined(batchTable)) {
                 var gltf = collection._model.gltf;
-                var diffuseUniformName = getDiffuseUniformName(gltf);
+                var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
                 var colorBlendMode = batchTable._content._tileset.colorBlendMode;
                 fs = batchTable.getFragmentShaderCallback(true, colorBlendMode, diffuseUniformName)(fs);
             }
@@ -329,7 +329,7 @@ define([
             // Use the vertex shader that was generated earlier
             vs = vertexShaderCached;
             if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getPickVertexShaderCallback()(vs);
+                vs = collection._batchTable.getPickVertexShaderCallback('a_batchId')(vs);
             }
             return vs;
         };
@@ -392,7 +392,7 @@ define([
     function getVertexShaderNonInstancedCallback(collection) {
         return function(vs) {
             if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getVertexShaderCallback(true)(vs);
+                vs = collection._batchTable.getVertexShaderCallback(true, 'a_batchId')(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;
             }
@@ -403,7 +403,7 @@ define([
     function getPickVertexShaderNonInstancedCallback(collection) {
         return function(vs) {
             if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getPickVertexShaderCallback()(vs);
+                vs = collection._batchTable.getPickVertexShaderCallback('a_batchId')(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;
             }
