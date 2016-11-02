@@ -766,7 +766,7 @@ function Foo() {
 
 Cesium includes a handful of standard widgets that are used in the Viewer, including animation and timeline controls, a base layer picker, and a geocoder.  These widgets are all built using [Knockout](http://knockoutjs.com/)) for automatic UI refreshing.  Knockout uses a Model View ViewModel (MVVM) design pattern.  You can learn more about this design pattern in [Understanding MVVM - A Guide For JavaScript Developers](https://addyosmani.com/blog/understanding-mvvm-a-guide-for-javascript-developers/)
 
-To learn about using the Knockout library, see the [Get started](http://knockoutjs.com/) section of their home page.  They also have a great [interative tutorial](http://learn.knockoutjs.com/) with step by step instructions.
+To learn about using the Knockout library, see the [Get started](http://knockoutjs.com/) section of their home page.  They also have a great [interactive tutorial](http://learn.knockoutjs.com/) with step by step instructions.
 
 Cesium also uses the [Knockout-ES5](http://blog.stevensanderson.com/2013/05/20/knockout-es5-a-plugin-to-simplify-your-syntax/) plugin to simplify knockout syntax.  This lets us use knockout observables the same way we use other variables.  Call `knockout.track` to create the observables.  Here is an example from [BaseLayerPickerViewModel](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/BaseLayerPicker/BaseLayerPickerViewModel.js#L73)
 ``` javascript
@@ -775,7 +775,7 @@ knockout.track(this, ['tooltip', 'showInstructions', '_touch']);
 
 **Knockout subscriptions**
 
-Use a knockout subscription only when you are unable to accomplish what you need to do with a standard binding.  For [example](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/Viewer/Viewer.js#L588), the `Viewer` subscribes to `FullscreenButtonViewModel.isFullscreenEnabled` because it needs to change the width of the timelne widget when that value changes.  This cannot be done with binding because the value from `FullscreenButtonViewModel` is effecting a value not contained within that widget.
+Use a knockout subscription only when you are unable to accomplish what you need to do with a standard binding.  For [example](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/Viewer/Viewer.js#L588), the `Viewer` subscribes to `FullscreenButtonViewModel.isFullscreenEnabled` because it needs to change the width of the timeline widget when that value changes.  This cannot be done with binding because the value from `FullscreenButtonViewModel` is effecting a value not contained within that widget.
 
 Cesium includes a [`subscribeAndEvaluate`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/subscribeAndEvaluate.js) helper function for subscribing to knockout observable.
 
