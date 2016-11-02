@@ -26,6 +26,26 @@
 
             document.body.className = document.body.className.replace(/(?:\s|^)sandcastle-loading(?:\s|$)/, ' ');
         },
+        addToggleButton : function(text, checked, onchange, toolbarID) {
+            window.Sandcastle.declare(onchange);
+            var input = document.createElement('input');
+            input.checked = checked;
+            input.type = 'checkbox';
+            var label = document.createElement('label');
+            label.appendChild(input);
+            label.appendChild(document.createTextNode(text));
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'cesium-button';
+            button.appendChild(label);
+
+            input.onchange = function(event) {
+                window.Sandcastle.reset();
+                window.Sandcastle.highlight(onchange);
+                onchange(event.target.checked);
+            };
+            document.getElementById(toolbarID || 'toolbar').appendChild(button);
+        },
         addToolbarButton : function(text, onclick, toolbarID) {
             window.Sandcastle.declare(onclick);
             var button = document.createElement('button');

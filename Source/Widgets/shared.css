@@ -70,6 +70,10 @@
     color: #777;
 }
 
+.cesium-button input {
+  vertical-align: sub;
+}
+
 .cesium-toolbar-button {
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
