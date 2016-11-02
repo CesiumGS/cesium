@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/Cartesian3',
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Matrix3',
@@ -11,6 +12,7 @@ define([
         defaultValue,
         defined,
         destroyObject,
+        Cartesian3,
         DeveloperError,
         CesiumMath,
         Matrix3,
@@ -29,80 +31,70 @@ define([
 
         this._scene = scene;
 
-        this._lastAlpha = undefined;
-        this._lastBeta = undefined;
-        this._lastGamma = undefined;
-
-        this._alpha = undefined;
-        this._beta = undefined;
-        this._gamma = undefined;
+        this._deviceOrientation = {};
+        this._screenOrientation = window.orientation || 0;
 
         var that = this;
 
-        function callback(e) {
-            var alpha = e.alpha;
-            if (!defined(alpha)) {
-                that._alpha = undefined;
-                that._beta = undefined;
-                that._gamma = undefined;
-                return;
-            }
-
-            that._alpha = CesiumMath.toRadians(alpha);
-            that._beta = CesiumMath.toRadians(e.beta);
-            that._gamma = CesiumMath.toRadians(e.gamma);
+        function deviceOrientationCallback(e) {
+            that._deviceOrientation = e;
         }
 
-        window.addEventListener('deviceorientation', callback, false);
+        function screenOrientationCallback() {
+            that._screenOrientation = window.orientation || 0;
+        }
+
+        window.addEventListener('deviceorientation', deviceOrientationCallback, false);
+        window.addEventListener('orientationchange', screenOrientationCallback, false);
 
         this._removeListener = function() {
-            window.removeEventListener('deviceorientation', callback, false);
+            window.removeEventListener('deviceorientation', deviceOrientationCallback, false);
+            window.removeEventListener('orientationchange', screenOrientationCallback, false);
         };
     }
 
-    var scratchQuaternion1 = new Quaternion();
-    var scratchQuaternion2 = new Quaternion();
-    var scratchMatrix3 = new Matrix3();
+    var rotQuat = new Quaternion();
+    var rotMatrix = new Matrix3();
+    var adjustToWorldQuat =
+       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.toRadians(90));
+    var direction = new Cartesian3();
 
-    function rotate(camera, alpha, beta, gamma) {
-        var direction = camera.direction;
-        var right = camera.right;
-        var up = camera.up;
+    function rotate(camera, alpha, beta, gamma, orient) {
 
-        var bQuat = Quaternion.fromAxisAngle(direction, beta, scratchQuaternion2);
-        var gQuat = Quaternion.fromAxisAngle(right, gamma, scratchQuaternion1);
+        // Euler angles to rotation matrix
+        var xRotation = Matrix3.fromRotationX(beta);
+        var yRotation = Matrix3.fromRotationY(gamma);
+        var zRotation = Matrix3.fromRotationZ(alpha);
 
-        var rotQuat = Quaternion.multiply(gQuat, bQuat, gQuat);
+        Matrix3.multiply(yRotation, xRotation, rotMatrix);
+        Matrix3.multiply(zRotation, rotMatrix, rotMatrix);
 
-        var aQuat = Quaternion.fromAxisAngle(up, alpha, scratchQuaternion2);
-        Quaternion.multiply(aQuat, rotQuat, rotQuat);
 
-        var matrix = Matrix3.fromQuaternion(rotQuat, scratchMatrix3);
-        Matrix3.multiplyByVector(matrix, right, right);
-        Matrix3.multiplyByVector(matrix, up, up);
-        Matrix3.multiplyByVector(matrix, direction, direction);
+        // Adjust for screen rotation
+        var screenRotation = Matrix3.fromRotationZ(-orient);
+        Matrix3.multiply(rotMatrix, screenRotation, rotMatrix);
+
+        // Set camera
+        Matrix3.getColumn(rotMatrix, 0, camera.right);
+        Matrix3.getColumn(rotMatrix, 1, camera.up);
+        Matrix3.getColumn(rotMatrix, 2, direction);
+        Cartesian3.negate(direction, camera.direction);
     }
 
     DeviceOrientationCameraController.prototype.update = function() {
-        if (!defined(this._alpha)) {
+        if (!defined(this._deviceOrientation.alpha)) {
             return;
         }
 
-        if (!defined(this._lastAlpha)) {
-            this._lastAlpha = this._alpha;
-            this._lastBeta = this._beta;
-            this._lastGamma = this._gamma;
-        }
+        var alpha = this._deviceOrientation.alpha ?
+          CesiumMath.toRadians(this._deviceOrientation.alpha) : 0;
+        var beta = this._deviceOrientation.beta ?
+          CesiumMath.toRadians(this._deviceOrientation.beta) : 0;
+        var gamma = this._deviceOrientation.gamma ?
+          CesiumMath.toRadians(this._deviceOrientation.gamma) : 0;
+        var orient = CesiumMath.toRadians(this._screenOrientation);
 
-        var a = this._lastAlpha - this._alpha;
-        var b = this._lastBeta - this._beta;
-        var g = this._lastGamma - this._gamma;
-
-        rotate(this._scene.camera, -a, b, g);
-
-        this._lastAlpha = this._alpha;
-        this._lastBeta = this._beta;
-        this._lastGamma = this._gamma;
+        rotate(this._scene.camera, alpha, beta, gamma, orient);
     };
 
     /**

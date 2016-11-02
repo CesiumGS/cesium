@@ -62,47 +62,58 @@ defineSuite([
             return new DeviceOrientationCameraController();
         }).toThrowDeveloperError();
     });
+    it('is at rest looking down', function() {
+      var position = Cartesian3.clone(camera.position);
 
-    it('rotates for alpha', function() {
-        var position = Cartesian3.clone(camera.position);
-        var up = Cartesian3.clone(camera.up);
+      fireEvent({
+          alpha : 0,
+          gamma: 0,
+          beta: 0
+      });
 
-        fireEvent({
-            alpha : 90.0
-        });
-
-        expect(camera.position).toEqual(position);
-        expect(camera.direction).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON14);
-        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON14);
-        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON14);
+      expect(camera.position).toEqual(position);
+      expect(camera.direction).toEqualEpsilon(new Cartesian3(0, 0, -1), CesiumMath.EPSILON14);
+      expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON14);
+      expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON14);
     });
 
-    it('rotates for beta', function() {
-        var position = Cartesian3.clone(camera.position);
-        var direction = Cartesian3.clone(camera.direction);
+    it('pitch to look north', function() {
+      var position = Cartesian3.clone(camera.position);
 
-        fireEvent({
-            beta : 90.0
-        });
+      fireEvent({
+          beta: 90
+      });
 
-        expect(camera.position).toEqual(position);
-        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON14);
-        expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON14);
-        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON14);
+      expect(camera.position).toEqual(position);
+      expect(camera.direction).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON14);
+      expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON14);
+      expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON14);
     });
 
-    it('rotates for gamma', function() {
-        var position = Cartesian3.clone(camera.position);
-        var right = Cartesian3.clone(camera.right);
+    it('yaw to look east', function() {
+      var position = Cartesian3.clone(camera.position);
 
-        fireEvent({
-            gamma : 90.0
-        });
+      fireEvent({
+          gamma: -90
+      });
 
-        expect(camera.position).toEqual(position);
-        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON14);
-        expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON14);
-        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON14);
+      expect(camera.position).toEqual(position);
+      expect(camera.direction).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON14);
+      expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON14);
+      expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON14);
+    });
+
+    it('roll to point east', function() {
+      var position = Cartesian3.clone(camera.position);
+
+      fireEvent({
+          alpha: -90
+      });
+
+      expect(camera.position).toEqual(position);
+      expect(camera.direction).toEqualEpsilon(new Cartesian3(0, 0, -1), CesiumMath.EPSILON14);
+      expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON14);
+      expect(camera.right).toEqualEpsilon(new Cartesian3(0, -1, 0), CesiumMath.EPSILON14);
     });
 
     it('is destroyed', function() {
