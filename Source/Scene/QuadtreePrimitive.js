@@ -631,8 +631,10 @@ define([
                     }
 
                     if (mode === SceneMode.SCENE3D) {
-                        Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
-                        Cartesian3.normalize(data.position, scratchRay.direction);
+                        var surfaceNormal = ellipsoid.geodeticSurfaceNormal(data.position, scratchRay.direction);
+                        // subtract by earth minor axis radius, to account for a case where the terrain is under ellipsoid surface - is that OK or should I use lower value (maybe -11500.0 which appears some lines bellow)?
+                        var radiusLengthVector = Cartesian3.multiplyByScalar(surfaceNormal, ellipsoid.minimumRadius, scratchPosition);
+                        Cartesian3.subtract(data.position, radiusLengthVector, scratchRay.origin);
                     } else {
                         Cartographic.clone(data.positionCartographic, scratchCartographic);
 
