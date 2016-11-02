@@ -332,8 +332,6 @@ define([
 
         this._labelCollection = labelCollection;
         this._polylineCollection = polylineCollection;
-        this.state = Cesium3DTileContentState.READY;
-        this._readyPromise.resolve(this);
     };
 
     /**
@@ -356,9 +354,15 @@ define([
         if (this._featuresLength === 0) {
             return;
         }
+
         this.batchTable.update(tileset, frameState);
         this._labelCollection.update(frameState);
         this._polylineCollection.update(frameState);
+
+        if (this.state !== Cesium3DTileContentState.READY) {
+            this.state = Cesium3DTileContentState.READY;
+            this._readyPromise.resolve(this);
+        }
     };
 
     /**
