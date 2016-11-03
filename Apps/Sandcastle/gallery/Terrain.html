@@ -25,12 +25,9 @@
 <div id="toolbar">
 <div id="terrainMenu"></div>
 <div id="zoomButtons"></div>
+<div id="toggleLighting"></div>
 <div id="sampleButtons"></div>
 <table><tbody>
-    <tr>
-        <td>Toggle Lighting</td>
-        <td><input type="checkbox" data-bind="checked: lightingEnabled"/></td>
-    </tr>
     <tr>
         <td>Enable fog</td>
         <td><input type="checkbox" data-bind="checked: fogEnabled"/></td>
@@ -42,9 +39,6 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-
-// set lighting to true
-viewer.scene.globe.enableLighting = true;
 
 var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     url : 'https://assets.agi.com/stk-terrain/world',
@@ -165,6 +159,11 @@ function sampleTerrainSuccess() {
     viewer.entities.resumeEvents();
 }
 
+Sandcastle.addToolbarButton('Toggle Lighting', function() {
+    viewer.scene.globe.enableLighting = !viewer.scene.globe.enableLighting;
+}, 'toggleLighting');
+
+
 Sandcastle.addToolbarButton('Sample Everest Terrain', function() {
     var gridWidth = 41;
     var gridHeight = 41;
@@ -183,25 +182,17 @@ Sandcastle.addToolbarButton('Sample Everest Terrain', function() {
     }
 
     Cesium.when(Cesium.sampleTerrain(viewer.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
-
-    var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
-    var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
-    viewer.camera.lookAt(target, offset);
-    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 }, 'sampleButtons');
 
-
-var viewModel = { fogEnabled : true, lightingEnabled: true };
+var viewModel = { fogEnabled : true };
 Cesium.knockout.track(viewModel);
 
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
-Cesium.knockout.getObservable(viewModel, 'lightingEnabled').subscribe(function(newValue) {
-    viewer.scene.globe.enableLighting = newValue;
-});
 Cesium.knockout.getObservable(viewModel, 'fogEnabled').subscribe(function(newValue) {
     viewer.scene.fog.enabled = newValue;
 });
+viewModel.enabled = viewer.scene.fog.enabled;
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
