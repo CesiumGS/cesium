@@ -65,6 +65,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Andrey Orlov](https://github.com/AndreyOrlov)
 * [The Imagineers](https://www.theimagineers.com/)
    * [Heerco Grond](https://github.com/HeercoGrond)
+* [Camptocamp SA](https://www.camptocamp.com/)
+   * [Frédéric Junod](https://github.com/fredj)
+   * [Guillaume Beraudo](https://github.com/gberaudo)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
