@@ -38,7 +38,7 @@
     "bluebird": "3.4.6",
     "compressible": "2.0.8",
     "compression": "1.6.2",
-    "electron": "1.4.4",
+    "electron": "1.4.5",
     "event-stream": "3.3.4",
     "express": "4.14.0",
     "globby": "6.0.0",
