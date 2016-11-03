@@ -632,9 +632,15 @@ define([
 
                     if (mode === SceneMode.SCENE3D) {
                         var surfaceNormal = ellipsoid.geodeticSurfaceNormal(data.position, scratchRay.direction);
-                        // subtract by earth minor axis radius, to account for a case where the terrain is under ellipsoid surface - is that OK or should I use lower value (maybe -11500.0 which appears some lines bellow)?
-                        var radiusLengthVector = Cartesian3.multiplyByScalar(surfaceNormal, ellipsoid.minimumRadius, scratchPosition);
-                        Cartesian3.subtract(data.position, radiusLengthVector, scratchRay.origin);
+
+                        // compute origin point, to account for a case where the terrain is under ellipsoid surface
+                        var minimumHeight = Math.min(defaultValue(tile.data.minimumHeight, 0.0), 0.0);
+
+                        // take into account the position height
+                        minimumHeight -= data.positionCartographic.height;
+
+                        var minimumHeightVector = Cartesian3.multiplyByScalar(surfaceNormal, minimumHeight - 1.0, scratchPosition);
+                        Cartesian3.add(data.position, minimumHeightVector, scratchRay.origin);
                     } else {
                         Cartographic.clone(data.positionCartographic, scratchCartographic);
 

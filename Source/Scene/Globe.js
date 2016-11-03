@@ -430,7 +430,16 @@ define([
         var cartesian = ellipsoid.cartographicToCartesian(cartographic, scratchGetHeightCartesian);
 
         var ray = scratchGetHeightRay;
-        Cartesian3.normalize(cartesian, ray.direction);
+        var surfaceNormal = ellipsoid.geodeticSurfaceNormal(cartesian, ray.direction);
+
+        // compute origin point, to account for a case where the terrain is under ellipsoid surface
+        var minimumHeight = Math.min(defaultValue(tile.data.minimumHeight, 0.0), 0.0);
+
+        // take into account the position height
+        minimumHeight -= cartographic.height;
+
+        var minimumHeightVector = Cartesian3.multiplyByScalar(surfaceNormal, minimumHeight - 1.0, scratchGetHeightIntersection);
+        Cartesian3.add(cartesian, minimumHeightVector, ray.origin);
 
         var intersection = tile.data.pick(ray, undefined, undefined, false, scratchGetHeightIntersection);
         if (!defined(intersection)) {
