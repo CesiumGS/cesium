@@ -769,7 +769,7 @@ Cesium includes a handful of standard widgets that are used in the Viewer, inclu
 
 To learn about using the Knockout library, see the [Get started](http://knockoutjs.com/) section of their home page.  They also have a great [interactive tutorial](http://learn.knockoutjs.com/) with step by step instructions.
 
-Cesium also uses the [Knockout-ES5](http://blog.stevensanderson.com/2013/05/20/knockout-es5-a-plugin-to-simplify-your-syntax/) plugin to simplify knockout syntax.  This lets us use knockout observables the same way we use other variables.  Call `knockout.track` to create the observables.  Here is an example from [BaseLayerPickerViewModel](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/BaseLayerPicker/BaseLayerPickerViewModel.js#L73) that makes observables for tooltip, showInstructions and _touch.
+Cesium also uses the [Knockout-ES5](http://blog.stevensanderson.com/2013/05/20/knockout-es5-a-plugin-to-simplify-your-syntax/) plugin to simplify knockout syntax.  This lets us use knockout observables the same way we use other variables.  Call `knockout.track` to create the observables.  Here is an example from [BaseLayerPickerViewModel](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/BaseLayerPicker/BaseLayerPickerViewModel.js#L73) that makes observables for `tooltip`, `showInstructions` and `_touch` properties.
 
 ``` javascript
 knockout.track(this, ['tooltip', 'showInstructions', '_touch']);
