@@ -313,7 +313,7 @@ define([
 
         // A width of a pixel or less is not a valid geometry, but in order to support external data
         // that may have errors we treat this as an empty geometry.
-        if (positionsLength < 2 || width < 1.0) {
+        if (positionsLength < 2 || width <= 0.0) {
             return undefined;
         }
 
