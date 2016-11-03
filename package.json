@@ -36,7 +36,7 @@
     "almond": "0.3.3",
     "aws-sdk": "2.6.14",
     "bluebird": "3.4.6",
-    "compressible": "2.0.8",
+    "compressible": "2.0.9",
     "compression": "1.6.2",
     "electron": "1.4.5",
     "event-stream": "3.3.4",
