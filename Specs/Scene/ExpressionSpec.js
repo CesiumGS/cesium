@@ -833,11 +833,8 @@ defineSuite([
     });
 
     it('evaluates cos function', function() {
-        var expression = new Expression('cos(Math.PI / 180)');
+        var expression = new Expression('cos(0)');
         expect(expression.evaluate(undefined)).toEqual(1);
-
-        expression = new Expression('cos(Math.PI)');
-        expect(expression.evaluate(undefined)).toEqual(-1);
     });
 
     it('throws if cos function takes an invalid number of arguments', function() {

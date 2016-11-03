@@ -347,9 +347,11 @@ define([
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'cos') {
+            //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
                 throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
             }
+            //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'Boolean') {
