@@ -1603,9 +1603,9 @@ defineSuite([
     });
 
     it('gets shader expression for cos', function() {
-        var expression = new Expression('cos(Math.PI / 180)');
+        var expression = new Expression('cos(0)');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'cos(Math.PI / 180)';
+        var expected = 'cos(0)';
         expect(shaderExpression).toEqual(expected);
     });
 
