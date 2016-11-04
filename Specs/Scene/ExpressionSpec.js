@@ -832,6 +832,21 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('evaluates cos function', function() {
+        var expression = new Expression('cos(0)');
+        expect(expression.evaluate(undefined)).toEqual(1);
+    });
+
+    it('throws if cos function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('cos()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('cos(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates ternary conditional', function() {
         var expression = new Expression('true ? "first" : "second"');
         expect(expression.evaluate(undefined)).toEqual('first');
@@ -1584,6 +1599,13 @@ defineSuite([
         var expression = new Expression('abs(-1.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'abs(-1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for cos', function() {
+        var expression = new Expression('cos(0.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'cos(0.0)';
         expect(shaderExpression).toEqual(expected);
     });
 

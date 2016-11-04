@@ -109,6 +109,10 @@ addStyle('Abs', {
     color : "color() * abs(${temperature} - 0.5)"
 });
 
+addStyle('Cos', {
+    color : "color() * cos(${temperature} - 0)"
+});
+
 addStyle('Secondary Color', {
     color : {
         expression : "[${secondaryColor}[0], ${secondaryColor}[1], ${secondaryColor}[2], 1.0]",
