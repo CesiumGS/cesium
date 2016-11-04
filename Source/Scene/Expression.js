@@ -928,7 +928,7 @@ define([
         return Math.abs(this._left.evaluate(feature));
     };
 
-Node.prototype._evaluateCosine = function(feature) {
+	Node.prototype._evaluateCosine = function(feature) {
         return Math.cos(this._left.evaluate(feature));
     };
 
