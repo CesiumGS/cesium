@@ -847,7 +847,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-        it('evaluates sqrt function', function() {
+    it('evaluates sqrt function', function() {
         var expression = new Expression('sqrt(1.0)');
         expect(expression.evaluate(undefined)).toEqual(1.0);
 
