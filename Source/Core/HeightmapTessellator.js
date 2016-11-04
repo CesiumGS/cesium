@@ -82,7 +82,7 @@ define([
      *                 are provided, they're assumed to be consistent.
      * @param {Boolean} [options.isGeographic=true] True if the heightmap uses a {@link GeographicProjection}, or false if it uses
      *                  a {@link WebMercatorProjection}.
-     * @param {Cartesian3} [options.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
+     * @param {Cartesian3} [options.relativeToCenter=Cartesian3.ZERO] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to which the heightmap applies.
      * @param {Object} [options.structure] An object describing the structure of the height data.
      * @param {Number} [options.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
