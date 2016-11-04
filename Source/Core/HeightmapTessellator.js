@@ -200,7 +200,9 @@ define([
             geographicNorth = rectangle.north;
         }
 
-        var relativeToCenter = defaultValue(options.relativeToCenter, Cartesian3.ZERO);
+        var relativeToCenter = options.relativeToCenter;
+        var hasRelativeToCenter = defined(relativeToCenter);
+        relativeToCenter = hasRelativeToCenter ? relativeToCenter : Cartesian3.ZERO;
         var exaggeration = defaultValue(options.exaggeration, 1.0);
         var includeWebMercatorT = defaultValue(options.includeWebMercatorT, false);
 
@@ -390,10 +392,9 @@ define([
         }
 
         var occludeePointInScaledSpace;
-        var center = options.relativetoCenter;
-        if (defined(center)) {
+        if (hasRelativeToCenter) {
             var occluder = new EllipsoidalOccluder(ellipsoid);
-            occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(center, positions);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(relativeToCenter, positions);
         }
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
