@@ -832,6 +832,21 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('evaluates cos function', function() {
+-        var expression = new Expression('cos(0)');
+-        expect(expression.evaluate(undefined)).toEqual(1);
+    });
+
+    it('throws if cos function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('cos()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('cos(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
         it('evaluates sqrt function', function() {
         var expression = new Expression('sqrt(1.0)');
         expect(expression.evaluate(undefined)).toEqual(1.0);
@@ -1608,7 +1623,15 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
-        it('gets shader expression for sqrt', function() {
+    it('gets shader expression for cos', function() {
+        var expression = new Expression('cos(0.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'cos(0.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+
+    it('gets shader expression for sqrt', function() {
         var expression = new Expression('sqrt(1.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'sqrt(1.0)';

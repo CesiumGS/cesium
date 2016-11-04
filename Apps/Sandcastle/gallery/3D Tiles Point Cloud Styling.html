@@ -109,6 +109,10 @@ addStyle('Abs', {
     color : "color() * abs(${temperature} - 0.5)"
 });
 
+addStyle('Cos', {
+    color : "color() * cos(${temperature} - 0)"
+});
+
 addStyle('Sqrt', {
     color : "color() * sqrt(${temperature} - 0.5)",
     pointSize : "10"
