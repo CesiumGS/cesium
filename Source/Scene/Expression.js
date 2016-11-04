@@ -354,6 +354,14 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'sqrt') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'Boolean') {
             if (args.length === 0) {
                 return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
@@ -587,6 +595,8 @@ define([
                 node.evaluate = node._evaluateAbsoluteValue;
             } else if (node._value === 'cos') {
                 node.evaluate = node._evaluateCosine;
+            } else if (node._value === 'sqrt') {
+                node.evaluate = node._evaluateSquareRoot;
             } else if (node._value === 'Boolean') {
                 node.evaluate = node._evaluateBooleanConversion;
             } else if (node._value === 'Number') {
@@ -918,8 +928,12 @@ define([
         return Math.abs(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateCosine = function(feature) {
+	Node.prototype._evaluateCosine = function(feature) {
         return Math.cos(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateSquareRoot = function(feature) {
+        return Math.sqrt(this._left.evaluate(feature));
     };
 
     Node.prototype._evaluateBooleanConversion = function(feature) {
@@ -1143,6 +1157,8 @@ define([
                     return 'abs(' + left + ')';
                 } else if (value === 'cos') {
                     return 'cos(' + left + ')';
+                } else if (value === 'sqrt') {
+                    return 'sqrt(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
                 else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
