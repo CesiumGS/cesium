@@ -31,19 +31,23 @@
             var input = document.createElement('input');
             input.checked = checked;
             input.type = 'checkbox';
+            input.style.pointerEvents = 'none';
             var label = document.createElement('label');
             label.appendChild(input);
             label.appendChild(document.createTextNode(text));
+            label.style.pointerEvents = 'none';
             var button = document.createElement('button');
             button.type = 'button';
             button.className = 'cesium-button';
             button.appendChild(label);
 
-            input.onchange = function(event) {
+            button.onclick = function() {
                 window.Sandcastle.reset();
                 window.Sandcastle.highlight(onchange);
-                onchange(event.target.checked);
+                input.checked = !input.checked;
+                onchange(input.checked);
             };
+
             document.getElementById(toolbarID || 'toolbar').appendChild(button);
         },
         addToolbarButton : function(text, onclick, toolbarID) {

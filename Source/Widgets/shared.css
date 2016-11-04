@@ -70,8 +70,12 @@
     color: #777;
 }
 
+.cesium-button input, .cesium-button label {
+    cursor: pointer;
+}
+
 .cesium-button input {
-  vertical-align: sub;
+    vertical-align: sub;
 }
 
 .cesium-toolbar-button {
