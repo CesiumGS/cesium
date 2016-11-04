@@ -832,18 +832,24 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('evaluates cos function', function() {
-        var expression = new Expression('cos(0)');
-        expect(expression.evaluate(undefined)).toEqual(1);
+        it('evaluates sqrt function', function() {
+        var expression = new Expression('sqrt(1.0)');
+        expect(expression.evaluate(undefined)).toEqual(1.0);
+
+        expression = new Expression('sqrt(4.0)');
+        expect(expression.evaluate(undefined)).toEqual(2.0);
+
+        expression = new Expression('sqrt(-1.0)');
+        expect(expression.evaluate(undefined)).toEqual(NaN);
     });
 
-    it('throws if cos function takes an invalid number of arguments', function() {
+    it('throws if sqrt function takes an invalid number of arguments', function() {
         expect(function() {
-            return new Expression('cos()');
+            return new Expression('sqrt()');
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('cos(1, 2)');
+            return new Expression('sqrt(1, 2)');
         }).toThrowDeveloperError();
     });
 
@@ -1602,10 +1608,10 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
-    it('gets shader expression for cos', function() {
-        var expression = new Expression('cos(0.0)');
+        it('gets shader expression for sqrt', function() {
+        var expression = new Expression('sqrt(1.0)');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'cos(0.0)';
+        var expected = 'sqrt(1.0)';
         expect(shaderExpression).toEqual(expected);
     });
 
