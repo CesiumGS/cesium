@@ -8,6 +8,7 @@ define([
         '../../Core/Rectangle',
         '../../Core/ScreenSpaceEventHandler',
         '../../Core/ScreenSpaceEventType',
+        '../../Core/WebMercatorTilingScheme',
         '../../Scene/DebugModelMatrixPrimitive',
         '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
@@ -22,6 +23,7 @@ define([
         Rectangle,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
+        WebMercatorTilingScheme,
         DebugModelMatrixPrimitive,
         PerformanceDisplay,
         TileCoordinatesImageryProvider,
@@ -418,7 +420,10 @@ define([
         this._showTileCoordinates = createCommand(function() {
             if (that.tileCoordinates && !defined(tileBoundariesLayer)) {
                 tileBoundariesLayer = scene.imageryLayers.addImageryProvider(new TileCoordinatesImageryProvider({
-                    tilingScheme : scene.terrainProvider.tilingScheme
+                    tilingScheme : new WebMercatorTilingScheme({
+                        numberOfLevelZeroTilesX : 2,
+                        numberOfLevelZeroTilesY : 2
+                    })
                 }));
             } else if (!that.tileCoordinates && defined(tileBoundariesLayer)) {
                 scene.imageryLayers.remove(tileBoundariesLayer);

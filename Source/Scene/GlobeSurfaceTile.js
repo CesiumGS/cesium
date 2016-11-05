@@ -8,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/IntersectionTests',
+        '../Core/OrientedBoundingBox',
         '../Core/PixelFormat',
         '../Core/Rectangle',
         '../Renderer/PixelDatatype',
@@ -31,6 +32,7 @@ define([
         defined,
         defineProperties,
         IntersectionTests,
+        OrientedBoundingBox,
         PixelFormat,
         Rectangle,
         PixelDatatype,
@@ -75,6 +77,9 @@ define([
         this.boundingSphere3D = new BoundingSphere();
         this.boundingSphere2D = new BoundingSphere();
         this.orientedBoundingBox = undefined;
+        this.boundingBoxMinimumHeight = 0.0;
+        this.boundingBoxMaximumHeight = 0.0;
+        this.minimumAndMaximumHeightAreFromParent = true;
         this.tileBoundingBox = undefined;
         this.occludeePointInScaledSpace = new Cartesian3();
 
@@ -200,6 +205,8 @@ define([
             this.pickTerrain = undefined;
         }
 
+        this.minimumAndMaximumHeightAreFromParent = true;
+
         var i, len;
 
         var imageryList = this.imagery;
@@ -250,6 +257,20 @@ define([
         if (tile.state === QuadtreeTileLoadState.START) {
             prepareNewTile(tile, terrainProvider, imageryLayerCollection);
             tile.state = QuadtreeTileLoadState.LOADING;
+        }
+
+        // Update our min/max height if they came from our parent
+        if (this.minimumAndMaximumHeightAreFromParent && defined(tile.parent) && defined(tile.parent.data)) {
+            var parentData = tile.parent.data;
+            this.minimumHeight = parentData.minimumHeight;
+            this.maximumHeight = parentData.maximumHeight;
+        }
+
+        // Recompute our oriented bounding box if our min/max heights changed.
+        if (!defined(this.orientedBoundingBox) || this.boundingBoxMinimumHeight !== this.minimumHeight || this.boundingBoxMaximumHeight !== this.maximumHeight) {
+            this.orientedBoundingBox = OrientedBoundingBox.fromRectangle(tile.rectangle, this.minimumHeight, this.maximumHeight, this.orientedBoundingBox);
+            this.boundingBoxMinimumHeight = this.minimumHeight;
+            this.boundingBoxMaximumHeight = this.maximumHeight;
         }
 
         if (tile.state === QuadtreeTileLoadState.LOADING) {
