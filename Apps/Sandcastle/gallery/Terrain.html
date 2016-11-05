@@ -26,16 +26,6 @@
 <div id="terrainMenu"></div>
 <div id="zoomButtons"></div>
 <div id="sampleButtons"></div>
-<table><tbody>
-    <tr>
-        <td>Enable Lighting</td>
-        <td><input type="checkbox" data-bind="checked: lightingEnabled"/></td>
-    </tr>
-    <tr>
-        <td>Enable fog</td>
-        <td><input type="checkbox" data-bind="checked: fogEnabled"/></td>
-    </tr>
-</tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
@@ -169,6 +159,14 @@ function sampleTerrainSuccess() {
     viewer.entities.resumeEvents();
 }
 
+Sandcastle.addToggleButton('Enable Lighting', viewer.scene.globe.enableLighting, function(checked) {
+    viewer.scene.globe.enableLighting = checked;
+});
+
+Sandcastle.addToggleButton('Enable fog', viewer.scene.fog.enabled, function(checked) {
+    viewer.scene.fog.enabled = checked;
+});
+
 Sandcastle.addToolbarButton('Sample Everest Terrain', function() {
     var gridWidth = 41;
     var gridHeight = 41;
@@ -191,18 +189,6 @@ Sandcastle.addToolbarButton('Sample Everest Terrain', function() {
     lookAtMtEverest();
 }, 'sampleButtons');
 
-
-var viewModel = { fogEnabled : true, lightingEnabled: true };
-Cesium.knockout.track(viewModel);
-
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-Cesium.knockout.getObservable(viewModel, 'lightingEnabled').subscribe(function(newValue) {
-    viewer.scene.globe.enableLighting = newValue;
-});
-Cesium.knockout.getObservable(viewModel, 'fogEnabled').subscribe(function(newValue) {
-    viewer.scene.fog.enabled = newValue;
-});
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
