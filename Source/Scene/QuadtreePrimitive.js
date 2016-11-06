@@ -98,7 +98,7 @@ define([
         this._tileTraversalQueue = new Queue();
         this._tileLoadQueueHigh = []; // high priority tiles are preventing refinement
         this._tileLoadQueueMedium = []; // medium priority tiles are being rendered
-        this._tileLoadQueueLow = []; // low priority tiles were were refined past or are non-visible parts of quads.
+        this._tileLoadQueueLow = []; // low priority tiles were refined past or are non-visible parts of quads.
         this._tileReplacementQueue = new TileReplacementQueue();
         this._levelZeroTiles = undefined;
         this._levelZeroTilesReady = false;
