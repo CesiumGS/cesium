@@ -440,6 +440,28 @@ define([
             customDataRemoved.length = 0;
         }
 
+        // Our goal with load ordering is to first load all of the tiles we need to 
+        // render the current scene at full detail.  Loading any other tiles is just
+        // a form of prefetching, and we need not do it at all (other concerns aside).  This
+        // simple and obvious statement gets more complicated when we realize that, because
+        // we don't have bounding volumes for the entire terrain tile pyramid, we don't
+        // precisely know which tiles we need to render the scene at full detail, until we do
+        // some loading.
+        //
+        // So our load priority is (from high to low):
+        // 1. Tiles that we _would_ render, except that they're not sufficiently loaded yet.
+        //    Ideally this would only include tiles that we've already determined to be visible,
+        //    but since we don't have reliable visibility information until a tile is loaded,
+        //    and because we (currently) must have all children in a quad renderable before we
+        //    can refine, this pretty much means tiles we'd like to refine to, regardless of
+        //    visibility. (high)
+        // 2. Tiles that we're rendering. (medium)
+        // 3. All other tiles. (low)
+        //
+        // Within each priority group, tiles should be loaded in approximate near-to-far order,
+        // but currently they're just loaded in our traversal order which makes no guarantees
+        // about depth ordering.
+
         // Enqueue the root tiles that are renderable and visible.
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
@@ -488,7 +510,7 @@ define([
                     primitive._tileLoadQueueLow.push(tile);
                 }
 
-                if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(frameState, primitive, tile)) {
+                if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile)) {
                     // SSE is not good enough and children are loaded, so refine.
                     var children = tile.children;
                     // PERFORMANCE_IDEA: traverse children front-to-back so we can avoid sorting by distance later.
@@ -560,7 +582,7 @@ define([
         ++primitive._debug.tilesRendered;
     }
 
-    function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(frameState, primitive, tile) {
+    function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile) {
         var allRenderable = true;
         var allUpsampledOnly = true;
         var allDoneLoading = true;
@@ -603,13 +625,6 @@ define([
         return willRefine;
     }
 
-    // function queueTileLoad(frameState, primitive, tile) {
-    //     // if (defined(tile.data) && defined(tile.data.orientedBoundingBox)) {
-    //     //     tile._estimatedVisibility = frameState.cullingVolume.computeVisibility(tile.data.orientedBoundingBox) >= 0;
-    //     // }
-    //     primitive._tileLoadQueue.push(tile);
-    // }
-
     function processTileLoadQueue(primitive, frameState) {
         var tileLoadQueueHigh = primitive._tileLoadQueueHigh;
         var tileLoadQueueMedium = primitive._tileLoadQueueMedium;
@@ -619,26 +634,6 @@ define([
         if (tileLoadQueueHigh.length === 0 && tileLoadQueueMedium.length === 0 && tileLoadQueueLow.length === 0) {
             return;
         }
-
-        // Our goal with load ordering is to first load all of the tiles we need to 
-        // render the current scene at full detail.  Loading any other tiles is just
-        // a form of prefetching, and we need not do it at all.  This simple and obvious
-        // statement gets more complicated when we realize that, because we don't have
-        // bounding volumes for the entire terrain tile pyramid, we don't precisely know
-        // which tiles we need to render the scene at full detail, until we do some
-        // loading.
-        //
-        // So our load priority is (from high to low):
-        // 1. Tiles that we _would_ render, except that they're not sufficiently loaded yet.
-        //    Ideally this would only include tiles that we've already determined to be visible,
-        //    but since we don't have reliable visibility information until a tile is loaded,
-        //    and because we (currently) must have all children in a quad renderable before we
-        //    can refine, this pretty much means tiles we'd like to refine to, regardless of
-        //    visibility. (high)
-        // 2. Tiles that we're rendering. (medium)
-        // 3. All other tiles. (low)
-        //
-        // Within each group, tiles should be loaded in approximate near-to-far order.
 
         // Remove any tiles that were not used this frame beyond the number
         // we're allowed to keep.
