@@ -667,8 +667,6 @@ define([
             imagery.image = image;
             imagery.state = ImageryState.RECEIVED;
 
-            console.log('Received L' + imagery.level + 'X' + imagery.x + 'Y' + imagery.y);
-
             TileProviderError.handleSuccess(that._requestImageError);
         }
 
