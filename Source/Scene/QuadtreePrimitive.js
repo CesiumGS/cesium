@@ -589,7 +589,7 @@ define([
         var allDoneLoading = true;
 
         var children = tile.children;
-        var i
+        var i;
         var len;
         var child;
         for (i = 0, len = children.length; i < len; ++i) {
