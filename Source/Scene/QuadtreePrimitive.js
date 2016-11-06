@@ -466,7 +466,9 @@ define([
             tile = levelZeroTiles[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
             if (!tile.renderable) {
-                primitive._tileLoadQueueHigh.push(tile);
+                if (tile.needsLoading) {
+                    primitive._tileLoadQueueHigh.push(tile);
+                }
                 ++debug.tilesWaitingForChildren;
             } else if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
                 traversalQueue.enqueue(tile);
