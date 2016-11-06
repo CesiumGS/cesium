@@ -113,6 +113,10 @@ addStyle('Trigonometric Functions', {
     color : "color() * cos(${temperature} - 0) + color() * sin(${temperature} - 0) + color() * tan(${temperature} - 0)"
 });
 
+addStyle('Trigonometric Functions', {
+    color : "color() * acos(${temperature} - 0) + color() * asin(${temperature} - 0) + color() * atan(${temperature} - 0)"
+});
+
 addStyle('Secondary Color', {
     color : {
         expression : "[${secondaryColor}[0], ${secondaryColor}[1], ${secondaryColor}[2], 1.0]",

@@ -370,6 +370,30 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'acos') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'asin') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'atan') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'Boolean') {
             if (args.length === 0) {
                 return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
@@ -602,11 +626,17 @@ define([
             } else if (node._value === 'abs') {
                 node.evaluate = node._evaluateAbsoluteValue;
             } else if (node._value === 'cos') {
-                node.evaluate = node._evaluateSine;
+                node.evaluate = node._evaluateCoine;
             } else if (node._value === 'sin') {
-                node.evaluate = node._evaluateTangent;
+                node.evaluate = node._evaluateSine;
             } else if (node._value === 'tan') {
-                node.evaluate = node._evaluateCosine;
+                node.evaluate = node._evaluateTangent;
+            } else if (node._value === 'acos') {
+                node.evaluate = node._evaluateArcCosine;
+            } else if (node._value === 'asin') {
+                node.evaluate = node._evaluateArcSine;
+            } else if (node._value === 'atan') {
+                node.evaluate = node._evaluateArcTangent;
             } else if (node._value === 'Boolean') {
                 node.evaluate = node._evaluateBooleanConversion;
             } else if (node._value === 'Number') {
@@ -950,6 +980,18 @@ define([
         return Math.tan(this._left.evaluate(feature));
     };
 
+    Node.prototype._evaluateArcCosine = function(feature) {
+        return Math.acos(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateArcSine = function(feature) {
+        return Math.asin(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateArcTangent = function(feature) {
+        return Math.atan(this._left.evaluate(feature));
+    };
+
     Node.prototype._evaluateBooleanConversion = function(feature) {
         return Boolean(this._left.evaluate(feature));
     };
@@ -1173,8 +1215,14 @@ define([
                     return 'cos(' + left + ')';
                 } else if (value === 'sin') {
                     return 'sin(' + left + ')';
-                } else if (value === 'cos') {
+                } else if (value === 'tan') {
                     return 'tan(' + left + ')';
+                } else if (value === 'acos') {
+                    return 'acos(' + left + ')';
+                } else if (value === 'asin') {
+                    return 'asin(' + left + ')';
+                } else if (value === 'atan') {
+                    return 'atan(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
                 else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
