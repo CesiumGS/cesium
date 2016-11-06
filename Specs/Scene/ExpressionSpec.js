@@ -922,6 +922,36 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('evaluates radians function', function() {
+        var expression = new Expression('radians(0)');
+        expect(expression.evaluate(undefined)).toEqual(0);
+    });
+
+    it('throws if radians function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('radians()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('radians(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates degrees function', function() {
+        var expression = new Expression('degrees(0)');
+        expect(expression.evaluate(undefined)).toEqual(0);
+    });
+
+    it('throws if degrees function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('degrees()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('degrees(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates ternary conditional', function() {
         var expression = new Expression('true ? "first" : "second"');
         expect(expression.evaluate(undefined)).toEqual('first');

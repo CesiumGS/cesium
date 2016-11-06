@@ -394,6 +394,22 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'radians') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'degrees') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'Boolean') {
             if (args.length === 0) {
                 return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
@@ -637,6 +653,10 @@ define([
                 node.evaluate = node._evaluateArcSine;
             } else if (node._value === 'atan') {
                 node.evaluate = node._evaluateArcTangent;
+            } else if (node._value === 'radians') {
+                node.evaluate = node._evaluateRadiansConversion;
+            } else if (node._value === 'degrees') {
+                node.evaluate = node._evaluateDegreesConversion;
             } else if (node._value === 'Boolean') {
                 node.evaluate = node._evaluateBooleanConversion;
             } else if (node._value === 'Number') {
@@ -992,6 +1012,14 @@ define([
         return Math.atan(this._left.evaluate(feature));
     };
 
+    Node.prototype._evaluateRadiansConversion = function(feature) {
+        return (this._left.evaluate(feature)) * Math.PI / 180;
+    };
+
+    Node.prototype._evaluateDegreesConversion = function(feature) {
+        return (this._left.evaluate(feature)) * 180 / Math.PI;
+    };
+
     Node.prototype._evaluateBooleanConversion = function(feature) {
         return Boolean(this._left.evaluate(feature));
     };
@@ -1223,7 +1251,12 @@ define([
                     return 'asin(' + left + ')';
                 } else if (value === 'atan') {
                     return 'atan(' + left + ')';
+                } else if (value === 'radians') {
+                    return 'radians(' + left + ')';
+                } else if (value === 'degrees') {
+                    return 'degrees(' + left + ')';
                 }
+
                 //>>includeStart('debug', pragmas.debug);
                 else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
                     throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
