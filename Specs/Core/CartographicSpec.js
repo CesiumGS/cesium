@@ -111,7 +111,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fromCartesian works with value that is above the ellipsoid surface', function() {
+    it('fromCartesian works with a value that is above the ellipsoid surface', function() {
         var cartographic1 = Cartographic.fromDegrees(35.766989, 33.333602, 3000);
         var cartesian1 = Cartesian3.fromRadians(cartographic1.longitude, cartographic1.latitude, cartographic1.height);
         var cartographic2 = Cartographic.fromCartesian(cartesian1);
@@ -119,7 +119,7 @@ defineSuite([
         expect(cartographic2).toEqualEpsilon(cartographic1, CesiumMath.EPSILON8);
     });
 
-    it('fromCartesian works with value that is bellow the ellipsoid surface', function() {
+    it('fromCartesian works with a value that is bellow the ellipsoid surface', function() {
         var cartographic1 = Cartographic.fromDegrees(35.766989, 33.333602, -3000);
         var cartesian1 = Cartesian3.fromRadians(cartographic1.longitude, cartographic1.latitude, cartographic1.height);
         var cartographic2 = Cartographic.fromCartesian(cartesian1);
