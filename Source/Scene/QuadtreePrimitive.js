@@ -110,7 +110,6 @@ define([
         this._tileToUpdateHeights = [];
         this._lastTileIndex = 0;
         this._updateHeightsTimeSlice = 2.0;
-        this._estimatedVisibility = Visibility.NONE;
 
         /**
          * Gets or sets the maximum screen-space error, in pixels, that is allowed.

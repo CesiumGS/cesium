@@ -91,7 +91,6 @@ define([
             maximumHeight : mesh.maximumHeight,
             ellipsoid : tile.tilingScheme.ellipsoid
         });
-        surfaceTile.minimumAndMaximumHeightAreFromParent = false;
 
         tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
     };
