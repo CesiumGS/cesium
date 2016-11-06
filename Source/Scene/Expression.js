@@ -354,6 +354,22 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'sin') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'tan') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'Boolean') {
             if (args.length === 0) {
                 return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
@@ -586,6 +602,10 @@ define([
             } else if (node._value === 'abs') {
                 node.evaluate = node._evaluateAbsoluteValue;
             } else if (node._value === 'cos') {
+                node.evaluate = node._evaluateSine;
+            } else if (node._value === 'sin') {
+                node.evaluate = node._evaluateTangent;
+            } else if (node._value === 'tan') {
                 node.evaluate = node._evaluateCosine;
             } else if (node._value === 'Boolean') {
                 node.evaluate = node._evaluateBooleanConversion;
@@ -922,6 +942,14 @@ define([
         return Math.cos(this._left.evaluate(feature));
     };
 
+    Node.prototype._evaluateSine = function(feature) {
+        return Math.sin(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateTangent = function(feature) {
+        return Math.tan(this._left.evaluate(feature));
+    };
+
     Node.prototype._evaluateBooleanConversion = function(feature) {
         return Boolean(this._left.evaluate(feature));
     };
@@ -1143,6 +1171,10 @@ define([
                     return 'abs(' + left + ')';
                 } else if (value === 'cos') {
                     return 'cos(' + left + ')';
+                } else if (value === 'sin') {
+                    return 'sin(' + left + ')';
+                } else if (value === 'cos') {
+                    return 'tan(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
                 else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
