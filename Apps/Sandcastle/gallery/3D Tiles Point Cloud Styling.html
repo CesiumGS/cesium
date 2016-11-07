@@ -113,6 +113,11 @@ addStyle('Cos', {
     color : "color() * cos(${temperature} - 0)"
 });
 
+addStyle('Sqrt', {
+    color : "color() * sqrt(${temperature})",
+    pointSize : "10"
+});
+
 addStyle('Secondary Color', {
     color : {
         expression : "[${secondaryColor}[0], ${secondaryColor}[1], ${secondaryColor}[2], 1.0]",
