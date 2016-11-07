@@ -6,7 +6,8 @@ Change Log
     *
 * Breaking changes
     *
-* Added support for saving html and css in Github Gists [#4125](https://github.com/AnalyticalGraphicsInc/cesium/issues/4125)
+* Added support for saving html and css in Github Gists. [#4125](https://github.com/AnalyticalGraphicsInc/cesium/issues/4125)
+* Fixed `Cartographic.fromCartesian` when the cartesian is not on the ellipsoid surface. [#4611](https://github.com/AnalyticalGraphicsInc/cesium/issues/4611)
 
 ### 1.27 - 2016-11-01
 * Deprecated
