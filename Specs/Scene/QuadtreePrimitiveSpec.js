@@ -191,18 +191,14 @@ defineSuite([
         expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(1);
 
         // Simulate the second zero-level child having loaded with two children.
-        quadtree._levelZeroTiles[1]._children = [
-            buildEmptyQuadtreeTile(tileProvider),
-            buildEmptyQuadtreeTile(tileProvider)
-        ];
         quadtree._levelZeroTiles[1].state = QuadtreeTileLoadState.DONE;
         quadtree._levelZeroTiles[1].renderable = true;
         quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
-        // Now this should be back to 2.
-        expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(2);
+        // Now that tile's four children should be in the load queue.
+        expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(4);
     });
 
     it('forEachLoadedTile does not enumerate tiles in the START state', function() {

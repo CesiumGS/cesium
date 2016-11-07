@@ -406,13 +406,21 @@ define([
             this.data.freeResources();
         }
 
-        if (defined(this._children)) {
-            for (var i = 0, len = this._children.length; i < len; ++i) {
-                this._children[i].freeResources();
-            }
-            this._children = undefined;
-        }
+        freeTile(this._southwestChild);
+        this._southwestChild = undefined;
+        freeTile(this._southeastChild);
+        this._southeastChild = undefined;
+        freeTile(this._northwestChild);
+        this._northwestChild = undefined;
+        freeTile(this._northeastChild);
+        this._northeastChild = undefined;
     };
+
+    function freeTile(tile) {
+        if (defined(tile)) {
+            tile.freeResources();
+        }
+    }
 
     return QuadtreeTile;
 });

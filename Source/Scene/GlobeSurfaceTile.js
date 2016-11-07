@@ -458,32 +458,34 @@ define([
         // of its ancestors receives new (better) data and we want to re-upsample from the
         // new data.
 
-        if (defined(tile._children)) {
-            for (var childIndex = 0; childIndex < 4; ++childIndex) {
-                var childTile = tile._children[childIndex];
-                if (childTile.state !== QuadtreeTileLoadState.START) {
-                    var childSurfaceTile = childTile.data;
-                    if (defined(childSurfaceTile.terrainData) && !childSurfaceTile.terrainData.wasCreatedByUpsampling()) {
-                        // Data for the child tile has already been loaded.
-                        continue;
-                    }
+        propagateNewUpsampledDataToChild(tile, tile._southwestChild);
+        propagateNewUpsampledDataToChild(tile, tile._southeastChild);
+        propagateNewUpsampledDataToChild(tile, tile._northwestChild);
+        propagateNewUpsampledDataToChild(tile, tile._northeastChild);
+    }
 
-                    // Restart the upsampling process, no matter its current state.
-                    // We create a new instance rather than just restarting the existing one
-                    // because there could be an asynchronous operation pending on the existing one.
-                    if (defined(childSurfaceTile.upsampledTerrain)) {
-                        childSurfaceTile.upsampledTerrain.freeResources();
-                    }
-                    childSurfaceTile.upsampledTerrain = new TileTerrain({
-                        data : surfaceTile.terrainData,
-                        x : tile.x,
-                        y : tile.y,
-                        level : tile.level
-                    });
-
-                    childTile.state = QuadtreeTileLoadState.LOADING;
-                }
+    function propagateNewUpsampledDataToChild(tile, childTile) {
+        if (defined(childTile) && childTile.state !== QuadtreeTileLoadState.START) {
+            var childSurfaceTile = childTile.data;
+            if (defined(childSurfaceTile.terrainData) && !childSurfaceTile.terrainData.wasCreatedByUpsampling()) {
+                // Data for the child tile has already been loaded.
+                return;
             }
+
+            // Restart the upsampling process, no matter its current state.
+            // We create a new instance rather than just restarting the existing one
+            // because there could be an asynchronous operation pending on the existing one.
+            if (defined(childSurfaceTile.upsampledTerrain)) {
+                childSurfaceTile.upsampledTerrain.freeResources();
+            }
+            childSurfaceTile.upsampledTerrain = new TileTerrain({
+                data : tile.data.terrainData,
+                x : tile.x,
+                y : tile.y,
+                level : tile.level
+            });
+
+            childTile.state = QuadtreeTileLoadState.LOADING;
         }
     }
 
