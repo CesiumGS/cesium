@@ -184,8 +184,9 @@ define([
         this._outOfViewPrevious = false;
         this._needsUpdate = true;
 
-        // In IE11 polygon offset is not functional.
-        // TODO : Also disabled for Chrome (ANGLE) temporarily. Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
+        // In IE11 and Edge polygon offset is not functional.
+        // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
+        // Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
         var polygonOffsetSupported = true;
         if (FeatureDetection.isInternetExplorer() || FeatureDetection.isEdge() || ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) && FeatureDetection.isWindows() && !context.depthTexture)) {
             polygonOffsetSupported = false;
