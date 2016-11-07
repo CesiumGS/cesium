@@ -757,7 +757,13 @@ define([
         }
     });
 
-    function validateFramebuffer(context, framebuffer) {
+    /**
+     * Validates a framebuffer.
+     * Available in debug builds only.
+     * @private
+     */
+    function validateFramebuffer(context) {
+        //>>includeStart('debug', pragmas.debug);
         if (context.validateFramebuffer) {
             var gl = context._gl;
             var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
@@ -783,6 +789,7 @@ define([
                 throw new DeveloperError(message);
             }
         }
+        //>>includeEnd('debug');
     }
 
     function applyRenderState(context, renderState, passState, clear) {
@@ -806,7 +813,7 @@ define([
 
             if (defined(framebuffer)) {
                 framebuffer._bind();
-                validateFramebuffer(context, framebuffer);
+                validateFramebuffer(context);
 
                 // TODO: Need a way for a command to give what draw buffers are active.
                 buffers = framebuffer._getActiveColorAttachments();

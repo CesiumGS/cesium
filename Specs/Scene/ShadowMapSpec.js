@@ -11,6 +11,7 @@ defineSuite([
         'Core/EllipsoidTerrainProvider',
         'Core/GeometryInstance',
         'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
         'Core/HeightmapTerrainData',
         'Core/JulianDate',
         'Core/Math',
@@ -43,6 +44,7 @@ defineSuite([
         EllipsoidTerrainProvider,
         GeometryInstance,
         HeadingPitchRange,
+        HeadingPitchRoll,
         HeightmapTerrainData,
         JulianDate,
         CesiumMath,
@@ -101,13 +103,13 @@ defineSuite([
         sunShadowMap = scene.shadowMap;
 
         var boxOrigin = new Cartesian3.fromRadians(longitude, latitude, boxHeight);
-        var boxTransform = Transforms.headingPitchRollToFixedFrame(boxOrigin, 0.0, 0.0, 0.0);
+        var boxTransform = Transforms.headingPitchRollToFixedFrame(boxOrigin, new HeadingPitchRoll());
 
         var floorOrigin = new Cartesian3.fromRadians(longitude, latitude, floorHeight);
-        var floorTransform = Transforms.headingPitchRollToFixedFrame(floorOrigin, 0.0, 0.0, 0.0);
+        var floorTransform = Transforms.headingPitchRollToFixedFrame(floorOrigin, new HeadingPitchRoll());
 
         var roomOrigin = new Cartesian3.fromRadians(longitude, latitude, height);
-        var roomTransform = Transforms.headingPitchRollToFixedFrame(roomOrigin, 0.0, 0.0, 0.0);
+        var roomTransform = Transforms.headingPitchRollToFixedFrame(roomOrigin, new HeadingPitchRoll());
 
         var modelPromises = [];
         modelPromises.push(loadModel({
@@ -661,7 +663,7 @@ defineSuite([
         for (var i = 0; i < 6; ++i) {
             var box = scene.primitives.add(Model.fromGltf({
                 url : boxUrl,
-                modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], 0.0, 0.0, 0.0),
+                modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], new HeadingPitchRoll()),
                 scale : 0.2
             }));
             scene.render(); // Model is pre-loaded, render one frame to make it ready
@@ -861,11 +863,11 @@ defineSuite([
     it('enable debugShow for cascaded shadow map', function() {
         createCascadedShadowMap();
 
-        // Shadow overlay command, shadow volume outline, camera outline, and four cascade outlines
+        // Shadow overlay command, shadow volume outline, camera outline, four cascade outlines, four cascade planes
         scene.shadowMap.debugShow = true;
         scene.shadowMap.debugFreezeFrame = true;
         render();
-        expect(scene.frameState.commandList.length).toBe(7);
+        expect(scene.frameState.commandList.length).toBe(13);
 
         scene.shadowMap.debugShow = false;
         render();
@@ -875,10 +877,10 @@ defineSuite([
     it('enable debugShow for fixed shadow map', function() {
         createShadowMapForDirectionalLight();
 
-        // Overlay command and shadow volume outline
+        // Overlay command, shadow volume outline, shadow volume planes
         scene.shadowMap.debugShow = true;
         render();
-        expect(scene.frameState.commandList.length).toBe(2);
+        expect(scene.frameState.commandList.length).toBe(3);
 
         scene.shadowMap.debugShow = false;
         render();

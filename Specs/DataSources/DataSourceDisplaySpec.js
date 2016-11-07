@@ -48,9 +48,7 @@ defineSuite([
         }
     });
 
-    function MockVisualizer(scene, entityCollection) {
-        this.scene = scene;
-        this.entityCollection = entityCollection;
+    function MockVisualizer() {
         this.updatesCalled = 0;
         this.lastUpdateTime = undefined;
         this.destroyed = false;
@@ -58,6 +56,7 @@ defineSuite([
         this.getBoundingSphereResult = undefined;
         this.getBoundingSphereState = undefined;
     }
+
     MockVisualizer.prototype.update = function(time) {
         this.lastUpdateTime = time;
         this.updatesCalled++;
@@ -118,6 +117,8 @@ defineSuite([
         dataSource.entities.add(entity);
         display.dataSources.add(dataSource);
 
+        display.update(Iso8601.MINIMUM_VALUE);
+
         var result = new BoundingSphere();
         var state = display.getBoundingSphere(entity, true, result);
 
@@ -148,6 +149,8 @@ defineSuite([
         var dataSource = new MockDataSource();
         dataSource.entities.add(entity);
         display.dataSources.add(dataSource);
+
+        display.update(Iso8601.MINIMUM_VALUE);
 
         var result = new BoundingSphere();
         var state = display.getBoundingSphere(entity, true, result);
@@ -191,6 +194,8 @@ defineSuite([
         var dataSource = new MockDataSource();
         dataSource.entities.add(entity);
         display.dataSources.add(dataSource);
+        display.update(Iso8601.MINIMUM_VALUE);
+
         var result = new BoundingSphere();
         var state = display.getBoundingSphere(entity, false, result);
         expect(state).toBe(BoundingSphereState.FAILED);
@@ -202,6 +207,8 @@ defineSuite([
             dataSourceCollection : dataSourceCollection,
             scene : scene
         });
+        display.update(Iso8601.MINIMUM_VALUE);
+
         var entity = new Entity();
         var result = new BoundingSphere();
         var state = display.getBoundingSphere(entity, false, result);

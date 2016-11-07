@@ -9,6 +9,7 @@ attribute vec4 compressedAttribute2;        // image height, color, pick color, 
 attribute vec4 eyeOffset;                   // eye offset in meters, 4 bytes free (texture range)
 attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
+attribute vec2 distanceDisplayCondition;    // near, far
 
 varying vec2 v_textureCoordinates;
 
@@ -39,22 +40,8 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
 {
     vec2 halfSize = imageSize * scale * czm_resolutionScale;
     halfSize *= ((direction * 2.0) - 1.0);
-    
-    if (sizeInMeters)
-    {
-        positionEC.xy += halfSize;
-    }
-    
-    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
-    
-    if (sizeInMeters)
-    {
-        positionWC.xy += (origin * abs(halfSize)) / czm_metersPerPixel(positionEC);
-    }
-    else
-    {
-        positionWC.xy += (origin * abs(halfSize));
-    }
+
+    vec2 originTranslate = origin * abs(halfSize);
     
 #if defined(ROTATION) || defined(ALIGNED_AXIS)
     if (validAlignedAxis || rotation != 0.0)
@@ -75,7 +62,20 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
         halfSize = rotationMatrix * halfSize;
     }
 #endif
-    
+
+    if (sizeInMeters)
+    {
+        positionEC.xy += halfSize;
+    }
+
+    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
+
+    if (sizeInMeters)
+    {
+        originTranslate += originTranslate / czm_metersPerPixel(positionEC);
+    }
+
+    positionWC.xy += originTranslate;
     if (!sizeInMeters)
     {
         positionWC.xy += halfSize;
@@ -203,7 +203,7 @@ void main()
     
     ///////////////////////////////////////////////////////////////////////////     
 
-#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(EYE_DISTANCE_PIXEL_OFFSET)
+#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(EYE_DISTANCE_PIXEL_OFFSET) || defined(DISTANCE_DISPLAY_CONDITION)
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -239,6 +239,15 @@ void main()
 #ifdef EYE_DISTANCE_PIXEL_OFFSET
     float pixelOffsetScale = czm_nearFarScalar(pixelOffsetScaleByDistance, lengthSq);
     pixelOffset *= pixelOffsetScale;
+#endif
+
+#ifdef DISTANCE_DISPLAY_CONDITION
+    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x;
+    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y;
+    if (lengthSq < nearSq || lengthSq > farSq)
+    {
+        positionEC.xyz = vec3(0.0);
+    }
 #endif
 
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);

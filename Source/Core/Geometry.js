@@ -158,7 +158,7 @@ define([
         /**
          * @private
          */
-        this.boundingSphereCV = undefined;
+        this.boundingSphereCV = options.boundingSphereCV;
     }
 
     /**
@@ -186,9 +186,11 @@ define([
 
                 var attribute = geometry.attributes[property];
                 var num = attribute.values.length / attribute.componentsPerAttribute;
+                //>>includeStart('debug', pragmas.debug);
                 if ((numberOfVertices !== num) && (numberOfVertices !== -1)) {
                     throw new DeveloperError('All attribute lists must have the same number of attributes.');
                 }
+                //>>includeEnd('debug');
                 numberOfVertices = num;
             }
         }

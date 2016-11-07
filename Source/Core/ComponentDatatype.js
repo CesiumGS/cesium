@@ -145,13 +145,15 @@ define([
             return Float32Array.BYTES_PER_ELEMENT;
         case ComponentDatatype.DOUBLE:
             return Float64Array.BYTES_PER_ELEMENT;
+        //>>includeStart('debug', pragmas.debug);
         default:
             throw new DeveloperError('componentDatatype is not a valid value.');
+        //>>includeEnd('debug');
         }
     };
 
     /**
-     * Gets the ComponentDatatype for the provided TypedArray instance.
+     * Gets the {@link ComponentDatatype} for the provided TypedArray instance.
      *
      * @param {TypedArray} array The typed array.
      * @returns {ComponentDatatype} The ComponentDatatype for the provided array, or undefined if the array is not a TypedArray.
@@ -246,8 +248,10 @@ define([
             return new Float32Array(valuesOrLength);
         case ComponentDatatype.DOUBLE:
             return new Float64Array(valuesOrLength);
+        //>>includeStart('debug', pragmas.debug);
         default:
             throw new DeveloperError('componentDatatype is not a valid value.');
+        //>>includeEnd('debug');
         }
     };
 
@@ -292,8 +296,43 @@ define([
             return new Float32Array(buffer, byteOffset, length);
         case ComponentDatatype.DOUBLE:
             return new Float64Array(buffer, byteOffset, length);
+        //>>includeStart('debug', pragmas.debug);
         default:
             throw new DeveloperError('componentDatatype is not a valid value.');
+        //>>includeEnd('debug');
+        }
+    };
+
+    /**
+     * Get the ComponentDatatype from its name.
+     *
+     * @param {String} name The name of the ComponentDatatype.
+     * @returns {ComponentDatatype} The ComponentDatatype.
+     *
+     * @exception {DeveloperError} name is not a valid value.
+     */
+    ComponentDatatype.fromName = function(name) {
+        switch (name) {
+            case 'BYTE':
+                return ComponentDatatype.BYTE;
+            case 'UNSIGNED_BYTE':
+                return ComponentDatatype.UNSIGNED_BYTE;
+            case 'SHORT':
+                return ComponentDatatype.SHORT;
+            case 'UNSIGNED_SHORT':
+                return ComponentDatatype.UNSIGNED_SHORT;
+            case 'INT':
+                return ComponentDatatype.INT;
+            case 'UNSIGNED_INT':
+                return ComponentDatatype.UNSIGNED_INT;
+            case 'FLOAT':
+                return ComponentDatatype.FLOAT;
+            case 'DOUBLE':
+                return ComponentDatatype.DOUBLE;
+            //>>includeStart('debug', pragmas.debug);
+            default:
+                throw new DeveloperError('name is not a valid value.');
+            //>>includeEnd('debug');
         }
     };
 
