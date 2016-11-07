@@ -251,7 +251,6 @@ define([
             }
         },
 
-
         /**
          * An array of tiles that is at the next level of the tile tree.
          * @memberof QuadtreeTile.prototype
