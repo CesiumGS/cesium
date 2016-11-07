@@ -46,7 +46,6 @@ We appreciate attribution by including the Cesium logo and link in your app.
 ### Demos ###
 
 <p align="center">
-
 <a href="http://cesiumjs.org/demos/IMERG.html"><img src="http://cesiumjs.org/demos/images/IMERG.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/OrbitLogic.html"><img src="http://cesiumjs.org/demos/images/OrbitLogic.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/nextPlace.html"><img src="http://cesiumjs.org/demos/images/nextPlace.jpg" height="150" /></a>&nbsp;
