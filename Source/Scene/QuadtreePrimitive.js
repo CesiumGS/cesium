@@ -522,7 +522,7 @@ define([
                     // Tile is not rendered, so load it with low priority.
                     primitive._tileLoadQueueLow.push(tile);
                 }
-            } else if (allAreRenderable && !allAreUpsampled) {
+            } else if (allAreRenderable && allAreUpsampled) {
                 // No point in rendering the children because they're all upsampled.  Render this tile instead.
                 addTileToRenderList(primitive, tile);
 
@@ -595,8 +595,8 @@ define([
 
         // Traverse in the opposite of the desired order, because we're pushing onto a stack (first in, last out),
         // and we want the nearest out first.
-        if (cameraPosition.longitude < southwest.east) {
-            if (cameraPosition.latitude < southwest.north) {
+        if (cameraPosition.longitude < southwest.rectangle.east) {
+            if (cameraPosition.latitude < southwest.rectangle.north) {
                 // Camera in southwest quadrant
                 traverseIfVisible(primitive, northeast, tileProvider, frameState, occluders, traversalStack);
                 traverseIfVisible(primitive, southeast, tileProvider, frameState, occluders, traversalStack);
@@ -610,7 +610,7 @@ define([
                 traverseIfVisible(primitive, northwest, tileProvider, frameState, occluders, traversalStack);
             }
         } else {
-            if (cameraPosition.latitude < southwest.north) {
+            if (cameraPosition.latitude < southwest.rectangle.north) {
                 // Camera southeast quadrant
                 traverseIfVisible(primitive, northwest, tileProvider, frameState, occluders, traversalStack);
                 traverseIfVisible(primitive, southwest, tileProvider, frameState, occluders, traversalStack);
@@ -683,49 +683,6 @@ define([
     function addTileToRenderList(primitive, tile) {
         primitive._tilesToRender.push(tile);
         ++primitive._debug.tilesRendered;
-    }
-
-    function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile) {
-        var allRenderable = true;
-        var allUpsampledOnly = true;
-        var allDoneLoading = true;
-
-        var children = tile.children;
-        var i;
-        var len;
-        var child;
-        for (i = 0, len = children.length; i < len; ++i) {
-            child = children[i];
-
-            primitive._tileReplacementQueue.markTileRendered(child);
-
-            allUpsampledOnly = allUpsampledOnly && child.upsampledFromParent;
-            allRenderable = allRenderable && child.renderable;
-            allDoneLoading = allDoneLoading && !child.needsLoading;
-        }
-
-        if (!allRenderable) {
-            ++primitive._debug.tilesWaitingForChildren;
-        }
-
-        // If all children are upsampled from this tile, we just render this tile instead of its children (don't refine).
-        var willRefine = allRenderable && !allUpsampledOnly;
-
-        if (!willRefine && !allDoneLoading) {
-            for (i = 0, len = children.length; i < len; ++i) {
-                child = children[i];
-                if (child.needsLoading) {
-                    if (child.renderable) {
-                        primitive._tileLoadQueueLow.push(child);
-                    } else {
-                        // A tile blocking refine loads with high priority
-                        primitive._tileLoadQueueHigh.push(child);
-                    }
-                }
-            }
-        }
-
-        return willRefine;
     }
 
     function processTileLoadQueue(primitive, frameState) {
