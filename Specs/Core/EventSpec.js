@@ -91,8 +91,8 @@ defineSuite([
         event.addEventListener(doNothing);
         event.addEventListener(removeEventCb);
         event.addEventListener(removeEventCb2);
-        event.addEventListener(removeEventCb3);
         event.addEventListener(doNothing2);
+        event.addEventListener(removeEventCb3);
         event.raiseEvent();
         expect(event.numberOfListeners).toEqual(2);
         expect(event._listeners.indexOf(doNothing2)).toEqual(1);
@@ -132,7 +132,7 @@ defineSuite([
         expect(callbacks.doNothing2.calls.count()).toEqual(2);
     });
 
-    it('event._recursionLevel is increased and decreased properly', function() {
+    it('event._recursionLevel has the correct value', function() {
 
         var counter = 0;
         var recursionLevel;
