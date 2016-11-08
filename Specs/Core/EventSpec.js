@@ -111,7 +111,7 @@ defineSuite([
                 },
                 doRecursiveCall : function(evt) {
                     if (counter < 1){
-                        counter ++;
+                        counter++;
                         event.raiseEvent();
                     }
                 },
@@ -132,7 +132,7 @@ defineSuite([
         expect(callbacks.doNothing2.calls.count()).toEqual(2);
     });
 
-    it('recursion counter is increased and decreased properly', function() {
+    it('event._recursionLevel is increased and decreased properly', function() {
 
         var counter = 0;
         var recursionLevel;
@@ -146,7 +146,7 @@ defineSuite([
                 },
                 doRecursiveCall : function(evt) {
                     if (counter < 1){
-                        counter ++;
+                        counter++;
                         event.raiseEvent();
                     } else {
                         recursionLevel = event._recursionLevel;
@@ -170,6 +170,7 @@ defineSuite([
 
 
     });
+
     it('addEventListener and removeEventListener works with same function of different scopes', function() {
         var Scope = function() {
             this.timesCalled = 0;
