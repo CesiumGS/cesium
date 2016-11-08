@@ -762,7 +762,7 @@ define([
      * Available in debug builds only.
      * @private
      */
-    function validateFramebuffer(context, framebuffer) {
+    function validateFramebuffer(context) {
         //>>includeStart('debug', pragmas.debug);
         if (context.validateFramebuffer) {
             var gl = context._gl;
@@ -813,7 +813,7 @@ define([
 
             if (defined(framebuffer)) {
                 framebuffer._bind();
-                validateFramebuffer(context, framebuffer);
+                validateFramebuffer(context);
 
                 // TODO: Need a way for a command to give what draw buffers are active.
                 buffers = framebuffer._getActiveColorAttachments();
