@@ -10,6 +10,14 @@ Change Log
    * `Cesium3DTileContent`
    * `Cesium3DTileFeature`
 
+### 1.28 - 2016-12-01
+* Deprecated
+    *
+* Breaking changes
+    *
+* Added support for saving html and css in Github Gists. [#4125](https://github.com/AnalyticalGraphicsInc/cesium/issues/4125)
+* Fixed `Cartographic.fromCartesian` when the cartesian is not on the ellipsoid surface. [#4611](https://github.com/AnalyticalGraphicsInc/cesium/issues/4611)
+
 ### 1.27 - 2016-11-01
 * Deprecated
     * Individual heading, pitch, and roll options to `Transforms.headingPitchRollToFixedFrame` and `Transforms.headingPitchRollQuaternion` have been deprecated and will be removed in 1.30.  Pass the new `HeadingPitchRoll` object instead. [#4498](https://github.com/AnalyticalGraphicsInc/cesium/pull/4498)
