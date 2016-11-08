@@ -33,7 +33,7 @@ define([
         this._listeners = [];
         this._scopes = [];
         this._toRemove = [];
-        this._insideRaiseEvent = false;
+        this._recursionLevel = 0;
     }
 
     defineProperties(Event.prototype, {
@@ -108,7 +108,7 @@ define([
         }
 
         if (index !== -1) {
-            if (this._insideRaiseEvent) {
+            if (this._recursionLevel > 0) {
                 //In order to allow removing an event subscription from within
                 //a callback, we don't actually remove the items here.  Instead
                 //remember the index they are at and undefined their value.
@@ -134,7 +134,7 @@ define([
      * @see Event#removeEventListener
      */
     Event.prototype.raiseEvent = function() {
-        this._insideRaiseEvent = true;
+        this._recursionLevel++;
 
         var i;
         var listeners = this._listeners;
@@ -148,17 +148,20 @@ define([
             }
         }
 
-        //Actually remove items removed in removeEventListener.
-        var toRemove = this._toRemove;
-        length = toRemove.length;
-        for (i = 0; i < length; i++) {
-            var index = toRemove[i];
-            listeners.splice(index, 1);
-            scopes.splice(index, 1);
-        }
-        toRemove.length = 0;
+        this._recursionLevel--;
 
-        this._insideRaiseEvent = false;
+        if (this._recursionLevel === 0){
+            //Actually remove items removed in removeEventListener.
+            var toRemove = this._toRemove;
+            length = toRemove.length;
+            for (i = length - 1; i >= 0; i--) {
+                var index = toRemove[i];
+                listeners.splice(index, 1);
+                scopes.splice(index, 1);
+            }
+            toRemove.length = 0;
+        }
+
     };
 
     /**
