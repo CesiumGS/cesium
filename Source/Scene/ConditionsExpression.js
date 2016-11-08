@@ -38,7 +38,7 @@ define([
      *         ['true', 'color("#FFFFFF")']
      *     ]
      * });
-     * expression.evaluateColor(feature, result); // returns a Cesium.Color object
+     * expression.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
      */
@@ -110,17 +110,18 @@ define([
      * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
      * object will be returned. If the result is a <code>Color</code>, a {@link Color} object will be returned.
      *
+     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature who's properties may be used as variables in the expression.
      * @returns {Boolean|Number|String|Color|RegExp} The result of evaluating the expression.
      */
-    ConditionsExpression.prototype.evaluate = function(feature) {
+    ConditionsExpression.prototype.evaluate = function(frameState, feature) {
         var conditions = this._runtimeConditions;
         if (defined(conditions)) {
             var length = conditions.length;
             for (var i = 0; i < length; ++i) {
                 var statement = conditions[i];
-                if (statement.condition.evaluate(feature)) {
-                    return statement.expression.evaluate(feature);
+                if (statement.condition.evaluate(frameState, feature)) {
+                    return statement.expression.evaluate(frameState, feature);
                 }
             }
         }
@@ -129,18 +130,19 @@ define([
     /**
      * Evaluates the result of a Color expression, using the values defined by a feature.
      *
+     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature who's properties may be used as variables in the expression.
      * @param {Color} [result] The object in which to store the result
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      */
-    ConditionsExpression.prototype.evaluateColor = function(feature, result) {
+    ConditionsExpression.prototype.evaluateColor = function(frameState, feature, result) {
         var conditions = this._runtimeConditions;
         if (defined(conditions)) {
             var length = conditions.length;
             for (var i = 0; i < length; ++i) {
                 var statement = conditions[i];
-                if (statement.condition.evaluate(feature)) {
-                    return statement.expression.evaluateColor(feature, result);
+                if (statement.condition.evaluate(frameState, feature)) {
+                    return statement.expression.evaluateColor(frameState, feature, result);
                 }
             }
         }

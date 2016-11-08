@@ -227,13 +227,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     show : '(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)'
          * });
-         * style.show.evaluate(feature); // returns true or false depending on the feature's properties
+         * style.show.evaluate(frameState, feature); // returns true or false depending on the feature's properties
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override show expression with a custom function
          * style.show = {
-         *     evaluate : function(feature) {
+         *     evaluate : function(frameState, feature) {
          *         return true;
          *     }
          * };
@@ -271,13 +271,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     color : '(${Temperature} > 90) ? color("red") : color("white")'
          * });
-         * style.color.evaluateColor(feature, result); // returns a Cesium.Color object
+         * style.color.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override color expression with a custom function
          * style.color = {
-         *     evaluateColor : function(feature, result) {
+         *     evaluateColor : function(frameState, feature, result) {
          *         return Cesium.Color.clone(Cesium.Color.WHITE, result);
          *     }
          * };
@@ -315,13 +315,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     pointSize : '(${Temperature} > 90) ? 2.0 : 1.0'
          * });
-         * style.pointSize.evaluate(feature); // returns a Number
+         * style.pointSize.evaluate(frameState, feature); // returns a Number
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override pointSize expression with a custom function
          * style.pointSize = {
-         *     evaluate : function(feature) {
+         *     evaluate : function(frameState, feature) {
          *         return 1.0;
          *     }
          * };
@@ -359,7 +359,7 @@ define([
          *         description : '"Building id ${id} has height ${Height}."'
          *     }
          * });
-         * style.meta.description.evaluate(feature); // returns a String with the substituted variables
+         * style.meta.description.evaluate(frameState, feature); // returns a String with the substituted variables
          *
          * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
