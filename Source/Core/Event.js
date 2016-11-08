@@ -153,6 +153,12 @@ define([
         if (this._recursionLevel === 0){
             //Actually remove items removed in removeEventListener.
             var toRemove = this._toRemove;
+
+            // This array is not necessarily in the correct order.
+            // For example  - if some listener callback removes **other** listener it wouldn't be in the correct order.
+            // So we have to sort it before the (reversed) loop...
+            toRemove.sort();
+
             length = toRemove.length;
             for (i = length - 1; i >= 0; i--) {
                 var index = toRemove[i];
