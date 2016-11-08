@@ -72,7 +72,9 @@ defineSuite([
             tileProvider : {
                 ready : true
             },
-            _tileLoadQueue : {},
+            _tileLoadQueueHigh : [],
+            _tileLoadQueueMedium : [],
+            _tileLoadQueueLow : [],
             _debug : {
                 tilesWaitingForChildren : 0
             }
