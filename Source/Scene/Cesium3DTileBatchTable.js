@@ -78,7 +78,22 @@ define([
          * @private
          */
         this.batchTableBinary = batchTableBinary;
-        this._batchTableBinaryProperties = Cesium3DTileBatchTable.getBinaryProperties(featuresLength, batchTableJson, batchTableBinary);
+
+        var batchTableHierarchy;
+        var batchTableBinaryProperties;
+        if (defined(batchTableJson)) {
+            // Extract the hierarchy and remove it from the batch table json
+            batchTableHierarchy = batchTableJson.HIERARCHY;
+            if (defined(batchTableHierarchy)) {
+                delete batchTableJson.HIERARCHY;
+                batchTableHierarchy = initializeHierarchy(batchTableHierarchy, batchTableBinary);
+            }
+            // Get the binary properties
+            batchTableBinaryProperties = Cesium3DTileBatchTable.getBinaryProperties(featuresLength, batchTableJson, batchTableBinary);
+        }
+
+        this._batchTableHierarchy = batchTableHierarchy;
+        this._batchTableBinaryProperties = batchTableBinaryProperties;
 
         // PERFORMANCE_IDEA: These parallel arrays probably generate cache misses in get/set color/show
         // and use A LOT of memory.  How can we use less memory?
@@ -114,6 +129,53 @@ define([
 
         this._textureDimensions = textureDimensions;
         this._textureStep = textureStep;
+    }
+
+    function initializeHierarchy(json, binary) {
+        var i;
+        var binaryAccessor;
+
+        var instancesLength = json.instancesLength;
+        var classes = json.classes;
+        var classIds = json.classIds;
+        var parentIds = json.parentIds;
+
+        if (defined(classIds.byteOffset)) {
+            classIds.componentType = defaultValue(classIds.componentType, 'SHORT');
+            classIds.type = 'SCALAR';
+            binaryAccessor = getBinaryAccessor(classIds);
+            classIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + classIds.byteOffset, instancesLength);
+        }
+
+        if (defined(parentIds.byteOffset)) {
+            parentIds.componentType = defaultValue(parentIds.componentType, 'SHORT');
+            parentIds.type = 'SCALAR';
+            binaryAccessor = getBinaryAccessor(parentIds);
+            parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, instancesLength);
+        }
+
+        var classesLength = classes.length;
+        for (i = 0; i < classesLength; ++i) {
+            var classInstancesLength = classes[i].length;
+            var properties = classes[i].instances;
+            var binaryProperties = Cesium3DTileBatchTable.getBinaryProperties(classInstancesLength, properties, binary);
+            classes[i].instances = combine(binaryProperties, properties);
+        }
+
+        var classCounts = arrayFill(new Array(classesLength), 0);
+        var classIndexes = new Array(instancesLength);
+        for (i = 0; i < instancesLength; ++i) {
+            var classId = classIds[i];
+            classIndexes[i] = classCounts[classId];
+            ++classCounts[classId];
+        }
+
+        return {
+            classes : classes,
+            classIds : classIds,
+            classIndexes : classIndexes,
+            parentIds : parentIds
+        };
     }
 
     Cesium3DTileBatchTable.getBinaryProperties = function(featuresLength, json, binary) {
@@ -369,13 +431,103 @@ define([
         return names;
     };
 
+    Cesium3DTileBatchTable.prototype.isDerived = function(batchId, className) {
+        var hierarchy = this._batchTableHierarchy;
+        if (!defined(hierarchy)) {
+            return false;
+        }
+        var instanceIndex = batchId;
+        while (instanceIndex !== -1) {
+            var classId = hierarchy.classIds[instanceIndex];
+            var instanceClass = hierarchy.classes[classId];
+            if (instanceClass.name === className) {
+                return true;
+            }
+            // Recursively check parent
+            instanceIndex = hierarchy.parentIds[instanceIndex];
+        }
+        return false;
+    };
+
+    Cesium3DTileBatchTable.prototype.isClass = function(batchId, className) {
+        var hierarchy = this._batchTableHierarchy;
+        if (!defined(hierarchy)) {
+            return false;
+        }
+        var classId = hierarchy.classIds[batchId];
+        var instanceClass = hierarchy.classes[classId];
+        return instanceClass.name === className;
+    };
+
+    function getBinaryProperty(binaryProperty, index) {
+        var typedArray = binaryProperty.typedArray;
+        var componentCount = binaryProperty.componentCount;
+        if (componentCount === 1) {
+            return typedArray[index];
+        } else {
+            return binaryProperty.type.unpack(typedArray, index * componentCount);
+        }
+    }
+
+    function setBinaryProperty(binaryProperty, index, value) {
+        var typedArray = binaryProperty.typedArray;
+        var componentCount = binaryProperty.componentCount;
+        if (componentCount === 1) {
+            typedArray[index] = value;
+        } else {
+            binaryProperty.type.pack(value, typedArray, index * componentCount);
+        }
+    }
+
+    function getHierarchyProperty(batchTable, batchId, name) {
+        var hierarchy = batchTable._batchTableHierarchy;
+        var instanceIndex = batchId;
+        while (instanceIndex !== -1) {
+            var classId = hierarchy.classIds[instanceIndex];
+            var instanceClass = hierarchy.classes[classId];
+            var indexInClass = hierarchy.classIndexes[instanceIndex];
+            var propertyValues = instanceClass.instances[name];
+            if (defined(propertyValues)) {
+                if (defined(propertyValues.typedArray)) {
+                    return getBinaryProperty(propertyValues, indexInClass);
+                } else {
+                    return clone(propertyValues[indexInClass], true);
+                }
+            }
+            // Recursively check parent for the property
+            instanceIndex = hierarchy.parentIds[instanceIndex];
+        }
+        return undefined;
+    }
+
+    function setHierarchyProperty(batchTable, batchId, name, value) {
+        var hierarchy = batchTable._batchTableHierarchy;
+        var instanceIndex = batchId;
+        while (instanceIndex !== -1) {
+            var classId = hierarchy.classIds[instanceIndex];
+            var instanceClass = hierarchy.classes[classId];
+            var indexInClass = hierarchy.classIndexes[instanceIndex];
+            var propertyValues = instanceClass.instances[name];
+            if (defined(propertyValues)) {
+                if (defined(propertyValues.typedArray)) {
+                    setBinaryProperty(propertyValues, indexInClass, value);
+                } else {
+                    propertyValues[indexInClass] = clone(value, true);
+                }
+                return true;
+            }
+            // Recursively check parent for the property
+            instanceIndex = hierarchy.parentIds[instanceIndex];
+        }
+        return false;
+    }
+
     Cesium3DTileBatchTable.prototype.getProperty = function(batchId, name) {
         var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
             throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
-
         if (!defined(name)) {
             throw new DeveloperError('name is required.');
         }
@@ -385,24 +537,26 @@ define([
             return undefined;
         }
 
+        if (defined(this._batchTableHierarchy)) {
+            var hierarchyProperty = getHierarchyProperty(this, batchId, name);
+            if (defined(hierarchyProperty)) {
+                return hierarchyProperty;
+            }
+        }
+
         if (defined(this._batchTableBinaryProperties)) {
             var binaryProperty = this._batchTableBinaryProperties[name];
             if (defined(binaryProperty)) {
-                var typedArray = binaryProperty.typedArray;
-                var componentCount = binaryProperty.componentCount;
-                if (componentCount === 1) {
-                    return typedArray[batchId];
-                } else {
-                    return binaryProperty.type.unpack(typedArray, batchId * componentCount);
-                }
+                return getBinaryProperty(binaryProperty, batchId);
             }
         }
 
         var propertyValues = this.batchTableJson[name];
-        if (!defined(propertyValues)) {
-            return undefined;
+        if (defined(propertyValues)) {
+            return clone(propertyValues[batchId], true);
         }
-        return clone(propertyValues[batchId], true);
+
+        return undefined;
     };
 
     Cesium3DTileBatchTable.prototype.setProperty = function(batchId, name, value) {
@@ -417,16 +571,16 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(this._batchTableHierarchy)) {
+            if (setHierarchyProperty(this, batchId, name, value)) {
+                return;
+            }
+        }
+
         if (defined(this._batchTableBinaryProperties)) {
             var binaryProperty = this._batchTableBinaryProperties[name];
             if (defined(binaryProperty)) {
-                var typedArray = binaryProperty.typedArray;
-                var componentCount = binaryProperty.componentCount;
-                if (componentCount === 1) {
-                    typedArray[batchId] = value;
-                } else {
-                    binaryProperty.type.pack(value, typedArray, batchId * componentCount);
-                }
+                setBinaryProperty(binaryProperty, batchId, value);
                 return;
             }
         }
@@ -473,9 +627,6 @@ define([
             '} \n';
     }
 
-    /**
-     * @private
-     */
     Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function(handleTranslucent, batchIdAttributeName) {
         if (this.featuresLength === 0) {
             return;

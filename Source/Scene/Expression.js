@@ -338,6 +338,22 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'isClass') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'isDerived') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'abs') {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
@@ -591,6 +607,10 @@ define([
                 node.evaluate = node._evaluateNaN;
             } else if (node._value === 'isFinite') {
                 node.evaluate = node._evaluateIsFinite;
+            } else if (node._value === 'isClass') {
+                node.evaluate = node._evaluateIsClass;
+            } else if (node._value === 'isDerived') {
+                node.evaluate = node._evaluateIsDerived;
             } else if (node._value === 'abs') {
                 node.evaluate = node._evaluateAbsoluteValue;
             } else if (node._value === 'cos') {
@@ -924,6 +944,14 @@ define([
         return isFinite(this._left.evaluate(feature));
     };
 
+    Node.prototype._evaluateIsClass = function(feature) {
+        return feature.isClass(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateIsDerived = function(feature) {
+        return feature.isDerived(this._left.evaluate(feature));
+    };
+
     Node.prototype._evaluateAbsoluteValue = function(feature) {
         return Math.abs(this._left.evaluate(feature));
     };
@@ -1161,7 +1189,7 @@ define([
                     return 'sqrt(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
-                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
+                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isClass') || (value === 'isDerived')) {
                     throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
                 }
                 //>>includeEnd('debug');

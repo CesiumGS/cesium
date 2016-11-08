@@ -168,5 +168,15 @@ define([
         this._content.featurePropertiesDirty = true;
     };
 
+    // TODO : add doc
+    Cesium3DTileFeature.prototype.isClass = function(className) {
+        return this._batchTable.isClass(this._batchId, className);
+    };
+
+    // TODO : add doc
+    Cesium3DTileFeature.prototype.isDerived = function(className) {
+        return this._batchTable.isDerived(this._batchId, className);
+    };
+
     return Cesium3DTileFeature;
 });
