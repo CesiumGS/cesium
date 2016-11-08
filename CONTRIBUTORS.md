@@ -113,4 +113,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Tom Payne](https://github.com/twpayne)
 * [Leesa Fini](https://github.com/leesafini)
 * [Victor Malaret](https://github.com/malaretv)
+* [David Friedman](https://github.com/duvifn)
 * [Abhishek Potnis](https://github.com/abhishekvp)
+
