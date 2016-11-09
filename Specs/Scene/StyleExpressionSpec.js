@@ -5,9 +5,7 @@ defineSuite([
         StyleExpression) {
     'use strict';
 
-    var frameState = {
-        frameNumber : 0
-    };
+    var frameState = {};
 
     function MockFeature() {
     }

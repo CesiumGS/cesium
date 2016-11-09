@@ -9,9 +9,7 @@ defineSuite([
         Color) {
     'use strict';
 
-    var frameState = {
-        frameNumber : 0
-    };
+    var frameState = {};
 
     function MockFeature(value) {
         this._value = value;

@@ -27,7 +27,7 @@ define([
      * @alias ConditionsExpression
      * @constructor
      *
-     * @param {Object} [expression] The conditions expression defined using the 3D Tiles Styling language.
+     * @param {Object} [conditionsExpression] The conditions expression defined using the 3D Tiles Styling language.
      *
      * @example
      * var expression = new Cesium.Expression({

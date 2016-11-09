@@ -9,12 +9,15 @@ defineSuite([
         Color) {
     'use strict';
 
-    var frameState = {
-        frameNumber : 0
-    };
+    var frameState = {};
 
     function MockFeature() {
         this._properties = {};
+        this._content = {
+            _tileset : {
+                timeSinceLoad : 0.0
+            }
+        };
     }
 
     MockFeature.prototype.addProperty = function(name, value) {
@@ -1289,12 +1292,12 @@ defineSuite([
         expect(expression.evaluate(frameState, feature)).toEqual(70);
     });
 
-    it('evaluates TILES3D_TIME expression', function() {
-        var expression = new Expression('TILES3D_TIME');
-        expect(expression.evaluate(frameState, undefined)).toEqual(0);
-        frameState.frameNumber = 1;
-        expect(expression.evaluate(frameState, undefined)).toEqual(1);
-        frameState.frameNumber = 0;
+    it('evaluates TILES3D_TILESET_TIME expression', function() {
+        var feature = new MockFeature();
+        var expression = new Expression('TILES3D_TILESET_TIME');
+        expect(expression.evaluate(frameState, feature)).toEqual(0.0);
+        feature._content._tileset.timeSinceLoad = 1.0;
+        expect(expression.evaluate(frameState, feature)).toEqual(1.0);
     });
 
     it('gets shader function', function() {
@@ -1628,10 +1631,10 @@ defineSuite([
         expect(shaderState.translucent).toBe(true);
     });
 
-    it('gets shader expression for TILES3D_TIME', function() {
-        var expression = new Expression('TILES3D_TIME');
+    it('gets shader expression for TILES3D_TILESET_TIME', function() {
+        var expression = new Expression('TILES3D_TILESET_TIME');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'czm_frameNumber';
+        var expected = 'u_tilesetTime';
         expect(shaderExpression).toEqual(expected);
     });
 

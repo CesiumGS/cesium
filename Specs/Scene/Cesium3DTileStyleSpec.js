@@ -11,9 +11,7 @@ defineSuite([
         Expression) {
     'use strict';
 
-    var frameState = {
-        frameNumber : 0
-    };
+    var frameState = {};
 
     function MockFeature() {
         this._properties = {};
