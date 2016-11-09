@@ -141,14 +141,14 @@ define([
         var parentIds = json.parentIds;
 
         if (defined(classIds.byteOffset)) {
-            classIds.componentType = defaultValue(classIds.componentType, 'SHORT');
+            classIds.componentType = defaultValue(classIds.componentType, 'UNSIGNED_SHORT');
             classIds.type = 'SCALAR';
             binaryAccessor = getBinaryAccessor(classIds);
             classIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + classIds.byteOffset, instancesLength);
         }
 
         if (defined(parentIds.byteOffset)) {
-            parentIds.componentType = defaultValue(parentIds.componentType, 'SHORT');
+            parentIds.componentType = defaultValue(parentIds.componentType, 'UNSIGNED_SHORT');
             parentIds.type = 'SCALAR';
             binaryAccessor = getBinaryAccessor(parentIds);
             parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, instancesLength);
@@ -409,16 +409,20 @@ define([
             return false;
         }
         var instanceIndex = batchId;
-        while (instanceIndex !== -1) {
+        while (true) {
             var classId = hierarchy.classIds[instanceIndex];
             var instanceClass = hierarchy.classes[classId];
             if (instanceClass.name === className) {
                 return true;
             }
+            // Stop the traversal when the instance has no parent (its parentId equals itself)
+            var parentId = hierarchy.parentIds[instanceIndex];
+            if (parentId === instanceIndex) {
+                return false;
+            }
             // Recursively check parent
-            instanceIndex = hierarchy.parentIds[instanceIndex];
+            instanceIndex = parentId;
         }
-        return false;
     };
 
     Cesium3DTileBatchTable.prototype.isClass = function(batchId, className) {
@@ -454,7 +458,7 @@ define([
     function getHierarchyProperty(batchTable, batchId, name) {
         var hierarchy = batchTable._batchTableHierarchy;
         var instanceIndex = batchId;
-        while (instanceIndex !== -1) {
+        while (true) {
             var classId = hierarchy.classIds[instanceIndex];
             var instanceClass = hierarchy.classes[classId];
             var indexInClass = hierarchy.classIndexes[instanceIndex];
@@ -466,16 +470,20 @@ define([
                     return clone(propertyValues[indexInClass], true);
                 }
             }
-            // Recursively check parent for the property
-            instanceIndex = hierarchy.parentIds[instanceIndex];
+            // Stop the traversal when the instance has no parent (its parentId equals itself)
+            var parentId = hierarchy.parentIds[instanceIndex];
+            if (parentId === instanceIndex) {
+                return undefined;
+            }
+            // Recursively check parent
+            instanceIndex = parentId;
         }
-        return undefined;
     }
 
     function setHierarchyProperty(batchTable, batchId, name, value) {
         var hierarchy = batchTable._batchTableHierarchy;
         var instanceIndex = batchId;
-        while (instanceIndex !== -1) {
+        while (true) {
             var classId = hierarchy.classIds[instanceIndex];
             var instanceClass = hierarchy.classes[classId];
             var indexInClass = hierarchy.classIndexes[instanceIndex];
@@ -488,10 +496,14 @@ define([
                 }
                 return true;
             }
-            // Recursively check parent for the property
-            instanceIndex = hierarchy.parentIds[instanceIndex];
+            // Stop the traversal when the instance has no parent (its parentId equals itself)
+            var parentId = hierarchy.parentIds[instanceIndex];
+            if (parentId === instanceIndex) {
+                return false;
+            }
+            // Recursively check parent
+            instanceIndex = parentId;
         }
-        return false;
     }
 
     Cesium3DTileBatchTable.prototype.getProperty = function(batchId, name) {
