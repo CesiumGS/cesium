@@ -133,6 +133,7 @@ define([
 
     function initializeHierarchy(json, binary) {
         var i;
+        var classId;
         var binaryAccessor;
 
         var instancesLength = json.instancesLength;
@@ -165,10 +166,31 @@ define([
         var classCounts = arrayFill(new Array(classesLength), 0);
         var classIndexes = new Array(instancesLength);
         for (i = 0; i < instancesLength; ++i) {
-            var classId = classIds[i];
+            classId = classIds[i];
             classIndexes[i] = classCounts[classId];
             ++classCounts[classId];
         }
+
+        // Check for circular dependencies
+        //>>includeStart('debug', pragmas.debug);
+        var visited = new Array(instancesLength);
+        for (i = 0; i < instancesLength; ++i) {
+            arrayFill(visited, false);
+            var instanceIndex = i;
+            while (true) {
+                visited[instanceIndex] = true;
+                var parentId = parentIds[instanceIndex];
+                if (parentId === instanceIndex) {
+                    // Stop the traversal when the instance has no parent (its parentId equals itself)
+                    break;
+                }
+                if (visited[parentId]) {
+                    throw new DeveloperError('Circular dependency detected in the batch table hierarchy.');
+                }
+                instanceIndex = parentId;
+            }
+        }
+        //>>includeEnd('debug');
 
         return {
             classes : classes,
