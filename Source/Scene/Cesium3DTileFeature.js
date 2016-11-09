@@ -169,13 +169,13 @@ define([
     };
 
     // TODO : add doc
-    Cesium3DTileFeature.prototype.isClass = function(className) {
-        return this._batchTable.isClass(this._batchId, className);
+    Cesium3DTileFeature.prototype.isExactClass = function(className) {
+        return this._batchTable.isExactClass(this._batchId, className);
     };
 
     // TODO : add doc
-    Cesium3DTileFeature.prototype.isDerived = function(className) {
-        return this._batchTable.isDerived(this._batchId, className);
+    Cesium3DTileFeature.prototype.isClass = function(className) {
+        return this._batchTable.isClass(this._batchId, className);
     };
 
     return Cesium3DTileFeature;

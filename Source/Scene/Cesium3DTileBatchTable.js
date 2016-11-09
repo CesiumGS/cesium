@@ -403,7 +403,7 @@ define([
             result);
     };
 
-    Cesium3DTileBatchTable.prototype.isDerived = function(batchId, className) {
+    Cesium3DTileBatchTable.prototype.isClass = function(batchId, className) {
         var hierarchy = this._batchTableHierarchy;
         if (!defined(hierarchy)) {
             return false;
@@ -425,7 +425,7 @@ define([
         }
     };
 
-    Cesium3DTileBatchTable.prototype.isClass = function(batchId, className) {
+    Cesium3DTileBatchTable.prototype.isExactClass = function(batchId, className) {
         var hierarchy = this._batchTableHierarchy;
         if (!defined(hierarchy)) {
             return false;

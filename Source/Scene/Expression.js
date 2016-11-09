@@ -338,7 +338,7 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'isClass') {
+        } else if (call === 'isExactClass') {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
                 throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
@@ -346,7 +346,7 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'isDerived') {
+        } else if (call === 'isClass') {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
                 throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
@@ -607,9 +607,9 @@ define([
                 node.evaluate = node._evaluateNaN;
             } else if (node._value === 'isFinite') {
                 node.evaluate = node._evaluateIsFinite;
-            } else if (node._value === 'isClass') {
+            } else if (node._value === 'isExactClass') {
                 node.evaluate = node._evaluateIsClass;
-            } else if (node._value === 'isDerived') {
+            } else if (node._value === 'isClass') {
                 node.evaluate = node._evaluateIsDerived;
             } else if (node._value === 'abs') {
                 node.evaluate = node._evaluateAbsoluteValue;
@@ -945,11 +945,11 @@ define([
     };
 
     Node.prototype._evaluateIsClass = function(feature) {
-        return feature.isClass(this._left.evaluate(feature));
+        return feature.isExactClass(this._left.evaluate(feature));
     };
 
     Node.prototype._evaluateIsDerived = function(feature) {
-        return feature.isDerived(this._left.evaluate(feature));
+        return feature.isClass(this._left.evaluate(feature));
     };
 
     Node.prototype._evaluateAbsoluteValue = function(feature) {
@@ -1189,7 +1189,7 @@ define([
                     return 'sqrt(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
-                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isClass') || (value === 'isDerived')) {
+                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass')) {
                     throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
                 }
                 //>>includeEnd('debug');

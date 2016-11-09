@@ -70,7 +70,7 @@ addStyle('Color by building', {
 addStyle('Color all doors', {
     "color" : {
         "conditions" : [
-            ["isClass('door')", "color('orange')"],
+            ["isExactClass('door')", "color('orange')"],
             ["true", "color('white')"]
         ]
     }
@@ -79,7 +79,7 @@ addStyle('Color all doors', {
 addStyle('Color all features derived from door', {
     "color" : {
         "conditions" : [
-            ["isDerived('door')", "color('orange')"],
+            ["isClass('door')", "color('orange')"],
             ["true", "color('white')"]
         ]
     }
