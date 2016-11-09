@@ -309,9 +309,8 @@ define([
 
         var n;
         var color = Color.WHITE.withAlpha(0.5);
-        var tempLength = counts.length;
-        var batchIds = new Array(tempLength);
-        for (n = 0; n < tempLength; ++n) {
+        var batchIds = new Array(numberOfPolygons);
+        for (n = 0; n < numberOfPolygons; ++n) {
             batchTable.setColor(n, color);
             batchIds[n] = n;
         }
@@ -333,10 +332,9 @@ define([
             });
         }
 
-        tempLength = polylineCounts.length;
-        var widths = new Array(tempLength);
-        batchIds = new Array(tempLength);
-        for (n = 0; n < tempLength; ++n) {
+        var widths = new Array(numberOfPolylines);
+        batchIds = new Array(numberOfPolylines);
+        for (n = 0; n < numberOfPolylines; ++n) {
             var id = n + numberOfPolygons;
             batchTable.setColor(id, color);
             widths[n] = 2.0;
@@ -358,21 +356,38 @@ define([
         }
 
         if (this._outlinePolygons && numberOfPolygons > 0) {
-            tempLength = counts.length;
-            var outlineWidths = new Array(tempLength);
-            batchIds = new Array(tempLength);
-            for (n = 0; n < tempLength; ++n) {
-                var outlineID = n + numberOfPolygons + numberOfPolylines;
-                //batchTable.setColor(outlineID, color);
+            var outlinePositions = new Uint16Array(positions.length + 3 * numberOfPolygons);
+            var outlineCounts = new Array(numberOfPolygons);
+            var outlineWidths = new Array(numberOfPolygons);
+            batchIds = new Array(numberOfPolygons);
+            var outlinePositionIndex = 0;
+            var polygonOffset = 0;
+            for (var s = 0; s < numberOfPolygons; ++s) {
+                var count = counts[s];
+                for (var t = 0; t < count; ++t) {
+                    var index = polygonOffset + 3 * t;
+                    outlinePositions[outlinePositionIndex++] = positions[index];
+                    outlinePositions[outlinePositionIndex++] = positions[index + 1];
+                    outlinePositions[outlinePositionIndex++] = positions[index + 2];
+                }
+
+                outlinePositions[outlinePositionIndex++] = positions[polygonOffset];
+                outlinePositions[outlinePositionIndex++] = positions[polygonOffset + 1];
+                outlinePositions[outlinePositionIndex++] = positions[polygonOffset + 2];
+
+                polygonOffset += 3 * count;
+
+                var outlineID = s + numberOfPolygons + numberOfPolylines;
                 batchTable.setColor(outlineID, Color.BLACK.withAlpha(0.7));
-                outlineWidths[n] = 2.0;
-                batchIds[n] = outlineID;
+                outlineWidths[s] = 2.0;
+                batchIds[s] = outlineID;
+                outlineCounts[s] = count + 1;
             }
 
             this._outlines = new GroundPolylineBatch({
-                positions : positions,
+                positions : outlinePositions,
                 widths : outlineWidths,
-                counts : counts,
+                counts : outlineCounts,
                 batchIds : batchIds,
                 center : center,
                 quantizedOffset : quantizedOffset,
