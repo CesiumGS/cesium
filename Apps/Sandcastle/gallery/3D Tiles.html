@@ -34,32 +34,12 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     shadows : true
 });
 
-viewer.extend(Cesium.viewerCesiumInspectorMixin);
-
 var scene = viewer.scene;
 scene.fog.enabled = false;
 scene.debugShowFramesPerSecond = true;
 
-    var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-        url : 'https://assets.agi.com/stk-terrain/world',
-        requestWaterMask : true,
-        requestVertexNormals : true
-    });
-    viewer.terrainProvider = cesiumTerrainProviderMeshes;
-
-    viewer.imageryLayers.removeAll();
-    var imageryProvider = new Cesium.MapboxImageryProvider({
-        mapId: 'mapbox.satellite'
-    });
-    viewer.imageryLayers.add(new Cesium.ImageryLayer(imageryProvider));
-
-    viewer.scene.globe.depthTestAgainstTerrain = true;
-
 var tilesets = [{
-    //name : 'Tileset', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/'
-    //name : 'Tileset', url : 'http://localhost:8002/tilesets/Names-Test/'
-    //name : 'Tileset', url : 'http://localhost:8002/tilesets/Seattle_South/'
-    name : 'Tileset', url : 'http://localhost:8002/tilesets/VectorTile-Test/'
+    name : 'Tileset', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/'
 }, {
     name : 'Translucent', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucent/'
 }, {
