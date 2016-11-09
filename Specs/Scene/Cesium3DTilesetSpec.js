@@ -1353,13 +1353,13 @@ defineSuite([
     it('applies custom style to a tileset', function() {
         var style = new Cesium3DTileStyle();
         style.show = {
-            evaluate : function(feature) {
+            evaluate : function(frameState, feature) {
                 return this._value;
             },
             _value : false
         };
         style.color = {
-            evaluateColor : function(feature, result) {
+            evaluateColor : function(frameState, feature, result) {
                 return Color.clone(Color.WHITE, result);
             }
         };
