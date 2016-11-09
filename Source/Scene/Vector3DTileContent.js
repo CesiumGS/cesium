@@ -64,6 +64,8 @@ define([
 
         this._polygons = undefined;
         this._polylines = undefined;
+        this._outlines = undefined;
+        this._outlinePolygons = true;
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
@@ -278,8 +280,10 @@ define([
 
         var numberOfPolygons = featureTableJson.POLYGONS_LENGTH;
         var numberOfPolylines = featureTableJson.POLYLINES_LENGTH;
+        var numberOfOutlines = this._outlinePolygons ? numberOfPolygons : 0;
+        var totalPrimitives = numberOfPolygons + numberOfOutlines + numberOfPolylines;
 
-        var batchTable = new Cesium3DTileBatchTable(this, numberOfPolygons + numberOfPolylines, batchTableJson, batchTableBinary, createColorChangedCallback(this, numberOfPolygons));
+        var batchTable = new Cesium3DTileBatchTable(this, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(this, numberOfPolygons));
         this.batchTable = batchTable;
 
         var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
@@ -353,6 +357,31 @@ define([
             });
         }
 
+        if (this._outlinePolygons && numberOfPolygons > 0) {
+            tempLength = counts.length;
+            var outlineWidths = new Array(tempLength);
+            batchIds = new Array(tempLength);
+            for (n = 0; n < tempLength; ++n) {
+                var outlineID = n + numberOfPolygons + numberOfPolylines;
+                //batchTable.setColor(outlineID, color);
+                batchTable.setColor(outlineID, Color.BLACK.withAlpha(0.7));
+                outlineWidths[n] = 2.0;
+                batchIds[n] = outlineID;
+            }
+
+            this._outlines = new GroundPolylineBatch({
+                positions : positions,
+                widths : outlineWidths,
+                counts : counts,
+                batchIds : batchIds,
+                center : center,
+                quantizedOffset : quantizedOffset,
+                quantizedScale : quantizedScale,
+                boundingVolume : this._tile._boundingVolume.boundingVolume,
+                batchTable : this.batchTable
+            });
+        }
+
         this.state = Cesium3DTileContentState.PROCESSING;
         this._contentReadyToProcessPromise.resolve(this);
 
@@ -371,6 +400,10 @@ define([
         if (defined(this._polylines)) {
             this._polylines.applyDebugSettings(enabled, color);
         }
+
+        if (defined(this._outlines)) {
+            this._outlines.applyDebugSettings(enabled, color);
+        }
     };
 
     /**
@@ -387,6 +420,10 @@ define([
 
         if (defined(this._polylines)) {
             this._polylines.update(frameState);
+        }
+
+        if (defined(this._outlines)) {
+            this._outlines.update(frameState);
         }
     };
 
