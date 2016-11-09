@@ -125,17 +125,6 @@ define([
     });
 
     /**
-     * Determines if the tile's batch table has a property.  If it does, each feature in
-     * the tile will have the property.
-     *
-     * @param {String} name The case-sensitive name of the property.
-     * @returns {Boolean} <code>true</code> if the property exists; otherwise, <code>false</code>.
-     */
-    Cesium3DTileContent.prototype.hasProperty = function(name) {
-        DeveloperError.throwInstantiationError();
-    };
-
-    /**
      * Returns the {@link Cesium3DTileFeature} object for the feature with the
      * given <code>batchId</code>.  This object is used to get and modify the
      * feature's properties.

@@ -188,16 +188,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
-     */
-    PointCloud3DTileContent.prototype.hasProperty = function(name) {
-        if (defined(this.batchTable)) {
-            return this.batchTable.hasProperty(name);
-        }
-        return false;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
      *
      * In this context a feature refers to a group of points that share the same BATCH_ID.
      * For example all the points that represent a door in a house point cloud would be a feature.

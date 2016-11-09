@@ -148,13 +148,6 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTable.hasProperty(name);
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
     Instanced3DModel3DTileContent.prototype.getFeature = function(batchId) {
         var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);

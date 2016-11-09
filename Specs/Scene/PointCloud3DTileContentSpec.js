@@ -292,7 +292,6 @@ defineSuite([
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(0);
             expect(content.innerContents).toBeUndefined();
-            expect(content.hasProperty('name')).toBe(false);
             expect(content.getFeature(0)).toBeUndefined();
         });
     });
@@ -302,7 +301,6 @@ defineSuite([
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(8);
             expect(content.innerContents).toBeUndefined();
-            expect(content.hasProperty('name')).toBe(true);
             expect(content.getFeature(0)).toBeDefined();
         });
     });
@@ -315,7 +313,6 @@ defineSuite([
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(0);
             expect(content.innerContents).toBeUndefined();
-            expect(content.hasProperty('name')).toBe(false);
             expect(content.getFeature(0)).toBeUndefined();
         });
     });

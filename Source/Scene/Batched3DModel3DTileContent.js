@@ -122,13 +122,6 @@ define([
         }
     }
 
-     /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Batched3DModel3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTable.hasProperty(name);
-    };
-
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */

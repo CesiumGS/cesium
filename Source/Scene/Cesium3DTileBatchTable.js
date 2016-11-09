@@ -403,34 +403,6 @@ define([
             result);
     };
 
-    Cesium3DTileBatchTable.prototype.hasProperty = function(name) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(name)) {
-            throw new DeveloperError('name is required.');
-        }
-        //>>includeEnd('debug');
-
-        var json = this.batchTableJson;
-        return defined(json) && defined(json[name]);
-    };
-
-    Cesium3DTileBatchTable.prototype.getPropertyNames = function() {
-        var names = [];
-        var json = this.batchTableJson;
-
-        if (!defined(json)) {
-            return names;
-        }
-
-        for (var name in json) {
-            if (json.hasOwnProperty(name)) {
-                names.push(name);
-            }
-        }
-
-        return names;
-    };
-
     Cesium3DTileBatchTable.prototype.isDerived = function(batchId, className) {
         var hierarchy = this._batchTableHierarchy;
         if (!defined(hierarchy)) {
