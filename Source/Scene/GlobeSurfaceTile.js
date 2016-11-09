@@ -449,8 +449,6 @@ define([
     }
 
     function propagateNewUpsampledDataToChildren(tile) {
-        var surfaceTile = tile.data;
-
         // Now that there's new data for this tile:
         //  - child tiles that were previously upsampled need to be re-upsampled based on the new data.
 

@@ -350,13 +350,4 @@ defineSuite([
 
         expect(position).toEqual(updatedPosition);
     });
-
-    function buildEmptyQuadtreeTile(tileProvider) {
-        return new QuadtreeTile({
-            x : 0,
-            y : 0,
-            level : 0,
-            tilingScheme : tileProvider.tilingScheme
-        });
-    }
 }, 'WebGL');
