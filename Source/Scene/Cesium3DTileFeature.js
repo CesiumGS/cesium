@@ -104,6 +104,20 @@ define([
     });
 
     /**
+     * Returns an array of property names for the feature.
+     * <p>
+     * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color} are not equivalent to
+     * <code>'show'</code> and <code>'color'</code> properties; the former are runtime-specific properties
+     * that are not part of the feature's properties in the stored 3D Tileset.
+     * </p>
+     *
+     * @returns {String[]} The names of the feature's properties.
+     */
+    Cesium3DTileFeature.prototype.getPropertyNames = function() {
+        return this._batchTable.getPropertyNames();
+    };
+
+    /**
      * Returns the value of the feature's property with the given name.
      * <p>
      * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color} are not equivalent to
@@ -116,13 +130,10 @@ define([
      *
      * @example
      * // Display all the properties for a feature in the console log.
-     * var properties = tileset.properties;
-     * if (Cesium.defined(properties)) {
-     *     for (var name in properties) {
-     *         if (properties.hasOwnProperty(name)) {
-     *             console.log(name + ': ' + feature.getProperty(name));
-     *         }
-     *     }
+     * var names = feature.getPropertyNames();
+     * for (var i = 0; i < names.length; ++i) {
+     *     var name = names[i];
+     *     console.log(name + ': ' + feature.getProperty(name));
      * }
      *
      * @see {Cesium3DTileset#properties}

@@ -85,7 +85,7 @@ define([
          */
         featuresLength : {
             get : function() {
-                return this.batchTable.featuresLength;
+                return defined(this.batchTable) ? this.batchTable.featuresLength : 0;
             }
         },
 
@@ -140,7 +140,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.getFeature = function(batchId) {
-        var featuresLength = this._featuresLength;
+        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
             throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
@@ -399,9 +399,6 @@ define([
 
         this.state = Cesium3DTileContentState.PROCESSING;
         this._contentReadyToProcessPromise.resolve(this);
-
-        this.state = Cesium3DTileContentState.READY;
-        this._readyPromise.resolve(this);
     };
 
     /**
@@ -424,6 +421,13 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
+    Vector3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
         if (defined(this.batchTable)) {
             this.batchTable.update(tileset, frameState);
@@ -439,6 +443,11 @@ define([
 
         if (defined(this._outlines)) {
             this._outlines.update(frameState);
+        }
+
+        if (this.state !== Cesium3DTileContentState.READY) {
+            this.state = Cesium3DTileContentState.READY;
+            this._readyPromise.resolve(this);
         }
     };
 
