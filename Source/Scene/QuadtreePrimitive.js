@@ -515,6 +515,11 @@ define([
                 // No point in rendering the children because they're all upsampled.  Render this tile instead.
                 addTileToRenderList(primitive, tile);
 
+                // Load the children even though we're (currently) not going to render them.
+                // A tile that is "upsampled only" right now might change its tune once it does more loading.
+                // A tile that is upsampled now and forever should also be done loading, so no harm done.
+                queueChildLoadNearToFar(primitive, frameState.camera.positionCartographic, southwestChild, southeastChild, northwestChild, northeastChild);
+
                 if (tile.needsLoading) {
                     // Rendered tile that's not waiting on children loads with medium priority.
                     primitive._tileLoadQueueMedium.push(tile);
