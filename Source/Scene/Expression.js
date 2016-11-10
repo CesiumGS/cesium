@@ -51,7 +51,13 @@ define([
         tan : Math.tan,
         acos : Math.acos,
         asin : Math.asin,
-        atan : Math.atan
+        atan : Math.atan,
+        radians : function(left) {
+            return (this._left.evaluate(feature)) * Math.PI / 180;
+        },
+        degrees : function(left) {
+            return (this._left.evaluate(feature)) * 180 / Math.PI;
+        }
     };
 
     /**
@@ -365,22 +371,6 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'radians') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
-            }
-            //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'degrees') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
-            }
-            //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'Boolean') {
             if (args.length === 0) {
                 return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
@@ -612,10 +602,6 @@ define([
                 node.evaluate = node._evaluateIsFinite;
             } else if (defined(unaryFunctions[node._value])) {
                 node.evaluate = getEvaluateUnaryFunction(node._value);
-            } else if (node._value === 'radians') {
-                node.evaluate = node._evaluateRadiansConversion;
-            } else if (node._value === 'degrees') {
-                node.evaluate = node._evaluateDegreesConversion;
             } else if (node._value === 'Boolean') {
                 node.evaluate = node._evaluateBooleanConversion;
             } else if (node._value === 'Number') {
@@ -941,42 +927,6 @@ define([
 
     Node.prototype._evaluateIsFinite = function(feature) {
         return isFinite(this._left.evaluate(feature));
-    };
-
-    Node.prototype._evaluateAbsoluteValue = function(feature) {
-        return Math.abs(this._left.evaluate(feature));
-    };
-
-    Node.prototype._evaluateCosine = function(feature) {
-        return Math.cos(this._left.evaluate(feature));
-    };
-
-    Node.prototype._evaluateSine = function(feature) {
-        return Math.sin(this._left.evaluate(feature));
-    };
-
-    Node.prototype._evaluateTangent = function(feature) {
-        return Math.tan(this._left.evaluate(feature));
-    };
-
-    Node.prototype._evaluateArcCosine = function(feature) {
-        return Math.acos(this._left.evaluate(feature));
-    };
-
-    Node.prototype._evaluateArcSine = function(feature) {
-        return Math.asin(this._left.evaluate(feature));
-    };
-
-    Node.prototype._evaluateArcTangent = function(feature) {
-        return Math.atan(this._left.evaluate(feature));
-    };
-
-    Node.prototype._evaluateRadiansConversion = function(feature) {
-        return (this._left.evaluate(feature)) * Math.PI / 180;
-    };
-
-    Node.prototype._evaluateDegreesConversion = function(feature) {
-        return (this._left.evaluate(feature)) * 180 / Math.PI;
     };
 
     Node.prototype._evaluateBooleanConversion = function(feature) {
