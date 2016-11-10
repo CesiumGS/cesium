@@ -1202,8 +1202,9 @@ define([
             }
         }
 
-        var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-        return BoundingSphere.transformWithoutScale(boundingSphere, yUpToZUp, boundingSphere);
+        Matrix4.multiplyByPoint(yUpToZUp, min, min);
+        Matrix4.multiplyByPoint(yUpToZUp, max, max);
+        return BoundingSphere.fromCornerPoints(min, max);
     }
 
     ///////////////////////////////////////////////////////////////////////////
