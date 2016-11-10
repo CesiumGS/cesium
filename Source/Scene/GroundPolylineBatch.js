@@ -134,7 +134,13 @@ define([
         var center = primitive._center;
         var quantizedOffset = primitive._quantizedOffset;
         var quantizedScale = primitive._quantizedScale;
-        var decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
+
+        var decodeMatrix;
+        if (defined(quantizedOffset) && defined(quantizedScale)) {
+            decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
+        } else {
+            decodeMatrix = Matrix4.IDENTITY;
+        }
 
         var i;
         var offset = 0;

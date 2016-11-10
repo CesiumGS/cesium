@@ -174,10 +174,9 @@ define([
 
         var quantizedOffset = primitive._quantizedOffset;
         var quantizedScale = primitive._quantizedScale;
-        var isQuantized = defined(quantizedOffset) && defined(quantizedScale);
 
         var decodeMatrix;
-        if (isQuantized) {
+        if (defined(quantizedOffset) && defined(quantizedScale)) {
             decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
         } else {
             decodeMatrix = Matrix4.IDENTITY;

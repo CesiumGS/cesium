@@ -37,14 +37,15 @@ defineSuite([
     createScene) {
     'use strict';
 
-    //(6378137.0 * 2.0 * Math.PI * 0.25 / (65.0 * 2.0)) / (1 << 4);
-
     var vectorPolygonUrl = './Data/Cesium3DTiles/Vector/VectorPolygon';
     var vectorPolygonQuantizedUrl = './Data/Cesium3DTiles/Vector/VectorPolygonQuantized';
+    var vectorPolylineUrl = './Data/Cesium3DTiles/Vector/VectorPolyline';
+    var vectorPolylineQuantizedUrl = './Data/Cesium3DTiles/Vector/VectorPolylineQuantized';
 
     function MockGlobePrimitive(primitive) {
         this._primitive = primitive;
     }
+
     MockGlobePrimitive.prototype.update = function(frameState) {
         var commandList = frameState.commandList;
         var startLength = commandList.length;
@@ -70,7 +71,6 @@ defineSuite([
     var depthPrimitive;
 
     beforeAll(function() {
-        // TODO: remove RTC
         // vector tiles use RTC, which for now requires scene3DOnly to be true
         scene = createScene({
             scene3DOnly : true
@@ -139,6 +139,14 @@ defineSuite([
 
     it('renders quantized polygons', function() {
         return Cesium3DTilesTester.loadTileset(scene, vectorPolygonQuantizedUrl).then(expectRenderVectorContent);
+    });
+
+    it('renders polylines', function() {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolylineUrl).then(expectRenderVectorContent);
+    });
+
+    it('renders quantized polylines', function() {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolylineQuantizedUrl).then(expectRenderVectorContent);
     });
 
 }, 'WebGL');
