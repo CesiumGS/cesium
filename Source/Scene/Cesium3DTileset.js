@@ -771,7 +771,7 @@ define([
         },
 
         /**
-         * Returns the time, in seconds, since the tileset was loaded.
+         * Returns the time, in seconds, since the tileset was loaded and first updated.
          *
          * @type {Number}
          */
