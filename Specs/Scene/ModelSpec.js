@@ -542,7 +542,7 @@ defineSuite([
 
     it('Throws because of invalid extension', function() {
         return loadJson(boxUrl).then(function(gltf) {
-            gltf.extensionsUsed = ['NOT_supported_extension'];
+            gltf.extensionsRequired = ['NOT_supported_extension'];
             var model = primitives.add(new Model({
                 gltf : gltf
             }));
@@ -556,7 +556,7 @@ defineSuite([
 
     it('Throws because of invalid extension', function() {
         return loadJson(boxUrl).then(function(gltf) {
-            gltf.extensionsUsed = ['CESIUM_binary_glTF'];
+            gltf.extensionsRequired = ['CESIUM_binary_glTF'];
             var model = primitives.add(new Model({
                 gltf : gltf
             }));
@@ -1958,7 +1958,7 @@ defineSuite([
                 scene.renderForSpecs();
                 expect(scene.globe.removedCallback).toEqual(true);
                 expect(scene.globe.callback).not.toBeDefined();
-                
+
                 primitives.remove(model);
             });
         });
