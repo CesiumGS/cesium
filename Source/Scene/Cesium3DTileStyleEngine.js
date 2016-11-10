@@ -103,12 +103,12 @@ define([
         var style = styleEngine._style;
 
         if (!content.applyStyleWithShader(frameState, style)) {
-            applyStyleWithBatchTable(content, stats, style);
+            applyStyleWithBatchTable(frameState, content, stats, style);
         }
 
     }
 
-    function applyStyleWithBatchTable(content, stats, style) {
+    function applyStyleWithBatchTable(frameState, content, stats, style) {
         var length = content.featuresLength;
         stats.numberOfFeaturesStyled += length;
 
@@ -122,12 +122,12 @@ define([
         // by using reusing a batchValues array across tiles.
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
-            feature.color = style.color.evaluateColor(feature, scratchColor);
-            feature.show = style.show.evaluate(feature);
-            feature.outlineColor = style.outlineColor.evaluate(feature);
-            feature.outlineWidth = style.outlineWidth.evaluate(feature);
-            feature.labelStyle = style.labelStyle.evaluate(feature);
-            feature.font = style.font.evaluate(feature);
+            feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
+            feature.show = style.show.evaluate(frameState, feature);
+            feature.outlineColor = style.outlineColor.evaluate(frameState, feature);
+            feature.outlineWidth = style.outlineWidth.evaluate(frameState, feature);
+            feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
+            feature.font = style.font.evaluate(frameState, feature);
         }
     }
 

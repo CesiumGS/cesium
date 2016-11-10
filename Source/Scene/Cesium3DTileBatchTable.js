@@ -476,7 +476,7 @@ define([
     /**
      * @private
      */
-    Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function(handleTranslucent) {
+    Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function(handleTranslucent, batchIdAttributeName) {
         if (this.featuresLength === 0) {
             return;
         }
@@ -495,7 +495,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    vec2 st = computeSt(a_batchId); \n' +
+                    '    vec2 st = computeSt(' + batchIdAttributeName + '); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
                     '    float show = ceil(featureProperties.a); \n' +      // 0 - false, non-zeo - true
                     '    gl_Position *= show; \n';                          // Per-feature show/hide
@@ -528,7 +528,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    tile_featureSt = computeSt(a_batchId); \n' +
+                    '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
                     '}';
             }
 
@@ -709,7 +709,7 @@ define([
         };
     };
 
-    Cesium3DTileBatchTable.prototype.getPickVertexShaderCallback = function() {
+    Cesium3DTileBatchTable.prototype.getPickVertexShaderCallback = function(batchIdAttributeName) {
         if (this.featuresLength === 0) {
             return;
         }
@@ -727,7 +727,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    vec2 st = computeSt(a_batchId); \n' +
+                    '    vec2 st = computeSt(' + batchIdAttributeName + '); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
                     '    float show = ceil(featureProperties.a); \n' +    // 0 - false, non-zero - true
                     '    gl_Position *= show; \n' +                       // Per-feature show/hide
@@ -739,7 +739,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    tile_featureSt = computeSt(a_batchId); \n' +
+                    '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
                     '}';
             }
 

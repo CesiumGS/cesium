@@ -31,15 +31,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor throws with invalid width', function() {
-        expect(function() {
-            return new PolylineGeometry({
-                positions : [Cartesian3.ZERO, Cartesian3.UNIT_X],
-                width : -1
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('constructor throws with invalid number of colors', function() {
         expect(function() {
             return new PolylineGeometry({
@@ -47,6 +38,19 @@ defineSuite([
                 colors : []
             });
         }).toThrowDeveloperError();
+    });
+
+    it('constructor returns undefined when line width is negative', function() {
+        var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
+        var line = PolylineGeometry.createGeometry(new PolylineGeometry({
+            positions : positions,
+            width : -1.0,
+            vertexFormat : VertexFormat.ALL,
+            granularity : Math.PI,
+            ellipsoid: Ellipsoid.UNIT_SPHERE
+        }));
+
+        expect(line).toBeUndefined();
     });
 
     it('constructor computes all vertex attributes', function() {
