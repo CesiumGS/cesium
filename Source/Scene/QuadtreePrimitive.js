@@ -802,16 +802,10 @@ define([
         }
     }
 
-    function tileDistanceSortFunction(a, b) {
-        return a._distance - b._distance;
-    }
-
     function createRenderCommandsForSelectedTiles(primitive, frameState) {
         var tileProvider = primitive._tileProvider;
         var tilesToRender = primitive._tilesToRender;
         var tilesToUpdateHeights = primitive._tileToUpdateHeights;
-
-        tilesToRender.sort(tileDistanceSortFunction);
 
         for (var i = 0, len = tilesToRender.length; i < len; ++i) {
             var tile = tilesToRender[i];
