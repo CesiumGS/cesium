@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Follow an object with the camera.">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.2/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source'
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<script id="cesium_sandcastle_script">
+require(['Cesium'], function(Cesium) {
+    "use strict";
+
+    //A real application should require only the subset of modules that
+    //are actually used, instead of requiring the Cesium module, which
+    //includes everything.
+
+    var canvas = document.createElement('canvas');
+    canvas.className = 'fullSize';
+    document.getElementById('cesiumContainer').appendChild(canvas);
+    var scene = new Cesium.Scene(canvas);
+
+    scene.skyAtmosphere = new Cesium.SkyAtmosphere();
+
+    var skyBoxBaseUrl = '../../../Source/Assets/Textures/SkyBox/tycho2t3_80';
+    scene.skyBox = new Cesium.SkyBox({
+        positiveX : skyBoxBaseUrl + '_px.jpg',
+        negativeX : skyBoxBaseUrl + '_mx.jpg',
+        positiveY : skyBoxBaseUrl + '_py.jpg',
+        negativeY : skyBoxBaseUrl + '_my.jpg',
+        positiveZ : skyBoxBaseUrl + '_pz.jpg',
+        negativeZ : skyBoxBaseUrl + '_mz.jpg'
+    });
+
+    var primitives = scene.getPrimitives();
+
+    // Bing Maps
+    var bing = new Cesium.BingMapsImageryProvider({
+        url : 'http://dev.virtualearth.net',
+        mapStyle : Cesium.BingMapsStyle.AERIAL,
+        // Some versions of Safari support WebGL, but don't correctly implement
+        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+    });
+
+    var ellipsoid = Cesium.Ellipsoid.WGS84;
+    var centralBody = new Cesium.CentralBody(ellipsoid);
+    centralBody.getImageryLayers().addImageryProvider(bing);
+
+    primitives.setCentralBody(centralBody);
+
+    var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // INSERT CODE HERE to create graphics primitives in the scene.
+    ///////////////////////////////////////////////////////////////////////////
+
+    var billboard;
+    var image = new Image();
+    image.onload = function() {
+        var billboards = new Cesium.BillboardCollection();
+        var textureAtlas = scene.getContext().createTextureAtlas({image : image});
+        billboards.setTextureAtlas(textureAtlas);
+        billboard = billboards.add({
+            imageIndex : 0
+        });
+        scene.getPrimitives().add(billboards);
+    };
+    image.src = '../images/Cesium_Logo_overlay.png';
+    
+    var now = new Cesium.JulianDate();
+    var start = now.getTotalDays();
+    var end = now.addMinutes(1.0).getTotalDays();
+    var duration = end - start;
+    
+    var radius = ellipsoid.getMaximumRadius();
+    var axis = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(-65.0, 32.0)).normalize();
+    var rotation = Cesium.Matrix3.fromQuaternion(Cesium.Quaternion.fromAxisAngle(Cesium.Cartesian3.UNIT_Z, 1000000.0 / radius));
+    var startPosition = Cesium.Matrix3.multiplyByVector(rotation, axis).multiplyByScalar(radius);
+    ellipsoid.scaleToGeodeticSurface(startPosition);
+    
+    function computePosition(time) {
+        var t = Math.abs(time.getTotalDays() - start) / duration;
+        t -= Math.floor(t);
+        t *= Cesium.Math.TWO_PI;
+        
+        var rotation = Cesium.Matrix3.fromQuaternion(Cesium.Quaternion.fromAxisAngle(axis, t));
+        var position = Cesium.Matrix3.multiplyByVector(rotation, startPosition);
+        
+        return position;
+    }
+    
+    function animate() {
+        var time = new Cesium.JulianDate();
+        var position = computePosition(time);
+        if (typeof billboard !== 'undefined') {
+            billboard.setPosition(position);
+        }
+        scene.getCamera().transform = Cesium.Transforms.eastNorthUpToFixedFrame(position, ellipsoid);
+    }
+    
+    var screenSpaceCameraController = scene.getScreenSpaceCameraController();
+    screenSpaceCameraController.setEllipsoid(Cesium.Ellipsoid.UNIT_SPHERE);
+    
+    animate();
+    scene.getCamera().controller.lookAt(new Cesium.Cartesian3(0.0, -1000000.0, 1000000.0),
+            Cesium.Cartesian3.ZERO,
+            Cesium.Cartesian3.UNIT_Z);
+
+    function tick() {
+        scene.initializeFrame();
+        animate();
+        scene.render();
+        Cesium.requestAnimationFrame(tick);
+    }
+    tick();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Example mouse and keyboard handlers
+
+    var handler = new Cesium.ScreenSpaceEventHandler(canvas);
+
+    handler.setInputAction(function(movement) {
+        // INSERT CODE HERE: Handler for left-click
+        // ...
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+    handler.setInputAction(function(movement) {
+        // INSERT CODE HERE: Handler for mouse move
+        // Use movement.startPosition, movement.endPosition
+        // ...
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    // To use this in Sandcastle, you must set focus manually,
+    // or click on a toolbar inside the iframe.
+    function keydownHandler(e) {
+        switch (e.keyCode) {
+        case '3'.charCodeAt(0): // '3' -> 3D globe
+            transitioner.morphTo3D();
+            break;
+        case '2'.charCodeAt(0): // '2' -> Columbus View
+            transitioner.morphToColumbusView();
+            break;
+        case '1'.charCodeAt(0): // '1' -> 2D map
+            transitioner.morphTo2D();
+            break;
+        default:
+            break;
+        }
+    }
+    document.addEventListener('keydown', keydownHandler, false);
+
+    // Prevent right-click from opening a context menu.
+    canvas.oncontextmenu = function() {
+        return false;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Example resize handler
+
+    var onResize = function() {
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+
+        if (canvas.width === width && canvas.height === height) {
+            return;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        scene.getCamera().frustum.aspectRatio = width / height;
+    };
+    window.addEventListener('resize', onResize, false);
+    onResize();
+
+    Sandcastle.finishedLoading();
+});
+</script>
+</body>
+</html>
