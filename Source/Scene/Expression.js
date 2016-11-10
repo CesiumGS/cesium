@@ -43,6 +43,17 @@ define([
         }
     };
 
+    var unaryFunctions = {
+        abs : Math.abs,
+        sqrt : Math.sqrt,
+        cos : Math.cos,
+        sin : Math.sin,
+        tan : Math.tan,
+        acos : Math.acos,
+        asin : Math.asin,
+        atan : Math.atan
+    };
+
     /**
      * Evaluates an expression defined using the
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
@@ -346,47 +357,7 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'cos') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
-            }
-            //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'sin') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
-            }
-            //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'tan') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
-            }
-            //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'acos') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
-            }
-            //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'asin') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
-            }
-            //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'atan') {
+        } else if (defined(unaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
                 throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
@@ -639,20 +610,8 @@ define([
                 node.evaluate = node._evaluateNaN;
             } else if (node._value === 'isFinite') {
                 node.evaluate = node._evaluateIsFinite;
-            } else if (node._value === 'abs') {
-                node.evaluate = node._evaluateAbsoluteValue;
-            } else if (node._value === 'cos') {
-                node.evaluate = node._evaluateCoine;
-            } else if (node._value === 'sin') {
-                node.evaluate = node._evaluateSine;
-            } else if (node._value === 'tan') {
-                node.evaluate = node._evaluateTangent;
-            } else if (node._value === 'acos') {
-                node.evaluate = node._evaluateArcCosine;
-            } else if (node._value === 'asin') {
-                node.evaluate = node._evaluateArcSine;
-            } else if (node._value === 'atan') {
-                node.evaluate = node._evaluateArcTangent;
+            } else if (defined(unaryFunctions[node._value])) {
+                node.evaluate = getEvaluateUnaryFunction(node._value);
             } else if (node._value === 'radians') {
                 node.evaluate = node._evaluateRadiansConversion;
             } else if (node._value === 'degrees') {
@@ -1237,20 +1196,8 @@ define([
                     return 'bool(' + left + ')';
                 } else if (value === 'Number') {
                     return 'float(' + left + ')';
-                } else if (value === 'abs') {
-                    return 'abs(' + left + ')';
-                } else if (value === 'cos') {
-                    return 'cos(' + left + ')';
-                } else if (value === 'sin') {
-                    return 'sin(' + left + ')';
-                } else if (value === 'tan') {
-                    return 'tan(' + left + ')';
-                } else if (value === 'acos') {
-                    return 'acos(' + left + ')';
-                } else if (value === 'asin') {
-                    return 'asin(' + left + ')';
-                } else if (value === 'atan') {
-                    return 'atan(' + left + ')';
+                } else if (defined(unaryFunctions[value])) {
+                    return value + '(' + left + ')';
                 } else if (value === 'radians') {
                     return 'radians(' + left + ')';
                 } else if (value === 'degrees') {
@@ -1385,6 +1332,13 @@ define([
                 //>>includeEnd('debug');
         }
     };
+
+    function getEvaluateUnaryFunction(call) {
+        var evaluate = unaryFunctions[call];
+        return function(feature) {
+            return evaluate(this._left.evaluate(feature));
+        }
+    }
 
     return Expression;
 });
