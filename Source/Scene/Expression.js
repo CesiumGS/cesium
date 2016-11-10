@@ -1148,10 +1148,6 @@ define([
                     return 'float(' + left + ')';
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
-                } else if (value === 'radians') {
-                    return 'radians(' + left + ')';
-                } else if (value === 'degrees') {
-                    return 'degrees(' + left + ')';
                 }
 
                 //>>includeStart('debug', pragmas.debug);
