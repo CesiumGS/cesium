@@ -221,6 +221,12 @@ defineSuite([
 
         expression = new Expression('Infinity');
         expect(expression.evaluate(frameState, undefined)).toEqual(Infinity);
+
+        expression = new Expression('PI');
+        expect(expression.evaluate(frameState, undefined)).toEqual(Math.PI);
+
+        expression = new Expression('E');
+        expect(expression.evaluate(frameState, undefined)).toEqual(Math.E);
     });
 
     it('converts to literal number', function() {

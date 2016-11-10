@@ -440,6 +440,10 @@ define([
             return new Node(ExpressionNodeType.LITERAL_NUMBER, Infinity);
         } else if (ast.name === 'undefined') {
             return new Node(ExpressionNodeType.LITERAL_UNDEFINED, undefined);
+        } else if (ast.name === 'PI') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.PI);
+        } else if (ast.name === 'E') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.E);
         } else if (ast.name === 'TILES3D_TILESET_TIME') {
             return new Node(ExpressionNodeType.LITERAL_GLOBAL, ast.name);
         }
