@@ -133,7 +133,11 @@ defineSuite([
         return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('vctr');
     });
 
-    it('renders quantized polygon', function() {
+    it('renders polygons', function() {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonUrl).then(expectRenderVectorContent);
+    });
+
+    it('renders quantized polygons', function() {
         return Cesium3DTilesTester.loadTileset(scene, vectorPolygonQuantizedUrl).then(expectRenderVectorContent);
     });
 

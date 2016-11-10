@@ -193,6 +193,7 @@ define([
 
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+    var sizeOfFloat32 = Float32Array.BYTES_PER_ELEMENT;
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
@@ -286,11 +287,38 @@ define([
         var batchTable = new Cesium3DTileBatchTable(this, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(this, numberOfPolygons));
         this.batchTable = batchTable;
 
+        var center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
+        var minHeight = featureTableJson.MINIMUM_HEIGHT;
+        var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
+
+        var isQuantized = defined(featureTableJson.QUANTIZED_VOLUME_OFFSET) && defined(featureTableJson.QUANTIZED_VOLUME_SCALE);
+        //>>includeStart('debug', pragmas.debug);
+        if ((!isQuantized && defined(featureTableJson.QUANTIZED_VOLUME_OFFSET)) || (!isQuantized && defined(featureTableJson.QUANTIZED_VOLUME_SCALE))) {
+            throw new DeveloperError('If the vector positions are quantized, both quantized offset and scale must be defined.');
+        }
+        //>>includeEnd('debug');
+
+        var quantizedOffset;
+        var quantizedScale;
+        if (isQuantized) {
+            quantizedOffset = Cartesian3.unpack(featureTableJson.QUANTIZED_VOLUME_OFFSET);
+            quantizedScale = Cartesian3.unpack(featureTableJson.QUANTIZED_VOLUME_SCALE);
+        }
+
         var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
         byteOffset += indicesByteLength;
-        var positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
-        byteOffset += positionByteLength;
-        var polylinePositions = new Uint16Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfUint16);
+
+        var positions;
+        var polylinePositions;
+        if (defined(quantizedOffset)) {
+            positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
+            byteOffset += positionByteLength;
+            polylinePositions = new Uint16Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfUint16);
+        } else {
+            positions = new Float32Array(arrayBuffer, byteOffset, positionByteLength / sizeOfFloat32);
+            byteOffset += positionByteLength;
+            polylinePositions = new Float32Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfFloat32);
+        }
 
         byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_COUNT.byteOffset;
         var counts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
@@ -300,12 +328,6 @@ define([
 
         byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_COUNT.byteOffset;
         var polylineCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolylines);
-
-        var center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
-        var minHeight = featureTableJson.MINIMUM_HEIGHT;
-        var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
-        var quantizedOffset = Cartesian3.unpack(featureTableJson.QUANTIZED_VOLUME_OFFSET);
-        var quantizedScale = Cartesian3.unpack(featureTableJson.QUANTIZED_VOLUME_SCALE);
 
         var n;
         var color = Color.WHITE.withAlpha(0.5);
@@ -356,7 +378,8 @@ define([
         }
 
         if (this._outlinePolygons && numberOfPolygons > 0) {
-            var outlinePositions = new Uint16Array(positions.length + 3 * numberOfPolygons);
+            var outlinePositionsLength = positions.length + 3 * numberOfPolygons;
+            var outlinePositions = isQuantized ? new Uint16Array(outlinePositionsLength) : new Float32Array(outlinePositionsLength);
             var outlineCounts = new Array(numberOfPolygons);
             var outlineWidths = new Array(numberOfPolygons);
             batchIds = new Array(numberOfPolygons);

@@ -2,7 +2,7 @@
   "asset": {
     "version": "0.0"
   },
-  "geometricError": 17.32,
+  "geometricError": 77067.33977995862,
   "root": {
     "refine": "replace",
     "boundingVolume": {
