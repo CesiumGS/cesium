@@ -1055,6 +1055,25 @@ define([
         return geometries;
     };
 
+    var scratchEdge1 = new Cartesian3();
+    var scratchEdge2 = new Cartesian3();
+
+    /**
+     * @private
+     * @param position1
+     * @param position2
+     * @param position3
+     * @returns {Cartesian3}
+     */
+    function getFaceNormal(position1, position2, position3) {
+        var result = new Cartesian3();
+        var edge1 = Cartesian3.subtract(position2, position1, scratchEdge1);
+        var edge2 = Cartesian3.subtract(position3, position1, scratchEdge2);
+        Cartesian3.cross(edge1, edge2, result);
+        Cartesian3.normalize(result, result);
+        return result;
+    }
+
     var normal = new Cartesian3();
     var v0 = new Cartesian3();
     var v1 = new Cartesian3();
@@ -1074,7 +1093,7 @@ define([
      * @example
      * Cesium.GeometryPipeline.computeNormal(geometry);
      */
-    GeometryPipeline.computeNormal = function(geometry) {
+    GeometryPipeline.computeNormal = function(geometry, isHard) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(geometry)) {
             throw new DeveloperError('geometry is required.');
@@ -1101,88 +1120,139 @@ define([
         var normalsPerVertex = new Array(numVertices);
         var normalsPerTriangle = new Array(numIndices / 3);
         var normalIndices = new Array(numIndices);
+        var normalValues;
+        var index;
+        var i;
 
-        for ( var i = 0; i < numVertices; i++) {
-            normalsPerVertex[i] = {
-                indexOffset : 0,
-                count : 0,
-                currentCount : 0
-            };
-        }
+        if (isHard) {
+            var oldPositions = [];
+            Cartesian3.unpackArray(vertices, oldPositions);
 
-        var j = 0;
-        for (i = 0; i < numIndices; i += 3) {
-            var i0 = indices[i];
-            var i1 = indices[i + 1];
-            var i2 = indices[i + 2];
-            var i03 = i0 * 3;
-            var i13 = i1 * 3;
-            var i23 = i2 * 3;
-
-            v0.x = vertices[i03];
-            v0.y = vertices[i03 + 1];
-            v0.z = vertices[i03 + 2];
-            v1.x = vertices[i13];
-            v1.y = vertices[i13 + 1];
-            v1.z = vertices[i13 + 2];
-            v2.x = vertices[i23];
-            v2.y = vertices[i23 + 1];
-            v2.z = vertices[i23 + 2];
-
-            normalsPerVertex[i0].count++;
-            normalsPerVertex[i1].count++;
-            normalsPerVertex[i2].count++;
-
-            Cartesian3.subtract(v1, v0, v1);
-            Cartesian3.subtract(v2, v0, v2);
-            normalsPerTriangle[j] = Cartesian3.cross(v1, v2, new Cartesian3());
-            j++;
-        }
-
-        var indexOffset = 0;
-        for (i = 0; i < numVertices; i++) {
-            normalsPerVertex[i].indexOffset += indexOffset;
-            indexOffset += normalsPerVertex[i].count;
-        }
-
-        j = 0;
-        var vertexNormalData;
-        for (i = 0; i < numIndices; i += 3) {
-            vertexNormalData = normalsPerVertex[indices[i]];
-            var index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
-            normalIndices[index] = j;
-            vertexNormalData.currentCount++;
-
-            vertexNormalData = normalsPerVertex[indices[i + 1]];
-            index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
-            normalIndices[index] = j;
-            vertexNormalData.currentCount++;
-
-            vertexNormalData = normalsPerVertex[indices[i + 2]];
-            index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
-            normalIndices[index] = j;
-            vertexNormalData.currentCount++;
-
-            j++;
-        }
-
-        var normalValues = new Float32Array(numVertices * 3);
-        for (i = 0; i < numVertices; i++) {
-            var i3 = i * 3;
-            vertexNormalData = normalsPerVertex[i];
-            if (vertexNormalData.count > 0) {
-                Cartesian3.clone(Cartesian3.ZERO, normal);
-                for (j = 0; j < vertexNormalData.count; j++) {
-                    Cartesian3.add(normal, normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
+            var positions = new Array(numIndices);
+            var normals = new Array(numIndices);
+            var maxIndex = 0;
+            for (i = 0; i < numIndices; i++) {
+                index = indices[i];
+                maxIndex = Math.max(maxIndex, index);
+            }
+            // Duplicate any vertices shared by multiple indices
+            var seenIndices = {};
+            var nextIndex = maxIndex + 1;
+            for (i = 0; i < numIndices; i++) {
+                index = indices[i];
+                var position = oldPositions[index];
+                if (defined(seenIndices[index])) {
+                    positions[nextIndex] = position;
+                    indices[i] = nextIndex;
+                    nextIndex++;
+                } else {
+                    positions[index] = position;
+                    seenIndices[index] = true;
                 }
+            }
+
+            // Add face normal to each vertex normal
+            for (i = 0; i < numIndices; i += 3) {
+                var index1 = indices[i];
+                var index2 = indices[i + 1];
+                var index3 = indices[i + 2];
+                var faceNormal = getFaceNormal(positions[index1], positions[index2], positions[index3]);
+                normals[index1] = faceNormal;
+                normals[index2] = faceNormal.clone();
+                normals[index3] = faceNormal.clone();
+            }
+
+            // Normalize the normals
+            for (i = 0; i < numIndices; ++i) {
+                normal = normals[i];
                 Cartesian3.normalize(normal, normal);
-                normalValues[i3] = normal.x;
-                normalValues[i3 + 1] = normal.y;
-                normalValues[i3 + 2] = normal.z;
-            } else {
-                normalValues[i3] = 0.0;
-                normalValues[i3 + 1] = 0.0;
-                normalValues[i3 + 2] = 1.0;
+            }
+            normalValues = [];
+            Cartesian3.packArray(normals, normalValues);
+        } else {
+            // "Soft" normals
+            for (i = 0; i < numVertices; i++) {
+                normalsPerVertex[i] = {
+                    indexOffset : 0,
+                    count : 0,
+                    currentCount : 0
+                };
+            }
+
+            var j = 0;
+            for (i = 0; i < numIndices; i += 3) {
+                var i0 = indices[i];
+                var i1 = indices[i + 1];
+                var i2 = indices[i + 2];
+                var i03 = i0 * 3;
+                var i13 = i1 * 3;
+                var i23 = i2 * 3;
+
+                v0.x = vertices[i03];
+                v0.y = vertices[i03 + 1];
+                v0.z = vertices[i03 + 2];
+                v1.x = vertices[i13];
+                v1.y = vertices[i13 + 1];
+                v1.z = vertices[i13 + 2];
+                v2.x = vertices[i23];
+                v2.y = vertices[i23 + 1];
+                v2.z = vertices[i23 + 2];
+
+                normalsPerVertex[i0].count++;
+                normalsPerVertex[i1].count++;
+                normalsPerVertex[i2].count++;
+
+                Cartesian3.subtract(v1, v0, v1);
+                Cartesian3.subtract(v2, v0, v2);
+                normalsPerTriangle[j] = Cartesian3.cross(v1, v2, new Cartesian3());
+                j++;
+            }
+
+            var indexOffset = 0;
+            for (i = 0; i < numVertices; i++) {
+                normalsPerVertex[i].indexOffset += indexOffset;
+                indexOffset += normalsPerVertex[i].count;
+            }
+
+            j = 0;
+            var vertexNormalData;
+            for (i = 0; i < numIndices; i += 3) {
+                vertexNormalData = normalsPerVertex[indices[i]];
+                index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+                normalIndices[index] = j;
+                vertexNormalData.currentCount++;
+
+                vertexNormalData = normalsPerVertex[indices[i + 1]];
+                index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+                normalIndices[index] = j;
+                vertexNormalData.currentCount++;
+
+                vertexNormalData = normalsPerVertex[indices[i + 2]];
+                index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+                normalIndices[index] = j;
+                vertexNormalData.currentCount++;
+
+                j++;
+            }
+
+            normalValues = new Float32Array(numVertices * 3);
+            for (i = 0; i < numVertices; i++) {
+                var i3 = i * 3;
+                vertexNormalData = normalsPerVertex[i];
+                if (vertexNormalData.count > 0) {
+                    Cartesian3.clone(Cartesian3.ZERO, normal);
+                    for (j = 0; j < vertexNormalData.count; j++) {
+                        Cartesian3.add(normal, normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
+                    }
+                    Cartesian3.normalize(normal, normal);
+                    normalValues[i3] = normal.x;
+                    normalValues[i3 + 1] = normal.y;
+                    normalValues[i3 + 2] = normal.z;
+                } else {
+                    normalValues[i3] = 0.0;
+                    normalValues[i3 + 1] = 0.0;
+                    normalValues[i3 + 2] = 1.0;
+                }
             }
         }
 

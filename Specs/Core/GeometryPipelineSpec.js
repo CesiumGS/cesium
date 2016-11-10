@@ -1345,6 +1345,25 @@ defineSuite([
         expect(geometry.attributes.normal.values).toEqual([0, 0, 1, 0, 0, 1, 0, 0, 1]);
     });
 
+    it('computeNormal computes hard normal for one triangle', function() {
+        var geometry = new Geometry({
+            attributes: {
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+                })
+            },
+            indices : [0, 1, 2],
+            primitiveType: PrimitiveType.TRIANGLES
+        });
+
+        geometry = GeometryPipeline.computeNormal(geometry, true);
+
+        expect(geometry.attributes.normal.values.length).toEqual(3*3);
+        expect(geometry.attributes.normal.values).toEqual([0, 0, 1, 0, 0, 1, 0, 0, 1]);
+    });
+
     it('computeNormal computes normal for two triangles', function() {
         var geometry = new Geometry({
             attributes: {
@@ -1371,6 +1390,36 @@ defineSuite([
 
         a = Cartesian3.normalize(new Cartesian3(1, 0, 1), new Cartesian3());
         expect(Cartesian3.fromArray(normals, 9)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+    });
+
+    it('computeNormal computes hard normal for two triangles', function() {
+        var geometry = new Geometry({
+            attributes: {
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+                })
+            },
+            indices : [0, 1, 2, 1, 3, 2],
+            primitiveType: PrimitiveType.TRIANGLES
+        });
+
+        geometry = GeometryPipeline.computeNormal(geometry, true);
+
+        var normals = geometry.attributes.normal.values;
+        expect(normals.length).toEqual(6*3);
+
+        var a = Cartesian3.normalize(new Cartesian3(-1, 0, 1), new Cartesian3());
+
+        expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 3)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+
+        a = Cartesian3.normalize(new Cartesian3(1, 0, 1), new Cartesian3());
+        expect(Cartesian3.fromArray(normals, 9)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 12)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 15)).toEqualEpsilon(a, CesiumMath.EPSILON7);
     });
 
     it('computeNormal computes normal for six triangles', function() {
@@ -1408,6 +1457,48 @@ defineSuite([
         expect(Cartesian3.fromArray(normals, 15)).toEqualEpsilon(a, CesiumMath.EPSILON7);
 
         expect(Cartesian3.fromArray(normals, 18)).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON7);
+    });
+
+    it('computeNormal computes hard normal for six triangles', function() {
+        var geometry = new Geometry ({
+            attributes: {
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+                })
+            },
+            indices : [0, 1, 2, 3, 0, 2, 4, 0, 3, 4, 5, 0, 5, 6, 0, 6, 1, 0],
+            primitiveType: PrimitiveType.TRIANGLES
+        });
+
+        geometry = GeometryPipeline.computeNormal(geometry, true);
+
+        var normals = geometry.attributes.normal.values;
+        expect(normals.length).toEqual(18*3);
+
+        var a = new Cartesian3(0, -1, 0);
+        expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 3)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 9)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 21)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 24)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+
+        a = new Cartesian3(-1, 0, 0);
+        expect(Cartesian3.fromArray(normals, 12)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 15)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 27)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 30)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 36)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+
+        a = new Cartesian3(0, 0, -1);
+        expect(Cartesian3.fromArray(normals, 18)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 39)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 42)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 45)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 48)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 51)).toEqualEpsilon(a, CesiumMath.EPSILON7);
     });
 
     it('computeBinormalAndTangent throws when geometry is undefined', function() {
