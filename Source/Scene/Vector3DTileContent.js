@@ -280,7 +280,19 @@ define([
         }
 
         var numberOfPolygons = featureTableJson.POLYGONS_LENGTH;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(numberOfPolygons)) {
+            throw new DeveloperError('Global property: POLYGONS_LENGTH must be defined.');
+        }
+        //>>includeEnd('debug');
+
         var numberOfPolylines = featureTableJson.POLYLINES_LENGTH;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(numberOfPolylines)) {
+            throw new DeveloperError('Global property: POLYLINES_LENGTH must be defined.');
+        }
+        //>>includeEnd('debug');
+
         var numberOfOutlines = this._outlinePolygons ? numberOfPolygons : 0;
         var totalPrimitives = numberOfPolygons + numberOfOutlines + numberOfPolylines;
 
@@ -293,8 +305,11 @@ define([
 
         var isQuantized = defined(featureTableJson.QUANTIZED_VOLUME_OFFSET) && defined(featureTableJson.QUANTIZED_VOLUME_SCALE);
         //>>includeStart('debug', pragmas.debug);
-        if ((!isQuantized && defined(featureTableJson.QUANTIZED_VOLUME_OFFSET)) || (!isQuantized && defined(featureTableJson.QUANTIZED_VOLUME_SCALE))) {
-            throw new DeveloperError('If the vector positions are quantized, both quantized offset and scale must be defined.');
+        if (!isQuantized && defined(featureTableJson.QUANTIZED_VOLUME_OFFSET)) {
+            throw new DeveloperError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
+        }
+        if (!isQuantized && defined(featureTableJson.QUANTIZED_VOLUME_SCALE)) {
+            throw new DeveloperError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
         }
         //>>includeEnd('debug');
 

@@ -125,6 +125,67 @@ defineSuite([
         return pixelColor;
     }
 
+    it('throws with invalid magic', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
+            magic : [120, 120, 120, 120]
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
+    });
+
+    it('throws with invalid version', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
+            version: 2
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
+    });
+
+    it('throws if featureTableJsonByteLength is 0', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
+            featureTableJsonByteLength : 0
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
+    });
+
+    it('throws if the feature table does not contain POLYGONS_LENGTH', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
+            featureTableJson : {
+                POLYLINES_LENGTH : 0
+            }
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
+    });
+
+    it('throws if the feature table does not contain POLYLINES_LENGTH', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
+            featureTableJson : {
+                POLYGONS_LENGTH : 0
+            }
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
+    });
+
+    it('throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_SCALE', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
+            featureTableJson : {
+                POLYGONS_LENGTH : 1,
+                POLYLINES_LENGTH : 0,
+                QUANTIZED_VOLUME_OFFSET : [0.0, 0.0, 0.0]
+            }
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
+    });
+
+    it('throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_OFFSET', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
+            featureTableJson : {
+                POLYGONS_LENGTH : 1,
+                POLYLINES_LENGTH : 0,
+                QUANTIZED_VOLUME_SCALE : [1.0, 1.0, 1.0]
+            }
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
+    });
+
     it('resolves readyPromise', function() {
         return Cesium3DTilesTester.resolvesReadyPromise(scene, vectorPolygonQuantizedUrl);
     });
@@ -147,6 +208,74 @@ defineSuite([
 
     it('renders quantized polylines', function() {
         return Cesium3DTilesTester.loadTileset(scene, vectorPolylineQuantizedUrl).then(expectRenderVectorContent);
+    });
+
+    it('renders with debug color', function() {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonQuantizedUrl).then(function(tileset) {
+            var color = expectRenderVectorContent(tileset);
+            tileset.debugColorizeTiles = true;
+            var debugColor = expectRenderVectorContent(tileset);
+            expect(debugColor).not.toEqual(color);
+            tileset.debugColorizeTiles = false;
+            debugColor = expectRenderVectorContent(tileset);
+            expect(debugColor).toEqual(color);
+        });
+    });
+
+    it('picks', function() {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonQuantizedUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            tileset.show = false;
+            var picked = scene.pickForSpecs();
+            expect(picked).toBeUndefined();
+            tileset.show = true;
+            picked = scene.pickForSpecs();
+            expect(picked).toBeDefined();
+            expect(picked.primitive).toBe(content);
+        });
+    });
+
+    it('picks based on batchId', function() {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonQuantizedUrl).then(function(tileset) {
+            var pixelColor = scene.renderForSpecs();
+
+            // Change the color of the picked feature to yellow
+            var picked = scene.pickForSpecs();
+            expect(picked).toBeDefined();
+            picked.color = Color.clone(Color.YELLOW, picked.color);
+
+            // Expect the pixel color to be some shade of yellow
+            var newPixelColor = scene.renderForSpecs();
+            expect(newPixelColor).not.toEqual(pixelColor);
+
+            // Turn show off. Expect a different feature to get picked.
+            picked.show = false;
+            var newPicked = scene.pickForSpecs();
+            expect(newPicked).not.toBe(picked);
+        });
+    });
+
+    it('throws when calling getFeature with invalid index', function() {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonQuantizedUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(function(){
+                content.getFeature(-1);
+            }).toThrowDeveloperError();
+            expect(function(){
+                content.getFeature(1000);
+            }).toThrowDeveloperError();
+            expect(function(){
+                content.getFeature();
+            }).toThrowDeveloperError();
+        });
+    });
+
+    it('destroys', function() {
+        return Cesium3DTilesTester.tileDestroys(scene, pointCloudRGBUrl);
+    });
+
+    it('destroys before loading finishes', function() {
+        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, pointCloudRGBUrl);
     });
 
 }, 'WebGL');
