@@ -1844,6 +1844,21 @@ defineSuite([
             label.pixelOffsetScaleByDistance = pixelOffsetScale;
         }).toThrowDeveloperError();
     });
+    
+    it('check the number of new line in a label', function() {
+        var one = labels.add({
+            text : 'Hi\nthisi\nsates\ntstring'
+        });
+        var numberNewlines=0;
+        var text1=one.text;
+        var length=text1.length;
+        for (var Index = 0; Index < length; ++Index) {
+            if (text1.charAt(Index) === '\n') {
+                numberNewlines += 1;
+            }
+        }
+        expect(numberNewlines).toEqual(3);
+    });
 
     it('destroys texture atlas when destroying', function() {
         labels.add({
