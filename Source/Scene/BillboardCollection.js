@@ -1479,7 +1479,7 @@ define([
                 fsSource = BillboardCollectionFS;
 
                 if (defined(this._batchTable)) {
-                    vsSource = this._batchTable.getVertexShaderCallback()(vsSource);
+                    vsSource = this._batchTable.getVertexShaderCallback(false, 'a_batchId')(vsSource);
                     fsSource = this._batchTable.getFragmentShaderCallback()(fsSource);
                 }
 
@@ -1579,7 +1579,7 @@ define([
                 fsSource = BillboardCollectionFS;
 
                 if (defined(this._batchTable)) {
-                    vsSource = this._batchTable.getPickVertexShaderCallback()(vsSource);
+                    vsSource = this._batchTable.getPickVertexShaderCallback('a_batchId')(vsSource);
                     fsSource = this._batchTable.getPickFragmentShaderCallback()(fsSource);
                 }
 
