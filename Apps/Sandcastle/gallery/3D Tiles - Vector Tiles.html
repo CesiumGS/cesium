@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+    #toolbar button { display: block; }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    scene3DOnly : true,
+    shadows : true
+});
+
+var scene = viewer.scene;
+scene.fog.enabled = false;
+scene.debugShowFramesPerSecond = true;
+
+var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
+    url : 'https://assets.agi.com/stk-terrain/world',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+viewer.terrainProvider = cesiumTerrainProviderMeshes;
+
+viewer.scene.globe.depthTestAgainstTerrain = true;
+
+var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+    url : 'http://localhost:8002/tilesets/VectorTile-Test/',
+    debugShowStatistics : true
+}));
+
+tileset.readyPromise.then(function(tileset) {
+    var boundingSphere = tileset.boundingSphere;
+    viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+    tileset.style = new Cesium.Cesium3DTileStyle({
+        "color" : {
+            "conditions" : [
+                ["${BEZ} == 23", "color('red')"],
+                ["true", "color('blue')"]
+            ]
+        }
+    });
+});
+
+var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+
+var pickingEnabled = true;
+var flags = {
+    // Mouse
+    leftDown : false,
+    middleDown : false,
+    rightDown : false
+};
+
+handler.setInputAction(function(movement) {
+    flags.leftDown = true;
+}, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+handler.setInputAction(function(movement) {
+    flags.middleDown = true;
+}, Cesium.ScreenSpaceEventType.MIDDLE_DOWN);
+
+handler.setInputAction(function(movement) {
+    flags.rightDown = true;
+}, Cesium.ScreenSpaceEventType.RIGHT_DOWN);
+
+handler.setInputAction(function(movement) {
+    flags.leftDown = false;
+}, Cesium.ScreenSpaceEventType.LEFT_UP);
+
+handler.setInputAction(function(movement) {
+    flags.middleDown = false;
+}, Cesium.ScreenSpaceEventType.MIDDLE_UP);
+
+handler.setInputAction(function(movement) {
+    flags.rightDown = false;
+}, Cesium.ScreenSpaceEventType.RIGHT_UP);
+
+var current = {
+    feature : undefined,
+    originalColor : new Cesium.Color()
+};
+
+var HIGHLIGHT_COLOR = new Cesium.Color(1.0, 1.0, 0.0, 0.4);
+
+// Highlight feature on mouse over
+handler.setInputAction(function(movement) {
+    if (!pickingEnabled) {
+        return;
+    }
+
+    if (flags.leftDown || flags.middleDown || flags.rightDown) {
+        // Don't highlight when panning and zooming
+        return;
+    }
+
+    var pickedFeature = scene.pick(movement.endPosition);
+
+    if (Cesium.defined(current.feature) && (current.feature !== pickedFeature)) {
+        // Restore original color to feature that is no longer selected
+
+        // This assignment is necessary to work with the set property
+        current.feature.color = Cesium.Color.clone(current.originalColor, current.feature.color);
+        current.feature = undefined;
+    }
+
+    if (Cesium.defined(pickedFeature) && (pickedFeature !== current.feature)) {
+        current.feature = pickedFeature;
+        Cesium.Color.clone(pickedFeature.color, current.originalColor);
+
+        // Highlight newly selected feature
+        pickedFeature.color = Cesium.Color.clone(HIGHLIGHT_COLOR, pickedFeature.color);
+    }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+handler.setInputAction(function(movement) {
+    if (!pickingEnabled) {
+        return;
+    }
+
+    var feature = current.feature;
+    if (Cesium.defined(feature)) {
+        if (feature.getProperty('clicked')) {
+            console.log('already clicked');
+        } else {
+            var properties = feature.getPropertyNames();
+            for (var i = 0; i < properties.length; ++i) {
+                var name = properties[i];
+                console.log(name + ': ' + feature.getProperty(name));
+            }
+
+            feature.setProperty('clicked', true);
+        }
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+///////////////////////////////////////////////////////////////////////////////
+
+Sandcastle.addToolbarButton('Stats on/off', function() {
+    tileset.debugShowStatistics = !tileset.debugShowStatistics;
+});
+
+Sandcastle.addToolbarButton('Pick stats on/off', function() {
+    tileset.debugShowPickStatistics = !tileset.debugShowPickStatistics;
+});
+
+Sandcastle.addToolbarButton('Freeze on/off', function() {
+    tileset.debugFreezeFrame = !tileset.debugFreezeFrame;
+});
+
+Sandcastle.addToolbarButton('Colorize on/off', function() {
+    tileset.debugColorizeTiles = !tileset.debugColorizeTiles;
+});
+
+Sandcastle.addToolbarButton('BV on/off', function() {
+    tileset.debugShowBoundingVolume = !tileset.debugShowBoundingVolume;
+});
+
+Sandcastle.addToolbarButton('Contents BV on/off', function() {
+    tileset.debugShowContentBoundingVolume = !tileset.debugShowContentBoundingVolume;
+});
+
+Sandcastle.addToolbarButton('Request Volume on/off', function() {
+    tileset.debugShowViewerRequestVolume = !tileset.debugShowViewerRequestVolume;
+});
+
+Sandcastle.addToolbarButton('Picking on/off', function() {
+    pickingEnabled = !pickingEnabled;
+});
+
+///////////////////////////////////////////////////////////////////////////////
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
