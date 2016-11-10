@@ -1,12 +1,10 @@
 /*global define*/
 define([
         './defined',
-        './DeveloperError',
-        './isArray'
+        './DeveloperError'
     ], function(
         defined,
-        DeveloperError,
-        isArray) {
+        DeveloperError) {
     'use strict';
 
     /**
@@ -43,7 +41,7 @@ define([
                 var value = obj[propName];
 
                 var part = encodeURIComponent(propName) + '=';
-                if (isArray(value)) {
+                if (Array.isArray(value)) {
                     for (var i = 0, len = value.length; i < len; ++i) {
                         result += part + encodeURIComponent(value[i]) + '&';
                     }

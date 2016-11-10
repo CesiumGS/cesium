@@ -21,7 +21,6 @@ define([
         '../Core/GeometryAttributes',
         '../Core/GeometryInstance',
         '../Core/GeometryInstanceAttribute',
-        '../Core/isArray',
         '../Core/Matrix4',
         '../Core/RuntimeError',
         '../Core/subdivideArray',
@@ -64,7 +63,6 @@ define([
         GeometryAttributes,
         GeometryInstance,
         GeometryInstanceAttribute,
-        isArray,
         Matrix4,
         RuntimeError,
         subdivideArray,
@@ -293,7 +291,7 @@ define([
         this.rtcCenter = options.rtcCenter;
 
         //>>includeStart('debug', pragmas.debug);
-        if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
+        if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (Array.isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
             throw new DeveloperError('Relative-to-center rendering only supports one geometry instance.');
         }
         //>>includeEnd('debug');
@@ -541,7 +539,7 @@ define([
 
     function createBatchTable(primitive, context) {
         var geometryInstances = primitive.geometryInstances;
-        var instances = (isArray(geometryInstances)) ? geometryInstances : [geometryInstances];
+        var instances = (Array.isArray(geometryInstances)) ? geometryInstances : [geometryInstances];
         var numberOfInstances = instances.length;
         if (numberOfInstances === 0) {
             return;
@@ -658,7 +656,7 @@ define([
 
     function cloneAttribute(attribute) {
         var clonedValues;
-        if (isArray(attribute.values)) {
+        if (Array.isArray(attribute.values)) {
             clonedValues = attribute.values.slice(0);
         } else {
             clonedValues = new attribute.values.constructor(attribute.values);
@@ -683,7 +681,7 @@ define([
         var indices;
         if (defined(geometry.indices)) {
             var sourceValues = geometry.indices;
-            if (isArray(sourceValues)) {
+            if (Array.isArray(sourceValues)) {
                 indices = sourceValues.slice(0);
             } else {
                 indices = new sourceValues.constructor(sourceValues);
@@ -996,7 +994,7 @@ define([
         var instanceIds = primitive._instanceIds;
 
         if (primitive._state === PrimitiveState.READY) {
-            instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+            instances = (Array.isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
             var length = primitive._numberOfInstances = instances.length;
 
             var promises = [];
@@ -1071,7 +1069,7 @@ define([
             });
         } else if (primitive._state === PrimitiveState.CREATED) {
             var transferableObjects = [];
-            instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+            instances = (Array.isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
 
             var scene3DOnly = frameState.scene3DOnly;
             var projection = frameState.mapProjection;
@@ -1113,7 +1111,7 @@ define([
     }
 
     function loadSynchronous(primitive, frameState) {
-        var instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+        var instances = (Array.isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
         var length = primitive._numberOfInstances = instances.length;
         var clonedInstances = new Array(length);
         var instanceIds = primitive._instanceIds;
@@ -1564,7 +1562,7 @@ define([
      */
     Primitive.prototype.update = function(frameState) {
         if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
-            (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
+            (defined(this.geometryInstances) && Array.isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
             (frameState.mode !== SceneMode.SCENE3D && frameState.scene3DOnly) ||
             (!frameState.passes.render && !frameState.passes.pick)) {

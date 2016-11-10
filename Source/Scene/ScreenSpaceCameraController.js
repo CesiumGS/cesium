@@ -10,7 +10,6 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/IntersectionTests',
-        '../Core/isArray',
         '../Core/KeyboardEventModifier',
         '../Core/Math',
         '../Core/Matrix3',
@@ -36,7 +35,6 @@ define([
         DeveloperError,
         Ellipsoid,
         IntersectionTests,
-        isArray,
         KeyboardEventModifier,
         CesiumMath,
         Matrix3,
@@ -396,7 +394,7 @@ define([
 
         var aggregator = controller._aggregator;
 
-        if (!isArray(eventTypes)) {
+        if (!Array.isArray(eventTypes)) {
             scratchEventTypeArray[0] = eventTypes;
             eventTypes = scratchEventTypeArray;
         }

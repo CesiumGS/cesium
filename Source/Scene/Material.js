@@ -10,7 +10,6 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/isArray',
         '../Core/loadImage',
         '../Core/Matrix2',
         '../Core/Matrix3',
@@ -41,7 +40,6 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        isArray,
         loadImage,
         Matrix2,
         Matrix3,
@@ -914,7 +912,7 @@ define([
                     uniformType = 'sampler2D';
                 }
             } else if (type === 'object') {
-                if (isArray(uniformValue)) {
+                if (Array.isArray(uniformValue)) {
                     if (uniformValue.length === 4 || uniformValue.length === 9 || uniformValue.length === 16) {
                         uniformType = 'mat' + Math.sqrt(uniformValue.length);
                     }

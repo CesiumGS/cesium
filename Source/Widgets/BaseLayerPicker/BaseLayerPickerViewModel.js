@@ -5,7 +5,6 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/EllipsoidTerrainProvider',
-        '../../Core/isArray',
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
@@ -14,7 +13,6 @@ define([
         defineProperties,
         DeveloperError,
         EllipsoidTerrainProvider,
-        isArray,
         knockout,
         createCommand) {
     'use strict';
@@ -138,7 +136,7 @@ define([
 
                 if (defined(value)) {
                     var newProviders = value.creationCommand();
-                    if (isArray(newProviders)) {
+                    if (Array.isArray(newProviders)) {
                         var newProvidersLength = newProviders.length;
                         for (i = newProvidersLength - 1; i >= 0; i--) {
                             imageryLayers.addImageryProvider(newProviders[i], 0);

@@ -153,7 +153,7 @@ dataSourcePromise.then(function(dataSource) {
         var pickedLabel = viewer.scene.pick(movement.position);
         if (Cesium.defined(pickedLabel)) {
             var ids = pickedLabel.id;
-            if (Cesium.isArray(ids)) {
+            if (Array.isArray(ids)) {
                 for (var i = 0; i < ids.length; ++i) {
                     ids[i].label.fillColor = Cesium.Color.RED;
                 }
