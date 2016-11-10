@@ -426,6 +426,8 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.isClass = function(batchId, className) {
+        // PERFORMANCE_IDEA : cache results in the ancestor classes to speed up this check if
+        // this area becomes a hotspot
         var hierarchy = this._batchTableHierarchy;
         if (!defined(hierarchy)) {
             return false;
@@ -448,13 +450,17 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.isExactClass = function(batchId, className) {
+        return (this.getClassName(batchId) === className);
+    };
+
+    Cesium3DTileBatchTable.prototype.getClassName = function(batchId) {
         var hierarchy = this._batchTableHierarchy;
         if (!defined(hierarchy)) {
-            return false;
+            return undefined;
         }
         var classId = hierarchy.classIds[batchId];
         var instanceClass = hierarchy.classes[classId];
-        return instanceClass.name === className;
+        return instanceClass.name;
     };
 
     function getBinaryProperty(binaryProperty, index) {

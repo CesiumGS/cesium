@@ -354,6 +354,14 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'getClassName') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'abs') {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
@@ -611,6 +619,8 @@ define([
                 node.evaluate = node._evaluateIsClass;
             } else if (node._value === 'isClass') {
                 node.evaluate = node._evaluateIsDerived;
+            } else if (node._value === 'getClassName') {
+                node.evaluate = node._evaluateGetClassName;
             } else if (node._value === 'abs') {
                 node.evaluate = node._evaluateAbsoluteValue;
             } else if (node._value === 'cos') {
@@ -952,6 +962,10 @@ define([
         return feature.isClass(this._left.evaluate(feature));
     };
 
+    Node.prototype._evaluateGetClassName = function(feature) {
+        return feature.getClassName(this._left.evaluate(feature));
+    };
+
     Node.prototype._evaluateAbsoluteValue = function(feature) {
         return Math.abs(this._left.evaluate(feature));
     };
@@ -1189,7 +1203,7 @@ define([
                     return 'sqrt(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
-                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass')) {
+                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getClassName')) {
                     throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
                 }
                 //>>includeEnd('debug');
