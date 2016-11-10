@@ -15,6 +15,7 @@ define([
         '../Core/Intersect',
         '../Core/isDataUri',
         '../Core/joinUrls',
+        '../Core/JulianDate',
         '../Core/loadJson',
         '../Core/Math',
         '../Core/Matrix4',
@@ -50,6 +51,7 @@ define([
         Intersect,
         isDataUri,
         joinUrls,
+        JulianDate,
         loadJson,
         CesiumMath,
         Matrix4,
@@ -139,6 +141,8 @@ define([
         this._processingQueue = [];
         this._selectedTiles = [];
         this._selectedTilesToStyle = [];
+        this._loadTimestamp = undefined;
+        this._timeSinceLoad = 0.0;
 
         var replacementList = new DoublyLinkedList();
 
@@ -763,6 +767,17 @@ define([
                     // Useful, for example, when setting the modelMatrix and then having the camera view the tileset.
                     this._root.updateTransform(this._modelMatrix);
                 }
+            }
+        },
+
+        /**
+         * Returns the time, in seconds, since the tileset was loaded.
+         *
+         * @type {Number}
+         */
+        timeSinceLoad : {
+            get : function() {
+                return this._timeSinceLoad;
             }
         },
 
@@ -1655,6 +1670,12 @@ define([
         if (!this.show || !defined(this._root) || (frameState.mode !== SceneMode.SCENE3D)) {
             return;
         }
+
+        if (!defined(this._loadTimestamp)) {
+            this._loadTimestamp = JulianDate.clone(frameState.time);
+        }
+
+        this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp), 0.0);
 
         // Do not do out-of-core operations (new content requests, cache removal,
         // process new tiles) during the pick pass.
