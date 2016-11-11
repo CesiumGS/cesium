@@ -10,8 +10,7 @@ attribute vec3 nextPosition3DHigh;
 attribute vec3 nextPosition3DLow;
 attribute vec3 nextPosition2DHigh;
 attribute vec3 nextPosition2DLow;
-attribute vec4 texCoordExpandWidthAndShow;
-attribute vec4 pickColor;
+attribute vec4 texCoordExpandAndBatchIndex;
 
 varying vec2  v_st;
 varying float v_width;
@@ -19,11 +18,21 @@ varying vec4  czm_pickColor;
 
 void main() 
 {
-    float texCoord = texCoordExpandWidthAndShow.x;
-    float expandDir = texCoordExpandWidthAndShow.y;
-    float width = abs(texCoordExpandWidthAndShow.z) + 0.5;
-    bool usePrev = texCoordExpandWidthAndShow.z < 0.0;
-    float show = texCoordExpandWidthAndShow.w;
+    float texCoord = texCoordExpandAndBatchIndex.x;
+    float expandDir = texCoordExpandAndBatchIndex.y;
+    bool usePrev = texCoordExpandAndBatchIndex.z < 0.0;
+    float batchTableIndex = texCoordExpandAndBatchIndex.w;
+
+    vec2 widthAndShow = batchTable_getWidthAndShow(batchTableIndex);
+    float width = widthAndShow.x + 0.5;
+    float show = widthAndShow.y;
+
+    if (width < 1.0)
+    {
+        show = 0.0;
+    }
+
+    vec4 pickColor = batchTable_getPickColor(batchTableIndex);
     
     vec4 p, prev, next;
     if (czm_morphTime == 1.0)
@@ -53,6 +62,32 @@ void main()
                 czm_translateRelativeToEye(nextPosition3DHigh.xyz, nextPosition3DLow.xyz),
                 czm_morphTime);
     }
+
+    #ifdef DISTANCE_DISPLAY_CONDITION
+        vec3 centerHigh = batchTable_getCenterHigh(batchTableIndex);
+        vec4 centerLowAndRadius = batchTable_getCenterLowAndRadius(batchTableIndex);
+        vec3 centerLow = centerLowAndRadius.xyz;
+        float radius = centerLowAndRadius.w;
+        vec2 distanceDisplayCondition = batchTable_getDistanceDisplayCondition(batchTableIndex);
+
+        float lengthSq;
+        if (czm_sceneMode == czm_sceneMode2D)
+        {
+            lengthSq = czm_eyeHeight2D.y;
+        }
+        else
+        {
+            vec4 center = czm_translateRelativeToEye(centerHigh.xyz, centerLow.xyz);
+            lengthSq = max(0.0, dot(center.xyz, center.xyz) - radius * radius);
+        }
+
+        float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x;
+        float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y;
+        if (lengthSq < nearSq || lengthSq > farSq)
+        {
+            show = 0.0;
+        }
+    #endif
     
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev);
     gl_Position = czm_viewportOrthographic * positionWC * show;

@@ -46,6 +46,7 @@ define([
         './DataSource',
         './DataSourceClock',
         './Entity',
+        './EntityCluster',
         './EntityCollection',
         './LabelGraphics',
         './PathGraphics',
@@ -105,6 +106,7 @@ define([
         DataSource,
         DataSourceClock,
         Entity,
+        EntityCluster,
         EntityCollection,
         LabelGraphics,
         PathGraphics,
@@ -283,13 +285,24 @@ define([
 
     // an optional context is passed to allow for some malformed kmls (those with multiple geometries with same ids) to still parse
     // correctly, as they do in Google Earth.
-    function getOrCreateEntity(node, entityCollection, context) {
+    function createEntity(node, entityCollection, context) {
         var id = queryStringAttribute(node, 'id');
         id = defined(id) && id.length !== 0 ? id : createGuid();
         if(defined(context)){
             id = context + id;
         }
-        var entity = entityCollection.getOrCreateEntity(id);
+
+        // If we have a duplicate ID just generate one.
+        // This isn't valid KML but Google Earth handles this case.
+        var entity = entityCollection.getById(id);
+        if (defined(entity)) {
+            id = createGuid();
+            if(defined(context)){
+                id = context + id;
+            }
+        }
+
+        entity = entityCollection.add(new Entity({id : id}));
         if (!defined(entity.kml)) {
             entity.addProperty('kml');
             entity.kml = new KmlFeatureData();
@@ -1076,7 +1089,7 @@ define([
             }
         }
 
-        if (defined(heightReference)) {
+        if (defined(heightReference) && dataSource._clampToGround) {
             billboard.heightReference = heightReference;
             label.heightReference = heightReference;
         }
@@ -1356,7 +1369,7 @@ define([
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
             if (defined(geometryProcessor)) {
-                var childEntity = getOrCreateEntity(childNode, entityCollection, context);
+                var childEntity = createEntity(childNode, entityCollection, context);
                 childEntity.parent = entity;
                 childEntity.name = entity.name;
                 childEntity.availability = entity.availability;
@@ -1512,7 +1525,7 @@ define([
     }
 
     function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var entity = getOrCreateEntity(featureNode, entityCollection);
+        var entity = createEntity(featureNode, entityCollection);
         var kmlData = entity.kml;
         var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver);
 
@@ -1525,6 +1538,17 @@ define([
             availability = processTimeStamp(featureNode);
         }
         entity.availability = availability;
+
+        if (defined(parent)) {
+            var parentAvailability = parent.availability;
+            if (defined(parentAvailability)) {
+                if (defined(availability)) {
+                    availability.intersect(parentAvailability);
+                } else {
+                    entity.availability = parentAvailability;
+                }
+            }
+        }
 
         // Per KML spec "A Feature is visible only if it and all its ancestors are visible."
         function ancestryIsVisible(parentEntity) {
@@ -1664,13 +1688,13 @@ define([
                     west = CesiumMath.negativePiToPi(CesiumMath.toRadians(west));
                 }
                 if (defined(south)) {
-                    south = CesiumMath.negativePiToPi(CesiumMath.toRadians(south));
+                    south = CesiumMath.clampToLatitudeRange(CesiumMath.toRadians(south));
                 }
                 if (defined(east)) {
                     east = CesiumMath.negativePiToPi(CesiumMath.toRadians(east));
                 }
                 if (defined(north)) {
-                    north = CesiumMath.negativePiToPi(CesiumMath.toRadians(north));
+                    north = CesiumMath.clampToLatitudeRange(CesiumMath.toRadians(north));
                 }
                 geometry.coordinates = new Rectangle(west, south, east, north);
 
@@ -1921,11 +1945,21 @@ define([
                 var promise = when(load(dataSource, networkLinkCollection, linkUrl), function(rootElement) {
                     var entities = dataSource._entityCollection;
                     var newEntities = networkLinkCollection.values;
+                    var networkLinkAvailability = networkEntity.availability;
                     entities.suspendEvents();
                     for (var i = 0; i < newEntities.length; i++) {
                         var newEntity = newEntities[i];
                         if (!defined(newEntity.parent)) {
                             newEntity.parent = networkEntity;
+
+                            if (defined(networkLinkAvailability)) {
+                                var childAvailability = newEntity.availability;
+                                if (defined(childAvailability)) {
+                                    childAvailability.intersect(networkLinkAvailability);
+                                } else {
+                                    newEntity.availability = networkLinkAvailability;
+                                }
+                            }
                         }
                         entities.add(newEntity);
                     }
@@ -2229,6 +2263,7 @@ define([
         this._pinBuilder = new PinBuilder();
         this._promises = [];
         this._networkLinks = new AssociativeArray();
+        this._entityCluster = new EntityCluster();
 
         this._canvas = canvas;
         this._camera = camera;
@@ -2364,6 +2399,26 @@ define([
             },
             set : function(value) {
                 this._entityCollection.show = value;
+            }
+        },
+
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof KmlDataSource.prototype
+         * @type {EntityCluster}
+         */
+        clustering : {
+            get : function() {
+                return this._entityCluster;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value must be defined.');
+                }
+                //>>includeEnd('debug');
+                this._entityCluster = value;
             }
         }
     });
@@ -2511,6 +2566,7 @@ define([
             }
 
             var networkLinkEntity = networkLink.entity;
+            var networkLinkAvailability = networkLinkEntity.availability;
             var entityCollection = dataSource._entityCollection;
             var newEntities = newEntityCollection.values;
 
@@ -2541,6 +2597,15 @@ define([
                 var newEntity = newEntities[i];
                 if (!defined(newEntity.parent)) {
                     newEntity.parent = networkLinkEntity;
+
+                    if (defined(networkLinkAvailability)) {
+                        var childAvailability = newEntity.availability;
+                        if (defined(childAvailability)) {
+                            childAvailability.intersect(networkLinkAvailability);
+                        } else {
+                            newEntity.availability = networkLinkAvailability;
+                        }
+                    }
                 }
                 entityCollection.add(newEntity);
             }

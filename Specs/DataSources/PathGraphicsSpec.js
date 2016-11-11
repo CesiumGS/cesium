@@ -2,11 +2,13 @@
 defineSuite([
         'DataSources/PathGraphics',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty'
     ], function(
         PathGraphics,
         Color,
+        DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty) {
     'use strict';
@@ -18,7 +20,8 @@ defineSuite([
             show : false,
             leadTime : 2,
             trailTime : 3,
-            resolution : 4
+            resolution : 4,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 20.0)
         };
 
         var path = new PathGraphics(options);
@@ -28,6 +31,7 @@ defineSuite([
         expect(path.leadTime).toBeInstanceOf(ConstantProperty);
         expect(path.trailTime).toBeInstanceOf(ConstantProperty);
         expect(path.resolution).toBeInstanceOf(ConstantProperty);
+        expect(path.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
 
         expect(path.material.color.getValue()).toEqual(options.material);
         expect(path.width.getValue()).toEqual(options.width);
@@ -35,6 +39,7 @@ defineSuite([
         expect(path.leadTime.getValue()).toEqual(options.leadTime);
         expect(path.trailTime.getValue()).toEqual(options.trailTime);
         expect(path.resolution.getValue()).toEqual(options.resolution);
+        expect(path.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -45,6 +50,7 @@ defineSuite([
         source.leadTime = new ConstantProperty(1);
         source.trailTime = new ConstantProperty(1);
         source.resolution = new ConstantProperty(1);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 20.0));
 
         var target = new PathGraphics();
         target.merge(source);
@@ -54,6 +60,7 @@ defineSuite([
         expect(target.leadTime).toBe(source.leadTime);
         expect(target.trailTime).toBe(source.trailTime);
         expect(target.resolution).toBe(source.resolution);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -64,6 +71,7 @@ defineSuite([
         source.leadTime = new ConstantProperty(1);
         source.trailTime = new ConstantProperty(1);
         source.resolution = new ConstantProperty(1);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
         var color = new ColorMaterialProperty();
         var width = new ConstantProperty(1);
@@ -71,6 +79,7 @@ defineSuite([
         var leadTime = new ConstantProperty(1);
         var trailTime = new ConstantProperty(1);
         var resolution = new ConstantProperty(1);
+        var distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
         var target = new PathGraphics();
         target.material = color;
@@ -79,6 +88,7 @@ defineSuite([
         target.leadTime = leadTime;
         target.trailTime = trailTime;
         target.resolution = resolution;
+        target.distanceDisplayCondition = distanceDisplayCondition;
 
         target.merge(source);
         expect(target.material).toBe(color);
@@ -87,6 +97,7 @@ defineSuite([
         expect(target.leadTime).toBe(leadTime);
         expect(target.trailTime).toBe(trailTime);
         expect(target.resolution).toBe(resolution);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
     });
 
     it('clone works', function() {
@@ -97,6 +108,7 @@ defineSuite([
         source.leadTime = new ConstantProperty(1);
         source.trailTime = new ConstantProperty(1);
         source.resolution = new ConstantProperty(1);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -105,6 +117,7 @@ defineSuite([
         expect(result.leadTime).toBe(source.leadTime);
         expect(result.trailTime).toBe(source.trailTime);
         expect(result.resolution).toBe(source.resolution);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge throws if source undefined', function() {

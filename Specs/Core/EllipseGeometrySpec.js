@@ -247,10 +247,10 @@ defineSuite([
         });
 
         var r = ellipse.rectangle;
-        expect(r.north).toEqual(0.6989665987920752);
-        expect(r.south).toEqual(0.6986522252554146);
-        expect(r.east).toEqual(-1.3190209903056758);
-        expect(r.west).toEqual(-1.3198389970251112);
+        expect(r.north).toEqualEpsilon(0.6989665987920752, CesiumMath.EPSILON7);
+        expect(r.south).toEqualEpsilon(0.6986522252554146, CesiumMath.EPSILON7);
+        expect(r.east).toEqualEpsilon(-1.3190209903056758, CesiumMath.EPSILON7);
+        expect(r.west).toEqualEpsilon(-1.3198389970251112, CesiumMath.EPSILON7);
     });
 
     var center = Cartesian3.fromDegrees(0,0);
