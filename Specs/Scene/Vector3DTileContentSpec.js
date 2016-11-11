@@ -4,8 +4,6 @@ defineSuite([
     'Core/Cartesian3',
     'Core/Color',
     'Core/ColorGeometryInstanceAttribute',
-    'Core/ComponentDatatype',
-    'Core/defined',
     'Core/destroyObject',
     'Core/GeometryInstance',
     'Core/HeadingPitchRange',
@@ -22,8 +20,6 @@ defineSuite([
     Cartesian3,
     Color,
     ColorGeometryInstanceAttribute,
-    ComponentDatatype,
-    defined,
     destroyObject,
     GeometryInstance,
     HeadingPitchRange,
@@ -41,6 +37,7 @@ defineSuite([
     var vectorPolygonQuantizedUrl = './Data/Cesium3DTiles/Vector/VectorPolygonQuantized';
     var vectorPolylineUrl = './Data/Cesium3DTiles/Vector/VectorPolyline';
     var vectorPolylineQuantizedUrl = './Data/Cesium3DTiles/Vector/VectorPolylineQuantized';
+    var vectorPolygonWithPropertiesUrl = './Data/Cesium3DTiles/Vector/VectorPolygonWithProperties';
 
     function MockGlobePrimitive(primitive) {
         this._primitive = primitive;
@@ -202,6 +199,10 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, vectorPolygonQuantizedUrl).then(expectRenderVectorContent);
     });
 
+    it('renders polygons with properties', function() {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonWithPropertiesUrl).then(expectRenderVectorContent);
+    });
+
     it('renders polylines', function() {
         return Cesium3DTilesTester.loadTileset(scene, vectorPolylineUrl).then(expectRenderVectorContent);
     });
@@ -270,12 +271,91 @@ defineSuite([
         });
     });
 
+    it('applies shader style', function() {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonWithPropertiesUrl).then(function(tileset) {
+            var content = tileset._root.content;
+
+            // Solid red color
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color("red")'
+            });
+            expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+
+            // Applies translucency
+            tileset.style = new Cesium3DTileStyle({
+                color : 'rgba(255, 0, 0, 0.005)'
+            });
+            var pixelColor = scene.renderForSpecs();
+            expect(pixelColor[0]).toBeLessThan(255);
+            expect(pixelColor[1]).toBe(0);
+            expect(pixelColor[2]).toBeLessThan(255);
+            expect(pixelColor[3]).toBe(255);
+
+            // Style with property
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color() * ${favoriteNumber} * 0.01'
+            });
+            pixelColor = scene.renderForSpecs();
+            expect(pixelColor[0]).toBeGreaterThan(0);
+            expect(pixelColor[1]).toBeGreaterThan(0);
+            expect(pixelColor[2]).toBeGreaterThan(0);
+            expect(pixelColor[3]).toEqual(255);
+
+            // When no conditions are met the default color is white with an alpha of 0.5
+            tileset.style = new Cesium3DTileStyle({
+                color : {
+                    conditions : [
+                        ['${name} == "Harambe"', 'color("red")'] // This condition will not be met
+                    ]
+                }
+            });
+            // blends with the depth color
+            expect(pixelColor[0]).toBeGreaterThan(0);
+            expect(pixelColor[1]).toBeGreaterThan(0);
+            expect(pixelColor[2]).toBeGreaterThan(0);
+            expect(pixelColor[3]).toEqual(255);
+
+            // Apply style with conditions
+            tileset.style = new Cesium3DTileStyle({
+                color : {
+                    conditions : [
+                        ['${favoriteNumber} == 15', 'color("red")'],
+                        ['true', 'color("#FFFFFF", 1.0)']
+                    ]
+                }
+            });
+            expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+
+            // Apply show style
+            tileset.style = new Cesium3DTileStyle({
+                show : true
+            });
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+
+            // Apply show style that hides all points
+            tileset.style = new Cesium3DTileStyle({
+                show : false
+            });
+            expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+
+            // Apply show style with property
+            tileset.style = new Cesium3DTileStyle({
+                show : '${favoriteNumber} > 0'
+            });
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 255, 255]);
+            tileset.style = new Cesium3DTileStyle({
+                show : '${favoriteNumber} > 100'
+            });
+            expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        });
+    });
+
     it('destroys', function() {
-        return Cesium3DTilesTester.tileDestroys(scene, pointCloudRGBUrl);
+        return Cesium3DTilesTester.tileDestroys(scene, vectorPolygonQuantizedUrl);
     });
 
     it('destroys before loading finishes', function() {
-        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, pointCloudRGBUrl);
+        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, vectorPolygonQuantizedUrl);
     });
 
 }, 'WebGL');

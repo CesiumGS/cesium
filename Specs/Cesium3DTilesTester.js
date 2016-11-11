@@ -389,6 +389,7 @@ define([
             view.setUint8(byteOffset, positions[i]);
             byteOffset++;
         }
+        return buffer;
     };
 
     Cesium3DTilesTester.generateCompositeTileBuffer = function(options) {
