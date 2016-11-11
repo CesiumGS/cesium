@@ -1743,7 +1743,7 @@ defineSuite([
             context._elementIndexUint = uint32Supported;
         });
     });
-
+    
     it('loads a gltf with no material using the default glTf material', function() {
         return loadModel(boxUrl).then(function(m) {
             verifyRender(m);
