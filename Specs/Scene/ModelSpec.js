@@ -1743,6 +1743,20 @@ defineSuite([
             context._elementIndexUint = uint32Supported;
         });
     });
+    
+    it('loads a gltf with no material using the default glTf material', function() {
+        return loadModel(boxUrl).then(function(m) {
+            verifyRender(m);
+            var gltf = m.gltf;
+            delete gltf.meshes['Geometry-mesh002'].primitives[0].material;
+            primitives.remove(m);
+            return loadModelJson(gltf).then(function(m) {
+                expect(m.gltf.meshes['Geometry-mesh002'].primitives[0].material).toBeDefined();
+                verifyRender(m);
+                primitives.remove(m);
+            });
+        });
+    });
 
     it('loads a gltf with WEB3D_quantized_attributes COLOR', function() {
         return loadModel(boxColorQuantizedUrl).then(function(m) {
