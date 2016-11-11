@@ -439,7 +439,7 @@ define([
         // The level zero tiles aren't necessarily a nice neat quad, so we can use the
         // quadtree ordering we use elsewhere in the tree
         comparisonPoint = frameState.camera.positionCartographic;
-        levelZeroTiles.sort(compareDistanceToPoint)
+        levelZeroTiles.sort(compareDistanceToPoint);
 
         var customDataAdded = primitive._addHeightCallbacks;
         var customDataRemoved = primitive._removeHeightCallbacks;

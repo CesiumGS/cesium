@@ -481,12 +481,12 @@ defineSuite([
             var west = quadtree._levelZeroTiles.filter(function(tile) { return tile.x === 0; })[0];
             var east = quadtree._levelZeroTiles.filter(function(tile) { return tile.x === 1; })[0];
             expect(quadtree._tilesToRender[0]).toBe(east.northwestChild);
-            expect(quadtree._tilesToRender[1] == east.southwestChild || quadtree._tilesToRender[1] === east.northeastChild).toBe(true);
-            expect(quadtree._tilesToRender[2] == east.southwestChild || quadtree._tilesToRender[2] === east.northeastChild).toBe(true);
+            expect(quadtree._tilesToRender[1] === east.southwestChild || quadtree._tilesToRender[1] === east.northeastChild).toBe(true);
+            expect(quadtree._tilesToRender[2] === east.southwestChild || quadtree._tilesToRender[2] === east.northeastChild).toBe(true);
             expect(quadtree._tilesToRender[3]).toBe(east.southeastChild);
             expect(quadtree._tilesToRender[4]).toBe(west.northeastChild);
-            expect(quadtree._tilesToRender[5] == west.northwestChild || quadtree._tilesToRender[5] === west.southeastChild).toBe(true);
-            expect(quadtree._tilesToRender[6] == west.northwestChild || quadtree._tilesToRender[6] === west.southeastChild).toBe(true);
+            expect(quadtree._tilesToRender[5] === west.northwestChild || quadtree._tilesToRender[5] === west.southeastChild).toBe(true);
+            expect(quadtree._tilesToRender[6] === west.northwestChild || quadtree._tilesToRender[6] === west.southeastChild).toBe(true);
             expect(quadtree._tilesToRender[7]).toBe(west.southwestChild);
         });
     });
