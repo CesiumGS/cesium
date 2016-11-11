@@ -65,7 +65,6 @@ define([
         this._polygons = undefined;
         this._polylines = undefined;
         this._outlines = undefined;
-        this._outlinePolygons = true;
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
@@ -293,7 +292,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var numberOfOutlines = this._outlinePolygons ? numberOfPolygons : 0;
+        var outlinePolygons = defaultValue(featureTableJson.OUTLINE_POLYGONS, false);
+        var numberOfOutlines = outlinePolygons ? numberOfPolygons : 0;
         var totalPrimitives = numberOfPolygons + numberOfOutlines + numberOfPolylines;
 
         var batchTable = new Cesium3DTileBatchTable(this, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(this, numberOfPolygons));
@@ -325,7 +325,7 @@ define([
 
         var positions;
         var polylinePositions;
-        if (defined(quantizedOffset)) {
+        if (isQuantized) {
             positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
             byteOffset += positionByteLength;
             polylinePositions = new Uint16Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfUint16);
@@ -392,7 +392,7 @@ define([
             });
         }
 
-        if (this._outlinePolygons && numberOfPolygons > 0) {
+        if (outlinePolygons && numberOfPolygons > 0) {
             var outlinePositionsLength = positions.length + 3 * numberOfPolygons;
             var outlinePositions = isQuantized ? new Uint16Array(outlinePositionsLength) : new Float32Array(outlinePositionsLength);
             var outlineCounts = new Array(numberOfPolygons);
