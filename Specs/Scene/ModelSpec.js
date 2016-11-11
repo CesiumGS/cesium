@@ -1733,10 +1733,11 @@ defineSuite([
 
     it('throws runtime error when loading a gltf with uint32 indices if OES_element_index_uint is disabled', function() {
         var context = scene.context;
+        var uint32Supported = context._elementIndexUint;
         context._elementIndexUint = false;
         return loadModel(boxUint32Indices).otherwise(function(e) {
             expect(e).toBeDefined();
-            context._elementIndexUint = true;
+            context._elementIndexUint = uint32Supported;
         });
     });
 
