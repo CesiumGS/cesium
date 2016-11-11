@@ -153,7 +153,6 @@ define([
 
         var timeBarEle = this._timeBarEle;
         if (FeatureDetection.supportsPointerEvents()) {
-            console.log("SUPPORTS POINTER EVENTS");
             document.addEventListener('pointerup', this._onMouseUp, false);
             document.addEventListener('pointermove', this._onMouseMove, false);
             timeBarEle.addEventListener('pointerdown', this._onMouseDown, false);
@@ -609,9 +608,7 @@ define([
 
     function createMouseDownCallback(timeline) {
         return function(e) {
-            console.log({touchOnly: timelineMouseMode.touchOnly, mouseMode: timeline._mouseMode})
             if (timeline._mouseMode !== timelineMouseMode.touchOnly) {
-                console.log('button: ' + e.button);
                 if (e.button === 0) {
                     timeline._mouseMode = timelineMouseMode.scrub;
                     if (timeline._scrubElement) {
@@ -645,9 +642,7 @@ define([
     function createMouseMoveCallback(timeline) {
         return function(e) {
             var dx;
-            console.log('mouseMoveCallback');
             if (timeline._mouseMode === timelineMouseMode.scrub) {
-                console.log('scrubbing');
                 e.preventDefault();
                 var x = e.clientX - timeline._topDiv.getBoundingClientRect().left;
 
@@ -663,7 +658,6 @@ define([
                 }
 
             } else if (timeline._mouseMode === timelineMouseMode.slide) {
-                console.log('sliding');
                 dx = timeline._mouseX - e.clientX;
                 timeline._mouseX = e.clientX;
                 if (dx !== 0) {
