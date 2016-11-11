@@ -48,6 +48,7 @@
 }
 
 .cesium-viewer-animationContainer {
+    touch-action: none;
     position: absolute;
     bottom: 0;
     left: 0;
