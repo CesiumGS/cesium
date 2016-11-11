@@ -3447,6 +3447,21 @@ define([
         }
     }
 
+    function checkSupportedGlExtensions(model, context) {
+        var glExtensionsUsed = model.gltf.glExtensionsUsed;
+        if (defined(glExtensionsUsed)) {
+            var glExtensionsUsedLength = glExtensionsUsed.length;
+            for (var i = 0; i < glExtensionsUsedLength; i++) {
+                var extension = glExtensionsUsed[i];
+                if (extension !== 'OES_element_index_uint') {
+                    throw new RuntimeError('Unsupported WebGL Extension: ' + extension);
+                } else if (!context.elementIndexUint) {
+                    throw new RuntimeError('The OES_element_index_uint WebGL extension is required for this glTF model, but it is not supported by this system.');
+                }
+            }
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     function CachedRendererResources(context, cacheKey) {
@@ -3602,6 +3617,8 @@ define([
      * </p>
      *
      * @exception {RuntimeError} Failed to load external reference.
+     * @exception {RuntimeError} The glTF model makes use of an unsupported glTF extension.
+     * @exception {RuntimeError} The glTF model makes use of an unsupported WebGL extension.
      */
     Model.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
@@ -3647,6 +3664,7 @@ define([
             this._initialRadius = this._boundingSphere.radius;
 
             checkSupportedExtensions(this);
+            checkSupportedGlExtensions(this, context);
             if (this._state !== ModelState.FAILED) {
                 var extensions = this.gltf.extensions;
                 if (defined(extensions) && defined(extensions.CESIUM_RTC)) {

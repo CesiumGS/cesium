@@ -1,13 +1,94 @@
 /*global define*/
 define([
+        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Renderer/WebGLConstants'
     ], function(
+        clone,
         defaultValue,
         defined,
         WebGLConstants) {
     'use strict';
+
+    var defaultMaterial = {
+        values : {
+            emission : [
+                0.8,
+                0.8,
+                0.8,
+                1.0
+            ]
+        }
+    };
+
+    var defaultTechnique = {
+        attributes : {
+            a_position : 'position'
+        },
+        parameters : {
+            modelViewMatrix : {
+                semantic : 'MODELVIEW',
+                type : WebGLConstants.FLOAT_MAT4
+            },
+            projectionMatrix : {
+                semantic : 'PROJECTION',
+                type : WebGLConstants.FLOAT_MAT4
+            },
+            emission : {
+                type : WebGLConstants.FLOAT_VEC4
+            },
+            position : {
+                semantic : 'POSITION',
+                type : WebGLConstants.FLOAT_VEC3
+            }
+        },
+        states : {
+            enable : [
+                WebGLConstants.CULL_FACE,
+                WebGLConstants.DEPTH_TEST
+            ]
+        },
+        uniforms : {
+            u_modelViewMatrix : 'modelViewMatrix',
+            u_projectionMatrix : 'projectionMatrix',
+            u_emission : 'emission'
+        }
+    };
+
+    var defaultProgram = {
+        attributes : [
+            'a_position'
+        ]
+    };
+
+    var defaultVertexShaderSource = 'precision highp float;\n\n' +
+                              'uniform mat4 u_modelViewMatrix;\n' +
+                              'uniform mat4 u_projectionMatrix;\n\n' +
+                              'attribute vec3 a_position;\n\n' +
+                              'void main(void) {\n' +
+                              '    gl_Position = u_projectionMatrix * u_modelViewMatrix * vec4(a_position, 1.0);\n' +
+                              '}\n';
+
+    var defaultVertexShader = {
+        type : WebGLConstants.VERTEX_SHADER,
+        extras : {
+            source : defaultVertexShaderSource
+        }
+    };
+
+    var defaultFragmentShaderSource = 'precision highp float;\n\n' +
+                                'uniform vec4 u_emission;\n\n' +
+                                'void main(void) {\n' +
+                                '    gl_FragColor = u_emission;\n' +
+                                '}\n';
+
+    var defaultFragmentShader = {
+        type : WebGLConstants.FRAGMENT_SHADER,
+        extras : {
+            source : defaultFragmentShaderSource
+        }
+    };
 
     function webGLConstantToGlslType(webGLValue) {
         switch(webGLValue) {
@@ -611,8 +692,7 @@ define([
         return techniqueId;
     }
 
-    function getKHRMaterialsCommonValueType(paramName, paramValue)
-    {
+    function getKHRMaterialsCommonValueType(paramName, paramValue) {
         var value;
 
         // Backwards compatibility for COLLADA2GLTF v1.0-draft when it encoding
@@ -673,6 +753,50 @@ define([
         return techniqueKey;
     }
 
+    function initializeDefaultMaterial(gltf) {
+        var meshes = gltf.meshes;
+        var materials = gltf.materials;
+        var programs = gltf.programs;
+        var shaders = gltf.shaders;
+        var techniques = gltf.techniques;
+        // If meshes don't have a material, assign the default material
+        var defaultMaterialId = getNextId(gltf.materials, 'gltf_default_material');
+        for (var meshId in meshes) {
+            if (meshes.hasOwnProperty(meshId)) {
+                var mesh = meshes[meshId];
+                var primitives = mesh.primitives;
+                var primitivesLength = primitives.length;
+                for (var j = 0; j < primitivesLength; j++) {
+                    var primitive = primitives[j];
+                    var primitiveMaterialId = primitive.material;
+                    if (!defined(primitiveMaterialId)) {
+                        primitive.material = defaultMaterialId;
+                        if (!defined(materials[defaultMaterialId])) {
+                            var defaultTechniqueId = getNextId(gltf.techniques, 'gltf_default_technique');
+                            var defaultProgramId = getNextId(gltf.programs, 'gltf_default_program');
+                            var defaultVertexShaderId = getNextId(gltf.shaders, 'gltf_default_vertex_shader');
+                            var defaultFragmentShaderId = getNextId(gltf.shaders, 'gltf_default_fragment_shader');
+                            var material = clone(defaultMaterial);
+                            material.technique = defaultTechniqueId;
+                            materials[defaultMaterialId] = material;
+                            var technique = clone(defaultTechnique);
+                            technique.program = defaultProgramId;
+                            techniques[defaultTechniqueId] = technique;
+                            var program = clone(defaultProgram);
+                            program.vertexShader = defaultVertexShaderId;
+                            program.fragmentShader = defaultFragmentShaderId;
+                            programs[defaultProgramId] = program;
+                            var fragmentShader = clone(defaultFragmentShader);
+                            shaders[defaultFragmentShaderId] = fragmentShader;
+                            var vertexShader = clone(defaultVertexShader);
+                            shaders[defaultVertexShaderId] = vertexShader;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Modifies gltf in place.
      *
@@ -683,11 +807,13 @@ define([
             return undefined;
         }
 
+        initializeDefaultMaterial(gltf);
+
         var hasExtension = false;
         var extensionsUsed = gltf.extensionsUsed;
         if (defined(extensionsUsed)) {
             var extensionsUsedCount = extensionsUsed.length;
-            for(var i=0;i<extensionsUsedCount;++i) {
+            for(var i = 0; i < extensionsUsedCount; i++) {
                 if (extensionsUsed[i] === 'KHR_materials_common') {
                     hasExtension = true;
                     extensionsUsed.splice(i, 1);
