@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/PolygonGraphics',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'Core/PolygonHierarchy',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
@@ -11,6 +12,7 @@ defineSuite([
     ], function(
         PolygonGraphics,
         Color,
+        DistanceDisplayCondition,
         PolygonHierarchy,
         ColorMaterialProperty,
         ConstantProperty,
@@ -35,7 +37,8 @@ defineSuite([
             outlineWidth : 7,
             closeTop : true,
             closeBottom : true,
-            shadows : ShadowMode.DISABLED
+            shadows : ShadowMode.DISABLED,
+            distanceDisplayCondition : new DistanceDisplayCondition()
         };
 
         var polygon = new PolygonGraphics(options);
@@ -54,6 +57,7 @@ defineSuite([
         expect(polygon.closeTop).toBeInstanceOf(ConstantProperty);
         expect(polygon.closeBottom).toBeInstanceOf(ConstantProperty);
         expect(polygon.shadows).toBeInstanceOf(ConstantProperty);
+        expect(polygon.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
 
         expect(polygon.material.color.getValue()).toEqual(options.material);
         expect(polygon.show.getValue()).toEqual(options.show);
@@ -70,6 +74,7 @@ defineSuite([
         expect(polygon.closeTop.getValue()).toEqual(options.closeTop);
         expect(polygon.closeBottom.getValue()).toEqual(options.closeBottom);
         expect(polygon.shadows.getValue()).toEqual(options.shadows);
+        expect(polygon.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -89,6 +94,7 @@ defineSuite([
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
         var target = new PolygonGraphics();
         target.merge(source);
@@ -108,6 +114,7 @@ defineSuite([
         expect(target.closeTop).toBe(source.closeTop);
         expect(target.closeBottom).toBe(source.closeBottom);
         expect(target.shadows).toBe(source.shadows);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -128,6 +135,7 @@ defineSuite([
         var closeTop = new ConstantProperty();
         var closeBottom = new ConstantProperty();
         var shadows = new ConstantProperty();
+        var distanceDisplayCondition = new ConstantProperty();
 
         var target = new PolygonGraphics();
         target.material = material;
@@ -145,6 +153,7 @@ defineSuite([
         target.closeTop = closeTop;
         target.closeBottom = closeBottom;
         target.shadows = shadows;
+        target.distanceDisplayCondition = distanceDisplayCondition;
 
         target.merge(source);
 
@@ -163,6 +172,7 @@ defineSuite([
         expect(target.closeTop).toBe(closeTop);
         expect(target.closeBottom).toBe(closeBottom);
         expect(target.shadows).toBe(shadows);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
     });
 
     it('clone works', function() {
@@ -182,6 +192,7 @@ defineSuite([
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
         source.shadows = new ConstantProperty();
+        source.distanceDisplayCondition = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -199,6 +210,7 @@ defineSuite([
         expect(result.closeTop).toBe(source.closeTop);
         expect(result.closeBottom).toBe(source.closeBottom);
         expect(result.shadows).toBe(source.shadows);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge throws if source undefined', function() {
@@ -225,5 +237,6 @@ defineSuite([
         testDefinitionChanged(property, 'closeTop', true, false);
         testDefinitionChanged(property, 'closeBottom', true, false);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
+        testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
 });

@@ -11,9 +11,9 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/FeatureDetection',
         '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
@@ -71,9 +71,9 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
         FeatureDetection,
         getAbsoluteUri,
         getBaseUri,
@@ -315,13 +315,12 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
-     * @param {Boolean} [options.castShadows=true] Deprecated, use options.shadows instead. Determines whether the model casts shadows from each light source.
-     * @param {Boolean} [options.receiveShadows=true] Deprecated, use options.shadows instead. Determines whether the model receives shadows from shadow casters in the scene.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
+     * @param {DistanceDisplayCondition} [options.istanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -507,10 +506,6 @@ define([
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
 
-        // Deprecated options
-        var castShadows = defaultValue(options.castShadows, true);
-        var receiveShadows = defaultValue(options.receiveShadows, true);
-
         /**
          * Determines whether the model casts or receives shadows from each light source.
          *
@@ -518,7 +513,7 @@ define([
          *
          * @default ShadowMode.ENABLED
          */
-        this.shadows = defaultValue(options.shadows, ShadowMode.fromCastReceive(castShadows, receiveShadows));
+        this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
         this._shadows = this.shadows;
 
         /**
@@ -547,6 +542,8 @@ define([
          */
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
+
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
 
         // Undocumented options
         this._precreatedAttributes = options.precreatedAttributes;
@@ -870,46 +867,22 @@ define([
         },
 
         /**
-         * Determines whether the model casts shadows from each light source.
-         *
+         * Gets or sets the condition specifying at what distance from the camera that this model will be displayed.
          * @memberof Model.prototype
-         *
-         * @type {Boolean}
-         *
-         * @deprecated
+         * @type {DistanceDisplayCondition}
+         * @default undefined
          */
-        castShadows : {
+        distanceDisplayCondition : {
             get : function() {
-                deprecationWarning('Model.castShadows', 'Model.castShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Model.shadows instead.');
-                return ShadowMode.castShadows(this.shadows);
+                return this._distanceDisplayCondition;
             },
             set : function(value) {
-                deprecationWarning('Model.castShadows', 'Model.castShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Model.shadows instead.');
-                var castShadows = value;
-                var receiveShadows = ShadowMode.receiveShadows(this.shadows);
-                this.shadows = ShadowMode.fromCastReceive(castShadows, receiveShadows);
-            }
-        },
-
-        /**
-         * Determines whether the model receives shadows from shadow casters in the scene.
-         *
-         * @memberof Model.prototype
-         *
-         * @type {Boolean}
-         *
-         * @deprecated
-         */
-        receiveShadows : {
-            get : function() {
-                deprecationWarning('Model.receiveShadows', 'Model.receiveShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Model.shadows instead.');
-                return ShadowMode.receiveShadows(this.shadows);
-            },
-            set : function(value) {
-                deprecationWarning('Model.receiveShadows', 'Model.receiveShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Model.shadows instead.');
-                var castShadows = ShadowMode.castShadows(this.shadows);
-                var receiveShadows = value;
-                this.shadows = ShadowMode.fromCastReceive(castShadows, receiveShadows);
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && value.far <= value.near) {
+                    throw new DeveloperError('far must be greater than near');
+                }
+                //>>includeEnd('debug');
+                this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
             }
         }
     });
@@ -2300,8 +2273,8 @@ define([
             WebGLConstants.FUNC_ADD]);
         var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
             WebGLConstants.ONE,
-            WebGLConstants.ONE,
             WebGLConstants.ZERO,
+            WebGLConstants.ONE,
             WebGLConstants.ZERO]);
         var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
         var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
@@ -2345,8 +2318,8 @@ define([
                 equationRgb : blendEquationSeparate[0],
                 equationAlpha : blendEquationSeparate[1],
                 functionSourceRgb : blendFuncSeparate[0],
-                functionSourceAlpha : blendFuncSeparate[1],
-                functionDestinationRgb : blendFuncSeparate[2],
+                functionDestinationRgb : blendFuncSeparate[1],
+                functionSourceAlpha : blendFuncSeparate[2],
                 functionDestinationAlpha : blendFuncSeparate[3]
             }
         });
@@ -2911,8 +2884,7 @@ define([
                 else {
                     var positions = accessors[primitive.attributes.POSITION];
                     count = positions.count;
-                    var accessorInfo = getBinaryAccessor(positions);
-                    offset = (positions.byteOffset / (accessorInfo.componentsPerAttribute*ComponentDatatype.getSizeInBytes(positions.componentType)));
+                    offset = 0;
                 }
 
                 var um = uniformMaps[primitive.material];
@@ -3592,6 +3564,35 @@ define([
         }
     }
 
+    var scratchDisplayConditionCartesian = new Cartesian3();
+    var scratchDistanceDisplayConditionCartographic = new Cartographic();
+
+    function distanceDisplayConditionVisible(model, frameState) {
+        var distance2;
+        var ddc = model.distanceDisplayCondition;
+        var nearSquared = ddc.near * ddc.near;
+        var farSquared = ddc.far * ddc.far;
+
+        if (frameState.mode === SceneMode.SCENE2D) {
+            var frustum2DWidth = frameState.camera.frustum.right - frameState.camera.frustum.left;
+            distance2 = frustum2DWidth * 0.5;
+            distance2 = distance2 * distance2;
+        } else {
+            // Distance to center of primitive's reference frame
+            var position = Matrix4.getTranslation(model.modelMatrix, scratchDisplayConditionCartesian);
+            if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+                var projection = frameState.mapProjection;
+                var ellipsoid = projection.ellipsoid;
+                var cartographic = ellipsoid.cartesianToCartographic(position, scratchDistanceDisplayConditionCartographic);
+                position = projection.project(cartographic, position);
+                Cartesian3.fromElements(position.z, position.x, position.y, position);
+            }
+            distance2 = Cartesian3.distanceSquared(position, frameState.camera.positionWC);
+        }
+
+        return (distance2 >= nearSquared) && (distance2 <= farSquared);
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -3708,7 +3709,8 @@ define([
             }
         }
 
-        var show = this.show && (this.scale !== 0.0);
+        var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
+        var show = this.show && displayConditionPassed && (this.scale !== 0.0);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;

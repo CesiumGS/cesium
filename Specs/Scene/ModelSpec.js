@@ -10,6 +10,7 @@ defineSuite([
         'Core/defaultValue',
         'Core/defined',
         'Core/defineProperties',
+        'Core/DistanceDisplayCondition',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/FeatureDetection',
@@ -41,6 +42,7 @@ defineSuite([
         defaultValue,
         defined,
         defineProperties,
+        DistanceDisplayCondition,
         Ellipsoid,
         Event,
         FeatureDetection,
@@ -214,22 +216,23 @@ defineSuite([
     it('sets model properties', function() {
         var modelMatrix = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0));
 
-       expect(texturedBoxModel.gltf).toBeDefined();
-       expect(texturedBoxModel.basePath).toEqual('./Data/Models/Box-Textured/');
-       expect(texturedBoxModel.show).toEqual(false);
-       expect(texturedBoxModel.modelMatrix).toEqual(modelMatrix);
-       expect(texturedBoxModel.scale).toEqual(1.0);
-       expect(texturedBoxModel.minimumPixelSize).toEqual(0.0);
-       expect(texturedBoxModel.maximumScale).toBeUndefined();
-       expect(texturedBoxModel.id).toEqual(texturedBoxUrl);
-       expect(texturedBoxModel.allowPicking).toEqual(true);
-       expect(texturedBoxModel.activeAnimations).toBeDefined();
-       expect(texturedBoxModel.ready).toEqual(true);
-       expect(texturedBoxModel.asynchronous).toEqual(true);
-       expect(texturedBoxModel.releaseGltfJson).toEqual(false);
-       expect(texturedBoxModel.cacheKey).toEndWith('Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf');
-       expect(texturedBoxModel.debugShowBoundingVolume).toEqual(false);
-       expect(texturedBoxModel.debugWireframe).toEqual(false);
+        expect(texturedBoxModel.gltf).toBeDefined();
+        expect(texturedBoxModel.basePath).toEqual('./Data/Models/Box-Textured/');
+        expect(texturedBoxModel.show).toEqual(false);
+        expect(texturedBoxModel.modelMatrix).toEqual(modelMatrix);
+        expect(texturedBoxModel.scale).toEqual(1.0);
+        expect(texturedBoxModel.minimumPixelSize).toEqual(0.0);
+        expect(texturedBoxModel.maximumScale).toBeUndefined();
+        expect(texturedBoxModel.id).toEqual(texturedBoxUrl);
+        expect(texturedBoxModel.allowPicking).toEqual(true);
+        expect(texturedBoxModel.activeAnimations).toBeDefined();
+        expect(texturedBoxModel.ready).toEqual(true);
+        expect(texturedBoxModel.asynchronous).toEqual(true);
+        expect(texturedBoxModel.releaseGltfJson).toEqual(false);
+        expect(texturedBoxModel.cacheKey).toEndWith('Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf');
+        expect(texturedBoxModel.debugShowBoundingVolume).toEqual(false);
+        expect(texturedBoxModel.debugWireframe).toEqual(false);
+        expect(texturedBoxModel.distanceDisplayCondition).toBeUndefined();
     });
 
     it('renders', function() {
@@ -362,6 +365,48 @@ defineSuite([
 
         texturedBoxModel.show = false;
         texturedBoxModel.debugWireframe = false;
+    });
+
+    it('renders with distance display condition', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        var center = Matrix4.getTranslation(texturedBoxModel.modelMatrix, new Cartesian3());
+        var near = 10.0;
+        var far = 100.0;
+
+        texturedBoxModel.show = true;
+        texturedBoxModel.distanceDisplayCondition = new DistanceDisplayCondition(near, far);
+
+        var frameState = scene.frameState;
+        var commands = frameState.commandList;
+
+        frameState.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, far + 10.0));
+        frameState.camera.lookAtTransform(Matrix4.IDENTITY);
+        frameState.commandList = [];
+        texturedBoxModel.update(frameState);
+        expect(frameState.commandList.length).toEqual(0);
+
+        frameState.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, (far + near) * 0.5));
+        frameState.camera.lookAtTransform(Matrix4.IDENTITY);
+        frameState.commandList = [];
+        texturedBoxModel.update(frameState);
+        expect(frameState.commandList.length).toBeGreaterThan(0);
+
+        frameState.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, near - 1.0));
+        frameState.camera.lookAtTransform(Matrix4.IDENTITY);
+        frameState.commandList = [];
+        texturedBoxModel.update(frameState);
+        expect(frameState.commandList.length).toEqual(0);
+
+        scene.frameState.commandList = commands;
+        texturedBoxModel.show = false;
+        texturedBoxModel.distanceDisplayCondition = undefined;
+    });
+
+    it('distanceDisplayCondition throws when ner >= far', function() {
+        expect(function() {
+            texturedBoxModel.distanceDisplayCondition = new DistanceDisplayCondition(100.0, 10.0);
+        }).toThrowDeveloperError();
     });
 
     it('getNode throws when model is not loaded', function() {

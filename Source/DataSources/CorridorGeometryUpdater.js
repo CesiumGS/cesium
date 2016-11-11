@@ -9,6 +9,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
+        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
@@ -34,6 +36,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         Event,
         GeometryInstance,
         Iso8601,
@@ -57,6 +61,7 @@ define([
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
+    var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
     var scratchColor = new Color();
 
     function GeometryOptions(entity) {
@@ -104,6 +109,7 @@ define([
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
         this._shadowsProperty = undefined;
+        this._distanceDisplayConditionProperty = undefined;
         this._onTerrain = false;
         this._options = new GeometryOptions(entity);
 
@@ -247,6 +253,18 @@ define([
             }
         },
         /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
+         * @memberof CorridorGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        distanceDisplayConditionProperty : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
@@ -348,6 +366,7 @@ define([
 
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
+        var distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayCondition.getValue(time));
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -356,11 +375,13 @@ define([
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
                 show : show,
+                distanceDisplayCondition : distanceDisplayCondition,
                 color : color
             };
         } else {
             attributes = {
-                show : show
+                show : show,
+                distanceDisplayCondition : distanceDisplayCondition
             };
         }
 
@@ -399,7 +420,8 @@ define([
             geometry : new CorridorOutlineGeometry(this._options),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayCondition.getValue(time))
             }
         });
     };
@@ -478,6 +500,7 @@ define([
         this._showOutlineProperty = defaultValue(corridor.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(corridor.outlineColor, defaultOutlineColor) : undefined;
         this._shadowsProperty = defaultValue(corridor.shadows, defaultShadows);
+        this._distanceDisplayCondition = defaultValue(corridor.distanceDisplayCondition, defaultDistanceDisplayCondition);
 
         var height = corridor.height;
         var extrudedHeight = corridor.extrudedHeight;
@@ -504,7 +527,8 @@ define([
             !Property.isConstant(granularity) || //
             !Property.isConstant(width) || //
             !Property.isConstant(outlineWidth) || //
-            !Property.isConstant(cornerType)) {
+            !Property.isConstant(cornerType) || //
+            (onTerrain && !Property.isConstant(material))) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -599,6 +623,8 @@ define([
         options.cornerType = Property.getValueOrUndefined(corridor.cornerType, time);
 
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
+        var distanceDisplayCondition = this._geometryUpdater.distanceDisplayConditionProperty.getValue(time);
+        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
 
         if (!defined(corridor.fill) || corridor.fill.getValue(time)) {
             var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
@@ -616,7 +642,8 @@ define([
                         id : entity,
                         geometry : new CorridorGeometry(options),
                         attributes: {
-                            color: ColorGeometryInstanceAttribute.fromColor(currentColor)
+                            color: ColorGeometryInstanceAttribute.fromColor(currentColor),
+                            distanceDisplayCondition : distanceDisplayConditionAttribute
                         }
                     }),
                     asynchronous : false,
@@ -633,7 +660,10 @@ define([
                 this._primitive = primitives.add(new Primitive({
                     geometryInstances : new GeometryInstance({
                         id : entity,
-                        geometry : new CorridorGeometry(options)
+                        geometry : new CorridorGeometry(options),
+                        attributes : {
+                            distanceDisplayCondition : distanceDisplayConditionAttribute
+                        }
                     }),
                     appearance : appearance,
                     asynchronous : false,
@@ -654,7 +684,8 @@ define([
                     id : entity,
                     geometry : new CorridorOutlineGeometry(options),
                     attributes : {
-                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+                        distanceDisplayCondition : distanceDisplayConditionAttribute
                     }
                 }),
                 appearance : new PerInstanceColorAppearance({

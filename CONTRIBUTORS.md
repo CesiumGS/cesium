@@ -62,6 +62,8 @@
    * [Dave Whipps](https://github.com/dwhipps)
 * [Geoscan](https://www.geoscan.aero)
    * [Andrey Orlov](https://github.com/AndreyOrlov)
+* [The Imagineers](https://www.theimagineers.com/)
+   * [Heerco Grond](https://github.com/HeercoGrond)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -101,3 +103,5 @@
 * [Tom Novacek](https://github.com/novacto2)
 * [Olivier Guyot-Roullot](https://github.com/theOgrable)
 * [Andy Fry](https://github.com/andyfry01)
+* [Jorge Piera Llodra](https://github.com/jorpiell)
+* [Tom Payne](https://github.com/twpayne)
