@@ -1725,10 +1725,13 @@ defineSuite([
     });
 
     it('loads a gltf with uint32 indices', function() {
-        return loadModel(boxUint32Indices).then(function(m) {
-            verifyRender(m);
-            primitives.remove(m);
-        });
+        var context = scene.context;
+        if (context._elementIndexUint) {
+            return loadModel(boxUint32Indices).then(function(m) {
+                verifyRender(m);
+                primitives.remove(m);
+            });
+        }
     });
 
     it('throws runtime error when loading a gltf with uint32 indices if OES_element_index_uint is disabled', function() {
