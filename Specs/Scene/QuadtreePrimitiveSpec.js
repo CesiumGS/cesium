@@ -9,6 +9,7 @@ defineSuite([
         'Core/Visibility',
         'Scene/QuadtreeTile',
         'Scene/QuadtreeTileLoadState',
+        'Specs/pollToPromise',
         'Specs/createScene'
     ], function(
         QuadtreePrimitive,
@@ -20,6 +21,7 @@ defineSuite([
         Visibility,
         QuadtreeTile,
         QuadtreeTileLoadState,
+        pollToPromise,
         createScene) {
     'use strict';
 
@@ -434,5 +436,58 @@ defineSuite([
         expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0].children[1]);
         expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0].children[2]);
         expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0].children[3]);
+    });
+
+    it('renders tiles in approximate near-to-far order', function() {
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+
+        var quadtree = new QuadtreePrimitive({
+            tileProvider : tileProvider
+        });
+
+        tileProvider.loadTile.and.callFake(function(frameState, tile) {
+            if (tile.level <= 1) {
+                tile.state = QuadtreeTileLoadState.DONE;
+                tile.renderable = true;
+            }
+        });
+
+        scene.camera.setView({
+            destination : Cartesian3.fromDegrees(1.0, 1.0, 15000.0)
+        });
+        scene.camera.update(scene.mode);
+
+        return pollToPromise(function() {
+            quadtree.beginFrame(scene.frameState);
+            quadtree.update(scene.frameState);
+            quadtree.endFrame(scene.frameState);
+
+            return quadtree._tilesToRender.filter(function(tile) { return tile.level === 1; }).length === 8;
+        }).then(function() {
+            quadtree.beginFrame(scene.frameState);
+            quadtree.update(scene.frameState);
+            quadtree.endFrame(scene.frameState);
+
+            // Rendered tiles:
+            // +----+----+----+----+
+            // |w.nw|w.ne|e.nw|e.ne|
+            // +----+----+----+----+
+            // |w.sw|w.se|e.sw|e.se|
+            // +----+----+----+----+
+            // camera is located in e.nw (east.northwestChild)
+
+            var west = quadtree._levelZeroTiles.filter(function(tile) { return tile.x === 0; })[0];
+            var east = quadtree._levelZeroTiles.filter(function(tile) { return tile.x === 1; })[0];
+            expect(quadtree._tilesToRender[0]).toBe(east.northwestChild);
+            expect(quadtree._tilesToRender[1] == east.southwestChild || quadtree._tilesToRender[1] === east.northeastChild).toBe(true);
+            expect(quadtree._tilesToRender[2] == east.southwestChild || quadtree._tilesToRender[2] === east.northeastChild).toBe(true);
+            expect(quadtree._tilesToRender[3]).toBe(east.southeastChild);
+            expect(quadtree._tilesToRender[4]).toBe(west.northeastChild);
+            expect(quadtree._tilesToRender[5] == west.northwestChild || quadtree._tilesToRender[5] === west.southeastChild).toBe(true);
+            expect(quadtree._tilesToRender[6] == west.northwestChild || quadtree._tilesToRender[6] === west.southeastChild).toBe(true);
+            expect(quadtree._tilesToRender[7]).toBe(west.southwestChild);
+        });
     });
 }, 'WebGL');

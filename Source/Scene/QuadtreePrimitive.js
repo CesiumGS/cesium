@@ -389,6 +389,20 @@ define([
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
     };
 
+    var comparisonPoint;
+    var centerScratch = new Cartographic();
+    function compareDistanceToPoint(a, b) {
+        var center = Rectangle.center(a.rectangle, centerScratch);
+        var alon = center.longitude - comparisonPoint.longitude;
+        var alat = center.latitude - comparisonPoint.latitude;
+
+        center = Rectangle.center(b.rectangle, centerScratch);
+        var blon = center.longitude - comparisonPoint.longitude;
+        var blat = center.latitude - comparisonPoint.latitude;
+
+        return (alon * alon + alat * alat) - (blon * blon + blat * blat);
+    }
+
     function selectTilesForRendering(primitive, frameState) {
         var debug = primitive._debug;
         if (debug.suspendLodUpdate) {
@@ -420,6 +434,12 @@ define([
 
         var tile;
         var levelZeroTiles = primitive._levelZeroTiles;
+
+        // Sort the level zero tiles by the distance from the center to the camera.
+        // The level zero tiles aren't necessarily a nice neat quad, so we can use the
+        // quadtree ordering we use elsewhere in the tree
+        comparisonPoint = frameState.camera.positionCartographic;
+        levelZeroTiles.sort(compareDistanceToPoint)
 
         var customDataAdded = primitive._addHeightCallbacks;
         var customDataRemoved = primitive._removeHeightCallbacks;
