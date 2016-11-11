@@ -132,6 +132,8 @@ function Model(options) {
 ```
 * In JavaScript code, use single quotes, `'`, instead of double quotes, `"`.  In HTML, use double quotes.
 
+* Text files, including JavaScript files, end with a newline to minimize the noise in diffs.
+
 ## Units
 
 * Cesium uses SI units:

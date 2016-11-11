@@ -338,6 +338,9 @@ defineSuite([
             Matrix3.multiplyByVector(axes, tang, tang);
             Matrix3.multiplyByVector(axes, binorm, binorm);
             Cartesian3.cross(tang, binorm, n);
+            if (Cartesian3.magnitude(n) === 0) {
+                return undefined;
+            }
             Cartesian3.normalize(n, n);
 
             Cartesian3.add(p0, center, p0);

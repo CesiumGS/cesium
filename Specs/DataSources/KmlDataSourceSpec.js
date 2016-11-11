@@ -7,6 +7,7 @@ defineSuite([
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/Color',
+        'Core/combine',
         'Core/DefaultProxy',
         'Core/Event',
         'Core/Iso8601',
@@ -37,6 +38,7 @@ defineSuite([
         ClockRange,
         ClockStep,
         Color,
+        combine,
         DefaultProxy,
         Event,
         Iso8601,
@@ -401,6 +403,23 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.id).toBe('Bob');
+        });
+    });
+
+    it('Feature: duplicate id', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <Placemark id="Bob">\
+            </Placemark>\
+            <Placemark id="Bob">\
+            </Placemark>\
+        </Document>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities[0].id).toBe('Bob');
+            expect(entities[1].id).not.toBe('Bob');
         });
     });
 
@@ -774,6 +793,24 @@ defineSuite([
                 <south>-90</south>\
                 <east>180</east>\
                 <north>90</north>\
+            </LatLonBox>\
+        </GroundOverlay>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon).toBeUndefined();
+            expect(entity.rectangle.coordinates.getValue()).toEqual(Rectangle.fromDegrees(-180, -90, 180, 90));
+        });
+    });
+
+    it('GroundOverlay: Handles out-of-range latitudes.', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <LatLonBox>\
+                <west>-180</west>\
+                <south>-100</south>\
+                <east>180</east>\
+                <north>100</north>\
             </LatLonBox>\
         </GroundOverlay>';
 
@@ -2107,6 +2144,118 @@ defineSuite([
         });
     });
 
+    it('Folder: timespan for folder', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Folder>\
+            <Placemark id="child">\
+            </Placemark>\
+            <TimeSpan>\
+              <begin>2000-01-01</begin>\
+              <end>2000-01-03</end>\
+            </TimeSpan>\
+          </Folder>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var start = JulianDate.fromIso8601('2000-01-01');
+            var stop = JulianDate.fromIso8601('2000-01-03');
+
+            var entities = dataSource.entities.values;
+            expect(entities.length).toBe(2);
+            var interval = entities[0].availability;
+            expect(interval.start).toEqual(start);
+            expect(interval.stop).toEqual(stop);
+
+            expect(entities[0].availability).toEqual(entities[1].availability);
+        });
+    });
+
+    it('Folder: timespan for folder and feature', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Folder>\
+            <Placemark id="child">\
+                <TimeSpan>\
+                  <begin>2000-01-02</begin>\
+                  <end>2000-01-03</end>\
+                </TimeSpan>\
+            </Placemark>\
+            <TimeSpan>\
+              <begin>2000-01-01</begin>\
+              <end>2000-01-04</end>\
+            </TimeSpan>\
+          </Folder>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var startFolder = JulianDate.fromIso8601('2000-01-01');
+            var stopFolder = JulianDate.fromIso8601('2000-01-04');
+            var startFeature = JulianDate.fromIso8601('2000-01-02');
+            var stopFeature = JulianDate.fromIso8601('2000-01-03');
+
+            var entities = dataSource.entities.values;
+            expect(entities.length).toBe(2);
+            var interval = entities[0].availability;
+            expect(interval.start).toEqual(startFolder);
+            expect(interval.stop).toEqual(stopFolder);
+
+            interval = entities[1].availability;
+            expect(interval.start).toEqual(startFeature);
+            expect(interval.stop).toEqual(stopFeature);
+        });
+    });
+
+    it('Folder: timestamp for folder', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Folder>\
+            <Placemark id="child">\
+            </Placemark>\
+            <TimeStamp>\
+              <when>2000-01-03</when>\
+            </TimeStamp>\
+          </Folder>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var start = JulianDate.fromIso8601('2000-01-03');
+
+            var entities = dataSource.entities.values;
+            expect(entities.length).toBe(2);
+            var interval = entities[0].availability;
+            expect(interval.start).toEqual(start);
+            expect(interval.stop).toEqual(Iso8601.MAXIMUM_VALUE);
+
+            expect(entities[0].availability).toEqual(entities[1].availability);
+        });
+    });
+
+    it('Folder: timestamp for folder and feature', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Folder>\
+            <Placemark id="child">\
+                <TimeSpan>\
+                  <begin>2000-01-04</begin>\
+                  <end>2000-01-05</end>\
+                </TimeSpan>\
+            </Placemark>\
+            <TimeStamp>\
+              <when>2000-01-03</when>\
+            </TimeStamp>\
+          </Folder>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var startFolder = JulianDate.fromIso8601('2000-01-03');
+            var startFeature = JulianDate.fromIso8601('2000-01-04');
+            var stopFeature = JulianDate.fromIso8601('2000-01-05');
+
+            var entities = dataSource.entities.values;
+            expect(entities.length).toBe(2);
+            var interval = entities[0].availability;
+            expect(interval.start).toEqual(startFolder);
+            expect(interval.stop).toEqual(Iso8601.MAXIMUM_VALUE);
+
+            interval = entities[1].availability;
+            expect(interval.start).toEqual(startFeature);
+            expect(interval.stop).toEqual(stopFeature);
+        });
+    });
+
     it('Geometry Point: handles empty Point', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
@@ -2155,7 +2304,7 @@ defineSuite([
         });
     });
 
-    it('Geometry Point: sets heightReference to clampToGround (the default)', function() {
+    it('Geometry Point: sets heightReference to clampToGround', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Point>\
@@ -2163,7 +2312,11 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+            camera : options.camera,
+            canvas : options.canvas,
+            clampToGround : true
+        }).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].billboard.heightReference.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HeightReference.CLAMP_TO_GROUND);
@@ -2668,7 +2821,7 @@ defineSuite([
         });
     });
 
-    it('Geometry gx:Track: sets position and availability (clampToGround default)', function() {
+    it('Geometry gx:Track: sets position and availability', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark xmlns="http://www.opengis.net/kml/2.2"\
                        xmlns:gx="http://www.google.com/kml/ext/2.2">\
@@ -2682,7 +2835,11 @@ defineSuite([
               </gx:Track>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+            camera : options.camera,
+            canvas : options.canvas,
+            clampToGround : true
+        }).then(function(dataSource) {
             var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
             var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
@@ -2717,7 +2874,11 @@ defineSuite([
               </gx:Track>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+            camera : options.camera,
+            canvas : options.canvas,
+            clampToGround : true
+        }).then(function(dataSource) {
             var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
             var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
@@ -2810,7 +2971,11 @@ defineSuite([
                 </gx:Track>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+            camera : options.camera,
+            canvas : options.canvas,
+            clampToGround : true
+        }).then(function(dataSource) {
             var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
             var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
@@ -3381,6 +3546,56 @@ defineSuite([
         });
     });
 
+    it('NetworkLink: timespan for network link', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/simple.kml</href>\
+            </Link>\
+            <TimeSpan>\
+              <begin>2000-01-01</begin>\
+              <end>2000-01-03</end>\
+            </TimeSpan>\
+          </NetworkLink>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var start = JulianDate.fromIso8601('2000-01-01');
+            var stop = JulianDate.fromIso8601('2000-01-03');
+
+            var entities = dataSource.entities.values;
+            expect(entities.length).toBe(2);
+            var interval = entities[0].availability;
+            expect(interval.start).toEqual(start);
+            expect(interval.stop).toEqual(stop);
+
+            expect(entities[0].availability).toEqual(entities[1].availability);
+        });
+    });
+
+    it('NetworkLink: timestamp for network link', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/simple.kml</href>\
+            </Link>\
+            <TimeStamp>\
+              <when>2000-01-03</when>\
+            </TimeStamp>\
+          </NetworkLink>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var start = JulianDate.fromIso8601('2000-01-03');
+
+            var entities = dataSource.entities.values;
+            expect(entities.length).toBe(2);
+            var interval = entities[0].availability;
+            expect(interval.start).toEqual(start);
+            expect(interval.stop).toEqual(Iso8601.MAXIMUM_VALUE);
+
+            expect(entities[0].availability).toEqual(entities[1].availability);
+        });
+    });
+
     it('can load a KML file with explicit namespaces', function() {
         return KmlDataSource.load('Data/KML/namespaced.kml', options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toBe(3);
@@ -3787,7 +4002,9 @@ defineSuite([
             </Link>\
           </NetworkLink>';
 
-        var camera = createCamera();
+        var camera = createCamera({
+            offset: Cartesian3.fromDegrees(-110, 30, 1000)
+        });
         Camera.clone(options.camera, camera);
 
         var kmlOptions = {
@@ -3848,7 +4065,7 @@ defineSuite([
                     </coordinates>\
                 </LineString>\
             </Placemark>';
-        var clampToGroundOptions = Object.assign({ clampToGround : true }, options);
+        var clampToGroundOptions = combine(options, { clampToGround : true });
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), clampToGroundOptions).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.corridor).toBeDefined();

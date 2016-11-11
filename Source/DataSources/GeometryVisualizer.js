@@ -166,7 +166,7 @@ define([
         }
 
         this._groundColorBatch = new StaticGroundGeometryColorBatch(groundPrimitives);
-        this._dynamicBatch = new DynamicGeometryBatch(primitives);
+        this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
 
         this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatch, this._dynamicBatch);
 
