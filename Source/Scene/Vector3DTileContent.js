@@ -18,12 +18,15 @@ define([
     '../Core/Request',
     '../Core/RequestScheduler',
     '../Core/RequestType',
+    '../Core/TranslationRotationScale',
     '../ThirdParty/when',
     './Cesium3DTileBatchTable',
     './Cesium3DTileContentState',
     './Cesium3DTileFeature',
+    './BillboardCollection',
     './GroundPolylineBatch',
-    './GroundPrimitiveBatch'
+    './GroundPrimitiveBatch',
+    './VerticalOrigin'
 ], function(
     BoundingSphere,
     Cartesian3,
@@ -43,12 +46,15 @@ define([
     Request,
     RequestScheduler,
     RequestType,
+    TranslationRotationScale,
     when,
     Cesium3DTileBatchTable,
     Cesium3DTileContentState,
     Cesium3DTileFeature,
+    BillboardCollection,
     GroundPolylineBatch,
-    GroundPrimitiveBatch) {
+    GroundPrimitiveBatch,
+    VerticalOrigin) {
     'use strict';
 
     /**
@@ -65,6 +71,7 @@ define([
         this._polygons = undefined;
         this._polylines = undefined;
         this._outlines = undefined;
+        this._points = undefined;
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
@@ -249,6 +256,8 @@ define([
         byteOffset += sizeOfUint32;
         var polylinePositionByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
+        var pointsPositionByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
 
         var featureTableString = getStringFromTypedArray(uint8Array, byteOffset, featureTableJSONByteLength);
         var featureTableJson = JSON.parse(featureTableString);
@@ -292,9 +301,16 @@ define([
         }
         //>>includeEnd('debug');
 
+        var numberOfPoints = featureTableJson.POINTS_LENGTH;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(numberOfPoints)) {
+            throw new DeveloperError('Global property: POINTS_LENGTH must be defined.');
+        }
+        //>>includeEnd('debug');
+
         var outlinePolygons = defaultValue(featureTableJson.OUTLINE_POLYGONS, false);
         var numberOfOutlines = outlinePolygons ? numberOfPolygons : 0;
-        var totalPrimitives = numberOfPolygons + numberOfOutlines + numberOfPolylines;
+        var totalPrimitives = numberOfPolygons + numberOfOutlines + numberOfPolylines + numberOfPoints;
 
         var batchTable = new Cesium3DTileBatchTable(this, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(this, numberOfPolygons));
         this.batchTable = batchTable;
@@ -325,14 +341,19 @@ define([
 
         var positions;
         var polylinePositions;
+        var pointsPositions;
         if (isQuantized) {
             positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
             byteOffset += positionByteLength;
             polylinePositions = new Uint16Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfUint16);
+            byteOffset += polylinePositionByteLength;
+            pointsPositions = new Uint16Array(arrayBuffer, byteOffset, pointsPositionByteLength / sizeOfUint16);
         } else {
             positions = new Float32Array(arrayBuffer, byteOffset, positionByteLength / sizeOfFloat32);
             byteOffset += positionByteLength;
             polylinePositions = new Float32Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfFloat32);
+            byteOffset += polylinePositionByteLength;
+            pointsPositions = new Float32Array(arrayBuffer, byteOffset, pointsPositionByteLength / sizeOfFloat32);
         }
 
         byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_COUNT.byteOffset;
@@ -435,9 +456,84 @@ define([
             });
         }
 
+        if (pointsPositions.length > 0) {
+            var decodeMatrix;
+            if (defined(quantizedOffset) && defined(quantizedScale)) {
+                decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), new Matrix4());
+            } else {
+                decodeMatrix = Matrix4.IDENTITY;
+            }
+
+            color = Color.WHITE;
+            var outlineColor = Color.BLACK;
+            var pixelSize = 8.0;
+            var outlineWidth = 2.0;
+
+            this._points = new BillboardCollection();
+            for (n = 0; n < numberOfPoints; ++n) {
+                var x = pointsPositions[n * 3];
+                var y = pointsPositions[n * 3 + 1];
+                var z = pointsPositions[n * 3 + 2];
+                var position = Cartesian3.fromElements(x, y, z);
+                Matrix4.multiplyByPoint(decodeMatrix, position, position);
+                Cartesian3.add(position, center, position);
+
+                var b = this._points.add();
+                b.position = position;
+                b._batchIndex = n + numberOfPolygons + numberOfPolylines + (outlinePolygons && numberOfPolygons > 0 ? numberOfPolygons : 0);
+                b.verticalOrigin = VerticalOrigin.BOTTOM;
+
+                var centerAlpha = color.alpha;
+                var cssColor = color.toCssColorString();
+                var cssOutlineColor = outlineColor.toCssColorString();
+                var textureId = JSON.stringify([cssColor, pixelSize, cssOutlineColor, outlineWidth]);
+
+                b.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, outlineWidth, pixelSize));
+            }
+        }
+
         this.state = Cesium3DTileContentState.PROCESSING;
         this._contentReadyToProcessPromise.resolve(this);
     };
+
+    function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize) {
+        return function(id) {
+            var canvas = document.createElement('canvas');
+
+            var length = newPixelSize + (2 * cssOutlineWidth);
+            canvas.height = canvas.width = length;
+
+            var context2D = canvas.getContext('2d');
+            context2D.clearRect(0, 0, length, length);
+
+            if (cssOutlineWidth !== 0) {
+                context2D.beginPath();
+                context2D.arc(length / 2, length / 2, length / 2, 0, 2 * Math.PI, true);
+                context2D.closePath();
+                context2D.fillStyle = cssOutlineColor;
+                context2D.fill();
+                // Punch a hole in the center if needed.
+                if (centerAlpha < 1.0) {
+                    context2D.save();
+                    context2D.globalCompositeOperation = 'destination-out';
+                    context2D.beginPath();
+                    context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
+                    context2D.closePath();
+                    context2D.fillStyle = 'black';
+                    context2D.fill();
+                    context2D.restore();
+                }
+            }
+
+            context2D.beginPath();
+            context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
+            context2D.closePath();
+            context2D.fillStyle = cssColor;
+            context2D.fill();
+
+            return canvas;
+        };
+    }
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
@@ -481,6 +577,10 @@ define([
 
         if (defined(this._outlines)) {
             this._outlines.update(frameState);
+        }
+
+        if (defined(this._points)) {
+            this._points.update(frameState);
         }
 
         if (this.state !== Cesium3DTileContentState.READY) {
