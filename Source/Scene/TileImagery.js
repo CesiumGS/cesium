@@ -65,7 +65,7 @@ define([
         // Find some ancestor imagery we can use while this imagery is still loading.
         var ancestor = loadingImagery.parent;
         var closestAncestorThatNeedsLoading;
-        while (defined(ancestor) && ancestor.state !== ImageryState.READY) {
+        while (defined(ancestor) && (ancestor.state !== ImageryState.READY || (!this.useWebMercatorT && !defined(ancestor.texture)))) {
             if (ancestor.state !== ImageryState.FAILED && ancestor.state !== ImageryState.INVALID) {
                 // ancestor is still loading
                 closestAncestorThatNeedsLoading = closestAncestorThatNeedsLoading || ancestor;
