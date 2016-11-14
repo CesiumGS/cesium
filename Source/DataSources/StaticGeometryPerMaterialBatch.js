@@ -205,16 +205,20 @@ define([
             var entity = updater.entity;
             var instance = this.geometry.get(entity.id);
 
-            var attributes = this.attributes.get(instance.id.id);
-            if (!defined(attributes)) {
-                attributes = primitive.getGeometryInstanceAttributes(instance.id);
-                this.attributes.set(instance.id.id, attributes);
-            }
-
-            var show = entity.isShowing;
-            var currentShow = attributes.show[0] === 1;
-            if (show !== currentShow) {
-                attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+            if (defined(instance)) {
+                var attributes = this.attributes.get(instance.id.id);
+                if (!defined(attributes)) {
+                    attributes = primitive.getGeometryInstanceAttributes(instance.id);
+                    this.attributes.set(instance.id.id, attributes);
+                }
+            
+                var show = entity.isShowing;
+                var currentShow = attributes.show[0] === 1;
+                if (show !== currentShow) {
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                }
+            } else {
+                console.log('Entity with ID: '+entity.id+' has no geometry instance and cannot be shown.');
             }
         }
         this.showsUpdated.removeAll();
