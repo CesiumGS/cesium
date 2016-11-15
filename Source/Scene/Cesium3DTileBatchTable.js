@@ -139,7 +139,9 @@ define([
         var instancesLength = json.instancesLength;
         var classes = json.classes;
         var classIds = json.classIds;
+        var parentCounts = json.parentCounts;
         var parentIds = json.parentIds;
+        var parentIdsLength = instancesLength;
 
         if (defined(classIds.byteOffset)) {
             classIds.componentType = defaultValue(classIds.componentType, 'UNSIGNED_SHORT');
@@ -148,11 +150,27 @@ define([
             classIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + classIds.byteOffset, instancesLength);
         }
 
+        var parentIndexes;
+        if (defined(parentCounts)) {
+            if (defined(parentCounts.byteOffset)) {
+                parentCounts.componentType = defaultValue(parentCounts.componentType, 'UNSIGNED_SHORT');
+                parentCounts.type = 'SCALAR';
+                binaryAccessor = getBinaryAccessor(parentCounts);
+                parentCounts = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentCounts.byteOffset, instancesLength);
+            }
+            parentIndexes = new Array(instancesLength);
+            parentIdsLength = 0;
+            for (i = 0; i < instancesLength; ++i) {
+                parentIndexes[i] = parentIdsLength;
+                parentIdsLength += parentCounts[i];
+            }
+        }
+
         if (defined(parentIds.byteOffset)) {
             parentIds.componentType = defaultValue(parentIds.componentType, 'UNSIGNED_SHORT');
             parentIds.type = 'SCALAR';
             binaryAccessor = getBinaryAccessor(parentIds);
-            parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, instancesLength);
+            parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, parentIdsLength);
         }
 
         var classesLength = classes.length;
@@ -171,33 +189,40 @@ define([
             ++classCounts[classId];
         }
 
-        // Check for circular dependencies
-        //>>includeStart('debug', pragmas.debug);
-        var visited = new Array(instancesLength);
-        for (i = 0; i < instancesLength; ++i) {
-            arrayFill(visited, false);
-            var instanceIndex = i;
-            while (true) {
-                visited[instanceIndex] = true;
-                var parentId = parentIds[instanceIndex];
-                if (parentId === instanceIndex) {
-                    // Stop the traversal when the instance has no parent (its parentId equals itself)
-                    break;
-                }
-                if (visited[parentId]) {
-                    throw new DeveloperError('Circular dependency detected in the batch table hierarchy.');
-                }
-                instanceIndex = parentId;
-            }
-        }
-        //>>includeEnd('debug');
-
-        return {
+        var hierarchy = {
             classes : classes,
             classIds : classIds,
             classIndexes : classIndexes,
+            parentCounts : parentCounts,
+            parentIndexes : parentIndexes,
             parentIds : parentIds
         };
+
+        //>>includeStart('debug', pragmas.debug);
+        validateHierarchy(hierarchy);
+        //>>includeEnd('debug');
+
+        return hierarchy;
+    }
+
+    function validateHierarchy(hierarchy) {
+        // TODO : this can be optimized by marking instances that have already been checked
+        // Check for circular dependencies
+        var classIds = hierarchy.classIds;
+        var instancesLength = classIds.length;
+        var visited = new Array(instancesLength);
+
+        var validateInstance = function(hierarchy, instanceIndex) {
+            if (visited[instanceIndex]) {
+                throw new DeveloperError('Circular dependency detected in the batch table hierarchy.');
+            }
+            visited[instanceIndex] = true;
+        };
+
+        for (var i = 0; i < instancesLength; ++i) {
+            arrayFill(visited, false);
+            traverseHierarchy(hierarchy, i, validateInstance);
+        }
     }
 
     Cesium3DTileBatchTable.getBinaryProperties = function(featuresLength, json, binary) {
@@ -425,44 +450,6 @@ define([
             result);
     };
 
-    Cesium3DTileBatchTable.prototype.isClass = function(batchId, className) {
-        // PERFORMANCE_IDEA : cache results in the ancestor classes to speed up this check if
-        // this area becomes a hotspot
-        var hierarchy = this._batchTableHierarchy;
-        if (!defined(hierarchy)) {
-            return false;
-        }
-        var instanceIndex = batchId;
-        while (true) {
-            var classId = hierarchy.classIds[instanceIndex];
-            var instanceClass = hierarchy.classes[classId];
-            if (instanceClass.name === className) {
-                return true;
-            }
-            // Stop the traversal when the instance has no parent (its parentId equals itself)
-            var parentId = hierarchy.parentIds[instanceIndex];
-            if (parentId === instanceIndex) {
-                return false;
-            }
-            // Recursively check parent
-            instanceIndex = parentId;
-        }
-    };
-
-    Cesium3DTileBatchTable.prototype.isExactClass = function(batchId, className) {
-        return (this.getClassName(batchId) === className);
-    };
-
-    Cesium3DTileBatchTable.prototype.getClassName = function(batchId) {
-        var hierarchy = this._batchTableHierarchy;
-        if (!defined(hierarchy)) {
-            return undefined;
-        }
-        var classId = hierarchy.classIds[batchId];
-        var instanceClass = hierarchy.classes[classId];
-        return instanceClass.name;
-    };
-
     function getBinaryProperty(binaryProperty, index) {
         var typedArray = binaryProperty.typedArray;
         var componentCount = binaryProperty.componentCount;
@@ -483,10 +470,81 @@ define([
         }
     }
 
+    var scratchStack = [];
+    function traverseHierarchyMultipleParents(hierarchy, instanceIndex, endConditionCallback) {
+        var parentCounts = hierarchy.parentCounts;
+        var parentIds = hierarchy.parentIds;
+        var parentIndexes = hierarchy.parentIndexes;
+
+        var stack = scratchStack;
+        stack.push(instanceIndex);
+        while (stack.length > 0) {
+            instanceIndex = stack.pop();
+            var result = endConditionCallback(hierarchy, instanceIndex);
+            if (defined(result)) {
+                // The end condition was met, stop the traversal and return the result
+                return result;
+            }
+            var parentCount = parentCounts[instanceIndex];
+            var parentIndex = parentIndexes[instanceIndex];
+            for (var i = 0; i < parentCount; ++i) {
+                var parentId = parentIds[parentIndex + i];
+                if (parentId !== instanceIndex) {
+                    stack.push(parentId);
+                }
+            }
+        }
+    }
+
+    function traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback) {
+        while (true) {
+            var result = endConditionCallback(hierarchy, instanceIndex);
+            if (defined(result)) {
+                // The end condition was met, stop the traversal and return the result
+                return result;
+            }
+            var parentId = hierarchy.parentIds[instanceIndex];
+            if (parentId === instanceIndex) {
+                // Stop the traversal when the instance has no parent (its parentId equals itself)
+                break;
+            }
+            instanceIndex = parentId;
+        }
+    }
+
+    function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
+        var parentCounts = hierarchy.parentCounts;
+        if (defined(parentCounts)) {
+            return traverseHierarchyMultipleParents(hierarchy, instanceIndex, endConditionCallback);
+        } else {
+            return traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback);
+        }
+    }
+
+    function hasPropertyInHierarchy(batchTable, batchId, name) {
+        var hierarchy = batchTable._batchTableHierarchy;
+        var result = traverseHierarchy(hierarchy, batchId, function (hierarchy, instanceIndex) {
+            var classId = hierarchy.classIds[instanceIndex];
+            var instances = hierarchy.classes[classId].instances;
+            if (defined(instances[name])) {
+                return true;
+            }
+        });
+        return defined(result);
+    }
+
+    function getPropertyNamesInHierarchy(batchTable, batchId, names) {
+        var hierarchy = batchTable._batchTableHierarchy;
+        traverseHierarchy(hierarchy, batchId, function (hierarchy, instanceIndex) {
+            var classId = hierarchy.classIds[instanceIndex];
+            var instances = hierarchy.classes[classId].instances;
+            names.push.apply(Object.keys(instances));
+        });
+    }
+
     function getHierarchyProperty(batchTable, batchId, name) {
         var hierarchy = batchTable._batchTableHierarchy;
-        var instanceIndex = batchId;
-        while (true) {
+        return traverseHierarchy(hierarchy, batchId, function (hierarchy, instanceIndex) {
             var classId = hierarchy.classIds[instanceIndex];
             var instanceClass = hierarchy.classes[classId];
             var indexInClass = hierarchy.classIndexes[instanceIndex];
@@ -498,20 +556,12 @@ define([
                     return clone(propertyValues[indexInClass], true);
                 }
             }
-            // Stop the traversal when the instance has no parent (its parentId equals itself)
-            var parentId = hierarchy.parentIds[instanceIndex];
-            if (parentId === instanceIndex) {
-                return undefined;
-            }
-            // Recursively check parent
-            instanceIndex = parentId;
-        }
+        });
     }
 
     function setHierarchyProperty(batchTable, batchId, name, value) {
         var hierarchy = batchTable._batchTableHierarchy;
-        var instanceIndex = batchId;
-        while (true) {
+        var result = traverseHierarchy(hierarchy, batchId, function (hierarchy, instanceIndex) {
             var classId = hierarchy.classIds[instanceIndex];
             var instanceClass = hierarchy.classes[classId];
             var indexInClass = hierarchy.classIndexes[instanceIndex];
@@ -524,15 +574,81 @@ define([
                 }
                 return true;
             }
-            // Stop the traversal when the instance has no parent (its parentId equals itself)
-            var parentId = hierarchy.parentIds[instanceIndex];
-            if (parentId === instanceIndex) {
-                return false;
-            }
-            // Recursively check parent
-            instanceIndex = parentId;
-        }
+        });
+        return defined(result);
     }
+
+    Cesium3DTileBatchTable.prototype.isClass = function(batchId, className) {
+        // PERFORMANCE_IDEA : cache results in the ancestor classes to speed up this check if
+        // this area becomes a hotspot
+        var hierarchy = this._batchTableHierarchy;
+        if (!defined(hierarchy)) {
+            return false;
+        }
+        var result = traverseHierarchy(hierarchy, batchId, function(hierarchy, instanceIndex) {
+            var classId = hierarchy.classIds[instanceIndex];
+            var instanceClass = hierarchy.classes[classId];
+            if (instanceClass.name === className) {
+                return true;
+            }
+        });
+        return defined(result);
+    };
+
+    Cesium3DTileBatchTable.prototype.isExactClass = function(batchId, className) {
+        return (this.getClassName(batchId) === className);
+    };
+
+    Cesium3DTileBatchTable.prototype.getClassName = function(batchId) {
+        var hierarchy = this._batchTableHierarchy;
+        if (!defined(hierarchy)) {
+            return undefined;
+        }
+        var classId = hierarchy.classIds[batchId];
+        var instanceClass = hierarchy.classes[classId];
+        return instanceClass.name;
+    };
+
+    Cesium3DTileBatchTable.prototype.hasProperty = function(batchId, name) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(name)) {
+            throw new DeveloperError('name is required.');
+        }
+        //>>includeEnd('debug');
+
+        var hierarchy = this._batchTableHierarchy;
+        if (defined(hierarchy)) {
+            if (hasPropertyInHierarchy(this, batchId)) {
+                return true;
+            }
+        }
+
+        var json = this.batchTableJson;
+        return defined(json) && defined(json[name]);
+    };
+
+    Cesium3DTileBatchTable.prototype.getPropertyNames = function(batchId) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId)) {
+            throw new DeveloperError('batchId required.');
+        }
+        //>>includeEnd('debug');
+
+        var names = [];
+        var json = this.batchTableJson;
+        var hierarchy = this._batchTableHierarchy;
+
+        if (!defined(json)) {
+            return names;
+        }
+
+        if (defined(hierarchy)) {
+            getPropertyNamesInHierarchy(this, batchId, names);
+        }
+
+        names = names.concat(Object.keys(json));
+        return names;
+    };
 
     Cesium3DTileBatchTable.prototype.getProperty = function(batchId, name) {
         var featuresLength = this.featuresLength;

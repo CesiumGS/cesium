@@ -34,7 +34,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 var scene = viewer.scene;
-var tilesetUrl = '../../../Specs/Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy';
+var tilesetUrl = '../../../Specs/Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents';
 var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
     url : tilesetUrl,
     debugShowStatistics : true
@@ -92,6 +92,17 @@ addStyle('Style by height', {
             ["${height} >= 6", "color('red')"],
             ["${height} >= 5", "color('orange')"],
             ["true", "color('blue')"]
+        ]
+    }
+});
+
+addStyle('Style by classifier', {
+    "color" : {
+        "conditions" : [
+            ["isClass('classifier_new') && isClass('classifier_old')", "color('purple')"],
+            ["isClass('classifier_new')", "color('red')"],
+            ["isClass('classifier_old')", "color('blue')"],
+            ["true", "color()"]
         ]
     }
 });
