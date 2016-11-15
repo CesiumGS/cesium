@@ -52,12 +52,8 @@ define([
         acos : Math.acos,
         asin : Math.asin,
         atan : Math.atan,
-        radians : function(left) {
-            return (this._left.evaluate(feature)) * Math.PI / 180;
-        },
-        degrees : function(left) {
-            return (this._left.evaluate(feature)) * 180 / Math.PI;
-        }
+        radians : CesiumMath.toRadians(),
+        degrees : CesiumMath.toDegrees()
     };
 
     /**
@@ -618,12 +614,6 @@ define([
                 node.evaluate = node._evaluateIsFinite;
             } else if (defined(unaryFunctions[node._value])) {
                 node.evaluate = getEvaluateUnaryFunction(node._value);
-            } else if (node._value === 'abs') {
-                node.evaluate = node._evaluateAbsoluteValue;
-            } else if (node._value === 'cos') {
-                node.evaluate = node._evaluateCosine;
-            } else if (node._value === 'sqrt') {
-                node.evaluate = node._evaluateSquareRoot;
             } else if (node._value === 'Boolean') {
                 node.evaluate = node._evaluateBooleanConversion;
             } else if (node._value === 'Number') {
@@ -660,6 +650,13 @@ define([
 
     function evaluateTime(frameState, feature) {
         return feature._content._tileset.timeSinceLoad;
+    }
+
+    function getEvaluateUnaryFunction(call) {
+        var evaluate = unaryFunctions[call];
+        return function(feature) {
+            return evaluate(this._left.evaluate(feature));
+        };
     }
 
     Node.prototype._evaluateLiteral = function(frameState, feature) {
@@ -961,7 +958,7 @@ define([
 
     Node.prototype._evaluateBooleanConversion = function(feature) {
         return Boolean(this._left.evaluate(feature));
-    }
+    };
 
     Node.prototype._evaluateAbsoluteValue = function(frameState, feature) {
         return Math.abs(this._left.evaluate(frameState, feature));
@@ -1201,7 +1198,6 @@ define([
                 } else if (value === 'sqrt') {
                     return 'sqrt(' + left + ')';
                 }
-
                 //>>includeStart('debug', pragmas.debug);
                 else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
                     throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
@@ -1334,13 +1330,6 @@ define([
                 }
         }
     };
-
-    function getEvaluateUnaryFunction(call) {
-        var evaluate = unaryFunctions[call];
-        return function(feature) {
-            return evaluate(this._left.evaluate(feature));
-        }
-    }
 
     return Expression;
 });

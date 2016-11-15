@@ -951,8 +951,8 @@ defineSuite([
     });
 
     it('evaluates degrees function', function() {
-        var expression = new Expression('degrees(0)');
-        expect(expression.evaluate(undefined)).toEqual(0);
+        var expression = new Expression('degrees(360)');
+        expect(expression.evaluate(undefined)).toEqualEpsilon(2*Math.PI);
     });
 
     it('throws if degrees function takes an invalid number of arguments', function() {
