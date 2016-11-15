@@ -936,8 +936,8 @@ defineSuite([
     });
 
     it('evaluates radians function', function() {
-        var expression = new Expression('radians(0)');
-        expect(expression.evaluate(undefined)).toEqual(0);
+        var expression = new Expression('radians(180)');
+        expect(expression.evaluate(undefined)).toEqualEpsilon(Math.PI);
     });
 
     it('throws if radians function takes an invalid number of arguments', function() {
