@@ -181,6 +181,7 @@ defineSuite([
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(10);
             expect(content.innerContents).toBeUndefined();
+            expect(content.hasProperty(0, 'id')).toBe(true);
             expect(content.getFeature(0)).toBeDefined();
         });
     });

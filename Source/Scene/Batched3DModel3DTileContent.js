@@ -125,6 +125,13 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
+    Batched3DModel3DTileContent.prototype.hasProperty = function(batchId, name) {
+        return this.batchTable.hasProperty(batchId, name);
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
     Batched3DModel3DTileContent.prototype.getFeature = function(batchId) {
         var featuresLength = this._featuresLength;
         //>>includeStart('debug', pragmas.debug);

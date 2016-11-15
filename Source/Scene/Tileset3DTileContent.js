@@ -79,6 +79,14 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
+     * always returns <code>false</code> since a tile of this type does not have any features.
+     */
+    Tileset3DTileContent.prototype.hasProperty = function(batchId, name) {
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
      * always returns <code>undefined</code> since a tile of this type does not have any features.
      */
     Tileset3DTileContent.prototype.getFeature = function(batchId) {

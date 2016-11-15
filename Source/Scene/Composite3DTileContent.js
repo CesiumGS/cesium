@@ -120,6 +120,14 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+     * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a tile in the composite.
+     */
+    Composite3DTileContent.prototype.hasProperty = function(batchId, name) {
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
      * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a tile in the composite.
      */
     Composite3DTileContent.prototype.getFeature = function(batchId) {

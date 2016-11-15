@@ -611,6 +611,9 @@ define([
 
     Cesium3DTileBatchTable.prototype.hasProperty = function(batchId, name) {
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId)) {
+            throw new DeveloperError('batchId is required.');
+        }
         if (!defined(name)) {
             throw new DeveloperError('name is required.');
         }
