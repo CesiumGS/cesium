@@ -5,6 +5,8 @@ defineSuite([
         StyleExpression) {
     'use strict';
 
+    var frameState = {};
+
     function MockFeature() {
     }
 
@@ -17,11 +19,11 @@ defineSuite([
         var feature = new MockFeature();
 
         expect(function() {
-            return expression.evaluate(feature);
+            return expression.evaluate(frameState, feature);
         }).toThrowDeveloperError();
 
         expect(function() {
-            return expression.evaluateColor(feature);
+            return expression.evaluateColor(frameState, feature);
         }).toThrowDeveloperError();
     });
 });

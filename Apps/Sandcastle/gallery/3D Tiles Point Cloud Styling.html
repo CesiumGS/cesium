@@ -109,6 +109,15 @@ addStyle('Abs', {
     color : "color() * abs(${temperature} - 0.5)"
 });
 
+addStyle('Cos', {
+    color : "color() * abs(cos(${temperature} + TILES3D_TILESET_TIME))"
+});
+
+addStyle('Sqrt', {
+    color : "color() * sqrt(${temperature})",
+    pointSize : "10"
+});
+
 addStyle('Secondary Color', {
     color : {
         expression : "[${secondaryColor}[0], ${secondaryColor}[1], ${secondaryColor}[2], 1.0]",

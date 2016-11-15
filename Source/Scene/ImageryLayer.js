@@ -567,6 +567,10 @@ define([
             imageryRectangle = imageryTileXYToRectangle(i, northwestTileCoordinates.y, imageryLevel);
             clippedImageryRectangle = Rectangle.simpleIntersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
 
+            if (!defined(clippedImageryRectangle)) {
+                continue;
+            }
+
             maxU = Math.min(1.0, (clippedImageryRectangle.east - terrainRectangle.west) / terrainRectangle.width);
 
             // If this is the eastern-most imagery tile mapped to this terrain tile,
@@ -584,6 +588,11 @@ define([
 
                 imageryRectangle = imageryTileXYToRectangle(i, j, imageryLevel);
                 clippedImageryRectangle = Rectangle.simpleIntersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
+
+                if (!defined(clippedImageryRectangle)) {
+                    continue;
+                }
+                
                 minV = Math.max(0.0, (clippedImageryRectangle.south - terrainRectangle.south) / terrainRectangle.height);
 
                 // If this is the southern-most imagery tile mapped to this terrain tile,

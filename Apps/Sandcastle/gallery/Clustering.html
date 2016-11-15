@@ -48,8 +48,6 @@
                 <input type="text" size="2" data-bind="value: minimumClusterSize">
             </td>
         </tr>
-        <tr><td><input type="checkbox" data-bind="checked: enabled"/>Enabled</td></tr>
-        <tr><td><input type="checkbox" data-bind="checked: customStyle"/>Custom Styling</td></tr>
         </tbody>
     </table>
 </div>
@@ -124,9 +122,7 @@ dataSourcePromise.then(function(dataSource) {
 
     var viewModel = {
         pixelRange: pixelRange,
-        minimumClusterSize: minimumClusterSize,
-        enabled : enabled,
-        customStyle : true
+        minimumClusterSize: minimumClusterSize
     };
     Cesium.knockout.track(viewModel);
 
@@ -143,8 +139,14 @@ dataSourcePromise.then(function(dataSource) {
 
     subscribeParameter('pixelRange');
     subscribeParameter('minimumClusterSize');
-    subscribeParameter('enabled');
-    Cesium.knockout.getObservable(viewModel, 'customStyle').subscribe(customStyle);
+
+    Sandcastle.addToggleButton('Enabled', true, function(checked) {
+        dataSource.clustering.enabled = checked;
+    });
+
+    Sandcastle.addToggleButton('Custom Styling', true, function(checked) {
+      customStyle();
+    });
 
     var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction(function(movement) {

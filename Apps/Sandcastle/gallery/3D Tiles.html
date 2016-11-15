@@ -238,7 +238,7 @@ handler.setInputAction(function(movement) {
 
             // evaluate feature description
             if (Cesium.defined(tileset.style.meta.description)) {
-                console.log("Description : " + tileset.style.meta.description.evaluate(feature));
+                console.log("Description : " + tileset.style.meta.description.evaluate(scene.frameState, feature));
             }
 
             feature.setProperty('clicked', true);
@@ -483,13 +483,13 @@ function addStyleUI() {
     button = Sandcastle.addToolbarButton('Custom style', function() {
         var style = new Cesium.Cesium3DTileStyle();
         style.show = {
-            evaluate : function(feature) {
+            evaluate : function(frameState, feature) {
                 tileset.makeStyleDirty(); // Force the style to be constantly evaluated
                 return Cesium.Math.nextRandomNumber() > 0.5;
             }
         };
         style.color = {
-            evaluateColor : function(feature, result) {
+            evaluateColor : function(frameState, feature, result) {
                 tileset.makeStyleDirty(); // Force the style to be constantly evaluated
                 return Cesium.Color.fromRandom(undefined, result);
             }

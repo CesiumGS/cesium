@@ -18,7 +18,7 @@ define([
         './Cesium3DTileFeature',
         './Cesium3DTileBatchTable',
         './Cesium3DTileContentState',
-        './getDiffuseUniformName',
+        './getAttributeOrUniformBySemantic',
         './Model'
     ], function(
         Color,
@@ -39,7 +39,7 @@ define([
         Cesium3DTileFeature,
         Cesium3DTileBatchTable,
         Cesium3DTileContentState,
-        getDiffuseUniformName,
+        getAttributeOrUniformBySemantic,
         Model) {
     'use strict';
 
@@ -178,11 +178,31 @@ define([
         return true;
     };
 
+    function getVertexShaderCallback(content) {
+        return function(vs) {
+            var batchTable = content.batchTable;
+            var gltf = content._model.gltf;
+            var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            var callback = batchTable.getVertexShaderCallback(true, batchIdAttributeName);
+            return defined(callback) ? callback(vs) : vs;
+        };
+    }
+
+    function getPickVertexShaderCallback(content) {
+        return function(vs) {
+            var batchTable = content.batchTable;
+            var gltf = content._model.gltf;
+            var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            var callback = batchTable.getPickVertexShaderCallback(batchIdAttributeName);
+            return defined(callback) ? callback(vs) : vs;
+        };
+    }
+
     function getFragmentShaderCallback(content) {
         return function(fs) {
             var batchTable = content.batchTable;
             var gltf = content._model.gltf;
-            var diffuseUniformName = getDiffuseUniformName(gltf);
+            var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
             var colorBlendMode = content._tileset.colorBlendMode;
             var callback = batchTable.getFragmentShaderCallback(true, colorBlendMode, diffuseUniformName);
             return defined(callback) ? callback(fs) : fs;
@@ -277,10 +297,10 @@ define([
             modelMatrix : this._tile.computedTransform,
             shadows: this._tileset.shadows,
             incrementallyLoadTextures : false,
-            vertexShaderLoaded : batchTable.getVertexShaderCallback(true),
+            vertexShaderLoaded : getVertexShaderCallback(this),
             fragmentShaderLoaded : getFragmentShaderCallback(this),
             uniformMapLoaded : batchTable.getUniformMapCallback(),
-            pickVertexShaderLoaded : batchTable.getPickVertexShaderCallback(),
+            pickVertexShaderLoaded : getPickVertexShaderCallback(this),
             pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
             pickUniformMapLoaded : batchTable.getPickUniformMapCallback()
         });
