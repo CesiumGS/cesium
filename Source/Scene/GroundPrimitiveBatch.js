@@ -74,7 +74,6 @@ define([
      *
      * @alias GroundPrimitiveBatch
      * @constructor
-     * @private
      *
      * @param {Object} options An object with following properties:
      * @param {Float32Array|Uint16Array} options.positions The positions of the polygons. The positions must be contiguous
@@ -93,6 +92,8 @@ define([
      * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.
      * @param {Number[]} options.batchIds The batch ids for each polygon.
      * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polygons.
+     *
+     * @private
      */
     function GroundPrimitiveBatch(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -375,10 +376,12 @@ define([
         primitive._indexOffsets = batchedIndexOffsets;
         primitive._indexCounts = batchedIndexCounts;
 
-        for (var m = 0; m < primitive._batchedIndices.length; ++m) {
+        var batchedIndicesLength = primitive._batchedIndices.length;
+        for (var m = 0; m < batchedIndicesLength; ++m) {
             var tempIds = primitive._batchedIndices[m].batchIds;
             var count = 0;
-            for (var n = 0; n < tempIds.length; ++n) {
+            var tempIdsLength = tempIds.length;
+            for (var n = 0; n < tempIdsLength; ++n) {
                 count += batchedIndexCounts[tempIds[n]];
             }
             primitive._batchedIndices[m].count = count;
@@ -720,56 +723,53 @@ define([
             var offset = batchedIndices[j / 3].offset;
             var count = batchedIndices[j / 3].count;
 
-            // stencil preload command
-            var command = commands[j];
-            if (!defined(command)) {
-                command = commands[j] = new DrawCommand({
+            var stencilPreloadCommand = commands[j];
+            if (!defined(stencilPreloadCommand)) {
+                stencilPreloadCommand = commands[j] = new DrawCommand({
                     owner : primitive
                 });
             }
 
-            command.vertexArray = vertexArray;
-            command.offset = offset;
-            command.count = count;
-            command.renderState = primitive._rsStencilPreloadPass;
-            command.shaderProgram = primitive._sp;
-            command.uniformMap = uniformMap;
-            command.boundingVolume = bv;
-            command.pass = Pass.GROUND;
+            stencilPreloadCommand.vertexArray = vertexArray;
+            stencilPreloadCommand.offset = offset;
+            stencilPreloadCommand.count = count;
+            stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
+            stencilPreloadCommand.shaderProgram = primitive._sp;
+            stencilPreloadCommand.uniformMap = uniformMap;
+            stencilPreloadCommand.boundingVolume = bv;
+            stencilPreloadCommand.pass = Pass.GROUND;
 
-            // stencil depth command
-            command = commands[j + 1];
-            if (!defined(command)) {
-                command = commands[j + 1] = new DrawCommand({
+            var stencilDepthCommand = commands[j + 1];
+            if (!defined(stencilDepthCommand)) {
+                stencilDepthCommand = commands[j + 1] = new DrawCommand({
                     owner : primitive
                 });
             }
 
-            command.vertexArray = vertexArray;
-            command.offset = offset;
-            command.count = count;
-            command.renderState = primitive._rsStencilDepthPass;
-            command.shaderProgram = primitive._sp;
-            command.uniformMap = uniformMap;
-            command.boundingVolume = bv;
-            command.pass = Pass.GROUND;
+            stencilDepthCommand.vertexArray = vertexArray;
+            stencilDepthCommand.offset = offset;
+            stencilDepthCommand.count = count;
+            stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
+            stencilDepthCommand.shaderProgram = primitive._sp;
+            stencilDepthCommand.uniformMap = uniformMap;
+            stencilDepthCommand.boundingVolume = bv;
+            stencilDepthCommand.pass = Pass.GROUND;
 
-            // color command
-            command = commands[j + 2];
-            if (!defined(command)) {
-                command = commands[j + 2] = new DrawCommand({
+            var colorCommand = commands[j + 2];
+            if (!defined(colorCommand)) {
+                colorCommand = commands[j + 2] = new DrawCommand({
                     owner : primitive
                 });
             }
 
-            command.vertexArray = vertexArray;
-            command.offset = offset;
-            command.count = count;
-            command.renderState = primitive._rsColorPass;
-            command.shaderProgram = primitive._sp;
-            command.uniformMap = uniformMap;
-            command.boundingVolume = bv;
-            command.pass = Pass.GROUND;
+            colorCommand.vertexArray = vertexArray;
+            colorCommand.offset = offset;
+            colorCommand.count = count;
+            colorCommand.renderState = primitive._rsColorPass;
+            colorCommand.shaderProgram = primitive._sp;
+            colorCommand.uniformMap = uniformMap;
+            colorCommand.boundingVolume = bv;
+            colorCommand.pass = Pass.GROUND;
         }
     }
 
@@ -790,56 +790,53 @@ define([
             var count = primitive._indexCounts[j / 3];
             var bv = primitive._boundingVolumes[j / 3];
 
-            // stencil preload command
-            var command = pickCommands[j];
-            if (!defined(command)) {
-                command = pickCommands[j] = new DrawCommand({
+            var stencilPreloadCommand = pickCommands[j];
+            if (!defined(stencilPreloadCommand)) {
+                stencilPreloadCommand = pickCommands[j] = new DrawCommand({
                     owner : primitive
                 });
             }
 
-            command.vertexArray = vertexArray;
-            command.offset = offset;
-            command.count = count;
-            command.renderState = primitive._rsStencilPreloadPass;
-            command.shaderProgram = primitive._sp;
-            command.uniformMap = uniformMap;
-            command.boundingVolume = bv;
-            command.pass = Pass.GROUND;
+            stencilPreloadCommand.vertexArray = vertexArray;
+            stencilPreloadCommand.offset = offset;
+            stencilPreloadCommand.count = count;
+            stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
+            stencilPreloadCommand.shaderProgram = primitive._sp;
+            stencilPreloadCommand.uniformMap = uniformMap;
+            stencilPreloadCommand.boundingVolume = bv;
+            stencilPreloadCommand.pass = Pass.GROUND;
 
-            // stencil depth command
-            command = pickCommands[j + 1];
-            if (!defined(command)) {
-                command = pickCommands[j + 1] = new DrawCommand({
+            var stencilDepthCommand = pickCommands[j + 1];
+            if (!defined(stencilDepthCommand)) {
+                stencilDepthCommand = pickCommands[j + 1] = new DrawCommand({
                     owner : primitive
                 });
             }
 
-            command.vertexArray = vertexArray;
-            command.offset = offset;
-            command.count = count;
-            command.renderState = primitive._rsStencilDepthPass;
-            command.shaderProgram = primitive._sp;
-            command.uniformMap = uniformMap;
-            command.boundingVolume = bv;
-            command.pass = Pass.GROUND;
+            stencilDepthCommand.vertexArray = vertexArray;
+            stencilDepthCommand.offset = offset;
+            stencilDepthCommand.count = count;
+            stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
+            stencilDepthCommand.shaderProgram = primitive._sp;
+            stencilDepthCommand.uniformMap = uniformMap;
+            stencilDepthCommand.boundingVolume = bv;
+            stencilDepthCommand.pass = Pass.GROUND;
 
-            // color command
-            command = pickCommands[j + 2];
-            if (!defined(command)) {
-                command = pickCommands[j + 2] = new DrawCommand({
+            var colorCommand = pickCommands[j + 2];
+            if (!defined(colorCommand)) {
+                colorCommand = pickCommands[j + 2] = new DrawCommand({
                     owner : primitive
                 });
             }
 
-            command.vertexArray = vertexArray;
-            command.offset = offset;
-            command.count = count;
-            command.renderState = primitive._rsPickPass;
-            command.shaderProgram = primitive._spPick;
-            command.uniformMap = uniformMap;
-            command.boundingVolume = bv;
-            command.pass = Pass.GROUND;
+            colorCommand.vertexArray = vertexArray;
+            colorCommand.offset = offset;
+            colorCommand.count = count;
+            colorCommand.renderState = primitive._rsPickPass;
+            colorCommand.shaderProgram = primitive._spPick;
+            colorCommand.uniformMap = uniformMap;
+            colorCommand.boundingVolume = bv;
+            colorCommand.pass = Pass.GROUND;
         }
 
         primitive._pickCommandsDirty = false;
@@ -847,7 +844,6 @@ define([
 
     /**
      * Colors the entire tile when enabled is true. The resulting color will be (polygon batch table color * color).
-     * @private
      *
      * @param {Boolean} enabled Whether to enable debug coloring.
      * @param {Color} color The debug color.
@@ -859,7 +855,6 @@ define([
     /**
      * Call when updating the color of a polygon with batchId changes color. The polygons will need to be re-batched
      * on the next update.
-     * @private
      *
      * @param {Number} batchId The batch id of the polygon whose color has changed.
      * @param {Color} color The new polygon color.
@@ -927,8 +922,7 @@ define([
     };
 
     /**
-     * Updates the batches and queues the commands for rendering
-     * @private
+     * Updates the batches and queues the commands for rendering.
      *
      * @param {FrameState} frameState The current frame state.
      */
@@ -964,7 +958,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      * </p>
-     * @private
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      */
@@ -980,7 +973,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     * @private
      *
      * @returns {undefined}
      *

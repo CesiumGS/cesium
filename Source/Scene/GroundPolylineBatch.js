@@ -46,7 +46,6 @@ define([
      *
      * @alias GroundPolylineBatch
      * @constructor
-     * @private
      *
      * @param {Object} options An object with following properties:
      * @param {Float32Array|Uint16Array} options.positions The positions of the polylines
@@ -58,6 +57,8 @@ define([
      * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polylines.
      * @param {Number[]} options.batchIds The batch ids for each polyline.
      * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polylines.
+     *
+     * @private
      */
     function GroundPolylineBatch(options) {
         // these arrays are all released after the first update.
@@ -429,7 +430,6 @@ define([
 
     /**
      * Colors the entire tile when enabled is true. The resulting color will be (polyline batch table color * color).
-     * @private
      *
      * @param {Boolean} enabled Whether to enable debug coloring.
      * @param {Color} color The debug color.
@@ -439,8 +439,7 @@ define([
     };
 
     /**
-     * Updates the batches and queues the commands for rendering
-     * @private
+     * Updates the batches and queues the commands for rendering.
      *
      * @param {FrameState} frameState The current frame state.
      */
@@ -468,7 +467,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      * </p>
-     * @private
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      */
@@ -484,7 +482,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     * @private
      *
      * @returns {undefined}
      *
