@@ -1,33 +1,38 @@
 /*global define*/
 define([
-        '../Core/clone',
-       '../Core/defaultValue',
-       '../Core/defined',
-       '../Core/defineProperties',
-       '../Core/DeveloperError',
-       '../Core/isArray',
-       '../Core/loadJson',
-       '../Core/RequestScheduler',
-       '../ThirdParty/when',
-       './ConditionsExpression',
-       './Expression'
-    ], function(
-        clone,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        isArray,
-        loadJson,
-        RequestScheduler,
-        when,
-        ConditionsExpression,
-        Expression) {
+    '../Core/clone',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/DeveloperError',
+    '../Core/isArray',
+    '../Core/loadJson',
+    '../Core/RequestScheduler',
+    '../ThirdParty/when',
+    './ConditionsExpression',
+    './Expression',
+    './LabelStyle'
+], function(
+    clone,
+    defaultValue,
+    defined,
+    defineProperties,
+    DeveloperError,
+    isArray,
+    loadJson,
+    RequestScheduler,
+    when,
+    ConditionsExpression,
+    Expression,
+    LabelStyle) {
     'use strict';
 
     var DEFAULT_JSON_COLOR_EXPRESSION = 'color("#ffffff")';
+    var DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION = 'color("#000000")';
     var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
     var DEFAULT_JSON_NUMBER_EXPRESSION = 1.0;
+    var DEFAULT_LABEL_STYLE_EXPRESSION = LabelStyle.FILL;
+    var DEFAULT_FONT_EXPRESSION = '"30px sans-serif"';
 
     /**
      * Evaluates an expression defined using the
@@ -62,6 +67,10 @@ define([
         this._color = undefined;
         this._show = undefined;
         this._pointSize = undefined;
+        this._outlineColor = undefined;
+        this._outlineWidth = undefined;
+        this._labelStyle = undefined;
+        this._font = undefined;
         this._meta = undefined;
 
         this._colorShaderFunction = undefined;
@@ -107,6 +116,10 @@ define([
         var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
         var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_JSON_NUMBER_EXPRESSION);
+        var outlineColorExpression = defaultValue(styleJson.outlineColor, DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION);
+        var outlineWidthExpression = defaultValue(styleJson.outlineWidth, DEFAULT_JSON_NUMBER_EXPRESSION);
+        var labelStyleExpression = defaultValue(styleJson.labelStyle, DEFAULT_LABEL_STYLE_EXPRESSION);
+        var fontExpression = defaultValue(styleJson.font, DEFAULT_FONT_EXPRESSION);
 
         var color;
         if (typeof(colorExpression) === 'string') {
@@ -138,6 +151,46 @@ define([
         }
 
         that._pointSize = pointSize;
+
+        var outlineColor;
+        if (typeof(outlineColorExpression) === 'string') {
+            outlineColor = new Expression(outlineColorExpression);
+        } else if (defined(outlineColorExpression)) {
+            outlineColor = new ConditionsExpression(outlineColorExpression);
+        }
+
+        that._outlineColor = outlineColor;
+
+        var outlineWidth;
+        if (typeof(outlineWidthExpression) === 'number') {
+            outlineWidth = new Expression(String(outlineWidthExpression));
+        } else if (typeof(outlineWidthExpression) === 'string') {
+            outlineWidth = new Expression(outlineWidthExpression);
+        } else if (defined(outlineWidthExpression)) {
+            outlineWidth = new ConditionsExpression(outlineWidthExpression);
+        }
+
+        that._outlineWidth = outlineWidth;
+
+        var labelStyle;
+        if (typeof(labelStyleExpression) === 'number') {
+            labelStyle = new Expression(String(labelStyleExpression));
+        } else if (typeof(labelStyleExpression) === 'string') {
+            labelStyle = new Expression(labelStyleExpression);
+        } else if (defined(labelStyleExpression)) {
+            labelStyle = new ConditionsExpression(labelStyleExpression);
+        }
+
+        that._labelStyle = labelStyle;
+
+        var font;
+        if (typeof(fontExpression) === 'string') {
+            font = new Expression(fontExpression);
+        } else if (defined(fontExpression)) {
+            font = new ConditionsExpression(fontExpression);
+        }
+
+        that._font = font;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -340,6 +393,66 @@ define([
             },
             set : function(value) {
                 this._pointSize = value;
+            }
+        },
+
+        outlineColor : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._outlineColor;
+            },
+            set : function(value) {
+                this._outlineColor = value;
+            }
+        },
+
+        outlineWidth : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._outlineWidth;
+            },
+            set : function(value) {
+                this._outlineWidth = value;
+            }
+        },
+
+        labelStyle : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._labelStyle;
+            },
+            set : function(value) {
+                this._labelStyle = value;
+            }
+        },
+
+        font : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._font;
+            },
+            set : function(value) {
+                this._font = value;
             }
         },
 

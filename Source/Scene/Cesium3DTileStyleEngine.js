@@ -1,12 +1,14 @@
 /*global define*/
 define([
-       '../Core/Color',
-       '../Core/defined',
-       '../Core/defineProperties'
-    ], function(
-        Color,
-        defined,
-        defineProperties) {
+    '../Core/Color',
+    '../Core/defined',
+    '../Core/defineProperties',
+    './LabelStyle'
+], function(
+    Color,
+    defined,
+    defineProperties,
+    LabelStyle) {
     'use strict';
 
     /**
@@ -122,6 +124,10 @@ define([
             var feature = content.getFeature(i);
             feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
             feature.show = style.show.evaluate(frameState, feature);
+            feature.outlineColor = style.outlineColor.evaluate(frameState, feature);
+            feature.outlineWidth = style.outlineWidth.evaluate(frameState, feature);
+            feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
+            feature.font = style.font.evaluate(frameState, feature);
         }
     }
 
@@ -131,6 +137,10 @@ define([
             var feature = content.getFeature(i);
             feature.show = true;
             feature.color = Color.WHITE;
+            feature.outlineColor = Color.BLACK;
+            feature.outlineWidth = 1.0;
+            feature.labelStyle = LabelStyle.FILL;
+            feature.font = '30px sans-serif';
         }
     }
 
