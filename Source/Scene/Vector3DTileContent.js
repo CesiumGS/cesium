@@ -26,6 +26,7 @@ define([
     './BillboardCollection',
     './GroundPolylineBatch',
     './GroundPrimitiveBatch',
+    './LabelCollection',
     './VerticalOrigin'
 ], function(
     BoundingSphere,
@@ -54,6 +55,7 @@ define([
     BillboardCollection,
     GroundPolylineBatch,
     GroundPrimitiveBatch,
+    LabelCollection,
     VerticalOrigin) {
     'use strict';
 
@@ -71,7 +73,9 @@ define([
         this._polygons = undefined;
         this._polylines = undefined;
         this._outlines = undefined;
-        this._points = undefined;
+
+        this._billboardCollection = undefined;
+        this._labelCollection = undefined;
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
@@ -390,29 +394,6 @@ define([
             });
         }
 
-        var widths = new Array(numberOfPolylines);
-        batchIds = new Array(numberOfPolylines);
-        for (n = 0; n < numberOfPolylines; ++n) {
-            var id = n + numberOfPolygons;
-            batchTable.setColor(id, color);
-            widths[n] = 2.0;
-            batchIds[n] = id;
-        }
-
-        if (polylinePositions.length > 0) {
-            this._polylines = new GroundPolylineBatch({
-                positions : polylinePositions,
-                widths : widths,
-                counts : polylineCounts,
-                batchIds : batchIds,
-                center : center,
-                quantizedOffset : quantizedOffset,
-                quantizedScale : quantizedScale,
-                boundingVolume : this._tile._boundingVolume.boundingVolume,
-                batchTable : this.batchTable
-            });
-        }
-
         if (outlinePolygons && numberOfPolygons > 0) {
             var outlinePositionsLength = positions.length + 3 * numberOfPolygons;
             var outlinePositions = isQuantized ? new Uint16Array(outlinePositionsLength) : new Float32Array(outlinePositionsLength);
@@ -436,7 +417,7 @@ define([
 
                 polygonOffset += 3 * count;
 
-                var outlineID = s + numberOfPolygons + numberOfPolylines;
+                var outlineID = s + numberOfPolygons;
                 batchTable.setColor(outlineID, Color.BLACK.withAlpha(0.7));
                 outlineWidths[s] = 2.0;
                 batchIds[s] = outlineID;
@@ -447,6 +428,30 @@ define([
                 positions : outlinePositions,
                 widths : outlineWidths,
                 counts : outlineCounts,
+                batchIds : batchIds,
+                center : center,
+                quantizedOffset : quantizedOffset,
+                quantizedScale : quantizedScale,
+                boundingVolume : this._tile._boundingVolume.boundingVolume,
+                batchTable : this.batchTable
+            });
+        }
+
+        var widths = new Array(numberOfPolylines);
+        batchIds = new Array(numberOfPolylines);
+        var polygonBatchOffset = outlinePolygons && numberOfPolygons > 0 ? 2.0 * numberOfPolygons : numberOfPolygons;
+        for (n = 0; n < numberOfPolylines; ++n) {
+            var id = n + polygonBatchOffset;
+            batchTable.setColor(id, color);
+            widths[n] = 2.0;
+            batchIds[n] = id;
+        }
+
+        if (polylinePositions.length > 0) {
+            this._polylines = new GroundPolylineBatch({
+                positions : polylinePositions,
+                widths : widths,
+                counts : polylineCounts,
                 batchIds : batchIds,
                 center : center,
                 quantizedOffset : quantizedOffset,
@@ -469,7 +474,9 @@ define([
             var pixelSize = 8.0;
             var outlineWidth = 2.0;
 
-            this._points = new BillboardCollection();
+            this._billboardCollection = new BillboardCollection();
+            this._labelCollection = new LabelCollection();
+
             for (n = 0; n < numberOfPoints; ++n) {
                 var x = pointsPositions[n * 3];
                 var y = pointsPositions[n * 3 + 1];
@@ -478,10 +485,11 @@ define([
                 Matrix4.multiplyByPoint(decodeMatrix, position, position);
                 Cartesian3.add(position, center, position);
 
-                var b = this._points.add();
+                var batchIndex = n + numberOfPolygons + numberOfPolylines + (outlinePolygons && numberOfPolygons > 0 ? numberOfPolygons : 0);
+                var b = this._billboardCollection.add();
                 b.position = position;
-                b._batchIndex = n + numberOfPolygons + numberOfPolylines + (outlinePolygons && numberOfPolygons > 0 ? numberOfPolygons : 0);
                 b.verticalOrigin = VerticalOrigin.BOTTOM;
+                b._batchIndex = batchIndex;
 
                 var centerAlpha = color.alpha;
                 var cssColor = color.toCssColorString();
@@ -489,6 +497,13 @@ define([
                 var textureId = JSON.stringify([cssColor, pixelSize, cssOutlineColor, outlineWidth]);
 
                 b.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, outlineWidth, pixelSize));
+
+                var l = this._labelCollection.add();
+                l.show = false;
+                l.text = '';
+                l.position = position;
+                l.verticalOrigin = VerticalOrigin.BOTTOM;
+                l._batchIndex = batchIndex;
             }
         }
 
@@ -543,13 +558,15 @@ define([
             this._polygons.applyDebugSettings(enabled, color);
         }
 
+        if (defined(this._outlines)) {
+            this._outlines.applyDebugSettings(enabled, color);
+        }
+
         if (defined(this._polylines)) {
             this._polylines.applyDebugSettings(enabled, color);
         }
 
-        if (defined(this._outlines)) {
-            this._outlines.applyDebugSettings(enabled, color);
-        }
+        //TODO: debug settings for points/billboards/labels
     };
 
     /**
@@ -571,16 +588,17 @@ define([
             this._polygons.update(frameState);
         }
 
-        if (defined(this._polylines)) {
-            this._polylines.update(frameState);
-        }
-
         if (defined(this._outlines)) {
             this._outlines.update(frameState);
         }
 
-        if (defined(this._points)) {
-            this._points.update(frameState);
+        if (defined(this._polylines)) {
+            this._polylines.update(frameState);
+        }
+
+        if (defined(this._billboardCollection)) {
+            this._billboardCollection.update(frameState);
+            this._labelCollection.update(frameState);
         }
 
         if (this.state !== Cesium3DTileContentState.READY) {
@@ -602,6 +620,9 @@ define([
     Vector3DTileContent.prototype.destroy = function() {
         this._polygons = this._polygons && this._polygons.destroy();
         this._polylines = this._polylines && this._polylines.destroy();
+        this._outlines = this._outlines && this._outlines.destroy();
+        this._billboardCollection = this._billboardCollection && this._billboardCollection.destroy();
+        this._labelCollection = this._labelCollection && this._labelCollection.destroy();
         return destroyObject(this);
     };
 
