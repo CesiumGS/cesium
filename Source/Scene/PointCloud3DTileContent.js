@@ -547,6 +547,9 @@ define([
             },
             u_constantColor : function() {
                 return content._constantColor;
+            },
+            u_tilesetTime : function() {
+                return content._tileset.timeSinceLoad;
             }
         };
 
@@ -909,7 +912,8 @@ define([
                  'varying vec4 v_color; \n' +
                  'uniform float u_pointSize; \n' +
                  'uniform vec4 u_constantColor; \n' +
-                 'uniform vec4 u_highlightColor; \n';
+                 'uniform vec4 u_highlightColor; \n' +
+                 'uniform float u_tilesetTime; \n';
 
         var length = styleableProperties.length;
         for (i = 0; i < length; ++i) {

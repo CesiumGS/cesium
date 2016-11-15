@@ -110,7 +110,7 @@ addStyle('Abs', {
 });
 
 addStyle('Cos', {
-    color : "color() * cos(${temperature} - 0)"
+    color : "color() * abs(cos(${temperature} + TILES3D_TILESET_TIME))"
 });
 
 addStyle('Sqrt', {
