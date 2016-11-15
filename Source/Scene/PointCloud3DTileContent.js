@@ -547,6 +547,9 @@ define([
             },
             u_constantColor : function() {
                 return content._constantColor;
+            },
+            u_tilesetTime : function() {
+                return content._tileset.timeSinceLoad;
             }
         };
 
@@ -909,7 +912,8 @@ define([
                  'varying vec4 v_color; \n' +
                  'uniform float u_pointSize; \n' +
                  'uniform vec4 u_constantColor; \n' +
-                 'uniform vec4 u_highlightColor; \n';
+                 'uniform vec4 u_highlightColor; \n' +
+                 'uniform float u_tilesetTime; \n';
 
         var length = styleableProperties.length;
         for (i = 0; i < length; ++i) {
@@ -1063,7 +1067,7 @@ define([
 
         if (hasBatchTable) {
             // Batched points always use the HIGHLIGHT color blend mode
-            drawVS = batchTable.getVertexShaderCallback(false)(drawVS);
+            drawVS = batchTable.getVertexShaderCallback(false, 'a_batchId')(drawVS);
             drawFS = batchTable.getFragmentShaderCallback(false, Cesium3DTileColorBlendMode.HIGHLIGHT)(drawFS);
         }
 
@@ -1071,7 +1075,7 @@ define([
         var pickFS = fs;
 
         if (hasBatchTable) {
-            pickVS = batchTable.getPickVertexShaderCallback()(pickVS);
+            pickVS = batchTable.getPickVertexShaderCallback('a_batchId')(pickVS);
             pickFS = batchTable.getPickFragmentShaderCallback()(pickFS);
         } else {
             pickFS = ShaderSource.createPickFragmentShaderSource(pickFS, 'uniform');

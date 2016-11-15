@@ -394,8 +394,6 @@ define([
 
         this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
 
-        this._transitioner = new SceneTransitioner(this, this._mapProjection.ellipsoid);
-
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
@@ -2596,7 +2594,7 @@ define([
     };
 
     var scratchPackedDepth = new Cartesian4();
-    var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 160581375.0);
+    var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
 
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.

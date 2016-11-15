@@ -87,6 +87,8 @@ define([
         this._clusterLabelCollection = undefined;
         this._clusterPointCollection = undefined;
 
+        this._collectionIndicesByEntity = {};
+
         this._unusedLabelIndices = [];
         this._unusedBillboardIndices = [];
         this._unusedPointIndices = [];
@@ -131,8 +133,8 @@ define([
 
         expandBoundingBox(result, pixelRange);
 
-        if (entityCluster._clusterLabels && !defined(item._labelCollection) && defined(item.id) && defined(item.id._label) && defined(entityCluster._labelCollection)) {
-            var labelIndex = item.id._labelIndex;
+        if (entityCluster._clusterLabels && !defined(item._labelCollection) && defined(item.id) && hasLabelIndex(entityCluster, item.id) && defined(item.id._label)) {
+            var labelIndex = entityCluster._collectionIndicesByEntity[item.id];
             var label = entityCluster._labelCollection.get(labelIndex);
             var labelBBox = Label.getScreenSpaceBoundingBox(label, coord, labelBoundingBoxScratch);
             expandBoundingBox(labelBBox, pixelRange);
@@ -145,8 +147,8 @@ define([
     function addNonClusteredItem(item, entityCluster) {
         item.clusterShow = true;
 
-        if (!defined(item._labelCollection) && defined(item.id) && defined(item.id._label)) {
-            var labelIndex = item.id._labelIndex;
+        if (!defined(item._labelCollection) && defined(item.id) && hasLabelIndex(entityCluster, item.id) && defined(item.id._label)) {
+            var labelIndex = entityCluster._collectionIndicesByEntity[item.id];
             var label = entityCluster._labelCollection.get(labelIndex);
             label.clusterShow = true;
         }
@@ -166,6 +168,10 @@ define([
         cluster.billboard.position = cluster.label.position = cluster.point.position = position;
         
         entityCluster._clusterEvent.raiseEvent(ids, cluster);
+    }
+
+    function hasLabelIndex(entityCluster, entityId) {
+        return defined(entityCluster) && defined(entityCluster._collectionIndicesByEntity[entityId]) && defined(entityCluster._collectionIndicesByEntity[entityId].labelIndex);
     }
 
     function getScreenSpacePositions(collection, points, scene, occluder, entityCluster) {
@@ -527,6 +533,62 @@ define([
 	}
     });
 
+    function createGetEntity(collectionProperty, CollectionConstructor, unusedIndicesProperty, entityIndexProperty) {
+        return function(entity) {
+            var collection = this[collectionProperty];
+
+            if (!defined(this._collectionIndicesByEntity)) {
+                this._collectionIndicesByEntity = {};
+            }
+
+            var entityIndices = this._collectionIndicesByEntity[entity.id];
+
+            if (!defined(entityIndices)) {
+                entityIndices = this._collectionIndicesByEntity[entity.id] = {
+                    billboardIndex: undefined,
+                    labelIndex: undefined,
+                    pointIndex: undefined
+                };
+            }
+
+            if (defined(collection) && defined(entityIndices[entityIndexProperty])) {
+                return collection.get(entityIndices[entityIndexProperty]);
+            }
+
+            if (!defined(collection)) {
+                collection = this[collectionProperty] = new CollectionConstructor({
+                    scene : this._scene
+                });
+            }
+
+            var index;
+            var entityItem;
+
+            var unusedIndices = this[unusedIndicesProperty];
+            if (unusedIndices.length > 0) {
+                index = unusedIndices.pop();
+                entityItem = collection.get(index);
+            } else {
+                entityItem = collection.add();
+                index = collection.length - 1;
+            }
+
+            entityIndices[entityIndexProperty] = index;
+
+            this._clusterDirty = true;
+
+            return entityItem;
+        };
+    }
+
+    function removeEntityIndicesIfUnused(entityCluster, entityId) {
+        var indices = entityCluster._collectionIndicesByEntity[entityId];
+
+        if (!defined(indices.billboardIndex) && !defined(indices.labelIndex) && !defined(indices.pointIndex)) {
+            delete entityCluster._collectionIndicesByEntity[entityId];
+        }
+    }
+
     /**
      * Returns a new {@link Label}.
      * @param {Entity} entity The entity that will use the returned {@link Label} for visualization.
@@ -534,36 +596,8 @@ define([
      *
      * @private
      */
-    EntityCluster.prototype.getLabel = function(entity) {
-        var labelCollection = this._labelCollection;
-        if (defined(labelCollection) && defined(entity._labelIndex)) {
-            return labelCollection.get(entity._labelIndex);
-        }
+    EntityCluster.prototype.getLabel = createGetEntity('_labelCollection', LabelCollection, '_unusedLabelIndices', 'labelIndex');
 
-        if (!defined(labelCollection)) {
-            labelCollection = this._labelCollection = new LabelCollection({
-                scene : this._scene
-            });
-        }
-
-        var index;
-        var label;
-
-        var unusedIndices = this._unusedLabelIndices;
-        if (unusedIndices.length > 0) {
-            index = unusedIndices.pop();
-            label = labelCollection.get(index);
-        } else {
-            label = labelCollection.add();
-            index = labelCollection.length - 1;
-        }
-
-        entity._labelIndex = index;
-
-        this._clusterDirty = true;
-
-        return label;
-    };
 
     /**
      * Removes the {@link Label} associated with an entity so it can be reused by another entity.
@@ -572,12 +606,14 @@ define([
      * @private
      */
     EntityCluster.prototype.removeLabel = function(entity) {
-        if (!defined(this._labelCollection) || !defined(entity._labelIndex)) {
+        var entityIndices = this._collectionIndicesByEntity && this._collectionIndicesByEntity[entity.id];
+        if (!defined(this._labelCollection) || !defined(entityIndices) || !defined(entityIndices.labelIndex)) {
             return;
         }
 
-        var index = entity._labelIndex;
-        entity._labelIndex = undefined;
+        var index = entityIndices.labelIndex;
+        entityIndices.labelIndex = undefined;
+        removeEntityIndicesIfUnused(this, entity.id);
 
         var label = this._labelCollection.get(index);
         label.show = false;
@@ -596,36 +632,8 @@ define([
      *
      * @private
      */
-    EntityCluster.prototype.getBillboard = function(entity) {
-        var billboardCollection = this._billboardCollection;
-        if (defined(billboardCollection) && defined(entity._billboardIndex)) {
-            return billboardCollection.get(entity._billboardIndex);
-        }
+    EntityCluster.prototype.getBillboard = createGetEntity('_billboardCollection', BillboardCollection, '_unusedBillboardIndices', 'billboardIndex');
 
-        if (!defined(billboardCollection)) {
-            billboardCollection = this._billboardCollection = new BillboardCollection({
-                scene : this._scene
-            });
-        }
-
-        var index;
-        var billboard;
-
-        var unusedIndices = this._unusedBillboardIndices;
-        if (unusedIndices.length > 0) {
-            index = unusedIndices.pop();
-            billboard = billboardCollection.get(index);
-        } else {
-            billboard = billboardCollection.add();
-            index = billboardCollection.length - 1;
-        }
-
-        entity._billboardIndex = index;
-
-        this._clusterDirty = true;
-
-        return billboard;
-    };
 
     /**
      * Removes the {@link Billboard} associated with an entity so it can be reused by another entity.
@@ -634,12 +642,14 @@ define([
      * @private
      */
     EntityCluster.prototype.removeBillboard = function(entity) {
-        if (!defined(this._billboardCollection) || !defined(entity._billboardIndex)) {
+        var entityIndices = this._collectionIndicesByEntity && this._collectionIndicesByEntity[entity.id];
+        if (!defined(this._billboardCollection) || !defined(entityIndices) || !defined(entityIndices.billboardIndex)) {
             return;
         }
 
-        var index = entity._billboardIndex;
-        entity._billboardIndex = undefined;
+        var index = entityIndices.billboardIndex;
+        entityIndices.billboardIndex = undefined;
+        removeEntityIndicesIfUnused(this, entity.id);
 
         var billboard = this._billboardCollection.get(index);
         billboard.id = undefined;
@@ -658,34 +668,7 @@ define([
      *
      * @private
      */
-    EntityCluster.prototype.getPoint = function(entity) {
-        var pointCollection = this._pointCollection;
-        if (defined(pointCollection) && defined(entity._pointIndex)) {
-            return pointCollection.get(entity._pointIndex);
-        }
-
-        if (!defined(pointCollection)) {
-            pointCollection = this._pointCollection = new PointPrimitiveCollection();
-        }
-
-        var index;
-        var point;
-
-        var unusedIndices = this._unusedPointIndices;
-        if (unusedIndices.length > 0) {
-            index = unusedIndices.pop();
-            point = pointCollection.get(index);
-        } else {
-            point = pointCollection.add();
-            index = pointCollection.length - 1;
-        }
-
-        entity._pointIndex = index;
-
-        this._clusterDirty = true;
-
-        return point;
-    };
+    EntityCluster.prototype.getPoint = createGetEntity('_pointCollection', PointPrimitiveCollection, '_unusedPointIndices', 'pointIndex');
 
     /**
      * Removes the {@link Point} associated with an entity so it can be reused by another entity.
@@ -694,12 +677,14 @@ define([
      * @private
      */
     EntityCluster.prototype.removePoint = function(entity) {
-        if (!defined(this._pointCollection) || !defined(entity._pointIndex)) {
+        var entityIndices = this._collectionIndicesByEntity && this._collectionIndicesByEntity[entity.id];
+        if (!defined(this._pointCollection) || !defined(entityIndices) || !defined(entityIndices.pointIndex)) {
             return;
         }
 
-        var index = entity._pointIndex;
-        entity._pointIndex = undefined;
+        var index = entityIndices.pointIndex;
+        entityIndices.pointIndex = undefined;
+        removeEntityIndicesIfUnused(this, entity.id);
 
         var point = this._pointCollection.get(index);
         point.show = false;
@@ -824,6 +809,8 @@ define([
         this._clusterBillboardCollection = undefined;
         this._clusterLabelCollection = undefined;
         this._clusterPointCollection = undefined;
+
+        this._collectionIndicesByEntity = undefined;
 
         this._unusedLabelIndices = [];
         this._unusedBillboardIndices = [];
