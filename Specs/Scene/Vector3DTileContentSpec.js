@@ -273,8 +273,6 @@ defineSuite([
 
     it('applies shader style', function() {
         return Cesium3DTilesTester.loadTileset(scene, vectorPolygonWithPropertiesUrl).then(function(tileset) {
-            var content = tileset._root.content;
-
             // Solid red color
             tileset.style = new Cesium3DTileStyle({
                 color : 'color("red")'

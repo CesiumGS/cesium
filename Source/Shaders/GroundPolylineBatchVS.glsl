@@ -1,6 +1,6 @@
-attribute vec3 currentPosition;
-attribute vec3 previousPosition;
-attribute vec3 nextPosition;
+attribute vec4 currentPosition;
+attribute vec4 previousPosition;
+attribute vec4 nextPosition;
 attribute vec2 expandAndWidth;
 attribute float a_batchId;
 
@@ -12,9 +12,9 @@ void main()
     float width = abs(expandAndWidth.y) + 0.5;
     bool usePrev = expandAndWidth.y < 0.0;
 
-    vec4 p = u_modifiedModelView * vec4(currentPosition, 1.0);
-    vec4 prev = u_modifiedModelView * vec4(previousPosition, 1.0);
-    vec4 next = u_modifiedModelView * vec4(nextPosition, 1.0);
+    vec4 p = u_modifiedModelView * currentPosition;
+    vec4 prev = u_modifiedModelView * previousPosition;
+    vec4 next = u_modifiedModelView * nextPosition;
 
     vec4 positionWC = getPolylineWindowCoordinatesEC(p, prev, next, expandDir, width, usePrev);
     gl_Position = czm_viewportOrthographic * positionWC;
