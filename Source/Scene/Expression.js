@@ -353,23 +353,7 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'abs') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
-            }
-            //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (defined(unaryFunctions[call])) {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
-            }
-            //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'sqrt') {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
                 throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
