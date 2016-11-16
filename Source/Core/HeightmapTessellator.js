@@ -16,8 +16,7 @@ define([
         './Rectangle',
         './TerrainEncoding',
         './Transforms',
-        './WebMercatorProjection',
-        
+        './WebMercatorProjection'
     ], function(
         AxisAlignedBoundingBox,
         BoundingSphere,

@@ -13,8 +13,7 @@ defineSuite([
         'Scene/SceneTransforms',
         'Specs/createCanvas',
         'Specs/createGlobe',
-        'Specs/createScene',
-        
+        'Specs/createScene'
     ], function(
         EntityCluster,
         Cartesian2,
