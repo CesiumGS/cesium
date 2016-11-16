@@ -1,12 +1,12 @@
 /*global define*/
 define([
-       '../Core/Color',
-       '../Core/defined',
-       '../Core/defineProperties',
-       '../Core/DeveloperError',
-       '../Core/isArray',
-       '../ThirdParty/jsep',
-       './ExpressionNodeType'
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/isArray',
+        '../ThirdParty/jsep',
+        './ExpressionNodeType'
     ], function(
         Color,
         defined,

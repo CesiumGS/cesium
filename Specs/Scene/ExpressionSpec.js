@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Expression',
-        'Scene/ExpressionNodeType',
-        'Core/Color'
+        'Core/Color',
+        'Scene/ExpressionNodeType'
     ], function(
         Expression,
-        ExpressionNodeType,
-        Color) {
+        Color,
+        ExpressionNodeType) {
     'use strict';
 
     var frameState = {};
