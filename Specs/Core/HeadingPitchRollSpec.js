@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/HeadingPitchRoll',
-    'Core/Math',
-    'Core/Quaternion'
-], function(
-    HeadingPitchRoll,
-    CesiumMath,
-    Quaternion) {
+        'Core/HeadingPitchRoll',
+        'Core/Math',
+        'Core/Quaternion'
+    ], function(
+        HeadingPitchRoll,
+        CesiumMath,
+        Quaternion) {
     "use strict";
     /*global it,expect*/
 
