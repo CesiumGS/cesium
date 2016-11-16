@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-    'Scene/BatchTable',
-    'Core/Cartesian4',
-    'Core/ComponentDatatype',
-    'Renderer/PixelDatatype',
-    'Renderer/Texture',
-    'Specs/createScene'
-], function(
-    BatchTable,
-    Cartesian4,
-    ComponentDatatype,
-    PixelDatatype,
-    Texture,
-    createScene) {
+        'Scene/BatchTable',
+        'Core/Cartesian4',
+        'Core/ComponentDatatype',
+        'Renderer/PixelDatatype',
+        'Renderer/Texture',
+        'Specs/createScene'
+    ], function(
+        BatchTable,
+        Cartesian4,
+        ComponentDatatype,
+        PixelDatatype,
+        Texture,
+        createScene) {
     'use strict';
 
     var unsignedByteAttributes = [{
