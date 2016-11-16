@@ -33,6 +33,8 @@ define([
     var DEFAULT_JSON_NUMBER_EXPRESSION = 1.0;
     var DEFAULT_LABEL_STYLE_EXPRESSION = LabelStyle.FILL;
     var DEFAULT_FONT_EXPRESSION = '"30px sans-serif"';
+    var DEFAULT_POINT_SIZE_EXPRESSION = 8.0;
+    var DEFAULT_TEXT_EXPRESSION = '" "';
 
     /**
      * Evaluates an expression defined using the
@@ -71,6 +73,8 @@ define([
         this._outlineWidth = undefined;
         this._labelStyle = undefined;
         this._font = undefined;
+        this._text = undefined;
+        this._image = undefined;
         this._meta = undefined;
 
         this._colorShaderFunction = undefined;
@@ -115,11 +119,13 @@ define([
 
         var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
-        var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_JSON_NUMBER_EXPRESSION);
+        var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_POINT_SIZE_EXPRESSION);
         var outlineColorExpression = defaultValue(styleJson.outlineColor, DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION);
         var outlineWidthExpression = defaultValue(styleJson.outlineWidth, DEFAULT_JSON_NUMBER_EXPRESSION);
         var labelStyleExpression = defaultValue(styleJson.labelStyle, DEFAULT_LABEL_STYLE_EXPRESSION);
         var fontExpression = defaultValue(styleJson.font, DEFAULT_FONT_EXPRESSION);
+        var textExpression = defaultValue(styleJson.text, DEFAULT_TEXT_EXPRESSION);
+        var imageExpression = styleJson.image;
 
         var color;
         if (typeof(colorExpression) === 'string') {
@@ -191,6 +197,24 @@ define([
         }
 
         that._font = font;
+
+        var text;
+        if (typeof(textExpression) === 'string') {
+            text = new Expression(textExpression);
+        } else if (defined(textExpression)) {
+            text = new ConditionsExpression(textExpression);
+        }
+
+        that._text = text;
+
+        var image;
+        if (typeof(imageExpression) === 'string') {
+            image = new Expression(imageExpression);
+        } else if (defined(imageExpression)) {
+            image = new ConditionsExpression(imageExpression);
+        }
+
+        that._image = image;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -453,6 +477,36 @@ define([
             },
             set : function(value) {
                 this._font = value;
+            }
+        },
+
+        text : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._text;
+            },
+            set : function(value) {
+                this._text = value;
+            }
+        },
+
+        image : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._image;
+            },
+            set : function(value) {
+                this._image = value;
             }
         },
 

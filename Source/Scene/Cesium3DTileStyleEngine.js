@@ -128,6 +128,11 @@ define([
             feature.outlineWidth = style.outlineWidth.evaluate(frameState, feature);
             feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
             feature.font = style.font.evaluate(frameState, feature);
+            feature.pointSize = style.pointSize.evaluate(frameState, feature);
+            feature.text = style.text.evaluate(frameState, feature);
+            if (defined(style.image)) {
+                feature.image = style.image.evaluate(frameState, feature);
+            }
         }
     }
 
@@ -138,9 +143,12 @@ define([
             feature.show = true;
             feature.color = Color.WHITE;
             feature.outlineColor = Color.BLACK;
-            feature.outlineWidth = 1.0;
+            feature.outlineWidth = 2.0;
             feature.labelStyle = LabelStyle.FILL;
             feature.font = '30px sans-serif';
+            feature.pointSize = 8.0;
+            feature.text = ' ';
+            feature.image = undefined;
         }
     }
 

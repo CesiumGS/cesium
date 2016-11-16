@@ -133,7 +133,13 @@ define([
         if (!defined(content._features) && (featuresLength > 0)) {
             var features = new Array(featuresLength);
             for (var i = 0; i < featuresLength; ++i) {
-                features[i] = new Cesium3DTileFeature(tileset, content, i);
+                if (defined(content._billboardCollection) && i < content._billboardCollection.length) {
+                    var billboardCollection = content._billboardCollection;
+                    var labelCollection = content._labelCollection;
+                    features[i] = new Cesium3DTileFeature(tileset, content, i, billboardCollection, labelCollection);
+                } else {
+                    features[i] = new Cesium3DTileFeature(tileset, content, i);
+                }
             }
             content._features = features;
         }
@@ -369,12 +375,63 @@ define([
         byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_COUNT.byteOffset;
         var polylineCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolylines);
 
-        var n;
-        var color = Color.WHITE.withAlpha(0.5);
+        var i;
+        var color;
+
+        if (numberOfPoints > 0) {
+            var decodeMatrix;
+            if (defined(quantizedOffset) && defined(quantizedScale)) {
+                decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), new Matrix4());
+            } else {
+                decodeMatrix = Matrix4.IDENTITY;
+            }
+
+            color = Color.WHITE;
+            var outlineColor = Color.BLACK;
+            var pixelSize = 8.0;
+            var outlineWidth = 2.0;
+
+            this._billboardCollection = new BillboardCollection();
+            this._labelCollection = new LabelCollection();
+
+            for (i = 0; i < numberOfPoints; ++i) {
+                var x = pointsPositions[i * 3];
+                var y = pointsPositions[i * 3 + 1];
+                var z = pointsPositions[i * 3 + 2];
+                var position = Cartesian3.fromElements(x, y, z);
+                Matrix4.multiplyByPoint(decodeMatrix, position, position);
+                Cartesian3.add(position, center, position);
+
+                // TODO: should only have to set position, vertical origin and batch id.
+                // Default style needs to be applied on creation. 
+                var b = this._billboardCollection.add();
+                b.position = position;
+                b.verticalOrigin = VerticalOrigin.BOTTOM;
+                b._batchIndex = i;
+
+                var centerAlpha = color.alpha;
+                var cssColor = color.toCssColorString();
+                var cssOutlineColor = outlineColor.toCssColorString();
+                var textureId = JSON.stringify([cssColor, pixelSize, cssOutlineColor, outlineWidth]);
+
+                b.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, outlineWidth, pixelSize));
+
+                var l = this._labelCollection.add();
+                l.show = false;
+                l.text = ' ';
+                l.position = position;
+                l.verticalOrigin = VerticalOrigin.BOTTOM;
+                l._batchIndex = i;
+            }
+        }
+
+        color = Color.WHITE.withAlpha(0.5);
+        var batchId;
         var batchIds = new Array(numberOfPolygons);
-        for (n = 0; n < numberOfPolygons; ++n) {
-            batchTable.setColor(n, color);
-            batchIds[n] = n;
+        for (i = 0; i < numberOfPolygons; ++i) {
+            batchId = i + numberOfPoints;
+            batchTable.setColor(batchId, color);
+            batchIds[i] = batchId;
         }
 
         if (positions.length > 0) {
@@ -417,7 +474,7 @@ define([
 
                 polygonOffset += 3 * count;
 
-                var outlineID = s + numberOfPolygons;
+                var outlineID = s + numberOfPolygons + numberOfPoints;
                 batchTable.setColor(outlineID, Color.BLACK.withAlpha(0.7));
                 outlineWidths[s] = 2.0;
                 batchIds[s] = outlineID;
@@ -439,12 +496,12 @@ define([
 
         var widths = new Array(numberOfPolylines);
         batchIds = new Array(numberOfPolylines);
-        var polygonBatchOffset = outlinePolygons && numberOfPolygons > 0 ? 2.0 * numberOfPolygons : numberOfPolygons;
-        for (n = 0; n < numberOfPolylines; ++n) {
-            var id = n + polygonBatchOffset;
+        var polygonBatchOffset = numberOfPoints + (outlinePolygons && numberOfPolygons > 0 ? 2.0 * numberOfPolygons : numberOfPolygons);
+        for (i = 0; i < numberOfPolylines; ++i) {
+            var id = i + polygonBatchOffset;
             batchTable.setColor(id, color);
-            widths[n] = 2.0;
-            batchIds[n] = id;
+            widths[i] = 2.0;
+            batchIds[i] = id;
         }
 
         if (polylinePositions.length > 0) {
@@ -459,52 +516,6 @@ define([
                 boundingVolume : this._tile._boundingVolume.boundingVolume,
                 batchTable : this.batchTable
             });
-        }
-
-        if (pointsPositions.length > 0) {
-            var decodeMatrix;
-            if (defined(quantizedOffset) && defined(quantizedScale)) {
-                decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), new Matrix4());
-            } else {
-                decodeMatrix = Matrix4.IDENTITY;
-            }
-
-            color = Color.WHITE;
-            var outlineColor = Color.BLACK;
-            var pixelSize = 8.0;
-            var outlineWidth = 2.0;
-
-            this._billboardCollection = new BillboardCollection();
-            this._labelCollection = new LabelCollection();
-
-            for (n = 0; n < numberOfPoints; ++n) {
-                var x = pointsPositions[n * 3];
-                var y = pointsPositions[n * 3 + 1];
-                var z = pointsPositions[n * 3 + 2];
-                var position = Cartesian3.fromElements(x, y, z);
-                Matrix4.multiplyByPoint(decodeMatrix, position, position);
-                Cartesian3.add(position, center, position);
-
-                var batchIndex = n + numberOfPolygons + numberOfPolylines + (outlinePolygons && numberOfPolygons > 0 ? numberOfPolygons : 0);
-                var b = this._billboardCollection.add();
-                b.position = position;
-                b.verticalOrigin = VerticalOrigin.BOTTOM;
-                b._batchIndex = batchIndex;
-
-                var centerAlpha = color.alpha;
-                var cssColor = color.toCssColorString();
-                var cssOutlineColor = outlineColor.toCssColorString();
-                var textureId = JSON.stringify([cssColor, pixelSize, cssOutlineColor, outlineWidth]);
-
-                b.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, outlineWidth, pixelSize));
-
-                var l = this._labelCollection.add();
-                l.show = false;
-                l.text = '';
-                l.position = position;
-                l.verticalOrigin = VerticalOrigin.BOTTOM;
-                l._batchIndex = batchIndex;
-            }
         }
 
         this.state = Cesium3DTileContentState.PROCESSING;
