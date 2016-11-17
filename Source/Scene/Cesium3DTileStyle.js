@@ -1,30 +1,30 @@
 /*global define*/
 define([
-    '../Core/clone',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/isArray',
-    '../Core/loadJson',
-    '../Core/RequestScheduler',
-    '../ThirdParty/when',
-    './ConditionsExpression',
-    './Expression',
-    './LabelStyle'
-], function(
-    clone,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    isArray,
-    loadJson,
-    RequestScheduler,
-    when,
-    ConditionsExpression,
-    Expression,
-    LabelStyle) {
+        '../Core/clone',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/isArray',
+        '../Core/loadJson',
+        '../Core/RequestScheduler',
+        '../ThirdParty/when',
+        './ConditionsExpression',
+        './Expression',
+        './LabelStyle'
+    ], function(
+        clone,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        isArray,
+        loadJson,
+        RequestScheduler,
+        when,
+        ConditionsExpression,
+        Expression,
+        LabelStyle) {
     'use strict';
 
     var DEFAULT_JSON_COLOR_EXPRESSION = 'color("#ffffff")';
