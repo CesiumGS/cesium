@@ -420,6 +420,35 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>outlineColor</code> property.
+         * <p>
+         * The expression must return a <code>Color</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     outlineColor : '(${Temperature} > 90) ? color('red') : color('white')'
+         * });
+         * style.outlineColor.evaluate(frameState, feature); // returns a Cesium.Color
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override outlineColor expression with a custom function
+         * style.outlineColor = {
+         *     evaluate : function(frameState, feature) {
+         *         return Color.WHITE;
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
         outlineColor : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -435,6 +464,35 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>outlineWidth</code> property.
+         * <p>
+         * The expression must return or convert to a <code>Number</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     outlineWidth : '(${Temperature} > 90) ? 4.0 : 2.0'
+         * });
+         * style.outlineWidth.evaluate(frameState, feature); // returns a Number
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override outlineWidth expression with a custom function
+         * style.outlineWidth = {
+         *     evaluate : function(frameState, feature) {
+         *         return 2.0;
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
         outlineWidth : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -450,6 +508,35 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelStyle</code> property.
+         * <p>
+         * The expression must return or convert to a <code>LabelStyle</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     labelStyle : '(${Temperature} > 90) ? ' + LabelStyle.FILL_AND_OUTLINE + ' : ' + LabelStyle.FILL
+         * });
+         * style.labelStyle.evaluate(frameState, feature); // returns a Cesium.LabelStyle
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override labelStyle expression with a custom function
+         * style.labelStyle = {
+         *     evaluate : function(frameState, feature) {
+         *         return LabelStyle.FILL;
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
         labelStyle : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -465,6 +552,35 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>font</code> property.
+         * <p>
+         * The expression must return a <code>String</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     font : '(${Temperature} > 90) ? "30px Helvetica" : "24px Helvetica"'
+         * });
+         * style.font.evaluate(frameState, feature); // returns a String
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override font expression with a custom function
+         * style.font = {
+         *     evaluate : function(frameState, feature) {
+         *         return '24px Helvetica';
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
         font : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -480,6 +596,35 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>text</code> property.
+         * <p>
+         * The expression must return a <code>String</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     text : '(${Temperature} > 90) ? ">90" : "<=90"'
+         * });
+         * style.text.evaluate(frameState, feature); // returns a String
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override text expression with a custom function
+         * style.text = {
+         *     evaluate : function(frameState, feature) {
+         *         return 'Example label text';
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
         text : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -495,6 +640,35 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>image</code> property.
+         * <p>
+         * The expression must return a <code>String</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     image : '(${Temperature} > 90) ? "/url/to/image1" : "/url/to/image2"'
+         * });
+         * style.image.evaluate(frameState, feature); // returns a String
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override image expression with a custom function
+         * style.image = {
+         *     evaluate : function(frameState, feature) {
+         *         return '/url/to/image';
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
         image : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);

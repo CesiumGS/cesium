@@ -137,6 +137,16 @@ define([
             }
         },
 
+        /**
+         * Gets and sets the point size of this feature.
+         * <p>
+         * Only applied when the feature is a point feature and <code>image</code> is <code>undefined</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Number}
+         */
         pointSize : {
             get : function() {
                 return this._pointSize;
@@ -149,6 +159,17 @@ define([
             }
         },
 
+        /**
+         * Gets and sets the outline color of this feature.
+         * <p>
+         * Only applied when the feature is a point feature. The outline will be applied to the point if
+         * <code>image</code> is undefined or to the <code>text</code> when it is defined.
+         * </p>
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Color}
+         */
         outlineColor : {
             get : function() {
                 if (defined(this._labelCollection)) {
@@ -166,6 +187,17 @@ define([
             }
         },
 
+        /**
+         * Gets and sets the outline width in pixels of this feature.
+         * <p>
+         * Only applied when the feature is a point feature. The outline width will be applied to the point if
+         * <code>image</code> is undefined or to the <code>text</code> when it is defined.
+         * </p>
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Color}
+         */
         outlineWidth : {
             get : function() {
                 if (defined(this._labelCollection)) {
@@ -183,6 +215,16 @@ define([
             }
         },
 
+        /**
+         * Gets and sets the image of this feature.
+         * <p>
+         * Only applied when the feature is a point feature.
+         * </p>
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {String}
+         */
         image : {
             get : function() {
                 return this._billboardImage;
@@ -195,6 +237,16 @@ define([
             }
         },
 
+        /**
+         * Gets and sets the font of this feature.
+         * <p>
+         * Only applied when the feature is a point feature and <code>text</code> is defined.
+         * </p>
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {String}
+         */
         font : {
             get : function() {
                 if (defined(this._labelCollection)) {
@@ -211,6 +263,16 @@ define([
             }
         },
 
+        /**
+         * Gets and sets the fill and outline style of this feature.
+         * <p>
+         * Only applied when the feature is a point feature and <code>text</code> is defined.
+         * </p>
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {LabelStyle}
+         */
         labelStyle : {
             get : function() {
                 if (defined(this._labelCollection)) {
@@ -227,6 +289,16 @@ define([
             }
         },
 
+        /**
+         * Gets and sets the text for this feature.
+         * <p>
+         * Only applied when the feature is a point feature.
+         * </p>
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {String}
+         */
         text : {
             get : function() {
                 if (defined(this._labelCollection)) {
