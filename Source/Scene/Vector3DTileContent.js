@@ -376,7 +376,6 @@ define([
         var polylineCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolylines);
 
         var i;
-        var color;
 
         if (numberOfPoints > 0) {
             var decodeMatrix;
@@ -385,11 +384,6 @@ define([
             } else {
                 decodeMatrix = Matrix4.IDENTITY;
             }
-
-            color = Color.WHITE;
-            var outlineColor = Color.BLACK;
-            var pixelSize = 8.0;
-            var outlineWidth = 2.0;
 
             this._billboardCollection = new BillboardCollection();
             this._labelCollection = new LabelCollection();
@@ -402,22 +396,12 @@ define([
                 Matrix4.multiplyByPoint(decodeMatrix, position, position);
                 Cartesian3.add(position, center, position);
 
-                // TODO: should only have to set position, vertical origin and batch id.
-                // Default style needs to be applied on creation. 
                 var b = this._billboardCollection.add();
                 b.position = position;
                 b.verticalOrigin = VerticalOrigin.BOTTOM;
                 b._batchIndex = i;
 
-                var centerAlpha = color.alpha;
-                var cssColor = color.toCssColorString();
-                var cssOutlineColor = outlineColor.toCssColorString();
-                var textureId = JSON.stringify([cssColor, pixelSize, cssOutlineColor, outlineWidth]);
-
-                b.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, outlineWidth, pixelSize));
-
                 var l = this._labelCollection.add();
-                l.show = false;
                 l.text = ' ';
                 l.position = position;
                 l.verticalOrigin = VerticalOrigin.BOTTOM;
@@ -425,12 +409,10 @@ define([
             }
         }
 
-        color = Color.WHITE.withAlpha(0.5);
         var batchId;
         var batchIds = new Array(numberOfPolygons);
         for (i = 0; i < numberOfPolygons; ++i) {
             batchId = i + numberOfPoints;
-            batchTable.setColor(batchId, color);
             batchIds[i] = batchId;
         }
 
@@ -474,10 +456,8 @@ define([
 
                 polygonOffset += 3 * count;
 
-                var outlineID = s + numberOfPolygons + numberOfPoints;
-                batchTable.setColor(outlineID, Color.BLACK.withAlpha(0.7));
                 outlineWidths[s] = 2.0;
-                batchIds[s] = outlineID;
+                batchIds[s] = s + numberOfPolygons + numberOfPoints;
                 outlineCounts[s] = count + 1;
             }
 
@@ -498,10 +478,8 @@ define([
         batchIds = new Array(numberOfPolylines);
         var polygonBatchOffset = numberOfPoints + (outlinePolygons && numberOfPolygons > 0 ? 2.0 * numberOfPolygons : numberOfPolygons);
         for (i = 0; i < numberOfPolylines; ++i) {
-            var id = i + polygonBatchOffset;
-            batchTable.setColor(id, color);
             widths[i] = 2.0;
-            batchIds[i] = id;
+            batchIds[i] = i + polygonBatchOffset;
         }
 
         if (polylinePositions.length > 0) {
@@ -521,45 +499,6 @@ define([
         this.state = Cesium3DTileContentState.PROCESSING;
         this._contentReadyToProcessPromise.resolve(this);
     };
-
-    function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize) {
-        return function(id) {
-            var canvas = document.createElement('canvas');
-
-            var length = newPixelSize + (2 * cssOutlineWidth);
-            canvas.height = canvas.width = length;
-
-            var context2D = canvas.getContext('2d');
-            context2D.clearRect(0, 0, length, length);
-
-            if (cssOutlineWidth !== 0) {
-                context2D.beginPath();
-                context2D.arc(length / 2, length / 2, length / 2, 0, 2 * Math.PI, true);
-                context2D.closePath();
-                context2D.fillStyle = cssOutlineColor;
-                context2D.fill();
-                // Punch a hole in the center if needed.
-                if (centerAlpha < 1.0) {
-                    context2D.save();
-                    context2D.globalCompositeOperation = 'destination-out';
-                    context2D.beginPath();
-                    context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
-                    context2D.closePath();
-                    context2D.fillStyle = 'black';
-                    context2D.fill();
-                    context2D.restore();
-                }
-            }
-
-            context2D.beginPath();
-            context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
-            context2D.closePath();
-            context2D.fillStyle = cssColor;
-            context2D.fill();
-
-            return canvas;
-        };
-    }
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.

@@ -3,11 +3,13 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
+        './Cesium3DTileStyle',
         './LabelStyle'
     ], function(
         Color,
         defined,
         defineProperties,
+        Cesium3DTileStyle,
         LabelStyle) {
     'use strict';
 
@@ -15,9 +17,9 @@ define([
      * @private
      */
     function Cesium3DTileStyleEngine() {
-        this._style = undefined;      // The style provided by the user
-        this._styleDirty = false;     // true when the style is reassigned
-        this._lastStyleTime = 0;      // The "time" when the last style was assigned
+        this._style = new Cesium3DTileStyle(); // The style provided by the user
+        this._styleDirty = true ;              // true when the style is reassigned
+        this._lastStyleTime = 0;               // The "time" when the last style was assigned
     }
 
     defineProperties(Cesium3DTileStyleEngine.prototype, {
