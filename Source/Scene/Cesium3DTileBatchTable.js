@@ -213,6 +213,9 @@ define([
         var visited = new Array(instancesLength);
 
         var validateInstance = function(hierarchy, instanceIndex) {
+            if (instanceIndex >= instancesLength) {
+                throw new DeveloperError('Parent index ' + instanceIndex + ' exceeds the total number of instances: ' + instancesLength);
+            }
             if (visited[instanceIndex]) {
                 throw new DeveloperError('Circular dependency detected in the batch table hierarchy.');
             }
@@ -584,6 +587,15 @@ define([
     }
 
     Cesium3DTileBatchTable.prototype.isClass = function(batchId, className) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId)) {
+            throw new DeveloperError('batchId is required.');
+        }
+        if (!defined(className)) {
+            throw new DeveloperError('className is required.');
+        }
+        //>>includeEnd('debug');
+
         // PERFORMANCE_IDEA : cache results in the ancestor classes to speed up this check if this area becomes a hotspot
         var hierarchy = this._batchTableHierarchy;
         if (!defined(hierarchy)) {
@@ -600,10 +612,22 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.isExactClass = function(batchId, className) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(className)) {
+            throw new DeveloperError('className is required.');
+        }
+        //>>includeEnd('debug');
+
         return (this.getClassName(batchId) === className);
     };
 
     Cesium3DTileBatchTable.prototype.getClassName = function(batchId) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId)) {
+            throw new DeveloperError('batchId is required.');
+        }
+        //>>includeEnd('debug');
+
         var hierarchy = this._batchTableHierarchy;
         if (!defined(hierarchy)) {
             return undefined;

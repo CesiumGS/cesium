@@ -640,6 +640,12 @@ defineSuite([
         });
     });
 
+    it('renders tileset with batch table hierarchy', function() {
+        return Cesium3DTilesTester.loadTileset(scene, batchTableHierarchyUrl).then(function(tileset) {
+            expectRender(tileset);
+        });
+    });
+
     it('destroys', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;

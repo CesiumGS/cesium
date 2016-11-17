@@ -168,14 +168,49 @@ define([
         this._content.featurePropertiesDirty = true;
     };
 
-    // TODO : add doc
+    /**
+     * Returns whether the feature's class name equals <code>className</code>. Unlike {@link Cesium3DTileFeature#isClass}
+     * this function only checks the feature's exact class and not base classes.
+     * <p>
+     * This function returns <code>false</code> if no batch table hierarchy is present.
+     * </p>
+     *
+     * @param {String} className The name to check against.
+     * @returns {Boolean} Whether the feature's class name equals <code>className</code>
+     *
+     * @private
+     */
     Cesium3DTileFeature.prototype.isExactClass = function(className) {
         return this._batchTable.isExactClass(this._batchId, className);
     };
 
-    // TODO : add doc
+    /**
+     * Returns whether the feature's class or any base classes are named <code>className</code>.
+     * <p>
+     * This function returns <code>false</code> if no batch table hierarchy is present.
+     * </p>
+     *
+     * @param {String} className The name to check against.
+     * @returns {Boolean} Whether the feature's class or base classes are named <code>className</code>
+     *
+     * @private
+     */
     Cesium3DTileFeature.prototype.isClass = function(className) {
         return this._batchTable.isClass(this._batchId, className);
+    };
+
+    /**
+     * Returns the feature's class name.
+     * <p>
+     * This function returns <code>undefined</code> if no batch table hierarchy is present.
+     * </p>
+     *
+     * @returns {String} The feature's class name.
+     *
+     * @private
+     */
+    Cesium3DTileFeature.prototype.getClassName = function() {
+        return this._batchTable.getClassName(this._batchId);
     };
 
     return Cesium3DTileFeature;

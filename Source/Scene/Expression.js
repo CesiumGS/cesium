@@ -358,12 +358,11 @@ define([
             return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'getClassName') {
             //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            if (args.length > 0) {
+                throw new DeveloperError('Error: ' + call + ' does not take any argument.');
             }
             //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
+            return new Node(ExpressionNodeType.UNARY, call);
         } else if (call === 'abs') {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
@@ -979,7 +978,7 @@ define([
     };
 
     Node.prototype._evaluateGetClassName = function(frameState, feature) {
-        return feature.getClassName(this._left.evaluate(frameState, feature));
+        return feature.getClassName();
     };
 
     Node.prototype._evaluateAbsoluteValue = function(frameState, feature) {
