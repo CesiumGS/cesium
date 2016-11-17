@@ -101,10 +101,10 @@ defineSuite([
 
     it('sets pointSize value to default expression', function() {
         var style = new Cesium3DTileStyle({});
-        expect(style.pointSize).toEqual(new Expression('1'));
+        expect(style.pointSize).toEqual(new Expression('8'));
 
         style = new Cesium3DTileStyle();
-        expect(style.pointSize).toEqual(new Expression('1'));
+        expect(style.pointSize).toEqual(new Expression('8'));
     });
 
     it('sets show value to expression', function() {
