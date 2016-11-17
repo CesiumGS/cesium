@@ -104,6 +104,37 @@ define([
     });
 
     /**
+     * Returns whether the feature contains this property. This includes properties from this feature's
+     * class and inherited classes, in addition to the standard batch table properties.
+     * <p>
+     * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color} are not equivalent to
+     * <code>'show'</code> and <code>'color'</code> properties; the former are runtime-specific properties
+     * that are not part of the feature's properties in the stored 3D Tileset.
+     * </p>
+     *
+     * @param {String} name The case-sensitive name of the property.
+     * @returns {Boolean} Whether the feature contains this property.
+     */
+    Cesium3DTileFeature.prototype.hasProperty = function(name) {
+        return this._batchTable.hasProperty(this._batchId, name);
+    };
+
+    /**
+     * Returns an array of property names for the feature. This includes properties from this feature's
+     * class and inherited classes, in addition to the standard batch table properties.
+     * <p>
+     * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color} are not equivalent to
+     * <code>'show'</code> and <code>'color'</code> properties; the former are runtime-specific properties
+     * that are not part of the feature's properties in the stored 3D Tileset.
+     * </p>
+     *
+     * @returns {String[]} The names of the feature's properties.
+     */
+    Cesium3DTileFeature.prototype.getPropertyNames = function() {
+        return this._batchTable.getPropertyNames(this._batchId);
+    };
+
+    /**
      * Returns the value of the feature's property with the given name.
      * <p>
      * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color} are not equivalent to
@@ -112,7 +143,7 @@ define([
      * </p>
      *
      * @param {String} name The case-sensitive name of the property.
-     * @returns {Any} The value of the property or <code>undefined</code> if the property does not exist.
+     * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
      *
      * @example
      * // Display all the properties for a feature in the console log.
@@ -143,7 +174,7 @@ define([
      * </p>
      *
      * @param {String} name The case-sensitive name of the property.
-     * @param {Any} value The value of the property that will be copied.
+     * @param {*} value The value of the property that will be copied.
      *
      * @example
      * var height = feature.getProperty('Height'); // e.g., the height of a building
@@ -170,7 +201,7 @@ define([
 
     /**
      * Returns whether the feature's class name equals <code>className</code>. Unlike {@link Cesium3DTileFeature#isClass}
-     * this function only checks the feature's exact class and not base classes.
+     * this function only checks the feature's exact class and not inherited classes.
      * <p>
      * This function returns <code>false</code> if no batch table hierarchy is present.
      * </p>
@@ -185,13 +216,13 @@ define([
     };
 
     /**
-     * Returns whether the feature's class or any base classes are named <code>className</code>.
+     * Returns whether the feature's class or any inherited classes are named <code>className</code>.
      * <p>
      * This function returns <code>false</code> if no batch table hierarchy is present.
      * </p>
      *
      * @param {String} className The name to check against.
-     * @returns {Boolean} Whether the feature's class or base classes are named <code>className</code>
+     * @returns {Boolean} Whether the feature's class or inherited classes are named <code>className</code>
      *
      * @private
      */

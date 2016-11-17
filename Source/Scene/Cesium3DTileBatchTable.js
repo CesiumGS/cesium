@@ -587,9 +587,10 @@ define([
     }
 
     Cesium3DTileBatchTable.prototype.isClass = function(batchId, className) {
+        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId)) {
-            throw new DeveloperError('batchId is required.');
+        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
         if (!defined(className)) {
             throw new DeveloperError('className is required.');
@@ -622,9 +623,10 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.getClassName = function(batchId) {
+        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId)) {
-            throw new DeveloperError('batchId is required.');
+        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
         //>>includeEnd('debug');
 
@@ -638,9 +640,10 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.hasProperty = function(batchId, name) {
+        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId)) {
-            throw new DeveloperError('batchId is required.');
+        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
         if (!defined(name)) {
             throw new DeveloperError('name is required.');
@@ -659,9 +662,10 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.getPropertyNames = function(batchId) {
+        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId)) {
-            throw new DeveloperError('batchId required.');
+        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
         //>>includeEnd('debug');
 
