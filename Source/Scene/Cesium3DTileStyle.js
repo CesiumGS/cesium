@@ -1,16 +1,16 @@
 /*global define*/
 define([
         '../Core/clone',
-       '../Core/defaultValue',
-       '../Core/defined',
-       '../Core/defineProperties',
-       '../Core/DeveloperError',
-       '../Core/isArray',
-       '../Core/loadJson',
-       '../Core/RequestScheduler',
-       '../ThirdParty/when',
-       './ConditionsExpression',
-       './Expression'
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/isArray',
+        '../Core/loadJson',
+        '../Core/RequestScheduler',
+        '../ThirdParty/when',
+        './ConditionsExpression',
+        './Expression'
     ], function(
         clone,
         defaultValue,
