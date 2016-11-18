@@ -1,18 +1,11 @@
 /*global define*/
 define([
-       '../Core/Math',
-       '../Core/Color',
-       '../Core/defined',
-       '../Core/defineProperties',
-       '../Core/DeveloperError',
-       '../Core/isArray',
-       '../ThirdParty/jsep',
-       './ExpressionNodeType'
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/isArray',
+        '../Core/Math',
         '../ThirdParty/jsep',
         './ExpressionNodeType'
     ], function(
