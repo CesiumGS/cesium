@@ -161,7 +161,7 @@ define([
         var outlineColor;
         if (typeof(outlineColorExpression) === 'string') {
             outlineColor = new Expression(outlineColorExpression);
-        } else if (defined(outlineColorExpression)) {
+        } else if (defined(outlineColorExpression.conditions)) {
             outlineColor = new ConditionsExpression(outlineColorExpression);
         }
 
@@ -172,7 +172,7 @@ define([
             outlineWidth = new Expression(String(outlineWidthExpression));
         } else if (typeof(outlineWidthExpression) === 'string') {
             outlineWidth = new Expression(outlineWidthExpression);
-        } else if (defined(outlineWidthExpression)) {
+        } else if (defined(outlineWidthExpression.conditions)) {
             outlineWidth = new ConditionsExpression(outlineWidthExpression);
         }
 
@@ -183,7 +183,7 @@ define([
             labelStyle = new Expression(String(labelStyleExpression));
         } else if (typeof(labelStyleExpression) === 'string') {
             labelStyle = new Expression(labelStyleExpression);
-        } else if (defined(labelStyleExpression)) {
+        } else if (defined(labelStyleExpression.conditions)) {
             labelStyle = new ConditionsExpression(labelStyleExpression);
         }
 
@@ -192,7 +192,7 @@ define([
         var font;
         if (typeof(fontExpression) === 'string') {
             font = new Expression(fontExpression);
-        } else if (defined(fontExpression)) {
+        } else if (defined(fontExpression.conditions)) {
             font = new ConditionsExpression(fontExpression);
         }
 
@@ -201,7 +201,7 @@ define([
         var text;
         if (typeof(textExpression) === 'string') {
             text = new Expression(textExpression);
-        } else if (defined(textExpression)) {
+        } else if (defined(textExpression.conditions)) {
             text = new ConditionsExpression(textExpression);
         }
 
@@ -210,7 +210,7 @@ define([
         var image;
         if (typeof(imageExpression) === 'string') {
             image = new Expression(imageExpression);
-        } else if (defined(imageExpression)) {
+        } else if (defined(imageExpression) && defined(imageExpression.conditions)) {
             image = new ConditionsExpression(imageExpression);
         }
 
