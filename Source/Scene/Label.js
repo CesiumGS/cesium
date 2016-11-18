@@ -101,6 +101,7 @@ define([
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
+        this._backgroundBillboard = undefined;
 
         this._rebindAllGlyphs = true;
         this._repositionAllGlyphs = true;

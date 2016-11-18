@@ -1,6 +1,8 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -8,7 +10,10 @@ define([
         '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/writeTextToCanvas',
+        '../Renderer/RenderState',
+        '../Renderer/WebGLConstants',
         './BillboardCollection',
+        './BlendingState',
         './HeightReference',
         './HorizontalOrigin',
         './Label',
@@ -16,7 +21,9 @@ define([
         './TextureAtlas',
         './VerticalOrigin'
     ], function(
+        BoundingRectangle,
         Cartesian2,
+        Color,
         defaultValue,
         defined,
         defineProperties,
@@ -24,7 +31,10 @@ define([
         DeveloperError,
         Matrix4,
         writeTextToCanvas,
+        RenderState,
+        WebGLConstants,
         BillboardCollection,
+        BlendingState,
         HeightReference,
         HorizontalOrigin,
         Label,
@@ -51,6 +61,28 @@ define([
         this.labelCollection = labelCollection;
         this.index = index;
         this.dimensions = dimensions;
+    }
+
+    var whitePixelCanvasId = 'ID_WHITE_PIXEL';
+    var whitePixelSubRegionId = 'ID_WHITE_PIXEL_SUBREGION';
+    var whitePixelSize = new Cartesian2(4, 4);
+    var whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
+
+    function addWhitePixelCanvas(textureAtlas, labelCollection) {
+        var canvas = document.createElement('canvas');
+        canvas.width = whitePixelSize.x;
+        canvas.height = whitePixelSize.y;
+
+        var context2D = canvas.getContext('2d');
+        context2D.fillStyle = '#fff';
+        context2D.fillRect(0, 0, canvas.width, canvas.height);
+
+        textureAtlas.addImage(whitePixelCanvasId, canvas).then(function(index) {
+            //glyphTextureInfo.index = index;
+            labelCollection._whitePixelIndex = index;
+            textureAtlas.addSubRegion(whitePixelCanvasId, whitePixelBoundingRegion);
+console.log('white pixel index ' + index);
+        });
     }
 
     // reusable object for calling writeTextToCanvas
@@ -104,6 +136,34 @@ define([
         var glyph;
         var glyphIndex;
         var textIndex;
+
+        var backgroundBillboard = label._backgroundBillboard;
+        if (!defined(backgroundBillboard)) {
+            if (labelCollection._spareBackgroundBillboards.length > 0) {
+                backgroundBillboard = labelCollection._spareBackgroundBillboards.pop();
+            } else {
+                backgroundBillboard = labelCollection._backgroundBillboardCollection.add({
+                    collection : labelCollection
+                });
+            }
+            label._backgroundBillboard = backgroundBillboard;
+        }
+
+        backgroundBillboard.color = new Color(0.5, 0.5, 0.5, 0.8);  // TODO: Configure color.
+        backgroundBillboard.show = label._show;
+        backgroundBillboard.position = label._position;
+        backgroundBillboard.eyeOffset = label._eyeOffset;
+        backgroundBillboard.pixelOffset = label._pixelOffset;
+        backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
+        backgroundBillboard.verticalOrigin = label._verticalOrigin;
+        backgroundBillboard.heightReference = label._heightReference;
+        backgroundBillboard.scale = label._scale;
+        backgroundBillboard.pickPrimitive = label;
+        backgroundBillboard.id = label._id;
+        backgroundBillboard.image = whitePixelSubRegionId;
+        backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
+        backgroundBillboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+        backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
 
         // if we have more glyphs than needed, unbind the extras.
         if (textLength < glyphsLength) {
@@ -216,11 +276,14 @@ define([
     var glyphPixelOffset = new Cartesian2();
 
     function repositionAllGlyphs(label, resolutionScale) {
+console.log('reposition glyphs:', resolutionScale);
         var glyphs = label._glyphs;
         var glyph;
         var dimensions;
         var totalWidth = 0;
         var maxHeight = 0;
+        var maxDescent = 0;
+        var maxY = 0;
 
         var glyphIndex = 0;
         var glyphLength = glyphs.length;
@@ -229,7 +292,12 @@ define([
             dimensions = glyph.dimensions;
             totalWidth += dimensions.computedWidth;
             maxHeight = Math.max(maxHeight, dimensions.height);
+            maxY = Math.max(maxHeight, dimensions.height - dimensions.descent);
+            maxDescent = Math.max(maxDescent, dimensions.descent);
+console.log('Glyph ' + glyphIndex + ' width ' + dimensions.computedWidth + ' descent ' + dimensions.descent + ' height ' + dimensions.height);
         }
+        var realMaxHeight = maxY + maxDescent;
+console.log('totalWidth ' + totalWidth + ' maxheight ' + maxHeight + ' maxdescent ' + maxDescent + ' realMaxHeight ' + realMaxHeight);
 
         var scale = label._scale;
         var horizontalOrigin = label._horizontalOrigin;
@@ -264,12 +332,33 @@ define([
 
             glyphPixelOffset.x += dimensions.computedWidth * scale * resolutionScale;
         }
+
+        var backgroundBillboard = label._backgroundBillboard;
+        if (defined(backgroundBillboard)) {
+            glyphPixelOffset.x = widthOffset * resolutionScale;
+            if (verticalOrigin === VerticalOrigin.BOTTOM) {
+                glyphPixelOffset.y = -maxDescent * scale;
+            } else if (verticalOrigin === VerticalOrigin.TOP) {
+                glyphPixelOffset.y = -(maxHeight - realMaxHeight) * scale - maxDescent * scale;
+            } else {
+                glyphPixelOffset.y = -(maxHeight - realMaxHeight) / 2 * scale - maxDescent * scale;
+            }
+            backgroundBillboard._setTranslate(glyphPixelOffset);
+            backgroundBillboard.width = totalWidth;
+            backgroundBillboard.height = realMaxHeight;
+        }
     }
 
     function destroyLabel(labelCollection, label) {
         var glyphs = label._glyphs;
         for ( var i = 0, len = glyphs.length; i < len; ++i) {
             unbindGlyph(labelCollection, glyphs[i]);
+        }
+        if (defined(label._backgroundBillboard)) {
+            label._backgroundBillboard.show = false;
+            label._backgroundBillboard.image = undefined;
+            labelCollection._spareBackgroundBillboards.push(label._backgroundBillboard);
+            label._backgroundBillboard = undefined;
         }
         label._labelCollection = undefined;
 
@@ -330,13 +419,29 @@ define([
         this._scene = options.scene;
 
         this._textureAtlas = undefined;
+        this.__backgroundTextureAtlas = undefined;
+        this._whitePixelIndex = undefined;
+
+        this._backgroundBillboardCollection = new BillboardCollection({
+            scene : this._scene
+        });
+        this._backgroundBillboardCollection.destroyTextureAtlas = false;
 
         this._billboardCollection = new BillboardCollection({
             scene : this._scene
         });
         this._billboardCollection.destroyTextureAtlas = false;
 
+        this._billboardCollection._rs = RenderState.fromCache({
+            depthTest : {
+                enabled : true,
+                func : WebGLConstants.LEQUAL  // default is LESS
+            },
+            blending : BlendingState.ALPHA_BLEND
+        });
+
         this._spareBillboards = [];
+        this._spareBackgroundBillboards = [];
         this._glyphTextureCache = {};
         this._labels = [];
         this._labelsToUpdate = [];
@@ -572,9 +677,12 @@ define([
      */
     LabelCollection.prototype.update = function(frameState) {
         var billboardCollection = this._billboardCollection;
+        var backgroundBillboardCollection = this._backgroundBillboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
         billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
+        backgroundBillboardCollection.modelMatrix = this.modelMatrix;
+        backgroundBillboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
         var context = frameState.context;
 
@@ -583,6 +691,16 @@ define([
                 context : context
             });
             billboardCollection.textureAtlas = this._textureAtlas;
+            //addWhitePixelCanvas(this._textureAtlas, this);
+        }
+
+        if (!defined(this._backgroundTextureAtlas)) {
+            this._backgroundTextureAtlas = new TextureAtlas({
+                context : context,
+                initialSize : whitePixelSize
+            });
+            backgroundBillboardCollection.textureAtlas = this._backgroundTextureAtlas;
+            addWhitePixelCanvas(this._backgroundTextureAtlas, this);
         }
 
         var uniformState = context.uniformState;
@@ -621,6 +739,7 @@ define([
         }
 
         this._labelsToUpdate.length = 0;
+        backgroundBillboardCollection.update(frameState);
         billboardCollection.update(frameState);
     };
 
@@ -660,6 +779,8 @@ define([
         this.removeAll();
         this._billboardCollection = this._billboardCollection.destroy();
         this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
+        this._backgroundBillboardCollection = this._backgroundBillboardCollection.destroy();
+        this._backgroundTextureAtlas = this._backgroundTextureAtlas && this._backgroundTextureAtlas.destroy();
 
         return destroyObject(this);
     };
