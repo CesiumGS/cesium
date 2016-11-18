@@ -231,7 +231,9 @@ define([
     // Note that this is a global cache, compared to renderer resources, which
     // are cached per context.
     function CachedGltf(options) {
-        this._gltf = modelMaterialsCommon(gltfDefaults(options.gltf));
+        this._gltf = modelMaterialsCommon(gltfDefaults(options.gltf), {
+            addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
+        });
         this._bgltf = options.bgltf;
         this.ready = options.ready;
         this.modelsToLoad = [];
@@ -331,6 +333,7 @@ define([
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      * @param {DistanceDisplayCondition} [options.istanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
+     * @param {Boolean} [options.addBatchIdToGeneratedShaders=false] Determines if shaders generated for materials using the KHR_materials_common extension should include a batchId attribute. For models contained in B3DM tiles.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -374,13 +377,15 @@ define([
                     cachedGltf = new CachedGltf({
                         gltf : result.glTF,
                         bgltf : gltf,
-                        ready : true
+                        ready : true,
+                        addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
                     });
                 } else {
                     // Normal glTF (JSON)
                     cachedGltf = new CachedGltf({
                         gltf : options.gltf,
-                        ready : true
+                        ready : true,
+                        addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
                     });
                 }
 
