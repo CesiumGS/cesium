@@ -67,7 +67,7 @@
     "request": "2.79.0",
     "rimraf": "2.5.4",
     "strip-comments": "0.3.2",
-    "yargs": "6.3.0"
+    "yargs": "6.4.0"
   },
   "scripts": {
     "start": "node server.js",
