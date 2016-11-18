@@ -8,6 +8,7 @@ define([
        '../ThirdParty/jsep',
        './ExpressionNodeType'
     ], function(
+        CesiumMath,
         Color,
         defined,
         defineProperties,
@@ -938,22 +939,6 @@ define([
 
     Node.prototype._evaluateIsFinite = function(frameState, feature) {
         return isFinite(this._left.evaluate(frameState, feature));
-    };
-
-    Node.prototype._evaluateBooleanConversion = function(feature) {
-        return Boolean(this._left.evaluate(feature));
-    };
-
-    Node.prototype._evaluateAbsoluteValue = function(frameState, feature) {
-        return Math.abs(this._left.evaluate(frameState, feature));
-    };
-
-    Node.prototype._evaluateCosine = function(frameState, feature) {
-        return Math.cos(this._left.evaluate(frameState, feature));
-    };
-
-    Node.prototype._evaluateSquareRoot = function(frameState, feature) {
-        return Math.sqrt(this._left.evaluate(frameState, feature));
     };
 
     Node.prototype._evaluateBooleanConversion = function(frameState, feature) {

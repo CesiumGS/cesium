@@ -110,12 +110,12 @@ addStyle('Abs', {
 });
 
 addStyle('Trigonometric Functions', {
-    color : "color() * radians(cos(${temperature})) + color() * sin(${temperature}) + color() * tan(${temperature}) + 30"
+    color : "color() * radians(cos(${temperature})) + color() * sin(${temperature}) + color() * tan(${temperature})"
 
 });
 
 addStyle('Arc Trigonometric Functions', {
-    color : "color() * degrees(acos(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature}) - 30"
+    color : "color() * acos(degrees(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature})"
 });
 
 addStyle('Sqrt', {
