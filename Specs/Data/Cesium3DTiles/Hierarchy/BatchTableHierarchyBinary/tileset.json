@@ -2,7 +2,7 @@
   "asset": {
     "version": "0.0"
   },
-  "geometricError": 20,
+  "geometricError": 70,
   "root": {
     "transform": [
       0.9686356343768792,
@@ -27,16 +27,16 @@
       "box": [
         0,
         0,
-        2,
-        10,
+        25,
+        100,
         0,
         0,
         0,
-        10,
+        100,
         0,
         0,
         0,
-        2
+        50
       ]
     },
     "geometricError": 0,

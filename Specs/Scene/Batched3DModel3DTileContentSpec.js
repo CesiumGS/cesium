@@ -29,7 +29,7 @@ defineSuite([
     var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
 
     function setCamera(longitude, latitude) {
-        // One instance is located at the center, point the camera there
+        // One feature is located at the center, point the camera there
         var center = Cartesian3.fromRadians(longitude, latitude);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
     }
