@@ -10,7 +10,8 @@ define([
         '../Core/RequestScheduler',
         '../ThirdParty/when',
         './ConditionsExpression',
-        './Expression'
+        './Expression',
+        './LabelStyle'
     ], function(
         clone,
         defaultValue,
@@ -22,12 +23,18 @@ define([
         RequestScheduler,
         when,
         ConditionsExpression,
-        Expression) {
+        Expression,
+        LabelStyle) {
     'use strict';
 
     var DEFAULT_JSON_COLOR_EXPRESSION = 'color("#ffffff")';
+    var DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION = 'color("#000000")';
     var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
     var DEFAULT_JSON_NUMBER_EXPRESSION = 1.0;
+    var DEFAULT_LABEL_STYLE_EXPRESSION = LabelStyle.FILL;
+    var DEFAULT_FONT_EXPRESSION = '"30px sans-serif"';
+    var DEFAULT_POINT_SIZE_EXPRESSION = 8.0;
+    var DEFAULT_TEXT_EXPRESSION = '" "';
 
     /**
      * Evaluates an expression defined using the
@@ -62,6 +69,12 @@ define([
         this._color = undefined;
         this._show = undefined;
         this._pointSize = undefined;
+        this._outlineColor = undefined;
+        this._outlineWidth = undefined;
+        this._labelStyle = undefined;
+        this._font = undefined;
+        this._text = undefined;
+        this._image = undefined;
         this._meta = undefined;
 
         this._colorShaderFunction = undefined;
@@ -106,7 +119,13 @@ define([
 
         var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
-        var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_JSON_NUMBER_EXPRESSION);
+        var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_POINT_SIZE_EXPRESSION);
+        var outlineColorExpression = defaultValue(styleJson.outlineColor, DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION);
+        var outlineWidthExpression = defaultValue(styleJson.outlineWidth, DEFAULT_JSON_NUMBER_EXPRESSION);
+        var labelStyleExpression = defaultValue(styleJson.labelStyle, DEFAULT_LABEL_STYLE_EXPRESSION);
+        var fontExpression = defaultValue(styleJson.font, DEFAULT_FONT_EXPRESSION);
+        var textExpression = defaultValue(styleJson.text, DEFAULT_TEXT_EXPRESSION);
+        var imageExpression = styleJson.image;
 
         var color;
         if (typeof(colorExpression) === 'string') {
@@ -138,6 +157,64 @@ define([
         }
 
         that._pointSize = pointSize;
+
+        var outlineColor;
+        if (typeof(outlineColorExpression) === 'string') {
+            outlineColor = new Expression(outlineColorExpression);
+        } else if (defined(outlineColorExpression.conditions)) {
+            outlineColor = new ConditionsExpression(outlineColorExpression);
+        }
+
+        that._outlineColor = outlineColor;
+
+        var outlineWidth;
+        if (typeof(outlineWidthExpression) === 'number') {
+            outlineWidth = new Expression(String(outlineWidthExpression));
+        } else if (typeof(outlineWidthExpression) === 'string') {
+            outlineWidth = new Expression(outlineWidthExpression);
+        } else if (defined(outlineWidthExpression.conditions)) {
+            outlineWidth = new ConditionsExpression(outlineWidthExpression);
+        }
+
+        that._outlineWidth = outlineWidth;
+
+        var labelStyle;
+        if (typeof(labelStyleExpression) === 'number') {
+            labelStyle = new Expression(String(labelStyleExpression));
+        } else if (typeof(labelStyleExpression) === 'string') {
+            labelStyle = new Expression(labelStyleExpression);
+        } else if (defined(labelStyleExpression.conditions)) {
+            labelStyle = new ConditionsExpression(labelStyleExpression);
+        }
+
+        that._labelStyle = labelStyle;
+
+        var font;
+        if (typeof(fontExpression) === 'string') {
+            font = new Expression(fontExpression);
+        } else if (defined(fontExpression.conditions)) {
+            font = new ConditionsExpression(fontExpression);
+        }
+
+        that._font = font;
+
+        var text;
+        if (typeof(textExpression) === 'string') {
+            text = new Expression(textExpression);
+        } else if (defined(textExpression.conditions)) {
+            text = new ConditionsExpression(textExpression);
+        }
+
+        that._text = text;
+
+        var image;
+        if (typeof(imageExpression) === 'string') {
+            image = new Expression(imageExpression);
+        } else if (defined(imageExpression) && defined(imageExpression.conditions)) {
+            image = new ConditionsExpression(imageExpression);
+        }
+
+        that._image = image;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -340,6 +417,270 @@ define([
             },
             set : function(value) {
                 this._pointSize = value;
+            }
+        },
+
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>outlineColor</code> property.
+         * <p>
+         * The expression must return a <code>Color</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     outlineColor : '(${Temperature} > 90) ? color('red') : color('white')'
+         * });
+         * style.outlineColor.evaluate(frameState, feature); // returns a Cesium.Color
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override outlineColor expression with a custom function
+         * style.outlineColor = {
+         *     evaluate : function(frameState, feature) {
+         *         return Color.WHITE;
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        outlineColor : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._outlineColor;
+            },
+            set : function(value) {
+                this._outlineColor = value;
+            }
+        },
+
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>outlineWidth</code> property.
+         * <p>
+         * The expression must return or convert to a <code>Number</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     outlineWidth : '(${Temperature} > 90) ? 4.0 : 2.0'
+         * });
+         * style.outlineWidth.evaluate(frameState, feature); // returns a Number
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override outlineWidth expression with a custom function
+         * style.outlineWidth = {
+         *     evaluate : function(frameState, feature) {
+         *         return 2.0;
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        outlineWidth : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._outlineWidth;
+            },
+            set : function(value) {
+                this._outlineWidth = value;
+            }
+        },
+
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelStyle</code> property.
+         * <p>
+         * The expression must return or convert to a <code>LabelStyle</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     labelStyle : '(${Temperature} > 90) ? ' + LabelStyle.FILL_AND_OUTLINE + ' : ' + LabelStyle.FILL
+         * });
+         * style.labelStyle.evaluate(frameState, feature); // returns a Cesium.LabelStyle
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override labelStyle expression with a custom function
+         * style.labelStyle = {
+         *     evaluate : function(frameState, feature) {
+         *         return LabelStyle.FILL;
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        labelStyle : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._labelStyle;
+            },
+            set : function(value) {
+                this._labelStyle = value;
+            }
+        },
+
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>font</code> property.
+         * <p>
+         * The expression must return a <code>String</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     font : '(${Temperature} > 90) ? "30px Helvetica" : "24px Helvetica"'
+         * });
+         * style.font.evaluate(frameState, feature); // returns a String
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override font expression with a custom function
+         * style.font = {
+         *     evaluate : function(frameState, feature) {
+         *         return '24px Helvetica';
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        font : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._font;
+            },
+            set : function(value) {
+                this._font = value;
+            }
+        },
+
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>text</code> property.
+         * <p>
+         * The expression must return a <code>String</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     text : '(${Temperature} > 90) ? ">90" : "<=90"'
+         * });
+         * style.text.evaluate(frameState, feature); // returns a String
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override text expression with a custom function
+         * style.text = {
+         *     evaluate : function(frameState, feature) {
+         *         return 'Example label text';
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        text : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._text;
+            },
+            set : function(value) {
+                this._text = value;
+            }
+        },
+
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>image</code> property.
+         * <p>
+         * The expression must return a <code>String</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     image : '(${Temperature} > 90) ? "/url/to/image1" : "/url/to/image2"'
+         * });
+         * style.image.evaluate(frameState, feature); // returns a String
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override image expression with a custom function
+         * style.image = {
+         *     evaluate : function(frameState, feature) {
+         *         return '/url/to/image';
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        image : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._image;
+            },
+            set : function(value) {
+                this._image = value;
             }
         },
 

@@ -2,20 +2,24 @@
 define([
         '../Core/Color',
         '../Core/defined',
-        '../Core/defineProperties'
+        '../Core/defineProperties',
+        './Cesium3DTileStyle',
+        './LabelStyle'
     ], function(
         Color,
         defined,
-        defineProperties) {
+        defineProperties,
+        Cesium3DTileStyle,
+        LabelStyle) {
     'use strict';
 
     /**
      * @private
      */
     function Cesium3DTileStyleEngine() {
-        this._style = undefined;      // The style provided by the user
-        this._styleDirty = false;     // true when the style is reassigned
-        this._lastStyleTime = 0;      // The "time" when the last style was assigned
+        this._style = new Cesium3DTileStyle(); // The style provided by the user
+        this._styleDirty = true ;              // true when the style is reassigned
+        this._lastStyleTime = 0;               // The "time" when the last style was assigned
     }
 
     defineProperties(Cesium3DTileStyleEngine.prototype, {
@@ -122,6 +126,15 @@ define([
             var feature = content.getFeature(i);
             feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
             feature.show = style.show.evaluate(frameState, feature);
+            feature.outlineColor = style.outlineColor.evaluate(frameState, feature);
+            feature.outlineWidth = style.outlineWidth.evaluate(frameState, feature);
+            feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
+            feature.font = style.font.evaluate(frameState, feature);
+            feature.pointSize = style.pointSize.evaluate(frameState, feature);
+            feature.text = style.text.evaluate(frameState, feature);
+            if (defined(style.image)) {
+                feature.image = style.image.evaluate(frameState, feature);
+            }
         }
     }
 
@@ -131,6 +144,13 @@ define([
             var feature = content.getFeature(i);
             feature.show = true;
             feature.color = Color.WHITE;
+            feature.outlineColor = Color.BLACK;
+            feature.outlineWidth = 2.0;
+            feature.labelStyle = LabelStyle.FILL;
+            feature.font = '30px sans-serif';
+            feature.pointSize = 8.0;
+            feature.text = ' ';
+            feature.image = undefined;
         }
     }
 

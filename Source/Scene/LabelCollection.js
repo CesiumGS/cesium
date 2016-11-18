@@ -204,6 +204,7 @@ define([
                 billboard.translucencyByDistance = label._translucencyByDistance;
                 billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
                 billboard.distanceDisplayCondition = label._distanceDisplayCondition;
+                billboard._batchIndex = label._batchIndex;
             }
         }
 
@@ -328,11 +329,13 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._scene = options.scene;
+        this._batchTable = options.batchTable;
 
         this._textureAtlas = undefined;
 
         this._billboardCollection = new BillboardCollection({
-            scene : this._scene
+            scene : this._scene,
+            batchTable : this._batchTable
         });
         this._billboardCollection.destroyTextureAtlas = false;
 

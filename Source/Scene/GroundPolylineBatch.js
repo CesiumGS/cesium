@@ -354,8 +354,8 @@ define([
 
         var batchTable = primitive._batchTable;
 
-        var vsSource = batchTable.getVertexShaderCallback()(GroundPolylineBatchVS, false);
-        var fsSource = batchTable.getFragmentShaderCallback()(PolylineFS, false);
+        var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId')(GroundPolylineBatchVS);
+        var fsSource = batchTable.getFragmentShaderCallback()(PolylineFS);
 
         var vs = new ShaderSource({
             defines : ['VECTOR_TILE'],
@@ -373,7 +373,7 @@ define([
             attributeLocations : attributeLocations
         });
 
-        vsSource = batchTable.getPickVertexShaderCallback()(GroundPolylineBatchVS);
+        vsSource = batchTable.getPickVertexShaderCallback('a_batchId')(GroundPolylineBatchVS);
         fsSource = batchTable.getPickFragmentShaderCallback()(PolylineFS);
 
         var pickVS = new ShaderSource({

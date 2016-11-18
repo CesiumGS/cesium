@@ -38,6 +38,8 @@ defineSuite([
     var vectorPolylineUrl = './Data/Cesium3DTiles/Vector/VectorPolyline';
     var vectorPolylineQuantizedUrl = './Data/Cesium3DTiles/Vector/VectorPolylineQuantized';
     var vectorPolygonWithPropertiesUrl = './Data/Cesium3DTiles/Vector/VectorPolygonWithProperties';
+    var vectorPointUrl = './Data/Cesium3DTiles/Vector/VectorPoint';
+    var vectorPointQuantizedUrl = './Data/Cesium3DTiles/Vector/VectorPointQuantized';
 
     function MockGlobePrimitive(primitive) {
         this._primitive = primitive;
@@ -97,7 +99,8 @@ defineSuite([
                 translucent : false,
                 flat : true
             }),
-            asynchronous : false
+            asynchronous : false,
+            allowPicking : false
         });
 
         // wrap rectangle primitive so it gets executed during the globe pass to lay down depth
@@ -146,7 +149,8 @@ defineSuite([
     it('throws if the feature table does not contain POLYGONS_LENGTH', function() {
         var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
             featureTableJson : {
-                POLYLINES_LENGTH : 0
+                POLYLINES_LENGTH : 0,
+                POINTS_LENGTH : 0
             }
         });
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
@@ -155,7 +159,18 @@ defineSuite([
     it('throws if the feature table does not contain POLYLINES_LENGTH', function() {
         var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
             featureTableJson : {
-                POLYGONS_LENGTH : 0
+                POLYGONS_LENGTH : 0,
+                POINTS_LENGTH : 0
+            }
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
+    });
+
+    it('throws if the feature table does not contain POINTS_LENGTH', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
+            featureTableJson : {
+                POLYGONS_LENGTH : 0,
+                POLYLINES_LENGTH : 0
             }
         });
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
@@ -211,6 +226,14 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, vectorPolylineQuantizedUrl).then(expectRenderVectorContent);
     });
 
+    it('renders points', function() {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPointUrl).then(expectRenderVectorContent);
+    });
+
+    it('renders quantized points', function() {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPointQuantizedUrl).then(expectRenderVectorContent);
+    });
+
     it('renders with debug color', function() {
         return Cesium3DTilesTester.loadTileset(scene, vectorPolygonQuantizedUrl).then(function(tileset) {
             var color = expectRenderVectorContent(tileset);
@@ -225,14 +248,12 @@ defineSuite([
 
     it('picks', function() {
         return Cesium3DTilesTester.loadTileset(scene, vectorPolygonQuantizedUrl).then(function(tileset) {
-            var content = tileset._root.content;
             tileset.show = false;
             var picked = scene.pickForSpecs();
             expect(picked).toBeUndefined();
             tileset.show = true;
             picked = scene.pickForSpecs();
             expect(picked).toBeDefined();
-            expect(picked.primitive).toBe(content);
         });
     });
 
@@ -271,7 +292,7 @@ defineSuite([
         });
     });
 
-    it('applies shader style', function() {
+    it('applies style', function() {
         return Cesium3DTilesTester.loadTileset(scene, vectorPolygonWithPropertiesUrl).then(function(tileset) {
             // Solid red color
             tileset.style = new Cesium3DTileStyle({

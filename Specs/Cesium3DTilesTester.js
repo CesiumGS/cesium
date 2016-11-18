@@ -331,6 +331,7 @@ define([
                 RTC_CENTER : [0.0, 0.0, 0.0],
                 POLYGONS_LENGTH : 1,
                 POLYLINES_LENGTH : 0,
+                POINTS_LENGTH : 0,
                 POLYGON_COUNT : {
                     byteOffset : 0
                 },
@@ -353,7 +354,7 @@ define([
         var indicesByteLength = indices.byteLength;
         var positionsByteLength = positions.byteLength;
 
-        var headerByteLength = 40;
+        var headerByteLength = 44;
         var byteLength = headerByteLength + featureTableJsonByteLength + featureTableBinaryByteLength + indicesByteLength + positionsByteLength;
         var buffer = new ArrayBuffer(byteLength);
         var view = new DataView(buffer);
@@ -370,6 +371,7 @@ define([
         view.setUint32(28, indicesByteLength, true);            // indices byte length
         view.setUint32(32, positionsByteLength, true);          // polygon positions byte length
         view.setUint32(36, 0, true);                            // polyline positions byte length
+        view.setUint32(40, 0, true);                            // point positions byte length
 
         var i;
         var byteOffset = headerByteLength;
