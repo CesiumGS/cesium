@@ -144,11 +144,11 @@ define([
      *
      * @param {TilingScheme} tilingScheme The tiling scheme for which the tiles are to be created.
      * @param {Number} level The minimum level to display.
-     * @param {Recatngle} rectangle  The area to display.
+     * @param {CesiumTerrainProvider} terrainProvider The area to display.
      * @returns {QuadtreeTile[]} An array containing the tiles at minimum level of detail, starting with the
      * tile in the northwest corner and followed by the tile (if any) to its east of the area.
      */
-    QuadtreeTile.createMinimumLevelTiles = function(tilingScheme, level, rectangle) {
+    QuadtreeTile.createMinimumLevelTiles = function(tilingScheme, level, terrainProvider) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
@@ -156,24 +156,33 @@ define([
         if (!defined(level)) {
             throw new DeveloperError('level is required.');
         }
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required.');
+        if (!defined(terrainProvider)) {
+            throw new DeveloperError('terrainProvider is required.');
         }
         //>>includeEnd('debug');
+        var rectangle = terrainProvider._rectangle;
         var westSouth = Cartographic.fromRadians(rectangle.west, rectangle.south);
         var eastNorth = Cartographic.fromRadians(rectangle.east, rectangle.north);
         var bottomLeft = tilingScheme.positionToTileXY(westSouth, level);
         var topRight = tilingScheme.positionToTileXY(eastNorth, level);
         var result = new Array();
+        var ranges = terrainProvider._availableTiles[level];
+        var numberOfTilesY = tilingScheme.getNumberOfYTilesAtLevel(level);
 
         for (var y = topRight.y; y <= bottomLeft.y; y++) {
             for (var x = bottomLeft.x; x <= topRight.x; x++) {
-                result.push(new QuadtreeTile({
-                    tilingScheme : tilingScheme,
-                    x : x,
-                    y : y,
-                    level : level
-                }));
+                for (var i = 0, len = ranges.length; i < len; ++i) {
+                    var range = ranges[i];
+                    var terrainY = numberOfTilesY - y - 1;
+                    if (x >= range.startX && x <= range.endX && terrainY >= range.startY && terrainY <= range.endY) {
+                        result.push(new QuadtreeTile({
+                            tilingScheme : tilingScheme,
+                            x : x,
+                            y : y,
+                            level : level
+                        }));
+                    }
+                }
             }
         }
 
