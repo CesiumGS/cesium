@@ -54,8 +54,8 @@ define([
         acos : Math.acos,
         asin : Math.asin,
         atan : Math.atan,
-        radians : CesiumMath.toRadians(),
-        degrees : CesiumMath.toDegrees()
+        radians : CesiumMath.toRadians,
+        degrees : CesiumMath.toDegrees
     };
 
     /**
