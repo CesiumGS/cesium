@@ -397,9 +397,9 @@ defineSuite([
             });
             pixelColor = scene.renderForSpecs(); // Pixel color is some shade of gray
             expect(pixelColor[0]).toBe(pixelColor[1]);
-            expect(pixelColor[0]).toBe(pixelColor[2]);
-            expect(pixelColor[0]).toBeGreaterThan(0);
-            expect(pixelColor[0]).toBeLessThan(255);
+            expect(pixelColor[1]).toBe(pixelColor[2]);
+            expect(pixelColor[2]).toBeGreaterThan(0);
+            expect(pixelColor[3]).toBeLessThan(255);
 
             // When no conditions are met the default color is white
             tileset.style = new Cesium3DTileStyle({

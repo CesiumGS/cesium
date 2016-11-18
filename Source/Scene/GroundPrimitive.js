@@ -548,7 +548,7 @@ define([
 
     function getRectangle(frameState, geometry) {
         var ellipsoid = frameState.mapProjection.ellipsoid;
-        
+
         if (!defined(geometry.attributes) || !defined(geometry.attributes.position3DHigh)) {
             if (defined(geometry.rectangle)) {
                 return geometry.rectangle;
@@ -692,7 +692,7 @@ define([
 
         var result = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, 0.0);
         BoundingSphere.fromRectangle3D(rectangle, ellipsoid, maxTerrainHeight, scratchBoundingSphere);
-        
+
         return BoundingSphere.union(result, scratchBoundingSphere, result);
     }
 

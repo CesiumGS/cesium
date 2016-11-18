@@ -4,13 +4,15 @@ define([
         './Composite3DTileContent',
         './Instanced3DModel3DTileContent',
         './PointCloud3DTileContent',
-        './Tileset3DTileContent'
+        './Tileset3DTileContent',
+        './Vector3DTileContent'
     ], function(
         Batched3DModel3DTileContent,
         Composite3DTileContent,
         Instanced3DModel3DTileContent,
         PointCloud3DTileContent,
-        Tileset3DTileContent) {
+        Tileset3DTileContent,
+        Vector3DTileContent) {
     'use strict';
 
     /**
@@ -32,6 +34,9 @@ define([
         cmpt : function(tileset, tile, url) {
             // Send in the factory in order to avoid a cyclical dependency
             return new Composite3DTileContent(tileset, tile, url, Cesium3DTileContentFactory);
+        },
+        vctr : function(tileset, tile, url) {
+            return new Vector3DTileContent(tileset, tile, url);
         },
         json : function(tileset, tile, url) {
             return new Tileset3DTileContent(tileset, tile, url);

@@ -60,7 +60,7 @@ define([
     /**
      * @private
      */
-    function Cesium3DTileBatchTable(content, featuresLength, batchTableJson, batchTableBinary) {
+    function Cesium3DTileBatchTable(content, featuresLength, batchTableJson, batchTableBinary, colorChangedCallback) {
         featuresLength = defaultValue(featuresLength, 0);
 
         /**
@@ -93,6 +93,8 @@ define([
         this._pickIds = [];
 
         this._content = content;
+
+        this._colorChangedCallback = colorChangedCallback;
 
         // Dimensions for batch and pick textures
         var textureDimensions;
@@ -295,6 +297,10 @@ define([
             }
 
             this._batchValuesDirty = true;
+
+            if (defined(this._colorChangedCallback)) {
+                this._colorChangedCallback(batchId, color);
+            }
         }
     };
 

@@ -318,6 +318,82 @@ define([
         return buffer;
     };
 
+    Cesium3DTilesTester.generateVectorTileBuffer = function(options) {
+        // Procedurally generate the tile array buffer for testing purposes
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var magic = defaultValue(options.magic, [118, 99, 116, 114]);
+        var version = defaultValue(options.version, 1);
+        var featureTableJson = options.featureTableJson;
+        if (!defined(featureTableJson)) {
+            featureTableJson = {
+                MINIMUM_HEIGHT : -100,
+                MAXIMUM_HEIGHT : 100,
+                RTC_CENTER : [0.0, 0.0, 0.0],
+                POLYGONS_LENGTH : 1,
+                POLYLINES_LENGTH : 0,
+                POINTS_LENGTH : 0,
+                POLYGON_COUNT : {
+                    byteOffset : 0
+                },
+                POLYGON_INDEX_COUNT : {
+                    byteOffset : 4
+                }
+            };
+        }
+
+        var featureTableJsonString = JSON.stringify(featureTableJson);
+        featureTableJsonString = padStringToByteAlignment(featureTableJsonString, 4);
+        var featureTableJsonByteLength = defaultValue(options.featureTableJsonByteLength, featureTableJsonString.length);
+
+        var featureTableBinary = new ArrayBuffer(8); // Enough space to hold 2 floats
+        var featureTableBinaryByteLength = featureTableBinary.byteLength;
+
+        var indices = new ArrayBuffer(12); // enough space for 3 unsigned integers
+        var positions = new ArrayBuffer(36); // enough space for 3 * 3 floats
+
+        var indicesByteLength = indices.byteLength;
+        var positionsByteLength = positions.byteLength;
+
+        var headerByteLength = 44;
+        var byteLength = headerByteLength + featureTableJsonByteLength + featureTableBinaryByteLength + indicesByteLength + positionsByteLength;
+        var buffer = new ArrayBuffer(byteLength);
+        var view = new DataView(buffer);
+        view.setUint8(0, magic[0]);
+        view.setUint8(1, magic[1]);
+        view.setUint8(2, magic[2]);
+        view.setUint8(3, magic[3]);
+        view.setUint32(4, version, true);                       // version
+        view.setUint32(8, byteLength, true);                    // byteLength
+        view.setUint32(12, featureTableJsonByteLength, true);   // featureTableJsonByteLength
+        view.setUint32(16, featureTableBinaryByteLength, true); // featureTableBinaryByteLength
+        view.setUint32(20, 0, true);                            // batchTableJsonByteLength
+        view.setUint32(24, 0, true);                            // batchTableBinaryByteLength
+        view.setUint32(28, indicesByteLength, true);            // indices byte length
+        view.setUint32(32, positionsByteLength, true);          // polygon positions byte length
+        view.setUint32(36, 0, true);                            // polyline positions byte length
+        view.setUint32(40, 0, true);                            // point positions byte length
+
+        var i;
+        var byteOffset = headerByteLength;
+        for (i = 0; i < featureTableJsonByteLength; i++) {
+            view.setUint8(byteOffset, featureTableJsonString.charCodeAt(i));
+            byteOffset++;
+        }
+        for (i = 0; i < featureTableBinaryByteLength; i++) {
+            view.setUint8(byteOffset, featureTableBinary[i]);
+            byteOffset++;
+        }
+        for (i = 0; i < indicesByteLength; i++) {
+            view.setUint8(byteOffset, indices[i]);
+            byteOffset++;
+        }
+        for (i = 0; i < positionsByteLength; i++) {
+            view.setUint8(byteOffset, positions[i]);
+            byteOffset++;
+        }
+        return buffer;
+    };
+
     Cesium3DTilesTester.generateCompositeTileBuffer = function(options) {
         // Procedurally generate the tile array buffer for testing purposes
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
