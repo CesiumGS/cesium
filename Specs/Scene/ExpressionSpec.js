@@ -2,10 +2,12 @@
 defineSuite([
         'Scene/Expression',
         'Core/Color',
+        'Core/Math',
         'Scene/ExpressionNodeType'
     ], function(
         Expression,
         Color,
+        CesiumMath,
         ExpressionNodeType) {
     'use strict';
 
@@ -937,7 +939,7 @@ defineSuite([
 
     it('evaluates radians function', function() {
         var expression = new Expression('radians(180)');
-        expect(expression.evaluate(undefined)).toEqualEpsilon(Math.PI);
+        expect(expression.evaluate(undefined)).toEqualEpsilon(Math.PI, CesiumMath.EPSILON10);
     });
 
     it('throws if radians function takes an invalid number of arguments', function() {
@@ -952,7 +954,7 @@ defineSuite([
 
     it('evaluates degrees function', function() {
         var expression = new Expression('degrees(360)');
-        expect(expression.evaluate(undefined)).toEqualEpsilon(2*Math.PI);
+        expect(expression.evaluate(undefined)).toEqualEpsilon(2*Math.PI, CesiumMath.EPSILON10);
     });
 
     it('throws if degrees function takes an invalid number of arguments', function() {
