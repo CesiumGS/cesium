@@ -373,6 +373,10 @@ define([
     var scratchGetHeightCartographic = new Cartographic();
     var scratchGetHeightRay = new Ray();
 
+    function tileIfContainsCartographic(tile, cartographic) {
+        return Rectangle.contains(tile.rectangle, cartographic) ? tile : undefined;
+    }
+
     /**
      * Get the height of the surface at a given cartographic.
      *
@@ -407,15 +411,10 @@ define([
         }
 
         while (tile.renderable) {
-            var children = tile.children;
-            length = children.length;
-
-            for (i = 0; i < length; ++i) {
-                tile = children[i];
-                if (Rectangle.contains(tile.rectangle, cartographic)) {
-                    break;
-                }
-            }
+            tile = tileIfContainsCartographic(tile.southwestChild, cartographic) ||
+                   tileIfContainsCartographic(tile.southeastChild, cartographic) ||
+                   tileIfContainsCartographic(tile.northwestChild, cartographic) ||
+                   tile.northeastChild;
         }
 
         while (defined(tile) && (!defined(tile.data) || !defined(tile.data.pickTerrain))) {

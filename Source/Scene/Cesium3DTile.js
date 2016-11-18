@@ -29,8 +29,8 @@ define([
         './Primitive',
         './TileBoundingRegion',
         './TileBoundingSphere',
-        './Tileset3DTileContent',
-        './TileOrientedBoundingBox'
+        './TileOrientedBoundingBox',
+        './Tileset3DTileContent'
     ], function(
         BoxOutlineGeometry,
         Cartesian3,
@@ -61,8 +61,8 @@ define([
         Primitive,
         TileBoundingRegion,
         TileBoundingSphere,
-        Tileset3DTileContent,
-        TileOrientedBoundingBox) {
+        TileOrientedBoundingBox,
+        Tileset3DTileContent) {
     'use strict';
 
     /**
