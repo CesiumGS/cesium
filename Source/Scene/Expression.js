@@ -9,12 +9,12 @@ define([
         '../ThirdParty/jsep',
         './ExpressionNodeType'
     ], function(
-        CesiumMath,
         Color,
         defined,
         defineProperties,
         DeveloperError,
         isArray,
+        CesiumMath,
         jsep,
         ExpressionNodeType) {
     "use strict";
