@@ -1,5 +1,6 @@
 /*global define*/
 define([
+       '../Core/Math',
        '../Core/Color',
        '../Core/defined',
        '../Core/defineProperties',
