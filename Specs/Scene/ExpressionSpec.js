@@ -2,10 +2,12 @@
 defineSuite([
         'Scene/Expression',
         'Core/Color',
+        'Core/Math',
         'Scene/ExpressionNodeType'
     ], function(
         Expression,
         Color,
+        CesiumMath,
         ExpressionNodeType) {
     'use strict';
 
@@ -881,6 +883,78 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('evaluates atan2 function', function() {
+        var expression = new Expression('atan2(0,1)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        var expression = new Expression('atan2(1,0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.5*Math.PI);
+    });
+
+    it('throws if atan2 function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('atan2(0.0)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('atan2(1, 2, 0)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates pow function', function() {
+        var expression = new Expression('pow(5,0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        var expression = new Expression('pow(4,2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(16.0);
+    });
+
+    it('throws if pow function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('pow(0.0)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('pow(1, 2, 0)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates min function', function() {
+        var expression = new Expression('min(0,1)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        var expression = new Expression('min(-1,0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(-1.0);
+    });
+
+    it('throws if min function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('min(0.0)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('min(1, 2, 0)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates max function', function() {
+        var expression = new Expression('max(0,1)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        var expression = new Expression('max(-1,0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+    });
+
+    it('throws if max function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('max(0.0)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('max(1, 2, 0)');
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates ternary conditional', function() {
         var expression = new Expression('true ? "first" : "second"');
         expect(expression.evaluate(frameState, undefined)).toEqual('first');
@@ -1662,6 +1736,34 @@ defineSuite([
         var expression = new Expression('sqrt(1.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'sqrt(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for atan2', function() {
+        var expression = new Expression('atan2(0,1)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'atan2(0,1)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for pow', function() {
+        var expression = new Expression('pow(2,2)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'pow(2,2)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for min', function() {
+        var expression = new Expression('min(3,5)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'min(3,5)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for max', function() {
+        var expression = new Expression('max(3,5)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'max(3,5)';
         expect(shaderExpression).toEqual(expected);
     });
 
