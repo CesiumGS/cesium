@@ -206,22 +206,42 @@ define([
     }
 
     function validateHierarchy(hierarchy) {
-        // Check for circular dependencies
+        var stack = scratchStack;
+        stack.length = 0;
+
         var classIds = hierarchy.classIds;
         var instancesLength = classIds.length;
 
-        var validateInstance = function(hierarchy, instanceIndex, stack) {
-            if (instanceIndex >= instancesLength) {
-                throw new DeveloperError('Parent index ' + instanceIndex + ' exceeds the total number of instances: ' + instancesLength);
-            }
-            if (stack.indexOf(instanceIndex) >= 0) {
-                throw new DeveloperError('Circular dependency detected in the batch table hierarchy.');
-            }
-        };
-
         for (var i = 0; i < instancesLength; ++i) {
-            traverseHierarchyTree(hierarchy, i, validateInstance);
+            validateInstance(hierarchy, i, stack);
         }
+    }
+
+    function validateInstance(hierarchy, instanceIndex, stack) {
+        var parentCounts = hierarchy.parentCounts;
+        var parentIds = hierarchy.parentIds;
+        var parentIndexes = hierarchy.parentIndexes;
+        var classIds = hierarchy.classIds;
+        var instancesLength = classIds.length;
+
+        if (instanceIndex >= instancesLength) {
+            throw new DeveloperError('Parent index ' + instanceIndex + ' exceeds the total number of instances: ' + instancesLength);
+        }
+        if (stack.indexOf(instanceIndex) > -1) {
+            throw new DeveloperError('Circular dependency detected in the batch table hierarchy.');
+        }
+
+        stack.push(instanceIndex);
+        var parentCount = defined(parentCounts) ? parentCounts[instanceIndex] : 1;
+        var parentIndex = defined(parentCounts) ? parentIndexes[instanceIndex] : instanceIndex;
+        for (var i = 0; i < parentCount; ++i) {
+            var parentId = parentIds[parentIndex + i];
+            // Stop the traversal when the instance has no parent (its parentId equals itself), else continue the traversal.
+            if (parentId !== instanceIndex) {
+                validateInstance(hierarchy, parentId, stack);
+            }
+        }
+        stack.pop(instanceIndex);
     }
 
     Cesium3DTileBatchTable.getBinaryProperties = function(featuresLength, json, binary) {
@@ -472,7 +492,7 @@ define([
     var scratchStack = [];
     var scratchVisited = [];
     var marker = 0;
-    function traverseHierarchyTree(hierarchy, instanceIndex, endConditionCallback) {
+    function traverseHierarchyMultipleParents(hierarchy, instanceIndex, endConditionCallback) {
         var classIds = hierarchy.classIds;
         var parentCounts = hierarchy.parentCounts;
         var parentIds = hierarchy.parentIds;
@@ -515,7 +535,7 @@ define([
         }
     }
 
-    function traverseHierarchyLinear(hierarchy, instanceIndex, endConditionCallback) {
+    function traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback) {
         while (true) {
             var result = endConditionCallback(hierarchy, instanceIndex);
             if (defined(result)) {
@@ -536,9 +556,9 @@ define([
         // When the endConditionCallback returns a value, the traversal stops and that value is returned.
         var parentCounts = hierarchy.parentCounts;
         if (defined(parentCounts)) {
-            return traverseHierarchyTree(hierarchy, instanceIndex, endConditionCallback);
+            return traverseHierarchyMultipleParents(hierarchy, instanceIndex, endConditionCallback);
         } else {
-            return traverseHierarchyLinear(hierarchy, instanceIndex, endConditionCallback);
+            return traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback);
         }
     }
 
