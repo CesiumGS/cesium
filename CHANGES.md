@@ -7,6 +7,7 @@ Change Log
 * Breaking changes
     *
 * Improved terrain/imagery load ordering, especially when the terrain is already fully loaded and we add a new imagery layer.  This results in a 25% reduction in load times in many cases.
+* Billboard depth testing changed from `LESS` to `LEQUAL`, allowing label glyphs of equal depths to overlap.
 * Added support for saving html and css in Github Gists. [#4125](https://github.com/AnalyticalGraphicsInc/cesium/issues/4125)
 * Fixed `Cartographic.fromCartesian` when the cartesian is not on the ellipsoid surface. [#4611](https://github.com/AnalyticalGraphicsInc/cesium/issues/4611)
 

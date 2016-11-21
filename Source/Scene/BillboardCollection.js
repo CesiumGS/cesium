@@ -22,6 +22,7 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArrayFacade',
+        '../Renderer/WebGLConstants',
         '../Shaders/BillboardCollectionFS',
         '../Shaders/BillboardCollectionVS',
         './Billboard',
@@ -55,6 +56,7 @@ define([
         ShaderProgram,
         ShaderSource,
         VertexArrayFacade,
+        WebGLConstants,
         BillboardCollectionFS,
         BillboardCollectionVS,
         Billboard,
@@ -1424,7 +1426,8 @@ define([
             if (!defined(this._rs)) {
                 this._rs = RenderState.fromCache({
                     depthTest : {
-                        enabled : true
+                        enabled : true,
+                        func : WebGLConstants.LEQUAL  // Allows label glyphs and billboards to overlap.
                     },
                     blending : BlendingState.ALPHA_BLEND
                 });
