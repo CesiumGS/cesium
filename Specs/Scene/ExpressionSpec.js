@@ -2,10 +2,12 @@
 defineSuite([
         'Scene/Expression',
         'Core/Color',
+        'Core/Math',
         'Scene/ExpressionNodeType'
     ], function(
         Expression,
         Color,
+        CesiumMath,
         ExpressionNodeType) {
     'use strict';
 
@@ -860,6 +862,111 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('evaluates sin function', function() {
+        var expression = new Expression('sin(0)');
+        expect(expression.evaluate(undefined)).toEqual(0);
+    });
+
+    it('throws if sin function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('sin()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('sin(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates tan function', function() {
+        var expression = new Expression('tan(0)');
+        expect(expression.evaluate(undefined)).toEqual(0);
+    });
+
+    it('throws if tan function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('tan()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('tan(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates acos function', function() {
+        var expression = new Expression('acos(1)');
+        expect(expression.evaluate(undefined)).toEqual(0);
+    });
+
+    it('throws if acos function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('acos()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('acos(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates asin function', function() {
+        var expression = new Expression('asin(0)');
+        expect(expression.evaluate(undefined)).toEqual(0);
+    });
+
+    it('throws if asin function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('asin()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('asin(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates atan function', function() {
+        var expression = new Expression('atan(0)');
+        expect(expression.evaluate(undefined)).toEqual(0);
+    });
+
+    it('throws if atan function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('atan()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('atan(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates radians function', function() {
+        var expression = new Expression('radians(180)');
+        expect(expression.evaluate(undefined)).toEqualEpsilon(Math.PI, CesiumMath.EPSILON10);
+    });
+
+    it('throws if radians function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('radians()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('radians(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates degrees function', function() {
+        var expression = new Expression('degrees(2 * PI)');
+        expect(expression.evaluate(undefined)).toEqualEpsilon(360, CesiumMath.EPSILON10);
+    });
+
+    it('throws if degrees function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('degrees()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('degrees(1, 2)');
+        });
+    });
+
     it('evaluates sqrt function', function() {
         var expression = new Expression('sqrt(1.0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
@@ -1655,6 +1762,41 @@ defineSuite([
         var expression = new Expression('cos(0.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'cos(0.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+     it('gets shader expression for sin', function() {
+        var expression = new Expression('sin(0.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'sin(0.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for tan', function() {
+        var expression = new Expression('tan(0.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'tan(0.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for acos', function() {
+        var expression = new Expression('acos(0.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'acos(0.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for asin', function() {
+        var expression = new Expression('asin(0.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'asin(0.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for atan', function() {
+        var expression = new Expression('atan(0.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'atan(0.0)';
         expect(shaderExpression).toEqual(expected);
     });
 
