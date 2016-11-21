@@ -953,7 +953,7 @@ defineSuite([
     });
 
     it('evaluates degrees function', function() {
-        var expression = new Expression('degrees(' + 2*Math.PI + ')');
+        var expression = new Expression('degrees(2 * PI)');
         expect(expression.evaluate(undefined)).toEqualEpsilon(360, CesiumMath.EPSILON10);
     });
 
