@@ -1,16 +1,16 @@
 /*global define*/
 define([
         '../Core/clone',
-       '../Core/defaultValue',
-       '../Core/defined',
-       '../Core/defineProperties',
-       '../Core/DeveloperError',
-       '../Core/isArray',
-       '../Core/loadJson',
-       '../Core/RequestScheduler',
-       '../ThirdParty/when',
-       './ConditionsExpression',
-       './Expression'
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/isArray',
+        '../Core/loadJson',
+        '../Core/RequestScheduler',
+        '../ThirdParty/when',
+        './ConditionsExpression',
+        './Expression'
     ], function(
         clone,
         defaultValue,
@@ -251,6 +251,7 @@ define([
                 return this._show;
             },
             set : function(value) {
+                this._showShaderFunctionReady = false;
                 this._show = value;
             }
         },
@@ -295,6 +296,7 @@ define([
                 return this._color;
             },
             set : function(value) {
+                this._colorShaderFunctionReady = false;
                 this._color = value;
             }
         },
@@ -339,6 +341,7 @@ define([
                 return this._pointSize;
             },
             set : function(value) {
+                this._pointSizeShaderFunctionReady = false;
                 this._pointSize = value;
             }
         },

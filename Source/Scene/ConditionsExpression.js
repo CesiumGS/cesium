@@ -1,18 +1,18 @@
 /*global define*/
 define([
-       './Expression',
-       '../Core/clone',
-       '../Core/Color',
-       '../Core/defaultValue',
-       '../Core/defined',
-       '../Core/defineProperties'
+        '../Core/clone',
+        '../Core/Color',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        './Expression'
     ], function(
-        Expression,
         clone,
         Color,
         defaultValue,
         defined,
-        defineProperties) {
+        defineProperties,
+        Expression) {
     'use strict';
 
     var expressionPlaceholder = /\$\{expression}/g;

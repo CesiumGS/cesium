@@ -15,9 +15,9 @@ define([
         '../Core/RequestScheduler',
         '../Core/RequestType',
         '../ThirdParty/when',
-        './Cesium3DTileFeature',
         './Cesium3DTileBatchTable',
         './Cesium3DTileContentState',
+        './Cesium3DTileFeature',
         './getAttributeOrUniformBySemantic',
         './Model'
     ], function(
@@ -36,9 +36,9 @@ define([
         RequestScheduler,
         RequestType,
         when,
-        Cesium3DTileFeature,
         Cesium3DTileBatchTable,
         Cesium3DTileContentState,
+        Cesium3DTileFeature,
         getAttributeOrUniformBySemantic,
         Model) {
     'use strict';

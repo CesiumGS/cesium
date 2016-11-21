@@ -8,6 +8,7 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Core/Transforms',
         'Scene/Cesium3DTileStyle',
+        'Scene/Expression',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
@@ -19,6 +20,7 @@ defineSuite([
         HeadingPitchRange,
         Transforms,
         Cesium3DTileStyle,
+        Expression,
         Cesium3DTilesTester,
         createScene) {
     'use strict';
@@ -464,6 +466,20 @@ defineSuite([
                 pointSize : 5.0
             });
             expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        });
+    });
+
+    it('rebuilds shader style when expression changes', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
+            // Solid red color
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color("red")'
+            });
+            expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+
+            tileset.style.color = new Expression('color("lime")');
+            tileset.makeStyleDirty();
+            expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
         });
     });
 

@@ -2,8 +2,8 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/destroyObject',
         '../Core/defineProperties',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/getMagic',
         '../Core/loadArrayBuffer',
@@ -15,8 +15,8 @@ define([
     ], function(
         defaultValue,
         defined,
-        destroyObject,
         defineProperties,
+        destroyObject,
         DeveloperError,
         getMagic,
         loadArrayBuffer,
