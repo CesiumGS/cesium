@@ -411,7 +411,7 @@ define([
                 if (terrainProvider && terrainProvider._availableLevels && terrainProvider._rectangle) {
                     var level = terrainProvider._availableLevels[0];
                     primitive._levelZeroTiles = QuadtreeTile.createMinimumLevelTiles(tilingScheme,
-                            level, terrainProvider._rectangle);
+                            level, terrainProvider);
                 } else {
                   primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
                 }
