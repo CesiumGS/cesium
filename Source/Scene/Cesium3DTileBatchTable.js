@@ -189,17 +189,13 @@ define([
             ++classCounts[classId];
         }
 
-        // Marks visited instances when traversing over the batch table hierarchy
-        var visited = new Uint32Array(instancesLength);
-
         var hierarchy = {
             classes : classes,
             classIds : classIds,
             classIndexes : classIndexes,
             parentCounts : parentCounts,
             parentIndexes : parentIndexes,
-            parentIds : parentIds,
-            visited : visited
+            parentIds : parentIds
         };
 
         //>>includeStart('debug', pragmas.debug);
@@ -474,16 +470,20 @@ define([
     }
 
     var scratchStack = [];
+    var scratchVisited = [];
     var marker = 0;
     function traverseHierarchyTree(hierarchy, instanceIndex, endConditionCallback) {
+        var classIds = hierarchy.classIds;
         var parentCounts = hierarchy.parentCounts;
         var parentIds = hierarchy.parentIds;
         var parentIndexes = hierarchy.parentIndexes;
+        var instancesLength = classIds.length;
 
         // Ignore instances that have already been visited. This occurs in diamond inheritance situations.
         // Use a marker value to indicate that an instance has been visited, which increments with each run.
         // This is more efficient than clearing the visited array every time.
-        var visited = hierarchy.visited;
+        var visited = scratchVisited;
+        visited.length = Math.max(visited.length, instancesLength);
         var visitedMarker = ++marker;
 
         var stack = scratchStack;
