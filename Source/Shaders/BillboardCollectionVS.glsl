@@ -38,7 +38,7 @@ const float SHIFT_RIGHT1 = 1.0 / 2.0;
 
 vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, bool validAlignedAxis, float rotation, bool sizeInMeters)
 {
-    vec2 halfSize = imageSize * scale * czm_resolutionScale;
+    vec2 halfSize = imageSize * scale * czm_resolutionScale * 0.5;
     halfSize *= ((direction * 2.0) - 1.0);
 
     vec2 originTranslate = origin * abs(halfSize);
