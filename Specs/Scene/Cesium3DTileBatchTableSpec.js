@@ -860,7 +860,55 @@ defineSuite([
         expect(batchTable.getPropertyNames(0).sort()).toEqual(['building_name', 'door_name', 'window_name']);
     });
 
+    it('validates hierarchy with multiple parents (2)', function() {
+        //             zone
+        //             / |  \
+        //   building0   |   \
+        //     /      \  |    \
+        //    door0  door1    /
+        //        \    |     /
+        //           window0
+        var batchTableJson = {
+            HIERARCHY : {
+                instancesLength : 4,
+                classIds : [0, 1, 1, 2, 3],
+                parentCounts : [3, 1, 2, 1, 0],
+                parentIds : [1, 2, 4, 3, 3, 4, 4],
+                classes : [{
+                    name : 'window',
+                    length : 1,
+                    instances : {
+                        window_name : ['window0']
+                    }
+                }, {
+                    name : 'door',
+                    length : 2,
+                    instances : {
+                        door_name : ['door0', 'door1']
+                    }
+                }, {
+                    name : 'building',
+                    length : 1,
+                    instances : {
+                        building_name : ['building0']
+                    }
+                }, {
+                    name : 'zone',
+                    length : 1,
+                    instances : {
+                        zone_name : ['zone0']
+                    }
+                }]
+            }
+        };
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 5, batchTableJson);
+        expect(batchTable.getPropertyNames(0).sort()).toEqual(['building_name', 'door_name', 'window_name', 'zone_name']); // check window
+        expect(batchTable.hasProperty(1, 'zone_name')).toEqual(true); // check door0
+        expect(batchTable.hasProperty(2, 'zone_name')).toEqual(true); // check door1
+    });
+
     it('throws if hierarchy has a circular dependency', function() {
+        // window0 -> door0 -> building0 -> window0
         var batchTableJson = {
             HIERARCHY : {
                 instancesLength : 3,
@@ -889,6 +937,39 @@ defineSuite([
         };
         expect(function() {
             return new Cesium3DTileBatchTable(mockContent, 3, batchTableJson);
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if hierarchy has a circular dependency (2)', function() {
+        // window0 -> door0 -> building0 -> window1 -> door0
+        var batchTableJson = {
+            HIERARCHY : {
+                instancesLength : 4,
+                classIds : [0, 1, 2, 0],
+                parentIds : [1, 2, 3, 1],
+                classes : [{
+                    name : 'window',
+                    length : 2,
+                    instances : {
+                        window_name : ['window0', 'window1']
+                    }
+                }, {
+                    name : 'door',
+                    length : 1,
+                    instances : {
+                        door_name : ['door0']
+                    }
+                }, {
+                    name : 'building',
+                    length : 1,
+                    instances : {
+                        building_name : ['building0']
+                    }
+                }]
+            }
+        };
+        expect(function() {
+            return new Cesium3DTileBatchTable(mockContent, 4, batchTableJson);
         }).toThrowDeveloperError();
     });
 
