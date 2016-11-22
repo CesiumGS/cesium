@@ -205,6 +205,7 @@ define([
         return hierarchy;
     }
 
+    //>>includeStart('debug', pragmas.debug);
     function validateHierarchy(hierarchy) {
         var stack = scratchStack;
         stack.length = 0;
@@ -243,6 +244,7 @@ define([
         }
         stack.pop(instanceIndex);
     }
+    //>>includeEnd('debug');
 
     Cesium3DTileBatchTable.getBinaryProperties = function(featuresLength, json, binary) {
         var binaryProperties;
@@ -474,9 +476,8 @@ define([
         var componentCount = binaryProperty.componentCount;
         if (componentCount === 1) {
             return typedArray[index];
-        } else {
-            return binaryProperty.type.unpack(typedArray, index * componentCount);
         }
+        return binaryProperty.type.unpack(typedArray, index * componentCount);
     }
 
     function setBinaryProperty(binaryProperty, index, value) {
@@ -517,7 +518,7 @@ define([
                 continue;
             }
             visited[instanceIndex] = visitedMarker;
-            var result = endConditionCallback(hierarchy, instanceIndex, stack);
+            var result = endConditionCallback(hierarchy, instanceIndex);
             if (defined(result)) {
                 // The end condition was met, stop the traversal and return the result
                 return result;
@@ -557,9 +558,8 @@ define([
         var parentCounts = hierarchy.parentCounts;
         if (defined(parentCounts)) {
             return traverseHierarchyMultipleParents(hierarchy, instanceIndex, endConditionCallback);
-        } else {
-            return traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback);
         }
+        return traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback);
     }
 
     function hasPropertyInHierarchy(batchTable, batchId, name) {
@@ -597,9 +597,8 @@ define([
             if (defined(propertyValues)) {
                 if (defined(propertyValues.typedArray)) {
                     return getBinaryProperty(propertyValues, indexInClass);
-                } else {
-                    return clone(propertyValues[indexInClass], true);
                 }
+                return clone(propertyValues[indexInClass], true);
             }
         });
     }
@@ -639,6 +638,8 @@ define([
         if (!defined(hierarchy)) {
             return false;
         }
+
+        // PERFORMANCE_IDEA : treat class names as integers for faster comparisons
         var result = traverseHierarchy(hierarchy, batchId, function(hierarchy, instanceIndex) {
             var classId = hierarchy.classIds[instanceIndex];
             var instanceClass = hierarchy.classes[classId];
