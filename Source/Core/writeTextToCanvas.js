@@ -87,16 +87,28 @@ define([
         document.body.appendChild(canvas);
 
         var dimensions = measureText(context2D, text, stroke, fill);
-        dimensions.computedWidth = Math.max(dimensions.width, dimensions.bounds.maxx - dimensions.bounds.minx);
         canvas.dimensions = dimensions;
 
         document.body.removeChild(canvas);
         canvas.style.visibility = '';
 
-        var baseline = dimensions.height - dimensions.ascent + padding;
-        canvas.width = dimensions.computedWidth + doublePadding;
-        canvas.height = dimensions.height + doublePadding;
-        var y = canvas.height - baseline;
+        //Some characters, such as the letter j, have a non-zero starting position.
+        //This value is used for kering later, but we need to take it into account
+        //now in order to draw the text completely on the canvas
+        var x = -dimensions.bounds.minx;
+
+        //Expand the width to include the starting position.
+        var width = Math.ceil(dimensions.width) + x;
+
+        //While the height of the letter is correct, we need to adjust
+        //where we start drawing it so that letters like j and y properly dip
+        //below the line.
+        var height = dimensions.height + padding;
+        var baseline = height - dimensions.ascent + doublePadding;
+        var y = height - baseline + doublePadding;
+
+        canvas.width = width;
+        canvas.height = height;
 
         // Properties must be explicitly set again after changing width and height
         context2D.font = font;
@@ -113,13 +125,13 @@ define([
         if (stroke) {
             var strokeColor = defaultValue(options.strokeColor, Color.BLACK);
             context2D.strokeStyle = strokeColor.toCssColorString();
-            context2D.strokeText(text, padding, y);
+            context2D.strokeText(text, x + padding, y);
         }
 
         if (fill) {
             var fillColor = defaultValue(options.fillColor, Color.WHITE);
             context2D.fillStyle = fillColor.toCssColorString();
-            context2D.fillText(text, padding, y);
+            context2D.fillText(text, x + padding, y);
         }
 
         return canvas;
