@@ -18,7 +18,7 @@ define([
      */
     function Cesium3DTileStyleEngine() {
         this._style = new Cesium3DTileStyle(); // The style provided by the user
-        this._styleDirty = true ;              // true when the style is reassigned
+        this._styleDirty = true;               // true when the style is reassigned
         this._lastStyleTime = 0;               // The "time" when the last style was assigned
     }
 
