@@ -36,8 +36,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var scene = viewer.scene;
 var tilesetUrl = '../../../Specs/Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents';
 var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : tilesetUrl,
-    debugShowStatistics : true
+    url : tilesetUrl
 }));
 
 tileset.readyPromise.then(function(tileset) {
@@ -205,6 +204,7 @@ handler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
+// When a feature is left clicked, print it's class name and properties
 handler.setInputAction(function(movement) {
     if (!pickingEnabled) {
         return;
@@ -212,16 +212,19 @@ handler.setInputAction(function(movement) {
 
     var feature = current.feature;
     if (Cesium.defined(feature)) {
-        if (feature.getProperty('clicked')) {
-            console.log('already clicked');
-        } else {
-            // TODO : Do something interesting here
-            feature.setProperty('clicked', true);
+        console.log('Class: ' + feature.getClassName());
+        console.log('Properties:');
+        var propertyNames = feature.getPropertyNames();
+        var length = propertyNames.length;
+        for (var i = 0; i < length; ++i) {
+            var name = propertyNames[i];
+            var value = feature.getProperty(name);
+            console.log('  ' + name + ': ' + value);
         }
     }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-//When a feature is double middle clicked, hide it
+// When a feature is double middle clicked, hide it
 handler.setInputAction(function(movement) {
     if (!pickingEnabled) {
         return;
@@ -231,34 +234,6 @@ handler.setInputAction(function(movement) {
         current.feature.show = false;
     }
 }, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
-
-///////////////////////////////////////////////////////////////////////////////
-
-Sandcastle.addToolbarButton('Stats on/off', function() {
-    tileset.debugShowStatistics = !tileset.debugShowStatistics;
-});
-
-Sandcastle.addToolbarButton('Pick stats on/off', function() {
-    tileset.debugShowPickStatistics = !tileset.debugShowPickStatistics;
-});
-
-Sandcastle.addToolbarButton('Freeze on/off', function() {
-    tileset.debugFreezeFrame = !tileset.debugFreezeFrame;
-});
-
-Sandcastle.addToolbarButton('Colorize on/off', function() {
-    tileset.debugColorizeTiles = !tileset.debugColorizeTiles;
-});
-
-Sandcastle.addToolbarButton('BV on/off', function() {
-    tileset.debugShowBoundingVolume = !tileset.debugShowBoundingVolume;
-});
-
-Sandcastle.addToolbarButton('Contents BV on/off', function() {
-    tileset.debugShowContentBoundingVolume = !tileset.debugShowContentBoundingVolume;
-});
-
-///////////////////////////////////////////////////////////////////////////////
 
 //Sandcastle_End
 Sandcastle.finishedLoading();
