@@ -53,7 +53,7 @@ defineSuite([
 
         // One feature is located at the center, point the camera there
         var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 20.0));
     });
 
     afterAll(function() {
@@ -572,7 +572,7 @@ defineSuite([
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
             // Reset maximum texture size
-            ContextLimits._maximumVertexTextureImageUnits = maximumTextureSize;
+            ContextLimits._maximumTextureSize = maximumTextureSize;
         });
     });
 
@@ -806,7 +806,7 @@ defineSuite([
 
     function checkBatchTableHierarchy(url, multipleParents) {
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
-            //checkHierarchyStyling(tileset);
+            checkHierarchyStyling(tileset);
             checkHierarchyProperties(tileset, multipleParents);
         });
     }
