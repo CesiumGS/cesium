@@ -93,7 +93,7 @@ define([
         canvas.style.visibility = '';
 
         //Some characters, such as the letter j, have a non-zero starting position.
-        //This value is used for kering later, but we need to take it into account
+        //This value is used for kerning later, but we need to take it into account
         //now in order to draw the text completely on the canvas
         var x = -dimensions.bounds.minx;
 
