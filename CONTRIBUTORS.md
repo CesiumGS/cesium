@@ -57,7 +57,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Sergio Flores](https://github.com/relfos)
 * [CubeWerx Inc.](http://www.cubewerx.com/)
    * [Keith Pomakis](https://github.com/pomakis)
-* [Vricon](https://www.vricon.com/)
+* [Vricon](http://www.vricon.com/)
    * [Erik Andersson](https://github.com/e-andersson)
 * [Simulation Curriculum](http://www.simulationcurriculum.com/)
    * [Dave Whipps](https://github.com/dwhipps)

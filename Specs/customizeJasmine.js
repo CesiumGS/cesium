@@ -9,7 +9,7 @@ define([
         equalsMethodEqualityTester) {
     "use strict";
 
-    return function (env, includedCategory, excludedCategory, webglValidation, release) {
+    return function (env, includedCategory, excludedCategory, webglValidation, release, RequestScheduler) {
         function defineSuite(deps, name, suite, categories, focus) {
             /*global define,describe,fdescribe*/
             if (typeof suite === 'object' || typeof suite === 'string') {
@@ -43,6 +43,9 @@ define([
             });
         }
 
+        // Disable request prioritization since it interferes with tests that expect a request to go through immediately.
+        RequestScheduler.prioritize = false;
+
         window.fdefineSuite = function(deps, name, suite, categories) {
             defineSuite(deps, name, suite, categories, true);
         };
@@ -72,6 +75,8 @@ define([
 
         window.it = function(description, f, timeout, categories) {
             originalIt(description, function(done) {
+                // Clear the RequestScheduler before for each test in case requests are still active from previous tests
+                RequestScheduler.clearForSpecs();
                 var result = f();
                 when(result, function() {
                     done();

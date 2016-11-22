@@ -1,0 +1,41 @@
+{
+  "asset": {
+    "version": "0.0"
+  },
+  "properties": {
+    "id": {
+      "minimum": 0,
+      "maximum": 99
+    },
+    "Longitude": {
+      "minimum": -1.3197004048940548,
+      "maximum": -1.3196602716044172
+    },
+    "Latitude": {
+      "minimum": 0.6988585409308616,
+      "maximum": 0.6988894207110236
+    },
+    "Height": {
+      "minimum": 0,
+      "maximum": 80
+    }
+  },
+  "geometricError": 40,
+  "root": {
+    "refine": "add",
+    "boundingVolume": {
+      "region": [
+        -1.3197004048940548,
+        0.6988585409308616,
+        -1.3196602716044172,
+        0.6988894207110236,
+        0,
+        80
+      ]
+    },
+    "geometricError": 0,
+    "content": {
+      "url": "composite.cmpt"
+    }
+  }
+}

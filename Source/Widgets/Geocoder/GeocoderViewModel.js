@@ -10,6 +10,7 @@ define([
         '../../Core/loadJsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
+        '../../Core/RequestScheduler',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
@@ -25,6 +26,7 @@ define([
         loadJsonp,
         Matrix4,
         Rectangle,
+        RequestScheduler,
         SceneMode,
         knockout,
         when,
@@ -250,7 +252,7 @@ define([
         }
         viewModel._isSearchInProgress = true;
 
-        var promise = loadJsonp(viewModel._url + 'REST/v1/Locations', {
+        var promise = RequestScheduler.request(viewModel._url + 'REST/v1/Locations', loadJsonp, {
             parameters : {
                 query : query,
                 key : viewModel._key

@@ -51,11 +51,12 @@
         }
 
         require([
+        'Core/RequestScheduler',
         'Specs/customizeJasmine'
     ], function(
+        RequestScheduler,
         customizeJasmine) {
-
-                    customizeJasmine(jasmine.getEnv(), included, excluded, webglValidation, release);
+                    customizeJasmine(jasmine.getEnv(), included, excluded, webglValidation, release, RequestScheduler);
 
                     var specFiles = Object.keys(__karma__.files).filter(function(file) {
                         return /Spec\.js$/.test(file);

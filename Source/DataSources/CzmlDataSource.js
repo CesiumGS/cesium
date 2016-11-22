@@ -30,6 +30,7 @@ define([
         '../Core/Quaternion',
         '../Core/Rectangle',
         '../Core/ReferenceFrame',
+        '../Core/RequestScheduler',
         '../Core/RuntimeError',
         '../Core/Spherical',
         '../Core/TimeInterval',
@@ -114,6 +115,7 @@ define([
         Quaternion,
         Rectangle,
         ReferenceFrame,
+        RequestScheduler,
         RuntimeError,
         Spherical,
         TimeInterval,
@@ -1763,7 +1765,7 @@ define([
         var promise = czml;
         var sourceUri = options.sourceUri;
         if (typeof czml === 'string') {
-            promise = loadJson(czml);
+            promise = RequestScheduler.request(czml, loadJson);
             sourceUri = defaultValue(sourceUri, czml);
         }
 
