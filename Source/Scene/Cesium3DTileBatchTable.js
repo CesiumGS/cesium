@@ -523,8 +523,8 @@ define([
                 // The end condition was met, stop the traversal and return the result
                 return result;
             }
-            var parentCount = defined(parentCounts) ? parentCounts[instanceIndex] : 1;
-            var parentIndex = defined(parentCounts) ? parentIndexes[instanceIndex] : instanceIndex;
+            var parentCount = parentCounts[instanceIndex];
+            var parentIndex = parentIndexes[instanceIndex];
             for (var i = 0; i < parentCount; ++i) {
                 var parentId = parentIds[parentIndex + i];
                 // Stop the traversal when the instance has no parent (its parentId equals itself)
