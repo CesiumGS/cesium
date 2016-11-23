@@ -64,9 +64,9 @@ define([
     }
 
     var whitePixelCanvasId = 'ID_WHITE_PIXEL';
-    var whitePixelSubRegionId = 'ID_WHITE_PIXEL_SUBREGION';
-    var whitePixelSize = new Cartesian2(4, 4);
-    var whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
+    //var whitePixelSubRegionId = 'ID_WHITE_PIXEL_SUBREGION';
+    var whitePixelSize = new Cartesian2(64, 64);
+    //var whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
 
     function addWhitePixelCanvas(textureAtlas, labelCollection) {
         var canvas = document.createElement('canvas');
@@ -80,7 +80,7 @@ define([
         textureAtlas.addImage(whitePixelCanvasId, canvas).then(function(index) {
             //glyphTextureInfo.index = index;
             labelCollection._whitePixelIndex = index;
-            textureAtlas.addSubRegion(whitePixelCanvasId, whitePixelBoundingRegion);
+            //textureAtlas.addSubRegion(whitePixelCanvasId, whitePixelBoundingRegion);
 console.log('white pixel index ' + index);
         });
     }
@@ -160,7 +160,7 @@ console.log('white pixel index ' + index);
         backgroundBillboard.scale = label._scale;
         backgroundBillboard.pickPrimitive = label;
         backgroundBillboard.id = label._id;
-        backgroundBillboard.image = whitePixelSubRegionId;
+        backgroundBillboard.image = whitePixelCanvasId;
         backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
         backgroundBillboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
         backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
@@ -282,7 +282,7 @@ console.log('reposition glyphs:', resolutionScale);
         var dimensions;
         var totalWidth = 0;
         var maxHeight = 0;
-        var maxDescent = 0;
+        var maxDescent = Number.NEGATIVE_INFINITY;
         var maxY = 0;
 
         var glyphIndex = 0;
@@ -291,7 +291,7 @@ console.log('reposition glyphs:', resolutionScale);
             glyph = glyphs[glyphIndex];
             dimensions = glyph.dimensions;
             maxHeight = Math.max(maxHeight, dimensions.height);
-            maxY = Math.max(maxHeight, dimensions.height - dimensions.descent);
+            maxY = Math.max(maxY, dimensions.height - dimensions.descent);
             maxDescent = Math.max(maxDescent, dimensions.descent);
 console.log('Glyph ' + glyphIndex + ' width ' + dimensions.computedWidth + ' descent ' + dimensions.descent + ' height ' + dimensions.height);
 
