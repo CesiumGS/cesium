@@ -140,7 +140,7 @@ define([
             label._backgroundBillboard = backgroundBillboard;
         }
 
-        backgroundBillboard.color = new Color(0.5, 0.5, 0.5, 0.8);  // TODO: Configure color.
+        backgroundBillboard.color = label._backgroundColor; // new Color(0.5, 0.5, 0.5, 0.8);  // TODO: remove comment
         backgroundBillboard.show = label._show;
         backgroundBillboard.position = label._position;
         backgroundBillboard.eyeOffset = label._eyeOffset;
@@ -333,7 +333,7 @@ define([
         var backgroundBillboard = label._backgroundBillboard;
         if (defined(backgroundBillboard)) {
             var backgroundPadding = label._backgroundPadding;
-            glyphPixelOffset.x = (widthOffset - backgroundPadding * scale) * resolutionScale;
+            glyphPixelOffset.x = (widthOffset - backgroundPadding.x * scale) * resolutionScale;
             if (verticalOrigin === VerticalOrigin.BOTTOM || maxHeight === maxY) {
                 glyphPixelOffset.y = -maxDescent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
@@ -341,11 +341,11 @@ define([
             } else {
                 glyphPixelOffset.y = -(maxY - maxHeight) / 2 * scale - maxDescent * scale;
             }
-            glyphPixelOffset.y += backgroundPadding * scale;
+            glyphPixelOffset.y += backgroundPadding.y * scale;
             glyphPixelOffset.y *= resolutionScale;
             backgroundBillboard._setTranslate(glyphPixelOffset);
-            backgroundBillboard.width = totalWidth + (backgroundPadding * 2);
-            backgroundBillboard.height = maxHeight + (backgroundPadding * 2);
+            backgroundBillboard.width = totalWidth + (backgroundPadding.x * 2);
+            backgroundBillboard.height = maxHeight + (backgroundPadding.y * 2);
         }
     }
 
@@ -523,9 +523,10 @@ define([
      *   font : '30px sans-serif',
      *   fillColor : Cesium.Color.WHITE,
      *   outlineColor : Cesium.Color.BLACK,
-     *   outlineWidth : 1.0
+     *   outlineWidth : 1.0,
+     *   showBackground : false,
      *   backgroundColor : Cesium.Color.TRANSPARENT,
-     *   backgroundPadding : 2.0
+     *   backgroundPadding : new Cesium.Cartesian2(2, 2),
      *   style : Cesium.LabelStyle.FILL,
      *   pixelOffset : Cesium.Cartesian2.ZERO,
      *   eyeOffset : Cesium.Cartesian3.ZERO,

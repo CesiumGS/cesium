@@ -86,8 +86,9 @@ define([
         this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
         this._outlineColor = Color.clone(defaultValue(options.outlineColor, Color.BLACK));
         this._outlineWidth = defaultValue(options.outlineWidth, 1.0);
-        this._backgroundColor = defaultValue(options.backgroundColor, Color.TRANSPARENT);
-        this._backgroundPadding = defaultValue(options.backgroundPadding, 2);
+        this._showBackground = defaultValue(options.showBackground, false);
+        this._backgroundColor = defaultValue(options.backgroundColor, new Color(0.165, 0.165, 0.165, 0.8));
+        this._backgroundPadding = defaultValue(options.backgroundPadding, new Cartesian2(2, 2));
         this._style = defaultValue(options.style, LabelStyle.FILL);
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.BOTTOM);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.LEFT);
@@ -358,7 +359,7 @@ define([
                 var backgroundColor = this._backgroundColor;
                 if (!Color.equals(backgroundColor, value)) {
                     Color.clone(value, backgroundColor);
-                    rebindAllGlyphs(this);
+                    rebindAllGlyphs(this);  // TODO: Can do something cheaper than rebindAllGlyphs?
                 }
             }
         },
@@ -379,9 +380,10 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                if (this._backgroundPadding !== value) {
-                    this._backgroundPadding = value;
-                    rebindAllGlyphs(this);
+                var backgroundPadding = this._backgroundPadding;
+                if (!Cartesian2.equals(backgroundPadding, value)) {
+                    Cartesian2.clone(value, backgroundPadding);
+                    rebindAllGlyphs(this);  // TODO: Can do something cheaper than rebindAllGlyphs?
                 }
             }
         },
@@ -934,7 +936,7 @@ define([
                this._show === other._show &&
                this._scale === other._scale &&
                this._outlineWidth === other._outlineWidth &&
-               this._backgroundPadding === other._backgroundPadding &&
+               this._showBackground === other._showBackground &&
                this._style === other._style &&
                this._verticalOrigin === other._verticalOrigin &&
                this._horizontalOrigin === other._horizontalOrigin &&
@@ -945,6 +947,7 @@ define([
                Color.equals(this._fillColor, other._fillColor) &&
                Color.equals(this._outlineColor, other._outlineColor) &&
                Color.equals(this._backgroundColor, other._backgroundColor) &&
+               Cartesian2.equals(this._backgroundPadding, other._backgroundPadding) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
