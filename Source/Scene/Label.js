@@ -86,6 +86,8 @@ define([
         this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
         this._outlineColor = Color.clone(defaultValue(options.outlineColor, Color.BLACK));
         this._outlineWidth = defaultValue(options.outlineWidth, 1.0);
+        this._backgroundColor = defaultValue(options.backgroundColor, Color.TRANSPARENT);
+        this._backgroundPadding = defaultValue(options.backgroundPadding, 2);
         this._style = defaultValue(options.style, LabelStyle.FILL);
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.BOTTOM);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.LEFT);
@@ -332,6 +334,53 @@ define([
 
                 if (this._outlineWidth !== value) {
                     this._outlineWidth = value;
+                    rebindAllGlyphs(this);
+                }
+            }
+        },
+
+        /**
+         * Gets or sets the background color of this label.  TRANSPARENT means no background will be used.
+         * @memberof Label.prototype
+         * @type {Color}
+         */
+        backgroundColor : {
+            get : function() {
+                return this._backgroundColor;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                var backgroundColor = this._backgroundColor;
+                if (!Color.equals(backgroundColor, value)) {
+                    Color.clone(value, backgroundColor);
+                    rebindAllGlyphs(this);
+                }
+            }
+        },
+
+        /**
+         * Gets or sets the background padding, in pixels, of this label.
+         * @memberof Label.prototype
+         * @type {Number}
+         */
+        backgroundPadding : {
+            get : function() {
+                return this._backgroundPadding;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                if (this._backgroundPadding !== value) {
+                    this._backgroundPadding = value;
                     rebindAllGlyphs(this);
                 }
             }
@@ -884,6 +933,8 @@ define([
                defined(other) &&
                this._show === other._show &&
                this._scale === other._scale &&
+               this._outlineWidth === other._outlineWidth &&
+               this._backgroundPadding === other._backgroundPadding &&
                this._style === other._style &&
                this._verticalOrigin === other._verticalOrigin &&
                this._horizontalOrigin === other._horizontalOrigin &&
@@ -893,6 +944,7 @@ define([
                Cartesian3.equals(this._position, other._position) &&
                Color.equals(this._fillColor, other._fillColor) &&
                Color.equals(this._outlineColor, other._outlineColor) &&
+               Color.equals(this._backgroundColor, other._backgroundColor) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&

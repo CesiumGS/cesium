@@ -133,6 +133,7 @@ define([
         var glyphIndex;
         var textIndex;
 
+        var hasBackground = (label._backgroundColor.alpha >= 0.0039);  // approximately 1.0/255.0
         var backgroundBillboard = label._backgroundBillboard;
         if (!defined(backgroundBillboard)) {
             if (labelCollection._spareBackgroundBillboards.length > 0) {
@@ -273,6 +274,7 @@ define([
     var glyphPixelOffset = new Cartesian2();
 
     function repositionAllGlyphs(label, resolutionScale) {
+//resolutionScale = 4;  // TODO: more testing
         var glyphs = label._glyphs;
         var glyph;
         var dimensions;
@@ -338,7 +340,8 @@ define([
 
         var backgroundBillboard = label._backgroundBillboard;
         if (defined(backgroundBillboard)) {
-            glyphPixelOffset.x = widthOffset * resolutionScale;
+            var backgroundPadding = label._backgroundPadding;
+            glyphPixelOffset.x = (widthOffset - backgroundPadding * scale) * resolutionScale;
             if (verticalOrigin === VerticalOrigin.BOTTOM || maxHeight === maxY) {
                 glyphPixelOffset.y = -maxDescent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
@@ -346,9 +349,11 @@ define([
             } else {
                 glyphPixelOffset.y = -(maxY - maxHeight) / 2 * scale - maxDescent * scale;
             }
+            glyphPixelOffset.y += backgroundPadding * scale;
+            glyphPixelOffset.y *= resolutionScale;
             backgroundBillboard._setTranslate(glyphPixelOffset);
-            backgroundBillboard.width = totalWidth;
-            backgroundBillboard.height = maxHeight;
+            backgroundBillboard.width = totalWidth + (backgroundPadding * 2);
+            backgroundBillboard.height = maxHeight + (backgroundPadding * 2);
         }
     }
 
@@ -359,7 +364,6 @@ define([
         }
         if (defined(label._backgroundBillboard)) {
             label._backgroundBillboard.show = false;
-            label._backgroundBillboard.image = undefined;
             labelCollection._spareBackgroundBillboards.push(label._backgroundBillboard);
             label._backgroundBillboard = undefined;
         }
@@ -425,6 +429,7 @@ define([
         this.__backgroundTextureAtlas = undefined;
         this._whitePixelIndex = undefined;
 
+        // TODO: Don't allocate this until later.
         this._backgroundBillboardCollection = new BillboardCollection({
             scene : this._scene
         });
@@ -434,14 +439,6 @@ define([
             scene : this._scene
         });
         this._billboardCollection.destroyTextureAtlas = false;
-
-        this._billboardCollection._rs = RenderState.fromCache({
-            depthTest : {
-                enabled : true,
-                func : WebGLConstants.LEQUAL  // default is LESS
-            },
-            blending : BlendingState.ALPHA_BLEND
-        });
 
         this._spareBillboards = [];
         this._spareBackgroundBillboards = [];
@@ -534,6 +531,9 @@ define([
      *   font : '30px sans-serif',
      *   fillColor : Cesium.Color.WHITE,
      *   outlineColor : Cesium.Color.BLACK,
+     *   outlineWidth : 1.0
+     *   backgroundColor : Cesium.Color.TRANSPARENT,
+     *   backgroundPadding : 2.0
      *   style : Cesium.LabelStyle.FILL,
      *   pixelOffset : Cesium.Cartesian2.ZERO,
      *   eyeOffset : Cesium.Cartesian3.ZERO,
