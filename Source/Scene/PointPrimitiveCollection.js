@@ -19,6 +19,7 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArrayFacade',
+        '../Renderer/WebGLConstants',
         '../Shaders/PointPrimitiveCollectionFS',
         '../Shaders/PointPrimitiveCollectionVS',
         './BlendingState',
@@ -45,6 +46,7 @@ define([
         ShaderProgram,
         ShaderSource,
         VertexArrayFacade,
+        WebGLConstants,
         PointPrimitiveCollectionFS,
         PointPrimitiveCollectionVS,
         BlendingState,
@@ -848,7 +850,8 @@ define([
             if (!defined(this._rs)) {
                 this._rs = RenderState.fromCache({
                     depthTest : {
-                        enabled : true
+                        enabled : true,
+                        func : WebGLConstants.LEQUAL
                     },
                     blending : BlendingState.ALPHA_BLEND
                 });
