@@ -64,9 +64,8 @@ define([
     }
 
     var whitePixelCanvasId = 'ID_WHITE_PIXEL';
-    //var whitePixelSubRegionId = 'ID_WHITE_PIXEL_SUBREGION';
-    var whitePixelSize = new Cartesian2(64, 64);
-    //var whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
+    var whitePixelSize = new Cartesian2(4, 4);
+    var whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
 
     function addWhitePixelCanvas(textureAtlas, labelCollection) {
         var canvas = document.createElement('canvas');
@@ -143,7 +142,9 @@ console.log('white pixel index ' + index);
                 backgroundBillboard = labelCollection._spareBackgroundBillboards.pop();
             } else {
                 backgroundBillboard = labelCollection._backgroundBillboardCollection.add({
-                    collection : labelCollection
+                    collection : labelCollection,
+                    image : whitePixelCanvasId,
+                    imageSubRegion : whitePixelBoundingRegion
                 });
             }
             label._backgroundBillboard = backgroundBillboard;
@@ -160,7 +161,6 @@ console.log('white pixel index ' + index);
         backgroundBillboard.scale = label._scale;
         backgroundBillboard.pickPrimitive = label;
         backgroundBillboard.id = label._id;
-        backgroundBillboard.image = whitePixelCanvasId;
         backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
         backgroundBillboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
         backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
