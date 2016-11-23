@@ -77,10 +77,7 @@ define([
         context2D.fillRect(0, 0, canvas.width, canvas.height);
 
         textureAtlas.addImage(whitePixelCanvasId, canvas).then(function(index) {
-            //glyphTextureInfo.index = index;
             labelCollection._whitePixelIndex = index;
-            //textureAtlas.addSubRegion(whitePixelCanvasId, whitePixelBoundingRegion);
-console.log('white pixel index ' + index);
         });
     }
 
@@ -276,7 +273,6 @@ console.log('white pixel index ' + index);
     var glyphPixelOffset = new Cartesian2();
 
     function repositionAllGlyphs(label, resolutionScale) {
-console.log('reposition glyphs:', resolutionScale);
         var glyphs = label._glyphs;
         var glyph;
         var dimensions;
@@ -291,7 +287,6 @@ console.log('reposition glyphs:', resolutionScale);
             dimensions = glyph.dimensions;
             maxY = Math.max(maxY, dimensions.height - dimensions.descent);
             maxDescent = Math.max(maxDescent, dimensions.descent);
-console.log('Glyph ' + glyphIndex + ' width ' + dimensions.computedWidth + ' descent ' + dimensions.descent + ' height ' + dimensions.height);
 
             //Computing the total width must also account for the kering that occurs between letters.
             totalWidth += dimensions.width - dimensions.bounds.minx;
@@ -300,7 +295,6 @@ console.log('Glyph ' + glyphIndex + ' width ' + dimensions.computedWidth + ' des
             }
         }
         var maxHeight = maxY + maxDescent;
-console.log('totalWidth ' + totalWidth + ' maxY ' + maxY + ' maxdescent ' + maxDescent + ' maxHeight ' + maxHeight);
 
         var scale = label._scale;
         var horizontalOrigin = label._horizontalOrigin;
