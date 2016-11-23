@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
@@ -14,7 +13,6 @@ define([
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
-        Color,
         defined,
         defineProperties,
         destroyObject,

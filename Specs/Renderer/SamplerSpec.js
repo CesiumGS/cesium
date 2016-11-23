@@ -1,13 +1,11 @@
 /*global defineSuite*/
 defineSuite([
         'Renderer/Sampler',
-        'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
         'Specs/createContext'
     ], function(
         Sampler,
-        TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
         createContext) {

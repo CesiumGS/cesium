@@ -4,8 +4,6 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
-        'Core/defined',
-        'Core/DeveloperError',
         'Core/EarthOrientationParameters',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
@@ -17,16 +15,12 @@ defineSuite([
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/Quaternion',
-        'Core/TimeConstants',
-        'Core/TimeInterval',
-        'ThirdParty/when'
+        'Core/TimeInterval'
     ], function(
         Transforms,
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        defined,
-        DeveloperError,
         EarthOrientationParameters,
         Ellipsoid,
         GeographicProjection,
@@ -38,9 +32,7 @@ defineSuite([
         Matrix3,
         Matrix4,
         Quaternion,
-        TimeConstants,
-        TimeInterval,
-        when) {
+        TimeInterval) {
     'use strict';
 
     var negativeX = new Cartesian4(-1, 0, 0, 0);

@@ -2,7 +2,6 @@
 defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
-        'Core/Cartesian4',
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/EncodedCartesian3',
@@ -18,7 +17,6 @@ defineSuite([
     ], function(
         BoundingSphere,
         Cartesian3,
-        Cartesian4,
         Cartographic,
         Ellipsoid,
         EncodedCartesian3,

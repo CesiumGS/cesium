@@ -1,11 +1,9 @@
 /*global defineSuite*/
 defineSuite([
         'Core/loadImage',
-        'Core/defined',
         'ThirdParty/when'
     ], function(
         loadImage,
-        defined,
         when) {
     'use strict';
 
