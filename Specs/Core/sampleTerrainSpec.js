@@ -2,13 +2,11 @@
 defineSuite([
         'Core/sampleTerrain',
         'Core/Cartographic',
-        'Core/CesiumTerrainProvider',
-        'ThirdParty/when'
+        'Core/CesiumTerrainProvider'
     ], function(
         sampleTerrain,
         Cartographic,
-        CesiumTerrainProvider,
-        when) {
+        CesiumTerrainProvider) {
     'use strict';
 
     var terrainProvider = new CesiumTerrainProvider({

@@ -1,8 +1,6 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -30,8 +28,6 @@ define([
         './SceneMode'
     ], function(
         BoundingSphere,
-        Cartesian2,
-        Cartesian3,
         Color,
         ComponentDatatype,
         defaultValue,

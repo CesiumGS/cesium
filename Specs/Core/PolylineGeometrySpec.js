@@ -4,7 +4,6 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
-        'Core/Math',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
@@ -12,7 +11,6 @@ defineSuite([
         Cartesian3,
         Color,
         Ellipsoid,
-        CesiumMath,
         VertexFormat,
         createPackableSpecs) {
     'use strict';
