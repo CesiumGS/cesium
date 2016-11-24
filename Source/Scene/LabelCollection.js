@@ -334,14 +334,13 @@ define([
         if (defined(backgroundBillboard)) {
             var backgroundPadding = label._backgroundPadding;
             glyphPixelOffset.x = (widthOffset - backgroundPadding.x * scale) * resolutionScale;
-            if (verticalOrigin === VerticalOrigin.BOTTOM || maxHeight === maxY) {
-                glyphPixelOffset.y = -maxDescent * scale;
+            if (verticalOrigin === VerticalOrigin.BOTTOM) {
+                glyphPixelOffset.y = -backgroundPadding.y * scale - maxDescent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = -(maxY - maxHeight) * scale - maxDescent * scale;
+                glyphPixelOffset.y = -(maxY - maxHeight - backgroundPadding.y) * scale - maxDescent * scale;
             } else {
                 glyphPixelOffset.y = -(maxY - maxHeight) / 2 * scale - maxDescent * scale;
             }
-            glyphPixelOffset.y += backgroundPadding.y * scale;
             glyphPixelOffset.y *= resolutionScale;
             backgroundBillboard._setTranslate(glyphPixelOffset);
             backgroundBillboard.width = totalWidth + (backgroundPadding.x * 2);
