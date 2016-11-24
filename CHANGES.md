@@ -7,6 +7,10 @@ Change Log
 * Breaking changes
     *
 * Improved terrain/imagery load ordering, especially when the terrain is already fully loaded and we add a new imagery layer.  This results in a 25% reduction in load times in many cases.
+* Billboard, Label, and PointPrimitive depth testing changed from `LESS` to `LEQUAL`, allowing label glyphs of equal depths to overlap.
+* Billboard sizes were incorrectly rounded up from odd values to even values.  This has been corrected, and as a result, odd-width and odd-height billboards will appear one pixel smaller than before.
+* Label glyph positions have been adjusted and corrected.
+* `TextureAtlas.borderWidthInPixels` has always been applied to the upper and right edges of each internal texture, but is now also applied to the bottom and left edges of the entire TextureAtlas, guaranteeing borders on all sides regardless of position within the atlas.
 * Added support for saving html and css in Github Gists. [#4125](https://github.com/AnalyticalGraphicsInc/cesium/issues/4125)
 * Fixed `Cartographic.fromCartesian` when the cartesian is not on the ellipsoid surface. [#4611](https://github.com/AnalyticalGraphicsInc/cesium/issues/4611)
 

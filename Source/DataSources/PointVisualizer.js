@@ -3,7 +3,6 @@ define([
         '../Core/AssociativeArray',
         '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -11,13 +10,11 @@ define([
         '../Core/NearFarScalar',
         '../Scene/HeightReference',
         './BoundingSphereState',
-        './EntityCluster',
         './Property'
     ], function(
         AssociativeArray,
         Cartesian3,
         Color,
-        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
@@ -25,7 +22,6 @@ define([
         NearFarScalar,
         HeightReference,
         BoundingSphereState,
-        EntityCluster,
         Property) {
     'use strict';
 

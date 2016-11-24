@@ -3,13 +3,11 @@ defineSuite([
         'Core/PinBuilder',
         'Core/buildModuleUrl',
         'Core/Color',
-        'Core/defined',
         'ThirdParty/when'
     ], function(
         PinBuilder,
         buildModuleUrl,
         Color,
-        defined,
         when) {
     'use strict';
 

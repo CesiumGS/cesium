@@ -1,16 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/SkyBox',
-        'Core/Cartesian3',
         'Core/loadImage',
-        'Renderer/ClearCommand',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
         SkyBox,
-        Cartesian3,
         loadImage,
-        ClearCommand,
         SceneMode,
         createScene) {
     'use strict';
