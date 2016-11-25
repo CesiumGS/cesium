@@ -125,35 +125,43 @@ define([
         var glyphIndex;
         var textIndex;
 
-        var hasBackground = (label._backgroundColor.alpha >= 0.0039);  // approximately 1.0/255.0
+        var showBackground = label._showBackground;
         var backgroundBillboard = label._backgroundBillboard;
-        if (!defined(backgroundBillboard)) {
-            if (labelCollection._spareBackgroundBillboards.length > 0) {
-                backgroundBillboard = labelCollection._spareBackgroundBillboards.pop();
-            } else {
-                backgroundBillboard = labelCollection._backgroundBillboardCollection.add({
-                    collection : labelCollection,
-                    image : whitePixelCanvasId,
-                    imageSubRegion : whitePixelBoundingRegion
-                });
+        if (!showBackground) {
+            if (defined(backgroundBillboard)) {
+                backgroundBillboard.show = false;
+                labelCollection._spareBackgroundBillboards.push(backgroundBillboard);
+                label._backgroundBillboard = backgroundBillboard = undefined;
             }
-            label._backgroundBillboard = backgroundBillboard;
-        }
+        } else {
+            if (!defined(backgroundBillboard)) {
+                if (labelCollection._spareBackgroundBillboards.length > 0) {
+                    backgroundBillboard = labelCollection._spareBackgroundBillboards.pop();
+                } else {
+                    backgroundBillboard = labelCollection._backgroundBillboardCollection.add({
+                        collection : labelCollection,
+                        image : whitePixelCanvasId,
+                        imageSubRegion : whitePixelBoundingRegion
+                    });
+                }
+                label._backgroundBillboard = backgroundBillboard;
+            }
 
-        backgroundBillboard.color = label._backgroundColor; // new Color(0.5, 0.5, 0.5, 0.8);  // TODO: remove comment
-        backgroundBillboard.show = label._show;
-        backgroundBillboard.position = label._position;
-        backgroundBillboard.eyeOffset = label._eyeOffset;
-        backgroundBillboard.pixelOffset = label._pixelOffset;
-        backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
-        backgroundBillboard.verticalOrigin = label._verticalOrigin;
-        backgroundBillboard.heightReference = label._heightReference;
-        backgroundBillboard.scale = label._scale;
-        backgroundBillboard.pickPrimitive = label;
-        backgroundBillboard.id = label._id;
-        backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
-        backgroundBillboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
-        backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
+            backgroundBillboard.color = label._backgroundColor;
+            backgroundBillboard.show = label._show;
+            backgroundBillboard.position = label._position;
+            backgroundBillboard.eyeOffset = label._eyeOffset;
+            backgroundBillboard.pixelOffset = label._pixelOffset;
+            backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
+            backgroundBillboard.verticalOrigin = label._verticalOrigin;
+            backgroundBillboard.heightReference = label._heightReference;
+            backgroundBillboard.scale = label._scale;
+            backgroundBillboard.pickPrimitive = label;
+            backgroundBillboard.id = label._id;
+            backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
+            backgroundBillboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+            backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
+        }
 
         // if we have more glyphs than needed, unbind the extras.
         if (textLength < glyphsLength) {
@@ -266,7 +274,6 @@ define([
     var glyphPixelOffset = new Cartesian2();
 
     function repositionAllGlyphs(label, resolutionScale) {
-//resolutionScale = 4;  // TODO: more testing
         var glyphs = label._glyphs;
         var glyph;
         var dimensions;

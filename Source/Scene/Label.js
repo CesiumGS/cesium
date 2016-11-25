@@ -341,6 +341,29 @@ define([
         },
 
         /**
+         * Determines if a background behind this label will be shown.
+         * @memberof Label.prototype
+         * @type {Boolean}
+         */
+        showBackground : {
+            get : function() {
+                return this._showBackground;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                if (this._showBackground !== value) {
+                    this._showBackground = value;
+                    rebindAllGlyphs(this);  // TODO: Can do something cheaper than rebindAllGlyphs?
+                }
+            }
+        },
+
+        /**
          * Gets or sets the background color of this label.  TRANSPARENT means no background will be used.
          * @memberof Label.prototype
          * @type {Color}
@@ -365,9 +388,10 @@ define([
         },
 
         /**
-         * Gets or sets the background padding, in pixels, of this label.
+         * Gets or sets the background padding, in pixels, of this label.  The x value
+         * controls horizontal padding, and the y value controls vertical padding.
          * @memberof Label.prototype
-         * @type {Number}
+         * @type {Cartesian2}
          */
         backgroundPadding : {
             get : function() {
