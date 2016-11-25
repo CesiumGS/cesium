@@ -13,8 +13,7 @@ define([
         './PixelDatatype',
         './Sampler',
         './TextureMagnificationFilter',
-        './TextureMinificationFilter',
-        './TextureWrap'
+        './TextureMinificationFilter'
     ], function(
         defaultValue,
         defined,
@@ -29,8 +28,7 @@ define([
         PixelDatatype,
         Sampler,
         TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap) {
+        TextureMinificationFilter) {
     'use strict';
 
     function CubeMap(options) {
