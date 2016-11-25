@@ -11,7 +11,6 @@ define([
         '../../Core/Matrix4',
         '../../Core/Rectangle',
         '../../Core/RequestScheduler',
-        '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../createCommand'
@@ -27,7 +26,6 @@ define([
         Matrix4,
         Rectangle,
         RequestScheduler,
-        SceneMode,
         knockout,
         when,
         createCommand) {

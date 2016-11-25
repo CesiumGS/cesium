@@ -2,7 +2,6 @@
 defineSuite([
         'Core/CesiumTerrainProvider',
         'Core/DefaultProxy',
-        'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/getAbsoluteUri',
@@ -14,12 +13,10 @@ defineSuite([
         'Core/RequestScheduler',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
-        'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
         CesiumTerrainProvider,
         DefaultProxy,
-        defined,
         Ellipsoid,
         GeographicTilingScheme,
         getAbsoluteUri,
@@ -31,7 +28,6 @@ defineSuite([
         RequestScheduler,
         TerrainProvider,
         pollToPromise,
-        Uri,
         when) {
     'use strict';
 

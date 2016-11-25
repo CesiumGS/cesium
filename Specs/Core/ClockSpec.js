@@ -4,15 +4,13 @@ defineSuite([
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/defined',
-        'Core/JulianDate',
-        'Specs/pollToPromise'
+        'Core/JulianDate'
     ], function(
         Clock,
         ClockRange,
         ClockStep,
         defined,
-        JulianDate,
-        pollToPromise) {
+        JulianDate) {
     'use strict';
 
     it('sets default parameters when constructed', function() {
