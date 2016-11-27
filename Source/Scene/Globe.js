@@ -15,6 +15,7 @@ define([
         '../Core/GeographicProjection',
         '../Core/IntersectionTests',
         '../Core/loadImage',
+        '../Core/Math',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Renderer/ShaderSource',
@@ -45,6 +46,7 @@ define([
         GeographicProjection,
         IntersectionTests,
         loadImage,
+        CesiumMath,
         Ray,
         Rectangle,
         ShaderSource,
@@ -432,14 +434,40 @@ define([
         var ray = scratchGetHeightRay;
         var surfaceNormal = ellipsoid.geodeticSurfaceNormal(cartesian, ray.direction);
 
-        // compute origin point, to account for a case where the terrain is under ellipsoid surface
-        var minimumHeight = Math.min(defaultValue(tile.data.minimumHeight, 0.0), 0.0);
+        // compute origin point
 
-        // take into account the position height
-        minimumHeight -= cartographic.height;
+        // try to find the intersection point between the surface normal and z-axis.
+        // Ellipsoid is a surface of revolution, so surface normal intersects the rotation axis (z-axis)
 
-        var minimumHeightVector = Cartesian3.multiplyByScalar(surfaceNormal, minimumHeight - 1.0, scratchGetHeightIntersection);
-        Cartesian3.add(cartesian, minimumHeightVector, ray.origin);
+        // compute the magnitude required to bring surface normal to x=0, y=0, from data.position
+        var magnitude;
+
+        // avoid dividing by zero
+        if (Math.abs(surfaceNormal.x) > CesiumMath.EPSILON16){
+            magnitude = cartesian.x / surfaceNormal.x;
+        } else if (Math.abs(surfaceNormal.y) > CesiumMath.EPSILON16){
+            magnitude = cartesian.y / surfaceNormal.y;
+        } else if (Math.abs(surfaceNormal.z) > CesiumMath.EPSILON16){ //surface normal is (0,0,1) | (0,0,-1) | (0,0,0)
+            magnitude = cartesian.z / surfaceNormal.z;
+        } else { //(0,0,0), just for case
+            magnitude = 0;
+        }
+
+        var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, magnitude, scratchGetHeightIntersection);
+        Cartesian3.subtract(cartesian, vectorToMinimumPoint, ray.origin);
+
+        // Theoretically, the intersection point can be outside the ellipsoid, so we have to check if the result's 'z' is inside the ellipsoid (with some buffer)
+        if (Math.abs(ray.origin.z) >= ellipsoid.radii.z -11500.0){
+            // intersection point is outside the ellipsoid, try other value
+            magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
+
+            // take into account the position height
+            magnitude -= cartographic.height;
+
+            // multiply by the *positive* value of the magnitude
+            vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchGetHeightIntersection);
+            Cartesian3.subtract(cartesian, vectorToMinimumPoint, ray.origin);
+        }
 
         var intersection = tile.data.pick(ray, undefined, undefined, false, scratchGetHeightIntersection);
         if (!defined(intersection)) {
