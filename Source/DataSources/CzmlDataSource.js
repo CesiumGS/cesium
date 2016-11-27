@@ -1374,6 +1374,9 @@ define([
         processPacketData(String, label, 'font', labelData.font, interval, sourceUri, entityCollection);
         processPacketData(LabelStyle, label, 'style', labelData.style, interval, sourceUri, entityCollection);
         processPacketData(Number, label, 'scale', labelData.scale, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, label, 'showBackground', labelData.showBackground, interval, sourceUri, entityCollection);
+        processPacketData(Color, label, 'backgroundColor', labelData.backgroundColor, interval, sourceUri, entityCollection);
+        processPacketData(Cartesian2, label, 'backgroundPadding', labelData.backgroundPadding, interval, sourceUri, entityCollection);
         processPacketData(Cartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri, entityCollection);
         processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri, entityCollection);
         processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri, entityCollection);

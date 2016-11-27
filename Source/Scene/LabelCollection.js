@@ -349,7 +349,7 @@ define([
                 glyphPixelOffset.y = -(maxY - maxHeight) / 2 * scale - maxDescent * scale;
             }
             glyphPixelOffset.y *= resolutionScale;
-            backgroundBillboard._setTranslate(glyphPixelOffset);
+            backgroundBillboard._setTranslate(glyphPixelOffset); // TODO: Make this count towards edge-based alignments.
             backgroundBillboard.width = totalWidth + (backgroundPadding.x * 2);
             backgroundBillboard.height = maxHeight + (backgroundPadding.y * 2);
         }
@@ -531,7 +531,7 @@ define([
      *   outlineColor : Cesium.Color.BLACK,
      *   outlineWidth : 1.0,
      *   showBackground : false,
-     *   backgroundColor : Cesium.Color.TRANSPARENT,
+     *   backgroundColor : new Cesium.Color(0.165, 0.165, 0.165, 0.8),
      *   backgroundPadding : new Cesium.Cartesian2(2, 2),
      *   style : Cesium.LabelStyle.FILL,
      *   pixelOffset : Cesium.Cartesian2.ZERO,
