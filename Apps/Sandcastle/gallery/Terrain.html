@@ -148,11 +148,13 @@ function sampleTerrainSuccess() {
             },
             label : {
                 text : position.height.toFixed(1),
+                font : '10pt monospace',
                 horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-                scale : 0.3,
                 pixelOffset : new Cesium.Cartesian2(0, -14),
-                fillColor : Cesium.Color.RED,
-                outlineColor : Cesium.Color.WHITE
+                fillColor : Cesium.Color.BLACK,
+                outlineColor : Cesium.Color.BLACK,
+                showBackground : true,
+                backgroundColor : new Cesium.Color(0.9, 0.9, 0.9, 0.7)
             }
         });
     }
