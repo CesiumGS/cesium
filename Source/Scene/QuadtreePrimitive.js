@@ -635,7 +635,7 @@ define([
 
                         // compute origin point
 
-                        // try to find the intersection point between the surface normal and z-axis.
+                        // Try to find the intersection point between the surface normal and z-axis.
                         // Ellipsoid is a surface of revolution, so surface normal intersects the rotation axis (z-axis)
 
                         // compute the magnitude required to bring surface normal to x=0, y=0, from data.position
