@@ -120,22 +120,22 @@ addStyle('Arc Trigonometric Functions', {
 
 addStyle('Sqrt', {
     color : "color() * sqrt(${temperature})",
-    pointSize : "10"
+    pointSize : "5"
 });
 
 addStyle('Pow', {
     color : "color() * pow(${temperature}, 3)",
-    pointSize : "10"
+    pointSize : "5"
 });
 
 addStyle('Min', {
-    color : "color() * min(0,1)",
-    pointSize : "10"
+    color : "color() * min(${POSITION}[0],0.75)",
+    pointSize : "5"
 });
 
 addStyle('Max', {
-    color : "rgb(max(${POSITION}[0],0.5) * 255, max(${POSITION}[1],0.5) * 255, max(${POSITION}[2],0.5) * 255)",
-    pointSize : "10"
+    color : "color() * max(${POSITION}[2],0.25)",
+    pointSize : "5"
 });
 
 addStyle('Secondary Color', {
