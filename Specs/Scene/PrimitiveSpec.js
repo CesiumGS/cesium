@@ -1031,7 +1031,7 @@ defineSuite([
                 positions : []
             }),
             attributes : {
-                color : new ColorGeometryInstanceAttribute(1.0, 0.0, 1.0, 1.0),
+                color : new ColorGeometryInstanceAttribute(1.0, 0.0, 1.0, 1.0)
             },
             id : 'invalid'
         }));
