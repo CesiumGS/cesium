@@ -46,7 +46,7 @@ define([
     };
 
     var binaryFunctions = {
-        atan2 : Math.atan2,
+        atan2 : Math.atan,
         pow : Math.pow,
         min : Math.min,
         max : Math.max
@@ -1191,6 +1191,8 @@ define([
                     return '(' + left + ' == ' + right + ')';
                 } else if (value === '!==') {
                     return '(' + left + ' != ' + right + ')';
+                } else if (value === 'atan2') {
+                    return 'atan' + '(' + left + ', ' + right + ')';
                 } else if (defined(binaryFunctions[value])) {
                     return value + '(' + left + ', ' + right + ')';
                 }

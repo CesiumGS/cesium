@@ -118,6 +118,11 @@ addStyle('Arc Trigonometric Functions', {
     color : "color() * acos(degrees(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature})"
 });
 
+addStyle('ATan2', {
+    color : "color() * atan2(${POSITION}[0],${temperature}) + color() * atan2(${POSITION}[1],${temperature}) + color() * atan2(${POSITION}[2],${temperature})",
+    pointSize : "5"
+});
+
 addStyle('Sqrt', {
     color : "color() * sqrt(${temperature})",
     pointSize : "5"
