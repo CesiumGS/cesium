@@ -888,7 +888,7 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
 
         var expression = new Expression('atan2(1,0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(0.5*Math.PI);
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.5*PI);
     });
 
     it('throws if atan2 function takes an invalid number of arguments', function() {

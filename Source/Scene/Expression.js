@@ -371,7 +371,7 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (defined(binaryFunctions[call]) {
+        } else if (defined(binaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 2 || args.length > 2) {
                 throw new DeveloperError('Error: ' + call + ' requires exactly two arguments.');

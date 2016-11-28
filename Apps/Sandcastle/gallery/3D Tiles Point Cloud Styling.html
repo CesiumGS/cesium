@@ -118,6 +118,21 @@ addStyle('Sqrt', {
     pointSize : "10"
 });
 
+addStyle('Pow', {
+    color : "color() * pow(${temperature}, 3)",
+    pointSize : "10"
+});
+
+addStyle('Min', {
+    color : "color() * min(0,1)",
+    pointSize : "10"
+});
+
+addStyle('Max', {
+    color : "rgb(max(${POSITION}[0],0.5) * 255, max(${POSITION}[1],0.5) * 255, max(${POSITION}[2],0.5) * 255)",
+    pointSize : "10"
+});
+
 addStyle('Secondary Color', {
     color : {
         expression : "[${secondaryColor}[0], ${secondaryColor}[1], ${secondaryColor}[2], 1.0]",
