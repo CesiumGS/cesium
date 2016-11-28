@@ -17,13 +17,11 @@ define([
         './loadArrayBuffer',
         './loadJson',
         './Math',
-        './Matrix3',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
         './Request',
         './RequestScheduler',
         './RequestType',
-        './RuntimeError',
         './TerrainProvider',
         './TileProviderError'
     ], function(
@@ -44,13 +42,11 @@ define([
         loadArrayBuffer,
         loadJson,
         CesiumMath,
-        Matrix3,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
         Request,
         RequestScheduler,
         RequestType,
-        RuntimeError,
         TerrainProvider,
         TileProviderError) {
     'use strict';

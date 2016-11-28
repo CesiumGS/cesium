@@ -1,13 +1,13 @@
 /*global define*/
 define([
-       '../Core/Color',
-       '../Core/defined',
-       '../Core/defineProperties',
-       '../Core/DeveloperError',
-       '../Core/isArray',
-       '../Core/Math',
-       '../ThirdParty/jsep',
-       './ExpressionNodeType'
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/isArray',
+        '../Core/Math',
+        '../ThirdParty/jsep',
+        './ExpressionNodeType'
     ], function(
         Color,
         defined,
@@ -50,6 +50,19 @@ define([
         pow : Math.pow,
         min : Math.min,
         max : Math.max
+    };
+
+    var unaryFunctions = {
+        abs : Math.abs,
+        sqrt : Math.sqrt,
+        cos : Math.cos,
+        sin : Math.sin,
+        tan : Math.tan,
+        acos : Math.acos,
+        asin : Math.asin,
+        atan : Math.atan,
+        radians : CesiumMath.toRadians,
+        degrees : CesiumMath.toDegrees
     };
 
     /**
@@ -347,23 +360,7 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'abs') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
-            }
-            //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'cos') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
-            }
-            //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'sqrt') {
+        } else if (defined(unaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
                 throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
@@ -611,12 +608,8 @@ define([
                 node.evaluate = node._evaluateNaN;
             } else if (node._value === 'isFinite') {
                 node.evaluate = node._evaluateIsFinite;
-            } else if (node._value === 'abs') {
-                node.evaluate = node._evaluateAbsoluteValue;
-            } else if (node._value === 'cos') {
-                node.evaluate = node._evaluateCosine;
-            } else if (node._value === 'sqrt') {
-                node.evaluate = node._evaluateSquareRoot;
+            } else if (defined(unaryFunctions[node._value])) {
+                node.evaluate = getEvaluateUnaryFunction(node._value);
             } else if (node._value === 'Boolean') {
                 node.evaluate = node._evaluateBooleanConversion;
             } else if (node._value === 'Number') {
@@ -651,10 +644,17 @@ define([
         var evaluate = binaryFunctions[call];
         return function(feature) {
             return evaluate(this._left.evaluate(feature), this._right.evaluate(feature));
-        }
+        };
     }
 
-    Node.prototype._evaluateLiteral = function(feature) {
+    function getEvaluateUnaryFunction(call) {
+        var evaluate = unaryFunctions[call];
+        return function(feature) {
+            return evaluate(this._left.evaluate(feature));
+        };
+    }
+
+    Node.prototype._evaluateLiteral = function(frameState, feature) {
         return this._value;
     };
 
@@ -951,20 +951,8 @@ define([
         return isFinite(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateAbsoluteValue = function(feature) {
-        return Math.abs(this._left.evaluate(feature));
-    };
-
-    Node.prototype._evaluateCosine = function(feature) {
-        return Math.cos(this._left.evaluate(feature));
-    };
-
-    Node.prototype._evaluateSquareRoot = function(feature) {
-        return Math.sqrt(this._left.evaluate(feature));
-    };
-
-    Node.prototype._evaluateBooleanConversion = function(feature) {
-        return Boolean(this._left.evaluate(feature));
+    Node.prototype._evaluateBooleanConversion = function(frameState, feature) {
+        return Boolean(this._left.evaluate(frameState, feature));
     };
 
     Node.prototype._evaluateNumberConversion = function(feature) {
@@ -1180,6 +1168,8 @@ define([
                     return 'bool(' + left + ')';
                 } else if (value === 'Number') {
                     return 'float(' + left + ')';
+                } else if (defined(unaryFunctions[value])) {
+                    return value + '(' + left + ')';
                 } else if (value === 'abs') {
                     return 'abs(' + left + ')';
                 } else if (value === 'cos') {

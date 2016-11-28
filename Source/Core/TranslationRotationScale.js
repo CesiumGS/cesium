@@ -3,13 +3,11 @@ define([
         './Cartesian3',
         './defaultValue',
         './defined',
-        './Matrix4',
         './Quaternion'
     ], function(
         Cartesian3,
         defaultValue,
         defined,
-        Matrix4,
         Quaternion) {
     'use strict';
 

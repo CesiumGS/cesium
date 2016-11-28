@@ -109,8 +109,13 @@ addStyle('Abs', {
     color : "color() * abs(${temperature} - 0.5)"
 });
 
-addStyle('Cos', {
-    color : "color() * abs(cos(${temperature} + TILES3D_TILESET_TIME))"
+addStyle('Trigonometric Functions', {
+    color : "color() * radians(cos(${temperature})) + color() * sin(${temperature}) + color() * tan(${temperature})"
+
+});
+
+addStyle('Arc Trigonometric Functions', {
+    color : "color() * acos(degrees(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature})"
 });
 
 addStyle('Sqrt', {
