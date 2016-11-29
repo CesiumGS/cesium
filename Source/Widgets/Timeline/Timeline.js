@@ -19,6 +19,8 @@ define([
         TimelineTrack) {
     'use strict';
 
+    var zoomInState=true;
+
     var timelineWheelDelta = 1e12;
 
     var timelineMouseMode = {
@@ -668,6 +670,10 @@ define([
     function createMouseWheelCallback(timeline) {
         return function(e) {
             var dy = e.wheelDeltaY || e.wheelDelta || (-e.detail);
+            if (zoomInState!==(dy>0)){
+                timelineWheelDelta = 1e12;
+            }
+            zoomInState=dy>0;
             timelineWheelDelta = Math.max(Math.min(Math.abs(dy), timelineWheelDelta), 1);
             dy /= timelineWheelDelta;
             timeline.zoomFrom(Math.pow(1.05, -dy));
