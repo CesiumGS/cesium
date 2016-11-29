@@ -2459,7 +2459,7 @@ define([
         var boundingSphere = geometry.boundingSphere;
         if (defined(boundingSphere)) {
             var minX = boundingSphere.center.x - boundingSphere.radius;
-            if (minX > 0 || BoundingSphere.intersectPlane(boundingSphere, Plane.ORIGIN_ZX_PLANE) !== Intersect.INTERSECTING) {
+            if (minX > 0 || BoundingSphere.intersectPlane(boundingSphere, Plane.ORIGIN_ZX_PLANE) !== Intersect.INTERSECTING || boundingSphere.center.equals(Cartesian3.ZERO)) {
                 return instance;
             }
         }
