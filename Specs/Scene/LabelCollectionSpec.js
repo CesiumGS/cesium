@@ -56,6 +56,7 @@ defineSuite([
     afterAll(function() {
         scene.destroyForSpecs();
     });
+
     beforeEach(function() {
         scene.morphTo3D(0);
 
@@ -1300,10 +1301,8 @@ defineSuite([
             label.verticalOrigin = VerticalOrigin.TOP;
             scene.renderForSpecs();
 
-            // vertical origin TOP should decrease (or equal) Y offset compared to CENTER
-            expect(getGlyphBillboardVertexTranslate(label, 0).y).toBeLessThanOrEqualTo(offset0.y);
-            expect(getGlyphBillboardVertexTranslate(label, 1).y).toBeLessThanOrEqualTo(offset1.y);
-            expect(getGlyphBillboardVertexTranslate(label, 2).y).toBeLessThanOrEqualTo(offset2.y);
+            // Because changing the label's vertical origin also changes the vertical origin of each
+            // individual glyph, it is not safe to assume anything about Y offsets being more or less.
 
             // X offset should be unchanged
             expect(getGlyphBillboardVertexTranslate(label, 0).x).toEqual(offset0.x);
@@ -1312,11 +1311,6 @@ defineSuite([
 
             label.verticalOrigin = VerticalOrigin.BOTTOM;
             scene.renderForSpecs();
-
-            // vertical origin BOTTOM should increase (or equal) Y offset compared to CENTER
-            expect(getGlyphBillboardVertexTranslate(label, 0).y).toBeGreaterThanOrEqualTo(offset0.y);
-            expect(getGlyphBillboardVertexTranslate(label, 1).y).toBeGreaterThanOrEqualTo(offset1.y);
-            expect(getGlyphBillboardVertexTranslate(label, 2).y).toBeGreaterThanOrEqualTo(offset2.y);
 
             // X offset should be unchanged
             expect(getGlyphBillboardVertexTranslate(label, 0).x).toEqual(offset0.x);
@@ -1394,20 +1388,9 @@ defineSuite([
             offset1 = getGlyphBillboardVertexTranslate(label, 1);
             offset2 = getGlyphBillboardVertexTranslate(label, 2);
 
-            // vertical origin TOP should decrease (or equal) Y offset compared to CENTER
-            expect(getGlyphBillboardVertexTranslate(label, 0).y).toBeLessThanOrEqualTo(offset0.y);
-            expect(getGlyphBillboardVertexTranslate(label, 1).y).toBeLessThanOrEqualTo(offset1.y);
-            expect(getGlyphBillboardVertexTranslate(label, 2).y).toBeLessThanOrEqualTo(offset2.y);
+            // Because changing the label's vertical origin also changes the vertical origin of each
+            // individual glyph, it is not safe to assume anything about Y offsets being more or less.
 
-            label.verticalOrigin = VerticalOrigin.BOTTOM;
-            scene.renderForSpecs();
-
-            // vertical origin BOTTOM should increase (or equal) Y offset compared to CENTER
-            expect(getGlyphBillboardVertexTranslate(label, 0).y).toBeGreaterThanOrEqualTo(offset0.y);
-            expect(getGlyphBillboardVertexTranslate(label, 1).y).toBeGreaterThanOrEqualTo(offset1.y);
-            expect(getGlyphBillboardVertexTranslate(label, 2).y).toBeGreaterThanOrEqualTo(offset2.y);
-
-            label.verticalOrigin = VerticalOrigin.CENTER;
             label.horizontalOrigin = HorizontalOrigin.LEFT;
             scene.renderForSpecs();
 
