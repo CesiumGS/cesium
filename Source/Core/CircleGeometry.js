@@ -7,7 +7,6 @@ define([
         './DeveloperError',
         './EllipseGeometry',
         './Ellipsoid',
-        './Math',
         './VertexFormat'
     ], function(
         Cartesian3,
@@ -17,7 +16,6 @@ define([
         DeveloperError,
         EllipseGeometry,
         Ellipsoid,
-        CesiumMath,
         VertexFormat) {
     'use strict';
 

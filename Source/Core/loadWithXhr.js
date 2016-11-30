@@ -1,20 +1,20 @@
 /*global define*/
 define([
         '../ThirdParty/when',
-        './TrustedServers',
         './defaultValue',
         './defined',
         './DeveloperError',
         './RequestErrorEvent',
-        './RuntimeError'
+        './RuntimeError',
+        './TrustedServers'
     ], function(
         when,
-        TrustedServers,
         defaultValue,
         defined,
         DeveloperError,
         RequestErrorEvent,
-        RuntimeError) {
+        RuntimeError,
+        TrustedServers) {
     'use strict';
 
     /**
@@ -120,7 +120,9 @@ define([
             case 'json':
                 return JSON.parse(decodeDataUriText(isBase64, data));
             default:
+                //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Unhandled responseType: ' + responseType);
+                //>>includeEnd('debug');
         }
     }
 

@@ -2,27 +2,23 @@
 defineSuite([
         'Renderer/loadCubeMap',
         'Core/Cartesian3',
-        'Core/defined',
         'Core/PrimitiveType',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
         'Renderer/ShaderProgram',
         'Renderer/VertexArray',
-        'Specs/createContext',
-        'ThirdParty/when'
+        'Specs/createContext'
     ], function(
         loadCubeMap,
         Cartesian3,
-        defined,
         PrimitiveType,
         Buffer,
         BufferUsage,
         DrawCommand,
         ShaderProgram,
         VertexArray,
-        createContext,
-        when) {
+        createContext) {
     'use strict';
 
     var context;

@@ -7,7 +7,6 @@ define([
         '../Core/Cartographic',
         '../Core/clone',
         '../Core/combine',
-        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -67,7 +66,6 @@ define([
         Cartographic,
         clone,
         combine,
-        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
@@ -903,9 +901,11 @@ define([
     }
 
     function parseBinaryGltfHeader(uint8Array) {
+        //>>includeStart('debug', pragmas.debug);
         if (!containsGltfMagic(uint8Array)) {
             throw new DeveloperError('bgltf is not a valid Binary glTF file.');
         }
+        //>>includeEnd('debug');
 
         var view = new DataView(uint8Array.buffer, uint8Array.byteOffset, uint8Array.byteLength);
         var byteOffset = 0;

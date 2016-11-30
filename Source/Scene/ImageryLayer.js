@@ -1,10 +1,7 @@
 /*global define*/
 define([
-        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian4',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -14,7 +11,6 @@ define([
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/PixelFormat',
-        '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/TerrainProvider',
         '../Core/TileProviderError',
@@ -22,13 +18,9 @@ define([
         '../Core/WebMercatorTilingScheme',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
-        '../Renderer/ClearCommand',
         '../Renderer/ComputeCommand',
         '../Renderer/ContextLimits',
-        '../Renderer/DrawCommand',
-        '../Renderer/Framebuffer',
         '../Renderer/MipmapHint',
-        '../Renderer/RenderState',
         '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -44,11 +36,8 @@ define([
         './ImageryState',
         './TileImagery'
     ], function(
-        BoundingRectangle,
         Cartesian2,
         Cartesian4,
-        Color,
-        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
@@ -58,7 +47,6 @@ define([
         IndexDatatype,
         CesiumMath,
         PixelFormat,
-        PrimitiveType,
         Rectangle,
         TerrainProvider,
         TileProviderError,
@@ -66,13 +54,9 @@ define([
         WebMercatorTilingScheme,
         Buffer,
         BufferUsage,
-        ClearCommand,
         ComputeCommand,
         ContextLimits,
-        DrawCommand,
-        Framebuffer,
         MipmapHint,
-        RenderState,
         Sampler,
         ShaderProgram,
         ShaderSource,
@@ -567,6 +551,10 @@ define([
             imageryRectangle = imageryTileXYToRectangle(i, northwestTileCoordinates.y, imageryLevel);
             clippedImageryRectangle = Rectangle.simpleIntersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
 
+            if (!defined(clippedImageryRectangle)) {
+                continue;
+            }
+
             maxU = Math.min(1.0, (clippedImageryRectangle.east - terrainRectangle.west) / terrainRectangle.width);
 
             // If this is the eastern-most imagery tile mapped to this terrain tile,
@@ -584,6 +572,11 @@ define([
 
                 imageryRectangle = imageryTileXYToRectangle(i, j, imageryLevel);
                 clippedImageryRectangle = Rectangle.simpleIntersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
+
+                if (!defined(clippedImageryRectangle)) {
+                    continue;
+                }
+                
                 minV = Math.max(0.0, (clippedImageryRectangle.south - terrainRectangle.south) / terrainRectangle.height);
 
                 // If this is the southern-most imagery tile mapped to this terrain tile,

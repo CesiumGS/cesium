@@ -6,7 +6,6 @@ define([
         './defineProperties',
         './DeveloperError',
         './freezeObject',
-        './HeadingPitchRoll',
         './Math'
     ], function(
         Cartesian3,
@@ -15,7 +14,6 @@ define([
         defineProperties,
         DeveloperError,
         freezeObject,
-        HeadingPitchRoll,
         CesiumMath) {
     'use strict';
 
@@ -1372,9 +1370,11 @@ define([
 
         var determinant = Matrix3.determinant(matrix);
 
+        //>>includeStart('debug', pragmas.debug);
         if (Math.abs(determinant) <= CesiumMath.EPSILON15) {
             throw new DeveloperError('matrix is not invertible');
         }
+        //>>includeEnd('debug');
 
         result[0] = m22 * m33 - m23 * m32;
         result[1] = m23 * m31 - m21 * m33;

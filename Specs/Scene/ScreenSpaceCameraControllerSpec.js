@@ -4,7 +4,6 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/combine',
-        'Core/defined',
         'Core/Ellipsoid',
         'Core/FeatureDetection',
         'Core/GeographicProjection',
@@ -26,7 +25,6 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         combine,
-        defined,
         Ellipsoid,
         FeatureDetection,
         GeographicProjection,
@@ -65,11 +63,16 @@ defineSuite([
         this.getHeight = function(cartographic) {
             return 0.0;
         };
+        this.pick = function() {
+            return new Cartesian3(0.0, 0.0, 1.0);
+        };
         this._surface = {
             tileProvider : {
                 ready : true
             },
-            _tileLoadQueue : {},
+            _tileLoadQueueHigh : [],
+            _tileLoadQueueMedium : [],
+            _tileLoadQueueLow : [],
             _debug : {
                 tilesWaitingForChildren : 0
             }
@@ -783,6 +786,27 @@ defineSuite([
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController();
+        expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
+    });
+
+    it('zoom in 3D to point 0,0', function() {
+        setUp3D();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+        updateController();
+
+        camera.setView({
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+        });
+
+        updateController();
+
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(0, 0);
+        var endPosition = new Cartesian2(0, canvas.clientHeight / 2);
 
         moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
         updateController();

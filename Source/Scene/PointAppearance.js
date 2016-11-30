@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/clone',
         '../Core/Color',
         '../Core/combine',
         '../Core/defaultValue',
@@ -11,7 +10,6 @@ define([
         '../Shaders/Appearances/PointAppearanceVS',
         './Appearance'
     ], function(
-        clone,
         Color,
         combine,
         defaultValue,
