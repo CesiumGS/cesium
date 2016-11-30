@@ -44,6 +44,7 @@ define([
      * @constructor
      * @private
      *
+     * @param {Context} context The context in which the batch table is created.
      * @param {Object[]} attributes An array of objects describing a per instance attribute. Each object contains a datatype, components per attributes, whether it is normalized and a function name
      *     to retrieve the value in the vertex shader.
      * @param {Number} numberOfInstances The number of instances in a batch table.
@@ -60,7 +61,7 @@ define([
      *     componentsPerAttribute : 4,
      *     normalize : true
      * }];
-     * var batchTable = new BatchTable(attributes, 5);
+     * var batchTable = new BatchTable(context, attributes, 5);
      *
      * // when creating the draw commands, update the uniform map and the vertex shader
      * vertexShaderSource = batchTable.getVertexShaderCallback()(vertexShaderSource);
@@ -83,8 +84,11 @@ define([
      *     // ...
      * }
      */
-    function BatchTable(attributes, numberOfInstances) {
+    function BatchTable(context, attributes, numberOfInstances) {
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(context)) {
+            throw new DeveloperError('context is required');
+        }
         if (!defined(attributes)) {
             throw new DeveloperError('attributes is required');
         }
@@ -96,13 +100,20 @@ define([
         this._attributes = attributes;
         this._numberOfInstances = numberOfInstances;
 
-        var pixelDatatype = getDatatype(attributes);
+        if (attributes.length === 0) {
+            return;
+        }
 
-        var numberOfAttributes = attributes.length;
-        var maxNumberOfInstancesPerRow = Math.floor(ContextLimits.maximumTextureSize / numberOfAttributes);
+        var pixelDatatype = getDatatype(attributes);
+        var textureFloatSupported = context.floatingPointTexture;
+        var packFloats = pixelDatatype === PixelDatatype.FLOAT && !textureFloatSupported;
+        var offsets = createOffsets(attributes, packFloats);
+
+        var stride = getStride(offsets, attributes, packFloats);
+        var maxNumberOfInstancesPerRow = Math.floor(ContextLimits.maximumTextureSize / stride);
 
         var instancesPerWidth = Math.min(numberOfInstances, maxNumberOfInstancesPerRow);
-        var width = numberOfAttributes * instancesPerWidth;
+        var width = stride * instancesPerWidth;
         var height = Math.ceil(numberOfInstances / instancesPerWidth);
 
         var stepX = 1.0 / width;
@@ -112,11 +123,14 @@ define([
 
         this._textureDimensions = new Cartesian2(width, height);
         this._textureStep = new Cartesian4(stepX, centerX, stepY, centerY);
-        this._pixelDatatype = pixelDatatype;
+        this._pixelDatatype = !packFloats ? pixelDatatype : PixelDatatype.UNSIGNED_BYTE;
+        this._packFloats = packFloats;
+        this._offsets = offsets;
+        this._stride = stride;
         this._texture = undefined;
 
-        var batchLength = width * height * 4;
-        this._batchValues = pixelDatatype === PixelDatatype.FLOAT ? new Float32Array(batchLength) : new Uint8Array(batchLength);
+        var batchLength = 4 * width * height;
+        this._batchValues = pixelDatatype === PixelDatatype.FLOAT && !packFloats ? new Float32Array(batchLength) : new Uint8Array(batchLength);
         this._batchValuesDirty = false;
     }
 
@@ -169,6 +183,134 @@ define([
         return Number;
     }
 
+    function createOffsets(attributes, packFloats) {
+        var offsets = new Array(attributes.length);
+
+        var currentOffset = 0;
+        var attributesLength = attributes.length;
+        for (var i = 0; i < attributesLength; ++i) {
+            var attribute = attributes[i];
+            var componentDatatype = attribute.componentDatatype;
+
+            offsets[i] = currentOffset;
+
+            if (componentDatatype !== ComponentDatatype.UNSIGNED_BYTE && packFloats) {
+                currentOffset += 4;
+            } else {
+                ++currentOffset;
+            }
+        }
+
+        return offsets;
+    }
+
+    function getStride(offsets, attributes, packFloats) {
+        var length = offsets.length;
+        var lastOffset = offsets[length - 1];
+        var lastAttribute = attributes[length - 1];
+        var componentDatatype = lastAttribute.componentDatatype;
+
+        if (componentDatatype !== ComponentDatatype.UNSIGNED_BYTE && packFloats) {
+            return lastOffset + 4;
+        }
+        return lastOffset + 1;
+    }
+
+    var scratchPackedFloatCartesian4 = new Cartesian4();
+
+    var SHIFT_LEFT_8 = 256.0;
+    var SHIFT_LEFT_16 = 65536.0;
+    var SHIFT_LEFT_24 = 16777216.0;
+
+    var SHIFT_RIGHT_8 = 1.0 / SHIFT_LEFT_8;
+    var SHIFT_RIGHT_16 = 1.0 / SHIFT_LEFT_16;
+    var SHIFT_RIGHT_24 = 1.0 / SHIFT_LEFT_24;
+
+    var BIAS = 38.0;
+
+    function unpackFloat(value) {
+        var temp = value.w / 2.0;
+        var exponent = Math.floor(temp);
+        var sign = (temp - exponent) * 2.0;
+        exponent = exponent - BIAS;
+
+        sign = sign * 2.0 - 1.0;
+        sign = -sign;
+
+        if (exponent >= BIAS) {
+            return sign < 0.0 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+        }
+
+        var unpacked = sign * value.x * SHIFT_RIGHT_8;
+        unpacked += sign * value.y * SHIFT_RIGHT_16;
+        unpacked += sign * value.z * SHIFT_RIGHT_24;
+
+        return unpacked * Math.pow(10.0, exponent);
+    }
+
+    function getPackedFloat(array, index, result) {
+        var packed = Cartesian4.unpack(array, index, scratchPackedFloatCartesian4);
+        var x = unpackFloat(packed);
+
+        packed = Cartesian4.unpack(array, index + 4, scratchPackedFloatCartesian4);
+        var y = unpackFloat(packed);
+
+        packed = Cartesian4.unpack(array, index + 8, scratchPackedFloatCartesian4);
+        var z = unpackFloat(packed);
+
+        packed = Cartesian4.unpack(array, index + 12, scratchPackedFloatCartesian4);
+        var w = unpackFloat(packed);
+
+        return Cartesian4.fromElements(x, y, z, w, result);
+    }
+
+    var scratchFloatArray = new Float32Array(1);
+
+    function packFloat(value, result) {
+        scratchFloatArray[0] = value;
+        value = scratchFloatArray[0];
+
+        if (value === 0.0) {
+            return Cartesian4.clone(Cartesian4.ZERO, result);
+        }
+
+        var sign = value < 0.0 ? 1.0 : 0.0;
+        var exponent;
+
+        if (!isFinite(value)) {
+            value = 0.1;
+            exponent = BIAS;
+        } else {
+            value = Math.abs(value);
+            exponent = Math.floor(Math.log10(value)) + 1.0;
+            value = value / Math.pow(10.0, exponent);
+        }
+
+        var temp = value * SHIFT_LEFT_8;
+        result.x = Math.floor(temp);
+        temp = (temp - result.x) * SHIFT_LEFT_8;
+        result.y = Math.floor(temp);
+        temp = (temp - result.y) * SHIFT_LEFT_8;
+        result.z = Math.floor(temp);
+        result.w = (exponent + BIAS) * 2.0 + sign;
+
+        return result;
+    }
+
+    function setPackedAttribute(value, array, index) {
+        var packed = packFloat(value.x, scratchPackedFloatCartesian4);
+        Cartesian4.pack(packed, array, index);
+
+        packed = packFloat(value.y, packed);
+        Cartesian4.pack(packed, array, index + 4);
+
+        packed = packFloat(value.z, packed);
+        Cartesian4.pack(packed, array, index + 8);
+
+        packed = packFloat(value.w, packed);
+        Cartesian4.pack(packed, array, index + 12);
+    }
+
     var scratchGetAttributeCartesian4 = new Cartesian4();
 
     /**
@@ -193,8 +335,17 @@ define([
         //>>includeEnd('debug');
 
         var attributes = this._attributes;
-        var index = 4 * attributes.length * instanceIndex + 4 * attributeIndex;
-        var value = Cartesian4.unpack(this._batchValues, index, scratchGetAttributeCartesian4);
+        var offset = this._offsets[attributeIndex];
+        var stride = this._stride;
+
+        var index = 4 * stride * instanceIndex + 4 * offset;
+        var value;
+
+        if (this._packFloats && attributes[attributeIndex].componentDatatype !== PixelDatatype.UNSIGNED_BYTE) {
+            value = getPackedFloat(this._batchValues, index, scratchGetAttributeCartesian4);
+        } else {
+            value = Cartesian4.unpack(this._batchValues, index, scratchGetAttributeCartesian4);
+        }
 
         var attributeType = getAttributeType(attributes, attributeIndex);
         if (defined(attributeType.fromCartesian4)) {
@@ -247,8 +398,15 @@ define([
         attributeValue.z = defined(value.z) ? value.z : 0.0;
         attributeValue.w = defined(value.w) ? value.w : 0.0;
 
-        var index = 4 * attributes.length * instanceIndex + 4 * attributeIndex;
-        Cartesian4.pack(attributeValue, this._batchValues, index);
+        var offset = this._offsets[attributeIndex];
+        var stride = this._stride;
+        var index = 4 * stride * instanceIndex + 4 * offset;
+
+        if (this._packFloats && attributes[attributeIndex].componentDatatype !== PixelDatatype.UNSIGNED_BYTE) {
+            setPackedAttribute(attributeValue, this._batchValues, index);
+        } else {
+            Cartesian4.pack(attributeValue, this._batchValues, index);
+        }
 
         this._batchValuesDirty = true;
     };
@@ -284,20 +442,14 @@ define([
      * @exception {RuntimeError} The floating point texture extension is required but not supported.
      */
     BatchTable.prototype.update = function(frameState) {
-        var context = frameState.context;
-        if (this._pixelDatatype === PixelDatatype.FLOAT && !context.floatingPointTexture) {
-            // We could probably pack the floats to RGBA unsigned bytes but that would add a lot CPU and memory overhead.
-            throw new RuntimeError('The floating point texture extension is required but not supported.');
-        }
-
-        if (defined(this._texture) && !this._batchValuesDirty) {
+        if ((defined(this._texture) && !this._batchValuesDirty) || this._attributes.length === 0) {
             return;
         }
 
         this._batchValuesDirty = false;
 
         if (!defined(this._texture)) {
-            createTexture(this, context);
+            createTexture(this, frameState.context);
         }
         updateTexture(this);
     };
@@ -310,6 +462,10 @@ define([
     BatchTable.prototype.getUniformMapCallback = function() {
         var that = this;
         return function(uniformMap) {
+            if (that._attributes.length === 0) {
+                return uniformMap;
+            }
+
             var batchUniformMap = {
                 batchTexture : function() {
                     return that._texture;
@@ -321,13 +477,12 @@ define([
                     return that._textureStep;
                 }
             };
-
             return combine(uniformMap, batchUniformMap);
         };
     };
 
     function getGlslComputeSt(batchTable) {
-        var numberOfAttributes = batchTable._attributes.length;
+        var stride = batchTable._stride;
 
         // GLSL batchId is zero-based: [0, numberOfInstances - 1]
         if (batchTable._textureDimensions.y === 1) {
@@ -336,7 +491,7 @@ define([
                    '{ \n' +
                    '    float stepX = batchTextureStep.x; \n' +
                    '    float centerX = batchTextureStep.y; \n' +
-                   '    float numberOfAttributes = float('+ numberOfAttributes + '); \n' +
+                   '    float numberOfAttributes = float('+ stride + '); \n' +
                    '    return vec2(centerX + (batchId * numberOfAttributes * stepX), 0.5); \n' +
                    '} \n';
         }
@@ -349,10 +504,31 @@ define([
                '    float centerX = batchTextureStep.y; \n' +
                '    float stepY = batchTextureStep.z; \n' +
                '    float centerY = batchTextureStep.w; \n' +
-               '    float numberOfAttributes = float('+ numberOfAttributes + '); \n' +
+               '    float numberOfAttributes = float('+ stride + '); \n' +
                '    float xId = mod(batchId * numberOfAttributes, batchTextureDimensions.x); \n' +
                '    float yId = floor(batchId * numberOfAttributes / batchTextureDimensions.x); \n' +
                '    return vec2(centerX + (xId * stepX), 1.0 - (centerY + (yId * stepY))); \n' +
+               '} \n';
+    }
+
+    function getGlslUnpackFloat(batchTable) {
+        if (!batchTable._packFloats) {
+            return '';
+        }
+
+        return 'float unpackFloat(vec4 value) \n' +
+               '{ \n' +
+               '    value *= 255.0; \n' +
+               '    float temp = value.w / 2.0; \n' +
+               '    float exponent = floor(temp); \n' +
+               '    float sign = (temp - exponent) * 2.0; \n' +
+               '    exponent = exponent - float(' + BIAS + '); \n' +
+               '    sign = sign * 2.0 - 1.0; \n' +
+               '    sign = -sign; \n' +
+               '    float unpacked = sign * value.x * float(' + SHIFT_RIGHT_8 + '); \n' +
+               '    unpacked += sign * value.y * float(' + SHIFT_RIGHT_16 + '); \n' +
+               '    unpacked += sign * value.z * float(' + SHIFT_RIGHT_24 + '); \n' +
+               '    return unpacked * pow(10.0, exponent); \n' +
                '} \n';
     }
 
@@ -382,15 +558,28 @@ define([
         var functionReturnType = getComponentType(componentsPerAttribute);
         var functionReturnValue = getComponentSwizzle(componentsPerAttribute);
 
+        var offset = batchTable._offsets[attributeIndex];
+
         var glslFunction =
             functionReturnType + ' ' + functionName + '(float batchId) \n' +
             '{ \n' +
             '    vec2 st = computeSt(batchId); \n' +
-            '    st.x += batchTextureStep.x * float(' + attributeIndex + '); \n' +
-            '    vec4 textureValue = texture2D(batchTexture, st); \n' +
-            '    ' + functionReturnType + ' value = textureValue' + functionReturnValue + '; \n';
+            '    st.x += batchTextureStep.x * float(' + offset + '); \n';
 
-        if (batchTable._pixelDatatype === PixelDatatype.UNSIGNED_BYTE && !attribute.normalize) {
+        if (batchTable._packFloats && attribute.componentDatatype !== PixelDatatype.UNSIGNED_BYTE) {
+            glslFunction += 'vec4 textureValue; \n' +
+                            'textureValue.x = unpackFloat(texture2D(batchTexture, st)); \n' +
+                            'textureValue.y = unpackFloat(texture2D(batchTexture, st + vec2(batchTextureStep.x, 0.0))); \n' +
+                            'textureValue.z = unpackFloat(texture2D(batchTexture, st + vec2(batchTextureStep.x * 2.0, 0.0))); \n' +
+                            'textureValue.w = unpackFloat(texture2D(batchTexture, st + vec2(batchTextureStep.x * 3.0, 0.0))); \n';
+
+        } else {
+            glslFunction += '    vec4 textureValue = texture2D(batchTexture, st); \n';
+        }
+
+        glslFunction += '    ' + functionReturnType + ' value = textureValue' + functionReturnValue + '; \n';
+
+        if (batchTable._pixelDatatype === PixelDatatype.UNSIGNED_BYTE && attribute.componentDatatype === ComponentDatatype.UNSIGNED_BYTE && !attribute.normalize) {
             glslFunction += 'value *= 255.0; \n';
         } else if (batchTable._pixelDatatype === PixelDatatype.FLOAT && attribute.componentDatatype === ComponentDatatype.UNSIGNED_BYTE && attribute.normalize) {
             glslFunction += 'value /= 255.0; \n';
@@ -408,10 +597,17 @@ define([
      * @returns {BatchTable~updateVertexShaderSourceCallback} A callback for updating a vertex shader source.
      */
     BatchTable.prototype.getVertexShaderCallback = function() {
+        var attributes = this._attributes;
+        if (attributes.length === 0) {
+            return function(source) {
+                return source;
+            };
+        }
+
         var batchTableShader = 'uniform sampler2D batchTexture; \n';
         batchTableShader += getGlslComputeSt(this) + '\n';
+        batchTableShader += getGlslUnpackFloat(this) + '\n';
 
-        var attributes = this._attributes;
         var length = attributes.length;
         for (var i = 0; i < length; ++i) {
             batchTableShader += getGlslAttributeFunction(this, i);
