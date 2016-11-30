@@ -104,6 +104,13 @@ define([
             return;
         }
 
+        // PERFORMANCE_IDEA: We may be able to arrange the attributes so they can be packing into fewer texels.
+        // Right now, an attribute with one component uses an entire texel when 4 single component attributes can
+        // be packed into a texel.
+        //
+        // Packing floats into unsigned byte textures makes the problem worse. A single component float attribute
+        // will be packed into a single texel leaving 3 texels unused. 4 texels are reserved for each float attribute
+        // regardless of how many components it has.
         var pixelDatatype = getDatatype(attributes);
         var textureFloatSupported = context.floatingPointTexture;
         var packFloats = pixelDatatype === PixelDatatype.FLOAT && !textureFloatSupported;
