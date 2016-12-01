@@ -634,6 +634,8 @@ define([
             if (node._value === 'TILES3D_TILESET_TIME') {
                 node.evaluate = evaluateTime;
             }
+        } else if (node._type === ExpressionNodeType.TERNARY) {
+            node.evaluate = getEvaluateTernaryFunction(node._value);
         } else {
             node.evaluate = node._evaluateLiteral;
         }
@@ -645,6 +647,13 @@ define([
 
     function getEvaluateUnaryFunction(call) {
         var evaluate = unaryFunctions[call];
+        return function(feature) {
+            return evaluate(this._left.evaluate(feature));
+        };
+    }
+
+    function getEvaluateTernaryFunction(call) {
+        var evaluate = ternaryFunctions[call];
         return function(feature) {
             return evaluate(this._left.evaluate(feature));
         };
@@ -1297,6 +1306,7 @@ define([
                 if (value === 'TILES3D_TILESET_TIME') {
                     return 'u_tilesetTime';
                 }
+                break;
             case ExpressionNodeType.TERNARY:
                 if (defined(ternaryFunctions[value])) {
                     return value + '(' + left + ', ' + right + ', ' + test + ')';

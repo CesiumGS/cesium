@@ -699,7 +699,7 @@ define([
     };
 
     /**
-     * Constraint a value to lie between two values.
+     * Constraints a value to lie between two values.
      *
      * @param {Number} value The value to constrain.
      * @param {Number} min The minimum value.
