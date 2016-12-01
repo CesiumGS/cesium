@@ -146,6 +146,10 @@ define([
                             billboard.show = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.show = value;
+                    }
                 }
             }
         },
@@ -176,6 +180,10 @@ define([
                         if (defined(billboard)) {
                             billboard.position = value;
                         }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.position = value;
                     }
 
                     if (this._heightReference !== HeightReference.NONE) {
@@ -210,6 +218,10 @@ define([
                         if (defined(billboard)) {
                             billboard.heightReference = value;
                         }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.heightReference = value;
                     }
 
                     repositionAllGlyphs(this);
@@ -358,7 +370,7 @@ define([
 
                 if (this._showBackground !== value) {
                     this._showBackground = value;
-                    rebindAllGlyphs(this);  // TODO: Can do something cheaper than rebindAllGlyphs?
+                    rebindAllGlyphs(this);
                 }
             }
         },
@@ -382,7 +394,11 @@ define([
                 var backgroundColor = this._backgroundColor;
                 if (!Color.equals(backgroundColor, value)) {
                     Color.clone(value, backgroundColor);
-                    rebindAllGlyphs(this);  // TODO: Can do something cheaper than rebindAllGlyphs?
+
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.color = backgroundColor;
+                    }
                 }
             }
         },
@@ -407,7 +423,7 @@ define([
                 var backgroundPadding = this._backgroundPadding;
                 if (!Cartesian2.equals(backgroundPadding, value)) {
                     Cartesian2.clone(value, backgroundPadding);
-                    rebindAllGlyphs(this);  // TODO: Can do something cheaper than rebindAllGlyphs?
+                    repositionAllGlyphs(this);
                 }
             }
         },
@@ -473,6 +489,10 @@ define([
                             glyph.billboard.pixelOffset = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.pixelOffset = value;
+                    }
                 }
             }
         },
@@ -520,6 +540,10 @@ define([
                         if (defined(glyph.billboard)) {
                             glyph.billboard.translucencyByDistance = value;
                         }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.translucencyByDistance = value;
                     }
                 }
             }
@@ -570,6 +594,10 @@ define([
                             glyph.billboard.pixelOffsetScaleByDistance = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.pixelOffsetScaleByDistance = value;
+                    }
                 }
             }
         },
@@ -617,6 +645,10 @@ define([
                         if (defined(glyph.billboard)) {
                             glyph.billboard.eyeOffset = value;
                         }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.eyeOffset = value;
                     }
                 }
             }
@@ -689,6 +721,10 @@ define([
                             glyph.billboard.verticalOrigin = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.verticalOrigin = value;
+                    }
 
                     repositionAllGlyphs(this);
                 }
@@ -733,6 +769,10 @@ define([
                             glyph.billboard.scale = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.scale = value;
+                    }
 
                     repositionAllGlyphs(this);
                 }
@@ -765,6 +805,10 @@ define([
                             glyph.billboard.distanceDisplayCondition = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.distanceDisplayCondition = value;
+                    }
                 }
             }
         },
@@ -789,6 +833,10 @@ define([
                             glyph.billboard.id = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.id = value;
+                    }
                 }
             }
         },
@@ -807,18 +855,22 @@ define([
                 this._actualClampedPosition = Cartesian3.clone(value, this._actualClampedPosition);
 
                 var glyphs = this._glyphs;
+                value = defaultValue(value, this._position);
                 for (var i = 0, len = glyphs.length; i < len; i++) {
                     var glyph = glyphs[i];
                     if (defined(glyph.billboard)) {
                         // Set all the private values here, because we already clamped to ground
                         //  so we don't want to do it again for every glyph
-
                         glyph.billboard._clampedPosition = value;
-
-                        value = defaultValue(value, this._position);
                         Cartesian3.clone(value, glyph.billboard._position);
                         Cartesian3.clone(value, glyph.billboard._actualPosition);
                     }
+                }
+                var backgroundBillboard = this._backgroundBillboard;
+                if (defined(backgroundBillboard)) {
+                    backgroundBillboard._clampedPosition = value;
+                    Cartesian3.clone(value, backgroundBillboard._position);
+                    Cartesian3.clone(value, backgroundBillboard._actualPosition);
                 }
             }
         },
@@ -845,6 +897,10 @@ define([
                             //  so we don't want to do it again for every glyph
                             glyph.billboard.clusterShow = value;
                         }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.cluserShow = value;
                     }
                 }
             }
@@ -938,6 +994,7 @@ define([
         if (!defined(result)) {
             result = new BoundingRectangle();
         }
+        // TODO: Add backgroundPadding here.
 
         result.x = x;
         result.y = y;

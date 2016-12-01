@@ -323,7 +323,6 @@ define([
             glyph = glyphs[glyphIndex];
             dimensions = glyph.dimensions;
 
-            // TODO: Add VerticalOrigin.BASELINE as copy of current BOTTOM, then fix BOTTOM.
             if (verticalOrigin === VerticalOrigin.BASELINE) {
                 glyphPixelOffset.y = -dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
@@ -350,7 +349,6 @@ define([
             }
         }
 
-        // TODO: Figure out why live-updating Entity.LabelGraphics doesn't get the right answer here.
         if (defined(backgroundBillboard)) {
             glyphPixelOffset.x = (widthOffset - backgroundPadding.x * scale) * resolutionScale;
             if (verticalOrigin === VerticalOrigin.BASELINE) {
@@ -364,9 +362,9 @@ define([
                 glyphPixelOffset.y = 0;
             }
             glyphPixelOffset.y *= resolutionScale;
-            backgroundBillboard._setTranslate(glyphPixelOffset); // TODO: Make this count towards edge-based alignments.
             backgroundBillboard.width = totalWidth + (backgroundPadding.x * 2);
             backgroundBillboard.height = maxHeight + (backgroundPadding.y * 2);
+            backgroundBillboard._setTranslate(glyphPixelOffset);
         }
     }
 
