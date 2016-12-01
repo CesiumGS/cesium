@@ -722,11 +722,24 @@ define([
         }
 
         // Imagery does not need to be discarded, so upload it to WebGL.
-        var texture = new Texture({
-            context : context,
-            source : imagery.image,
-            pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
-        });
+        var texture;
+        if (defined(imagery.image.internalFormat)) {
+            texture = new Texture({
+                context : context,
+                pixelFormat : imagery.image.internalFormat,
+                width : imagery.image.width,
+                height : imagery.image.height,
+                source : {
+                    arrayBufferView : imagery.image.bufferView
+                }
+            });
+        } else {
+            texture = new Texture({
+                context : context,
+                source : imagery.image,
+                pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
+            });
+        }
 
         if (imageryProvider.tilingScheme instanceof WebMercatorTilingScheme) {
             imagery.textureWebMercator = texture;
@@ -739,7 +752,7 @@ define([
 
     function finalizeReprojectTexture(imageryLayer, context, imagery, texture) {
         // Use mipmaps if this texture has power-of-two dimensions.
-        if (CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
+        if (!PixelFormat.isCompressedFormat(texture.pixelFormat) && CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
             if (!defined(mipmapSampler)) {
                 var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
