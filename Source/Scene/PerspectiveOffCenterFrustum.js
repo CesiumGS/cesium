@@ -1,19 +1,15 @@
 /*global define*/
 define([
-        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Matrix4',
         './CullingVolume'
     ], function(
-        Cartesian2,
         Cartesian3,
         Cartesian4,
-        defaultValue,
         defined,
         defineProperties,
         DeveloperError,

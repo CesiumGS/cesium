@@ -1,16 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Core/HeightmapTerrainData',
-        'Core/defined',
         'Core/GeographicTilingScheme',
-        'Core/TerrainData',
-        'ThirdParty/when'
+        'Core/TerrainData'
     ], function(
         HeightmapTerrainData,
-        defined,
         GeographicTilingScheme,
-        TerrainData,
-        when) {
+        TerrainData) {
      'use strict';
 
      it('conforms to TerrainData interface', function() {

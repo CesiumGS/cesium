@@ -373,11 +373,11 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
+            positions : positions
         });
         polylines.add();
         polylines.add({
-            positions: positions,
+            positions: positions
         });
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
