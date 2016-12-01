@@ -957,44 +957,62 @@ define([
      * @private
      */
     Label.getScreenSpaceBoundingBox = function(label, screenSpacePosition, result) {
+        var x = 0;
+        var y = 0;
         var width = 0;
         var height = 0;
+        var scale = label.scale;
 
-        var glyphs = label._glyphs;
-        var length = glyphs.length;
-        for (var i = 0; i < length; ++i) {
-            var glyph = glyphs[i];
-            var billboard = glyph.billboard;
-            if (!defined(billboard)) {
-                continue;
+        var backgroundBillboard = label._backgroundBillboard;
+        if (defined(backgroundBillboard)) {
+            x = screenSpacePosition.x + backgroundBillboard._translate.x;
+            y = screenSpacePosition.y - backgroundBillboard._translate.y;
+            width = backgroundBillboard.width * scale;
+            height = backgroundBillboard.height * scale;
+
+            if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
+                y -= height;
+            } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
+                y -= height * 0.5;
+            }
+        } else {
+            x = Number.POSITIVE_INFINITY;
+            y = Number.POSITIVE_INFINITY;
+            var maxX = 0;
+            var maxY = 0;
+            var glyphs = label._glyphs;
+            var length = glyphs.length;
+            for (var i = 0; i < length; ++i) {
+                var glyph = glyphs[i];
+                var billboard = glyph.billboard;
+                if (!defined(billboard)) {
+                    continue;
+                }
+
+                var glyphX = screenSpacePosition.x + billboard._translate.x;  // TODO: Accomodate resolutionScale in _translate?
+                var glyphY = screenSpacePosition.y - billboard._translate.y;
+                var glyphWidth = billboard.width * scale;
+                var glyphHeight = billboard.height * scale;
+
+                if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
+                    glyphY -= glyphHeight;
+                } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
+                    glyphY -= glyphHeight * 0.5;
+                }
+
+                x = Math.min(x, glyphX);
+                y = Math.min(y, glyphY);
+                maxX = Math.max(maxX, glyphX + glyphWidth);
+                maxY = Math.max(maxY, glyphY + glyphHeight);
             }
 
-            width += billboard.width;
-            height = Math.max(height, billboard.height);
-        }
-
-        var scale = label.scale;
-        width *= scale;
-        height *= scale;
-
-        var x = screenSpacePosition.x;
-        if (label.horizontalOrigin === HorizontalOrigin.RIGHT) {
-            x -= width;
-        } else if (label.horizontalOrigin === HorizontalOrigin.CENTER) {
-            x -= width * 0.5;
-        }
-
-        var y = screenSpacePosition.y;
-        if (label.verticalOrigin === VerticalOrigin.TOP) {
-            y -= height;
-        } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
-            y -= height * 0.5;
+            width = maxX - x;
+            height = maxY - y;
         }
 
         if (!defined(result)) {
             result = new BoundingRectangle();
         }
-        // TODO: Add backgroundPadding here.
 
         result.x = x;
         result.y = y;

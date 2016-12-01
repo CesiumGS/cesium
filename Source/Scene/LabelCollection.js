@@ -706,7 +706,6 @@ define([
                 context : context
             });
             billboardCollection.textureAtlas = this._textureAtlas;
-            //addWhitePixelCanvas(this._textureAtlas, this);
         }
 
         if (!defined(this._backgroundTextureAtlas)) {

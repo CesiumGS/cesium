@@ -1227,7 +1227,7 @@ define([
         }
 
         var y = screenSpacePosition.y;
-        if (billboard.verticalOrigin === VerticalOrigin.TOP) {
+        if (billboard.verticalOrigin === VerticalOrigin.TOP) {   // TODO: This is likely wrong!
             y -= height;
         } else if (billboard.verticalOrigin === VerticalOrigin.CENTER) {
             y -= height * 0.5;
