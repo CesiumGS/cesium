@@ -47,8 +47,8 @@ We appreciate attribution by including the Cesium logo and link in your app.
 
 <p align="center">
 <a href="http://cesiumjs.org/demos/STI.html"><img src="http://cesiumjs.org/demos/images/STI.jpg" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/TexasGroundwater.html"><img src="http://cesiumjs.org/demos/images/TXgroundwater.jpg" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/PearlHarbor.html"><img src="http://cesiumjs.org/demos/images/PearlHarbor.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/TexasGroundwater.html"><img src="http://cesiumjs.org/demos/images/TXgroundwater.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/PearlHarbor.html"><img src="http://cesiumjs.org/demos/images/PearlHarbor.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/JumpLog.html"><img src="http://cesiumjs.org/demos/images/JumpLog.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/Soarer.html"><img src="http://cesiumjs.org/demos/images/Soarer.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/IMERG.html"><img src="http://cesiumjs.org/demos/images/IMERG.jpg" height="150" /></a>&nbsp;
