@@ -1,9 +1,7 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
-        '../Core/Color',
         '../Core/ComponentDatatype',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -18,9 +16,7 @@ define([
         '../Core/WebMercatorProjection'
     ], function(
         BoundingSphere,
-        Color,
         ComponentDatatype,
-        defaultValue,
         defined,
         DeveloperError,
         Ellipsoid,

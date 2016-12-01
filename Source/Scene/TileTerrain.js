@@ -2,7 +2,6 @@
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
-        '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/IndexDatatype',
@@ -17,7 +16,6 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
-        ComponentDatatype,
         defined,
         DeveloperError,
         IndexDatatype,

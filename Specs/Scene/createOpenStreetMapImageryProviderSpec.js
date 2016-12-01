@@ -8,7 +8,6 @@ defineSuite([
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Scene/UrlTemplateImageryProvider',
         'Specs/pollToPromise'
@@ -21,7 +20,6 @@ defineSuite([
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
-        ImageryProvider,
         ImageryState,
         UrlTemplateImageryProvider,
         pollToPromise) {

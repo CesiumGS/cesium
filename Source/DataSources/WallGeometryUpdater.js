@@ -361,7 +361,7 @@ define([
         } else {
             attributes = {
                 show : show,
-                distanceDisplayCondition : distanceDisplayConditionAttribute,
+                distanceDisplayCondition : distanceDisplayConditionAttribute
             };
         }
 

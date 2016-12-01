@@ -4,7 +4,6 @@ defineSuite([
         'Core/Cartesian3',
         'Core/defined',
         'Core/Matrix4',
-        'Renderer/ClearCommand',
         'Scene/Material',
         'Specs/createScene'
     ], function(
@@ -12,7 +11,6 @@ defineSuite([
         Cartesian3,
         defined,
         Matrix4,
-        ClearCommand,
         Material,
         createScene) {
     'use strict';

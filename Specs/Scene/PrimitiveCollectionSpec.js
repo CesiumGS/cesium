@@ -1,13 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/PrimitiveCollection',
-        'Core/Cartesian3',
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
         'Core/defined',
         'Core/GeometryInstance',
-        'Core/Math',
-        'Core/Matrix4',
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Scene/HorizontalOrigin',
@@ -18,13 +15,10 @@ defineSuite([
         'Specs/createScene'
     ], function(
         PrimitiveCollection,
-        Cartesian3,
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         GeometryInstance,
-        CesiumMath,
-        Matrix4,
         Rectangle,
         RectangleGeometry,
         HorizontalOrigin,

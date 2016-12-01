@@ -1,14 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Core/loadImageFromTypedArray',
-        'Core/defined',
-        'Core/loadArrayBuffer',
-        'ThirdParty/when'
+        'Core/loadArrayBuffer'
     ], function(
         loadImageFromTypedArray,
-        defined,
-        loadArrayBuffer,
-        when) {
+        loadArrayBuffer) {
     'use strict';
 
     it('can load an image', function() {

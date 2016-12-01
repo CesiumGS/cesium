@@ -5,7 +5,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -15,7 +14,6 @@ define([
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
         './BoundingSphereState',
-        './EntityCluster',
         './Property'
     ], function(
         AssociativeArray,
@@ -23,7 +21,6 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
-        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
@@ -33,7 +30,6 @@ define([
         HorizontalOrigin,
         VerticalOrigin,
         BoundingSphereState,
-        EntityCluster,
         Property) {
     'use strict';
 

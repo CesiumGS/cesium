@@ -3,10 +3,8 @@ defineSuite([
         'Scene/Globe',
         'Core/CesiumTerrainProvider',
         'Core/defined',
-        'Core/Ellipsoid',
         'Core/loadWithXhr',
         'Core/Rectangle',
-        'Renderer/ClearCommand',
         'Scene/SingleTileImageryProvider',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -14,10 +12,8 @@ defineSuite([
         Globe,
         CesiumTerrainProvider,
         defined,
-        Ellipsoid,
         loadWithXhr,
         Rectangle,
-        ClearCommand,
         SingleTileImageryProvider,
         createScene,
         pollToPromise) {
@@ -68,7 +64,7 @@ defineSuite([
         return pollToPromise(function() {
             globe._surface._debug.enableDebugOutput = true;
             scene.render();
-            return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
+            return globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
         });
     }
 
