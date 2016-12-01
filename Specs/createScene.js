@@ -22,6 +22,9 @@ define([
 // TODO: expectRenderForSpecs for picking
 // TODO: update https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/TestingGuide with when/why to use these
 //    * index.html and command line:  npm run test-webgl-stub
+// TODO: test with WebGL 2
+// TODO: this makes the WebGL category less useful, still keep it?
+// TODO: it would be nice to include this in release test builds, but not release builds
 
     function createScene(options) {
         options = defaultValue(options, {});
@@ -65,7 +68,7 @@ define([
             // the expectation is not verified.  This allows running all the WebGL
             // tests, to exercise as much Cesium code as possible, even if the system
             // doesn't have a WebGL implementation or a reliable one.
-            if (window.webglStub) {
+            if (!window.webglStub) {
                 // Most tests want to compare the rendered rgba to a known rgba, but some
                 // only want to compare some rgba components or use a more complicated
                 // expectation.  These cases are handled with a callback.
@@ -75,9 +78,8 @@ define([
 
                 expect(rgba).toEqual(expectationCallbackOrExpectedRgba);
             } else {
-                // To avoid Jasmine's spec has no expecttions error
+                // To avoid Jasmine's spec has no expectations error
                 expect(true).toEqual(true);
-
             }
 
             return undefined;

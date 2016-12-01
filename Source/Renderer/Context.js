@@ -109,29 +109,29 @@ define([
         }
     }
 
-    function makeGetterSetter(gl, propertyName, logFunc) {
+    function makeGetterSetter(gl, propertyName, logFunction) {
         return {
             get : function() {
                 var value = gl[propertyName];
-                logFunc(gl, 'get: ' + propertyName, value);
+                logFunction(gl, 'get: ' + propertyName, value);
                 return gl[propertyName];
             },
             set : function(value) {
                 gl[propertyName] = value;
-                logFunc(gl, 'set: ' + propertyName, value);
+                logFunction(gl, 'set: ' + propertyName, value);
             }
         };
     }
 
-    function wrapGL(gl, logFunc) {
-        if (!logFunc) {
+    function wrapGL(gl, logFunction) {
+        if (!defined(logFunction)) {
             return gl;
         }
 
         function wrapFunction(property) {
             return function() {
                 var result = property.apply(gl, arguments);
-                logFunc(gl, property, arguments);
+                logFunction(gl, property, arguments);
                 return result;
             };
         }
@@ -143,14 +143,14 @@ define([
         // JSLint normally demands that a for..in loop must directly contain an if,
         // but in our loop below, we actually intend to iterate all properties, including
         // those in the prototype.
-        for ( var propertyName in gl) {
+        for (var propertyName in gl) {
             var property = gl[propertyName];
 
             // wrap any functions we encounter, otherwise just copy the property to the wrapper.
-            if (typeof property === 'function') {
+            if (property instanceof Function) {
                 glWrapper[propertyName] = wrapFunction(property);
             } else {
-                Object.defineProperty(glWrapper, propertyName, makeGetterSetter(gl, propertyName, logFunc));
+                Object.defineProperty(glWrapper, propertyName, makeGetterSetter(gl, propertyName, logFunction));
             }
         }
 
@@ -167,6 +167,167 @@ define([
         }
 
         return undefined;
+    }
+
+// TODO: move this to a @private file
+    function noop() {
+    }
+
+    function createStub() {
+        return {};
+    }
+
+    function getStub() {
+        return {};
+    }
+
+    function getWebGLStub(canvas, requestWebgl2) {
+// TODO: extensions
+// TODO: support requestWebgl2
+        var stub = clone(WebGLConstants);
+
+        stub.canvas = canvas;
+        stub.drawingBufferWidth = canvas.width;
+        stub.drawingBufferHeight = canvas.height;
+
+        stub.activeTexture = noop;
+        stub.attachShader = noop;
+        stub.bindAttribLocation = noop;
+        stub.bindBuffer = noop;
+        stub.bindFramebuffer = noop;
+        stub.bindRenderbuffer = noop;
+        stub.bindTexture = noop;
+        stub.blendColor = noop;
+        stub.blendEquation = noop;
+        stub.blendEquationSeparate = noop;
+        stub.blendFunc = noop;
+        stub.blendFuncSeparate = noop;
+        stub.bufferData = noop;
+        stub.bufferSubData = noop;
+        stub.checkFramebufferStatus = function () { }; // TODO
+        stub.clear = noop;
+        stub.clearColor = noop;
+        stub.clearDepth = noop;
+        stub.clearStencil = noop;
+        stub.colorMask = noop;
+        stub.compileShader = noop; // TODO: needs to fall sometime?
+        stub.compressedTexImage2D = noop;
+        stub.compressedTexSubImage2D = noop;
+        stub.copyTexImage2D = noop;
+        stub.copyTexSubImage2D = noop;
+        stub.createBuffer = createStub;
+        stub.createFramebuffer = createStub;
+        stub.createProgram = createStub;
+        stub.createRenderbuffer = createStub;
+        stub.createShader = createStub;
+        stub.createTexture = createStub;
+        stub.cullFace = noop;
+        stub.deleteBuffer = noop;
+        stub.deleteFramebuffer = noop;
+        stub.deleteProgram = noop;
+        stub.deleteRenderbuffer = noop;
+        stub.deleteShader = noop;
+        stub.deleteTexture = noop;
+        stub.depthFunc = noop;
+        stub.depthMask = noop;
+        stub.depthRange = noop;
+        stub.detachShader = noop;
+        stub.disable = noop;
+        stub.disableVertexAttribArray = noop;
+        stub.drawArrays = noop;
+        stub.drawElements = noop;
+        stub.enable = noop;
+        stub.enableVertexAttribArray = noop;
+        stub.finish = noop;
+        stub.flush = noop;
+        stub.framebufferRenderbuffer = noop;
+        stub.framebufferTexture2D = noop;
+        stub.frontFace = noop;
+        stub.generateMipmap = noop;
+        stub.getActiveAttrib = getStub; // TODO
+        stub.getActiveUniform = getStub; // TODO
+        stub.getAttachedShaders = getStub; // TODO
+        stub.getAttribLocation = getStub; // TODO
+        stub.getBufferParameter = getStub; // TODO
+        stub.getContextAttributes = getStub; // TODO
+        stub.getError = getStub; // TODO
+        stub.getExtension = getStub; // TODO
+        stub.getFramebufferAttachmentParameter = getStub; // TODO
+        stub.getParameter = getStub; // TODO
+        stub.getProgramParameter = getStub; // TODO
+        stub.getProgramInfoLog = getStub; // TODO
+        stub.getRenderbufferParameter = getStub; // TODO
+        stub.getShaderParameter = getStub; // TODO
+        stub.getShaderInfoLog = getStub; // TODO
+        stub.getShaderPrecisionFormat = getStub; // TODO
+        stub.getShaderSource = getStub; // TODO
+        stub.getSupportedExtensions = getStub; // TODO
+        stub.getTexParameter = getStub; // TODO
+        stub.getUniform = getStub; // TODO
+        stub.getUniformLocation = getStub; // TODO
+        stub.getVertexAttrib = getStub; // TODO
+        stub.getVertexAttribOffset = getStub; // TODO
+        stub.hint = noop;
+        stub.isBuffer = getStub;
+        stub.isContextLost = getStub;
+        stub.isEnabled = getStub;
+        stub.isFramebuffer = getStub;
+        stub.isProgram = getStub;
+        stub.isRenderbuffer = getStub;
+        stub.isShader = getStub;
+        stub.isTexture = getStub;
+        stub.lineWidth = noop;
+        stub.linkProgram = noop;
+        stub.pixelStorei = noop;
+        stub.polygonOffset = noop;
+        stub.readPixels = noop;
+        stub.renderbufferStorage = noop;
+        stub.sampleCoverage = noop;
+        stub.scissor = noop;
+        stub.shaderSource = noop;
+        stub.stencilFunc = noop;
+        stub.stencilFuncSeparate = noop;
+        stub.stencilMask = noop;
+        stub.stencilMaskSeparate = noop;
+        stub.stencilOp = noop;
+        stub.stencilOpSeparate = noop;
+        stub.texParameterf = noop;
+        stub.texParameteri = noop;
+        stub.texImage2D = noop;
+        stub.texSubImage2D = noop;
+        stub.uniform1f = noop;
+        stub.uniform1fv = noop;
+        stub.uniform1i = noop;
+        stub.uniform1iv = noop;
+        stub.uniform2f = noop;
+        stub.uniform2fv = noop;
+        stub.uniform2i = noop;
+        stub.uniform2iv = noop;
+        stub.uniform3f = noop;
+        stub.uniform3fv = noop;
+        stub.uniform3i = noop;
+        stub.uniform3iv = noop;
+        stub.uniform4f = noop;
+        stub.uniform4fv = noop;
+        stub.uniform4i = noop;
+        stub.uniform4iv = noop;
+        stub.uniformMatrix2fv = noop;
+        stub.uniformMatrix3fv = noop;
+        stub.uniformMatrix4fv = noop;
+        stub.useProgram = noop;
+        stub.validateProgram = noop; // TODO
+        stub.vertexAttrib1f = noop;
+        stub.vertexAttrib1fv = noop;
+        stub.vertexAttrib2f = noop;
+        stub.vertexAttrib2fv = noop;
+        stub.vertexAttrib3f = noop;
+        stub.vertexAttrib3fv = noop;
+        stub.vertexAttrib4f = noop;
+        stub.vertexAttrib4fv = noop;
+        stub.vertexAttribPointer = noop;
+        stub.viewport = noop;
+
+        return stub;
     }
 
     /**
@@ -195,24 +356,32 @@ define([
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
 
         var defaultToWebgl2 = false;
-        var webgl2Supported = (typeof WebGL2RenderingContext !== 'undefined');
+        var requestWebgl2 = defaultToWebgl2 && (typeof WebGL2RenderingContext !== 'undefined');
         var webgl2 = false;
         var glContext;
 
-        if (defaultToWebgl2 && webgl2Supported) {
-            glContext = canvas.getContext('webgl2', webglOptions) || canvas.getContext('experimental-webgl2', webglOptions) || undefined;
-            if (defined(glContext)) {
-                webgl2 = true;
+// TODO: pass this into the constructor?
+        if (false) {
+//      if (!window.webglStub) {
+            if (requestWebgl2) {
+                glContext = canvas.getContext('webgl2', webglOptions) || canvas.getContext('experimental-webgl2', webglOptions) || undefined;
+                if (defined(glContext)) {
+                    webgl2 = true;
+                }
             }
-        }
-        if (!defined(glContext)) {
-            glContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
-        }
-        if (!defined(glContext)) {
-            throw new RuntimeError('The browser supports WebGL, but initialization failed.');
+            if (!defined(glContext)) {
+                glContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
+            }
+            if (!defined(glContext)) {
+                throw new RuntimeError('The browser supports WebGL, but initialization failed.');
+            }
+        } else {
+            // Use WebGL stub of noops when requested for testing
+            glContext = getWebGLStub(canvas, requestWebgl2);
         }
 
         this._originalGLContext = glContext;
+        this._gl = glContext;
         this._webgl2 = webgl2;
         this._id = createGuid();
 
@@ -225,7 +394,7 @@ define([
 
         this._shaderCache = new ShaderCache(this);
 
-        var gl = this._gl = this._originalGLContext;
+        var gl = glContext;
 
         this._redBits = gl.getParameter(gl.RED_BITS);
         this._greenBits = gl.getParameter(gl.GREEN_BITS);
@@ -397,7 +566,6 @@ define([
          * @type {Object}
          */
         this.cache = {};
-
 
         RenderState.apply(gl, rs, ps);
     }
@@ -650,7 +818,7 @@ define([
             },
             set : function(value) {
                 this._throwOnWebGLError = value;
-                this._gl = wrapGL(this._originalGLContext, value ? throwOnError : null);
+                this._gl = wrapGL(this._originalGLContext, value ? throwOnError : undefined);
             }
         },
 

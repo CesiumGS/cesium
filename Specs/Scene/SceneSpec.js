@@ -1,5 +1,5 @@
 /*global defineSuite*/
-fdefineSuite([
+defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -449,7 +449,7 @@ fdefineSuite([
         s.destroyForSpecs();
     });
 
-    it('setting a central body', function() {
+    it('setting a globe', function() {
         var scene = createScene();
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var globe = new Globe(ellipsoid);
@@ -473,7 +473,7 @@ fdefineSuite([
         scene.destroyForSpecs();
     });
 
-    it('renders a central body', function() {
+    it('renders a globe', function() {
         var s = createScene();
 
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
@@ -481,7 +481,10 @@ fdefineSuite([
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
 
-        return scene.expectRenderForSpecs(function() {
+        // To avoid Jasmine's spec has no expectations error
+        expect(true).toEqual(true);
+
+        return s.expectRenderForSpecs(function() {
             return pollToPromise(function() {
                 render(s.frameState, s.globe);
                 return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
