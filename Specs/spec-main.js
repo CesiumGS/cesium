@@ -210,10 +210,14 @@
             window.webglValidation = true;
          }
 
-         var queryStringForSpecFocus = Cesium.clone(queryString);
-         if (queryStringForSpecFocus.category === 'none') {
+        if (queryString.webglStub !== undefined) {
+            window.webglStub = true;
+        }
+
+        var queryStringForSpecFocus = Cesium.clone(queryString);
+        if (queryStringForSpecFocus.category === 'none') {
             delete queryStringForSpecFocus.category;
-         }
+        }
 
         var catchingExceptions = queryString['catch'];
         env.catchExceptions(typeof catchingExceptions === "undefined" ? true : catchingExceptions);

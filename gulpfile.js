@@ -618,6 +618,7 @@ gulp.task('test', function(done) {
     var includeCategory = argv.include ? argv.include : '';
     var excludeCategory = argv.exclude ? argv.exclude : '';
     var webglValidation = argv.webglValidation ? argv.webglValidation : false;
+    var webglStub = argv.webglStub ? argv.webglStub : false;
     var release = argv.release ? argv.release : false;
     var failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
     var suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
@@ -651,7 +652,7 @@ gulp.task('test', function(done) {
         },
         files: files,
         client: {
-            args: [includeCategory, excludeCategory, webglValidation, release]
+            args: [includeCategory, excludeCategory, webglValidation, webglStub, release]
         }
     }, function(e) {
         return done(failTaskOnError ? e : undefined);

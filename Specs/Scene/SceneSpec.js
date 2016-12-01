@@ -1,5 +1,5 @@
 /*global defineSuite*/
-defineSuite([
+fdefineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
