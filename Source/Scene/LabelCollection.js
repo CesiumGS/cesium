@@ -270,8 +270,9 @@ define([
         label._repositionAllGlyphs = true;
     }
 
-    // reusable Cartesian2 instance
+    // reusable Cartesian2 instances
     var glyphPixelOffset = new Cartesian2();
+    var scratchBackgroundPadding = new Cartesian2();
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
@@ -280,6 +281,12 @@ define([
         var totalWidth = 0;
         var maxDescent = Number.NEGATIVE_INFINITY;
         var maxY = 0;
+
+        var backgroundBillboard = label._backgroundBillboard;
+        var backgroundPadding = scratchBackgroundPadding;
+        Cartesian2.clone(
+            (defined(backgroundBillboard) ? label._backgroundPadding : Cartesian2.ZERO),
+            backgroundPadding);
 
         var glyphIndex = 0;
         var glyphLength = glyphs.length;
@@ -303,7 +310,9 @@ define([
         if (horizontalOrigin === HorizontalOrigin.CENTER) {
             widthOffset -= totalWidth / 2 * scale;
         } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
-            widthOffset -= totalWidth * scale;
+            widthOffset -= (totalWidth + backgroundPadding.x) * scale;
+        } else {
+            widthOffset += backgroundPadding.x * scale;
         }
 
         glyphPixelOffset.x = widthOffset * resolutionScale;
@@ -314,10 +323,11 @@ define([
             glyph = glyphs[glyphIndex];
             dimensions = glyph.dimensions;
 
+            // TODO: Add VerticalOrigin.BASELINE as copy of current BOTTOM, then fix BOTTOM.
             if (verticalOrigin === VerticalOrigin.BOTTOM || dimensions.height === maxY) {
                 glyphPixelOffset.y = -dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = -(maxY - dimensions.height) * scale - dimensions.descent * scale;
+                glyphPixelOffset.y = -(maxY - dimensions.height + dimensions.descent + backgroundPadding.y) * scale;
             } else if (verticalOrigin === VerticalOrigin.CENTER) {
                 glyphPixelOffset.y = -(maxY - dimensions.height) / 2 * scale - dimensions.descent * scale;
             }
@@ -337,14 +347,13 @@ define([
             }
         }
 
-        var backgroundBillboard = label._backgroundBillboard;
+        // TODO: Figure out why live-updating Entity.LabelGraphics doesn't get the right answer here.
         if (defined(backgroundBillboard)) {
-            var backgroundPadding = label._backgroundPadding;
             glyphPixelOffset.x = (widthOffset - backgroundPadding.x * scale) * resolutionScale;
             if (verticalOrigin === VerticalOrigin.BOTTOM) {
                 glyphPixelOffset.y = -backgroundPadding.y * scale - maxDescent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = -(maxY - maxHeight - backgroundPadding.y) * scale - maxDescent * scale;
+                glyphPixelOffset.y = -(maxY - maxHeight) * scale - maxDescent * scale;
             } else {
                 glyphPixelOffset.y = -(maxY - maxHeight) / 2 * scale - maxDescent * scale;
             }
