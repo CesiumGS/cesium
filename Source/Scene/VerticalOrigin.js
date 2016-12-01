@@ -32,6 +32,14 @@ define([
         BOTTOM : 1,
 
         /**
+         * If the object contains text, the origin is at the baseline of the text, else the origin is at the bottom of the object.
+         *
+         * @type {Number}
+         * @constant
+         */
+        BASELINE : 2,
+
+        /**
          * The origin is at the top of the object.
          *
          * @type {Number}

@@ -81,13 +81,13 @@ define([
         writeTextToCanvasParameters.strokeColor = outlineColor;
         writeTextToCanvasParameters.strokeWidth = outlineWidth;
 
-        if (verticalOrigin === VerticalOrigin.BOTTOM) {
-            writeTextToCanvasParameters.textBaseline = 'bottom';
+        if (verticalOrigin === VerticalOrigin.CENTER) {
+            writeTextToCanvasParameters.textBaseline = 'middle';
         } else if (verticalOrigin === VerticalOrigin.TOP) {
             writeTextToCanvasParameters.textBaseline = 'top';
         } else {
-            // VerticalOrigin.CENTER
-            writeTextToCanvasParameters.textBaseline = 'middle';
+            // VerticalOrigin.BOTTOM and VerticalOrigin.BASELINE
+            writeTextToCanvasParameters.textBaseline = 'bottom';
         }
 
         writeTextToCanvasParameters.fill = style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE;
@@ -324,12 +324,15 @@ define([
             dimensions = glyph.dimensions;
 
             // TODO: Add VerticalOrigin.BASELINE as copy of current BOTTOM, then fix BOTTOM.
-            if (verticalOrigin === VerticalOrigin.BOTTOM || dimensions.height === maxY) {
+            if (verticalOrigin === VerticalOrigin.BASELINE) {
                 glyphPixelOffset.y = -dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
                 glyphPixelOffset.y = -(maxY - dimensions.height + dimensions.descent + backgroundPadding.y) * scale;
             } else if (verticalOrigin === VerticalOrigin.CENTER) {
                 glyphPixelOffset.y = -(maxY - dimensions.height) / 2 * scale - dimensions.descent * scale;
+            } else {
+                // VerticalOrigin.BOTTOM
+                glyphPixelOffset.y = (maxDescent - dimensions.descent + backgroundPadding.y) * scale;
             }
 
             glyphPixelOffset.y *= resolutionScale;
@@ -350,12 +353,15 @@ define([
         // TODO: Figure out why live-updating Entity.LabelGraphics doesn't get the right answer here.
         if (defined(backgroundBillboard)) {
             glyphPixelOffset.x = (widthOffset - backgroundPadding.x * scale) * resolutionScale;
-            if (verticalOrigin === VerticalOrigin.BOTTOM) {
+            if (verticalOrigin === VerticalOrigin.BASELINE) {
                 glyphPixelOffset.y = -backgroundPadding.y * scale - maxDescent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
                 glyphPixelOffset.y = -(maxY - maxHeight) * scale - maxDescent * scale;
-            } else {
+            } else if (verticalOrigin === VerticalOrigin.CENTER) {
                 glyphPixelOffset.y = -(maxY - maxHeight) / 2 * scale - maxDescent * scale;
+            } else {
+                // VerticalOrigin.BOTTOM
+                glyphPixelOffset.y = 0;
             }
             glyphPixelOffset.y *= resolutionScale;
             backgroundBillboard._setTranslate(glyphPixelOffset); // TODO: Make this count towards edge-based alignments.
