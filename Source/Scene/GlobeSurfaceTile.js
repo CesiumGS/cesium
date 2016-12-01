@@ -18,6 +18,7 @@ define([
         './QuadtreeTileLoadState',
         './SceneMode',
         './TerrainState',
+        './TileBoundingRegion',
         './TileTerrain'
     ], function(
         BoundingSphere,
@@ -38,6 +39,7 @@ define([
         QuadtreeTileLoadState,
         SceneMode,
         TerrainState,
+        TileBoundingRegion,
         TileTerrain) {
     'use strict';
 
@@ -69,7 +71,7 @@ define([
         this.boundingSphere3D = new BoundingSphere();
         this.boundingSphere2D = new BoundingSphere();
         this.orientedBoundingBox = undefined;
-        this.tileBoundingBox = undefined;
+        this.tileBoundingRegion = undefined;
         this.occludeePointInScaledSpace = new Cartesian3();
 
         this.loadedTerrain = undefined;
@@ -235,10 +237,29 @@ define([
         }
     };
 
+    function createTileBoundingRegion(tile) {
+        var minimumHeight;
+        var maximumHeight;
+        if (defined(tile.parent) && defined(tile.parent.data)) {
+            minimumHeight = tile.parent.data.minimumHeight;
+            maximumHeight = tile.parent.data.maximumHeight;
+        }
+        return new TileBoundingRegion({
+            rectangle : tile.rectangle,
+            ellipsoid : tile.tilingScheme.ellipsoid,
+            minimumHeight : minimumHeight,
+            maximumHeight : maximumHeight
+        });
+    }
+
     GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
+            // Create the TileBoundingRegion now in order to estimate the distance, which is used to prioritize the request.
+            // Since the terrain isn't loaded yet, estimate the heights using its parent's values.
+            surfaceTile.tileBoundingRegion = createTileBoundingRegion(tile, frameState);
+            tile._distance = surfaceTile.tileBoundingRegion.distanceToCamera(frameState);
         }
 
         if (tile.state === QuadtreeTileLoadState.START) {
@@ -337,7 +358,7 @@ define([
         var suspendUpsampling = false;
 
         if (defined(loaded)) {
-            loaded.processLoadStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level);
+            loaded.processLoadStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level, tile._distance);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.

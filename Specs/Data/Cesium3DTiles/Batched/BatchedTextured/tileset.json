@@ -1,0 +1,37 @@
+{
+  "asset": {
+    "version": "0.0"
+  },
+  "properties": {
+    "Longitude": {
+      "minimum": -1.3196975700111178,
+      "maximum": -1.3196648446060844
+    },
+    "Latitude": {
+      "minimum": 0.6988688652634713,
+      "maximum": 0.698886371486204
+    },
+    "Height": {
+      "minimum": 6.161747192963958,
+      "maximum": 12.778013898059726
+    }
+  },
+  "geometricError": 70,
+  "root": {
+    "refine": "add",
+    "boundingVolume": {
+      "region": [
+        -1.3197004795898053,
+        0.6988582109,
+        -1.3196595204101946,
+        0.6988897891,
+        0,
+        20
+      ]
+    },
+    "geometricError": 0,
+    "content": {
+      "url": "batchedTextured.b3dm"
+    }
+  }
+}

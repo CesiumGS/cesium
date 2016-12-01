@@ -237,6 +237,11 @@ define([
             }
         }
 
+        // Give the diffuse uniform a semantic to support color replacement in 3D Tiles
+        if (defined(techniqueParameters.diffuse)) {
+            techniqueParameters.diffuse.semantic = '_3DTILESDIFFUSE';
+        }
+
         // Copy light parameters into technique parameters
         if (defined(lightParameters)) {
             for (var lightParamName in lightParameters) {

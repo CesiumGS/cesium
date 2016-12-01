@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+    #toolbar button { display: block; }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    scene3DOnly : true,
+    shadows : true
+});
+
+var scene = viewer.scene;
+scene.fog.enabled = false;
+scene.debugShowFramesPerSecond = true;
+
+var tilesets = [{
+    name : 'Tileset', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/'
+}, {
+    name : 'Translucent', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucent/'
+}, {
+    name : 'Translucent/Opaque', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/'
+}, {
+    name : 'Multi-color', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedColors/'
+}, {
+    name : 'Request Volume', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/'
+}, {
+    name : 'Batched', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/'
+}, {
+    name : 'Instanced', url : '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/'
+}, {
+    name : 'Instanced/Orientation', url : '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientationWithBatchTable/'
+}, {
+    name : 'Composite', url : '../../../Specs/Data/Cesium3DTiles/Composite/Composite/'
+}, {
+    name : 'PointCloud', url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudRGB/'
+}, {
+    name : 'PointCloudConstantColor', url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/'
+}, {
+    name : 'PointCloudNormals', url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/'
+}, {
+    name : 'PointCloudBatched', url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudBatched/'
+}];
+
+var tileset;
+
+function loadTileset(url) {
+    reset();
+
+    tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+        url : url,
+        debugShowStatistics : true
+//        , maximumNumberOfLoadedTiles : 3
+//       , refineToVisible : true
+    }));
+
+    return tileset.readyPromise.then(function(tileset) {
+        var boundingSphere = tileset.boundingSphere;
+        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+        var properties = tileset.properties;
+        if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
+            tileset.style = new Cesium.Cesium3DTileStyle({
+//              "color" : "color('#BAA5EC')",
+//              "color" : "color('cyan', 0.5)",
+//              "color" : "rgb(100, 255, 190)",
+//              "color" : "hsla(0.9, 0.6, 0.7, 0.75)",
+                "color" : {
+                    "conditions" : [
+                        ["${Height} >= 83", "color('purple', 0.5)"],
+                        ["${Height} >= 80", "color('red')"],
+                        ["${Height} >= 70", "color('orange')"],
+                        ["${Height} >= 12", "color('yellow')"],
+                        ["${Height} >= 7", "color('lime')"],
+                        ["${Height} >= 1", "color('cyan')"],
+                        ["true", "color('blue')"]
+                    ]
+                },
+//              "show": false,
+//              "show" : "${Height} >= 0",
+                "meta" : {
+                    "description" : "'Building id ${id} has height ${Height}.'"
+                }
+            });
+            addStyleUI();
+        }
+
+        tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
+            if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
+                //console.log('Stopped loading');
+                return;
+            }
+
+            //console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberProcessing);
+        });
+
+        tileset.tileUnload.addEventListener(function(tile) {
+            //console.log('Tile unloaded.')
+        });
+    });
+}
+
+
+var canvas = viewer.canvas;
+canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
+canvas.onclick = function() {
+    // To get key events
+    canvas.focus();
+};
+
+var handler = new Cesium.ScreenSpaceEventHandler(canvas);
+
+var pickingEnabled = true;
+var flags = {
+    // Mouse
+    leftDown : false,
+    middleDown : false,
+    rightDown : false,
+
+    annotate : false
+};
+
+handler.setInputAction(function(movement) {
+    flags.leftDown = true;
+}, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+handler.setInputAction(function(movement) {
+    flags.middleDown = true;
+}, Cesium.ScreenSpaceEventType.MIDDLE_DOWN);
+
+handler.setInputAction(function(movement) {
+    flags.rightDown = true;
+}, Cesium.ScreenSpaceEventType.RIGHT_DOWN);
+
+handler.setInputAction(function(movement) {
+    flags.leftDown = false;
+}, Cesium.ScreenSpaceEventType.LEFT_UP);
+
+handler.setInputAction(function(movement) {
+    flags.middleDown = false;
+}, Cesium.ScreenSpaceEventType.MIDDLE_UP);
+
+handler.setInputAction(function(movement) {
+    flags.rightDown = false;
+}, Cesium.ScreenSpaceEventType.RIGHT_UP);
+
+document.addEventListener('keyup', function(e) {
+    if (e.keyCode === 'W'.charCodeAt(0)) {
+        flags.annotate = !flags.annotate;
+    }
+}, false);
+
+var current = {
+    feature : undefined,
+    originalColor : new Cesium.Color()
+};
+
+var HIGHLIGHT_COLOR = new Cesium.Color(1.0, 1.0, 0.0, 0.4);
+
+// Highlight feature on mouse over
+handler.setInputAction(function(movement) {
+    if (!pickingEnabled) {
+        return;
+    }
+
+    if (flags.leftDown || flags.middleDown || flags.rightDown) {
+        // Don't highlight when panning and zooming
+        return;
+    }
+
+    var pickedFeature = scene.pick(movement.endPosition);
+
+    if (Cesium.defined(current.feature) && (current.feature !== pickedFeature)) {
+        // Restore original color to feature that is no longer selected
+
+        // This assignment is necessary to work with the set property
+        current.feature.color = Cesium.Color.clone(current.originalColor, current.feature.color);
+        current.feature = undefined;
+    }
+
+    if (Cesium.defined(pickedFeature) && (pickedFeature !== current.feature)) {
+// For testing re-evaluating a style when a property changes
+//      pickedFeature.setProperty('id', 1);
+
+        current.feature = pickedFeature;
+        Cesium.Color.clone(pickedFeature.color, current.originalColor);
+
+        // Highlight newly selected feature
+        pickedFeature.color = Cesium.Color.clone(HIGHLIGHT_COLOR, pickedFeature.color);
+    }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+var annotations = scene.primitives.add(new Cesium.LabelCollection());
+
+handler.setInputAction(function(movement) {
+    if (!pickingEnabled) {
+        return;
+    }
+
+    var feature = current.feature;
+    if (Cesium.defined(feature)) {
+        if (feature.getProperty('clicked')) {
+            console.log('already clicked');
+        } else {
+            var properties = feature.primitive.properties; // get properties from tileset
+            if (Cesium.defined(properties)) {
+                for (var name in properties) {
+                    if (properties.hasOwnProperty(name)) {
+                        console.log(name + ': ' + feature.getProperty(name));
+                    }
+                }
+            }
+
+            // evaluate feature description
+            if (Cesium.defined(tileset.style.meta.description)) {
+                console.log("Description : " + tileset.style.meta.description.evaluate(scene.frameState, feature));
+            }
+
+            feature.setProperty('clicked', true);
+        }
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+handler.setInputAction(function(movement) {
+    if (!pickingEnabled) {
+        return;
+    }
+
+    if (flags.annotate) {
+        // Add annotation showing the height at the click location
+        annotate(movement);
+    } else {
+        // When a feature is double clicked, zoom to it
+        zoom(movement);
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
+function annotate(movement) {
+    if (Cesium.defined(current.feature) && scene.pickPositionSupported) {
+        var cartesian = scene.pickPosition(movement.position);
+        var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+        var height = cartographic.height.toFixed(2) + ' m';
+
+        annotations.add({
+            position : cartesian,
+            text : height,
+            horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
+            verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+            eyeOffset : new Cesium.Cartesian3(0.0, 0.0, -1.0)
+        });
+    }
+}
+
+function offsetFromHeadingPitchRange(heading, pitch, range) {
+    pitch = Cesium.Math.clamp(pitch, -Cesium.Math.PI_OVER_TWO, Cesium.Math.PI_OVER_TWO);
+    heading = Cesium.Math.zeroToTwoPi(heading) - Cesium.Math.PI_OVER_TWO;
+
+    var pitchQuat = Cesium.Quaternion.fromAxisAngle(Cesium.Cartesian3.UNIT_Y, -pitch);
+    var headingQuat = Cesium.Quaternion.fromAxisAngle(Cesium.Cartesian3.UNIT_Z, -heading);
+    var rotQuat = Cesium.Quaternion.multiply(headingQuat, pitchQuat, headingQuat);
+    var rotMatrix = Cesium.Matrix3.fromQuaternion(rotQuat);
+
+    var offset = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_X);
+    Cesium.Matrix3.multiplyByVector(rotMatrix, offset, offset);
+    Cesium.Cartesian3.negate(offset, offset);
+    Cesium.Cartesian3.multiplyByScalar(offset, range, offset);
+    return offset;
+}
+
+function zoom(movement) {
+    var feature = current.feature;
+    if (Cesium.defined(feature)) {
+        var longitude = feature.getProperty('Longitude');
+        var latitude = feature.getProperty('Latitude');
+        var height = feature.getProperty('Height');
+
+        if (!Cesium.defined(longitude) || !Cesium.defined(latitude) || !Cesium.defined(height)) {
+            return;
+        }
+
+        var positionCartographic = new Cesium.Cartographic(longitude, latitude, height * 0.5);
+        var position = scene.globe.ellipsoid.cartographicToCartesian(positionCartographic);
+
+        var camera = scene.camera;
+        var heading = camera.heading;
+        var pitch = camera.pitch;
+
+        var offset = offsetFromHeadingPitchRange(heading, pitch, height * 2.0);
+
+        var transform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+        Cesium.Matrix4.multiplyByPoint(transform, offset, position);
+
+        camera.flyTo({
+            destination : position,
+            orientation : {
+                heading : heading,
+                pitch : pitch
+            },
+            easingFunction : Cesium.EasingFunction.QUADRATIC_OUT
+        });
+    }
+}
+
+//When a feature is double middle clicked, hide it
+handler.setInputAction(function(movement) {
+    if (!pickingEnabled) {
+        return;
+    }
+
+    if (Cesium.defined(current.feature)) {
+        current.feature.show = false;
+    }
+}, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
+
+///////////////////////////////////////////////////////////////////////////////
+
+function addTilesetsUI() {
+    function getLoadTilesetFunction(url) {
+        return function() {
+            loadTileset(url);
+        };
+    }
+
+    var options = [];
+    var length = tilesets.length;
+    for (var i = 0; i < length; ++i) {
+        var t = tilesets[i];
+        options.push({
+             text : t.name,
+             onselect : getLoadTilesetFunction(t.url)
+         });
+    }
+    Sandcastle.addToolbarMenu(options);
+}
+addTilesetsUI();
+
+Sandcastle.addToolbarButton('Stats on/off', function() {
+    tileset.debugShowStatistics = !tileset.debugShowStatistics;
+});
+
+Sandcastle.addToolbarButton('Pick stats on/off', function() {
+    tileset.debugShowPickStatistics = !tileset.debugShowPickStatistics;
+});
+
+Sandcastle.addToolbarButton('Freeze on/off', function() {
+    tileset.debugFreezeFrame = !tileset.debugFreezeFrame;
+});
+
+Sandcastle.addToolbarButton('Colorize on/off', function() {
+    tileset.debugColorizeTiles = !tileset.debugColorizeTiles;
+});
+
+Sandcastle.addToolbarButton('BV on/off', function() {
+    tileset.debugShowBoundingVolume = !tileset.debugShowBoundingVolume;
+});
+
+Sandcastle.addToolbarButton('Contents BV on/off', function() {
+    tileset.debugShowContentBoundingVolume = !tileset.debugShowContentBoundingVolume;
+});
+
+Sandcastle.addToolbarButton('Request Volume on/off', function() {
+    tileset.debugShowViewerRequestVolume = !tileset.debugShowViewerRequestVolume;
+});
+
+Sandcastle.addToolbarButton('SSE++', function() {
+    ++tileset.maximumScreenSpaceError;
+    console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
+});
+
+Sandcastle.addToolbarButton('SSE--', function() {
+    tileset.maximumScreenSpaceError = Math.max(tileset.maximumScreenSpaceError - 1, 0);
+    console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE on/off', function() {
+    tileset.dynamicScreenSpaceError = !tileset.dynamicScreenSpaceError;
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE density++', function() {
+    tileset.dynamicScreenSpaceErrorDensity = Math.min(tileset.dynamicScreenSpaceErrorDensity + 0.005, 1.0);
+    console.log('New dynamic SSE density: ' + tileset.dynamicScreenSpaceErrorDensity);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE density--', function() {
+    tileset.dynamicScreenSpaceErrorDensity = Math.max(tileset.dynamicScreenSpaceErrorDensity - 0.005, 0);
+    console.log('New dynamic SSE density: ' + tileset.dynamicScreenSpaceErrorDensity);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE factor++', function() {
+    tileset.dynamicScreenSpaceErrorFactor = tileset.dynamicScreenSpaceErrorFactor + 1.0;
+    console.log('New dynamic SSE factor: ' + tileset.dynamicScreenSpaceErrorFactor);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE factor--', function() {
+    tileset.dynamicScreenSpaceErrorFactor = Math.max(tileset.dynamicScreenSpaceErrorFactor - 1.0, 0);
+    console.log('New dynamic SSE factor: ' + tileset.dynamicScreenSpaceErrorFactor);
+});
+
+Sandcastle.addToolbarButton('Trim tiles (cache)', function() {
+    tileset.trimLoadedTiles();
+});
+
+Sandcastle.addToolbarButton('Picking on/off', function() {
+    pickingEnabled = !pickingEnabled;
+});
+
+// Styling ////////////////////////////////////////////////////////////////////
+
+var styleElements = [];
+var numberofColors = 6;
+var currentPropertyName = 'Height';
+
+function getRandomColor() {
+    var color = Cesium.Color.fromRandom();
+    color.alpha = 1.0;
+    return color.toCssColorString();
+}
+
+function styleFunction(name) {
+    var conditions = [];
+    var intervalSize = Math.floor(100/numberofColors);
+    for (var i = numberofColors; i >= 0; --i) {
+        var cond = '${' + name + '} > ' + (i * intervalSize);
+        conditions.push([cond, getRandomColor()]);
+    }
+    conditions.push(['true', getRandomColor()]);
+
+    tileset.style = new Cesium.Cesium3DTileStyle({
+        color : {
+            conditions : conditions
+        },
+        show : '${' + name + '} >= 0'
+    });
+
+    currentPropertyName = name;
+}
+
+function getStyleFunction(name) {
+    return function() {
+        styleFunction(name);
+    };
+}
+
+function addStyleUI() {
+    var button;
+
+    var properties = tileset.properties;
+    if (Cesium.defined(properties)) {
+        for (var name in properties) {
+            // Include all properties except longitude and latitude
+            if (properties.hasOwnProperty(name) && (name !== 'Longitude') && (name !== 'Latitude')) {
+                button = Sandcastle.addToolbarButton('Style with ' + name, getStyleFunction(name));
+                styleElements.push(button);
+            }
+        }
+    }
+
+    button = Sandcastle.addToolbarButton('Custom style', function() {
+        var style = new Cesium.Cesium3DTileStyle();
+        style.show = {
+            evaluate : function(frameState, feature) {
+                tileset.makeStyleDirty(); // Force the style to be constantly evaluated
+                return Cesium.Math.nextRandomNumber() > 0.5;
+            }
+        };
+        style.color = {
+            evaluateColor : function(frameState, feature, result) {
+                tileset.makeStyleDirty(); // Force the style to be constantly evaluated
+                return Cesium.Color.fromRandom(undefined, result);
+            }
+        };
+        tileset.style = style;
+    });
+    styleElements.push(button);
+
+    button = Sandcastle.addToolbarButton('Remove style', function() {
+        tileset.style = undefined;
+    });
+    styleElements.push(button);
+
+    function setColorBlendMode(colorBlendMode) {
+        return function() {
+            tileset.colorBlendMode = colorBlendMode;
+        };
+    }
+
+    var menu = Sandcastle.addToolbarMenu([{
+        text : 'Color Blend Mode'
+    }, {
+        text : 'Highlight',
+        onselect : setColorBlendMode(Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT)
+    }, {
+        text : 'Replace',
+        onselect : setColorBlendMode(Cesium.Cesium3DTileColorBlendMode.REPLACE)
+    }, {
+        text : 'Mix',
+        onselect : setColorBlendMode(Cesium.Cesium3DTileColorBlendMode.MIX)
+    }]);
+    styleElements.push(menu);
+
+    button = Sandcastle.addToolbarButton('colors++', function() {
+        ++numberofColors;
+        styleFunction(currentPropertyName);
+    });
+    styleElements.push(button);
+
+    button = Sandcastle.addToolbarButton('colors--', function() {
+        numberofColors = Math.max(numberofColors - 1, 1);
+        styleFunction(currentPropertyName);
+    });
+    styleElements.push(button);
+
+    var leftOperand = 0;
+    var rightOperand = 0;
+    var op = '==';
+
+    // Left operand (properties and literals)
+
+    function getLeftOperandFunction(name) {
+        return function() {
+            leftOperand = name;
+            updateExpression();
+        };
+    }
+    addOperands('Expression left operand', getLeftOperandFunction);
+
+    // Operator
+
+    var ops = ['<', '<=', '>', '>=', '==', '!='];
+    var operators = [{
+        text : 'Operator',
+        onselect : function() {
+        }
+    }];
+
+    function getOperatorFunction(operator) {
+        return function() {
+            op = operator;
+            updateExpression();
+        };
+    }
+
+    for (var i = 0; i < ops.length; ++i) {
+        operators.push({
+           text : ops[i],
+           onselect : getOperatorFunction(ops[i])
+       });
+    }
+
+    menu = Sandcastle.addToolbarMenu(operators);
+    styleElements.push(menu);
+
+    // Right operand
+
+    function getRightOperandFunction(operand) {
+        return function() {
+            rightOperand = operand;
+            updateExpression();
+        };
+    }
+    addOperands('Right operand', getRightOperandFunction);
+
+    function updateExpression() {
+        var exp = '' + leftOperand + op + rightOperand;
+        tileset.style = new Cesium.Cesium3DTileStyle({ show : exp });
+    }
+}
+
+function addOperands(text, getOperandFunction) {
+    var expressionOperands = [{
+        text : text,
+        onselect : function() {
+        }
+    }];
+
+    var properties = tileset.properties;
+    for (var name in properties) {
+        if (properties.hasOwnProperty(name)) {
+            var property = '${' + name + '}';
+            expressionOperands.push({
+                text : property,
+                onselect : getOperandFunction(property)
+            });
+        }
+    }
+
+    var oprs = [1, 10, 50, 100];
+    for (var j = 0; j < oprs.length; ++j) {
+        expressionOperands.push({
+            text : oprs[j],
+            onselect : getOperandFunction(oprs[j])
+        });
+    }
+
+    var menu = Sandcastle.addToolbarMenu(expressionOperands);
+    styleElements.push(menu);
+}
+
+// End of Styling /////////////////////////////////////////////////////////////
+
+function reset() {
+    if (Cesium.defined(tileset)) {
+        scene.primitives.remove(tileset);
+    }
+
+    // Remove style UI for the previous tileset
+    var buttonsLength = styleElements.length;
+    for (var i = 0; i < buttonsLength; ++i) {
+        var element = styleElements[i];
+        element.parentNode.removeChild(element);
+    }
+    styleElements = [];
+    numberofColors = 6;
+
+    current.feature = undefined;
+    current.originalColor = new Cesium.Color();
+
+    annotations.removeAll();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
