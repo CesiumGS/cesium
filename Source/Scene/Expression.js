@@ -47,15 +47,22 @@ define([
 
     var unaryFunctions = {
         abs : Math.abs,
-        sqrt : Math.sqrt,
-        cos : Math.cos,
-        sin : Math.sin,
-        tan : Math.tan,
         acos : Math.acos,
         asin : Math.asin,
         atan : Math.atan,
+        clamp : CesiumMath.clamp,
+        cos : Math.cos,
+        degrees : CesiumMath.toDegrees,
+        mix: CesiumMath.lerp,
         radians : CesiumMath.toRadians,
-        degrees : CesiumMath.toDegrees
+        sin : Math.sin,
+        sqrt : Math.sqrt,
+        tan : Math.tan
+    };
+
+    var ternaryFunctions = {
+        clamp : CesiumMath.clamp,
+        mix: CesiumMath.lerp
     };
 
     /**
@@ -1161,12 +1168,6 @@ define([
                     return 'float(' + left + ')';
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
-                } else if (value === 'abs') {
-                    return 'abs(' + left + ')';
-                } else if (value === 'cos') {
-                    return 'cos(' + left + ')';
-                } else if (value === 'sqrt') {
-                    return 'sqrt(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
                 else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
@@ -1297,6 +1298,10 @@ define([
             case ExpressionNodeType.LITERAL_GLOBAL:
                 if (value === 'TILES3D_TILESET_TIME') {
                     return 'u_tilesetTime';
+                }
+            case ExpressionNodeType.TERNARY:
+                if (defined(ternaryFunctions[value])) {
+                    return value + '(' + left + ', ' + right + ', ' + test + ')';
                 }
         }
     };

@@ -25,7 +25,8 @@ define([
         LITERAL_COLOR : 13,
         LITERAL_REGEX : 14,
         LITERAL_UNDEFINED : 15,
-        LITERAL_GLOBAL : 16
+        LITERAL_GLOBAL : 16,
+        TERNARY : 17
     };
 
     return freezeObject(ExpressionNodeType);
