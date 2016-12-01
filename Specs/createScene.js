@@ -17,6 +17,10 @@ define([
         destroyCanvas) {
     'use strict';
 
+// TODO: expectRenderForSpecs that passes in time for ModelSpec.js and maybe others
+// TODO: expectRenderForSpecs for picking
+// TODO: update https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/TestingGuide with when/why to use these
+
     function createScene(options) {
         options = defaultValue(options, {});
 
@@ -45,19 +49,35 @@ define([
 
         // Add functions for test
         scene.destroyForSpecs = function() {
-            var canvas = scene.canvas;
-            scene.destroy();
+            var canvas = this.canvas;
+            this.destroy();
             destroyCanvas(canvas);
         };
 
+        scene.expectRenderForSpecs = function(expectationCallbackOrExpectedRgba) {
+            this.initializeFrame();
+            this.render();
+            var rgba = this.context.readPixels();
+
+            // Most tests want to compare the rendered rgba to a known rgba, but some
+            // only want to compare some rgba components or use a more complicated
+            // expectation.  These cases are handled with a callback.
+            if (expectationCallbackOrExpectedRgba instanceof Function) {
+                return expectationCallbackOrExpectedRgba(rgba);
+            }
+
+            expect(rgba).toEqual(expectationCallbackOrExpectedRgba);
+            return undefined;
+        };
+
         scene.renderForSpecs = function(time) {
-            scene.initializeFrame();
-            scene.render(time);
-            return scene.context.readPixels();
+            this.initializeFrame();
+            this.render(time);
+            return this.context.readPixels();
         };
 
         scene.pickForSpecs = function() {
-            return scene.pick(new Cartesian2(0, 0));
+            return this.pick(new Cartesian2(0, 0));
         };
 
         scene.rethrowRenderErrors = defaultValue(options.rethrowRenderErrors, true);

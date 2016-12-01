@@ -165,10 +165,10 @@ defineSuite([
     });
 
     it('draws background color', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.expectRenderForSpecs([0, 0, 0, 255]);
 
         scene.backgroundColor = Color.BLUE;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        scene.expectRenderForSpecs([0, 0, 255, 255]);
     });
 
     it('calls afterRender functions', function() {
@@ -239,7 +239,9 @@ defineSuite([
         scene.primitives.add(new CommandMockPrimitive(c));
         scene.depthTestAgainstTerrain = true;
 
-        expect(scene.renderForSpecs()[0]).not.toEqual(0);  // Red bounding sphere
+        scene.expectRenderForSpecs(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);  // Red bounding sphere
+        });
     });
 
     it('debugShowCommands tints commands', function() {
@@ -288,10 +290,11 @@ defineSuite([
         rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
         scene.primitives.add(rectanglePrimitive);
+        scene.expectRenderForSpecs([255, 0, 0, 255]);
 
-        expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
         scene.debugShowGlobeDepth = true;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.expectRenderForSpecs([0, 0, 0, 255]);
+
         scene.debugShowGlobeDepth = false;
     });
 
@@ -309,18 +312,18 @@ defineSuite([
         primitives.add(rectanglePrimitive2);
 
         scene.camera.setView({ destination : rectangle });
-
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).not.toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        scene.expectRenderForSpecs(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).not.toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
 
         primitives.raiseToTop(rectanglePrimitive1);
-
-        pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).not.toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        scene.expectRenderForSpecs(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).not.toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
     });
 
     it('opaque/translucent render order (2)', function() {
@@ -337,18 +340,18 @@ defineSuite([
         primitives.add(rectanglePrimitive2);
 
         scene.camera.setView({ destination : rectangle });
-
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        scene.expectRenderForSpecs(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
 
         primitives.raiseToTop(rectanglePrimitive1);
-
-        pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        scene.expectRenderForSpecs(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
     });
 
     it('renders fast path with no translucent primitives', function() {
@@ -361,11 +364,11 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.camera.setView({ destination : rectangle });
-
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        scene.expectRenderForSpecs(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
     });
 
     it('renders with OIT and without FXAA', function() {
@@ -378,13 +381,12 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.camera.setView({ destination : rectangle });
-
         scene.fxaa = false;
-
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        scene.expectRenderForSpecs(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
     });
 
     it('renders with forced FXAA', function() {
@@ -438,10 +440,11 @@ defineSuite([
 
         s.camera.setView({ destination : rectangle });
 
-        var pixels = s.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        s.expectRenderForSpecs(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
 
         s.destroyForSpecs();
     });
@@ -478,11 +481,11 @@ defineSuite([
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
 
-        s.renderForSpecs();
-
-        return pollToPromise(function() {
-            render(s.frameState, s.globe);
-            return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+        return scene.expectRenderForSpecs(function() {
+            return pollToPromise(function() {
+                render(s.frameState, s.globe);
+                return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+            });
         });
     });
 
@@ -503,10 +506,11 @@ defineSuite([
 
                 s.camera.setView({ destination : rectangle });
 
-                var pixels = s.renderForSpecs();
-                expect(pixels[0]).not.toEqual(0);
-                expect(pixels[1]).toEqual(0);
-                expect(pixels[2]).toEqual(0);
+                s.expectRenderForSpecs(function(rgba) {
+                    expect(rgba[0]).not.toEqual(0);
+                    expect(rgba[1]).toEqual(0);
+                    expect(rgba[2]).toEqual(0);
+                });
             }
 
             s.destroyForSpecs();
@@ -532,10 +536,11 @@ defineSuite([
 
             s.camera.setView({ destination : rectangle });
 
-            var pixels = s.renderForSpecs();
-            expect(pixels[0]).not.toEqual(0);
-            expect(pixels[1]).toEqual(0);
-            expect(pixels[2]).toEqual(0);
+            s.expectRenderForSpecs(function(rgba) {
+                expect(rgba[0]).not.toEqual(0);
+                expect(rgba[1]).toEqual(0);
+                expect(rgba[2]).toEqual(0);
+            });
         }
         s.destroyForSpecs();
     });
@@ -556,10 +561,11 @@ defineSuite([
             convert : false
         });
 
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        scene.expectRenderForSpecs(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
     });
 
     it('renders map when the camera is on the IDL in 2D', function() {
@@ -581,10 +587,11 @@ defineSuite([
             convert : false
         });
 
-        var pixels = s.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        s.expectRenderForSpecs(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
 
         s.destroyForSpecs();
     });
@@ -604,12 +611,14 @@ defineSuite([
 
             var uniformState = scene.context.uniformState;
 
-            scene.renderForSpecs();
-            expect(uniformState.globeDepthTexture).not.toBeDefined();
+            scene.expectRenderForSpecs(function(rgba) {
+                expect(uniformState.globeDepthTexture).not.toBeDefined();
+            });
 
             scene.copyGlobeDepth = true;
-            scene.renderForSpecs();
-            expect(uniformState.globeDepthTexture).toBeDefined();
+            scene.expectRenderForSpecs(function(rgba) {
+                expect(uniformState.globeDepthTexture).toBeDefined();
+            });
         }
 
         scene.destroyForSpecs();
@@ -623,24 +632,24 @@ defineSuite([
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
         scene.camera.setView({ destination : rectangle });
 
-        scene.renderForSpecs();
-
         var canvas = scene.canvas;
         var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        var position = scene.pickPosition(windowPosition);
-        expect(position).not.toBeDefined();
+        scene.expectRenderForSpecs(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
 
-        var rectanglePrimitive = createRectangle(rectangle);
-        rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
-        var primitives = scene.primitives;
-        primitives.add(rectanglePrimitive);
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
 
-        scene.renderForSpecs();
-
-        position = scene.pickPosition(windowPosition);
-        expect(position).toBeDefined();
+        scene.expectRenderForSpecs(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toBeDefined();
+        });
     });
 
     it('pickPosition returns undefined when useDepthPicking is false', function() {
@@ -663,18 +672,16 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.useDepthPicking = false;
-
-        scene.renderForSpecs();
-
-        var position = scene.pickPosition(windowPosition);
-        expect(position).not.toBeDefined();
+        scene.expectRenderForSpecs(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+        });
 
         scene.useDepthPicking = true;
-
-        scene.renderForSpecs();
-
-        position = scene.pickPosition(windowPosition);
-        expect(position).toBeDefined();
+        scene.expectRenderForSpecs(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toBeDefined();
+        });
     });
 
     it('pickPosition throws without windowPosition', function() {
