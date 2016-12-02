@@ -484,6 +484,7 @@ define([
         options = defaultValue(options, {});
         options.allowTextureFilterAnisotropic = defaultValue(options.allowTextureFilterAnisotropic, true);
         var webglOptions = defaultValue(options.webgl, {});
+        var webglStub = defaultValue(options.webglStub, false);
 
         // Override select WebGL defaults
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
@@ -493,8 +494,6 @@ define([
         var webgl2 = false;
         var glContext;
 
-// TODO: pass this into the constructor?
-        var webglStub = false;
         if (!webglStub) {
             if (requestWebgl2) {
                 glContext = canvas.getContext('webgl2', webglOptions) || canvas.getContext('experimental-webgl2', webglOptions) || undefined;

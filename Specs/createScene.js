@@ -17,7 +17,6 @@ define([
         destroyCanvas) {
     'use strict';
 
-// TODO: check for window.webglStub in createContext
 // TODO: expectRenderForSpecs that passes in time for ModelSpec.js and maybe others
 // TODO: expectRenderForSpecs for picking
 // TODO: update https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/TestingGuide with when/why to use these
@@ -38,9 +37,12 @@ define([
         options.canvas = canvas;
         options.contextOptions = defaultValue(options.contextOptions, {});
 
+        var webglStub = !!window.webglStub;
+
         var contextOptions = options.contextOptions;
         contextOptions.webgl = defaultValue(contextOptions.webgl, {});
         contextOptions.webgl.antialias = defaultValue(contextOptions.webgl.antialias, false);
+        contextOptions.webglStub = webglStub;
 
         var scene = new Scene(options);
 
@@ -68,7 +70,7 @@ define([
             // the expectation is not verified.  This allows running all the WebGL
             // tests, to exercise as much Cesium code as possible, even if the system
             // doesn't have a WebGL implementation or a reliable one.
-            if (!window.webglStub) {
+            if (!webglStub) {
                 // Most tests want to compare the rendered rgba to a known rgba, but some
                 // only want to compare some rgba components or use a more complicated
                 // expectation.  These cases are handled with a callback.
