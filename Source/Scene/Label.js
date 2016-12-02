@@ -951,19 +951,18 @@ define([
      * Gets a label's screen space bounding box centered around screenSpacePosition.
      * @param {Label} label The label to get the screen space bounding box for.
      * @param {Cartesian2} screenSpacePosition The screen space center of the label.
-     * @param {Scene} scene The scene the label is in.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
      * @returns {BoundingRectangle} The screen space bounding box.
      *
      * @private
      */
-    Label.getScreenSpaceBoundingBox = function(label, screenSpacePosition, scene, result) {
+    Label.getScreenSpaceBoundingBox = function(label, screenSpacePosition, result) {
         var x = 0;
         var y = 0;
         var width = 0;
         var height = 0;
         var scale = label.scale;
-        var resolutionScale = scene.context.uniformState.resolutionScale;
+        var resolutionScale = label._labelCollection._resolutionScale;
 
         var backgroundBillboard = label._backgroundBillboard;
         if (defined(backgroundBillboard)) {

@@ -892,7 +892,7 @@ defineSuite([
             var width = maxX - x;
             var height = maxY - y;
 
-            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene);
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
             expect(bbox.x).toEqual(x);
             expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
@@ -937,7 +937,7 @@ defineSuite([
             var height = maxY - y;
 
             var result = new BoundingRectangle();
-            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene, result);
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, result);
             expect(bbox.x).toEqual(x);
             expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
@@ -983,7 +983,7 @@ defineSuite([
             var width = maxX - x;
             var height = maxY - y;
 
-            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene);
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
             expect(bbox.x).toEqual(x);
             expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
@@ -1028,7 +1028,7 @@ defineSuite([
             var width = maxX - x;
             var height = maxY - y;
 
-            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene);
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
             expect(bbox.x).toEqual(x);
             expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
@@ -1073,7 +1073,7 @@ defineSuite([
             var width = maxX - x;
             var height = maxY - y;
 
-            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene);
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
             expect(bbox.x).toEqual(x);
             expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
@@ -1120,7 +1120,7 @@ defineSuite([
 
             var halfWidth = width * 0.5;
 
-            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene);
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
             expect(bbox.x).toEqual(-halfWidth);
             expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
@@ -1128,7 +1128,7 @@ defineSuite([
 
             label.horizontalOrigin = HorizontalOrigin.RIGHT;
             scene.renderForSpecs();
-            bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene);
+            bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
             expect(bbox.x).toEqual(-width);
             expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);

@@ -106,7 +106,7 @@ define([
 
     function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
         if (defined(item._labelCollection) && entityCluster._clusterLabels) {
-            result = Label.getScreenSpaceBoundingBox(item, coord, entityCluster._scene, result);
+            result = Label.getScreenSpaceBoundingBox(item, coord, result);
         } else if (defined(item._billboardCollection) && entityCluster._clusterBillboards) {
             result = Billboard.getScreenSpaceBoundingBox(item, coord, result);
         } else if (defined(item._pointPrimitiveCollection) && entityCluster._clusterPoints) {
