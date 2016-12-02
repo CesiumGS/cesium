@@ -46,7 +46,7 @@ define([
     };
 
     var binaryFunctions = {
-        atan2 : Math.atan,
+        atan2 : Math.atan2,
         pow : Math.pow,
         min : Math.min,
         max : Math.max
@@ -79,11 +79,11 @@ define([
      *
      * @example
      * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
-     * expression.evaluate(feature); // returns true or false depending on the feature's properties
+     * expression.evaluate(frameState, feature); // returns true or false depending on the feature's properties
      *
      * @example
      * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
-     * expression.evaluateColor(feature, result); // returns a Cesium.Color object
+     * expression.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
      */
@@ -139,12 +139,13 @@ define([
      * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
      * object will be returned. If the result is a <code>Color</code>, a {@link Color} object will be returned.
      *
+     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature who's properties may be used as variables in the expression.
      * @returns {Boolean|Number|String|Color|RegExp} The result of evaluating the expression.
      */
-    Expression.prototype.evaluate = function(feature) {
+    Expression.prototype.evaluate = function(frameState, feature) {
         ScratchStorage.reset();
-        var result = this._runtimeAst.evaluate(feature);
+        var result = this._runtimeAst.evaluate(frameState, feature);
         if (result instanceof Color) {
             return Color.clone(result);
         }
@@ -154,13 +155,14 @@ define([
     /**
      * Evaluates the result of a Color expression, using the values defined by a feature.
      *
+     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature who's properties may be used as variables in the expression.
      * @param {Color} [result] The object in which to store the result
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      */
-    Expression.prototype.evaluateColor = function(feature, result) {
+    Expression.prototype.evaluateColor = function(frameState, feature, result) {
         ScratchStorage.reset();
-        var color = this._runtimeAst.evaluate(feature);
+        var color = this._runtimeAst.evaluate(frameState, feature);
         return Color.clone(color, result);
     };
 
@@ -453,6 +455,12 @@ define([
             return new Node(ExpressionNodeType.LITERAL_NUMBER, Infinity);
         } else if (ast.name === 'undefined') {
             return new Node(ExpressionNodeType.LITERAL_UNDEFINED, undefined);
+        } else if (ast.name === 'PI') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.PI);
+        } else if (ast.name === 'E') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.E);
+        } else if (ast.name === 'TILES3D_TILESET_TIME') {
+            return new Node(ExpressionNodeType.LITERAL_GLOBAL, ast.name);
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -1192,7 +1200,7 @@ define([
                 } else if (value === '!==') {
                     return '(' + left + ' != ' + right + ')';
                 } else if (value === 'atan2') {
-                    return 'atan' + '(' + left + ', ' + right + ')';
+                    return 'atan(' + left + ', ' + right + ')';
                 } else if (defined(binaryFunctions[value])) {
                     return value + '(' + left + ', ' + right + ')';
                 }

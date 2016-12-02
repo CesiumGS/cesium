@@ -990,10 +990,10 @@ defineSuite([
 
     it('evaluates atan2 function', function() {
         var expression = new Expression('atan2(0,1)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.0, CesiumMath.EPSILON10);
 
         var expression = new Expression('atan2(1,0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(0.5*PI);
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.5*Math.PI, CesiumMath.EPSILON10);
     });
 
     it('throws if atan2 function takes an invalid number of arguments', function() {
@@ -1880,30 +1880,30 @@ defineSuite([
     });
 
     it('gets shader expression for atan2', function() {
-        var expression = new Expression('atan2(0,1)');
+        var expression = new Expression('atan2(0.0,1.0)');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'atan2(0,1)';
+        var expected = 'atan2(0.0,1.0)';
         expect(shaderExpression).toEqual(expected);
     });
 
     it('gets shader expression for pow', function() {
-        var expression = new Expression('pow(2,2)');
+        var expression = new Expression('pow(2.0,2.0)');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'pow(2,2)';
+        var expected = 'pow(2.0,2.0)';
         expect(shaderExpression).toEqual(expected);
     });
 
     it('gets shader expression for min', function() {
-        var expression = new Expression('min(3,5)');
+        var expression = new Expression('min(3.0,5.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'min(3,5)';
         expect(shaderExpression).toEqual(expected);
     });
 
     it('gets shader expression for max', function() {
-        var expression = new Expression('max(3,5)');
+        var expression = new Expression('max(3.0,5.0)');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'max(3,5)';
+        var expected = 'max(3.0,5.0)';
         expect(shaderExpression).toEqual(expected);
     });
 

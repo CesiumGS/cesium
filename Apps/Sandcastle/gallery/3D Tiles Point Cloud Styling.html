@@ -115,11 +115,7 @@ addStyle('Trigonometric Functions', {
 });
 
 addStyle('Arc Trigonometric Functions', {
-    color : "color() * acos(degrees(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature})"
-});
-
-addStyle('ATan2', {
-    color : "color() * atan2(${POSITION}[0],${temperature}) + color() * atan2(${POSITION}[1],${temperature}) + color() * atan2(${POSITION}[2],${temperature})",
+    color : "color() * acos(degrees(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature}) + color() * atan2(${POSITION}[0],${temperature})",
     pointSize : "5"
 });
 
@@ -134,12 +130,7 @@ addStyle('Pow', {
 });
 
 addStyle('Min', {
-    color : "color() * min(${POSITION}[0],0.75)",
-    pointSize : "5"
-});
-
-addStyle('Max', {
-    color : "color() * max(${POSITION}[2],0.25)",
+    color : "rgb(min(${POSITION}[0],0.75)*255, max(${POSITION}[2],0.25)*255, 255",
     pointSize : "5"
 });
 
