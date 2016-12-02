@@ -864,8 +864,10 @@ defineSuite([
             });
             scene.renderForSpecs();
 
-            var width = 0;
-            var height = 0;
+            var x = Number.POSITIVE_INFINITY;
+            var y = Number.POSITIVE_INFINITY;
+            var maxX = 0;
+            var maxY = 0;
 
             var glyphs = label._glyphs;
             var length = glyphs.length;
@@ -876,16 +878,23 @@ defineSuite([
                     continue;
                 }
 
-                width += billboard.width;
-                height = Math.max(height, billboard.height);
+                var glyphWidth = billboard.width * scale;
+                var glyphHeight = billboard.height * scale;
+                var glyphX = billboard._translate.x;
+                var glyphY = -(billboard._translate.y + glyphHeight);
+
+                x = Math.min(x, glyphX);
+                y = Math.min(y, glyphY);
+                maxX = Math.max(maxX, glyphX + glyphWidth);
+                maxY = Math.max(maxY, glyphY + glyphHeight);
             }
 
-            width *= scale;
-            height *= scale;
+            var width = maxX - x;
+            var height = maxY - y;
 
-            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
-            expect(bbox.x).toEqual(0);
-            expect(bbox.y).toEqual(0);
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene);
+            expect(bbox.x).toEqual(x);
+            expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
             expect(bbox.height).toEqual(height);
         });
@@ -899,8 +908,10 @@ defineSuite([
             });
             scene.renderForSpecs();
 
-            var width = 0;
-            var height = 0;
+            var x = Number.POSITIVE_INFINITY;
+            var y = Number.POSITIVE_INFINITY;
+            var maxX = 0;
+            var maxY = 0;
 
             var glyphs = label._glyphs;
             var length = glyphs.length;
@@ -911,23 +922,30 @@ defineSuite([
                     continue;
                 }
 
-                width += billboard.width;
-                height = Math.max(height, billboard.height);
+                var glyphWidth = billboard.width * scale;
+                var glyphHeight = billboard.height * scale;
+                var glyphX = billboard._translate.x;
+                var glyphY = -(billboard._translate.y + glyphHeight);
+
+                x = Math.min(x, glyphX);
+                y = Math.min(y, glyphY);
+                maxX = Math.max(maxX, glyphX + glyphWidth);
+                maxY = Math.max(maxY, glyphY + glyphHeight);
             }
 
-            width *= scale;
-            height *= scale;
+            var width = maxX - x;
+            var height = maxY - y;
 
             var result = new BoundingRectangle();
-            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, result);
-            expect(bbox.x).toEqual(0);
-            expect(bbox.y).toEqual(0);
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene, result);
+            expect(bbox.x).toEqual(x);
+            expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
             expect(bbox.height).toEqual(height);
             expect(bbox).toBe(result);
         });
 
-        it('computes screen space bounding box with vertical origin', function() {
+        it('computes screen space bounding box with vertical origin center', function() {
             var scale = 1.5;
 
             var label = labels.add({
@@ -937,8 +955,10 @@ defineSuite([
             });
             scene.renderForSpecs();
 
-            var width = 0;
-            var height = 0;
+            var x = Number.POSITIVE_INFINITY;
+            var y = Number.POSITIVE_INFINITY;
+            var maxX = 0;
+            var maxY = 0;
 
             var glyphs = label._glyphs;
             var length = glyphs.length;
@@ -949,25 +969,113 @@ defineSuite([
                     continue;
                 }
 
-                width += billboard.width;
-                height = Math.max(height, billboard.height);
+                var glyphWidth = billboard.width * scale;
+                var glyphHeight = billboard.height * scale;
+                var glyphX = billboard._translate.x;
+                var glyphY = -(billboard._translate.y + glyphHeight * 0.5);
+
+                x = Math.min(x, glyphX);
+                y = Math.min(y, glyphY);
+                maxX = Math.max(maxX, glyphX + glyphWidth);
+                maxY = Math.max(maxY, glyphY + glyphHeight);
             }
 
-            width *= scale;
-            height *= scale;
+            var width = maxX - x;
+            var height = maxY - y;
 
-            var halfHeight = height * 0.5;
-
-            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
-            expect(bbox.x).toEqual(0);
-            expect(bbox.y).toEqual(-halfHeight);
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene);
+            expect(bbox.x).toEqual(x);
+            expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
             expect(bbox.height).toEqual(height);
+        });
 
-            label.verticalOrigin = VerticalOrigin.TOP;
-            bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
-            expect(bbox.x).toEqual(0);
-            expect(bbox.y).toEqual(-height);
+        it('computes screen space bounding box with vertical origin top', function() {
+            var scale = 1.5;
+
+            var label = labels.add({
+                text : 'abc',
+                scale : scale,
+                verticalOrigin : VerticalOrigin.TOP
+            });
+            scene.renderForSpecs();
+
+            var x = Number.POSITIVE_INFINITY;
+            var y = Number.POSITIVE_INFINITY;
+            var maxX = 0;
+            var maxY = 0;
+
+            var glyphs = label._glyphs;
+            var length = glyphs.length;
+            for (var i = 0; i < length; ++i) {
+                var glyph = glyphs[i];
+                var billboard = glyph.billboard;
+                if (!defined(billboard)) {
+                    continue;
+                }
+
+                var glyphWidth = billboard.width * scale;
+                var glyphHeight = billboard.height * scale;
+                var glyphX = billboard._translate.x;
+                var glyphY = -billboard._translate.y;
+
+                x = Math.min(x, glyphX);
+                y = Math.min(y, glyphY);
+                maxX = Math.max(maxX, glyphX + glyphWidth);
+                maxY = Math.max(maxY, glyphY + glyphHeight);
+            }
+
+            var width = maxX - x;
+            var height = maxY - y;
+
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene);
+            expect(bbox.x).toEqual(x);
+            expect(bbox.y).toEqual(y);
+            expect(bbox.width).toEqual(width);
+            expect(bbox.height).toEqual(height);
+        });
+
+        it('computes screen space bounding box with vertical origin baseline', function() {
+            var scale = 1.5;
+
+            var label = labels.add({
+                text : 'abc',
+                scale : scale,
+                verticalOrigin : VerticalOrigin.BASELINE
+            });
+            scene.renderForSpecs();
+
+            var x = Number.POSITIVE_INFINITY;
+            var y = Number.POSITIVE_INFINITY;
+            var maxX = 0;
+            var maxY = 0;
+
+            var glyphs = label._glyphs;
+            var length = glyphs.length;
+            for (var i = 0; i < length; ++i) {
+                var glyph = glyphs[i];
+                var billboard = glyph.billboard;
+                if (!defined(billboard)) {
+                    continue;
+                }
+
+                var glyphWidth = billboard.width * scale;
+                var glyphHeight = billboard.height * scale;
+                var glyphX = billboard._translate.x;
+                var glyphY = -(billboard._translate.y + glyphHeight);
+
+                x = Math.min(x, glyphX);
+                y = Math.min(y, glyphY);
+                maxX = Math.max(maxX, glyphX + glyphWidth);
+                maxY = Math.max(maxY, glyphY + glyphHeight);
+            }
+
+            var width = maxX - x;
+            var height = maxY - y;
+
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene);
+            expect(bbox.x).toEqual(x);
+            expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
             expect(bbox.height).toEqual(height);
         });
@@ -982,8 +1090,10 @@ defineSuite([
             });
             scene.renderForSpecs();
 
-            var width = 0;
-            var height = 0;
+            var x = Number.POSITIVE_INFINITY;
+            var y = Number.POSITIVE_INFINITY;
+            var maxX = 0;
+            var maxY = 0;
 
             var glyphs = label._glyphs;
             var length = glyphs.length;
@@ -994,25 +1104,33 @@ defineSuite([
                     continue;
                 }
 
-                width += billboard.width;
-                height = Math.max(height, billboard.height);
+                var glyphWidth = billboard.width * scale;
+                var glyphHeight = billboard.height * scale;
+                var glyphX = billboard._translate.x;
+                var glyphY = -(billboard._translate.y + glyphHeight);
+
+                x = Math.min(x, glyphX);
+                y = Math.min(y, glyphY);
+                maxX = Math.max(maxX, glyphX + glyphWidth);
+                maxY = Math.max(maxY, glyphY + glyphHeight);
             }
 
-            width *= scale;
-            height *= scale;
+            var width = maxX - x;
+            var height = maxY - y;
 
             var halfWidth = width * 0.5;
 
-            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene);
             expect(bbox.x).toEqual(-halfWidth);
-            expect(bbox.y).toEqual(0);
+            expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
             expect(bbox.height).toEqual(height);
 
             label.horizontalOrigin = HorizontalOrigin.RIGHT;
-            bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            scene.renderForSpecs();
+            bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, scene);
             expect(bbox.x).toEqual(-width);
-            expect(bbox.y).toEqual(0);
+            expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
             expect(bbox.height).toEqual(height);
         });

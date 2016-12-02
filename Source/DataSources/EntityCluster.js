@@ -106,7 +106,7 @@ define([
 
     function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
         if (defined(item._labelCollection) && entityCluster._clusterLabels) {
-            result = Label.getScreenSpaceBoundingBox(item, coord, result);
+            result = Label.getScreenSpaceBoundingBox(item, coord, entityCluster._scene, result);
         } else if (defined(item._billboardCollection) && entityCluster._clusterBillboards) {
             result = Billboard.getScreenSpaceBoundingBox(item, coord, result);
         } else if (defined(item._pointPrimitiveCollection) && entityCluster._clusterPoints) {
@@ -148,7 +148,7 @@ define([
         cluster.label.show = true;
         cluster.label.text = numPoints.toLocaleString();
         cluster.billboard.position = cluster.label.position = cluster.point.position = position;
-        
+
         entityCluster._clusterEvent.raiseEvent(ids, cluster);
     }
 

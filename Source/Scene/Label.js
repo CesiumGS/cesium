@@ -951,22 +951,24 @@ define([
      * Gets a label's screen space bounding box centered around screenSpacePosition.
      * @param {Label} label The label to get the screen space bounding box for.
      * @param {Cartesian2} screenSpacePosition The screen space center of the label.
+     * @param {Scene} scene The scene the label is in.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
      * @returns {BoundingRectangle} The screen space bounding box.
      *
      * @private
      */
-    Label.getScreenSpaceBoundingBox = function(label, screenSpacePosition, result) {
+    Label.getScreenSpaceBoundingBox = function(label, screenSpacePosition, scene, result) {
         var x = 0;
         var y = 0;
         var width = 0;
         var height = 0;
         var scale = label.scale;
+        var resolutionScale = scene.context.uniformState.resolutionScale;
 
         var backgroundBillboard = label._backgroundBillboard;
         if (defined(backgroundBillboard)) {
-            x = screenSpacePosition.x + backgroundBillboard._translate.x;
-            y = screenSpacePosition.y - backgroundBillboard._translate.y;
+            x = screenSpacePosition.x + (backgroundBillboard._translate.x / resolutionScale);
+            y = screenSpacePosition.y - (backgroundBillboard._translate.y / resolutionScale);
             width = backgroundBillboard.width * scale;
             height = backgroundBillboard.height * scale;
 
@@ -989,8 +991,8 @@ define([
                     continue;
                 }
 
-                var glyphX = screenSpacePosition.x + billboard._translate.x;  // TODO: Accomodate resolutionScale in _translate?
-                var glyphY = screenSpacePosition.y - billboard._translate.y;
+                var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
+                var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
                 var glyphWidth = billboard.width * scale;
                 var glyphHeight = billboard.height * scale;
 

@@ -1132,9 +1132,7 @@ define([
         return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
     };
 
-    var scratchCartesian2 = new Cartesian2();
     var scratchCartesian3 = new Cartesian3();
-    var scratchComputePixelOffset = new Cartesian2();
 
     // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, scene, result) {
@@ -1148,10 +1146,7 @@ define([
         }
 
         // Apply pixel offset
-        pixelOffset = Cartesian2.clone(pixelOffset, scratchComputePixelOffset);
-        var po = Cartesian2.multiplyByScalar(pixelOffset, scene.context.uniformState.resolutionScale, scratchCartesian2);
-        positionWC.x += po.x;
-        positionWC.y += po.y;
+        Cartesian2.add(positionWC, pixelOffset, positionWC);
 
         return positionWC;
     };
@@ -1227,7 +1222,7 @@ define([
         }
 
         var y = screenSpacePosition.y;
-        if (billboard.verticalOrigin === VerticalOrigin.TOP) {   // TODO: This is likely wrong!
+        if (billboard.verticalOrigin === VerticalOrigin.BOTTOM || billboard.verticalOrigin === VerticalOrigin.BASELINE) {
             y -= height;
         } else if (billboard.verticalOrigin === VerticalOrigin.CENTER) {
             y -= height * 0.5;
