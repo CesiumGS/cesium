@@ -990,13 +990,13 @@ defineSuite([
 
     it('evaluates clamp function', function() {
         var expression = new Expression('clamp(50.0, 0.0, 100.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(50.0);
+        expect(expression.evaluate(undefined)).toEqual(50.0);
 
         expression = new Expression('clamp(50.0, 0.0, 25.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(25.0);
+        expect(expression.evaluate(undefined)).toEqual(25.0);
 
         expression = new Expression('clamp(50.0, 75.0, 100.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(75.0);
+        expect(expression.evaluate(undefined)).toEqual(75.0);
     });
 
     it('throws if clamp function takes an invalid number of arguments', function() {
@@ -1019,7 +1019,7 @@ defineSuite([
 
     it('evaluates mix function', function() {
         var expression = new Expression('mix(0.0, 2.0, 0.5)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+        expect(expression.evaluate(undefined)).toEqual(1.0);
     });
 
     it('throws if mix function takes an invalid number of arguments', function() {
