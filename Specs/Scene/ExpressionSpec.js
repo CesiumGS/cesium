@@ -988,6 +988,58 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('evaluates clamp function', function() {
+        var expression = new Expression('clamp(50.0, 0.0, 100.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(50.0);
+
+        expression = new Expression('clamp(50.0, 0.0, 25.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(25.0);
+
+        expression = new Expression('clamp(50.0, 75.0, 100.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(75.0);
+    });
+
+    it('throws if clamp function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('clamp()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('clamp(1)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('clamp(1, 2)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('clamp(1, 2, 3, 4)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates mix function', function() {
+        var expression = new Expression('mix(0.0, 2.0, 0.5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+    });
+
+    it('throws if mix function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('mix()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('mix(1)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('mix(1, 2)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('mix(1, 2, 3, 4)');
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates ternary conditional', function() {
         var expression = new Expression('true ? "first" : "second"');
         expect(expression.evaluate(frameState, undefined)).toEqual('first');
@@ -1804,6 +1856,20 @@ defineSuite([
         var expression = new Expression('sqrt(1.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'sqrt(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for clamp', function() {
+        var expression = new Expression('clamp(50.0, 0.0, 100.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = '50.0';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for mix', function() {
+        var expression = new Expression('mix(0.0, 2.0, 0.5)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = '1.0';
         expect(shaderExpression).toEqual(expected);
     });
 
