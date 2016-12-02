@@ -169,20 +169,12 @@ define([
         return undefined;
     }
 
+///////////////////////////////////////////////////////////////////////////////
 // TODO: move this to a @private file
-    function noop() {
-    }
-
-    function createStub() {
-        return {};
-    }
-
-    function getStub() {
-        return {};
-    }
-
-    function getWebGLStub(canvas, requestWebgl2) {
-// TODO: extensions
+    /**
+     * @private
+     */
+    function getWebGLStub(canvas, options, requestWebgl2) {
 // TODO: support requestWebgl2
         var stub = clone(WebGLConstants);
 
@@ -204,13 +196,13 @@ define([
         stub.blendFuncSeparate = noop;
         stub.bufferData = noop;
         stub.bufferSubData = noop;
-        stub.checkFramebufferStatus = function () { }; // TODO
+        stub.checkFramebufferStatus = checkFramebufferStatusStub;
         stub.clear = noop;
         stub.clearColor = noop;
         stub.clearDepth = noop;
         stub.clearStencil = noop;
         stub.colorMask = noop;
-        stub.compileShader = noop; // TODO: needs to fall sometime?
+        stub.compileShader = noop;
         stub.compressedTexImage2D = noop;
         stub.compressedTexSubImage2D = noop;
         stub.copyTexImage2D = noop;
@@ -244,43 +236,43 @@ define([
         stub.framebufferTexture2D = noop;
         stub.frontFace = noop;
         stub.generateMipmap = noop;
-        stub.getActiveAttrib = getStub; // TODO
-        stub.getActiveUniform = getStub; // TODO
-        stub.getAttachedShaders = getStub; // TODO
-        stub.getAttribLocation = getStub; // TODO
-        stub.getBufferParameter = getStub; // TODO
-        stub.getContextAttributes = getStub; // TODO
-        stub.getError = getStub; // TODO
-        stub.getExtension = getStub; // TODO
-        stub.getFramebufferAttachmentParameter = getStub; // TODO
-        stub.getParameter = getStub; // TODO
-        stub.getProgramParameter = getStub; // TODO
-        stub.getProgramInfoLog = getStub; // TODO
-        stub.getRenderbufferParameter = getStub; // TODO
-        stub.getShaderParameter = getStub; // TODO
-        stub.getShaderInfoLog = getStub; // TODO
-        stub.getShaderPrecisionFormat = getStub; // TODO
-        stub.getShaderSource = getStub; // TODO
-        stub.getSupportedExtensions = getStub; // TODO
-        stub.getTexParameter = getStub; // TODO
-        stub.getUniform = getStub; // TODO
-        stub.getUniformLocation = getStub; // TODO
-        stub.getVertexAttrib = getStub; // TODO
-        stub.getVertexAttribOffset = getStub; // TODO
+        stub.getActiveAttrib = getStub;
+        stub.getActiveUniform = getStub; // TODO: needs name property
+        stub.getAttachedShaders = getStubWarning;
+        stub.getAttribLocation = getStub; // TODO?
+        stub.getBufferParameter = getStubWarning;
+        stub.getContextAttributes = getContextAttributesStub(options);
+        stub.getError = getErrorStub;
+        stub.getExtension = getExtensionStub;
+        stub.getFramebufferAttachmentParameter = getStubWarning;
+        stub.getParameter = getParameterStub(options);
+        stub.getProgramParameter = getProgramParameterStub;
+        stub.getProgramInfoLog = getStub;
+        stub.getRenderbufferParameter = getStubWarning;
+        stub.getShaderParameter = getShaderParameterStub;
+        stub.getShaderInfoLog = getStub;
+        stub.getShaderPrecisionFormat = getShaderPrecisionStub;
+        stub.getShaderSource = getStubWarning;
+        stub.getSupportedExtensions = getStubWarning;
+        stub.getTexParameter = getStubWarning;
+        stub.getUniform = getStub;
+        stub.getUniformLocation = getStub; // TODO?
+        stub.getVertexAttrib = getStubWarning;
+        stub.getVertexAttribOffset = getStubWarning;
         stub.hint = noop;
-        stub.isBuffer = getStub;
-        stub.isContextLost = getStub;
-        stub.isEnabled = getStub;
-        stub.isFramebuffer = getStub;
-        stub.isProgram = getStub;
-        stub.isRenderbuffer = getStub;
-        stub.isShader = getStub;
-        stub.isTexture = getStub;
+        stub.isBuffer = getStubWarning;
+        stub.isContextLost = getStubWarning;
+        stub.isEnabled = getStubWarning;
+        stub.isFramebuffer = getStubWarning;
+        stub.isProgram = getStubWarning;
+        stub.isRenderbuffer = getStubWarning;
+        stub.isShader = getStubWarning;
+        stub.isTexture = getStubWarning;
         stub.lineWidth = noop;
         stub.linkProgram = noop;
         stub.pixelStorei = noop;
         stub.polygonOffset = noop;
-        stub.readPixels = noop;
+        stub.readPixels = readPixelsStub;
         stub.renderbufferStorage = noop;
         stub.sampleCoverage = noop;
         stub.scissor = noop;
@@ -315,7 +307,7 @@ define([
         stub.uniformMatrix3fv = noop;
         stub.uniformMatrix4fv = noop;
         stub.useProgram = noop;
-        stub.validateProgram = noop; // TODO
+        stub.validateProgram = noop;
         stub.vertexAttrib1f = noop;
         stub.vertexAttrib1fv = noop;
         stub.vertexAttrib2f = noop;
@@ -329,6 +321,147 @@ define([
 
         return stub;
     }
+
+    function noop() {
+    }
+
+    function createStub() {
+        return {};
+    }
+
+    function getStub() {
+        return {};
+    }
+
+    function getStubWarning() {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('A stub for this get/is function is not defined.  Can it use getStub() or does it need a new one?');
+        }
+        //>>includeEnd('debug');
+    }
+
+    function checkFramebufferStatusStub(target) {
+        return WebGLConstants.FRAMEBUFFER_COMPLETE;
+    }
+
+    function getContextAttributesStub(options) {
+        var contextAttributes = {
+            alpha : defaultValue(options.alpha, true),
+            depth : defaultValue(options.depth, true),
+            stencil : defaultValue(options.stencil, false),
+            antialias : defaultValue(options.antialias, true),
+            premultipliedAlpha : defaultValue(options.premultipliedAlpha, true),
+            preserveDrawingBuffer : defaultValue(options.preserveDrawingBuffer, false),
+            preferLowPowerToHighPerformance : defaultValue(options.preferLowPowerToHighPerformance, false),
+            failIfMajorPerformanceCaveat : defaultValue(options.failIfMajorPerformanceCaveat, false)
+        };
+
+        return function() {
+            return contextAttributes;
+        };
+    }
+
+    function getErrorStub() {
+        return WebGLConstants.NO_ERROR;
+    }
+
+    function getExtensionStub(name) {
+// TODO: extensions
+        return null;
+    }
+
+    function getParameterStub(options) {
+        // These are not the minimum maximum; instead, they are typical maximums.
+        var parameterStubValues = {};
+        parameterStubValues[WebGLConstants.STENCIL_BITS] = options.stencil ? 8 : 0;
+        parameterStubValues[WebGLConstants.MAX_COMBINED_TEXTURE_IMAGE_UNITS] = 32;
+        parameterStubValues[WebGLConstants.MAX_CUBE_MAP_TEXTURE_SIZE] = 16384;
+        parameterStubValues[WebGLConstants.MAX_FRAGMENT_UNIFORM_VECTORS] = 1024;
+        parameterStubValues[WebGLConstants.MAX_TEXTURE_IMAGE_UNITS] = 16;
+        parameterStubValues[WebGLConstants.MAX_RENDERBUFFER_SIZE] = 16384;
+        parameterStubValues[WebGLConstants.MAX_TEXTURE_SIZE] = 16384;
+        parameterStubValues[WebGLConstants.MAX_VARYING_VECTORS] = 30;
+        parameterStubValues[WebGLConstants.MAX_VERTEX_ATTRIBS] = 16;
+        parameterStubValues[WebGLConstants.MAX_VERTEX_TEXTURE_IMAGE_UNITS] = 16;
+        parameterStubValues[WebGLConstants.MAX_VERTEX_UNIFORM_VECTORS] = 4096;
+        parameterStubValues[WebGLConstants.ALIASED_LINE_WIDTH_RANGE] = [1, 1];
+        parameterStubValues[WebGLConstants.ALIASED_POINT_SIZE_RANGE] = [1, 1024];
+        parameterStubValues[WebGLConstants.MAX_VIEWPORT_DIMS] = [16384, 16384];
+        parameterStubValues[WebGLConstants.MAX_TEXTURE_MAX_ANISOTROPY_EXT] = 16; // Assuming extension
+        parameterStubValues[WebGLConstants.MAX_DRAW_BUFFERS] = 8; // Assuming extension
+        parameterStubValues[WebGLConstants.MAX_COLOR_ATTACHMENTS] = 8; // Assuming extension
+
+        return function(pname) {
+            var value = parameterStubValues[pname];
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(value)) {
+                throw new DeveloperError('A WebGL parameter stub for ' + pname + ' is not defined. Add it.');
+            }
+            //>>includeEnd('debug');
+
+            return value;
+        };
+    }
+
+    function getProgramParameterStub(program, pname) {
+        if ((pname === WebGLConstants.LINK_STATUS) || (pname === WebGLConstants.VALIDATE_STATUS)) {
+            return true;
+        }
+
+        if ((pname === WebGLConstants.ACTIVE_UNIFORMS) || (pname === WebGLConstants.ACTIVE_ATTRIBUTES)) {
+            return 0;
+        }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('A WebGL parameter stub for ' + pname + ' is not defined. Add it.');
+        //>>includeEnd('debug');
+    }
+
+    function getShaderParameterStub(shader, pname) {
+        //>>includeStart('debug', pragmas.debug);
+        if (pname !== WebGLConstants.COMPILE_STATUS) {
+            throw new DeveloperError('A WebGL parameter stub for ' + pname + ' is not defined. Add it.');
+        }
+        //>>includeEnd('debug');
+
+        return true;
+    }
+
+    function getShaderPrecisionStub(shadertype, precisiontype) {
+        //>>includeStart('debug', pragmas.debug);
+        if (shadertype !== WebGLConstants.FRAGMENT_SHADER) {
+            throw new DeveloperError('getShaderPrecision only has a stub for FRAGMENT_SHADER. Update it.');
+        }
+
+        if ((precisiontype !== WebGLConstants.HIGH_FLOAT) && (precisiontype !== WebGLConstants.HIGH_INT)) {
+            throw new DeveloperError('getShaderPrecision only has a stub for HIGH_FLOAT and HIGH_INT. Update it.');
+        }
+        //>>includeEnd('debug');
+
+        if (precisiontype === WebGLConstants.HIGH_FLOAT) {
+            return {
+                rangeMin : 127,
+                rangeMax : 127,
+                precision : 23
+            };
+        }
+
+        // HIGH_INT
+        return {
+            rangeMin : 31,
+            rangeMax : 30,
+            precision : 0
+        };
+    }
+
+    function readPixelsStub(x, y, width, height, format, type, pixels) {
+        return [0, 0, 0, 0];
+    }
+
+// TODO: move this to a @private file
+///////////////////////////////////////////////////////////////////////////////
 
     /**
      * @private
@@ -361,8 +494,8 @@ define([
         var glContext;
 
 // TODO: pass this into the constructor?
-        if (true) {
-//      if (!window.webglStub) {
+        var webglStub = false;
+        if (!webglStub) {
             if (requestWebgl2) {
                 glContext = canvas.getContext('webgl2', webglOptions) || canvas.getContext('experimental-webgl2', webglOptions) || undefined;
                 if (defined(glContext)) {
@@ -376,8 +509,8 @@ define([
                 throw new RuntimeError('The browser supports WebGL, but initialization failed.');
             }
         } else {
-            // Use WebGL stub of noops when requested for testing
-            glContext = getWebGLStub(canvas, requestWebgl2);
+            // Use WebGL stub when requested for unit tests
+            glContext = getWebGLStub(canvas, webglOptions, requestWebgl2);
         }
 
         this._originalGLContext = glContext;
@@ -504,10 +637,9 @@ define([
         ContextLimits._maximumDrawBuffers = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_DRAW_BUFFERS) : 1;
         ContextLimits._maximumColorAttachments = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_COLOR_ATTACHMENTS) : 1;
 
-        var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
-        this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
-        this._clearDepth = gl.getParameter(gl.DEPTH_CLEAR_VALUE);
-        this._clearStencil = gl.getParameter(gl.STENCIL_CLEAR_VALUE);
+        this._clearColor = new Color(0.0, 0.0, 0.0, 0.0);
+        this._clearDepth = 1.0;
+        this._clearStencil = 0;
 
         var us = new UniformState();
         var ps = new PassState(this);
