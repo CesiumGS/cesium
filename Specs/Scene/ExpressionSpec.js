@@ -1882,7 +1882,7 @@ defineSuite([
     it('gets shader expression for atan2', function() {
         var expression = new Expression('atan2(0.0,1.0)');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'atan2(0.0, 1.0)';
+        var expected = 'atan(0.0, 1.0)';
         expect(shaderExpression).toEqual(expected);
     });
 
