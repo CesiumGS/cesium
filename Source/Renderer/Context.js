@@ -361,7 +361,7 @@ define([
         var glContext;
 
 // TODO: pass this into the constructor?
-        if (false) {
+        if (true) {
 //      if (!window.webglStub) {
             if (requestWebgl2) {
                 glContext = canvas.getContext('webgl2', webglOptions) || canvas.getContext('experimental-webgl2', webglOptions) || undefined;
@@ -396,11 +396,6 @@ define([
 
         var gl = glContext;
 
-        this._redBits = gl.getParameter(gl.RED_BITS);
-        this._greenBits = gl.getParameter(gl.GREEN_BITS);
-        this._blueBits = gl.getParameter(gl.BLUE_BITS);
-        this._alphaBits = gl.getParameter(gl.ALPHA_BITS);
-        this._depthBits = gl.getParameter(gl.DEPTH_BITS);
         this._stencilBits = gl.getParameter(gl.STENCIL_BITS);
 
         ContextLimits._maximumCombinedTextureImageUnits = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS); // min: 8
@@ -596,70 +591,6 @@ define([
         uniformState : {
             get : function() {
                 return this._us;
-            }
-        },
-
-        /**
-         * The number of red bits per component in the default framebuffer's color buffer.  The minimum is eight.
-         * @memberof Context.prototype
-         * @type {Number}
-         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>RED_BITS</code>.
-         */
-        redBits : {
-            get : function() {
-                return this._redBits;
-            }
-        },
-
-        /**
-         * The number of green bits per component in the default framebuffer's color buffer.  The minimum is eight.
-         * @memberof Context.prototype
-         * @type {Number}
-         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>GREEN_BITS</code>.
-         */
-        greenBits : {
-            get : function() {
-                return this._greenBits;
-            }
-        },
-
-        /**
-         * The number of blue bits per component in the default framebuffer's color buffer.  The minimum is eight.
-         * @memberof Context.prototype
-         * @type {Number}
-         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>BLUE_BITS</code>.
-         */
-        blueBits : {
-            get : function() {
-                return this._blueBits;
-            }
-        },
-
-        /**
-         * The number of alpha bits per component in the default framebuffer's color buffer.  The minimum is eight.
-         * <br /><br />
-         * The alpha channel is used for GL destination alpha operations and by the HTML compositor to combine the color buffer
-         * with the rest of the page.
-         * @memberof Context.prototype
-         * @type {Number}
-         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALPHA_BITS</code>.
-         */
-        alphaBits : {
-            get : function() {
-                return this._alphaBits;
-            }
-        },
-
-        /**
-         * The number of depth bits per pixel in the default bound framebuffer.  The minimum is 16 bits; most
-         * implementations will have 24 bits.
-         * @memberof Context.prototype
-         * @type {Number}
-         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>DEPTH_BITS</code>.
-         */
-        depthBits : {
-            get : function() {
-                return this._depthBits;
             }
         },
 

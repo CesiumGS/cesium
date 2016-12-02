@@ -40,26 +40,6 @@ defineSuite([
         expect(context.canvas).not.toBeNull();
     });
 
-    it('get redBits', function() {
-        expect(context.redBits).toEqual(8);
-    });
-
-    it('get greenBits', function() {
-        expect(context.greenBits).toEqual(8);
-    });
-
-    it('get blueBits', function() {
-        expect(context.blueBits).toEqual(8);
-    });
-
-    it('get alphaBits', function() {
-        expect(context.alphaBits).toEqual(8);
-    });
-
-    it('get depthBits', function() {
-        expect(context.depthBits).toBeGreaterThanOrEqualTo(16);
-    });
-
     it('get stencilBits', function() {
         expect(context.stencilBits).toBeGreaterThanOrEqualTo(0);
     });
