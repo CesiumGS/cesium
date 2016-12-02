@@ -282,7 +282,7 @@ define([
     function parseCall(expression, ast) {
         var args = ast.arguments;
         var call;
-        var val;
+        var val, left, right;
 
         // Member function calls
         if (ast.callee.type === 'MemberExpression') {
