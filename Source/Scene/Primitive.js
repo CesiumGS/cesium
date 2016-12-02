@@ -608,7 +608,7 @@ define([
         }
 
         var attributesLength = attributes.length;
-        var batchTable = new BatchTable(attributes, numberOfInstances);
+        var batchTable = new BatchTable(context, attributes, numberOfInstances);
 
         for (i = 0; i < numberOfInstances; ++i) {
             var instance = instances[i];
