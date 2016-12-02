@@ -1880,30 +1880,30 @@ defineSuite([
     });
 
     it('gets shader expression for atan2', function() {
-        var expression = new Expression('atan2(0.0,1.0)');
+        var expression = new Expression('atan2(0.0, 1.0)');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'atan2(0.0,1.0)';
+        var expected = 'atan2(0.0, 1.0)';
         expect(shaderExpression).toEqual(expected);
     });
 
     it('gets shader expression for pow', function() {
-        var expression = new Expression('pow(2.0,2.0)');
+        var expression = new Expression('pow(2.0, 2.0)');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'pow(2.0,2.0)';
+        var expected = 'pow(2.0, 2.0)';
         expect(shaderExpression).toEqual(expected);
     });
 
     it('gets shader expression for min', function() {
-        var expression = new Expression('min(3.0,5.0)');
+        var expression = new Expression('min(3.0, 5.0)');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'min(3,5)';
+        var expected = 'min(3.0, 5.0)';
         expect(shaderExpression).toEqual(expected);
     });
 
     it('gets shader expression for max', function() {
-        var expression = new Expression('max(3.0,5.0)');
+        var expression = new Expression('max(3.0, 5.0)');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'max(3.0,5.0)';
+        var expected = 'max(3.0, 5.0)';
         expect(shaderExpression).toEqual(expected);
     });
 
