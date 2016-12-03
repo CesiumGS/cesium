@@ -82,6 +82,9 @@ defineSuite([
         expect(label.fillColor).toEqual(Color.WHITE);
         expect(label.outlineColor).toEqual(Color.BLACK);
         expect(label.outlineWidth).toEqual(1);
+        expect(label.showBackground).toEqual(false);
+        expect(label.backgroundColor).toEqual(new Color(0.165, 0.165, 0.165, 0.8));
+        expect(label.backgroundPadding).toEqual(new Cartesian2(2, 2));
         expect(label.style).toEqual(LabelStyle.FILL);
         expect(label.pixelOffset).toEqual(Cartesian2.ZERO);
         expect(label.eyeOffset).toEqual(Cartesian3.ZERO);
@@ -120,6 +123,9 @@ defineSuite([
         var horizontalOrigin = HorizontalOrigin.LEFT;
         var verticalOrigin = VerticalOrigin.BOTTOM;
         var scale = 2.0;
+        var showBackground = true;
+        var backgroundColor = Color.BLUE;
+        var backgroundPadding = new Cartesian2(11, 12);
         var translucency = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
         var pixelOffsetScale = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
         var distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
@@ -132,6 +138,9 @@ defineSuite([
             outlineColor : outlineColor,
             outlineWidth : outlineWidth,
             style : style,
+            showBackground : showBackground,
+            backgroundColor : backgroundColor,
+            backgroundPadding : backgroundPadding,
             pixelOffset : pixelOffset,
             eyeOffset : eyeOffset,
             horizontalOrigin : horizontalOrigin,
@@ -151,6 +160,9 @@ defineSuite([
         expect(label.outlineColor).toEqual(outlineColor);
         expect(label.outlineWidth).toEqual(outlineWidth);
         expect(label.style).toEqual(style);
+        expect(label.showBackground).toEqual(showBackground);
+        expect(label.backgroundColor).toEqual(backgroundColor);
+        expect(label.backgroundPadding).toEqual(backgroundPadding);
         expect(label.pixelOffset).toEqual(pixelOffset);
         expect(label.eyeOffset).toEqual(eyeOffset);
         expect(label.horizontalOrigin).toEqual(horizontalOrigin);
@@ -430,6 +442,22 @@ defineSuite([
         expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
     });
 
+    it('can render a label background', function() {
+        var label = labels.add({
+            position : Cartesian3.ZERO,
+            text : '_',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER,
+            showBackground : true,
+            backgroundColor : Color.BLUE
+        });
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+
+        labels.remove(label);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+    });
+
     it('does not render labels with show set to false', function() {
         var label = labels.add({
             position : Cartesian3.ZERO,
@@ -445,6 +473,25 @@ defineSuite([
 
         label.show = true;
         expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+    });
+
+    it('does not render label background with show set to false', function() {
+        var label = labels.add({
+            position : Cartesian3.ZERO,
+            text : '_',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER,
+            showBackground : true,
+            backgroundColor : Color.BLUE
+        });
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+
+        label.show = false;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        label.show = true;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
     });
 
     it('does not render labels that are behind the viewer', function() {
@@ -719,14 +766,37 @@ defineSuite([
         });
         scene.renderForSpecs();
         expect(labels._billboardCollection.length).toEqual(3);
+        expect(labels._spareBillboards.length).toEqual(0);
 
         label.text = 'a';
         scene.renderForSpecs();
         expect(labels._billboardCollection.length).toEqual(3);
+        expect(labels._spareBillboards.length).toEqual(2);
 
         label.text = 'def';
         scene.renderForSpecs();
         expect(labels._billboardCollection.length).toEqual(3);
+        expect(labels._spareBillboards.length).toEqual(0);
+    });
+
+    it('should reuse background billboards that are not needed any more', function() {
+        var label = labels.add({
+            text : 'abc',
+            showBackground : true
+        });
+        scene.renderForSpecs();
+        expect(labels._backgroundBillboardCollection.length).toEqual(1);
+        expect(labels._spareBackgroundBillboards.length).toEqual(0);
+
+        label.showBackground = false;
+        scene.renderForSpecs();
+        expect(labels._backgroundBillboardCollection.length).toEqual(1);
+        expect(labels._spareBackgroundBillboards.length).toEqual(1);
+
+        label.showBackground = true;
+        scene.renderForSpecs();
+        expect(labels._backgroundBillboardCollection.length).toEqual(1);
+        expect(labels._spareBackgroundBillboards.length).toEqual(0);
     });
 
     describe('Label', function() {
@@ -1135,6 +1205,40 @@ defineSuite([
             expect(bbox.height).toEqual(height);
         });
 
+        it('computes screen space bounding box with padded background', function() {
+            var scale = 1.5;
+
+            var label = labels.add({
+                text : 'abc',
+                scale : scale,
+                showBackground : true,
+                backgroundPadding : new Cartesian2(15, 10)
+            });
+            scene.renderForSpecs();
+
+            var backgroundBillboard = label._backgroundBillboard;
+            var width = backgroundBillboard.width * scale;
+            var height = backgroundBillboard.height * scale;
+            var x = backgroundBillboard._translate.x;
+            var y = -(backgroundBillboard._translate.y + height);
+
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            expect(bbox.x).toEqual(x);
+            expect(bbox.y).toEqual(y);
+            expect(bbox.width).toEqual(width);
+            expect(bbox.height).toEqual(height);
+
+            label.verticalOrigin = VerticalOrigin.CENTER;
+            scene.renderForSpecs();
+            y = -(backgroundBillboard._translate.y + height * 0.5);
+
+            bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            expect(bbox.x).toEqual(x);
+            expect(bbox.y).toEqual(y);
+            expect(bbox.width).toEqual(width);
+            expect(bbox.height).toEqual(height);
+        });
+
         it('can equal another label', function() {
             var label = labels.add({
                 position : new Cartesian3(1.0, 2.0, 3.0),
@@ -1213,7 +1317,7 @@ defineSuite([
             var eyeOffset1 = new Cartesian3(6.0, 7.0, 8.0);
             var eyeOffset2 = new Cartesian3(16.0, 17.0, 18.0);
             var verticalOrigin1 = VerticalOrigin.TOP;
-            var verticalOrigin2 = VerticalOrigin.BOTTOM;
+            var verticalOrigin2 = VerticalOrigin.BASELINE;
             var scale1 = 2.0;
             var scale2 = 3.0;
             var id1 = 'id1';
@@ -1232,7 +1336,8 @@ defineSuite([
                 scale : scale1,
                 id : id1,
                 translucencyByDistance : translucency1,
-                pixelOffsetScaleByDistance : pixelOffsetScale1
+                pixelOffsetScaleByDistance : pixelOffsetScale1,
+                showBackground : true
             });
 
             scene.renderForSpecs();
@@ -1279,7 +1384,8 @@ defineSuite([
                     scale : 2.0,
                     id : 'id1',
                     translucencyByDistance : new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0),
-                    pixelOffsetScaleByDistance : new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0)
+                    pixelOffsetScaleByDistance : new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0),
+                    showBackground : true
                 });
                 scene.renderForSpecs();
             });
@@ -1347,6 +1453,26 @@ defineSuite([
                 });
             });
 
+            it('showBackground', function() {
+                expect(label.showBackground).toEqual(true);
+                label.showBackground = false;
+                expect(label.showBackground).toEqual(false);
+            });
+
+            it('backgroundColor', function() {
+                var newValue = Color.RED;
+                expect(label.backgroundColor).not.toEqual(newValue);
+                label.backgroundColor = newValue;
+                expect(label.backgroundColor).toEqual(newValue);
+            });
+
+            it('backgroundPadding', function() {
+                var newValue = new Cartesian2(8, 5);
+                expect(label.backgroundPadding).not.toEqual(newValue);
+                label.backgroundPadding = newValue;
+                expect(label.backgroundPadding).toEqual(newValue);
+            });
+
             it('id', function() {
                 var newValue = 'id2';
                 expect(label.id).not.toEqual(newValue);
@@ -1400,6 +1526,12 @@ defineSuite([
                 getGlyphBillboards().forEach(function(billboard) {
                     expect(billboard.pixelOffsetScaleByDistance).toEqual(label.pixelOffsetScaleByDistance);
                 });
+            });
+
+            it('clusterShow', function() {
+                expect(label.clusterShow).toEqual(true);
+                label.clusterShow = false;
+                expect(label.clusterShow).toEqual(false);
             });
         });
 
