@@ -376,7 +376,7 @@ define([
         },
 
         /**
-         * Gets or sets the background color of this label.  TRANSPARENT means no background will be used.
+         * Gets or sets the background color of this label.
          * @memberof Label.prototype
          * @type {Color}
          */
@@ -404,8 +404,8 @@ define([
         },
 
         /**
-         * Gets or sets the background padding, in pixels, of this label.  The x value
-         * controls horizontal padding, and the y value controls vertical padding.
+         * Gets or sets the background padding, in pixels, of this label.  The <code>x</code> value
+         * controls horizontal padding, and the <code>y</code> value controls vertical padding.
          * @memberof Label.prototype
          * @type {Cartesian2}
          */
