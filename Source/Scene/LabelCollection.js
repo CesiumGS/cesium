@@ -440,7 +440,6 @@ define([
         this.__backgroundTextureAtlas = undefined;
         this._whitePixelIndex = undefined;
 
-        // TODO: Don't allocate this until later.
         this._backgroundBillboardCollection = new BillboardCollection({
             scene : this._scene
         });
@@ -550,8 +549,12 @@ define([
      *   pixelOffset : Cesium.Cartesian2.ZERO,
      *   eyeOffset : Cesium.Cartesian3.ZERO,
      *   horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
-     *   verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-     *   scale : 1.0
+     *   verticalOrigin : Cesium.VerticalOrigin.BASELINE,
+     *   scale : 1.0,
+     *   translucencyByDistance : undefined,
+     *   pixelOffsetScaleByDistance : undefined,
+     *   heightReference : HeightReference.NONE,
+     *   distanceDisplayCondition : undefined
      * });
      *
      * @example

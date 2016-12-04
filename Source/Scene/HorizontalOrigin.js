@@ -10,6 +10,10 @@ define([
      * or {@link Label}.  For example, setting the horizontal origin to <code>LEFT</code>
      * or <code>RIGHT</code> will display a billboard to the left or right (in screen space)
      * of the anchor position.
+     * <br /><br />
+     * <div align='center'>
+     * <img src='images/Billboard.setHorizontalOrigin.png' width='400' height='300' /><br />
+     * </div>
      *
      * @exports HorizontalOrigin
      *

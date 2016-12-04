@@ -90,7 +90,7 @@ defineSuite([
         expect(label.eyeOffset).toEqual(Cartesian3.ZERO);
         expect(label.heightReference).toEqual(HeightReference.NONE);
         expect(label.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
-        expect(label.verticalOrigin).toEqual(VerticalOrigin.BOTTOM);
+        expect(label.verticalOrigin).toEqual(VerticalOrigin.BASELINE);
         expect(label.scale).toEqual(1.0);
         expect(label.id).not.toBeDefined();
         expect(label.translucencyByDistance).not.toBeDefined();

@@ -90,7 +90,7 @@ define([
         this._backgroundColor = defaultValue(options.backgroundColor, new Color(0.165, 0.165, 0.165, 0.8));
         this._backgroundPadding = defaultValue(options.backgroundPadding, new Cartesian2(2, 2));
         this._style = defaultValue(options.style, LabelStyle.FILL);
-        this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.BOTTOM);
+        this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.BASELINE);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.LEFT);
         this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
@@ -656,7 +656,7 @@ define([
 
         /**
          * Gets or sets the horizontal origin of this label, which determines if the label is drawn
-         * to the left, center, or right of its position.
+         * to the left, center, or right of its anchor position.
          * <br /><br />
          * <div align='center'>
          * <img src='images/Billboard.setHorizontalOrigin.png' width='400' height='300' /><br />
@@ -688,10 +688,10 @@ define([
 
         /**
          * Gets or sets the vertical origin of this label, which determines if the label is
-         * to the above, below, or at the center of its position.
+         * to the above, below, or at the center of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setVerticalOrigin.png' width='400' height='300' /><br />
+         * <img src='images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
          * </div>
          * @memberof Label.prototype
          * @type {VerticalOrigin}

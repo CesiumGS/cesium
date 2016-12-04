@@ -194,6 +194,7 @@ define([
          * of removing it and re-adding it to the collection.
          * @memberof Billboard.prototype
          * @type {Boolean}
+         * @default true
          */
         show : {
             get : function() {
@@ -468,7 +469,7 @@ define([
 
         /**
          * Gets or sets the horizontal origin of this billboard, which determines if the billboard is
-         * to the left, center, or right of its position.
+         * to the left, center, or right of its anchor position.
          * <br /><br />
          * <div align='center'>
          * <img src='images/Billboard.setHorizontalOrigin.png' width='400' height='300' /><br />
@@ -500,10 +501,10 @@ define([
 
         /**
          * Gets or sets the vertical origin of this billboard, which determines if the billboard is
-         * to the above, below, or at the center of its position.
+         * to the above, below, or at the center of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setVerticalOrigin.png' width='400' height='300' /><br />
+         * <img src='images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
          * </div>
          * @memberof Billboard.prototype
          * @type {VerticalOrigin}
