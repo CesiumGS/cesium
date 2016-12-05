@@ -12,6 +12,7 @@ var request = require('request');
 
 var globby = require('globby');
 var jshint = require('gulp-jshint');
+var gulpTap = require('gulp-tap');
 var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
 var mkdirp = require('mkdirp');
@@ -288,6 +289,14 @@ gulp.task('makeZipFile', ['release'], function() {
     var indexSrc = gulp.src('index.release.html').pipe(gulpRename("index.html"));
 
     return eventStream.merge(builtSrc, staticSrc, indexSrc)
+        .pipe(gulpTap(function(file) {
+            // Work around an issue with gulp-zip where archives generated on Windows do
+            // not properly have their directory executable mode set.
+            // see https://github.com/sindresorhus/gulp-zip/issues/64#issuecomment-205324031
+            if (file.isDirectory()) {
+                file.stat.mode = parseInt('40777', 8);
+            }
+        }))
         .pipe(gulpZip('Cesium-' + version + '.zip'))
         .pipe(gulp.dest('.'));
 });
