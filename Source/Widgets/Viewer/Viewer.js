@@ -473,6 +473,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             toolbar.appendChild(geocoderContainer);
             geocoder = new Geocoder({
                 container : geocoderContainer,
+                customGeocoder: options.geocoder,
                 scene : cesiumWidget.scene
             });
             // Subscribe to search so that we can clear the trackedEntity when it is clicked.

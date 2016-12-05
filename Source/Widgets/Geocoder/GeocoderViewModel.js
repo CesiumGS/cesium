@@ -53,6 +53,14 @@ define([
         if (!defined(options) || !defined(options.scene)) {
             throw new DeveloperError('options.scene is required.');
         }
+        if (defined(options.customGeocoder)) {
+            if (!defined(options.customGeocoder.getSuggestions)) {
+                throw new DeveloperError('options.customGeocoder is available but missing a getSuggestions method');
+            }
+            if (!defined(options.customGeocoder.geocode)) {
+                throw new DeveloperError('options.customGeocoder is available but missing a geocode method');
+            }
+        }
         //>>includeEnd('debug');
 
         this._url = defaultValue(options.url, 'https://dev.virtualearth.net/');
@@ -78,7 +86,7 @@ define([
             if (that.isSearchInProgress) {
                 cancelGeocode(that);
             } else {
-                geocode(that);
+                geocode(that, options.customGeocoder);
             }
         });
 
@@ -227,13 +235,57 @@ define([
         });
     }
 
-    function geocode(viewModel) {
+    function geocode(viewModel, customGeocoder) {
         var query = viewModel.searchText;
 
         if (/^\s*$/.test(query)) {
             //whitespace string
             return;
         }
+
+        if (defined(customGeocoder)) {
+            viewModel._isSearchInProgress = true;
+            customGeocoder.geocode(query, function (err, results) {
+                if (defined(err)) {
+                    viewModel._isSearchInProgress = false;
+                    return;
+
+                }
+                if (results.length === 0) {
+                    viewModel.searchText = viewModel._searchText + ' (not found)';
+                    viewModel._isSearchInProgress = false;
+                    return;
+                }
+
+                var firstResult = results[0];
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(firstResult.displayName)) {
+                    throw new DeveloperError('each result must have a displayName');
+                }
+                if (!defined(firstResult.bbox)) {
+                    throw new DeveloperError('each result must have a bbox');
+                }
+                if (!defined(firstResult.bbox.south) || !defined(firstResult.bbox.west) || !defined(firstResult.bbox.north) || !defined(firstResult.bbox.east)) {
+                    throw new DeveloperError('each result must have a bbox where south, west, north and east are defined');
+                }
+                //>>includeEnd('debug');
+
+                viewModel._searchText = firstResult.displayName;
+                var bbox = firstResult.bbox;
+                var south = bbox.south;
+                var west = bbox.west;
+                var north = bbox.north;
+                var east = bbox.east;
+
+                updateCamera(viewModel, Rectangle.fromDegrees(west, south, east, north));
+                viewModel._isSearchInProgress = false;
+            });
+        } else {
+            defaultGeocode(viewModel, query);
+        }
+    }
+
+    function defaultGeocode(viewModel, query) {
 
         // If the user entered (longitude, latitude, [height]) in degrees/meters,
         // fly without calling the geocoder.
