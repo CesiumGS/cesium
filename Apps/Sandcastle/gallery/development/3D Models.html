@@ -55,8 +55,10 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.shadows = true;
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shadows : true
+});
+
 var scene = viewer.scene;
 var model;
 
@@ -65,6 +67,7 @@ var viewModel = {
     blendAmount : 0.0,
     blendColor : 0.0
 };
+
 // Convert the viewModel members into knockout observables.
 Cesium.knockout.track(viewModel);
 

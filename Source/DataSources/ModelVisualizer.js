@@ -2,6 +2,7 @@
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
+        '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -15,6 +16,7 @@ define([
     ], function(
         AssociativeArray,
         BoundingSphere,
+        Color,
         defined,
         destroyObject,
         DeveloperError,
@@ -32,7 +34,10 @@ define([
     var defaultIncrementallyLoadTextures = true;
     var defaultShadows = ShadowMode.ENABLED;
     var defaultHeightReference = HeightReference.NONE;
+    var defaultBlendColor = Color.RED;
+    var defaultBlendAmount = 0.0;
 
+    var color = new Color();
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
 
@@ -139,6 +144,8 @@ define([
             model.shadows = Property.getValueOrDefault(modelGraphics._shadows, time, defaultShadows);
             model.heightReference = Property.getValueOrDefault(modelGraphics._heightReference, time, defaultHeightReference);
             model.distanceDisplayCondition = Property.getValueOrUndefined(modelGraphics._distanceDisplayCondition, time);
+            model.blendColor = Property.getValueOrDefault(modelGraphics._blendColor, time, defaultBlendColor, color);
+            model.blendAmount = Property.getValueOrDefault(modelGraphics._blendAmount, time, defaultBlendAmount);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);

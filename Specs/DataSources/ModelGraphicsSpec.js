@@ -2,22 +2,26 @@
 defineSuite([
         'DataSources/ModelGraphics',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Quaternion',
         'DataSources/ConstantProperty',
         'DataSources/NodeTransformationProperty',
         'DataSources/PropertyBag',
+        'Scene/HeightReference',
         'Scene/ShadowMode'
     ], function(
         ModelGraphics,
         Cartesian3,
+        Color,
         DistanceDisplayCondition,
         JulianDate,
         Quaternion,
         ConstantProperty,
         NodeTransformationProperty,
         PropertyBag,
+        HeightReference,
         ShadowMode) {
     'use strict';
 
@@ -31,7 +35,10 @@ defineSuite([
             incrementallyLoadTextures : false,
             runAnimations : false,
             shadows : ShadowMode.DISABLED,
+            heightReference : HeightReference.CLAMP_TO_GROUND,
             distanceDisplayCondition : new DistanceDisplayCondition(),
+            blendColor : new Color(0.0, 1.0, 0.0, 0.2),
+            blendAmount : 0.5,
             nodeTransformations : {
                 node1 : {
                     translation : Cartesian3.UNIT_Y,
@@ -49,6 +56,10 @@ defineSuite([
         expect(model.maximumScale).toBeInstanceOf(ConstantProperty);
         expect(model.incrementallyLoadTextures).toBeInstanceOf(ConstantProperty);
         expect(model.shadows).toBeInstanceOf(ConstantProperty);
+        expect(model.heightReference).toBeInstanceOf(ConstantProperty);
+        expect(model.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+        expect(model.blendColor).toBeInstanceOf(ConstantProperty);
+        expect(model.blendAmount).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
 
         expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
@@ -60,7 +71,10 @@ defineSuite([
         expect(model.maximumScale.getValue()).toEqual(options.maximumScale);
         expect(model.incrementallyLoadTextures.getValue()).toEqual(options.incrementallyLoadTextures);
         expect(model.shadows.getValue()).toEqual(options.shadows);
+        expect(model.heightReference.getValue()).toEqual(options.heightReference);
         expect(model.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
+        expect(model.blendColor.getValue()).toEqual(options.blendColor);
+        expect(model.blendAmount.getValue()).toEqual(options.blendAmount);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
 
         var actualNodeTransformations = model.nodeTransformations.getValue(new JulianDate());
@@ -81,7 +95,10 @@ defineSuite([
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        source.blendColor = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+        source.blendAmount = new ConstantProperty(0.5);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty({
@@ -104,7 +121,10 @@ defineSuite([
         expect(target.maximumScale).toBe(source.maximumScale);
         expect(target.incrementallyLoadTextures).toBe(source.incrementallyLoadTextures);
         expect(target.shadows).toBe(source.shadows);
+        expect(target.heightReference).toBe(source.heightReference);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(target.blendColor).toBe(source.blendColor);
+        expect(target.blendAmount).toBe(source.blendAmount);
         expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
     });
@@ -118,7 +138,10 @@ defineSuite([
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        source.blendColor = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+        source.blendAmount = new ConstantProperty(0.5);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
@@ -131,7 +154,10 @@ defineSuite([
         var maximumScale = new ConstantProperty(200.0);
         var incrementallyLoadTextures = new ConstantProperty(true);
         var shadows = new ConstantProperty(ShadowMode.ENABLED);
+        var heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         var distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        var blendColor = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+        var blendAmount = new ConstantProperty(0.5);
         var runAnimations = new ConstantProperty(true);
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
@@ -145,7 +171,10 @@ defineSuite([
         target.maximumScale = maximumScale;
         target.incrementallyLoadTextures = incrementallyLoadTextures;
         target.shadows = shadows;
+        target.heightReference = heightReference;
         target.distanceDisplayCondition = distanceDisplayCondition;
+        target.blendColor = blendColor;
+        target.blendAmount = blendAmount;
         target.runAnimations = runAnimations;
         target.nodeTransformations = nodeTransformations;
 
@@ -158,7 +187,10 @@ defineSuite([
         expect(target.maximumScale).toBe(maximumScale);
         expect(target.incrementallyLoadTextures).toBe(incrementallyLoadTextures);
         expect(target.shadows).toBe(shadows);
+        expect(target.heightReference).toBe(heightReference);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
+        expect(target.blendColor).toBe(blendColor);
+        expect(target.blendAmount).toBe(blendAmount);
         expect(target.runAnimations).toBe(runAnimations);
         expect(target.nodeTransformations).toBe(nodeTransformations);
     });
@@ -172,7 +204,10 @@ defineSuite([
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        source.blendColor = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+        source.blendAmount = new ConstantProperty(0.5);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty(),
@@ -187,7 +222,10 @@ defineSuite([
         expect(result.maximumScale).toBe(source.maximumScale);
         expect(result.incrementallyLoadTextures).toBe(source.incrementallyLoadTextures);
         expect(result.shadows).toBe(source.shadows);
+        expect(result.heightReference).toBe(source.heightReference);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(result.blendColor).toBe(source.blendColor);
+        expect(result.blendAmount).toBe(source.blendAmount);
         expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
     });

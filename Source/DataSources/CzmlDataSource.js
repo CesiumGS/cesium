@@ -1413,6 +1413,8 @@ define([
         processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, model, 'shadows', modelData.shadows, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, model, 'heightReference', modelData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(Color, model, 'blendColor', modelData.blendColor, interval, sourceUri, entityCollection);
+        processPacketData(Number, model, 'blendAmount', modelData.blendAmount, interval, sourceUri, entityCollection);
 
         var nodeTransformationsData = modelData.nodeTransformations;
         if (defined(nodeTransformationsData)) {

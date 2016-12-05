@@ -19,10 +19,38 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="toolbar">
+    <table><tbody>
+    <tr>
+        <td>Blend Amount</td>
+        <td>
+            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: blendAmount, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: blendAmount">
+        </td>
+    </tr>
+    <tr>
+        <td>Blend Color</td>
+        <td>
+            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: blendColor, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: blendColor">
+        </td>
+    </tr>
+    </tbody></table>
+
+</div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -32,6 +60,32 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     selectionIndicator : false,
     shadows : true
 });
+
+var entity;
+
+// The viewModel tracks the state of our mini application.
+var viewModel = {
+    blendAmount : 0.0,
+    blendColor : 0.0
+};
+// Convert the viewModel members into knockout observables.
+Cesium.knockout.track(viewModel);
+
+// Bind the viewModel to the DOM elements of the UI that call for it.
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout.getObservable(viewModel, 'blendAmount').subscribe(
+    function(newValue) {
+        entity.model.blendAmount = newValue;
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'blendColor').subscribe(
+    function(newValue) {
+        entity.model.blendColor = Cesium.Color.fromHsl(newValue, 1.0, 0.5);
+    }
+);
 
 function createModel(url, height) {
     viewer.entities.removeAll();
@@ -43,14 +97,16 @@ function createModel(url, height) {
     var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
     var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
-    var entity = viewer.entities.add({
+    entity = viewer.entities.add({
         name : url,
         position : position,
         orientation : orientation,
         model : {
             uri : url,
             minimumPixelSize : 128,
-            maximumScale : 20000
+            maximumScale : 20000,
+            blendAmount : viewModel.blendAmount,
+            blendColor : Cesium.Color.fromHsl(viewModel.blendColor, 1.0, 0.5)
         }
     });
     viewer.trackedEntity = entity;
@@ -84,6 +140,11 @@ var options = [{
 }];
 
 Sandcastle.addToolbarMenu(options);
+
+Sandcastle.addToggleButton('Shadows', viewer.shadows, function(checked) {
+    viewer.shadows = checked;
+});
+
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }

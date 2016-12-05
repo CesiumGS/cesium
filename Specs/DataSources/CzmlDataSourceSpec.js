@@ -1838,6 +1838,10 @@ defineSuite([
                 incrementallyLoadTextures : true,
                 shadows : 'ENABLED',
                 heightReference: 'CLAMP_TO_GROUND',
+                blendColor : {
+                    rgbaf : [0.0, 1.0, 0.0, 0.2]
+                },
+                blendAmount : 0.5,
                 nodeTransformations : {
                     Mesh : {
                         scale : {
@@ -1867,6 +1871,8 @@ defineSuite([
         expect(entity.model.incrementallyLoadTextures.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.model.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
         expect(entity.model.heightReference.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(entity.model.blendColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.0, 1.0, 0.0, 0.2));
+        expect(entity.model.blendAmount.getValue(Iso8601.MINIMUM_VALUE)).toEqual(0.5);
 
         var nodeTransform = entity.model.nodeTransformations.getValue(Iso8601.MINIMUM_VALUE).Mesh;
         expect(nodeTransform).toBeDefined();
@@ -1892,6 +1898,12 @@ defineSuite([
                 gltf : './Data/Models/Box/CesiumBoxTest.gltf',
                 incrementallyLoadTextures : true,
                 shadows : 'ENABLED',
+                heightReference: 'CLAMP_TO_GROUND',
+                blendColor : {
+                    rgbaf : [0.0, 1.0, 0.0, 0.2]
+                },
+                blendAmount : 0.5,
+
                 nodeTransformations : {
                     Mesh : {
                         scale : {
@@ -1924,6 +1936,9 @@ defineSuite([
         expect(entity.model.uri.getValue(validTime)).toEqual('./Data/Models/Box/CesiumBoxTest.gltf');
         expect(entity.model.incrementallyLoadTextures.getValue(validTime)).toEqual(true);
         expect(entity.model.shadows.getValue(validTime)).toEqual(ShadowMode.ENABLED);
+        expect(entity.model.heightReference.getValue(validTime)).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(entity.model.blendColor.getValue(validTime)).toEqual(new Color(0.0, 1.0, 0.0, 0.2));
+        expect(entity.model.blendAmount.getValue(validTime)).toEqual(0.5);
 
         var nodeTransform = entity.model.nodeTransformations.getValue(validTime).Mesh;
         expect(nodeTransform).toBeDefined();
@@ -1944,6 +1959,9 @@ defineSuite([
         expect(entity.model.uri.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.incrementallyLoadTextures.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.shadows.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.heightReference.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.blendColor.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.blendAmount.getValue(invalidTime)).toBeUndefined();
 
         expect(entity.model.nodeTransformations.Mesh.getValue(invalidTime)).toEqual(new TranslationRotationScale());
         expect(entity.model.nodeTransformations.Mesh.scale.getValue(invalidTime)).toBeUndefined();
