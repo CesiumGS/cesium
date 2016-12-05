@@ -426,7 +426,9 @@ define([
         }
 
         var ellipsoid = this._surface._tileProvider.tilingScheme.ellipsoid;
-        var cartesian = ellipsoid.cartographicToCartesian(cartographic, scratchGetHeightCartesian);
+
+        //cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
+        var cartesian = Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0, ellipsoid, scratchGetHeightCartesian);
 
         var ray = scratchGetHeightRay;
         var surfaceNormal = ellipsoid.geodeticSurfaceNormal(cartesian, ray.direction);
@@ -457,9 +459,6 @@ define([
         if (Math.abs(ray.origin.z) >= ellipsoid.radii.z -11500.0){
             // intersection point is outside the ellipsoid, try other value
             magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
-
-            // take into account the position height
-            magnitude -= cartographic.height;
 
             // multiply by the *positive* value of the magnitude
             vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchGetHeightIntersection);

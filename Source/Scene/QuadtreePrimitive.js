@@ -240,7 +240,7 @@ define([
     QuadtreePrimitive.prototype.updateHeight = function(cartographic, callback) {
         var primitive = this;
         var object = {
-            position : undefined,
+            positionOnEllipsoidSurface : undefined,
             positionCartographic : cartographic,
             level : -1,
             callback : callback
@@ -455,7 +455,7 @@ define([
             customDataRemoved.length = 0;
         }
 
-        // Our goal with load ordering is to first load all of the tiles we need to 
+        // Our goal with load ordering is to first load all of the tiles we need to
         // render the current scene at full detail.  Loading any other tiles is just
         // a form of prefetching, and we need not do it at all (other concerns aside).  This
         // simple and obvious statement gets more complicated when we realize that, because
@@ -761,12 +761,13 @@ define([
                 var data = customData[i];
 
                 if (tile.level > data.level) {
-                    if (!defined(data.position)) {
-                        data.position = ellipsoid.cartographicToCartesian(data.positionCartographic);
+                    if (!defined(data.positionOnEllipsoidSurface)) {
+                        // cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
+                        data.positionOnEllipsoidSurface = Cartesian3.fromRadians(data.positionCartographic.longitude, data.positionCartographic.latitude, 0.0, ellipsoid);
                     }
 
                     if (mode === SceneMode.SCENE3D) {
-                        var surfaceNormal = ellipsoid.geodeticSurfaceNormal(data.position, scratchRay.direction);
+                        var surfaceNormal = ellipsoid.geodeticSurfaceNormal(data.positionOnEllipsoidSurface, scratchRay.direction);
 
                         // compute origin point
 
@@ -778,29 +779,26 @@ define([
 
                         // avoid dividing by zero
                         if (Math.abs(surfaceNormal.x) > CesiumMath.EPSILON16){
-                            magnitude = data.position.x / surfaceNormal.x;
+                            magnitude = data.positionOnEllipsoidSurface.x / surfaceNormal.x;
                         } else if (Math.abs(surfaceNormal.y) > CesiumMath.EPSILON16){
-                            magnitude = data.position.y / surfaceNormal.y;
+                            magnitude = data.positionOnEllipsoidSurface.y / surfaceNormal.y;
                         } else if (Math.abs(surfaceNormal.z) > CesiumMath.EPSILON16){ //surface normal is (0,0,1) | (0,0,-1) | (0,0,0)
-                            magnitude = data.position.z / surfaceNormal.z;
+                            magnitude = data.positionOnEllipsoidSurface.z / surfaceNormal.z;
                         } else { //(0,0,0), just for case
                             magnitude = 0;
                         }
 
                         var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, magnitude, scratchPosition);
-                        Cartesian3.subtract(data.position, vectorToMinimumPoint, scratchRay.origin);
+                        Cartesian3.subtract(data.positionOnEllipsoidSurface, vectorToMinimumPoint, scratchRay.origin);
 
                         // Theoretically, the intersection point can be outside the ellipsoid, so we have to check if the result's 'z' is inside the ellipsoid (with some buffer)
                         if (Math.abs(scratchRay.origin.z) >= ellipsoid.radii.z -11500.0){
                             // intersection point is outside the ellipsoid, try other value
                             magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
 
-                            // take into account the position height
-                            magnitude -= data.positionCartographic.height;
-
                             // multiply by the *positive* value of the magnitude
                             vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchPosition);
-                            Cartesian3.subtract(data.position, vectorToMinimumPoint, scratchRay.origin);
+                            Cartesian3.subtract(data.positionOnEllipsoidSurface, vectorToMinimumPoint, scratchRay.origin);
                         }
 
                     } else {
