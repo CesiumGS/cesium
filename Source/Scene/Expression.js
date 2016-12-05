@@ -388,6 +388,18 @@ define([
             return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'regExp') {
             return parseRegex(expression, ast);
+        } else if (defined(ternaryFunctions[call])) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 3 || args.length > 3) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly three arguments.');
+            }
+            //>>includeEnd('debug');
+            val = [
+                createRuntimeAst(expression, args[0]),
+                createRuntimeAst(expression, args[1]),
+                createRuntimeAst(expression, args[2])
+            ];
+            return new Node(ExpressionNodeType.TERNARY, call, val);
         }
 
         //>>includeStart('debug', pragmas.debug);
