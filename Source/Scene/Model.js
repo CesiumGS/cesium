@@ -49,7 +49,6 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './BlendingState',
-        './CullFace',
         './getBinaryAccessor',
         './HeightReference',
         './ModelAnimationCache',
@@ -111,7 +110,6 @@ define([
         Uri,
         when,
         BlendingState,
-        CullFace,
         getBinaryAccessor,
         HeightReference,
         ModelAnimationCache,
@@ -3094,10 +3092,8 @@ define([
                     command2D : command2D,
                     pickCommand2D : pickCommand2D,
                     // Generate on demand when blendColor alpha is less than 1.0
-                    translucentCommandBack : undefined,
-                    translucentCommandFront : undefined,
-                    translucentCommandBack2D : undefined,
-                    translucentCommandFront2D : undefined
+                    translucentCommand : undefined,
+                    translucentCommand2D : undefined
                 };
                 runtimeNode.commands.push(nodeCommand);
                 nodeCommands.push(nodeCommand);
@@ -3474,10 +3470,9 @@ define([
         }
     }
 
-    function getTranslucentRenderState(renderState, cullFace) {
+    function getTranslucentRenderState(renderState) {
         var rs = clone(renderState, true);
-        rs.cull.enabled = true;
-        rs.cull.face = cullFace;
+        rs.cull.enabled = false;
         rs.depthTest.enabled = true;
         rs.depthMask = false;
         rs.blending = BlendingState.ALPHA_BLEND;
@@ -3485,10 +3480,10 @@ define([
         return RenderState.fromCache(rs);
     }
 
-    function deriveTranslucentCommand(command, cullFace) {
+    function deriveTranslucentCommand(command) {
         var translucentCommand = DrawCommand.shallowClone(command);
         translucentCommand.pass = Pass.TRANSLUCENT;
-        translucentCommand.renderState = getTranslucentRenderState(command.renderState, cullFace);
+        translucentCommand.renderState = getTranslucentRenderState(command.renderState);
         return translucentCommand;
     }
 
@@ -3498,16 +3493,14 @@ define([
             var nodeCommands = model._nodeCommands;
             var length = nodeCommands.length;
             // Generate translucent commands when the blend color has an alpha less than 1.0
-            if (!defined(nodeCommands[0].translucentCommandBack)) {
+            if (!defined(nodeCommands[0].translucentCommand)) {
                 for (var i = 0; i < length; ++i) {
                     var nodeCommand = nodeCommands[i];
                     var command = nodeCommand.command;
-                    nodeCommand.translucentCommandBack = deriveTranslucentCommand(command, CullFace.FRONT);
-                    nodeCommand.translucentCommandFront = deriveTranslucentCommand(command, CullFace.BACK);
+                    nodeCommand.translucentCommand = deriveTranslucentCommand(command);
                     if (!scene3DOnly) {
                         var command2D = nodeCommand.command2D;
-                        nodeCommand.translucentCommandBack2D = deriveTranslucentCommand(command2D, CullFace.FRONT);
-                        nodeCommand.translucentCommandFront2D = deriveTranslucentCommand(command2D, CullFace.BACK);
+                        nodeCommand.translucentCommand2D = deriveTranslucentCommand(command2D);
                     }
                 }
             }
@@ -3941,22 +3934,13 @@ define([
                     nc = nodeCommands[i];
                     if (nc.show) {
                         var translucent = (this.blendColor.alpha < 1.0);
-                        if (translucent) {
-                            commandList.push(nc.translucentCommandBack);
-                            commandList.push(nc.translucentCommandFront);
-                        } else {
-                            commandList.push(nc.command);
-                        }
-
+                        var command = translucent ? nc.translucentCommand : nc.command;
+                        commandList.push(command);
                         boundingVolume = nc.command.boundingVolume;
                         if (frameState.mode === SceneMode.SCENE2D &&
                             (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            if (translucent) {
-                                commandList.push(nc.translucentCommandBack2D);
-                                commandList.push(nc.translucentCommandFront2D);
-                            } else {
-                                commandList.push(nc.command2D);
-                            }
+                            var command2D = translucent ? nc.translucentCommand2D : nc.command2D;
+                            commandList.push(command2D);
                         }
                     }
                 }
