@@ -48,6 +48,8 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './BlendingState',
+        './CullFace',
         './getBinaryAccessor',
         './HeightReference',
         './ModelAnimationCache',
@@ -108,6 +110,8 @@ define([
         gltfDefaults,
         Uri,
         when,
+        BlendingState,
+        CullFace,
         getBinaryAccessor,
         HeightReference,
         ModelAnimationCache,
@@ -2338,7 +2342,7 @@ define([
             if ((blendFuncSeparate[0] === WebGLConstants.ONE) && (blendFuncSeparate[1] === WebGLConstants.ONE_MINUS_SRC_ALPHA)) {
                 blendFuncSeparate[0] = WebGLConstants.SRC_ALPHA;
                 blendFuncSeparate[1] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
-                blendFuncSeparate[2] = WebGLConstants.ONE;
+                blendFuncSeparate[2] = WebGLConstants.SRC_ALPHA;
                 blendFuncSeparate[3] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
             }
         }
@@ -3087,7 +3091,12 @@ define([
                     command : command,
                     pickCommand : pickCommand,
                     command2D : command2D,
-                    pickCommand2D : pickCommand2D
+                    pickCommand2D : pickCommand2D,
+                    // Generate on demand when blendColor alpha is less than 1.0
+                    translucentCommandBack : undefined,
+                    translucentCommandFront : undefined,
+                    translucentCommandBack2D : undefined,
+                    translucentCommandFront2D : undefined
                 };
                 runtimeNode.commands.push(nodeCommand);
                 nodeCommands.push(nodeCommand);
@@ -3460,6 +3469,46 @@ define([
                 var nodeCommand = nodeCommands[i];
                 nodeCommand.command.castShadows = castShadows;
                 nodeCommand.command.receiveShadows = receiveShadows;
+            }
+        }
+    }
+
+    function getTranslucentRenderState(renderState, cullFace) {
+        var rs = clone(renderState, true);
+        rs.cull.enabled = true;
+        rs.cull.face = cullFace;
+        rs.depthTest.enabled = true;
+        rs.depthMask = false;
+        rs.blending = BlendingState.ALPHA_BLEND;
+
+        return RenderState.fromCache(rs);
+    }
+
+    function deriveTranslucentCommand(command, cullFace) {
+        var translucentCommand = DrawCommand.shallowClone(command);
+        translucentCommand.pass = Pass.TRANSLUCENT;
+        translucentCommand.renderState = getTranslucentRenderState(command.renderState, cullFace);
+        return translucentCommand;
+    }
+
+    function updateBlendColor(model, frameState) {
+        var scene3DOnly = frameState.scene3DOnly;
+        if (model.blendColor.alpha < 1.0) {
+            var nodeCommands = model._nodeCommands;
+            var length = nodeCommands.length;
+            // Generate translucent commands when the blend color has an alpha less than 1.0
+            if (!defined(nodeCommands[0].translucentCommandBack)) {
+                for (var i = 0; i < length; ++i) {
+                    var nodeCommand = nodeCommands[i];
+                    var command = nodeCommand.command;
+                    nodeCommand.translucentCommandBack = deriveTranslucentCommand(command, CullFace.FRONT);
+                    nodeCommand.translucentCommandFront = deriveTranslucentCommand(command, CullFace.BACK);
+                    if (!scene3DOnly) {
+                        var command2D = nodeCommand.command2D;
+                        nodeCommand.translucentCommandBack2D = deriveTranslucentCommand(command2D, CullFace.FRONT);
+                        nodeCommand.translucentCommandFront2D = deriveTranslucentCommand(command2D, CullFace.BACK);
+                    }
+                }
             }
         }
     }
@@ -3858,6 +3907,7 @@ define([
             updateWireframe(this);
             updateShowBoundingVolume(this);
             updateShadows(this);
+            updateBlendColor(this, frameState);
         }
 
         if (justLoaded) {
@@ -3889,13 +3939,23 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        var command = nc.command;
-                        commandList.push(command);
+                        var translucent = (this.blendColor.alpha < 1.0);
+                        if (translucent) {
+                            commandList.push(nc.translucentCommandBack);
+                            commandList.push(nc.translucentCommandFront);
+                        } else {
+                            commandList.push(nc.command);
+                        }
 
-                        boundingVolume = command.boundingVolume;
+                        boundingVolume = nc.command.boundingVolume;
                         if (frameState.mode === SceneMode.SCENE2D &&
                             (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            commandList.push(nc.command2D);
+                            if (translucent) {
+                                commandList.push(nc.translucentCommandBack2D);
+                                commandList.push(nc.translucentCommandFront2D);
+                            } else {
+                                commandList.push(nc.command2D);
+                            }
                         }
                     }
                 }
