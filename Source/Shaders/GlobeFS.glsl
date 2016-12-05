@@ -11,6 +11,10 @@ uniform bool u_dayTextureUseWebMercatorT[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_SPLIT
+uniform float u_dayTextureSplit[TEXTURE_UNITS];
+#endif
+
 #ifdef APPLY_BRIGHTNESS
 uniform float u_dayTextureBrightness[TEXTURE_UNITS];
 #endif
@@ -71,7 +75,8 @@ vec4 sampleAndBlend(
     float textureContrast,
     float textureHue,
     float textureSaturation,
-    float textureOneOverGamma)
+    float textureOneOverGamma,
+    float split)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
@@ -92,6 +97,19 @@ vec4 sampleAndBlend(
     vec4 value = texture2D(texture, textureCoordinates);
     vec3 color = value.rgb;
     float alpha = value.a;
+
+#ifdef APPLY_SPLIT
+    // Split to the left
+    if (split < 0.0 && gl_FragCoord.x > czm_viewport.z/2.0) {
+       alpha = 0.0;
+    }
+    // Split to the right
+    else if (split > 0.0 && gl_FragCoord.x < czm_viewport.z/2.0) {
+       alpha = 0.0;
+    }
+#endif
+
+
 
 #ifdef APPLY_BRIGHTNESS
     color = mix(vec3(0.0), color, textureBrightness);
