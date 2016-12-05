@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.29 - 2017-01-02
+
+* Added the ability to blend a `Model` with a color/translucency. [#4547](https://github.com/AnalyticalGraphicsInc/cesium/pull/4547)
+
 ### 1.28 - 2016-12-01
 
 * Improved terrain/imagery load ordering, especially when the terrain is already fully loaded and a new imagery layer is loaded.  This results in a 25% reduction in load times in many cases. [#4616](https://github.com/AnalyticalGraphicsInc/cesium/pull/4616)
@@ -12,7 +16,6 @@ Change Log
 * Fall back to packing floats into an unsigned byte texture when floating point textures are unsupported. [#4563](https://github.com/AnalyticalGraphicsInc/cesium/issues/4563)
 * Added support for saving html and css in GitHub Gists. [#4125](https://github.com/AnalyticalGraphicsInc/cesium/issues/4125)
 * Fixed `Cartographic.fromCartesian` when the cartesian is not on the ellipsoid surface. [#4611](https://github.com/AnalyticalGraphicsInc/cesium/issues/4611)
-* Added the ability to blend a `Model` with a color. [#4547](https://github.com/AnalyticalGraphicsInc/cesium/pull/4547)
 
 ### 1.27 - 2016-11-01
 * Deprecated
