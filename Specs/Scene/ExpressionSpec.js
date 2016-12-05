@@ -992,7 +992,7 @@ defineSuite([
         var expression = new Expression('atan2(0,1)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.0, CesiumMath.EPSILON10);
 
-        var expression = new Expression('atan2(1,0)');
+        expression = new Expression('atan2(1,0)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.5*Math.PI, CesiumMath.EPSILON10);
     });
 
@@ -1010,7 +1010,7 @@ defineSuite([
         var expression = new Expression('pow(5,0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
 
-        var expression = new Expression('pow(4,2)');
+        expression = new Expression('pow(4,2)');
         expect(expression.evaluate(frameState, undefined)).toEqual(16.0);
     });
 
@@ -1028,7 +1028,7 @@ defineSuite([
         var expression = new Expression('min(0,1)');
         expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
 
-        var expression = new Expression('min(-1,0)');
+        expression = new Expression('min(-1,0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(-1.0);
     });
 
@@ -1046,7 +1046,7 @@ defineSuite([
         var expression = new Expression('max(0,1)');
         expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
 
-        var expression = new Expression('max(-1,0)');
+        expression = new Expression('max(-1,0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
     });
 

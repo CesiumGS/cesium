@@ -302,8 +302,8 @@ define([
                         return new Node(ExpressionNodeType.LITERAL_NULL, null);
                     }
                 }
-                var left = createRuntimeAst(expression, object);
-                var right = createRuntimeAst(expression, args[0]);
+                left = createRuntimeAst(expression, object);
+                right = createRuntimeAst(expression, args[0]);
                 return new Node(ExpressionNodeType.FUNCTION_CALL, call, left, right);
             } else if (call === 'toString') {
                 val = createRuntimeAst(expression, object);
