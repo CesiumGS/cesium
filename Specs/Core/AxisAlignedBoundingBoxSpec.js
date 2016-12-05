@@ -2,13 +2,11 @@
 defineSuite([
         'Core/AxisAlignedBoundingBox',
         'Core/Cartesian3',
-        'Core/Cartesian4',
         'Core/Intersect',
         'Core/Plane'
     ], function(
         AxisAlignedBoundingBox,
         Cartesian3,
-        Cartesian4,
         Intersect,
         Plane) {
     'use strict';

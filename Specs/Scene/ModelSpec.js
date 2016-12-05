@@ -7,7 +7,6 @@ defineSuite([
         'Core/CesiumTerrainProvider',
         'Core/clone',
         'Core/combine',
-        'Core/defaultValue',
         'Core/defined',
         'Core/defineProperties',
         'Core/DistanceDisplayCondition',
@@ -39,7 +38,6 @@ defineSuite([
         CesiumTerrainProvider,
         clone,
         combine,
-        defaultValue,
         defined,
         defineProperties,
         DistanceDisplayCondition,
@@ -1883,7 +1881,9 @@ defineSuite([
                     tileProvider : {
                         ready : true
                     },
-                    _tileLoadQueue : {},
+                    _tileLoadQueueHigh : [],
+                    _tileLoadQueueMedium : [],
+                    _tileLoadQueueLow : [],
                     _debug : {
                         tilesWaitingForChildren : 0
                     }

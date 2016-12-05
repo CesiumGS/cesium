@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/defined',
         '../Renderer/ShaderSource'
     ], function(
-        defaultValue,
         defined,
         ShaderSource) {
     'use strict';
@@ -48,7 +46,7 @@ define([
         });
     };
 
-    ShadowMapShader.createShadowCastFragmentShader = function(fs, isPointLight, useDepthTexture, opaque) {
+    ShadowMapShader.createShadowCastFragmentShader = function(fs, isPointLight, usesDepthTexture, opaque) {
         var defines = fs.defines.slice(0);
         var sources = fs.sources.slice(0);
 
@@ -92,7 +90,7 @@ define([
                 'float distance = length(' + positionVaryingName + '); \n' +
                 'distance /= shadowMap_lightPositionEC.w; // radius \n' +
                 'gl_FragColor = czm_packDepth(distance); \n';
-        } else if (useDepthTexture) {
+        } else if (usesDepthTexture) {
             fsSource += 'gl_FragColor = vec4(1.0); \n';
         } else {
             fsSource += 'gl_FragColor = czm_packDepth(gl_FragCoord.z); \n';

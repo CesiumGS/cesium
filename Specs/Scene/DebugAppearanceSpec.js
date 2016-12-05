@@ -8,7 +8,6 @@ defineSuite([
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/VertexFormat',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Primitive',
         'Specs/createScene'
@@ -21,7 +20,6 @@ defineSuite([
         Rectangle,
         RectangleGeometry,
         VertexFormat,
-        ClearCommand,
         Appearance,
         Primitive,
         createScene) {

@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/Matrix3',
-    'Core/Cartesian3',
-    'Core/Math',
-    'Core/HeadingPitchRoll',
-    'Core/Quaternion'
-], function(
-    Matrix3,
-    Cartesian3,
-    CesiumMath,
-    HeadingPitchRoll,
-    Quaternion) {
+        'Core/Matrix3',
+        'Core/Cartesian3',
+        'Core/HeadingPitchRoll',
+        'Core/Math',
+        'Core/Quaternion'
+    ], function(
+        Matrix3,
+        Cartesian3,
+        HeadingPitchRoll,
+        CesiumMath,
+        Quaternion) {
     'use strict';
 
     it('default constructor creates values array with all zeros.', function() {

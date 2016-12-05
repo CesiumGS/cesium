@@ -373,11 +373,11 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
+            positions : positions
         });
         polylines.add();
         polylines.add({
-            positions: positions,
+            positions: positions
         });
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
@@ -1227,10 +1227,6 @@ defineSuite([
     });
 
     it('renders with a distance display condition', function() {
-        if (!scene.context.floatingPointTexture) {
-            return;
-        }
-
         var near = 100.0;
         var far = 10000.0;
 

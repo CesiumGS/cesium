@@ -4,7 +4,6 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/combine',
-        'Core/defined',
         'Core/Ellipsoid',
         'Core/FeatureDetection',
         'Core/GeographicProjection',
@@ -26,7 +25,6 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         combine,
-        defined,
         Ellipsoid,
         FeatureDetection,
         GeographicProjection,
@@ -72,7 +70,9 @@ defineSuite([
             tileProvider : {
                 ready : true
             },
-            _tileLoadQueue : {},
+            _tileLoadQueueHigh : [],
+            _tileLoadQueueMedium : [],
+            _tileLoadQueueLow : [],
             _debug : {
                 tilesWaitingForChildren : 0
             }
