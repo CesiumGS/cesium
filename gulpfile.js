@@ -14,7 +14,7 @@ var globby = require('globby');
 var jshint = require('gulp-jshint');
 var gulpTap = require('gulp-tap');
 var rimraf = require('rimraf');
-var stripComments = require('strip-comments');
+var glslStripComments = require('glsl-strip-comments');
 var mkdirp = require('mkdirp');
 var eventStream = require('event-stream');
 var gulp = require('gulp');
@@ -1001,7 +1001,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
         }
 
         if (minify) {
-            contents = stripComments(contents);
+            contents = glslStripComments(contents);
             contents = contents.replace(/\s+$/gm, '').replace(/^\s+/gm, '').replace(/\n+/gm, '\n');
             contents += '\n';
         }
