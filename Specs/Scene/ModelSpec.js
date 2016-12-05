@@ -1894,6 +1894,13 @@ defineSuite([
             blendColor = scene.renderForSpecs();
             expect(blendColor[0]).toEqual(0);
             expect(blendColor[1]).toEqual(255);
+
+            // Check alpha. Alpha works independently of the blendAmount.
+            model.blendColor = Color.fromAlpha(Color.LIME, 0.5);
+            blendColor = scene.renderForSpecs();
+            expect(blendColor[0]).toEqual(0);
+            expect(blendColor[1]).toBeLessThan(255);
+            expect(blendColor[1]).toBeGreaterThan(0);
         });
     });
 

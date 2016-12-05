@@ -1766,6 +1766,7 @@ define([
             '    gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_blendColor.rgb, gltf_blendAmount); \n' +
             '    gl_FragColor.a *= gltf_blendColor.a; \n' +
             '} \n';
+
         return shader;
     }
 
