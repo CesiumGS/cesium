@@ -1,7 +1,7 @@
 Change Log
 ==========
-*  Fixed issue where billboards on terrain have some offset. [#4598](https://github.com/AnalyticalGraphicsInc/cesium/issues/4598)
-*  Fixed issue where `globe.getHeight` randomly returns 'undefined'. [#3411](https://github.com/AnalyticalGraphicsInc/cesium/issues/3411)
+*  Fixed issue where billboards on terrain had some offset. [#4598](https://github.com/AnalyticalGraphicsInc/cesium/issues/4598)
+*  Fixed issue where `globe.getHeight` randomly returned 'undefined'. [#3411](https://github.com/AnalyticalGraphicsInc/cesium/issues/3411)
 
 ### 1.28 - 2016-12-01
 
