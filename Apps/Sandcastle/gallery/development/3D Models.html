@@ -48,6 +48,13 @@
             <input type="text" size="5" data-bind="value: blendColor">
         </td>
     </tr>
+    <tr>
+        <td>Blend Alpha</td>
+        <td>
+            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: blendAlpha, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: blendAlpha">
+        </td>
+    </tr>
     </tbody></table>
 
 </div>
@@ -65,7 +72,8 @@ var model;
 // The viewModel tracks the state of our mini application.
 var viewModel = {
     blendAmount : 0.0,
-    blendColor : 0.0
+    blendColor : 0.0,
+    blendAlpha : 1.0
 };
 
 // Convert the viewModel members into knockout observables.
@@ -83,7 +91,13 @@ Cesium.knockout.getObservable(viewModel, 'blendAmount').subscribe(
 
 Cesium.knockout.getObservable(viewModel, 'blendColor').subscribe(
     function(newValue) {
-        model.blendColor = Cesium.Color.fromHsl(newValue, 1.0, 0.5);
+        entity.model.blendColor = Cesium.Color.fromHsl(newValue, 1.0, 0.5, viewModel.blendAlpha);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'blendAlpha').subscribe(
+    function(newValue) {
+        entity.model.blendColor = Cesium.Color.fromHsl(viewModel.blendColor, 1.0, 0.5, newValue);
     }
 );
 
@@ -106,7 +120,7 @@ function createModel(url, height, heading, pitch, roll) {
 
     model.readyPromise.then(function(model) {
         model.blendAmount = viewModel.blendAmount;
-        model.blendColor = Cesium.Color.fromHsl(viewModel.blendColor, 1.0, 0.5);
+        model.blendColor = Cesium.Color.fromHsl(viewModel.blendColor, 1.0, viewModel.blendAlpha);
         // Play and loop all animations at half-speed
         model.activeAnimations.addAll({
             speedup : 0.5,

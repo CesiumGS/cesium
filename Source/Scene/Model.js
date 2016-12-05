@@ -1739,15 +1739,28 @@ define([
         return shader;
     }
 
-    function modifyShaderForBlendColor(shader) {
+    function hasPremultipliedAlpha(model) {
+        var gltf = model.gltf;
+        return defined(gltf.asset) ? defaultValue(gltf.asset.premultipliedAlpha, false) : false;
+    }
+
+    function modifyShaderForBlendColor(shader, premultipliedAlpha) {
         shader = ShaderSource.replaceMain(shader, 'gltf_blend_main');
         shader +=
             'uniform vec4 gltf_blendColor; \n' +
             'uniform float gltf_blendAmount; \n' +
             'void main() \n' +
             '{ \n' +
-            '    gltf_blend_main(); \n' +
+            '    gltf_blend_main(); \n';
+
+        // Un-premultiply the alpha so that blending is correct.
+        if (premultipliedAlpha) {
+            shader += '    gl_FragColor.rgb /= gl_FragColor.a; \n';
+        }
+
+        shader +=
             '    gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_blendColor.rgb, gltf_blendAmount); \n' +
+            '    gl_FragColor.a *= gltf_blendColor.a; \n' +
             '} \n';
         return shader;
     }
@@ -1783,7 +1796,8 @@ define([
             vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
         }
 
-        var blendFS = modifyShaderForBlendColor(fs);
+        var premultipliedAlpha = hasPremultipliedAlpha(model);
+        var blendFS = modifyShaderForBlendColor(fs, premultipliedAlpha);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(blendFS, id, model._fragmentShaderLoaded);
@@ -2318,6 +2332,16 @@ define([
         var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
         var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
         var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
+
+        // Change the render state to use traditional alpha blending instead of premultiplied alpha blending
+        if (booleanStates[WebGLConstants.BLEND] && hasPremultipliedAlpha(model)) {
+            if ((blendFuncSeparate[0] === WebGLConstants.ONE) && (blendFuncSeparate[1] === WebGLConstants.ONE_MINUS_SRC_ALPHA)) {
+                blendFuncSeparate[0] = WebGLConstants.SRC_ALPHA;
+                blendFuncSeparate[1] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
+                blendFuncSeparate[2] = WebGLConstants.ONE;
+                blendFuncSeparate[3] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
+            }
+        }
 
         rendererRenderStates[id] = RenderState.fromCache({
             frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
