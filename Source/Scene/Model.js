@@ -1677,7 +1677,7 @@ define([
             if (getProgramForPrimitive(model, primitive) === programName) {
                 for (var attributeSemantic in primitive.attributes) {
                     if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
-                        var decodeUniformVarName = 'czm_u_dec_' + attributeSemantic.toLowerCase();
+                        var decodeUniformVarName = 'gltf_u_dec_' + attributeSemantic.toLowerCase();
                         var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
                         var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
                         if (!defined(quantizedUniforms[decodeUniformVarName]) && !defined(quantizedUniforms[decodeUniformVarNameScale])) {
@@ -1686,8 +1686,8 @@ define([
                             if (defined(quantizedAttributes)) {
                                 var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
                                 var decodeMatrix = quantizedAttributes.decodeMatrix;
-                                var newMain = 'czm_decoded_' + attributeSemantic;
-                                var decodedAttributeVarName = attributeVarName.replace('a_', 'czm_a_dec_');
+                                var newMain = 'gltf_decoded_' + attributeSemantic;
+                                var decodedAttributeVarName = attributeVarName.replace('a_', 'gltf_a_dec_');
                                 var size = Math.floor(Math.sqrt(decodeMatrix.length));
 
                                 // replace usages of the original attribute with the decoded version, but not the declaration
@@ -1740,14 +1740,14 @@ define([
     }
 
     function modifyShaderForBlendColor(shader) {
-        shader = ShaderSource.replaceMain(shader, 'czm_blend_main');
+        shader = ShaderSource.replaceMain(shader, 'gltf_blend_main');
         shader +=
-            'uniform vec4 czm_blendColor; \n' +
-            'uniform float czm_blendAmount; \n' +
+            'uniform vec4 gltf_blendColor; \n' +
+            'uniform float gltf_blendAmount; \n' +
             'void main() \n' +
             '{ \n' +
-            '    czm_blend_main(); \n' +
-            '    gl_FragColor.rgb = mix(gl_FragColor.rgb, czm_blendColor.rgb, czm_blendAmount); \n' +
+            '    gltf_blend_main(); \n' +
+            '    gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_blendColor.rgb, gltf_blendAmount); \n' +
             '} \n';
         return shader;
     }
@@ -2809,7 +2809,7 @@ define([
                     var quantizedAttributes = extensions.WEB3D_quantized_attributes;
                     if (defined(quantizedAttributes)) {
                         var decodeMatrix = quantizedAttributes.decodeMatrix;
-                        var uniformVariable = 'czm_u_dec_' + attribute.toLowerCase();
+                        var uniformVariable = 'gltf_u_dec_' + attribute.toLowerCase();
 
                         switch (a.type) {
                             case 'SCALAR':
@@ -2957,8 +2957,8 @@ define([
                 }
 
                 uniformMap = combine(uniformMap, {
-                    czm_blendColor : createBlendColorFunction(model),
-                    czm_blendAmount : createBlendAmountFunction(model)
+                    gltf_blendColor : createBlendColorFunction(model),
+                    gltf_blendAmount : createBlendAmountFunction(model)
                 });
 
                 // Allow callback to modify the uniformMap
