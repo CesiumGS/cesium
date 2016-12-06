@@ -305,7 +305,7 @@ require({
         var selectedTabName = registry.byId('innerPanel').selectedChildWidget.title;
         var suffix = selectedTabName + 'Demos';
         if (selectedTabName === 'All') {
-            suffix = '';
+            suffix = 'all';
         } else if (selectedTabName === 'Search Results') {
             suffix = 'searchDemo';
         }
