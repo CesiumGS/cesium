@@ -2927,16 +2927,7 @@ define([
 
     function createColorBlendFunction(model) {
         return function() {
-            var colorBlendMode = model.colorBlendMode;
-            var colorBlendAmount = model.colorBlendAmount;
-            if (colorBlendMode === ColorBlendMode.HIGHLIGHT) {
-                return 0.0;
-            } else if (colorBlendMode === ColorBlendMode.REPLACE) {
-                return 1.0;
-            } else if (colorBlendMode === ColorBlendMode.MIX) {
-                // The value 0.0 is reserved for highlight, so clamp to just above 0.0.
-                return CesiumMath.clamp(colorBlendAmount, CesiumMath.EPSILON4, 1.0);
-            }
+            return ColorBlendMode.getColorBlend(model.colorBlendMode, model.colorBlendAmount);
         };
     }
 
