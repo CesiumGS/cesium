@@ -19,45 +19,10 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
-    #toolbar {
-        background: rgba(42, 42, 42, 0.8);
-        padding: 4px;
-        border-radius: 4px;
-    }
-    #toolbar input {
-        vertical-align: middle;
-        padding-top: 2px;
-        padding-bottom: 2px;
-    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-    <table><tbody>
-    <tr>
-        <td>Mode</td>
-        <td><select data-bind="options: colorBlendModes, value: colorBlendMode"></select></td>
-    </tr>
-    <tr>
-        <td>Color</td>
-        <td><select data-bind="options: colors, value: color"></select></td>
-    </tr>
-    <tr>
-        <td>Alpha</td>
-        <td>
-            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: alpha, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: alpha">
-        </td>
-    </tr>
-    <tr>
-        <td data-bind="style: { color: colorBlendAmountEnabled ? '' : 'gray'}">Mix</td>
-        <td>
-            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: colorBlendAmount, valueUpdate: 'input', enable: colorBlendAmountEnabled">
-            <input type="text" size="5" data-bind="value: colorBlendAmount, enable: colorBlendAmountEnabled">
-        </td>
-    </tr>
-    </tbody></table>
-</div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -67,60 +32,6 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     selectionIndicator : false,
     shadows : true
 });
-
-var entity;
-
-function getColorBlendMode(colorBlendMode) {
-    return Cesium.ColorBlendMode[colorBlendMode.toUpperCase()];
-}
-
-function getColor(color) {
-    return Cesium.Color[color.toUpperCase()];
-}
-
-// The viewModel tracks the state of our mini application.
-var viewModel = {
-    color : 'White',
-    colors : ['White', 'Red', 'Green', 'Blue', 'Yellow', 'Gray'],
-    alpha : 1.0,
-    colorBlendMode : 'Highlight',
-    colorBlendModes : ['Highlight', 'Replace', 'Mix'],
-    colorBlendAmount : 0.5,
-    colorBlendAmountEnabled : false
-};
-
-// Convert the viewModel members into knockout observables.
-Cesium.knockout.track(viewModel);
-
-// Bind the viewModel to the DOM elements of the UI that call for it.
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-
-Cesium.knockout.getObservable(viewModel, 'color').subscribe(
-    function(newValue) {
-        entity.model.color = Cesium.Color.fromAlpha(getColor(newValue), viewModel.alpha);
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'alpha').subscribe(
-    function(newValue) {
-        entity.model.color = Cesium.Color.fromAlpha(getColor(viewModel.color), newValue);
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'colorBlendMode').subscribe(
-    function(newValue) {
-        var colorBlendMode = getColorBlendMode(newValue);
-        entity.model.colorBlendMode = colorBlendMode;
-        viewModel.colorBlendAmountEnabled = (colorBlendMode === Cesium.ColorBlendMode.MIX);
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'colorBlendAmount').subscribe(
-    function(newValue) {
-        entity.model.colorBlendAmount = newValue;
-    }
-);
 
 function createModel(url, height) {
     viewer.entities.removeAll();
@@ -132,17 +43,14 @@ function createModel(url, height) {
     var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
     var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
-    entity = viewer.entities.add({
+    var entity = viewer.entities.add({
         name : url,
         position : position,
         orientation : orientation,
         model : {
             uri : url,
             minimumPixelSize : 128,
-            maximumScale : 20000,
-            color : Cesium.Color.fromAlpha(getColor(viewModel.color), viewModel.alpha),
-            colorBlendMode : getColorBlendMode(viewModel.colorBlendMode),
-            colorBlendAmount : viewModel.colorBlendAmount
+            maximumScale : 20000
         }
     });
     viewer.trackedEntity = entity;
@@ -176,11 +84,6 @@ var options = [{
 }];
 
 Sandcastle.addToolbarMenu(options);
-
-Sandcastle.addToggleButton('Shadows', viewer.shadows, function(checked) {
-    viewer.shadows = checked;
-});
-
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
