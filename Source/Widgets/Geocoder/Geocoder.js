@@ -69,7 +69,7 @@ define([
 value: searchText,\
 valueUpdate: "afterkeydown",\
 disable: isSearchInProgress,\
-event: { keyup: handleKeyUp, keydown: handleKeyDown },\
+event: { keyup: handleKeyUp, keydown: handleKeyDown, mouseover: deselectSuggestion },\
 css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 }');
 
         this._onTextBoxFocus = function() {
@@ -120,12 +120,14 @@ css: { active: $data === $parent.selectedSuggestion() }');
         this._onInputBegin = function(e) {
             if (!container.contains(e.target)) {
                 textBox.blur();
+                viewModel.hideSuggestions();
             }
         };
 
         this._onInputEnd = function(e) {
             if (container.contains(e.target)) {
                 textBox.focus();
+                viewModel.showSuggestions();
             }
         };
 

@@ -82,6 +82,8 @@ define([
         this._complete = new Event();
         this._suggestions = knockout.observableArray();
         this._selectedSuggestion = knockout.observable();
+        this._showSuggestions = knockout.observable(true);
+
 
         var that = this;
 
@@ -91,7 +93,7 @@ define([
          * @type {Boolean}
          */
         this.suggestionsVisible = knockout.pureComputed(function () {
-            return that._suggestions().length > 0;
+            return that._suggestions().length > 0 && that._showSuggestions();
         });
 
         this._searchCommand = createCommand(function() {
@@ -130,6 +132,10 @@ define([
             that._selectedSuggestion(that._suggestions()[next]);
         };
 
+        this.deselectSuggestion = function () {
+            that._selectedSuggestion(undefined);
+        };
+
         this.updateSearchSuggestions = function () {
             var query = that.searchText;
 
@@ -152,12 +158,6 @@ define([
                     }
                 });
             }
-        };
-
-        this.isSelected = function(data) {
-            var index = this._suggestions().indexOf(data);
-            console.log(index);
-            return index === this._selectedSuggestion();
         };
 
         this.handleKeyDown = function (data, event) {
@@ -191,6 +191,15 @@ define([
             var bbox = data.bbox;
             that._suggestions.splice(0, that._suggestions().length);
             updateCamera(that, Rectangle.fromDegrees(bbox.west, bbox.south, bbox.east, bbox.north));
+        };
+
+        this.hideSuggestions = function () {
+            that._showSuggestions(false);
+            that._selectedSuggestion(undefined);
+        };
+
+        this.showSuggestions = function () {
+            that._showSuggestions(true);
         };
 
         this.handleMouseover = function (data, event) {
@@ -369,14 +378,14 @@ define([
 
         if (defined(customGeocoder)) {
             viewModel._isSearchInProgress = true;
+            viewModel._suggestions.splice(0, viewModel._suggestions().length);
             customGeocoder.geocode(query, function (err, results) {
                 if (defined(err)) {
                     viewModel._isSearchInProgress = false;
                     return;
-
                 }
                 if (results.length === 0) {
-                    viewModel.searchText = viewModel._searchText + ' (not found)';
+                    viewModel.searchText = query + ' (not found)';
                     viewModel._isSearchInProgress = false;
                     return;
                 }
