@@ -53,10 +53,7 @@ define([
         };
     }
 
-    var rotQuat = new Quaternion();
     var rotMatrix = new Matrix3();
-    var adjustToWorldQuat =
-       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.toRadians(90));
     var direction = new Cartesian3();
 
     function rotate(camera, alpha, beta, gamma, orient) {
