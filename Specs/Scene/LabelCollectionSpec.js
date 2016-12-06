@@ -779,24 +779,21 @@ defineSuite([
         expect(labels._spareBillboards.length).toEqual(0);
     });
 
-    it('should reuse background billboards that are not needed any more', function() {
+    it('should not reuse background billboards that are not needed any more', function() {
         var label = labels.add({
             text : 'abc',
             showBackground : true
         });
         scene.renderForSpecs();
         expect(labels._backgroundBillboardCollection.length).toEqual(1);
-        expect(labels._spareBackgroundBillboards.length).toEqual(0);
 
         label.showBackground = false;
         scene.renderForSpecs();
-        expect(labels._backgroundBillboardCollection.length).toEqual(1);
-        expect(labels._spareBackgroundBillboards.length).toEqual(1);
+        expect(labels._backgroundBillboardCollection.length).toEqual(0);
 
         label.showBackground = true;
         scene.renderForSpecs();
         expect(labels._backgroundBillboardCollection.length).toEqual(1);
-        expect(labels._spareBackgroundBillboards.length).toEqual(0);
     });
 
     describe('Label', function() {

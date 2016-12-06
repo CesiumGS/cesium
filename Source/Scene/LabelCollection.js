@@ -127,24 +127,19 @@ define([
 
         var showBackground = label._showBackground;
         var backgroundBillboard = label._backgroundBillboard;
-        var spareBackgroundBillboards = labelCollection._spareBackgroundBillboards;
+        var backgroundBillboardCollection = labelCollection._backgroundBillboardCollection;
         if (!showBackground) {
             if (defined(backgroundBillboard)) {
-                backgroundBillboard.show = false;
-                spareBackgroundBillboards.push(backgroundBillboard);
+                backgroundBillboardCollection.remove(backgroundBillboard);
                 label._backgroundBillboard = backgroundBillboard = undefined;
             }
         } else {
             if (!defined(backgroundBillboard)) {
-                if (spareBackgroundBillboards.length > 0) {
-                    backgroundBillboard = spareBackgroundBillboards.pop();
-                } else {
-                    backgroundBillboard = labelCollection._backgroundBillboardCollection.add({
-                        collection : labelCollection,
-                        image : whitePixelCanvasId,
-                        imageSubRegion : whitePixelBoundingRegion
-                    });
-                }
+                backgroundBillboard = backgroundBillboardCollection.add({
+                    collection : labelCollection,
+                    image : whitePixelCanvasId,
+                    imageSubRegion : whitePixelBoundingRegion
+                });
                 label._backgroundBillboard = backgroundBillboard;
             }
 
@@ -376,8 +371,7 @@ define([
             unbindGlyph(labelCollection, glyphs[i]);
         }
         if (defined(label._backgroundBillboard)) {
-            label._backgroundBillboard.show = false;
-            labelCollection._spareBackgroundBillboards.push(label._backgroundBillboard);
+            labelCollection._backgroundBillboardCollection.remove(label._backgroundBillboard);
             label._backgroundBillboard = undefined;
         }
         label._labelCollection = undefined;
@@ -453,7 +447,6 @@ define([
         this._billboardCollection.destroyTextureAtlas = false;
 
         this._spareBillboards = [];
-        this._spareBackgroundBillboards = [];
         this._glyphTextureCache = {};
         this._labels = [];
         this._labelsToUpdate = [];
