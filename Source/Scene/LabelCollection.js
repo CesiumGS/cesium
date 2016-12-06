@@ -127,16 +127,17 @@ define([
 
         var showBackground = label._showBackground;
         var backgroundBillboard = label._backgroundBillboard;
+        var spareBackgroundBillboards = labelCollection._spareBackgroundBillboards;
         if (!showBackground) {
             if (defined(backgroundBillboard)) {
                 backgroundBillboard.show = false;
-                labelCollection._spareBackgroundBillboards.push(backgroundBillboard);
+                spareBackgroundBillboards.push(backgroundBillboard);
                 label._backgroundBillboard = backgroundBillboard = undefined;
             }
         } else {
             if (!defined(backgroundBillboard)) {
-                if (labelCollection._spareBackgroundBillboards.length > 0) {
-                    backgroundBillboard = labelCollection._spareBackgroundBillboards.pop();
+                if (spareBackgroundBillboards.length > 0) {
+                    backgroundBillboard = spareBackgroundBillboards.pop();
                 } else {
                     backgroundBillboard = labelCollection._backgroundBillboardCollection.add({
                         collection : labelCollection,
@@ -237,9 +238,10 @@ define([
             // if we have a texture, configure the existing billboard, or obtain one
             if (glyphTextureInfo.index !== -1) {
                 var billboard = glyph.billboard;
+                var spareBillboards = labelCollection._spareBillboards;
                 if (!defined(billboard)) {
-                    if (labelCollection._spareBillboards.length > 0) {
-                        billboard = labelCollection._spareBillboards.pop();
+                    if (spareBillboards.length > 0) {
+                        billboard = spareBillboards.pop();
                     } else {
                         billboard = labelCollection._billboardCollection.add({
                             collection : labelCollection
