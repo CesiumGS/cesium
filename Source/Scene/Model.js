@@ -3505,7 +3505,8 @@ define([
 
     function updateColor(model, frameState) {
         var scene3DOnly = frameState.scene3DOnly;
-        if (model.color.alpha < 1.0) {
+        var alpha = model.color.alpha;
+        if ((alpha > 0.0) && (alpha < 1.0)) {
             var nodeCommands = model._nodeCommands;
             var length = nodeCommands.length;
             // Generate translucent commands when the blend color has an alpha less than 1.0
@@ -3857,8 +3858,9 @@ define([
             }
         }
 
+        var alpha = this.color.alpha;
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
-        var show = this.show && displayConditionPassed && (this.scale !== 0.0);
+        var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (alpha > 0.0);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
@@ -3949,7 +3951,7 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        var translucent = (this.color.alpha < 1.0);
+                        var translucent = (alpha < 1.0);
                         var command = translucent ? nc.translucentCommand : nc.command;
                         commandList.push(command);
                         boundingVolume = nc.command.boundingVolume;

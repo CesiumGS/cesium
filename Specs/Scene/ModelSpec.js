@@ -1915,13 +1915,19 @@ defineSuite([
             expect(sourceColor[1]).toEqual(0);
             expect(sourceColor[2]).toEqual(0);
 
-            // Check alpha.
+            // Check alpha
             model.colorBlendMode = ColorBlendMode.REPLACE;
             model.color = Color.fromAlpha(Color.LIME, 0.5);
             color = scene.renderForSpecs();
             expect(color[0]).toEqual(0);
             expect(color[1]).toBeLessThan(255);
             expect(color[1]).toBeGreaterThan(0);
+
+            // No commands are issued when the alpha is 0.0
+            model.color = Color.fromAlpha(Color.LIME, 0.0);
+            scene.renderForSpecs();
+            var commands = scene.frameState.commandList;
+            expect(commands.length).toBe(0);
         });
     });
 
