@@ -125,7 +125,17 @@ define([
         var glyphIndex;
         var textIndex;
 
-        var showBackground = label._showBackground;
+        // if we have more glyphs than needed, unbind the extras.
+        if (textLength < glyphsLength) {
+            for (glyphIndex = textLength; glyphIndex < glyphsLength; ++glyphIndex) {
+                unbindGlyph(labelCollection, glyphs[glyphIndex]);
+            }
+        }
+
+        // presize glyphs to match the new text length
+        glyphs.length = textLength;
+
+        var showBackground = label._showBackground && (glyphs.length > 0);
         var backgroundBillboard = label._backgroundBillboard;
         var backgroundBillboardCollection = labelCollection._backgroundBillboardCollection;
         if (!showBackground) {
@@ -158,16 +168,6 @@ define([
             backgroundBillboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
             backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
         }
-
-        // if we have more glyphs than needed, unbind the extras.
-        if (textLength < glyphsLength) {
-            for (glyphIndex = textLength; glyphIndex < glyphsLength; ++glyphIndex) {
-                unbindGlyph(labelCollection, glyphs[glyphIndex]);
-            }
-        }
-
-        // presize glyphs to match the new text length
-        glyphs.length = textLength;
 
         var glyphTextureCache = labelCollection._glyphTextureCache;
 
@@ -346,7 +346,7 @@ define([
             }
         }
 
-        if (defined(backgroundBillboard)) {
+        if (defined(backgroundBillboard) && (glyphLength > 0)) {
             glyphPixelOffset.x = (widthOffset - backgroundPadding.x * scale) * resolutionScale;
             if (verticalOrigin === VerticalOrigin.BASELINE) {
                 glyphPixelOffset.y = -backgroundPadding.y * scale - maxDescent * scale;
