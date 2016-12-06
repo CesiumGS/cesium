@@ -1270,6 +1270,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
         }
 
+        if (defined(this._geocoder)) {
+            var geocoderSuggestions = this._geocoder.searchSuggestionsContainer;
+            geocoderSuggestions.style.maxHeight = panelMaxHeight + 'px';
+        }
+
         if (defined(this._infoBox)) {
             this._infoBox.viewModel.maxHeight = panelMaxHeight;
         }

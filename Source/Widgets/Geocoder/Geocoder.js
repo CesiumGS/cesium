@@ -69,6 +69,7 @@ define([
 value: searchText,\
 valueUpdate: "afterkeydown",\
 disable: isSearchInProgress,\
+event: { keyup: handleKeyUp },\
 css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 }');
 
         this._onTextBoxFocus = function() {
@@ -92,9 +93,26 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
 
         container.appendChild(form);
 
+        var searchSuggestionsContainer = document.createElement('div');
+        searchSuggestionsContainer.className = 'search-results';
+        searchSuggestionsContainer.setAttribute('data-bind', 'visible: suggestionsVisible');
+
+        var suggestionsList = document.createElement('ul');
+        suggestionsList.setAttribute('data-bind', 'foreach: suggestions');
+        var suggestions = document.createElement('li');
+        suggestionsList.appendChild(suggestions);
+        suggestions.setAttribute('data-bind', 'text: $data.displayName, \
+click: $parent.activateSuggestion');//,\
+//css: { active: $data === $parent.selectedSuggestion }');
+
+        searchSuggestionsContainer.appendChild(suggestionsList);
+        container.appendChild(searchSuggestionsContainer);
+
         knockout.applyBindings(viewModel, form);
+        knockout.applyBindings(viewModel, searchSuggestionsContainer);
 
         this._container = container;
+        this._searchSuggestionsContainer = searchSuggestionsContainer;
         this._viewModel = viewModel;
         this._form = form;
 
@@ -137,6 +155,18 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
         container : {
             get : function() {
                 return this._container;
+            }
+        },
+
+        /**
+         * Gets the parent container.
+         * @memberof Geocoder.prototype
+         *
+         * @type {Element}
+         */
+        searchSuggestionsContainer : {
+            get : function() {
+                return this._searchSuggestionsContainer;
             }
         },
 

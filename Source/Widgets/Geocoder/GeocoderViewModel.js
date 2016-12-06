@@ -80,8 +80,20 @@ define([
         this._isSearchInProgress = false;
         this._geocodeInProgress = undefined;
         this._complete = new Event();
+        this._suggestions = knockout.observableArray();
+        this._selectedSuggestion = knockout.observable();
 
         var that = this;
+
+        /**
+         * Indicates whether search suggestions should be visible. True if there are at least 1 suggestion.
+         *
+         * @type {Boolean}
+         */
+        this.suggestionsVisible = knockout.pureComputed(function () {
+            return that._suggestions().length > 0;
+        });
+
         this._searchCommand = createCommand(function() {
             if (that.isSearchInProgress) {
                 cancelGeocode(that);
@@ -89,6 +101,80 @@ define([
                 geocode(that, options.customGeocoder);
             }
         });
+
+        this.handleArrowDown = function () {
+            if (that._suggestions().length === 0) {
+                return;
+            }
+            var numberOfSuggestions = that._suggestions().length;
+            var currentIndex = that._suggestions().indexOf(that._selectedSuggestion());
+            var next = (currentIndex + 1) % numberOfSuggestions;
+            that._selectedSuggestion(that._suggestions()[next]);
+        };
+        this.handleArrowUp = function () {
+            if (that._suggestions().length === 0) {
+                return;
+            }
+            var numberOfSuggestions = that._suggestions().length;
+            var next;
+            var currentIndex = that._suggestions().indexOf(that._selectedSuggestion());
+            if (currentIndex === -1 || currentIndex === 0) {
+               next = numberOfSuggestions - 1;
+            } else {
+                next = currentIndex - 1;
+            }
+            that._selectedSuggestion(that._suggestions()[next]);
+        };
+
+        this.updateSearchSuggestions = function () {
+            var query = that.searchText;
+
+            if (hasOnlyWhitespace(query)) {
+                that._suggestions.splice(0, that._suggestions().length);
+                return;
+            }
+
+            var customGeocoder = options.customGeocoder;
+            if (defined(customGeocoder)) {
+                customGeocoder.geocode(query, function (err, results) {
+                    if (defined(err)) {
+                        return;
+                    }
+                    that._suggestions.splice(0, that._suggestions().length);
+                    if (results.length > 0) {
+                        results.slice(0, 5).forEach(function (result) {
+                            that._suggestions.push(result);
+                        });
+                    }
+                });
+            }
+        };
+
+        this.isSelected = function(data) {
+            var index = this._suggestions().indexOf(data);
+            console.log(index);
+            return index === this._selectedSuggestion();
+        };
+
+        this.handleKeyUp = function(data, event) {
+            var key = event.which;
+            if (key === 38) {
+                that.handleArrowUp();
+                return;
+            } else if (key === 40) {
+                that.handleArrowDown();
+                return;
+            }
+            that.updateSearchSuggestions();
+            return true;
+        };
+
+        this.activateSuggestion = function (data) {
+            that._searchText = data.displayName;
+            var bbox = data.bbox;
+            that._suggestions.splice(0, that._suggestions().length);
+            updateCamera(that, Rectangle.fromDegrees(bbox.west, bbox.south, bbox.east, bbox.north));
+        };
 
         /**
          * Gets or sets a value indicating if this instance should always show its text input field.
@@ -221,6 +307,12 @@ define([
             get : function() {
                 return this._searchCommand;
             }
+        },
+
+        suggestions : {
+            get : function() {
+                return this._suggestions;
+            }
         }
     });
 
@@ -238,8 +330,7 @@ define([
     function geocode(viewModel, customGeocoder) {
         var query = viewModel.searchText;
 
-        if (/^\s*$/.test(query)) {
-            //whitespace string
+        if (hasOnlyWhitespace(query)) {
             return;
         }
 
@@ -354,6 +445,10 @@ define([
             viewModel._geocodeInProgress.cancel = true;
             viewModel._geocodeInProgress = undefined;
         }
+    }
+
+    function hasOnlyWhitespace(string) {
+        return /^\s*$/.test(string);
     }
 
     return GeocoderViewModel;
