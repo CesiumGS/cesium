@@ -119,7 +119,7 @@ function createModel(url, height, heading, pitch, roll) {
 
     model.readyPromise.then(function(model) {
         model.blendAmount = viewModel.blendAmount;
-        model.blendColor = Cesium.Color.fromHsl(viewModel.blendColor, 1.0, viewModel.blendAlpha);
+        model.blendColor = Cesium.Color.fromHsl(viewModel.blendColor, 1.0, 0.5, viewModel.blendAlpha);
         // Play and loop all animations at half-speed
         model.activeAnimations.addAll({
             speedup : 0.5,
