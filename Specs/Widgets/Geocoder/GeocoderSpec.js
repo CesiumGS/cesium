@@ -8,6 +8,14 @@ defineSuite([
     'use strict';
 
     var scene;
+    var customGeocoderOptions = {
+        geocode : function (input, callback) {
+            callback(undefined, ['a', 'b', 'c']);
+        },
+        getSuggestions : function (input) {
+            return ['a', 'b', 'c'];
+        }
+    };
     beforeEach(function() {
         scene = createScene();
     });
@@ -80,4 +88,32 @@ defineSuite([
             });
         }).toThrowDeveloperError();
     });
+
+    it('automatic suggestions can be navigated by arrow up/down keys', function() {
+        var container = document.createElement('div');
+        container.id = 'testContainer';
+        document.body.appendChild(container);
+        var geocoder = new Geocoder({
+            container : 'testContainer',
+            scene : scene,
+            customGeocoder : customGeocoderOptions
+        });
+        var viewModel = geocoder._viewModel;
+        viewModel._searchText = 'some_text';
+        viewModel.updateSearchSuggestions();
+
+        expect(viewModel._selectedSuggestion()).toEqual(undefined);
+        viewModel.handleArrowDown();
+        expect(viewModel._selectedSuggestion()).toEqual('a');
+        viewModel.handleArrowDown();
+        viewModel.handleArrowDown();
+        expect(viewModel._selectedSuggestion()).toEqual('c');
+        viewModel.handleArrowDown();
+        expect(viewModel._selectedSuggestion()).toEqual('a');
+        viewModel.handleArrowUp();
+        expect(viewModel._selectedSuggestion()).toEqual('c');
+        viewModel.handleArrowUp();
+        expect(viewModel._selectedSuggestion()).toEqual('b');
+    });
+
 }, 'WebGL');

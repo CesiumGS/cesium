@@ -208,7 +208,9 @@ css: { active: $data === $parent.selectedSuggestion() }');
         }
 
         knockout.cleanNode(this._form);
+        knockout.cleanNode(this._searchSuggestionsContainer);
         this._container.removeChild(this._form);
+        this._container.removeChild(this._searchSuggestionsContainer);
         this._textBox.removeEventListener('focus', this._onTextBoxFocus, false);
 
         return destroyObject(this);

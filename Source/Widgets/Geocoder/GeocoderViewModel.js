@@ -14,7 +14,8 @@ define([
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
-        '../createCommand'
+        '../createCommand',
+        '../getElement'
     ], function(
         BingMapsApi,
         Cartesian3,
@@ -30,7 +31,8 @@ define([
         SceneMode,
         knockout,
         when,
-        createCommand) {
+        createCommand,
+        getElement) {
     'use strict';
 
     /**
@@ -84,6 +86,7 @@ define([
             options.scene._frameState.creditDisplay.addDefaultCredit(errorCredit);
         }
 
+        this._viewContainer = options.container;
         this._scene = options.scene;
         this._flightDuration = options.flightDuration;
         this._searchText = '';
@@ -93,6 +96,7 @@ define([
         this._suggestions = knockout.observableArray();
         this._selectedSuggestion = knockout.observable();
         this._showSuggestions = knockout.observable(true);
+        this._updateCamera = updateCamera;
 
         var that = this;
 
@@ -113,7 +117,7 @@ define([
         });
 
         this._adjustSuggestionsScroll = function (focusedItemIndex) {
-            var container = document.getElementsByClassName('cesium-viewer-geocoderContainer')[0];
+            var container = getElement(this._viewContainer);
             var searchResults = container.getElementsByClassName('search-results')[0];
             var listItems = container.getElementsByTagName('li');
             var element = listItems[focusedItemIndex];
@@ -180,7 +184,7 @@ define([
                     }
                     that._suggestions.splice(0, that._suggestions().length);
                     if (results.length > 0) {
-                        results.slice(0, 5).forEach(function (result) {
+                        results.slice(0, Math.min(results.length, 5)).forEach(function (result) {
                             that._suggestions.push(result);
                         });
                     }

@@ -147,7 +147,7 @@ defineSuite([
         }).not.toThrowDeveloperError();
     });
 
-    fit('automatic suggestions can be retrieved', function() {
+    it('automatic suggestions can be retrieved', function() {
         var geocoder = new GeocoderViewModel({
             scene : scene,
             customGeocoder : customGeocoderOptions
@@ -157,26 +157,29 @@ defineSuite([
         expect(geocoder._suggestions().length).toEqual(3);
     });
 
-    fit('automatic suggestions can be navigated by arrow up/down keys', function() {
+    it('update search suggestions results in empty list if the query is empty', function() {
         var geocoder = new GeocoderViewModel({
             scene : scene,
             customGeocoder : customGeocoderOptions
         });
-        geocoder._searchText = 'some_text';
+        geocoder._searchText = '';
+        spyOn(geocoder, '_adjustSuggestionsScroll');
         geocoder.updateSearchSuggestions();
+        expect(geocoder._suggestions().length).toEqual(0);
+    });
 
-        expect(geocoder._selectedSuggestion()).toEqual(undefined);
-        geocoder.handleArrowDown();
-        expect(geocoder._selectedSuggestion()).toEqual('a');
-        geocoder.handleArrowDown();
-        geocoder.handleArrowDown();
-        expect(geocoder._selectedSuggestion()).toEqual('c');
-        geocoder.handleArrowDown();
-        expect(geocoder._selectedSuggestion()).toEqual('a');
-        geocoder.handleArrowUp();
-        expect(geocoder._selectedSuggestion()).toEqual('c');
-        geocoder.handleArrowUp();
-        expect(geocoder._selectedSuggestion()).toEqual('b');
+    it('can activate selected search suggestion', function () {
+        var geocoder = new GeocoderViewModel({
+            scene : scene,
+            customGeocoder : customGeocoderOptions
+        });
+        spyOn(geocoder, '_updateCamera');
+        spyOn(geocoder, '_adjustSuggestionsScroll');
+
+        var suggestion = {displayName: 'a', bbox: {west: 0.0, east: 0.1, north: 0.1, south: -0.1}};
+        geocoder._selectedSuggestion(suggestion);
+        geocoder.activateSuggestion(suggestion);
+        expect(geocoder._searchText).toEqual('a');
     });
 
 }, 'WebGL');
