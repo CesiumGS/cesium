@@ -5,6 +5,7 @@ define([
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
+        '../../Core/deprecationWarning',
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/loadJsonp',
@@ -20,6 +21,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         loadJsonp,
@@ -63,13 +65,21 @@ define([
         }
         //>>includeEnd('debug');
 
+        var errorCredit;
         this._url = defaultValue(options.url, 'https://dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
         }
 
         this._key = BingMapsApi.getKey(options.key);
-        var errorCredit = BingMapsApi.getErrorCredit(options.key);
+        this._defaultGeocoderOptions = {
+            url: this._url,
+            key: this._key
+        };
+
+        if (defined(options.key)) {
+            errorCredit = BingMapsApi.getErrorCredit(options.key);
+        }
         if (defined(errorCredit)) {
             options.scene._frameState.creditDisplay.addDefaultCredit(errorCredit);
         }
@@ -84,15 +94,9 @@ define([
         this._selectedSuggestion = knockout.observable();
         this._showSuggestions = knockout.observable(true);
 
-
         var that = this;
 
-        /**
-         * Indicates whether search suggestions should be visible. True if there are at least 1 suggestion.
-         *
-         * @type {Boolean}
-         */
-        this.suggestionsVisible = knockout.pureComputed(function () {
+        this._suggestionsVisible = knockout.pureComputed(function () {
             return that._suggestions().length > 0 && that._showSuggestions();
         });
 
@@ -302,29 +306,29 @@ define([
 
     defineProperties(GeocoderViewModel.prototype, {
         /**
-         * Gets the currently selected geocoder suggestion
-         * @memberof GeocoderViewModel.prototype
-         */
-        /**
          * Gets the Bing maps url.
+         * @deprecated
          * @memberof GeocoderViewModel.prototype
          *
          * @type {String}
          */
         url : {
             get : function() {
+                deprecationWarning('url is deprecated', 'The url property was deprecated in Cesium 1.29 and will be removed in version 1.30.');
                 return this._url;
             }
         },
 
         /**
          * Gets the Bing maps key.
+         * @deprecated
          * @memberof GeocoderViewModel.prototype
          *
          * @type {String}
          */
         key : {
             get : function() {
+                deprecationWarning('key is deprecated', 'The key property was deprecated in Cesium 1.29 and will be removed in version 1.30.');
                 return this._key;
             }
         },
@@ -365,15 +369,38 @@ define([
             }
         },
 
+        /**
+         * Gets the currently selected geocoder search suggestion
+         * @memberof GeocoderViewModel.prototype
+         *
+         * @type {Object}
+         */
         selectedSuggestion : {
             get : function() {
                 return this._selectedSuggestion;
             }
         },
 
+        /**
+         * Gets the list of geocoder search suggestions
+         * @memberof GeocoderViewModel.prototype
+         *
+         * @type {Object[]}
+         */
         suggestions : {
             get : function() {
                 return this._suggestions;
+            }
+        },
+
+        /**
+         * Indicates whether search suggestions should be visible. True if there are at least 1 suggestion.
+         *
+         * @type {Boolean}
+         */
+        suggestionsVisible : {
+            get : function() {
+                return this._suggestionsVisible;
             }
         }
     });
@@ -439,6 +466,7 @@ define([
     }
 
     function defaultGeocode(viewModel, query) {
+        var defaultOptions = viewModel._defaultGeocoderOptions;
 
         // If the user entered (longitude, latitude, [height]) in degrees/meters,
         // fly without calling the geocoder.
@@ -455,11 +483,10 @@ define([
         }
         viewModel._isSearchInProgress = true;
 
-        var promise = loadJsonp(viewModel._url + 'REST/v1/Locations', {
+        var promise = loadJsonp(defaultOptions.url + 'REST/v1/Locations', {
             parameters : {
                 query : query,
-                key : viewModel._key
-
+                key : defaultOptions.key
             },
             callbackParameterName : 'jsonp'
         });
