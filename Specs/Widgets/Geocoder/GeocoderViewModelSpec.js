@@ -14,6 +14,15 @@ defineSuite([
     'use strict';
 
     var scene;
+    var customGeocoderOptions = {
+        geocode : function (input, callback) {
+            callback(undefined, ['a', 'b', 'c']);
+        },
+        getSuggestions : function (input) {
+            return ['a', 'b', 'c'];
+        }
+    };
+
     beforeAll(function() {
         scene = createScene();
     });
@@ -133,14 +142,7 @@ defineSuite([
         expect(function() {
             return new GeocoderViewModel({
                 scene : scene,
-                customGeocoder : {
-                    geocode : function (input) {
-                        return 'fake';
-                    },
-                    getSuggestions : function (input) {
-                        return [];
-                    }
-                }
+                customGeocoder : customGeocoderOptions
             });
         }).not.toThrowDeveloperError();
     });
@@ -148,14 +150,7 @@ defineSuite([
     fit('automatic suggestions can be retrieved', function() {
         var geocoder = new GeocoderViewModel({
             scene : scene,
-            customGeocoder : {
-                geocode : function (input, callback) {
-                    callback(undefined, ['a', 'b', 'c']);
-                },
-                getSuggestions : function (input) {
-                    return ['a', 'b', 'c'];
-                }
-            }
+            customGeocoder : customGeocoderOptions
         });
         geocoder._searchText = 'some_text';
         geocoder.updateSearchSuggestions();
@@ -165,14 +160,7 @@ defineSuite([
     fit('automatic suggestions can be navigated by arrow up/down keys', function() {
         var geocoder = new GeocoderViewModel({
             scene : scene,
-            customGeocoder : {
-                geocode : function (input, callback) {
-                    callback(undefined, ['a', 'b', 'c']);
-                },
-                getSuggestions : function (input) {
-                    return ['a', 'b', 'c'];
-                }
-            }
+            customGeocoder : customGeocoderOptions
         });
         geocoder._searchText = 'some_text';
         geocoder.updateSearchSuggestions();
