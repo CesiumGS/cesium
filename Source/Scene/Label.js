@@ -124,6 +124,7 @@ define([
          * of removing it and re-adding it to the collection.
          * @memberof Label.prototype
          * @type {Boolean}
+         * @default true
          */
         show : {
             get : function() {
@@ -197,6 +198,7 @@ define([
          * Gets or sets the height reference of this billboard.
          * @memberof Label.prototype
          * @type {HeightReference}
+         * @default HeightReference.NONE
          */
         heightReference : {
             get : function() {
@@ -258,6 +260,7 @@ define([
          * Gets or sets the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
          * @memberof Label.prototype
          * @type {String}
+         * @default '30px sans-serif'
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles|HTML canvas 2D context text styles}
          */
         font : {
@@ -282,6 +285,7 @@ define([
          * Gets or sets the fill color of this label.
          * @memberof Label.prototype
          * @type {Color}
+         * @default Color.WHITE
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
          */
         fillColor : {
@@ -307,6 +311,7 @@ define([
          * Gets or sets the outline color of this label.
          * @memberof Label.prototype
          * @type {Color}
+         * @default Color.BLACK
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
          */
         outlineColor : {
@@ -332,6 +337,7 @@ define([
          * Gets or sets the outline width of this label.
          * @memberof Label.prototype
          * @type {Number}
+         * @default 1.0
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
          */
         outlineWidth : {
@@ -355,6 +361,7 @@ define([
         /**
          * Determines if a background behind this label will be shown.
          * @memberof Label.prototype
+         * @default false
          * @type {Boolean}
          */
         showBackground : {
@@ -379,6 +386,7 @@ define([
          * Gets or sets the background color of this label.
          * @memberof Label.prototype
          * @type {Color}
+         * @default new Color(0.165, 0.165, 0.165, 0.8)
          */
         backgroundColor : {
             get : function() {
@@ -408,6 +416,7 @@ define([
          * controls horizontal padding, and the <code>y</code> value controls vertical padding.
          * @memberof Label.prototype
          * @type {Cartesian2}
+         * @default new Cartesian2(7, 5)
          */
         backgroundPadding : {
             get : function() {
@@ -432,6 +441,7 @@ define([
          * Gets or sets the style of this label.
          * @memberof Label.prototype
          * @type {LabelStyle}
+         * @default LabelStyle.FILL
          */
         style : {
             get : function() {
@@ -466,6 +476,7 @@ define([
          * </div>
          * @memberof Label.prototype
          * @type {Cartesian2}
+         * @default Cartesian2.ZERO
          */
         pixelOffset : {
             get : function() {
@@ -623,6 +634,7 @@ define([
          * </div>
          * @memberof Label.prototype
          * @type {Cartesian3}
+         * @default Cartesian3.ZERO
          */
         eyeOffset : {
             get : function() {
@@ -663,6 +675,7 @@ define([
          * </div>
          * @memberof Label.prototype
          * @type {HorizontalOrigin}
+         * @default HorizontalOrigin.LEFT
          * @example
          * // Use a top, right origin
          * l.horizontalOrigin = Cesium.HorizontalOrigin.RIGHT;
@@ -695,6 +708,7 @@ define([
          * </div>
          * @memberof Label.prototype
          * @type {VerticalOrigin}
+         * @default VerticalOrigin.BASELINE
          * @example
          * // Use a top, right origin
          * l.horizontalOrigin = Cesium.HorizontalOrigin.RIGHT;
@@ -747,6 +761,7 @@ define([
          * </div>
          * @memberof Label.prototype
          * @type {Number}
+         * @default 1.0
          */
         scale : {
             get : function() {
@@ -879,6 +894,7 @@ define([
          * Determines whether or not this label will be shown or hidden because it was clustered.
          * @memberof Label.prototype
          * @type {Boolean}
+         * @default true
          * @private
          */
         clusterShow : {
