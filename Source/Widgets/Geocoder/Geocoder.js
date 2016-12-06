@@ -69,7 +69,7 @@ define([
 value: searchText,\
 valueUpdate: "afterkeydown",\
 disable: isSearchInProgress,\
-event: { keyup: handleKeyUp },\
+event: { keyup: handleKeyUp, keydown: handleKeyDown },\
 css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 }');
 
         this._onTextBoxFocus = function() {
@@ -102,8 +102,9 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
         var suggestions = document.createElement('li');
         suggestionsList.appendChild(suggestions);
         suggestions.setAttribute('data-bind', 'text: $data.displayName, \
-click: $parent.activateSuggestion');//,\
-//css: { active: $data === $parent.selectedSuggestion }');
+click: $parent.activateSuggestion, \
+event: { mouseover: $parent.handleMouseover }, \
+css: { active: $data === $parent.selectedSuggestion() }');
 
         searchSuggestionsContainer.appendChild(suggestionsList);
         container.appendChild(searchSuggestionsContainer);

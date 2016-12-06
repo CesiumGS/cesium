@@ -95,6 +95,10 @@ define([
         });
 
         this._searchCommand = createCommand(function() {
+            if (defined(that._selectedSuggestion())) {
+                that.activateSuggestion(that._selectedSuggestion());
+                return false;
+            }
             if (that.isSearchInProgress) {
                 cancelGeocode(that);
             } else {
@@ -156,14 +160,27 @@ define([
             return index === this._selectedSuggestion();
         };
 
-        this.handleKeyUp = function(data, event) {
+        this.handleKeyDown = function (data, event) {
+            var key = event.which;
+            if (key === 38) {
+                event.preventDefault();
+            } else if (key === 40) {
+                event.preventDefault();
+            }
+            return true;
+        };
+
+        this.handleKeyUp = function (data, event) {
             var key = event.which;
             if (key === 38) {
                 that.handleArrowUp();
-                return;
+                return true;
             } else if (key === 40) {
                 that.handleArrowDown();
-                return;
+                return true;
+            } else if (key === 13) {
+                that.activateSuggestion(that._selectedSuggestion());
+                return false;
             }
             that.updateSearchSuggestions();
             return true;
@@ -174,6 +191,12 @@ define([
             var bbox = data.bbox;
             that._suggestions.splice(0, that._suggestions().length);
             updateCamera(that, Rectangle.fromDegrees(bbox.west, bbox.south, bbox.east, bbox.north));
+        };
+
+        this.handleMouseover = function (data, event) {
+            if (data !== that._selectedSuggestion()) {
+                that._selectedSuggestion(data);
+            }
         };
 
         /**
@@ -250,6 +273,10 @@ define([
 
     defineProperties(GeocoderViewModel.prototype, {
         /**
+         * Gets the currently selected geocoder suggestion
+         * @memberof GeocoderViewModel.prototype
+         */
+        /**
          * Gets the Bing maps url.
          * @memberof GeocoderViewModel.prototype
          *
@@ -306,6 +333,12 @@ define([
         search : {
             get : function() {
                 return this._searchCommand;
+            }
+        },
+
+        selectedSuggestion : {
+            get : function() {
+                return this._selectedSuggestion;
             }
         },
 

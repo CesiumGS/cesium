@@ -128,4 +128,67 @@ defineSuite([
             return spyListener.calls.count() === 2;
         });
     });
+
+    it('can be created with a custom geocoder', function() {
+        expect(function() {
+            return new GeocoderViewModel({
+                scene : scene,
+                customGeocoder : {
+                    geocode : function (input) {
+                        return 'fake';
+                    },
+                    getSuggestions : function (input) {
+                        return [];
+                    }
+                }
+            });
+        }).not.toThrowDeveloperError();
+    });
+
+    fit('automatic suggestions can be retrieved', function() {
+        var geocoder = new GeocoderViewModel({
+            scene : scene,
+            customGeocoder : {
+                geocode : function (input, callback) {
+                    callback(undefined, ['a', 'b', 'c']);
+                },
+                getSuggestions : function (input) {
+                    return ['a', 'b', 'c'];
+                }
+            }
+        });
+        geocoder._searchText = 'some_text';
+        geocoder.updateSearchSuggestions();
+        expect(geocoder._suggestions().length).toEqual(3);
+    });
+
+    fit('automatic suggestions can be navigated by arrow up/down keys', function() {
+        var geocoder = new GeocoderViewModel({
+            scene : scene,
+            customGeocoder : {
+                geocode : function (input, callback) {
+                    callback(undefined, ['a', 'b', 'c']);
+                },
+                getSuggestions : function (input) {
+                    return ['a', 'b', 'c'];
+                }
+            }
+        });
+        geocoder._searchText = 'some_text';
+        geocoder.updateSearchSuggestions();
+
+        expect(geocoder._selectedSuggestion()).toEqual(undefined);
+        geocoder.handleArrowDown();
+        expect(geocoder._selectedSuggestion()).toEqual('a');
+        geocoder.handleArrowDown();
+        geocoder.handleArrowDown();
+        expect(geocoder._selectedSuggestion()).toEqual('c');
+        geocoder.handleArrowDown();
+        expect(geocoder._selectedSuggestion()).toEqual('a');
+        geocoder.handleArrowUp();
+        expect(geocoder._selectedSuggestion()).toEqual('c');
+        geocoder.handleArrowUp();
+        expect(geocoder._selectedSuggestion()).toEqual('b');
+    });
+
 }, 'WebGL');

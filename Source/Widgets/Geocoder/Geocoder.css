@@ -48,7 +48,7 @@
 .cesium-viewer-geocoderContainer .search-results ul {
     list-style-type: none;
     margin: 0;
-    padding: 4px 0px;
+    padding: 0;
 }
 
 .cesium-viewer-geocoderContainer .search-results ul li {
@@ -56,8 +56,11 @@
     padding: 3px 10px;
 }
 .cesium-viewer-geocoderContainer .search-results ul li:hover {
-    text-decoration: underline;
     cursor: pointer;
+}
+
+.cesium-viewer-geocoderContainer .search-results ul li.active {
+    background: #48b;
 }
 
 .cesium-geocoder-searchButton {
