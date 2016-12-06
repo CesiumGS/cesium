@@ -108,6 +108,25 @@ define([
             }
         });
 
+        this._adjustSuggestionsScroll = function (focusedItemIndex) {
+            var container = document.getElementsByClassName('cesium-viewer-geocoderContainer')[0];
+            var searchResults = container.getElementsByClassName('search-results')[0];
+            var listItems = container.getElementsByTagName('li');
+            var element = listItems[focusedItemIndex];
+
+            if (focusedItemIndex === 0) {
+                searchResults.scrollTop = 0;
+                return;
+            }
+
+            var offsetTop = element.offsetTop;
+            if (offsetTop + element.clientHeight > searchResults.clientHeight) {
+                searchResults.scrollTop = offsetTop + element.clientHeight;
+            } else if (offsetTop < searchResults.scrollTop) {
+                searchResults.scrollTop = offsetTop;
+            }
+        };
+
         this.handleArrowDown = function () {
             if (that._suggestions().length === 0) {
                 return;
@@ -116,7 +135,10 @@ define([
             var currentIndex = that._suggestions().indexOf(that._selectedSuggestion());
             var next = (currentIndex + 1) % numberOfSuggestions;
             that._selectedSuggestion(that._suggestions()[next]);
+
+            this._adjustSuggestionsScroll(next);
         };
+
         this.handleArrowUp = function () {
             if (that._suggestions().length === 0) {
                 return;
@@ -130,6 +152,8 @@ define([
                 next = currentIndex - 1;
             }
             that._selectedSuggestion(that._suggestions()[next]);
+
+            this._adjustSuggestionsScroll(next);
         };
 
         this.deselectSuggestion = function () {
