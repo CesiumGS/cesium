@@ -198,15 +198,11 @@ define([
             var key = event.which;
             if (key === 38) {
                 that.handleArrowUp();
-                return true;
             } else if (key === 40) {
                 that.handleArrowDown();
-                return true;
             } else if (key === 13) {
                 that.activateSuggestion(that._selectedSuggestion());
-                return false;
             }
-            that.updateSearchSuggestions();
             return true;
         };
 
@@ -274,8 +270,8 @@ define([
                     throw new DeveloperError('value must be a valid string.');
                 }
                 //>>includeEnd('debug');
-
                 this._searchText = value;
+                this.updateSearchSuggestions();
             }
         });
 

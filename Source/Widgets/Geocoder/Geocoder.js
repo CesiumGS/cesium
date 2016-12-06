@@ -66,8 +66,7 @@ define([
         textBox.className = 'cesium-geocoder-input';
         textBox.setAttribute('placeholder', 'Enter an address or landmark...');
         textBox.setAttribute('data-bind', '\
-value: searchText,\
-valueUpdate: "afterkeydown",\
+textInput: searchText,\
 disable: isSearchInProgress,\
 event: { keyup: handleKeyUp, keydown: handleKeyDown, mouseover: deselectSuggestion },\
 css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 }');
