@@ -115,12 +115,23 @@ addStyle('Trigonometric Functions', {
 });
 
 addStyle('Arc Trigonometric Functions', {
-    color : "color() * acos(degrees(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature})"
+    color : "color() * acos(degrees(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature}) + color() * atan2(${POSITION}[0],${temperature})",
+    pointSize : "5"
 });
 
 addStyle('Sqrt', {
     color : "color() * sqrt(${temperature})",
-    pointSize : "10"
+    pointSize : "5"
+});
+
+addStyle('Pow', {
+    color : "color() * pow(${temperature}, 3)",
+    pointSize : "5"
+});
+
+addStyle('Min and Max', {
+    color : "rgb(min(${POSITION}[0], 0.75) * 255, max(${POSITION}[2], 0.25) * 255, 255)",
+    pointSize : "5"
 });
 
 addStyle('Secondary Color', {
