@@ -53,6 +53,9 @@ define([
      * @param {Property} [options.highlightColor=new Color())] The highlight color for the outline.
      * @param {Property} [options.highlightSize=2] The size of the highlight in pixels
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
+     * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} that blends with the model's rendered color.
+     * @param {Property} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
+     * @param {Property} [options.colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -83,6 +86,12 @@ define([
         this._highlightSize = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
+        this._color = undefined;
+        this._colorSubscription = undefined;
+        this._colorBlendMode = undefined;
+        this._colorBlendModeSubscription = undefined;
+        this._colorBlendAmount = undefined;
+        this._colorBlendAmountSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -216,7 +225,33 @@ define([
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the Property specifying the {@link Color} that blends with the model's rendered color.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default Color.WHITE
+         */
+        color : createPropertyDescriptor('color'),
+
+        /**
+         * Gets or sets the enum Property specifying how the color blends with the model.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default ColorBlendMode.HIGHLIGHT
+         */
+        colorBlendMode : createPropertyDescriptor('colorBlendMode'),
+
+        /**
+         * A numeric Property specifying the color strength when the <code>colorBlendMode</code> is MIX.
+         * A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with
+         * any value in-between resulting in a mix of the two.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default 0.5
+         */
+        colorBlendAmount : createPropertyDescriptor('colorBlendAmount')
     });
 
     /**
@@ -243,6 +278,9 @@ define([
         result.highlightColor = this.highlightColor;
         result.highlightSize = this.highlightSize;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.color = this.color;
+        result.colorBlendMode = this.colorBlendMode;
+        result.colorBlendAmount = this.colorBlendAmount;
 
         return result;
     };
@@ -273,6 +311,9 @@ define([
         this.highlightColor = defaultValue(this.highlightColor, source.highlightColor);
         this.highlightSize = defaultValue(this.highlightSize, source.highlightSize);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.color = defaultValue(this.color, source.color);
+        this.colorBlendMode = defaultValue(this.colorBlendMode, source.colorBlendMode);
+        this.colorBlendAmount = defaultValue(this.colorBlendAmount, source.colorBlendAmount);
 
         var sourceNodeTransformations = source.nodeTransformations;
         if (defined(sourceNodeTransformations)) {

@@ -17,6 +17,7 @@ define([
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
+        './oneTimeWarning',
         './PolygonPipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
@@ -40,6 +41,7 @@ define([
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
+        oneTimeWarning,
         PolygonPipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
@@ -163,7 +165,13 @@ define([
         }
 
         if (vertexFormat.tangent || vertexFormat.binormal) {
-            geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+            try {
+                geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+            } catch (e) {
+                oneTimeWarning('polyline-volume-tangent-binormal', 'Unable to compute tangents and binormals for polyline volume geometry');
+                //TODO https://github.com/AnalyticalGraphicsInc/cesium/issues/3609
+            }
+
             if (!vertexFormat.tangent) {
                 geometry.attributes.tangent = undefined;
             }

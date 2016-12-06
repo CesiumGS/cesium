@@ -4,11 +4,10 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
-        'Core/defined',
-        'Core/DeveloperError',
         'Core/EarthOrientationParameters',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
+        'Core/HeadingPitchRoll',
         'Core/Iau2006XysData',
         'Core/JulianDate',
         'Core/loadJson',
@@ -16,19 +15,16 @@ defineSuite([
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/Quaternion',
-        'Core/TimeConstants',
-        'Core/TimeInterval',
-        'ThirdParty/when'
+        'Core/TimeInterval'
     ], function(
         Transforms,
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        defined,
-        DeveloperError,
         EarthOrientationParameters,
         Ellipsoid,
         GeographicProjection,
+        HeadingPitchRoll,
         Iau2006XysData,
         JulianDate,
         loadJson,
@@ -36,13 +32,13 @@ defineSuite([
         Matrix3,
         Matrix4,
         Quaternion,
-        TimeConstants,
-        TimeInterval,
-        when) {
+        TimeInterval) {
     'use strict';
 
     var negativeX = new Cartesian4(-1, 0, 0, 0);
+    var negativeY = new Cartesian4(0, -1, 0, 0);
     var negativeZ = new Cartesian4(0, 0, -1, 0);
+
     it('eastNorthUpToFixedFrame works without a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var expectedTranslation = new Cartesian4(origin.x, origin.y, origin.z, 1.0);
@@ -187,11 +183,60 @@ defineSuite([
         expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
     });
 
+    it('northWestUpToFixedFrame works without a result parameter', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var expectedTranslation = new Cartesian4(origin.x, origin.y, origin.z, 1.0);
+
+        var returnedResult = Transforms.northWestUpToFixedFrame(origin, Ellipsoid.UNIT_SPHERE);
+        expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(Cartesian4.UNIT_Z); // north
+        expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(negativeY); // west
+        expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(Cartesian4.UNIT_X); // up
+        expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
+    });
+
+    it('northWestUpToFixedFrame works with a result parameter', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var expectedTranslation = new Cartesian4(origin.x, origin.y, origin.z, 1.0);
+        var result = new Matrix4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+
+        var returnedResult = Transforms.northWestUpToFixedFrame(origin, Ellipsoid.UNIT_SPHERE, result);
+        expect(result).toBe(returnedResult);
+        expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(Cartesian4.UNIT_Z); // north
+        expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(negativeY); // west
+        expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(Cartesian4.UNIT_X); // up
+        expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
+    });
+
+    it('northWestUpToFixedFrame works at the north pole', function() {
+        var northPole = new Cartesian3(0.0, 0.0, 1.0);
+        var expectedTranslation = new Cartesian4(northPole.x, northPole.y, northPole.z, 1.0);
+
+        var result = new Matrix4();
+        var returnedResult = Transforms.northWestUpToFixedFrame(northPole, Ellipsoid.UNIT_SPHERE, result);
+        expect(returnedResult).toBe(result);
+        expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(negativeX); // north
+        expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(negativeY); // west
+        expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(Cartesian4.UNIT_Z); // up
+        expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
+    });
+
+    it('northWestUpToFixedFrame works at the south pole', function() {
+        var southPole = new Cartesian3(0.0, 0.0, -1.0);
+        var expectedTranslation = new Cartesian4(southPole.x, southPole.y, southPole.z, 1.0);
+
+        var returnedResult = Transforms.northWestUpToFixedFrame(southPole, Ellipsoid.UNIT_SPHERE);
+        expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(Cartesian4.UNIT_X); // north
+        expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(negativeY); // west
+        expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(negativeZ); // up
+        expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
+    });
+
     it('headingPitchRollToFixedFrame works without a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
         var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
@@ -202,7 +247,35 @@ defineSuite([
         Cartesian3.fromElements(expectedY.z, expectedY.x, expectedY.y, expectedY);
         Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
-        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
+        var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
+        var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
+        var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
+        var actualTranslation = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 3, new Cartesian4()));
+
+        expect(actualX).toEqual(expectedX);
+        expect(actualY).toEqual(expectedY);
+        expect(actualZ).toEqual(expectedZ);
+        expect(actualTranslation).toEqual(origin);
+    });
+
+    it('headingPitchRollToFixedFrame works with a HeadingPitchRoll object and without a result parameter', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var heading = CesiumMath.toRadians(20.0);
+        var pitch = CesiumMath.toRadians(30.0);
+        var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
+
+        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
+        var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
+        var expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
+        var expectedZ = Matrix3.getColumn(expectedRotation, 2, new Cartesian3());
+
+        Cartesian3.fromElements(expectedX.z, expectedX.x, expectedX.y, expectedX);
+        Cartesian3.fromElements(expectedY.z, expectedY.x, expectedY.y, expectedY);
+        Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
+
+        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
         var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
         var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
@@ -219,6 +292,7 @@ defineSuite([
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
         var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
@@ -230,7 +304,7 @@ defineSuite([
         Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
         var result = new Matrix4();
-        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
+        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, result);
         var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
         var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
         var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
@@ -243,50 +317,24 @@ defineSuite([
         expect(actualTranslation).toEqual(origin);
     });
 
-    it('aircraftHeadingPitchRollToFixedFrame works without a result parameter', function() {
+    it('headingPitchRollToFixedFrame works with a HeadingPitchRoll object and a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
         var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
         var expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
         var expectedZ = Matrix3.getColumn(expectedRotation, 2, new Cartesian3());
 
-        Cartesian3.fromElements(-expectedX.z, expectedX.y, expectedX.x, expectedX);
-        Cartesian3.fromElements(-expectedY.z, expectedY.y, expectedY.x, expectedY);
-        Cartesian3.fromElements(-expectedZ.z, expectedZ.y, expectedZ.x, expectedZ);
-
-        var returnedResult = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
-        var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
-        var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
-        var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
-        var actualTranslation = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 3, new Cartesian4()));
-
-        expect(actualX).toEqual(expectedX);
-        expect(actualY).toEqual(expectedY);
-        expect(actualZ).toEqual(expectedZ);
-        expect(actualTranslation).toEqual(origin);
-    });
-
-    it('aircraftHeadingPitchRollToFixedFrame works with a result parameter', function() {
-        var origin = new Cartesian3(1.0, 0.0, 0.0);
-        var heading = CesiumMath.toRadians(20.0);
-        var pitch = CesiumMath.toRadians(30.0);
-        var roll = CesiumMath.toRadians(40.0);
-
-        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
-        var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
-        var expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
-        var expectedZ = Matrix3.getColumn(expectedRotation, 2, new Cartesian3());
-
-        Cartesian3.fromElements(-expectedX.z, expectedX.y, expectedX.x, expectedX);
-        Cartesian3.fromElements(-expectedY.z, expectedY.y, expectedY.x, expectedY);
-        Cartesian3.fromElements(-expectedZ.z, expectedZ.y, expectedZ.x, expectedZ);
+        Cartesian3.fromElements(expectedX.z, expectedX.x, expectedX.y, expectedX);
+        Cartesian3.fromElements(expectedY.z, expectedY.x, expectedY.y, expectedY);
+        Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
         var result = new Matrix4();
-        var returnedResult = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
+        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, result);
         var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
         var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
         var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
@@ -298,17 +346,33 @@ defineSuite([
         expect(actualZ).toEqual(expectedZ);
         expect(actualTranslation).toEqual(origin);
     });
-    
+
     it('headingPitchRollQuaternion works without a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
         var quaternion = Transforms.headingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var actual = Matrix3.fromQuaternion(quaternion);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
+    });
+
+    it('headingPitchRollQuaternion works with a HeadingPitchRoll object and without a result parameter', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var heading = CesiumMath.toRadians(20.0);
+        var pitch = CesiumMath.toRadians(30.0);
+        var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
+
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
+        var expected = Matrix4.getRotation(transform, new Matrix3());
+
+        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var actual = Matrix3.fromQuaternion(quaternion);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
     });
@@ -318,8 +382,9 @@ defineSuite([
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
         var result = new Quaternion();
@@ -329,31 +394,18 @@ defineSuite([
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
     });
 
-    it('aircraftHeadingPitchRollQuaternion works without a result parameter', function() {
+    it('headingPitchRollQuaternion works with a HeadingPitchRoll object and a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var transform = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
-        var expected = Matrix4.getRotation(transform, new Matrix3());
-
-        var quaternion = Transforms.aircraftHeadingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
-        var actual = Matrix3.fromQuaternion(quaternion);
-        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
-    });
-
-    it('aircraftHeadingPitchRollQuaternion works with a result parameter', function() {
-        var origin = new Cartesian3(1.0, 0.0, 0.0);
-        var heading = CesiumMath.toRadians(20.0);
-        var pitch = CesiumMath.toRadians(30.0);
-        var roll = CesiumMath.toRadians(40.0);
-
-        var transform = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
         var result = new Quaternion();
-        var quaternion = Transforms.aircraftHeadingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
+        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, result);
         var actual = Matrix3.fromQuaternion(quaternion);
         expect(quaternion).toBe(result);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
@@ -426,8 +478,8 @@ defineSuite([
         function preloadTransformationData(start, stop, eopDescription) {
             Transforms.earthOrientationParameters = new EarthOrientationParameters(eopDescription);
             var preloadInterval = new TimeInterval({
-                start : start,
-                stop : stop
+                start: start,
+                stop: stop
             });
 
             return Transforms.preloadIcrfFixed(preloadInterval);
@@ -453,9 +505,9 @@ defineSuite([
                 var stop = JulianDate.fromIso8601(componentsData[componentsData.length - 1].date);
 
                 return preloadTransformationData(start, stop, {
-                    url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                    url: 'Data/EarthOrientationParameters/EOP-2011-July.json'
                 }).then(function() {
-                    for ( var i = 0; i < componentsData.length; ++i) {
+                    for (var i = 0; i < componentsData.length; ++i) {
                         var time = JulianDate.fromIso8601(componentsData[i].date);
                         var resultT = new Matrix3();
                         var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -472,7 +524,7 @@ defineSuite([
                         var expectedMtx = Matrix3.fromQuaternion(Quaternion.conjugate(componentsData[i].icrfToFixedQuaternion, new Quaternion()));
                         var testInverse = Matrix3.multiply(Matrix3.transpose(t, new Matrix3()), expectedMtx, new Matrix3());
                         var testDiff = new Matrix3();
-                        for ( var k = 0; k < 9; k++) {
+                        for (var k = 0; k < 9; k++) {
                             testDiff[k] = t[k] - expectedMtx[k];
                         }
                         expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON14);
@@ -487,7 +539,7 @@ defineSuite([
             var time = new JulianDate(2455745, 43200);
 
             return preloadTransformationData(time, time, {
-                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                url: 'Data/EarthOrientationParameters/EOP-2011-July.json'
             }).then(function() {
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -514,7 +566,7 @@ defineSuite([
 
                 var testInverse = Matrix3.multiply(Matrix3.transpose(t, new Matrix3()), expectedMtx, new Matrix3());
                 var testDiff = new Matrix3();
-                for ( var i = 0; i < 9; i++) {
+                for (var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
                 }
                 expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON14);
@@ -527,7 +579,7 @@ defineSuite([
             var time = new JulianDate(2455745, 86395);
 
             return preloadTransformationData(time, time, {
-                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                url: 'Data/EarthOrientationParameters/EOP-2011-July.json'
             }).then(function() {
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -537,7 +589,7 @@ defineSuite([
 
                 var testInverse = Matrix3.multiply(Matrix3.transpose(t, new Matrix3()), expectedMtx, new Matrix3());
                 var testDiff = new Matrix3();
-                for ( var i = 0; i < 9; i++) {
+                for (var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
                 }
                 expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON14);
@@ -549,7 +601,7 @@ defineSuite([
             var time = new JulianDate(2455745, 10);
 
             return preloadTransformationData(time, time, {
-                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                url: 'Data/EarthOrientationParameters/EOP-2011-July.json'
             }).then(function() {
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -559,7 +611,7 @@ defineSuite([
 
                 var testInverse = Matrix3.multiply(Matrix3.transpose(t, new Matrix3()), expectedMtx, new Matrix3());
                 var testDiff = new Matrix3();
-                for ( var i = 0; i < 9; i++) {
+                for (var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
                 }
                 expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON14);
@@ -577,7 +629,7 @@ defineSuite([
             var time = new JulianDate(2455745, 43200);
 
             return preloadTransformationData(time, time, {
-                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                url: 'Data/EarthOrientationParameters/EOP-2011-July.json'
             }).then(function() {
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -645,7 +697,7 @@ defineSuite([
             var time = new JulianDate(2455745, 43200);
 
             return preloadTransformationData(time, time, {
-                url : 'Data/EarthOrientationParameters/EOP-Invalid.json'
+                url: 'Data/EarthOrientationParameters/EOP-Invalid.json'
             }).then(function() {
                 expect(function() {
                     return Transforms.computeIcrfToFixedMatrix(time);
@@ -658,7 +710,7 @@ defineSuite([
             var time = new JulianDate(2455745, 43200);
 
             return preloadTransformationData(time, time, {
-                url : 'Data/EarthOrientationParameters/EOP-DoesNotExist.json'
+                url: 'Data/EarthOrientationParameters/EOP-DoesNotExist.json'
             }).then(function() {
                 expect(function() {
                     return Transforms.computeIcrfToFixedMatrix(time);
@@ -679,7 +731,7 @@ defineSuite([
             return preloadTransformationData(time, time).then(function() {
                 expect(Transforms.computeIcrfToFixedMatrix(time)).toBeDefined();
                 Transforms.earthOrientationParameters = new EarthOrientationParameters({
-                    url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                    url: 'Data/EarthOrientationParameters/EOP-2011-July.json'
                 });
                 expect(Transforms.computeIcrfToFixedMatrix(time)).toBeUndefined();
             });
@@ -690,15 +742,15 @@ defineSuite([
     var height = 768.0;
     var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0, new Matrix4());
     var vpTransform = Matrix4.computeViewportTransformation({
-        width : width,
-        height : height
+        width: width,
+        height: height
     }, 0, 1, new Matrix4());
 
     it('pointToGLWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
-            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-            up : Cartesian3.UNIT_Z
+            position: Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
+            up: Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
@@ -709,9 +761,9 @@ defineSuite([
 
     it('pointToGLWindowCoordinates works with a result parameter', function() {
         var view = Matrix4.fromCamera({
-            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-            up : Cartesian3.UNIT_Z
+            position: Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
+            up: Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
@@ -746,9 +798,9 @@ defineSuite([
 
     it('pointToWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
-            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-            up : Cartesian3.UNIT_Z
+            position: Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
+            up: Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
@@ -759,9 +811,9 @@ defineSuite([
 
     it('pointToWindowCoordinates works with a result parameter', function() {
         var view = Matrix4.fromCamera({
-            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-            up : Cartesian3.UNIT_Z
+            position: Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
+            up: Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
@@ -801,8 +853,9 @@ defineSuite([
         var heading = CesiumMath.toRadians(90.0);
         var pitch = CesiumMath.toRadians(45.0);
         var roll = 0.0;
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, ellipsoid);
+        var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, hpr, ellipsoid);
         var modelMatrix2D = Transforms.basisTo2D(projection, modelMatrix, new Matrix4());
 
         var translation2D = Cartesian3.fromCartesian4(Matrix4.getColumn(modelMatrix2D, 3, new Cartesian4()));
@@ -821,8 +874,9 @@ defineSuite([
         var heading = CesiumMath.toRadians(90.0);
         var pitch = CesiumMath.toRadians(45.0);
         var roll = 0.0;
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, ellipsoid);
+        var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, hpr, ellipsoid);
         var modelMatrix2D = Transforms.basisTo2D(projection, modelMatrix, new Matrix4());
 
         var rotation2D = Matrix4.getRotation(modelMatrix2D, new Matrix3());
@@ -831,11 +885,11 @@ defineSuite([
         var enuInverse = Matrix4.inverseTransformation(enu, enu);
 
         var hprPlusTranslate = Matrix4.multiply(enuInverse, modelMatrix, new Matrix4());
-        var hpr = Matrix4.getRotation(hprPlusTranslate, new Matrix3());
+        var hpr2 = Matrix4.getRotation(hprPlusTranslate, new Matrix3());
 
-        var row0 = Matrix3.getRow(hpr, 0, new Cartesian3());
-        var row1 = Matrix3.getRow(hpr, 1, new Cartesian3());
-        var row2 = Matrix3.getRow(hpr, 2, new Cartesian3());
+        var row0 = Matrix3.getRow(hpr2, 0, new Cartesian3());
+        var row1 = Matrix3.getRow(hpr2, 1, new Cartesian3());
+        var row2 = Matrix3.getRow(hpr2, 2, new Cartesian3());
 
         var expected = new Matrix3();
         Matrix3.setRow(expected, 0, row2, expected);
@@ -854,6 +908,12 @@ defineSuite([
     it('northEastDownToFixedFrame throws without an origin', function() {
         expect(function() {
             Transforms.northEastDownToFixedFrame(undefined, Ellipsoid.WGS84);
+        }).toThrowDeveloperError();
+    });
+
+    it('northWestUpToFixedFrame throws without an origin', function() {
+        expect(function() {
+            Transforms.northWestUpToFixedFrame(undefined, Ellipsoid.WGS84);
         }).toThrowDeveloperError();
     });
 
@@ -878,54 +938,6 @@ defineSuite([
     it('headingPitchRollToFixedFrame throws without an roll', function() {
         expect(function() {
             Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, 0.0, 0.0, undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('aircraftHeadingPitchRollToFixedFrame throws without an origin', function() {
-        expect(function() {
-            Transforms.aircraftHeadingPitchRollToFixedFrame(undefined, 0.0, 0.0, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('aircraftHeadingPitchRollToFixedFrame throws without an heading', function() {
-        expect(function() {
-            Transforms.aircraftHeadingPitchRollToFixedFrame(Cartesian3.ZERO, undefined, 0.0, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('aircraftHeadingPitchRollToFixedFrame throws without an pitch', function() {
-        expect(function() {
-            Transforms.aircraftHeadingPitchRollToFixedFrame(Cartesian3.ZERO, 0.0, undefined, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('aircraftHeadingPitchRollToFixedFrame throws without an roll', function() {
-        expect(function() {
-            Transforms.aircraftHeadingPitchRollToFixedFrame(Cartesian3.ZERO, 0.0, 0.0, undefined);
-        }).toThrowDeveloperError();
-    });
-    
-    it('aircraftHeadingPitchRollQuaternion throws without an origin', function() {
-        expect(function() {
-            Transforms.aircraftHeadingPitchRollQuaternion(undefined, 0.0, 0.0, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('aircraftHeadingPitchRollQuaternion throws without an heading', function() {
-        expect(function() {
-            Transforms.aircraftHeadingPitchRollQuaternion(Cartesian3.ZERO, undefined, 0.0, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('aircraftHeadingPitchRollQuaternion throws without an pitch', function() {
-        expect(function() {
-            Transforms.aircraftHeadingPitchRollQuaternion(Cartesian3.ZERO, 0.0, undefined, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('aircraftHeadingPitchRollQuaternion throws without an roll', function() {
-        expect(function() {
-            Transforms.aircraftHeadingPitchRollQuaternion(Cartesian3.ZERO, 0.0, 0.0, undefined);
         }).toThrowDeveloperError();
     });
 

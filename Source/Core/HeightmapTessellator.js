@@ -15,7 +15,8 @@ define([
         './OrientedBoundingBox',
         './Rectangle',
         './TerrainEncoding',
-        './Transforms'
+        './Transforms',
+        './WebMercatorProjection'
     ], function(
         AxisAlignedBoundingBox,
         BoundingSphere,
@@ -32,7 +33,8 @@ define([
         OrientedBoundingBox,
         Rectangle,
         TerrainEncoding,
-        Transforms) {
+        Transforms,
+        WebMercatorProjection) {
     'use strict';
 
     /**
@@ -80,7 +82,7 @@ define([
      *                 are provided, they're assumed to be consistent.
      * @param {Boolean} [options.isGeographic=true] True if the heightmap uses a {@link GeographicProjection}, or false if it uses
      *                  a {@link WebMercatorProjection}.
-     * @param {Cartesian3} [options.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
+     * @param {Cartesian3} [options.relativeToCenter=Cartesian3.ZERO] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to which the heightmap applies.
      * @param {Object} [options.structure] An object describing the structure of the height data.
      * @param {Number} [options.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
@@ -198,8 +200,11 @@ define([
             geographicNorth = rectangle.north;
         }
 
-        var relativeToCenter = defaultValue(options.relativeToCenter, Cartesian3.ZERO);
+        var relativeToCenter = options.relativeToCenter;
+        var hasRelativeToCenter = defined(relativeToCenter);
+        relativeToCenter = hasRelativeToCenter ? relativeToCenter : Cartesian3.ZERO;
         var exaggeration = defaultValue(options.exaggeration, 1.0);
+        var includeWebMercatorT = defaultValue(options.includeWebMercatorT, false);
 
         var structure = defaultValue(options.structure, HeightmapTessellator.DEFAULT_STRUCTURE);
         var heightScale = defaultValue(structure.heightScale, HeightmapTessellator.DEFAULT_STRUCTURE.heightScale);
@@ -223,6 +228,13 @@ define([
         var fromENU = Transforms.eastNorthUpToFixedFrame(relativeToCenter, ellipsoid);
         var toENU = Matrix4.inverseTransformation(fromENU, matrix4Scratch);
 
+        var southMercatorY;
+        var oneOverMercatorHeight;
+        if (includeWebMercatorT) {
+            southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(geographicSouth);
+            oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(geographicNorth) - southMercatorY);
+        }
+
         var minimum = minimumScratch;
         minimum.x = Number.POSITIVE_INFINITY;
         minimum.y = Number.POSITIVE_INFINITY;
@@ -241,6 +253,7 @@ define([
         var positions = new Array(size);
         var heights = new Array(size);
         var uvs = new Array(size);
+        var webMercatorTs = includeWebMercatorT ? new Array(size) : [];
 
         var startRow = 0;
         var endRow = height;
@@ -279,6 +292,11 @@ define([
 
             var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
             v = CesiumMath.clamp(v, 0.0, 1.0);
+
+            var webMercatorT;
+            if (includeWebMercatorT) {
+                webMercatorT = (WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude) - southMercatorY) * oneOverMercatorHeight;
+            }
 
             for (var colIndex = startCol; colIndex < endCol; ++colIndex) {
                 var col = colIndex;
@@ -351,6 +369,10 @@ define([
                 u = CesiumMath.clamp(u, 0.0, 1.0);
                 uvs[index] = new Cartesian2(u, v);
 
+                if (includeWebMercatorT) {
+                    webMercatorTs[index] = webMercatorT;
+                }
+
                 index++;
 
                 Matrix4.multiplyByPoint(toENU, position, cartesian3Scratch);
@@ -370,19 +392,18 @@ define([
         }
 
         var occludeePointInScaledSpace;
-        var center = options.relativetoCenter;
-        if (defined(center)) {
+        if (hasRelativeToCenter) {
             var occluder = new EllipsoidalOccluder(ellipsoid);
-            occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(center, positions);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(relativeToCenter, positions);
         }
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
-        var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, false);
+        var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, false, includeWebMercatorT);
         var vertices = new Float32Array(size * encoding.getStride());
 
         var bufferIndex = 0;
         for (var j = 0; j < size; ++j) {
-            bufferIndex = encoding.encode(vertices, bufferIndex, positions[j], uvs[j], heights[j]);
+            bufferIndex = encoding.encode(vertices, bufferIndex, positions[j], uvs[j], heights[j], undefined, webMercatorTs[j]);
         }
 
         return {

@@ -1,4 +1,4 @@
-﻿See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
 
 ## [Corporate CLA](http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt)
 
@@ -34,6 +34,7 @@
    * [Todd Smith](https://github.com/tsmith717)
    * [Josh Becker](https://github.com/JoshuaStorm)
    * [Kangning Li](https://github.com/likangning93)
+   * [Erik Andersson](https://github.com/erikmaarten)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -64,6 +65,9 @@
    * [Andrey Orlov](https://github.com/AndreyOrlov)
 * [The Imagineers](https://www.theimagineers.com/)
    * [Heerco Grond](https://github.com/HeercoGrond)
+* [Camptocamp SA](https://www.camptocamp.com/)
+   * [Frédéric Junod](https://github.com/fredj)
+   * [Guillaume Beraudo](https://github.com/gberaudo)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -103,3 +107,12 @@
 * [Tom Novacek](https://github.com/novacto2)
 * [Olivier Guyot-Roullot](https://github.com/theOgrable)
 * [Andy Fry](https://github.com/andyfry01)
+* [Dylan Brown](https://github.com/Dylan-Brown)
+* [Judy Weng](http://github.com/JudyWeng)
+* [Jorge Piera Llodra](https://github.com/jorpiell)
+* [Tom Payne](https://github.com/twpayne)
+* [Leesa Fini](https://github.com/leesafini)
+* [Victor Malaret](https://github.com/malaretv)
+* [David Friedman](https://github.com/duvifn)
+* [Abhishek Potnis](https://github.com/abhishekvp)
+

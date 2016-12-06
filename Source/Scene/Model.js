@@ -5,10 +5,9 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/Color',
         '../Core/clone',
+        '../Core/Color',
         '../Core/combine',
-        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -49,8 +48,9 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './getBinaryAccessor',
         './BlendingState',
+        './ColorBlendMode',
+        './getBinaryAccessor',
         './HeightReference',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -67,10 +67,9 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
-        Color,
         clone,
+        Color,
         combine,
-        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
@@ -111,8 +110,9 @@ define([
         gltfDefaults,
         Uri,
         when,
-        getBinaryAccessor,
         BlendingState,
+        ColorBlendMode,
+        getBinaryAccessor,
         HeightReference,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -325,6 +325,9 @@ define([
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      * @param {DistanceDisplayCondition} [options.istanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
+     * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
+     * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+     * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -546,6 +549,35 @@ define([
          */
         this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
         this._shadows = this.shadows;
+
+        /**
+         * A color that blends with the model's rendered color.
+         *
+         * @type {Color}
+         *
+         * @default Color.WHITE
+         */
+        this.color = defaultValue(options.color, Color.WHITE);
+
+        /**
+         * Defines how the color blends with the model.
+         *
+         * @type {ColorBlendMode}
+         *
+         * @default ColorBlendMode.HIGHLIGHT
+         */
+        this.colorBlendMode = defaultValue(options.colorBlendMode, ColorBlendMode.HIGHLIGHT);
+
+        /**
+         * Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>.
+         * A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with
+         * any value in-between resulting in a mix of the two.
+         *
+         * @type {Number}
+         *
+         * @default 0.5
+         */
+        this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -935,9 +967,11 @@ define([
     }
 
     function parseBinaryGltfHeader(uint8Array) {
+        //>>includeStart('debug', pragmas.debug);
         if (!containsGltfMagic(uint8Array)) {
             throw new DeveloperError('bgltf is not a valid Binary glTF file.');
         }
+        //>>includeEnd('debug');
 
         var view = new DataView(uint8Array.buffer, uint8Array.byteOffset, uint8Array.byteLength);
         var byteOffset = 0;
@@ -1687,7 +1721,7 @@ define([
             if (getProgramForPrimitive(model, primitive) === programName) {
                 for (var attributeSemantic in primitive.attributes) {
                     if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
-                        var decodeUniformVarName = 'czm_u_dec_' + attributeSemantic.toLowerCase();
+                        var decodeUniformVarName = 'gltf_u_dec_' + attributeSemantic.toLowerCase();
                         var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
                         var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
                         if (!defined(quantizedUniforms[decodeUniformVarName]) && !defined(quantizedUniforms[decodeUniformVarNameScale])) {
@@ -1696,8 +1730,8 @@ define([
                             if (defined(quantizedAttributes)) {
                                 var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
                                 var decodeMatrix = quantizedAttributes.decodeMatrix;
-                                var newMain = 'czm_decoded_' + attributeSemantic;
-                                var decodedAttributeVarName = attributeVarName.replace('a_', 'czm_a_dec_');
+                                var newMain = 'gltf_decoded_' + attributeSemantic;
+                                var decodedAttributeVarName = attributeVarName.replace('a_', 'gltf_a_dec_');
                                 var size = Math.floor(Math.sqrt(decodeMatrix.length));
 
                                 // replace usages of the original attribute with the decoded version, but not the declaration
@@ -1749,6 +1783,35 @@ define([
         return shader;
     }
 
+    function hasPremultipliedAlpha(model) {
+        var gltf = model.gltf;
+        return defined(gltf.asset) ? defaultValue(gltf.asset.premultipliedAlpha, false) : false;
+    }
+
+    function modifyShaderForColor(shader, premultipliedAlpha) {
+        shader = ShaderSource.replaceMain(shader, 'gltf_blend_main');
+        shader +=
+            'uniform vec4 gltf_color; \n' +
+            'uniform float gltf_colorBlend; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    gltf_blend_main(); \n';
+
+        // Un-premultiply the alpha so that blending is correct.
+        if (premultipliedAlpha) {
+            shader += '    gl_FragColor.rgb /= gl_FragColor.a; \n';
+        }
+
+        shader +=
+            '    gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_color.rgb, gltf_colorBlend); \n' +
+            '    float highlight = ceil(gltf_colorBlend); \n' +
+            '    gl_FragColor.rgb *= mix(gltf_color.rgb, vec3(1.0), highlight); \n' +
+            '    gl_FragColor.a *= gltf_color.a; \n' +
+            '} \n';
+
+        return shader;
+    }
+
     function modifyShader(shader, programName, callback) {
         if (defined(callback)) {
             shader = callback(shader, programName);
@@ -1797,8 +1860,11 @@ define([
             vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
         }
 
+        var premultipliedAlpha = hasPremultipliedAlpha(model);
+        var blendFS = modifyShaderForColor(fs, premultipliedAlpha);
+
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
+        var drawFS = modifyShader(blendFS, id, model._fragmentShaderLoaded);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -2345,6 +2411,16 @@ define([
         var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
         var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
 
+        // Change the render state to use traditional alpha blending instead of premultiplied alpha blending
+        if (booleanStates[WebGLConstants.BLEND] && hasPremultipliedAlpha(model)) {
+            if ((blendFuncSeparate[0] === WebGLConstants.ONE) && (blendFuncSeparate[1] === WebGLConstants.ONE_MINUS_SRC_ALPHA)) {
+                blendFuncSeparate[0] = WebGLConstants.SRC_ALPHA;
+                blendFuncSeparate[1] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
+                blendFuncSeparate[2] = WebGLConstants.SRC_ALPHA;
+                blendFuncSeparate[3] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
+            }
+        }
+
         rendererRenderStates[id] = RenderState.fromCache({
             frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
             cull : {
@@ -2836,7 +2912,7 @@ define([
                     var quantizedAttributes = extensions.WEB3D_quantized_attributes;
                     if (defined(quantizedAttributes)) {
                         var decodeMatrix = quantizedAttributes.decodeMatrix;
-                        var uniformVariable = 'czm_u_dec_' + attribute.toLowerCase();
+                        var uniformVariable = 'gltf_u_dec_' + attribute.toLowerCase();
 
                         switch (a.type) {
                             case 'SCALAR':
@@ -2915,6 +2991,18 @@ define([
         };
     }
 
+    function createColorFunction(model) {
+        return function() {
+            return model.color;
+        };
+    }
+
+    function createColorBlendFunction(model) {
+        return function() {
+            return ColorBlendMode.getColorBlend(model.colorBlendMode, model.colorBlendAmount);
+        };
+    }
+
     function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
@@ -2983,6 +3071,11 @@ define([
 
                     uniformMap = combine(uniformMap, jointUniformMap);
                 }
+
+                uniformMap = combine(uniformMap, {
+                    gltf_color : createColorFunction(model),
+                    gltf_colorBlend : createColorBlendFunction(model)
+                });
 
                 // Allow callback to modify the uniformMap
                 if (defined(model._uniformMapLoaded)) {
@@ -3160,7 +3253,10 @@ define([
                     command2D : command2D,
                     pickCommand2D : pickCommand2D,
                     highlightCommand: highlightCommand,
-                    highlightCommand2D: highlightCommand2D
+                    highlightCommand2D: highlightCommand2D,
+                    // Generate on demand when color alpha is less than 1.0
+                    translucentCommand : undefined,
+                    translucentCommand2D : undefined
                 };
                 runtimeNode.commands.push(nodeCommand);
                 nodeCommands.push(nodeCommand);
@@ -3545,6 +3641,44 @@ define([
         }
     }
 
+    function getTranslucentRenderState(renderState) {
+        var rs = clone(renderState, true);
+        rs.cull.enabled = false;
+        rs.depthTest.enabled = true;
+        rs.depthMask = false;
+        rs.blending = BlendingState.ALPHA_BLEND;
+
+        return RenderState.fromCache(rs);
+    }
+
+    function deriveTranslucentCommand(command) {
+        var translucentCommand = DrawCommand.shallowClone(command);
+        translucentCommand.pass = Pass.TRANSLUCENT;
+        translucentCommand.renderState = getTranslucentRenderState(command.renderState);
+        return translucentCommand;
+    }
+
+    function updateColor(model, frameState) {
+        var scene3DOnly = frameState.scene3DOnly;
+        var alpha = model.color.alpha;
+        if ((alpha > 0.0) && (alpha < 1.0)) {
+            var nodeCommands = model._nodeCommands;
+            var length = nodeCommands.length;
+            // Generate translucent commands when the blend color has an alpha less than 1.0
+            if (!defined(nodeCommands[0].translucentCommand)) {
+                for (var i = 0; i < length; ++i) {
+                    var nodeCommand = nodeCommands[i];
+                    var command = nodeCommand.command;
+                    nodeCommand.translucentCommand = deriveTranslucentCommand(command);
+                    if (!scene3DOnly) {
+                        var command2D = nodeCommand.command2D;
+                        nodeCommand.translucentCommand2D = deriveTranslucentCommand(command2D);
+                    }
+                }
+            }
+        }
+    }
+
     var scratchBoundingSphere = new BoundingSphere();
 
     function scaleInPixels(positionWC, radius, frameState) {
@@ -3879,8 +4013,9 @@ define([
             }
         }
 
+        var alpha = this.color.alpha;
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
-        var show = this.show && displayConditionPassed && (this.scale !== 0.0);
+        var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (alpha > 0.0);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
@@ -3939,6 +4074,7 @@ define([
             updateWireframe(this);
             updateShowBoundingVolume(this);
             updateShadows(this);
+            updateColor(this, frameState);
         }
 
         if (justLoaded) {
@@ -3972,12 +4108,14 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        commandList.push(nc.command);
-
+                        var translucent = (alpha < 1.0);
+                        var command = translucent ? nc.translucentCommand : nc.command;
+                        commandList.push(command);
                         boundingVolume = nc.command.boundingVolume;
                         if (frameState.mode === SceneMode.SCENE2D &&
                             (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            commandList.push(nc.command2D);
+                            var command2D = translucent ? nc.translucentCommand2D : nc.command2D;
+                            commandList.push(command2D);
                         }
                     }
                 }

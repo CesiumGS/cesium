@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Core/OrientedBoundingBox',
-        'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Ellipsoid',
-        'Core/EllipsoidTangentPlane',
         'Core/Intersect',
         'Core/Math',
         'Core/Matrix3',
@@ -16,12 +14,10 @@ defineSuite([
         'Core/Rectangle'
     ], function(
         OrientedBoundingBox,
-        BoundingRectangle,
         BoundingSphere,
         Cartesian3,
         Cartesian4,
         Ellipsoid,
-        EllipsoidTangentPlane,
         Intersect,
         CesiumMath,
         Matrix3,
@@ -338,6 +334,9 @@ defineSuite([
             Matrix3.multiplyByVector(axes, tang, tang);
             Matrix3.multiplyByVector(axes, binorm, binorm);
             Cartesian3.cross(tang, binorm, n);
+            if (Cartesian3.magnitude(n) === 0) {
+                return undefined;
+            }
             Cartesian3.normalize(n, n);
 
             Cartesian3.add(p0, center, p0);

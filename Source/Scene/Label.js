@@ -166,15 +166,15 @@ define([
                 if (!Cartesian3.equals(position, value)) {
                     Cartesian3.clone(value, position);
 
-                    if (this._heightReference === HeightReference.NONE) {
-                        var glyphs = this._glyphs;
-                        for (var i = 0, len = glyphs.length; i < len; i++) {
-                            var billboard = glyphs[i].billboard;
-                            if (defined(billboard)) {
-                                billboard.position = value;
-                            }
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var billboard = glyphs[i].billboard;
+                        if (defined(billboard)) {
+                            billboard.position = value;
                         }
-                    } else {
+                    }
+
+                    if (this._heightReference !== HeightReference.NONE) {
                         this._updateClamping();
                     }
                 }
@@ -736,9 +736,12 @@ define([
                     if (defined(glyph.billboard)) {
                         // Set all the private values here, because we already clamped to ground
                         //  so we don't want to do it again for every glyph
-                        glyph.billboard._position = value;
-                        glyph.billboard._actualPosition = value;
+
                         glyph.billboard._clampedPosition = value;
+
+                        value = defaultValue(value, this._position);
+                        Cartesian3.clone(value, glyph.billboard._position);
+                        Cartesian3.clone(value, glyph.billboard._actualPosition);
                     }
                 }
             }

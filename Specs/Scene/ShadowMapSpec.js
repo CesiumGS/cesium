@@ -11,6 +11,7 @@ defineSuite([
         'Core/EllipsoidTerrainProvider',
         'Core/GeometryInstance',
         'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
         'Core/HeightmapTerrainData',
         'Core/JulianDate',
         'Core/Math',
@@ -43,6 +44,7 @@ defineSuite([
         EllipsoidTerrainProvider,
         GeometryInstance,
         HeadingPitchRange,
+        HeadingPitchRoll,
         HeightmapTerrainData,
         JulianDate,
         CesiumMath,
@@ -101,13 +103,13 @@ defineSuite([
         sunShadowMap = scene.shadowMap;
 
         var boxOrigin = new Cartesian3.fromRadians(longitude, latitude, boxHeight);
-        var boxTransform = Transforms.headingPitchRollToFixedFrame(boxOrigin, 0.0, 0.0, 0.0);
+        var boxTransform = Transforms.headingPitchRollToFixedFrame(boxOrigin, new HeadingPitchRoll());
 
         var floorOrigin = new Cartesian3.fromRadians(longitude, latitude, floorHeight);
-        var floorTransform = Transforms.headingPitchRollToFixedFrame(floorOrigin, 0.0, 0.0, 0.0);
+        var floorTransform = Transforms.headingPitchRollToFixedFrame(floorOrigin, new HeadingPitchRoll());
 
         var roomOrigin = new Cartesian3.fromRadians(longitude, latitude, height);
-        var roomTransform = Transforms.headingPitchRollToFixedFrame(roomOrigin, 0.0, 0.0, 0.0);
+        var roomTransform = Transforms.headingPitchRollToFixedFrame(roomOrigin, new HeadingPitchRoll());
 
         var modelPromises = [];
         modelPromises.push(loadModel({
@@ -245,7 +247,8 @@ defineSuite([
     function loadGlobe() {
         return pollToPromise(function() {
             scene.render();
-            return scene.globe._surface.tileProvider.ready && !defined(scene.globe._surface._tileLoadQueue.head) && scene.globe._surface._debug.tilesWaitingForChildren === 0;
+            var globe = scene.globe;
+            return globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
         });
     }
 
@@ -661,7 +664,7 @@ defineSuite([
         for (var i = 0; i < 6; ++i) {
             var box = scene.primitives.add(Model.fromGltf({
                 url : boxUrl,
-                modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], 0.0, 0.0, 0.0),
+                modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], new HeadingPitchRoll()),
                 scale : 0.2
             }));
             scene.render(); // Model is pre-loaded, render one frame to make it ready

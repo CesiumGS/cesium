@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/defined',
         '../Renderer/ShaderSource'
     ], function(
-        defaultValue,
         defined,
         ShaderSource) {
     'use strict';
@@ -48,7 +46,7 @@ define([
         });
     };
 
-    ShadowMapShader.createShadowCastFragmentShader = function(fs, isPointLight, useDepthTexture, opaque) {
+    ShadowMapShader.createShadowCastFragmentShader = function(fs, isPointLight, usesDepthTexture, opaque) {
         var defines = fs.defines.slice(0);
         var sources = fs.sources.slice(0);
 
@@ -92,7 +90,7 @@ define([
                 'float distance = length(' + positionVaryingName + '); \n' +
                 'distance /= shadowMap_lightPositionEC.w; // radius \n' +
                 'gl_FragColor = czm_packDepth(distance); \n';
-        } else if (useDepthTexture) {
+        } else if (usesDepthTexture) {
             fsSource += 'gl_FragColor = vec4(1.0); \n';
         } else {
             fsSource += 'gl_FragColor = czm_packDepth(gl_FragCoord.z); \n';
@@ -134,6 +132,7 @@ define([
         var hasPositionVarying = defined(positionVaryingName);
 
         var usesDepthTexture = shadowMap._usesDepthTexture;
+        var polygonOffsetSupported = shadowMap._polygonOffsetSupported;
         var isPointLight = shadowMap._isPointLight;
         var isSpotLight = shadowMap._isSpotLight;
         var hasCascades = shadowMap._numberOfCascades > 1;
@@ -230,7 +229,9 @@ define([
         if (isTerrain) {
             // Scale depth bias based on view distance to reduce z-fighting in distant terrain
             fsSource += '    shadowParameters.depthBias *= max(depth * 0.01, 1.0); \n';
-        } else {
+        } else if (!polygonOffsetSupported) {
+            // If polygon offset isn't supported push the depth back based on view, however this
+            // causes light leaking at further away views
             fsSource += '    shadowParameters.depthBias *= mix(1.0, 100.0, depth * 0.0015); \n';
         }
 

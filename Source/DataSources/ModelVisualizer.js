@@ -2,11 +2,12 @@
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
+        '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
-        '../Core/Color',
+        '../Scene/ColorBlendMode',
         '../Scene/HeightReference',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
@@ -16,11 +17,12 @@ define([
     ], function(
         AssociativeArray,
         BoundingSphere,
+        Color,
         defined,
         destroyObject,
         DeveloperError,
         Matrix4,
-        Color,
+        ColorBlendMode,
         HeightReference,
         Model,
         ModelAnimationLoop,
@@ -37,7 +39,11 @@ define([
     var defaultHighlightColor = new Color();
     var defaultHighlightSize = 2.0;
     var defaultHighlight = false;
+    var defaultColor = Color.WHITE;
+    var defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
+    var defaultColorBlendAmount = 0.5;
 
+    var color = new Color();
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
 
@@ -147,6 +153,9 @@ define([
             model.highlightColor = Property.getValueOrDefault(modelGraphics.highlightColor, time, defaultHighlightColor);
             model.highlightSize = Property.getValueOrDefault(modelGraphics.highlightSize, time, defaultHighlightSize);
             model.distanceDisplayCondition = Property.getValueOrUndefined(modelGraphics._distanceDisplayCondition, time);
+            model.color = Property.getValueOrDefault(modelGraphics._color, time, defaultColor, color);
+            model.colorBlendMode = Property.getValueOrDefault(modelGraphics._colorBlendMode, time, defaultColorBlendMode);
+            model.colorBlendAmount = Property.getValueOrDefault(modelGraphics._colorBlendAmount, time, defaultColorBlendAmount);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);

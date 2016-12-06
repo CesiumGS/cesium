@@ -62,7 +62,7 @@ npm start -- --help
 ```
 
 While you can use the editor of your choice to develop Cesium, certain files, such as `glsl` and new tests, require that
-the `build` task be executed in order for the changes to take affect.  You can use the `build-watch` script to have this
+the `build` task be executed in order for the changes to take effect.  You can use the `build-watch` script to have this
 happen automatically.
 
 ## Build Scripts
@@ -140,7 +140,7 @@ var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesi
 
 To configure Travis for deployment for a fork of Cesium, you must have valid credentials to the S3 bucket.
 
-* Go to [travis.org](https://travis-ci.org/) and select your fork of Cesium
+* Go to [travis-ci.org](https://travis-ci.org/) and select your fork of Cesium
 * Go to "More Options">"Settings"
 * Under the "Environment Variables" section, add two environment variables, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, with your access key and secret key
 
@@ -158,6 +158,6 @@ To configure the additional commit statuses on GitHub for your fork of Cesium, y
 ![Token Access](token.jpg)
 
 * Copy the token to your clipboard
-* Go to [travis.org](https://travis-ci.org/) and select your fork of Cesium
+* Go to [travis-ci.org](https://travis-ci.org/) and select your fork of Cesium
 * Go to "More Options">"Settings"
 * Under the "Environment Variables" section, add the environment variable `TOKEN` and paste your token for the value

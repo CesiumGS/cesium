@@ -19,14 +19,11 @@ define([
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
-        '../Core/GeometryInstance',
-        '../Core/GeometryInstanceAttribute',
         '../Core/isArray',
         '../Core/Matrix4',
         '../Core/RuntimeError',
         '../Core/subdivideArray',
         '../Core/TaskProcessor',
-        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
@@ -62,14 +59,11 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        GeometryInstance,
-        GeometryInstanceAttribute,
         isArray,
         Matrix4,
         RuntimeError,
         subdivideArray,
         TaskProcessor,
-        Buffer,
         BufferUsage,
         ContextLimits,
         DrawCommand,
@@ -614,7 +608,7 @@ define([
         }
 
         var attributesLength = attributes.length;
-        var batchTable = new BatchTable(attributes, numberOfInstances);
+        var batchTable = new BatchTable(context, attributes, numberOfInstances);
 
         for (i = 0; i < numberOfInstances; ++i) {
             var instance = instances[i];
@@ -1173,7 +1167,8 @@ define([
     var scratchBoundingSphereCenter2D = new Cartesian3();
 
     function updateBatchTableBoundingSpheres(primitive, frameState) {
-        if (!defined(primitive._batchTableAttributeIndices.distanceDisplayCondition) || primitive._batchTableBoundingSpheresUpdated) {
+        var hasDistanceDisplayCondition = defined(primitive._batchTableAttributeIndices.distanceDisplayCondition);
+        if (!hasDistanceDisplayCondition && primitive._batchTableBoundingSpheresUpdated) {
             return;
         }
 
@@ -1193,20 +1188,30 @@ define([
 
         for (var i = 0; i < length; ++i) {
             var boundingSphere = boundingSpheres[i];
-            var center = boundingSphere.center;
-            var radius = boundingSphere.radius;
+            if (!defined(boundingSphere)) {
+                continue;
+            }
 
-            var encodedCenter = EncodedCartesian3.fromCartesian(center, scratchBoundingSphereCenterEncoded);
-            batchTable.setBatchedAttribute(i, center3DHighIndex, encodedCenter.high);
-            batchTable.setBatchedAttribute(i, center3DLowIndex, encodedCenter.low);
+            var modelMatrix = primitive.modelMatrix;
+            if (defined(modelMatrix)) {
+                boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
+            }
 
-            var cartographic = ellipsoid.cartesianToCartographic(center, scratchBoundingSphereCartographic);
-            var center2D = projection.project(cartographic, scratchBoundingSphereCenter2D);
-            encodedCenter = EncodedCartesian3.fromCartesian(center2D, scratchBoundingSphereCenterEncoded);
-            batchTable.setBatchedAttribute(i, center2DHighIndex, encodedCenter.high);
-            batchTable.setBatchedAttribute(i, center2DLowIndex, encodedCenter.low);
+            if (hasDistanceDisplayCondition) {
+                var center = boundingSphere.center;
+                var radius = boundingSphere.radius;
 
-            batchTable.setBatchedAttribute(i, radiusIndex, radius);
+                var encodedCenter = EncodedCartesian3.fromCartesian(center, scratchBoundingSphereCenterEncoded);
+                batchTable.setBatchedAttribute(i, center3DHighIndex, encodedCenter.high);
+                batchTable.setBatchedAttribute(i, center3DLowIndex, encodedCenter.low);
+
+                var cartographic = ellipsoid.cartesianToCartographic(center, scratchBoundingSphereCartographic);
+                var center2D = projection.project(cartographic, scratchBoundingSphereCenter2D);
+                encodedCenter = EncodedCartesian3.fromCartesian(center2D, scratchBoundingSphereCenterEncoded);
+                batchTable.setBatchedAttribute(i, center2DHighIndex, encodedCenter.high);
+                batchTable.setBatchedAttribute(i, center2DLowIndex, encodedCenter.low);
+                batchTable.setBatchedAttribute(i, radiusIndex, radius);
+            }
         }
 
         primitive._batchTableBoundingSpheresUpdated = true;
@@ -1370,10 +1375,12 @@ define([
             // Convert to uniform map of functions for the renderer
             for (var name in appearanceUniforms) {
                 if (appearanceUniforms.hasOwnProperty(name)) {
+                    //>>includeStart('debug', pragmas.debug);
                     if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
                         // Later, we could rename uniforms behind-the-scenes if needed.
                         throw new DeveloperError('Appearance and material have a uniform with the same name: ' + name);
                     }
+                    //>>includeEnd('debug');
 
                     appearanceUniformMap[name] = getUniformFunction(appearanceUniforms, name);
                 }
@@ -1562,9 +1569,11 @@ define([
             throw this._error;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (defined(this.rtcCenter) && !frameState.scene3DOnly) {
             throw new DeveloperError('RTC rendering is only available for 3D only scenes.');
         }
+        //>>includeEnd('debug');
 
         if (this._state === PrimitiveState.FAILED) {
             return;

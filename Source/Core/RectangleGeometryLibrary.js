@@ -55,13 +55,10 @@ define([
         position.z = kZ / gamma;
 
         if (defined(options.vertexFormat) && options.vertexFormat.st) {
-            st.x = (stLongitude - rectangle.west) * options.lonScalar - 0.5;
-            st.y = (stLatitude - rectangle.south) * options.latScalar - 0.5;
+            st.x = (stLongitude - rectangle.west) * options.lonScalar;
+            st.y = (stLatitude - rectangle.south) * options.latScalar;
 
             Matrix2.multiplyByVector(options.textureMatrix, st, st);
-
-            st.x += 0.5;
-            st.y += 0.5;
         }
     };
 
@@ -112,7 +109,7 @@ define([
         var granYSin = 0.0;
         var granXSin = 0.0;
 
-        if (defined(rotation) && rotation !== 0) { // rotation doesn't work when center is on/near IDL
+        if (defined(rotation) && rotation !== 0) {
             var cosRotation = Math.cos(rotation);
             granYCos *= cosRotation;
             granXCos *= cosRotation;
@@ -120,6 +117,10 @@ define([
             var sinRotation = Math.sin(rotation);
             granYSin = granularityY * sinRotation;
             granXSin = granularityX * sinRotation;
+
+            if (center.longitude < nwCorner.longitude) {
+                center.longitude += CesiumMath.TWO_PI;
+            }
 
             nwCartesian = proj.project(nwCorner, nwCartesian);
             centerCartesian = proj.project(center, centerCartesian);
@@ -146,10 +147,12 @@ define([
             east = Math.max(longitude, longitude0, longitude1, longitude2);
             west = Math.min(longitude, longitude0, longitude1, longitude2);
 
+            //>>includeStart('debug', pragmas.debug);
             if (north < -CesiumMath.PI_OVER_TWO || north > CesiumMath.PI_OVER_TWO ||
                     south < -CesiumMath.PI_OVER_TWO || south > CesiumMath.PI_OVER_TWO) {
                 throw new DeveloperError('Rotated rectangle is invalid.  It crosses over either the north or south pole.');
             }
+            //>>includeEnd('debug')
 
             rectangle.north = north;
             rectangle.south = south;

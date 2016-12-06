@@ -48,9 +48,7 @@ defineSuite([
         }
     });
 
-    function MockVisualizer(scene, entityCollection) {
-        this.scene = scene;
-        this.entityCollection = entityCollection;
+    function MockVisualizer() {
         this.updatesCalled = 0;
         this.lastUpdateTime = undefined;
         this.destroyed = false;
@@ -58,6 +56,7 @@ defineSuite([
         this.getBoundingSphereResult = undefined;
         this.getBoundingSphereState = undefined;
     }
+
     MockVisualizer.prototype.update = function(time) {
         this.lastUpdateTime = time;
         this.updatesCalled++;
