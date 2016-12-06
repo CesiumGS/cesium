@@ -37,7 +37,7 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the label.
      * @param {Property} [options.showBackground=true] A boolean Property specifying the visibility of the background behind the label.
      * @param {Property} [options.backgroundColor=new Color(0.165, 0.165, 0.165, 0.8)] A Property specifying the background {@link Color}.
-     * @param {Property} [options.backgroundPadding=new Cartesian2(2, 2)] A {@link Cartesian2} Property specifying the horizontal and vertical background padding in pixels.
+     * @param {Property} [options.backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Property specifying the horizontal and vertical background padding in pixels.
      * @param {Property} [options.scale=1.0] A numeric Property specifying the scale to apply to the text.
      * @param {Property} [options.horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
      * @param {Property} [options.verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
@@ -262,7 +262,7 @@ define([
          * background padding in pixels.
          * @memberof LabelGraphics.prototype
          * @type {Property}
-         * @default new Cartesian2(2, 2)
+         * @default new Cartesian2(7, 5)
          */
         backgroundPadding : createPropertyDescriptor('backgroundPadding'),
 

@@ -84,7 +84,7 @@ defineSuite([
         expect(label.outlineWidth).toEqual(1);
         expect(label.showBackground).toEqual(false);
         expect(label.backgroundColor).toEqual(new Color(0.165, 0.165, 0.165, 0.8));
-        expect(label.backgroundPadding).toEqual(new Cartesian2(2, 2));
+        expect(label.backgroundPadding).toEqual(new Cartesian2(7, 5));
         expect(label.style).toEqual(LabelStyle.FILL);
         expect(label.pixelOffset).toEqual(Cartesian2.ZERO);
         expect(label.eyeOffset).toEqual(Cartesian3.ZERO);

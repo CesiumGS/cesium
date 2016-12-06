@@ -88,7 +88,7 @@ define([
         this._outlineWidth = defaultValue(options.outlineWidth, 1.0);
         this._showBackground = defaultValue(options.showBackground, false);
         this._backgroundColor = defaultValue(options.backgroundColor, new Color(0.165, 0.165, 0.165, 0.8));
-        this._backgroundPadding = defaultValue(options.backgroundPadding, new Cartesian2(2, 2));
+        this._backgroundPadding = defaultValue(options.backgroundPadding, new Cartesian2(7, 5));
         this._style = defaultValue(options.style, LabelStyle.FILL);
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.BASELINE);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.LEFT);

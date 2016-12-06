@@ -43,7 +43,7 @@ define([
     var defaultOutlineWidth = 1.0;
     var defaultShowBackground = false;
     var defaultBackgroundColor = new Color(0.165, 0.165, 0.165, 0.8);
-    var defaultBackgroundPadding = new Cartesian2(2, 2);
+    var defaultBackgroundPadding = new Cartesian2(7, 5);
     var defaultPixelOffset = Cartesian2.ZERO;
     var defaultEyeOffset = Cartesian3.ZERO;
     var defaultHeightReference = HeightReference.NONE;

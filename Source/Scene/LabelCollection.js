@@ -437,7 +437,7 @@ define([
         this._scene = options.scene;
 
         this._textureAtlas = undefined;
-        this.__backgroundTextureAtlas = undefined;
+        this._backgroundTextureAtlas = undefined;
         this._whitePixelIndex = undefined;
 
         this._backgroundBillboardCollection = new BillboardCollection({
@@ -544,7 +544,7 @@ define([
      *   outlineWidth : 1.0,
      *   showBackground : false,
      *   backgroundColor : new Cesium.Color(0.165, 0.165, 0.165, 0.8),
-     *   backgroundPadding : new Cesium.Cartesian2(2, 2),
+     *   backgroundPadding : new Cesium.Cartesian2(7, 5),
      *   style : Cesium.LabelStyle.FILL,
      *   pixelOffset : Cesium.Cartesian2.ZERO,
      *   eyeOffset : Cesium.Cartesian3.ZERO,
