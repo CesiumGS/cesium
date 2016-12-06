@@ -776,6 +776,7 @@ define([
         var surfaceHeight = rectangleGeometry._surfaceHeight;
         var extrude = rectangleGeometry._extrude;
         var extrudedHeight = rectangleGeometry._extrudedHeight;
+        var rotation = rectangleGeometry._rotation;
         var stRotation = rectangleGeometry._stRotation;
         var vertexFormat = rectangleGeometry._vertexFormat;
 
@@ -783,12 +784,11 @@ define([
 
         var textureMatrix = textureMatrixScratch;
         var tangentRotationMatrix = tangentRotationMatrixScratch;
-        if (defined(stRotation)) {
+        if (stRotation !== 0 || rotation !== 0) {
             // negate angle for a counter-clockwise rotation
-            Matrix2.fromRotation(-stRotation, textureMatrix);
+            Matrix2.fromRotation(-(stRotation - rotation), textureMatrix);
             var center = Rectangle.center(rectangle, centerScratch);
-            var axis = ellipsoid.cartographicToCartesian(center, v1Scratch);
-            Cartesian3.normalize(axis, axis);
+            var axis = ellipsoid.geodeticSurfaceNormalCartographic(center, v1Scratch);
             Quaternion.fromAxisAngle(axis, -stRotation, quaternionScratch);
             Matrix3.fromQuaternion(quaternionScratch, tangentRotationMatrix);
         } else {
@@ -796,10 +796,12 @@ define([
             Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
         }
 
-        options.lonScalar = 1.0 / rectangle.width;
-        options.latScalar = 1.0 / rectangle.height;
+        options.lonScalar = 1.0 / rectangleGeometry._rectangle.width;
+        options.latScalar = 1.0 / rectangleGeometry._rectangle.height;
         options.vertexFormat = vertexFormat;
         options.textureMatrix = textureMatrix;
+        options.rotation = rotation;
+        options.stRotation = stRotation;
         options.tangentRotationMatrix = tangentRotationMatrix;
         options.size = options.width * options.height;
 

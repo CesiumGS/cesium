@@ -1,22 +1,22 @@
 /*global define*/
 define([
-        './Cartesian3',
-        './Cartographic',
-        './defined',
-        './DeveloperError',
-        './GeographicProjection',
-        './Math',
-        './Matrix2',
-        './Rectangle'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        defined,
-        DeveloperError,
-        GeographicProjection,
-        CesiumMath,
-        Matrix2,
-        Rectangle) {
+    './Cartesian3',
+    './Cartographic',
+    './defined',
+    './DeveloperError',
+    './GeographicProjection',
+    './Math',
+    './Matrix2',
+    './Rectangle'
+], function(
+    Cartesian3,
+    Cartographic,
+    defined,
+    DeveloperError,
+    GeographicProjection,
+    CesiumMath,
+    Matrix2,
+    Rectangle) {
     'use strict';
 
     var cos = Math.cos;
@@ -55,10 +55,50 @@ define([
         position.z = kZ / gamma;
 
         if (defined(options.vertexFormat) && options.vertexFormat.st) {
-            st.x = (stLongitude - rectangle.west) * options.lonScalar;
-            st.y = (stLatitude - rectangle.south) * options.latScalar;
+            var stnwCorner = options.stnwCorner;
+            if (defined(stnwCorner)) {
+                stLatitude = stnwCorner.latitude - options.stgranycos * row + col * options.stgranxsin;
+                stLongitude = stnwCorner.longitude + row * options.stgranysin + col * options.stgranxcos;
 
-            Matrix2.multiplyByVector(options.textureMatrix, st, st);
+                st.x = (stLongitude - options.stwest) * options.lonScalar;
+                st.y = (stLatitude - options.stsouth) * options.latScalar;
+            } else {
+                st.x = (stLongitude - rectangle.west) * options.lonScalar;
+                st.y = (stLatitude - rectangle.south) * options.latScalar;
+            }
+
+
+            // var stRotation = options.stRotation - options.rotation;
+            // var cosRotation = Math.cos(stRotation);
+            // var granularityX = 1/options.width;
+            // var granularityY = 1/options.height;
+            // var granYCos = granularityY;
+            // var granXCos = granularityX;
+            // var granYSin = 0.0;
+            // var granXSin = 0.0;
+            //
+            // granYCos *= cosRotation;
+            // granXCos *= cosRotation;
+            //
+            // var sinRotation = Math.sin(stRotation);
+            // granYSin = granularityY * sinRotation;
+            // granXSin = granularityX * sinRotation;
+            //
+            //
+            // st.x -= 0.5;
+            // st.y -= 0.5;
+            //
+            //
+            //
+            //
+            // // st.x = col * 1/options.width;
+            // // st.y = 1 - row * 1/options.height;
+            //
+            // st.x = row * granYSin + col * granXCos;
+            // st.y = 1 - (granYCos * row + col * granXSin);
+            //
+            // st.x += 0.5;
+            // st.y += 0.5;
         }
     };
 
@@ -75,6 +115,7 @@ define([
         var ellipsoid = geometry._ellipsoid;
         var surfaceHeight = geometry._surfaceHeight;
         var rotation = geometry._rotation;
+        var stRotation = geometry._stRotation;
         var extrudedHeight = geometry._extrudedHeight;
         var east = rectangle.east;
         var west = rectangle.west;
@@ -149,7 +190,7 @@ define([
 
             //>>includeStart('debug', pragmas.debug);
             if (north < -CesiumMath.PI_OVER_TWO || north > CesiumMath.PI_OVER_TWO ||
-                    south < -CesiumMath.PI_OVER_TWO || south > CesiumMath.PI_OVER_TWO) {
+                south < -CesiumMath.PI_OVER_TWO || south > CesiumMath.PI_OVER_TWO) {
                 throw new DeveloperError('Rotated rectangle is invalid.  It crosses over either the north or south pole.');
             }
             //>>includeEnd('debug')
@@ -160,18 +201,73 @@ define([
             rectangle.west = west;
         }
 
-         return {
+        var stgranYCos;
+        var stgranXCos;
+        var stgranYSin;
+        var stgranXSin;
+        var stnwCorner;
+        var stsouth;
+        var stwest;
+        if (stRotation !== 0) {
+            rotation = rotation - stRotation;
+            stgranYCos = granularityY;
+            stgranXCos = granularityX;
+  //          stgranYSin = 0.0;
+//            stgranXSin = 0.0;
+
+            var stcosRotation = Math.cos(rotation);
+            stgranYCos *= stcosRotation;
+            stgranXCos *= stcosRotation;
+
+            var stsinRotation = Math.sin(rotation);
+            stgranYSin = granularityY * stsinRotation;
+            stgranXSin = granularityX * stsinRotation;
+
+            stnwCorner = Rectangle.northwest(rectangle, stnwCorner);
+            nwCartesian = proj.project(stnwCorner, nwCartesian);
+            centerCartesian = proj.project(center, centerCartesian);
+
+            nwCartesian = Cartesian3.subtract(nwCartesian, centerCartesian, nwCartesian);
+            nwCartesian = Matrix2.multiplyByVector(Matrix2.fromRotation(rotation, rotationMatrixScratch), nwCartesian, nwCartesian);
+            nwCartesian = Cartesian3.add(nwCartesian, centerCartesian, nwCartesian);
+            stnwCorner = proj.unproject(nwCartesian, stnwCorner);
+
+            var la = nwCorner.latitude;
+            var l0 = la + (width - 1) * granXSin;
+            var l1 = la - granYCos * (height - 1);
+            var l2 = la - granYCos * (height - 1) + (width - 1) * granXSin;
+
+            stsouth = Math.min(la, l0, l1, l2);
+
+            var lo = nwCorner.longitude;
+            var lo0 = lo + (width - 1) * granXCos;
+            var lo1 = lo + (height - 1) * granYSin;
+            var lo2 = lo + (height - 1) * granYSin + (width - 1) * granXCos;
+
+            stwest = Math.min(lo, lo0, lo1, lo2);
+        }
+
+        return {
             granYCos : granYCos,
             granYSin : granYSin,
             granXCos : granXCos,
             granXSin : granXSin,
+            granX: granularityX,
+            granY: granularityY,
             ellipsoid : ellipsoid,
             width : width,
             height : height,
             surfaceHeight : surfaceHeight,
             extrudedHeight : extrudedHeight,
-            nwCorner: nwCorner,
-            rectangle: rectangle
+            nwCorner : nwCorner,
+            rectangle : rectangle,
+            stgranycos: stgranYCos,
+            stgranxcos: stgranXCos,
+            stgranysin: stgranYSin,
+            stgranxsin: stgranXSin,
+            stnwCorner: stnwCorner,
+            stwest: stwest,
+            stsouth: stsouth
         };
     };
 
