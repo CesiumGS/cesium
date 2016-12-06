@@ -49,6 +49,7 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './BlendingState',
+        './ColorBlendMode',
         './getBinaryAccessor',
         './HeightReference',
         './ModelAnimationCache',
@@ -110,6 +111,7 @@ define([
         Uri,
         when,
         BlendingState,
+        ColorBlendMode,
         getBinaryAccessor,
         HeightReference,
         ModelAnimationCache,
@@ -323,8 +325,9 @@ define([
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      * @param {DistanceDisplayCondition} [options.istanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
-     * @param {Color} [options.blendColor=Color.RED] A color that blends with the model's rendered color.
-     * @param {Number} [options.blendAmount=0.0] Value used to mix between the render color and blend color. A value of 0.0 results in no blending while a value of 1.0 results in a solid blend color.
+     * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
+     * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+     * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -525,18 +528,29 @@ define([
          *
          * @type {Color}
          *
-         * @default Color.RED
+         * @default Color.WHITE
          */
-        this.blendColor = defaultValue(options.blendColor, Color.RED);
+        this.color = defaultValue(options.color, Color.WHITE);
 
         /**
-         * Value used to mix between the render color and blend color. A value of 0.0 results in no blending while a value of 1.0 results in a solid blend color.
+         * Defines how the color blends with the model.
+         *
+         * @type {ColorBlendMode}
+         *
+         * @default ColorBlendMode.HIGHLIGHT
+         */
+        this.colorBlendMode = defaultValue(options.colorBlendMode, ColorBlendMode.HIGHLIGHT);
+
+        /**
+         * Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>.
+         * A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with
+         * any value in-between resulting in a mix of the two.
          *
          * @type {Number}
          *
-         * @default 0.0
+         * @default 0.5
          */
-        this.blendAmount = defaultValue(options.blendAmount, 0.0);
+        this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -1746,11 +1760,11 @@ define([
         return defined(gltf.asset) ? defaultValue(gltf.asset.premultipliedAlpha, false) : false;
     }
 
-    function modifyShaderForBlendColor(shader, premultipliedAlpha) {
+    function modifyShaderForColor(shader, premultipliedAlpha) {
         shader = ShaderSource.replaceMain(shader, 'gltf_blend_main');
         shader +=
-            'uniform vec4 gltf_blendColor; \n' +
-            'uniform float gltf_blendAmount; \n' +
+            'uniform vec4 gltf_color; \n' +
+            'uniform float gltf_colorBlend; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_blend_main(); \n';
@@ -1761,8 +1775,10 @@ define([
         }
 
         shader +=
-            '    gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_blendColor.rgb, gltf_blendAmount); \n' +
-            '    gl_FragColor.a *= gltf_blendColor.a; \n' +
+            '    gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_color.rgb, gltf_colorBlend); \n' +
+            '    float highlight = ceil(gltf_colorBlend); \n' +
+            '    gl_FragColor.rgb *= mix(gltf_color.rgb, vec3(1.0), highlight); \n' +
+            '    gl_FragColor.a *= gltf_color.a; \n' +
             '} \n';
 
         return shader;
@@ -1800,7 +1816,7 @@ define([
         }
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
-        var blendFS = modifyShaderForBlendColor(fs, premultipliedAlpha);
+        var blendFS = modifyShaderForColor(fs, premultipliedAlpha);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(blendFS, id, model._fragmentShaderLoaded);
@@ -2903,15 +2919,24 @@ define([
         };
     }
 
-    function createBlendColorFunction(model) {
+    function createColorFunction(model) {
         return function() {
-            return model.blendColor;
+            return model.color;
         };
     }
 
-    function createBlendAmountFunction(model) {
+    function createColorBlendFunction(model) {
         return function() {
-            return model.blendAmount;
+            var colorBlendMode = model.colorBlendMode;
+            var colorBlendAmount = model.colorBlendAmount;
+            if (colorBlendMode === ColorBlendMode.HIGHLIGHT) {
+                return 0.0;
+            } else if (colorBlendMode === ColorBlendMode.REPLACE) {
+                return 1.0;
+            } else if (colorBlendMode === ColorBlendMode.MIX) {
+                // The value 0.0 is reserved for highlight, so clamp to just above 0.0.
+                return CesiumMath.clamp(colorBlendAmount, CesiumMath.EPSILON4, 1.0);
+            }
         };
     }
 
@@ -2984,8 +3009,8 @@ define([
                 }
 
                 uniformMap = combine(uniformMap, {
-                    gltf_blendColor : createBlendColorFunction(model),
-                    gltf_blendAmount : createBlendAmountFunction(model)
+                    gltf_color : createColorFunction(model),
+                    gltf_colorBlend : createColorBlendFunction(model)
                 });
 
                 // Allow callback to modify the uniformMap
@@ -3091,7 +3116,7 @@ define([
                     pickCommand : pickCommand,
                     command2D : command2D,
                     pickCommand2D : pickCommand2D,
-                    // Generate on demand when blendColor alpha is less than 1.0
+                    // Generate on demand when color alpha is less than 1.0
                     translucentCommand : undefined,
                     translucentCommand2D : undefined
                 };
@@ -3487,9 +3512,9 @@ define([
         return translucentCommand;
     }
 
-    function updateBlendColor(model, frameState) {
+    function updateColor(model, frameState) {
         var scene3DOnly = frameState.scene3DOnly;
-        if (model.blendColor.alpha < 1.0) {
+        if (model.color.alpha < 1.0) {
             var nodeCommands = model._nodeCommands;
             var length = nodeCommands.length;
             // Generate translucent commands when the blend color has an alpha less than 1.0
@@ -3901,7 +3926,7 @@ define([
             updateWireframe(this);
             updateShowBoundingVolume(this);
             updateShadows(this);
-            updateBlendColor(this, frameState);
+            updateColor(this, frameState);
         }
 
         if (justLoaded) {
@@ -3933,7 +3958,7 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        var translucent = (this.blendColor.alpha < 1.0);
+                        var translucent = (this.color.alpha < 1.0);
                         var command = translucent ? nc.translucentCommand : nc.command;
                         commandList.push(command);
                         boundingVolume = nc.command.boundingVolume;

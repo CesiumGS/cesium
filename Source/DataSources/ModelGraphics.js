@@ -50,8 +50,10 @@ define([
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
-     * @param {Property} [options.blendColor=Color.RED] A Property specifying the {@link Color} that blends with the model's rendered color.
-     * @param {Property} [options.blendAmount=0.0] A numeric Property specifying a value used to mix between the render color and blend color. A value of 0.0 results in no blending while a value of 1.0 results in a solid blend color.
+     * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} that blends with the model's rendered color.
+     * @param {Property} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
+     * @param {Property} [options.colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+     *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
      */
@@ -78,10 +80,12 @@ define([
         this._heightReferenceSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
-        this._blendColor = undefined;
-        this._blendColorSubscription = undefined;
-        this._blendAmount = undefined;
-        this._blendAmountSubscription = undefined;
+        this._color = undefined;
+        this._colorSubscription = undefined;
+        this._colorBlendMode = undefined;
+        this._colorBlendModeSubscription = undefined;
+        this._colorBlendAmount = undefined;
+        this._colorBlendAmountSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -194,21 +198,30 @@ define([
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
 
         /**
-         * Gets or sets the Property specifying the {@link Color} color that blends with the model's rendered color.
+         * Gets or sets the Property specifying the {@link Color} that blends with the model's rendered color.
          * @memberof ModelGraphics.prototype
          * @type {Property}
-         * @default Color.RED
+         * @default Color.WHITE
          */
-        blendColor : createPropertyDescriptor('blendColor'),
+        color : createPropertyDescriptor('color'),
 
         /**
-         * Gets or sets the numeric Property specifying specifying a value used to mix between the render color
-         * and blend color. A value of 0.0 results in no blending while a value of 1.0 results in a solid blend color.
+         * Gets or sets the enum Property specifying how the color blends with the model.
          * @memberof ModelGraphics.prototype
          * @type {Property}
-         * @default 0.0
+         * @default ColorBlendMode.HIGHLIGHT
          */
-        blendAmount : createPropertyDescriptor('blendAmount')
+        colorBlendMode : createPropertyDescriptor('colorBlendMode'),
+
+        /**
+         * A numeric Property specifying the color strength when the <code>colorBlendMode</code> is MIX.
+         * A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with
+         * any value in-between resulting in a mix of the two.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default 0.5
+         */
+        colorBlendAmount : createPropertyDescriptor('colorBlendAmount')
     });
 
     /**
@@ -232,8 +245,9 @@ define([
         result.nodeTransformations = this.nodeTransformations;
         result.heightReference = this._heightReference;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
-        result.blendColor = this.blendColor;
-        result.blendAmount = this.blendAmount;
+        result.color = this.color;
+        result.colorBlendMode = this.colorBlendMode;
+        result.colorBlendAmount = this.colorBlendAmount;
 
         return result;
     };
@@ -261,8 +275,9 @@ define([
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
-        this.blendColor = defaultValue(this.blendColor, source.blendColor);
-        this.blendAmount = defaultValue(this.blendAmount, source.blendAmount);
+        this.color = defaultValue(this.color, source.color);
+        this.colorBlendMode = defaultValue(this.colorBlendMode, source.colorBlendMode);
+        this.colorBlendAmount = defaultValue(this.colorBlendAmount, source.colorBlendAmount);
 
         var sourceNodeTransformations = source.nodeTransformations;
         if (defined(sourceNodeTransformations)) {

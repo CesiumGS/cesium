@@ -26,6 +26,7 @@ defineSuite([
         'Renderer/RenderState',
         'Renderer/ShaderSource',
         'Renderer/WebGLConstants',
+        'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
@@ -58,6 +59,7 @@ defineSuite([
         RenderState,
         ShaderSource,
         WebGLConstants,
+        ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
         createScene,
@@ -1869,7 +1871,7 @@ defineSuite([
         });
     });
 
-    it('renders with a blend color', function() {
+    it('renders with a color', function() {
         return loadModel(boxUrl).then(function(model) {
             model.show = true;
             model.zoomTo();
@@ -1879,28 +1881,47 @@ defineSuite([
             expect(sourceColor[0]).toBeGreaterThan(0);
             expect(sourceColor[1]).toEqual(0);
 
-            model.blendColor = Color.LIME;
+            // Check MIX
+            model.colorBlendMode = ColorBlendMode.MIX;
+            model.color = Color.LIME;
 
-            model.blendAmount = 0.0;
-            var blendColor = scene.renderForSpecs();
-            expect(blendColor).toEqual(sourceColor);
+            model.colorBlendAmount = 0.0;
+            var color = scene.renderForSpecs();
+            expect(color).toEqual(sourceColor);
 
-            model.blendAmount = 0.5;
-            blendColor = scene.renderForSpecs();
-            expect(blendColor[0]).toBeGreaterThan(0);
-            expect(blendColor[1]).toBeGreaterThan(0);
+            model.colorBlendAmount = 0.5;
+            color = scene.renderForSpecs();
+            expect(color[0]).toBeGreaterThan(0);
+            expect(color[1]).toBeGreaterThan(0);
 
-            model.blendAmount = 1.0;
-            blendColor = scene.renderForSpecs();
-            expect(blendColor[0]).toEqual(0);
-            expect(blendColor[1]).toEqual(255);
+            model.colorBlendAmount = 1.0;
+            color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toEqual(255);
 
-            // Check alpha. Alpha works independently of the blendAmount.
-            model.blendColor = Color.fromAlpha(Color.LIME, 0.5);
-            blendColor = scene.renderForSpecs();
-            expect(blendColor[0]).toEqual(0);
-            expect(blendColor[1]).toBeLessThan(255);
-            expect(blendColor[1]).toBeGreaterThan(0);
+            // Check REPLACE
+            model.colorBlendMode = ColorBlendMode.REPLACE;
+            model.colorBlendAmount = 0.5; // Should have no effect
+            color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toEqual(255);
+
+            // Check HIGHLIGHT
+            model.colorBlendMode = ColorBlendMode.HIGHLIGHT;
+            model.color = Color.DARKGRAY;
+            color = scene.renderForSpecs();
+            expect(sourceColor[0]).toBeGreaterThan(0);
+            expect(sourceColor[0]).toBeLessThan(255);
+            expect(sourceColor[1]).toEqual(0);
+            expect(sourceColor[2]).toEqual(0);
+
+            // Check alpha.
+            model.colorBlendMode = ColorBlendMode.REPLACE;
+            model.color = Color.fromAlpha(Color.LIME, 0.5);
+            color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toBeLessThan(255);
+            expect(color[1]).toBeGreaterThan(0);
         });
     });
 

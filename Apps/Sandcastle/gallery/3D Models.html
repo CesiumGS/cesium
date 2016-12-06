@@ -35,24 +35,25 @@
 <div id="toolbar">
     <table><tbody>
     <tr>
-        <td>Blend Amount</td>
+        <td>Mode</td>
+        <td><select data-bind="options: colorBlendModes, value: colorBlendMode"></select></td>
+    </tr>
+    <tr>
+        <td>Color</td>
+        <td><select data-bind="options: colors, value: color"></select></td>
+    </tr>
+    <tr>
+        <td>Alpha</td>
         <td>
-            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: blendAmount, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: blendAmount">
+            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: alpha, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: alpha">
         </td>
     </tr>
     <tr>
-        <td>Blend Color</td>
+        <td data-bind="style: { color: colorBlendAmountEnabled ? '' : 'gray'}">Mix</td>
         <td>
-            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: blendColor, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: blendColor">
-        </td>
-    </tr>
-    <tr>
-        <td>Blend Alpha</td>
-        <td>
-            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: blendAlpha, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: blendAlpha">
+            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: colorBlendAmount, valueUpdate: 'input', enable: colorBlendAmountEnabled">
+            <input type="text" size="5" data-bind="value: colorBlendAmount, enable: colorBlendAmountEnabled">
         </td>
     </tr>
     </tbody></table>
@@ -69,11 +70,23 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 
 var entity;
 
+function getColorBlendMode(colorBlendMode) {
+    return Cesium.ColorBlendMode[colorBlendMode.toUpperCase()];
+}
+
+function getColor(color) {
+    return Cesium.Color[color.toUpperCase()];
+}
+
 // The viewModel tracks the state of our mini application.
 var viewModel = {
-    blendAmount : 0.0,
-    blendColor : 0.0,
-    blendAlpha : 1.0
+    color : 'White',
+    colors : ['White', 'Red', 'Green', 'Blue', 'Yellow', 'Gray'],
+    alpha : 1.0,
+    colorBlendMode : 'Highlight',
+    colorBlendModes : ['Highlight', 'Replace', 'Mix'],
+    colorBlendAmount : 0.5,
+    colorBlendAmountEnabled : false
 };
 
 // Convert the viewModel members into knockout observables.
@@ -83,21 +96,29 @@ Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
-Cesium.knockout.getObservable(viewModel, 'blendAmount').subscribe(
+Cesium.knockout.getObservable(viewModel, 'color').subscribe(
     function(newValue) {
-        entity.model.blendAmount = newValue;
+        entity.model.color = Cesium.Color.fromAlpha(getColor(newValue), viewModel.alpha);
     }
 );
 
-Cesium.knockout.getObservable(viewModel, 'blendColor').subscribe(
+Cesium.knockout.getObservable(viewModel, 'alpha').subscribe(
     function(newValue) {
-        entity.model.blendColor = Cesium.Color.fromHsl(newValue, 1.0, 0.5, viewModel.blendAlpha);
+        entity.model.color = Cesium.Color.fromAlpha(getColor(viewModel.color), newValue);
     }
 );
 
-Cesium.knockout.getObservable(viewModel, 'blendAlpha').subscribe(
+Cesium.knockout.getObservable(viewModel, 'colorBlendMode').subscribe(
     function(newValue) {
-        entity.model.blendColor = Cesium.Color.fromHsl(viewModel.blendColor, 1.0, 0.5, newValue);
+        var colorBlendMode = getColorBlendMode(newValue);
+        entity.model.colorBlendMode = colorBlendMode;
+        viewModel.colorBlendAmountEnabled = (colorBlendMode === Cesium.ColorBlendMode.MIX);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'colorBlendAmount').subscribe(
+    function(newValue) {
+        entity.model.colorBlendAmount = newValue;
     }
 );
 
@@ -119,8 +140,9 @@ function createModel(url, height) {
             uri : url,
             minimumPixelSize : 128,
             maximumScale : 20000,
-            blendAmount : viewModel.blendAmount,
-            blendColor : Cesium.Color.fromHsl(viewModel.blendColor, 1.0, 0.5, viewModel.blendAlpha)
+            color : Cesium.Color.fromAlpha(getColor(viewModel.color), viewModel.alpha),
+            colorBlendMode : getColorBlendMode(viewModel.colorBlendMode),
+            colorBlendAmount : viewModel.colorBlendAmount
         }
     });
     viewer.trackedEntity = entity;

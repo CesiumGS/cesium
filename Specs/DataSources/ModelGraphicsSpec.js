@@ -9,6 +9,7 @@ defineSuite([
         'DataSources/ConstantProperty',
         'DataSources/NodeTransformationProperty',
         'DataSources/PropertyBag',
+        'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ShadowMode'
     ], function(
@@ -21,6 +22,7 @@ defineSuite([
         ConstantProperty,
         NodeTransformationProperty,
         PropertyBag,
+        ColorBlendMode,
         HeightReference,
         ShadowMode) {
     'use strict';
@@ -37,8 +39,9 @@ defineSuite([
             shadows : ShadowMode.DISABLED,
             heightReference : HeightReference.CLAMP_TO_GROUND,
             distanceDisplayCondition : new DistanceDisplayCondition(),
-            blendColor : new Color(0.0, 1.0, 0.0, 0.2),
-            blendAmount : 0.5,
+            color : new Color(0.0, 1.0, 0.0, 0.2),
+            colorBlendMode : ColorBlendMode.HIGHLIGHT,
+            colorBlendAmount : 0.5,
             nodeTransformations : {
                 node1 : {
                     translation : Cartesian3.UNIT_Y,
@@ -58,8 +61,9 @@ defineSuite([
         expect(model.shadows).toBeInstanceOf(ConstantProperty);
         expect(model.heightReference).toBeInstanceOf(ConstantProperty);
         expect(model.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
-        expect(model.blendColor).toBeInstanceOf(ConstantProperty);
-        expect(model.blendAmount).toBeInstanceOf(ConstantProperty);
+        expect(model.color).toBeInstanceOf(ConstantProperty);
+        expect(model.colorBlendMode).toBeInstanceOf(ConstantProperty);
+        expect(model.colorBlendAmount).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
 
         expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
@@ -73,8 +77,9 @@ defineSuite([
         expect(model.shadows.getValue()).toEqual(options.shadows);
         expect(model.heightReference.getValue()).toEqual(options.heightReference);
         expect(model.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
-        expect(model.blendColor.getValue()).toEqual(options.blendColor);
-        expect(model.blendAmount.getValue()).toEqual(options.blendAmount);
+        expect(model.color.getValue()).toEqual(options.color);
+        expect(model.colorBlendMode.getValue()).toEqual(options.colorBlendMode);
+        expect(model.colorBlendAmount.getValue()).toEqual(options.colorBlendAmount);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
 
         var actualNodeTransformations = model.nodeTransformations.getValue(new JulianDate());
@@ -97,8 +102,9 @@ defineSuite([
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
-        source.blendColor = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
-        source.blendAmount = new ConstantProperty(0.5);
+        source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+        source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
+        source.colorBlendAmount = new ConstantProperty(0.5);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty({
@@ -123,8 +129,9 @@ defineSuite([
         expect(target.shadows).toBe(source.shadows);
         expect(target.heightReference).toBe(source.heightReference);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
-        expect(target.blendColor).toBe(source.blendColor);
-        expect(target.blendAmount).toBe(source.blendAmount);
+        expect(target.color).toBe(source.color);
+        expect(target.colorBlendMode).toBe(source.colorBlendMode);
+        expect(target.colorBlendAmount).toBe(source.colorBlendAmount);
         expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
     });
@@ -140,8 +147,9 @@ defineSuite([
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
-        source.blendColor = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
-        source.blendAmount = new ConstantProperty(0.5);
+        source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+        source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
+        source.colorBlendAmount = new ConstantProperty(0.5);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
@@ -156,8 +164,9 @@ defineSuite([
         var shadows = new ConstantProperty(ShadowMode.ENABLED);
         var heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         var distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
-        var blendColor = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
-        var blendAmount = new ConstantProperty(0.5);
+        var color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+        var colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
+        var colorBlendAmount = new ConstantProperty(0.5);
         var runAnimations = new ConstantProperty(true);
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
@@ -173,8 +182,9 @@ defineSuite([
         target.shadows = shadows;
         target.heightReference = heightReference;
         target.distanceDisplayCondition = distanceDisplayCondition;
-        target.blendColor = blendColor;
-        target.blendAmount = blendAmount;
+        target.color = color;
+        target.colorBlendMode = colorBlendMode;
+        target.colorBlendAmount = colorBlendAmount;
         target.runAnimations = runAnimations;
         target.nodeTransformations = nodeTransformations;
 
@@ -189,8 +199,9 @@ defineSuite([
         expect(target.shadows).toBe(shadows);
         expect(target.heightReference).toBe(heightReference);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
-        expect(target.blendColor).toBe(blendColor);
-        expect(target.blendAmount).toBe(blendAmount);
+        expect(target.color).toBe(color);
+        expect(target.colorBlendMode).toBe(colorBlendMode);
+        expect(target.colorBlendAmount).toBe(colorBlendAmount);
         expect(target.runAnimations).toBe(runAnimations);
         expect(target.nodeTransformations).toBe(nodeTransformations);
     });
@@ -206,8 +217,9 @@ defineSuite([
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
-        source.blendColor = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
-        source.blendAmount = new ConstantProperty(0.5);
+        source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+        source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
+        source.colorBlendAmount = new ConstantProperty(0.5);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty(),
@@ -224,8 +236,9 @@ defineSuite([
         expect(result.shadows).toBe(source.shadows);
         expect(result.heightReference).toBe(source.heightReference);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
-        expect(result.blendColor).toBe(source.blendColor);
-        expect(result.blendAmount).toBe(source.blendAmount);
+        expect(result.color).toBe(source.color);
+        expect(result.colorBlendMode).toBe(source.colorBlendMode);
+        expect(result.colorBlendAmount).toBe(source.colorBlendAmount);
         expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
     });
