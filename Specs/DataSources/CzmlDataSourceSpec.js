@@ -1839,7 +1839,11 @@ defineSuite([
                 gltf : './Data/Models/Box/CesiumBoxTest.gltf',
                 incrementallyLoadTextures : true,
                 shadows : 'ENABLED',
-                heightReference: 'CLAMP_TO_GROUND',
+                heightReference : 'CLAMP_TO_GROUND',
+                silhouetteColor : {
+                    rgbaf : [1.0, 0.0, 0.0, 1.0]
+                },
+                silhouetteSize : 2.0,
                 color : {
                     rgbaf : [0.0, 1.0, 0.0, 0.2]
                 },
@@ -1874,6 +1878,8 @@ defineSuite([
         expect(entity.model.incrementallyLoadTextures.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.model.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
         expect(entity.model.heightReference.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(entity.model.silhouetteColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(1.0, 0.0, 0.0, 1.0));
+        expect(entity.model.silhouetteSize.getValue(Iso8601.MINIMUM_VALUE)).toEqual(2.0);
         expect(entity.model.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.0, 1.0, 0.0, 0.2));
         expect(entity.model.colorBlendMode.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ColorBlendMode.HIGHLIGHT);
         expect(entity.model.colorBlendAmount.getValue(Iso8601.MINIMUM_VALUE)).toEqual(0.5);
@@ -1903,6 +1909,10 @@ defineSuite([
                 incrementallyLoadTextures : true,
                 shadows : 'ENABLED',
                 heightReference: 'CLAMP_TO_GROUND',
+                silhouetteColor : {
+                    rgbaf : [1.0, 0.0, 0.0, 1.0]
+                },
+                silhouetteSize : 2.0,
                 color : {
                     rgbaf : [0.0, 1.0, 0.0, 0.2]
                 },
@@ -1941,6 +1951,8 @@ defineSuite([
         expect(entity.model.incrementallyLoadTextures.getValue(validTime)).toEqual(true);
         expect(entity.model.shadows.getValue(validTime)).toEqual(ShadowMode.ENABLED);
         expect(entity.model.heightReference.getValue(validTime)).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(entity.model.silhouetteColor.getValue(validTime)).toEqual(new Color(1.0, 0.0, 0.0, 1.0));
+        expect(entity.model.silhouetteSize.getValue(validTime)).toEqual(2.0);
         expect(entity.model.color.getValue(validTime)).toEqual(new Color(0.0, 1.0, 0.0, 0.2));
         expect(entity.model.colorBlendMode.getValue(validTime)).toEqual(ColorBlendMode.HIGHLIGHT);
         expect(entity.model.colorBlendAmount.getValue(validTime)).toEqual(0.5);
@@ -1966,6 +1978,8 @@ defineSuite([
         expect(entity.model.shadows.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.heightReference.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.color.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.silhouetteColor.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.silhouetteSize.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.colorBlendMode.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.colorBlendAmount.getValue(invalidTime)).toBeUndefined();
 

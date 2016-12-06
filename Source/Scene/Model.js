@@ -324,10 +324,12 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
-     * @param {DistanceDisplayCondition} [options.istanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
+     * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
      * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+     * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color.
+     * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -406,31 +408,23 @@ define([
         this.show = defaultValue(options.show, true);
 
         /**
-         * Determines if the model will be highlighted.
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
-        this.highlight = defaultValue(options.highlight, false);
-
-        /**
-         * The highlight color
+         * The silhouette color.
          *
          * @type {Color}
          *
-         * @default Color()
+         * @default Color.RED
          */
-        this.highlightColor = defaultValue(options.highlightColor, new Color());
+        this.silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
+        this._silhouetteColor = new Color();
 
         /**
-         * The size of the highlight
+         * The size of the silhouette in pixels.
          *
-         * @type {Float}
+         * @type {Number}
          *
-         * @default 2.0
+         * @default 0.0
          */
-        this.highlightSize = 2.0;
+        this.silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
 
         /**
          * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -558,6 +552,7 @@ define([
          * @default Color.WHITE
          */
         this.color = defaultValue(options.color, Color.WHITE);
+        this._color = new Color();
 
         /**
          * Defines how the color blends with the model.
@@ -658,7 +653,7 @@ define([
             vertexArrays : {},
             programs : {},
             pickPrograms : {},
-            highlightPrograms: {},
+            silhouettePrograms: {},
             textures : {},
 
             samplers : {},
@@ -952,6 +947,20 @@ define([
     });
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+
+    function silhouetteSupported(context) {
+        return context.stencilBuffer;
+    }
+
+    /**
+     * Determines if silhouettes are supported.
+     *
+     * @param {Scene} scene The scene.
+     * @returns {Boolean} <code>true</code> if silhouettes are supported; otherwise, returns <code>false</code>
+     */
+    Model.silhouetteSupported = function(scene) {
+        return silhouetteSupported(scene.context);
+    };
 
     /**
      * This function differs from the normal subarray function
@@ -1819,23 +1828,6 @@ define([
         return shader;
     }
 
-    function createHighlightVertexShaderSource(vertexShaderSource) {
-        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_old_main');
-        // Modified from http://forum.unity3d.com/threads/toon-outline-but-with-diffuse-surface.24668/
-        var highlightMain = 'uniform float u_highlightSize;\n' +
-            'void main() \n' +
-            '{ \n' +
-            '  czm_old_main(); \n' +
-            '  vec3 n = normalize(v_normal);\n' +
-            '  n.x *= czm_projection[0][0];\n' +
-            '  n.y *= czm_projection[1][1];\n' +
-            '  vec4 clip = gl_Position;\n' +
-            '  clip.xy += n.xy * clip.w * u_highlightSize / czm_viewport.z * 2.0;\n' +
-            '  gl_Position = clip;\n' +
-            '}';
-        return renamedVS + '\n' + highlightMain;
-    }
-
     function createProgram(id, model, context) {
         var programs = model.gltf.programs;
         var shaders = model._loadResources.shaders;
@@ -1889,20 +1881,6 @@ define([
                 attributeLocations : attributeLocations
             });
         }
-
-        var highlightVS = createHighlightVertexShaderSource(vs);
-        var highlightFS = 'uniform vec4 u_highlightColor;\n' +
-            'void main() \n' +
-            '{ \n' +
-            '    gl_FragColor = u_highlightColor;\n' +
-            '}';
-
-        model._rendererResources.highlightPrograms[id] = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : highlightVS,
-                fragmentShaderSource : highlightFS,
-                attributeLocations : attributeLocations
-            });
     }
 
     function createPrograms(model, context) {
@@ -2880,7 +2858,6 @@ define([
                 u.jointMatrixUniformName = jointMatrixUniformName;
             }
         }
-
     }
 
     function scaleFromMatrix5Array(matrix) {
@@ -2979,15 +2956,15 @@ define([
         };
     }
 
-    function createHighlightColorFunction(model) {
+    function createSilhouetteColorFunction(model) {
         return function() {
-            return model.highlightColor;
+            return model.silhouetteColor;
         };
     }
 
-    function createHighlightSizeFunction(model) {
+    function createSilhouetteSizeFunction(model) {
         return function() {
-            return model.highlightSize;
+            return model.silhouetteSize;
         };
     }
 
@@ -3014,7 +2991,6 @@ define([
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
         var rendererRenderStates = resources.renderStates;
-        var rendererhighlightPrograms = resources.highlightPrograms;
         var uniformMaps = model._uniformMaps;
 
         var gltf = model.gltf;
@@ -3102,27 +3078,6 @@ define([
                 var castShadows = ShadowMode.castShadows(model._shadows);
                 var receiveShadows = ShadowMode.receiveShadows(model._shadows);
 
-                // Setup the stencil for the first pass
-                var drawRS = clone(rs);
-                drawRS.stencilTest = {
-                    enabled : true,
-                    frontFunction : WebGLConstants.ALWAYS,
-                    backFunction : WebGLConstants.ALWAYS,
-                    reference : 1,
-                    mask : ~0,
-                    frontOperation : {
-                        fail : WebGLConstants.KEEP,
-                        zFail : WebGLConstants.KEEP,
-                        zPass : WebGLConstants.REPLACE
-                    },
-                    backOperation : {
-                        fail : WebGLConstants.KEEP,
-                        zFail : WebGLConstants.KEEP,
-                        zPass : WebGLConstants.REPLACE
-                    }
-                };
-                drawRS = RenderState.fromCache(drawRS);
-
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     cull : model.cull,
@@ -3135,53 +3090,7 @@ define([
                     castShadows : castShadows,
                     receiveShadows : receiveShadows,
                     uniformMap : uniformMap,
-                    renderState : drawRS,
-                    owner : owner,
-                    pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
-                });
-
-                // Setup the stencil command for the highlight
-                var highlightRS = clone(rs);
-                highlightRS.stencilTest = {
-                    enabled : true,
-                    frontFunction : WebGLConstants.NOTEQUAL,
-                    backFunction : WebGLConstants.NOTEQUAL,
-                    reference : 1,
-                    mask : ~0,
-                    frontOperation : {
-                        fail : WebGLConstants.KEEP,
-                        zFail : WebGLConstants.KEEP,
-                        zPass : WebGLConstants.REPLACE
-                    },
-                    backOperation : {
-                        fail : WebGLConstants.KEEP,
-                        zFail : WebGLConstants.KEEP,
-                        zPass : WebGLConstants.REPLACE
-                    }
-                };
-                highlightRS.cull = {
-                    enabled : false
-                };
-                highlightRS.depthTest = false;
-                highlightRS.blending = BlendingState.ALPHA_BLEND;
-
-                highlightRS = RenderState.fromCache(highlightRS);
-
-                // Setup the highlight color and size uniforms.
-                uniformMap.u_highlightColor = createHighlightColorFunction(model);
-                uniformMap.u_highlightSize = createHighlightSizeFunction(model);
-
-                var highlightCommand = new DrawCommand({
-                    boundingVolume : new BoundingSphere(), // updated in update()
-                    cull : model.cull,
-                    modelMatrix : new Matrix4(),           // computed in update()
-                    primitiveType : primitive.mode,
-                    vertexArray : vertexArray,
-                    count : count,
-                    offset : offset,
-                    shaderProgram : rendererhighlightPrograms[technique.program],
-                    uniformMap : uniformMap,
-                    renderState : highlightRS,
+                    renderState : rs,
                     owner : owner,
                     pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                 });
@@ -3228,21 +3137,16 @@ define([
 
                 var command2D;
                 var pickCommand2D;
-                var highlightCommand2D;
                 if (!scene3DOnly) {
                     command2D = DrawCommand.shallowClone(command);
-                    command2D.boundingVolume = new BoundingSphere();
-                    command2D.modelMatrix = new Matrix4();
+                    command2D.boundingVolume = new BoundingSphere(); // updated in update()
+                    command2D.modelMatrix = new Matrix4();           // updated in update()
 
                     if (allowPicking) {
                         pickCommand2D = DrawCommand.shallowClone(pickCommand);
-                        pickCommand2D.boundingVolume = new BoundingSphere();
-                        pickCommand2D.modelMatrix = new Matrix4();
+                        pickCommand2D.boundingVolume = new BoundingSphere(); // updated in update()
+                        pickCommand2D.modelMatrix = new Matrix4();           // updated in update()
                     }
-
-                    highlightCommand2D = DrawCommand.shallowClone(highlightCommand);
-                    highlightCommand2D.boundingVolume = new BoundingSphere();
-                    highlightCommand2D.modelMatrix = new Matrix4();
                 }
 
                 var nodeCommand = {
@@ -3252,9 +3156,12 @@ define([
                     pickCommand : pickCommand,
                     command2D : command2D,
                     pickCommand2D : pickCommand2D,
-                    highlightCommand: highlightCommand,
-                    highlightCommand2D: highlightCommand2D,
-                    // Generate on demand when color alpha is less than 1.0
+                    // Generated on demand when silhouette size is greater than 0.0 and silhouette alpha is greater than 0.0
+                    silhouetteModelCommand : undefined,
+                    silhouetteModelCommand2D : undefined,
+                    silhouetteColorCommand : undefined,
+                    silhouetteColorCommand2D : undefined,
+                    // Generated on demand when color alpha is less than 1.0
                     translucentCommand : undefined,
                     translucentCommand2D : undefined
                 };
@@ -3353,6 +3260,7 @@ define([
             resources.vertexArrays = cachedResources.vertexArrays;
             resources.programs = cachedResources.programs;
             resources.pickPrograms = cachedResources.pickPrograms;
+            resources.silhouettePrograms = cachedResources.silhouettePrograms;
             resources.textures = cachedResources.textures;
             resources.samplers = cachedResources.samplers;
             resources.renderStates = cachedResources.renderStates;
@@ -3453,10 +3361,6 @@ define([
                                 BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
                             }
 
-                            var highlightCommand = primitiveCommand.highlightCommand;
-                            Matrix4.clone(command.modelMatrix, highlightCommand.modelMatrix);
-                            BoundingSphere.clone(command.boundingVolume, highlightCommand.boundingVolume);
-
                             // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
                             // will be clipped by the viewport. We create a second command that translates the model
                             // model matrix to the opposite side of the map so the part that was clipped in one viewport
@@ -3472,10 +3376,6 @@ define([
                                     Matrix4.clone(command.modelMatrix, pickCommand2D.modelMatrix);
                                     BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
                                 }
-
-                                var highlightCommand2D = primitiveCommand.highlightCommand2D;
-                                Matrix4.clone(command.modelMatrix, highlightCommand2D.modelMatrix);
-                                BoundingSphere.clone(command.boundingVolume, highlightCommand2D.boundingVolume);
                             }
                         }
                     }
@@ -3659,12 +3559,12 @@ define([
     }
 
     function updateColor(model, frameState) {
+        // Generate translucent commands when the blend color has an alpha in the range (0.0, 1.0) exclusive
         var scene3DOnly = frameState.scene3DOnly;
         var alpha = model.color.alpha;
         if ((alpha > 0.0) && (alpha < 1.0)) {
             var nodeCommands = model._nodeCommands;
             var length = nodeCommands.length;
-            // Generate translucent commands when the blend color has an alpha less than 1.0
             if (!defined(nodeCommands[0].translucentCommand)) {
                 for (var i = 0; i < length; ++i) {
                     var nodeCommand = nodeCommands[i];
@@ -3675,6 +3575,197 @@ define([
                         nodeCommand.translucentCommand2D = deriveTranslucentCommand(command2D);
                     }
                 }
+            }
+        }
+    }
+
+    function getProgramId(model, program) {
+        var programs = model._rendererResources.programs;
+        for (var id in programs) {
+            if (programs.hasOwnProperty(id)) {
+                if (programs[id] === program) {
+                    return id;
+                }
+            }
+        }
+    }
+
+    function createSilhouetteProgram(program, frameState) {
+        var vs = program.vertexShaderSource.sources[0];
+        var attributeLocations = program._attributeLocations;
+
+        // Modified from http://forum.unity3d.com/threads/toon-outline-but-with-diffuse-surface.24668/
+        vs = ShaderSource.replaceMain(vs, 'gltf_silhouette_main');
+        vs +=
+            'uniform float gltf_silhouetteSize;\n' +
+            'void main() \n' +
+            '{ \n' +
+            '    gltf_silhouette_main(); \n' +
+            '    vec3 n = normalize(v_normal);\n' +
+            '    n.x *= czm_projection[0][0];\n' +
+            '    n.y *= czm_projection[1][1];\n' +
+            '    vec4 clip = gl_Position;\n' +
+            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize / czm_viewport.z * 2.0;\n' +
+            '    gl_Position = clip;\n' +
+            '}';
+
+        var fs =
+            'uniform vec4 gltf_silhouetteColor;\n' +
+            'void main() \n' +
+            '{ \n' +
+            '    gl_FragColor = gltf_silhouetteColor;\n' +
+            '}';
+
+        return ShaderProgram.fromCache({
+            context : frameState.context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+    }
+
+    function hasSilhouette(model, frameState) {
+        return silhouetteSupported(frameState.context) && (model.silhouetteSize > 0.0) && (model.silhouetteColor.alpha > 0.0);
+    }
+
+    function isTranslucent(model) {
+        return (model.color.alpha > 0.0) && (model.color.alpha < 1.0);
+    }
+
+    function isInvisible(model) {
+        return (model.color.alpha === 0.0);
+    }
+
+    function alphaDirty(currAlpha, prevAlpha) {
+        // Returns whether the alpha state has changed between invisible, translucent, or opaque
+        return (Math.floor(currAlpha) !== Math.floor(prevAlpha)) || (Math.ceil(currAlpha) !== Math.ceil(prevAlpha));
+    }
+
+    function updateSilhouette(model, frameState) {
+        // Generate silhouette commands when the silhouette size is greater than 0.0 and the alpha is greater than 0.0
+        // There are two silhouette commands:
+        //     1. silhouetteModelCommand : render model normally while enabling stencil mask
+        //     2. silhouetteColorCommand : render enlarged model with a solid color while enabling stencil tests
+        if (!hasSilhouette(model, frameState)) {
+            return;
+        }
+
+        var nodeCommands = model._nodeCommands;
+        var dirty = alphaDirty(model.color.alpha, model._color.alpha) ||
+                    alphaDirty(model.silhouetteColor.alpha, model._silhouetteColor.alpha) ||
+                    !defined(nodeCommands[0].silhouetteModelCommand);
+
+        Color.clone(model.color, model._color);
+        Color.clone(model.silhouetteColor, model._silhouetteColor);
+
+        if (!dirty) {
+            return;
+        }
+
+        var silhouettePrograms = model._rendererResources.silhouettePrograms;
+        var scene3DOnly = frameState.scene3DOnly;
+        var length = nodeCommands.length;
+        for (var i = 0; i < length; ++i) {
+            var nodeCommand = nodeCommands[i];
+            var command = nodeCommand.command;
+
+            // Create model command
+            var modelCommand = isTranslucent(model) ? nodeCommand.translucentCommand : command;
+            var silhouetteModelCommand = DrawCommand.shallowClone(modelCommand);
+            var renderState = clone(modelCommand.renderState);
+            renderState.stencilTest = {
+                enabled : true,
+                frontFunction : WebGLConstants.ALWAYS,
+                backFunction : WebGLConstants.ALWAYS,
+                reference : 1,
+                mask : ~0,
+                frontOperation : {
+                    fail : WebGLConstants.KEEP,
+                    zFail : WebGLConstants.KEEP,
+                    zPass : WebGLConstants.REPLACE
+                },
+                backOperation : {
+                    fail : WebGLConstants.KEEP,
+                    zFail : WebGLConstants.KEEP,
+                    zPass : WebGLConstants.REPLACE
+                }
+            };
+
+            if (isInvisible(model)) {
+                // Disable color and depth writes but still write into the stencil buffer
+                renderState.colorMask = {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                };
+                renderState.depthMask = false;
+            }
+            renderState = RenderState.fromCache(renderState);
+            silhouetteModelCommand.renderState = renderState;
+            nodeCommand.silhouetteModelCommand = silhouetteModelCommand;
+
+            // Create color command
+            var silhouetteColorCommand = DrawCommand.shallowClone(command);
+            renderState = clone(command.renderState, true);
+            if (model.silhouetteColor.alpha < 1.0) {
+                silhouetteColorCommand.pass = Pass.TRANSLUCENT;
+                renderState.depthMask = false;
+                renderState.blending = BlendingState.ALPHA_BLEND;
+            }
+            renderState.depthTest.enabled = true;
+            renderState.cull.enabled = false;
+            renderState.stencilTest = {
+                enabled : true,
+                frontFunction : WebGLConstants.NOTEQUAL,
+                backFunction : WebGLConstants.NOTEQUAL,
+                reference : 1,
+                mask : ~0,
+                frontOperation : {
+                    fail : WebGLConstants.KEEP,
+                    zFail : WebGLConstants.KEEP,
+                    zPass : WebGLConstants.REPLACE
+                },
+                backOperation : {
+                    fail : WebGLConstants.KEEP,
+                    zFail : WebGLConstants.KEEP,
+                    zPass : WebGLConstants.REPLACE
+                }
+            };
+            renderState = RenderState.fromCache(renderState);
+
+            // If the silhouette program has already been cached use it
+            var program = command.shaderProgram;
+            var id = getProgramId(model, program);
+            var silhouetteProgram = silhouettePrograms[id];
+            if (!defined(silhouetteProgram)) {
+                silhouetteProgram = createSilhouetteProgram(program, frameState);
+                silhouettePrograms[id] = silhouetteProgram;
+            }
+
+            var silhouetteUniformMap = combine(command.uniformMap, {
+                gltf_silhouetteColor : createSilhouetteColorFunction(model),
+                gltf_silhouetteSize : createSilhouetteSizeFunction(model)
+            });
+
+            silhouetteColorCommand.renderState = renderState;
+            silhouetteColorCommand.shaderProgram = silhouetteProgram;
+            silhouetteColorCommand.uniformMap = silhouetteUniformMap;
+            silhouetteColorCommand.castShadows = false;
+            silhouetteColorCommand.receiveShadows = false;
+            nodeCommand.silhouetteColorCommand = silhouetteColorCommand;
+
+            if (!scene3DOnly) {
+                var command2D = nodeCommand.command2D;
+                var silhouetteModelCommand2D = DrawCommand.shallowClone(silhouetteModelCommand);
+                silhouetteModelCommand2D.boundingVolume = command2D.boundingVolume;
+                silhouetteModelCommand2D.modelMatrix = command2D.modelMatrix;
+                nodeCommand.silhouetteModelCommand2D = silhouetteModelCommand2D;
+
+                var silhouetteColorCommand2D = DrawCommand.shallowClone(silhouetteColorCommand);
+                silhouetteModelCommand2D.boundingVolume = command2D.boundingVolume;
+                silhouetteModelCommand2D.modelMatrix = command2D.modelMatrix;
+                nodeCommand.silhouetteColorCommand2D = silhouetteColorCommand2D;
             }
         }
     }
@@ -3758,6 +3849,7 @@ define([
         this.vertexArrays = undefined;
         this.programs = undefined;
         this.pickPrograms = undefined;
+        this.silhouettePrograms = undefined;
         this.textures = undefined;
         this.samplers = undefined;
         this.renderStates = undefined;
@@ -3781,6 +3873,7 @@ define([
         destroy(resources.vertexArrays);
         destroy(resources.programs);
         destroy(resources.pickPrograms);
+        destroy(resources.silhouettePrograms);
         destroy(resources.textures);
     }
 
@@ -4013,9 +4106,11 @@ define([
             }
         }
 
-        var alpha = this.color.alpha;
+        var silhouette = hasSilhouette(this, frameState);
+        var translucent = isTranslucent(this);
+        var invisible = isInvisible(this);
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
-        var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (alpha > 0.0);
+        var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (!invisible || silhouette);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
@@ -4075,6 +4170,7 @@ define([
             updateShowBoundingVolume(this);
             updateShadows(this);
             updateColor(this, frameState);
+            updateSilhouette(this, frameState);
         }
 
         if (justLoaded) {
@@ -4103,42 +4199,34 @@ define([
             var boundingVolume;
 
             if (passes.render) {
-
-                // The actual render commands
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        var translucent = (alpha < 1.0);
                         var command = translucent ? nc.translucentCommand : nc.command;
+                        command = silhouette ? nc.silhouetteModelCommand : command;
                         commandList.push(command);
                         boundingVolume = nc.command.boundingVolume;
                         if (frameState.mode === SceneMode.SCENE2D &&
                             (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
                             var command2D = translucent ? nc.translucentCommand2D : nc.command2D;
+                            command2D = silhouette ? nc.silhouetteModelCommand2D : command2D;
                             commandList.push(command2D);
                         }
                     }
                 }
 
-                if (this.highlight) {
-
-                    // Only render the highlight commands if we have sufficient stencil bits.
-                    if (context.stencilBits > 0) {
-                        // highlight commands second.
-                        for (i = 0; i < length; ++i) {
-                            nc = nodeCommands[i];
-                            if (nc.show) {
-                                commandList.push(nc.highlightCommand);
-                                boundingVolume = nc.command.boundingVolume;
-                                if (frameState.mode === SceneMode.SCENE2D &&
-                                    (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                                    commandList.push(nc.highlightCommand2D);
-                                }
+                if (silhouette) {
+                    // Render second silhouette pass
+                    for (i = 0; i < length; ++i) {
+                        nc = nodeCommands[i];
+                        if (nc.show) {
+                            commandList.push(nc.silhouetteColorCommand);
+                            boundingVolume = nc.command.boundingVolume;
+                            if (frameState.mode === SceneMode.SCENE2D &&
+                                (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                                commandList.push(nc.silhouetteColorCommand2D);
                             }
                         }
-                    }
-                    else {
-                        console.log("Model highlighting not supported, stencilBits = " + context.stencilBits + ".  Request a stencil buffer when initializing the Viewer");
                     }
                 }
             }

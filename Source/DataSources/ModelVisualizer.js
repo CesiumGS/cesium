@@ -36,9 +36,8 @@ define([
     var defaultIncrementallyLoadTextures = true;
     var defaultShadows = ShadowMode.ENABLED;
     var defaultHeightReference = HeightReference.NONE;
-    var defaultHighlightColor = new Color();
-    var defaultHighlightSize = 2.0;
-    var defaultHighlight = false;
+    var defaultSilhouetteColor = Color.RED;
+    var defaultSilhouetteSize = 0.0;
     var defaultColor = Color.WHITE;
     var defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
     var defaultColorBlendAmount = 0.5;
@@ -149,10 +148,9 @@ define([
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
             model.shadows = Property.getValueOrDefault(modelGraphics._shadows, time, defaultShadows);
             model.heightReference = Property.getValueOrDefault(modelGraphics._heightReference, time, defaultHeightReference);
-            model.highlight = Property.getValueOrDefault(modelGraphics.highlight, time, defaultHighlight);
-            model.highlightColor = Property.getValueOrDefault(modelGraphics.highlightColor, time, defaultHighlightColor);
-            model.highlightSize = Property.getValueOrDefault(modelGraphics.highlightSize, time, defaultHighlightSize);
             model.distanceDisplayCondition = Property.getValueOrUndefined(modelGraphics._distanceDisplayCondition, time);
+            model.silhouetteColor = Property.getValueOrDefault(modelGraphics.silhouetteColor, time, defaultSilhouetteColor);
+            model.silhouetteSize = Property.getValueOrDefault(modelGraphics.silhouetteSize, time, defaultSilhouetteSize);
             model.color = Property.getValueOrDefault(modelGraphics._color, time, defaultColor, color);
             model.colorBlendMode = Property.getValueOrDefault(modelGraphics._colorBlendMode, time, defaultColorBlendMode);
             model.colorBlendAmount = Property.getValueOrDefault(modelGraphics._colorBlendAmount, time, defaultColorBlendAmount);
