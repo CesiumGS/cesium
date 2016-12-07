@@ -909,14 +909,12 @@ define([
                     for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
-                            // Set all the private values here, because we already clamped to ground
-                            //  so we don't want to do it again for every glyph
                             glyph.billboard.clusterShow = value;
                         }
                     }
                     var backgroundBillboard = this._backgroundBillboard;
                     if (defined(backgroundBillboard)) {
-                        backgroundBillboard.cluserShow = value;
+                        backgroundBillboard.clusterShow = value;
                     }
                 }
             }
