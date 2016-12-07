@@ -57,13 +57,8 @@ define([
         if (!defined(options) || !defined(options.scene)) {
             throw new DeveloperError('options.scene is required.');
         }
-        if (defined(options.customGeocoder)) {
-            if (!defined(options.customGeocoder.getSuggestions)) {
-                throw new DeveloperError('options.customGeocoder is available but missing a getSuggestions method');
-            }
-            if (!defined(options.customGeocoder.geocode)) {
-                throw new DeveloperError('options.customGeocoder is available but missing a geocode method');
-            }
+        if (defined(options.geocoderService) && !defined(options.geocoderService.geocode)) {
+            throw new DeveloperError('options.geocoderService is available but missing a geocode method');
         }
         //>>includeEnd('debug');
 
@@ -112,7 +107,7 @@ define([
             if (that.isSearchInProgress) {
                 cancelGeocode(that);
             } else {
-                geocode(that, options.customGeocoder);
+                geocode(that, options.geocoderService);
             }
         });
 
@@ -176,9 +171,9 @@ define([
                 return;
             }
 
-            var customGeocoder = options.customGeocoder;
-            if (defined(customGeocoder)) {
-                customGeocoder.geocode(query, function (err, results) {
+            var geocoderService = options.geocoderService;
+            if (defined(geocoderService)) {
+                geocoderService.geocode(query, function (err, results) {
                     if (defined(err)) {
                         return;
                     }
@@ -420,17 +415,17 @@ define([
         });
     }
 
-    function geocode(viewModel, customGeocoder) {
+    function geocode(viewModel, geocoderService) {
         var query = viewModel.searchText;
 
         if (hasOnlyWhitespace(query)) {
             return;
         }
 
-        if (defined(customGeocoder)) {
+        if (defined(geocoderService)) {
             viewModel._isSearchInProgress = true;
             viewModel._suggestions.splice(0, viewModel._suggestions().length);
-            customGeocoder.geocode(query, function (err, results) {
+            geocoderService.geocode(query, function (err, results) {
                 if (defined(err)) {
                     viewModel._isSearchInProgress = false;
                     return;

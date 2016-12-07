@@ -38,9 +38,6 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var options = {
     geocoder: {
-        getSuggestions: function () {
-            return [];
-        },
         geocode: function (input, callback) {
             var endpoint = 'http://nominatim.openstreetmap.org/search?';
             var query = 'format=json&q=' + input;
