@@ -1,17 +1,16 @@
 /*global define*/
 define([
-        '../Core/freezeObject'
+        './freezeObject'
     ], function(
         freezeObject) {
     'use strict';
 
     /**
-     * WebGL constants.
+     * Enum containing WebGL Constant values by name
+     * for use without an active WebGL context.
      *
-     * This file provides a workaround for Safari 9 where WebGL constants can't be accessed
-     * through WebGLRenderingContext.  See https://github.com/AnalyticalGraphicsInc/cesium/issues/2989
-     *
-     * @private
+     * @readonly
+     * @enum {Number}
      */
     var WebGLConstants = {
         DEPTH_BUFFER_BIT : 0x00000100,

@@ -33,6 +33,7 @@ define([
         '../Core/Queue',
         '../Core/RuntimeError',
         '../Core/Transforms',
+        '../Core/WebGLConstants',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -44,7 +45,6 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Renderer/VertexArray',
-        '../Renderer/WebGLConstants',
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -95,6 +95,7 @@ define([
         Queue,
         RuntimeError,
         Transforms,
+        WebGLConstants,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -106,7 +107,6 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         VertexArray,
-        WebGLConstants,
         gltfDefaults,
         Uri,
         when,
@@ -3028,7 +3028,7 @@ define([
 
                 var castShadows = ShadowMode.castShadows(model._shadows);
                 var receiveShadows = ShadowMode.receiveShadows(model._shadows);
-                
+
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     cull : model.cull,
