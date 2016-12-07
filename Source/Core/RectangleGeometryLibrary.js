@@ -55,8 +55,13 @@ define([
         position.z = kZ / gamma;
 
         if (defined(options.vertexFormat) && options.vertexFormat.st) {
-            st.x = (stLongitude - rectangle.west) * options.lonScalar;
-            st.y = (stLatitude - rectangle.south) * options.latScalar;
+            st.x = (stLongitude - rectangle.west);
+            st.y = (stLatitude - rectangle.south);
+
+            if (!options.stRotation) {
+                st.x = st.x * options.lonScalar;
+                st.y = st.y * options.latScalar;
+            }
 
             Matrix2.multiplyByVector(options.textureMatrix, st, st);
         }
