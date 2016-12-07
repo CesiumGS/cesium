@@ -35,6 +35,7 @@ define([
         '../Core/Transforms',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
+        '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
@@ -97,6 +98,7 @@ define([
         Transforms,
         Buffer,
         BufferUsage,
+        ClearCommand,
         DrawCommand,
         RenderState,
         Sampler,
@@ -3606,23 +3608,23 @@ define([
         // Modified from http://forum.unity3d.com/threads/toon-outline-but-with-diffuse-surface.24668/
         vs = ShaderSource.replaceMain(vs, 'gltf_silhouette_main');
         vs +=
-            'uniform float gltf_silhouetteSize;\n' +
+            'uniform float gltf_silhouetteSize; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_silhouette_main(); \n' +
-            '    vec3 n = v_normal;\n' +
-            '    n.x *= czm_projection[0][0];\n' +
-            '    n.y *= czm_projection[1][1];\n' +
-            '    vec4 clip = gl_Position;\n' +
-            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize / czm_viewport.z * 2.0;\n' +
-            '    gl_Position = clip;\n' +
+            '    vec3 n = v_normal; \n' +
+            '    n.x *= czm_projection[0][0]; \n' +
+            '    n.y *= czm_projection[1][1]; \n' +
+            '    vec4 clip = gl_Position; \n' +
+            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize / czm_viewport.z * 2.0; \n' +
+            '    gl_Position = clip; \n' +
             '}';
 
         var fs =
-            'uniform vec4 gltf_silhouetteColor;\n' +
+            'uniform vec4 gltf_silhouetteColor; \n' +
             'void main() \n' +
             '{ \n' +
-            '    gl_FragColor = gltf_silhouetteColor;\n' +
+            '    gl_FragColor = gltf_silhouetteColor; \n' +
             '}';
 
         return ShaderProgram.fromCache({
@@ -3682,6 +3684,8 @@ define([
             var modelCommand = isTranslucent(model) ? nodeCommand.translucentCommand : command;
             var silhouetteModelCommand = DrawCommand.shallowClone(modelCommand);
             var renderState = clone(modelCommand.renderState);
+
+            // Write the value 1 into the stencil buffer
             renderState.stencilTest = {
                 enabled : true,
                 frontFunction : WebGLConstants.ALWAYS,
@@ -3724,6 +3728,8 @@ define([
             }
             renderState.depthTest.enabled = true;
             renderState.cull.enabled = false;
+
+            // Only render if value of the stencil buffer is not 1.
             renderState.stencilTest = {
                 enabled : true,
                 frontFunction : WebGLConstants.NOTEQUAL,
@@ -3733,12 +3739,12 @@ define([
                 frontOperation : {
                     fail : WebGLConstants.KEEP,
                     zFail : WebGLConstants.KEEP,
-                    zPass : WebGLConstants.REPLACE
+                    zPass : WebGLConstants.KEEP
                 },
                 backOperation : {
                     fail : WebGLConstants.KEEP,
                     zFail : WebGLConstants.KEEP,
-                    zPass : WebGLConstants.REPLACE
+                    zPass : WebGLConstants.KEEP
                 }
             };
             renderState = RenderState.fromCache(renderState);
@@ -4099,6 +4105,7 @@ define([
                 cachedResources.vertexArrays = resources.vertexArrays;
                 cachedResources.programs = resources.programs;
                 cachedResources.pickPrograms = resources.pickPrograms;
+                cachedResources.silhouettePrograms = resources.silhouettePrograms;
                 cachedResources.textures = resources.textures;
                 cachedResources.samplers = resources.samplers;
                 cachedResources.renderStates = resources.renderStates;
@@ -4238,6 +4245,10 @@ define([
                         }
                     }
                 }
+
+                commandList.push(new ClearCommand({
+                    stencil : 0
+                }));
             }
 
             if (passes.pick && this.allowPicking) {
