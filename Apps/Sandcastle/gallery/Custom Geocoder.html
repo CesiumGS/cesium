@@ -36,36 +36,10 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var options = {
-    geocoder: {
-        geocode: function (input, callback) {
-            var endpoint = 'http://nominatim.openstreetmap.org/search?';
-            var query = 'format=json&q=' + input;
-            var requestString = endpoint + query;
-            Cesium.loadJson(requestString)
-                    .then(function (results) {
-                        var bboxDegrees;
-                        callback(undefined, results.map(function (resultObject) {
-                            bboxDegrees = resultObject.boundingbox;
-                            return {
-                                displayName: resultObject.display_name,
-                                bbox: {
-                                    south: bboxDegrees[0],
-                                    north: bboxDegrees[1],
-                                    west: bboxDegrees[2],
-                                    east: bboxDegrees[3]
-                                }
-                            };
-                        }));
-                    })
-                    .otherwise(function (err) {
-                        callback(err);
-                    });
-        }
-    }
-};
 
-var viewer = new Cesium.Viewer('cesiumContainer', options);
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    geocoder: new Cesium.OpenStreetMapNominatimGeocoderService()
+});
 
 //Sandcastle_End
         Sandcastle.finishedLoading();

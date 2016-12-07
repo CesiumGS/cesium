@@ -14,6 +14,12 @@ define([
      */
 
     /**
+     * @typedef {Function} GeocoderCallback
+     * @param {Error | undefined} error The error that occurred during geocoding
+     * @param {GeocoderResult[]} [results]
+     */
+
+    /**
      * Provides geocoding through an external service. This type describes an interface and
      * is not intended to be used.
      * @alias GeocoderService
@@ -22,6 +28,13 @@ define([
      * @see BingMapsGeocoderService
      */
     function GeocoderService () {
+        /**
+         * Indicates whether this geocoding service is to be used for autocomplete.
+         *
+         * @type {boolean}
+         * @default false
+         */
+        this.autoComplete = false;
     }
 
     defineProperties(GeocoderService.prototype, {
@@ -40,8 +53,7 @@ define([
      * @function
      *
      * @param {String} query The query to be sent to the geocoder service
-     * @returns {GeocoderResult[]} geocoderResults An array containing the results from the
-     * geocoder service
+     * @param {GeocoderCallback} callback Callback to be called with geocoder results
      */
     GeocoderService.prototype.geocode = DeveloperError.throwInstantiationError;
 

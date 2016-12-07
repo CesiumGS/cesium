@@ -1,23 +1,27 @@
 /*global define*/
 define([
-        '../../Core/BingMapsApi',
-        '../../Core/Cartesian3',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/deprecationWarning',
-        '../../Core/DeveloperError',
-        '../../Core/Event',
-        '../../Core/loadJsonp',
-        '../../Core/Matrix4',
-        '../../Core/Rectangle',
-        '../../Scene/SceneMode',
-        '../../ThirdParty/knockout',
-        '../../ThirdParty/when',
-        '../createCommand',
-        '../getElement'
+    '../../Core/BingMapsApi',
+    '../../Core/BingMapsGeocoderService',
+    '../../Core/Cartesian3',
+    '../../Core/defaultValue',
+    '../../Core/defined',
+    '../../Core/defineProperties',
+    '../../Core/deprecationWarning',
+    '../../Core/DeveloperError',
+    '../../Core/Event',
+    '../../Core/LongLatGeocoderService',
+    '../../Core/loadJsonp',
+    '../../Core/Matrix4',
+    '../../Core/OpenStreetMapNominatimGeocoderService',
+    '../../Core/Rectangle',
+    '../../Scene/SceneMode',
+    '../../ThirdParty/knockout',
+    '../../ThirdParty/when',
+    '../createCommand',
+    '../getElement'
     ], function(
         BingMapsApi,
+        BingMapsGeocoderService,
         Cartesian3,
         defaultValue,
         defined,
@@ -25,8 +29,10 @@ define([
         deprecationWarning,
         DeveloperError,
         Event,
+        LongLatGeocoderService,
         loadJsonp,
         Matrix4,
+        OpenStreetMapNominatimGeocoderService,
         Rectangle,
         SceneMode,
         knockout,
@@ -42,6 +48,9 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Scene} options.scene The Scene instance to use.
+     * @param {GeocoderService[]} [geocoderServices] Geocoder services to use for geocoding queries.
+     *        If more than one are supplied, suggestions will be gathered for the geocoders that support it,
+     *        and if no suggestion is selected the result from the first geocoder service wil be used.
      * @param {String} [options.url='https://dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com}.
@@ -57,10 +66,16 @@ define([
         if (!defined(options) || !defined(options.scene)) {
             throw new DeveloperError('options.scene is required.');
         }
-        if (defined(options.geocoderService) && !defined(options.geocoderService.geocode)) {
-            throw new DeveloperError('options.geocoderService is available but missing a geocode method');
-        }
         //>>includeEnd('debug');
+
+        this._geocoderServices = options.geocoderServices;
+        if (!defined(options.geocoderServices)) {
+            this._geocoderServices = [
+                new LongLatGeocoderService(),
+                new BingMapsGeocoderService(),
+                new OpenStreetMapNominatimGeocoderService()
+            ];
+        }
 
         var errorCredit;
         this._url = defaultValue(options.url, 'https://dev.virtualearth.net/');
@@ -107,7 +122,7 @@ define([
             if (that.isSearchInProgress) {
                 cancelGeocode(that);
             } else {
-                geocode(that, options.geocoderService);
+                geocode(that, that._geocoderServices);
             }
         });
 
@@ -171,20 +186,21 @@ define([
                 return;
             }
 
-            var geocoderService = options.geocoderService;
-            if (defined(geocoderService)) {
-                geocoderService.geocode(query, function (err, results) {
+            that._suggestions.splice(0, that._suggestions().length);
+            var geocoderServices = that._geocoderServices.filter(function (service) {
+                return service.autoComplete === true;
+            });
+
+            geocoderServices.forEach(function (service) {
+                service.geocode(query, function (err, results) {
                     if (defined(err)) {
                         return;
                     }
-                    that._suggestions.splice(0, that._suggestions().length);
-                    if (results.length > 0) {
-                        results.slice(0, Math.min(results.length, 5)).forEach(function (result) {
-                            that._suggestions.push(result);
-                        });
-                    }
+                    results.slice(0, 3).forEach(function (result) {
+                        that._suggestions.push(result);
+                    });
                 });
-            }
+            });
         };
 
         this.handleKeyDown = function (data, event) {
@@ -204,16 +220,16 @@ define([
             } else if (key === 40) {
                 that.handleArrowDown();
             } else if (key === 13) {
-                that.activateSuggestion(that._selectedSuggestion());
+                that._searchCommand();
             }
             return true;
         };
 
         this.activateSuggestion = function (data) {
             that._searchText = data.displayName;
-            var bbox = data.bbox;
+            var destination = data.destination;
             that._suggestions.splice(0, that._suggestions().length);
-            updateCamera(that, Rectangle.fromDegrees(bbox.west, bbox.south, bbox.east, bbox.north));
+            updateCamera(that, destination);
         };
 
         this.hideSuggestions = function () {
@@ -415,122 +431,78 @@ define([
         });
     }
 
-    function geocode(viewModel, geocoderService) {
+    function createGeocodeCallback(geocodePromise) {
+        return function (err, results) {
+            if (defined(err)) {
+                geocodePromise.resolve(undefined);
+                return;
+            }
+            if (results.length === 0) {
+                geocodePromise.resolve(undefined);
+                return;
+            }
+
+            var firstResult = results[0];
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(firstResult.displayName)) {
+                throw new DeveloperError('each result must have a displayName');
+            }
+            if (!defined(firstResult.destination)) {
+                throw new DeveloperError('each result must have a rectangle');
+            }
+            //>>includeEnd('debug');
+
+            geocodePromise.resolve({
+                displayName: firstResult.displayName,
+                destination: firstResult.destination
+            });
+        };
+    }
+    function geocode(viewModel, geocoderServices) {
         var query = viewModel.searchText;
 
         if (hasOnlyWhitespace(query)) {
             return;
         }
 
-        if (defined(geocoderService)) {
+        viewModel._geocodeInProgress = true;
+
+        var resultPromises = [];
+        for (var i = 0; i < geocoderServices.length; i++) {
+            var geocoderService = geocoderServices[i];
+
             viewModel._isSearchInProgress = true;
             viewModel._suggestions.splice(0, viewModel._suggestions().length);
-            geocoderService.geocode(query, function (err, results) {
-                if (defined(err)) {
-                    viewModel._isSearchInProgress = false;
+            var geocodePromise = when.defer();
+            resultPromises.push(geocodePromise);
+            geocoderService.geocode(query, createGeocodeCallback(geocodePromise));
+        }
+        var allReady = when.all(resultPromises);
+        allReady.then(function (results) {
+            viewModel._isSearchInProgress = false;
+            if (viewModel._cancelGeocode) {
+                viewModel._cancelGeocode = false;
+                return;
+            }
+            for (var j = 0; j < results.length; j++) {
+                if (defined(results[j])) {
+                    viewModel._searchText = results[j].displayName;
+                    updateCamera(viewModel, results[j].destination);
                     return;
                 }
-                if (results.length === 0) {
-                    viewModel.searchText = query + ' (not found)';
-                    viewModel._isSearchInProgress = false;
-                    return;
-                }
-
-                var firstResult = results[0];
-                //>>includeStart('debug', pragmas.debug);
-                if (!defined(firstResult.displayName)) {
-                    throw new DeveloperError('each result must have a displayName');
-                }
-                if (!defined(firstResult.bbox)) {
-                    throw new DeveloperError('each result must have a bbox');
-                }
-                if (!defined(firstResult.bbox.south) || !defined(firstResult.bbox.west) || !defined(firstResult.bbox.north) || !defined(firstResult.bbox.east)) {
-                    throw new DeveloperError('each result must have a bbox where south, west, north and east are defined');
-                }
-                //>>includeEnd('debug');
-
-                viewModel._searchText = firstResult.displayName;
-                var bbox = firstResult.bbox;
-                var south = bbox.south;
-                var west = bbox.west;
-                var north = bbox.north;
-                var east = bbox.east;
-
-                updateCamera(viewModel, Rectangle.fromDegrees(west, south, east, north));
-                viewModel._isSearchInProgress = false;
-            });
-        } else {
-            defaultGeocode(viewModel, query);
-        }
-    }
-
-    function defaultGeocode(viewModel, query) {
-        var defaultOptions = viewModel._defaultGeocoderOptions;
-
-        // If the user entered (longitude, latitude, [height]) in degrees/meters,
-        // fly without calling the geocoder.
-        var splitQuery = query.match(/[^\s,\n]+/g);
-        if ((splitQuery.length === 2) || (splitQuery.length === 3)) {
-            var longitude = +splitQuery[0];
-            var latitude = +splitQuery[1];
-            var height = (splitQuery.length === 3) ? +splitQuery[2] : 300.0;
-
-            if (!isNaN(longitude) && !isNaN(latitude) && !isNaN(height)) {
-                updateCamera(viewModel, Cartesian3.fromDegrees(longitude, latitude, height));
-                return;
             }
-        }
-        viewModel._isSearchInProgress = true;
-
-        var promise = loadJsonp(defaultOptions.url + 'REST/v1/Locations', {
-            parameters : {
-                query : query,
-                key : defaultOptions.key
-            },
-            callbackParameterName : 'jsonp'
-        });
-
-        var geocodeInProgress = viewModel._geocodeInProgress = when(promise, function(result) {
-            if (geocodeInProgress.cancel) {
-                return;
-            }
+            viewModel._searchText = query + ' (not found)';
+        })
+        .otherwise(function (err) {
             viewModel._isSearchInProgress = false;
-
-            if (result.resourceSets.length === 0) {
-                viewModel.searchText = viewModel._searchText + ' (not found)';
-                return;
-            }
-
-            var resourceSet = result.resourceSets[0];
-            if (resourceSet.resources.length === 0) {
-                viewModel.searchText = viewModel._searchText + ' (not found)';
-                return;
-            }
-
-            var resource = resourceSet.resources[0];
-
-            viewModel._searchText = resource.name;
-            var bbox = resource.bbox;
-            var south = bbox[0];
-            var west = bbox[1];
-            var north = bbox[2];
-            var east = bbox[3];
-
-            updateCamera(viewModel, Rectangle.fromDegrees(west, south, east, north));
-        }, function() {
-            if (geocodeInProgress.cancel) {
-                return;
-            }
-
-            viewModel._isSearchInProgress = false;
-            viewModel.searchText = viewModel._searchText + ' (error)';
+            viewModel._searchText = query + ' (not found)';
         });
     }
 
     function cancelGeocode(viewModel) {
         viewModel._isSearchInProgress = false;
         if (defined(viewModel._geocodeInProgress)) {
-            viewModel._geocodeInProgress.cancel = true;
+            viewModel._cancelGeocode = true;
             viewModel._geocodeInProgress = undefined;
         }
     }

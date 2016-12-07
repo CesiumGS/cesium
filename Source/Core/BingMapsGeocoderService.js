@@ -73,7 +73,7 @@ define([
                 var east = bbox[3];
                 return {
                     displayName: resource.name,
-                    rectangle: Rectangle.fromDegrees(west, south, east, north)
+                    destination: Rectangle.fromDegrees(west, south, east, north)
                 };
             }));
 
