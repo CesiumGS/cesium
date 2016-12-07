@@ -47,15 +47,15 @@ define([
 
     var unaryFunctions = {
         abs : Math.abs,
+        sqrt : Math.sqrt,
+        sin : Math.sin,
+        cos : Math.cos,
+        tan : Math.tan,
         acos : Math.acos,
         asin : Math.asin,
         atan : Math.atan,
-        cos : Math.cos,
         degrees : CesiumMath.toDegrees,
-        radians : CesiumMath.toRadians,
-        sin : Math.sin,
-        sqrt : Math.sqrt,
-        tan : Math.tan
+        radians : CesiumMath.toRadians
     };
 
     var ternaryFunctions = {
