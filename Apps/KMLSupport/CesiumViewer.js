@@ -128,6 +128,7 @@ define([
                 } else if (!defined(view)) {
                     viewer.flyTo(dataSource);
                 }*/
+                /*
                 var entries = dataSource.entities.values;
                 for(var i = 0; i < entries.length; i++) {
                     if(entries[i].kml && entries[i].kml.lookAt) {
@@ -137,7 +138,9 @@ define([
                         }, 3000);
                         break;
                     }
-                }
+                }*/
+
+                var player = new TourPlayer(viewer, dataSource);
 
             }).otherwise(function(error) {
                 showLoadError(source, error);
