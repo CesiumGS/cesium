@@ -1987,7 +1987,7 @@ define([
             }
         }
 
-        console.log('Tour');
+        dataSource.kmlTour = tour;
     }
 
     function processTourFlyTo(tour, entryNode) {
@@ -2004,7 +2004,7 @@ define([
             ft['flyToMode'] = flyToMode;
         }
 
-        var t = {};
+        var t = {kml: {}};
         processLookAt(entryNode, t);
         ft['lookAt'] = t.kml.lookAt;
 
@@ -2055,6 +2055,7 @@ define([
             entityCollection.resumeEvents();
 
             deferred.resolve(kml.documentElement);
+            def
         });
 
         return deferred.promise;
