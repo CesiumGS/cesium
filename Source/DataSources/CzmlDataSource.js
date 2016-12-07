@@ -34,6 +34,7 @@ define([
         '../Core/Spherical',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Scene/ColorBlendMode',
         '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
@@ -118,6 +119,7 @@ define([
         Spherical,
         TimeInterval,
         TimeIntervalCollection,
+        ColorBlendMode,
         HeightReference,
         HorizontalOrigin,
         LabelStyle,
@@ -430,6 +432,8 @@ define([
                 return unwrapCartesianInterval(czmlInterval);
             case Color:
                 return unwrapColorInterval(czmlInterval);
+            case ColorBlendMode:
+                return ColorBlendMode[defaultValue(czmlInterval.colorBlendMode, czmlInterval)];
             case CornerType:
                 return CornerType[defaultValue(czmlInterval.cornerType, czmlInterval)];
             case HeightReference:
@@ -1416,6 +1420,9 @@ define([
         processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, model, 'shadows', modelData.shadows, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, model, 'heightReference', modelData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(Color, model, 'color', modelData.color, interval, sourceUri, entityCollection);
+        processPacketData(ColorBlendMode, model, 'colorBlendMode', modelData.colorBlendMode, interval, sourceUri, entityCollection);
+        processPacketData(Number, model, 'colorBlendAmount', modelData.colorBlendAmount, interval, sourceUri, entityCollection);
 
         var nodeTransformationsData = modelData.nodeTransformations;
         if (defined(nodeTransformationsData)) {

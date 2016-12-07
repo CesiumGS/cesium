@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Create 3D models using glTF.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+    <meta name="description" content="Change color of 3D models.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
@@ -63,11 +63,12 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
+    infoBox : false,
+    selectionIndicator : false,
     shadows : true
 });
 
-var scene = viewer.scene;
-var model;
+var entity;
 
 function getColorBlendMode(colorBlendMode) {
     return Cesium.ColorBlendMode[colorBlendMode.toUpperCase()];
@@ -79,7 +80,7 @@ function getColor(color) {
 
 // The viewModel tracks the state of our mini application.
 var viewModel = {
-    color : 'White',
+    color : 'Red',
     colors : ['White', 'Red', 'Green', 'Blue', 'Yellow', 'Gray'],
     alpha : 1.0,
     colorBlendMode : 'Highlight',
@@ -97,107 +98,80 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
 
 Cesium.knockout.getObservable(viewModel, 'color').subscribe(
     function(newValue) {
-        model.color = Cesium.Color.fromAlpha(getColor(newValue), viewModel.alpha);
+        entity.model.color = Cesium.Color.fromAlpha(getColor(newValue), viewModel.alpha);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'alpha').subscribe(
     function(newValue) {
-        model.color = Cesium.Color.fromAlpha(getColor(viewModel.color), newValue);
+        entity.model.color = Cesium.Color.fromAlpha(getColor(viewModel.color), newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'colorBlendMode').subscribe(
     function(newValue) {
         var colorBlendMode = getColorBlendMode(newValue);
-        model.colorBlendMode = colorBlendMode;
+        entity.model.colorBlendMode = colorBlendMode;
         viewModel.colorBlendAmountEnabled = (colorBlendMode === Cesium.ColorBlendMode.MIX);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'colorBlendAmount').subscribe(
     function(newValue) {
-        model.colorBlendAmount = newValue;
+        entity.model.colorBlendAmount = newValue;
     }
 );
 
-function createModel(url, height, heading, pitch, roll) {
-    height = Cesium.defaultValue(height, 0.0);
-    heading = Cesium.defaultValue(heading, 0.0);
-    pitch = Cesium.defaultValue(pitch, 0.0);
-    roll = Cesium.defaultValue(roll, 0.0);
+function createModel(url, height) {
+    viewer.entities.removeAll();
+
+    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+    var heading = Cesium.Math.toRadians(135);
+    var pitch = 0;
+    var roll = 0;
     var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
-    var origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
-    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
-
-    scene.primitives.removeAll(); // Remove previous model
-    model = scene.primitives.add(Cesium.Model.fromGltf({
-        url : url,
-        modelMatrix : modelMatrix,
-        minimumPixelSize : 128
-    }));
-
-    model.readyPromise.then(function(model) {
-        model.color = Cesium.Color.fromAlpha(getColor(viewModel.color), viewModel.alpha);
-        model.colorBlendMode = getColorBlendMode(viewModel.colorBlendMode);
-        model.colorBlendAmount = viewModel.colorBlendAmount;
-        // Play and loop all animations at half-speed
-        model.activeAnimations.addAll({
-            speedup : 0.5,
-            loop : Cesium.ModelAnimationLoop.REPEAT
-        });
-
-        var camera = viewer.camera;
-
-        // Zoom to model
-        var controller = scene.screenSpaceCameraController;
-        var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
-        controller.minimumZoomDistance = r * 0.5;
-
-        var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
-        var heading = Cesium.Math.toRadians(230.0);
-        var pitch = Cesium.Math.toRadians(-20.0);
-        camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
-    }).otherwise(function(error){
-        window.alert(error);
+    entity = viewer.entities.add({
+        name : url,
+        position : position,
+        orientation : orientation,
+        model : {
+            uri : url,
+            minimumPixelSize : 128,
+            maximumScale : 20000,
+            color : Cesium.Color.fromAlpha(getColor(viewModel.color), viewModel.alpha),
+            colorBlendMode : getColorBlendMode(viewModel.colorBlendMode),
+            colorBlendAmount : viewModel.colorBlendAmount
+        }
     });
+    viewer.trackedEntity = entity;
 }
-
-var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-handler.setInputAction(function(movement) {
-    var pick = scene.pick(movement.endPosition);
-    if (Cesium.defined(pick) && Cesium.defined(pick.node) && Cesium.defined(pick.mesh)) {
-        // Output glTF node and mesh under the mouse.
-        console.log('node: ' + pick.node.name + '. mesh: ' + pick.mesh.name);
-    }
-}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-
-///////////////////////////////////////////////////////////////////////////
 
 var options = [{
     text : 'Aircraft',
     onselect : function() {
-        var height = 5000.0;
-        var heading = 0.0;
-        var pitch = Cesium.Math.toRadians(10.0);
-        var roll = Cesium.Math.toRadians(-20.0);
-        createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', height, heading, pitch, roll);
+        createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', 5000.0);
     }
 }, {
     text : 'Ground vehicle',
     onselect : function() {
-        createModel('../../SampleData/models/CesiumGround/Cesium_Ground.glb');
+        createModel('../../SampleData/models/CesiumGround/Cesium_Ground.glb', 0);
+    }
+}, {
+    text : 'Hot Air Balloon',
+    onselect : function() {
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', 1000.0);
     }
 }, {
     text : 'Milk truck',
     onselect : function() {
-        createModel('../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb');
+        createModel('../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck-kmc.glb', 0);
     }
 }, {
     text : 'Skinned character',
     onselect : function() {
-        createModel('../../SampleData/models/CesiumMan/Cesium_Man.glb');
+        createModel('../../SampleData/models/CesiumMan/Cesium_Man.glb', 0);
     }
 }];
 
