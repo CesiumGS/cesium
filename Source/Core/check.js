@@ -54,11 +54,11 @@ define([
             return true;
         }
         if (pattern instanceof Where) {
-            throwUnless(pattern.condition(arg), 'Failed Match.Where condition for arg: ' + JSON.stringify(arg));
+            throwUnless(pattern.condition(arg), 'Failed Match.Where condition for arg: ' + typeof arg);
             return true;
         }
         if (pattern === Object) {
-            throwUnless(typeof arg === 'object' && !isArray(arg), makeErrorMessage('object', JSON.stringify(arg), optionalMessage));
+            throwUnless(typeof arg === 'object' && !isArray(arg), makeErrorMessage('object', typeof arg, optionalMessage));
             return true;
         }
         if (isArray(pattern)) {
@@ -67,10 +67,12 @@ define([
             }
             if (pattern.length === 1) {
                 for (var j = 0; j < arg.length; j++) {
-                    check(arg[j], pattern[1], optionalMessage ? '(checking array elements) ' + optionalMessage : undefined);
+                    check(arg[j], pattern[0], optionalMessage ? '(checking array elements) ' + optionalMessage : undefined);
                 }
             }
-            throwUnless(isArray(arg), makeErrorMessage('array', JSON.stringify(arg)), optionalMessage);
+            var isArrayOrTypedArray = isArray(arg) || arg instanceof Float32Array || arg instanceof Float64Array ||
+                                      arg instanceof Int8Array || arg instanceof Int16Array || arg instanceof Int32Array;
+            throwUnless(isArrayOrTypedArray, makeErrorMessage('array', typeof arg), optionalMessage);
             return true;
         }
         if (!patternValid) {

@@ -32,13 +32,13 @@ defineSuite([
     it('does not throw when matching array of any elements against []', function () {
         expect(function () {
             check([], []);
-        }).toThrowDeveloperError();
+        }).not.toThrowDeveloperError();
         expect(function () {
             check([2], []);
-        }).toThrowDeveloperError();
+        }).not.toThrowDeveloperError();
         expect(function () {
             check([34, 'snth'], []);
-        }).toThrowDeveloperError();
+        }).not.toThrowDeveloperError();
     });
 
     it('throws when matching array with non-matching elements against [Type]', function () {
@@ -56,13 +56,13 @@ defineSuite([
     it('does not throw when matching array of matching elements against [Type]', function () {
         expect(function () {
             check([4, 2], [Number]);
-        }).toThrowDeveloperError();
+        }).not.toThrowDeveloperError();
         expect(function () {
             check(['snth', 'snth'], [String]);
-        }).toThrowDeveloperError();
+        }).not.toThrowDeveloperError();
         expect(function () {
             check([true, false], [Boolean]);
-        }).toThrowDeveloperError();
+        }).not.toThrowDeveloperError();
     });
 
     it('throws on matching non-number with Number', function () {
@@ -125,7 +125,7 @@ defineSuite([
         };
         expect(function () {
             check(1, Match.Where(condition));
-        }).toThrowDeveloperError();
+        }).not.toThrowDeveloperError();
     });
 
 });
