@@ -2,7 +2,6 @@
 defineSuite([
         'Core/VRTheWorldTerrainProvider',
         'Core/DefaultProxy',
-        'Core/defined',
         'Core/GeographicTilingScheme',
         'Core/HeightmapTerrainData',
         'Core/loadImage',
@@ -14,7 +13,6 @@ defineSuite([
     ], function(
         VRTheWorldTerrainProvider,
         DefaultProxy,
-        defined,
         GeographicTilingScheme,
         HeightmapTerrainData,
         loadImage,

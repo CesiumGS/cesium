@@ -160,11 +160,15 @@ require({
     var currentTab = '';
     var newDemo;
     var demoHtml = '';
-    var demoJs = '';
+    var demoCode = '';
     var previousCode = '';
+    var previousHtml = '';
     var runGist = false;
     var gistCode;
+    var gistHtml;
     var sandcastleUrl = '';
+
+    var defaultHtml = '<style>\n@import url(../templates/bucket.css);\n</style>\n<div id=\"cesiumContainer\" class=\"fullSize\"></div>\n<div id=\"loadingOverlay\"><h1>Loading...</h1></div>\n<div id=\"toolbar\"></div>';
 
     var galleryErrorMsg = document.createElement('span');
     galleryErrorMsg.className = 'galleryError';
@@ -301,7 +305,7 @@ require({
         var selectedTabName = registry.byId('innerPanel').selectedChildWidget.title;
         var suffix = selectedTabName + 'Demos';
         if (selectedTabName === 'All') {
-            suffix = '';
+            suffix = 'all';
         } else if (selectedTabName === 'Search Results') {
             suffix = 'searchDemo';
         }
@@ -504,7 +508,7 @@ require({
     window.onbeforeunload = function (e) {
         var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
         var jsText = (jsEditor.getValue()).replace(/\s/g, '');
-        if (demoHtml !== htmlText || demoJs !== jsText) {
+        if (demoHtml !== htmlText || demoCode !== jsText) {
             return 'Be sure to save a copy of any important edits before leaving this page.';
         }
     };
@@ -695,7 +699,7 @@ require({
 
         if (demo.name === 'Gist Import') {
             jsEditor.setValue(gistCode);
-            htmlEditor.setValue('<style>\n@import url(../templates/bucket.css);\n</style>\n<div id=\"cesiumContainer\" class=\"fullSize\"></div>\n<div id=\"loadingOverlay\"><h1>Loading...</h1></div>\n<div id=\"toolbar\"></div>');
+            htmlEditor.setValue(gistHtml);
             document.title = 'Gist Import - Cesium Sandcastle';
             CodeMirror.commands.runCesium(jsEditor);
             return;
@@ -719,17 +723,23 @@ require({
             }
 
             var scriptCode = scriptMatch[1];
-            demoJs = scriptCode.replace(/\s/g, '');
+            demoCode = scriptCode.replace(/\s/g, '');
 
             if (Cesium.defined(queryObject.gistId)) {
                 Cesium.loadJsonp('https://api.github.com/gists/' + queryObject.gistId + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60')
                     .then(function(data) {
                         var files = data.data.files;
-                        var code = files[Object.keys(files)[0]].content;
+                        var code = files['Cesium-Sandcastle.js'].content;
+                        var htmlFile = files['Cesium-Sandcastle.html'];
+                        var html = Cesium.defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
                         jsEditor.setValue(code);
-                        demoJs = code.replace(/\s/g, '');
+                        htmlEditor.setValue(html);
+                        demoCode = code.replace(/\s/g, '');
+                        demoHtml = html.replace(/\s/g, '');
                         gistCode = code;
+                        gistHtml = html;
                         previousCode = code;
+                        previousHtml = html;
                         sandcastleUrl = Cesium.getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + gistId;
                         CodeMirror.commands.runCesium(jsEditor);
                         clearRun();
@@ -885,17 +895,22 @@ require({
         var textArea = document.getElementById('link');
         textArea.value = '\n\n';
         var code = jsEditor.getValue();
-        if (code === previousCode) {
+        var html = htmlEditor.getValue();
+        if (code === previousCode && html === previousHtml) {
             textArea.value = sandcastleUrl;
             textArea.select();
             return;
         }
         previousCode = code;
+        previousHtml = html;
         var data = {
             public : true,
             files : {
                 'Cesium-Sandcastle.js' : {
                     content : code
+                },
+                'Cesium-Sandcastle.html' : {
+                    content : html
                 }
             }
         };
@@ -915,9 +930,10 @@ require({
 
     registry.byId('buttonImport').on('click', function() {
         gistId = document.getElementById("gistId").value;
-        if (gistId.indexOf('/') !== -1) {
-            var index = gistId.lastIndexOf('/');
-            gistId = gistId.substring(index + 1);
+        var gistParameter = '&gist=';
+        var gistIndex = gistId.indexOf(gistParameter);
+        if (gistIndex !== -1) {
+            gistId = gistId.substring(gistIndex + gistParameter.length);
         }
         window.location.href = Cesium.getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + gistId;
     });
@@ -926,7 +942,7 @@ require({
         var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
         var jsText = (jsEditor.getValue()).replace(/\s/g, '');
         var confirmChange = true;
-        if (demoHtml !== htmlText || demoJs !== jsText) {
+        if (demoHtml !== htmlText || demoCode !== jsText) {
             confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?');
         }
         if (confirmChange) {
@@ -1169,7 +1185,7 @@ require({
                 var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
                 var jsText = (jsEditor.getValue()).replace(/\s/g, '');
                 var confirmChange = true;
-                if (demoHtml !== htmlText || demoJs !== jsText) {
+                if (demoHtml !== htmlText || demoCode !== jsText) {
                     confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?');
                 }
                 if (confirmChange) {

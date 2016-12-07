@@ -6,8 +6,8 @@ defineSuite([
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
         'Core/clone',
+        'Core/Color',
         'Core/combine',
-        'Core/defaultValue',
         'Core/defined',
         'Core/defineProperties',
         'Core/DistanceDisplayCondition',
@@ -26,6 +26,7 @@ defineSuite([
         'Renderer/RenderState',
         'Renderer/ShaderSource',
         'Renderer/WebGLConstants',
+        'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
@@ -38,8 +39,8 @@ defineSuite([
         Cartesian4,
         CesiumTerrainProvider,
         clone,
+        Color,
         combine,
-        defaultValue,
         defined,
         defineProperties,
         DistanceDisplayCondition,
@@ -58,6 +59,7 @@ defineSuite([
         RenderState,
         ShaderSource,
         WebGLConstants,
+        ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
         createScene,
@@ -1869,6 +1871,66 @@ defineSuite([
         });
     });
 
+    it('renders with a color', function() {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            // Model is originally red
+            var sourceColor = scene.renderForSpecs();
+            expect(sourceColor[0]).toBeGreaterThan(0);
+            expect(sourceColor[1]).toEqual(0);
+
+            // Check MIX
+            model.colorBlendMode = ColorBlendMode.MIX;
+            model.color = Color.LIME;
+
+            model.colorBlendAmount = 0.0;
+            var color = scene.renderForSpecs();
+            expect(color).toEqual(sourceColor);
+
+            model.colorBlendAmount = 0.5;
+            color = scene.renderForSpecs();
+            expect(color[0]).toBeGreaterThan(0);
+            expect(color[1]).toBeGreaterThan(0);
+
+            model.colorBlendAmount = 1.0;
+            color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toEqual(255);
+
+            // Check REPLACE
+            model.colorBlendMode = ColorBlendMode.REPLACE;
+            model.colorBlendAmount = 0.5; // Should have no effect
+            color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toEqual(255);
+
+            // Check HIGHLIGHT
+            model.colorBlendMode = ColorBlendMode.HIGHLIGHT;
+            model.color = Color.DARKGRAY;
+            color = scene.renderForSpecs();
+            expect(sourceColor[0]).toBeGreaterThan(0);
+            expect(sourceColor[0]).toBeLessThan(255);
+            expect(sourceColor[1]).toEqual(0);
+            expect(sourceColor[2]).toEqual(0);
+
+            // Check alpha
+            model.colorBlendMode = ColorBlendMode.REPLACE;
+            model.color = Color.fromAlpha(Color.LIME, 0.5);
+            color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toBeLessThan(255);
+            expect(color[1]).toBeGreaterThan(0);
+
+            // No commands are issued when the alpha is 0.0
+            model.color = Color.fromAlpha(Color.LIME, 0.0);
+            scene.renderForSpecs();
+            var commands = scene.frameState.commandList;
+            expect(commands.length).toBe(0);
+        });
+    });
+
     describe('height referenced model', function() {
         function createMockGlobe() {
             var globe = {
@@ -1883,7 +1945,9 @@ defineSuite([
                     tileProvider : {
                         ready : true
                     },
-                    _tileLoadQueue : {},
+                    _tileLoadQueueHigh : [],
+                    _tileLoadQueueMedium : [],
+                    _tileLoadQueueLow : [],
                     _debug : {
                         tilesWaitingForChildren : 0
                     }

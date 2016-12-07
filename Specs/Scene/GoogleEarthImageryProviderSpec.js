@@ -2,7 +2,6 @@
 defineSuite([
         'Scene/GoogleEarthImageryProvider',
         'Core/DefaultProxy',
-        'Core/defined',
         'Core/GeographicTilingScheme',
         'Core/loadImage',
         'Core/loadWithXhr',
@@ -16,7 +15,6 @@ defineSuite([
     ], function(
         GoogleEarthImageryProvider,
         DefaultProxy,
-        defined,
         GeographicTilingScheme,
         loadImage,
         loadWithXhr,

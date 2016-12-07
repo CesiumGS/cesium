@@ -4,8 +4,6 @@ define([
         './defined',
         './defineProperties',
         './destroyObject',
-        './DeveloperError',
-        './Event',
         './Iso8601',
         './JulianDate'
     ], function(
@@ -13,8 +11,6 @@ define([
         defined,
         defineProperties,
         destroyObject,
-        DeveloperError,
-        Event,
         Iso8601,
         JulianDate) {
     'use strict';

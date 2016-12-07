@@ -9,7 +9,6 @@ define([
         '../Core/Matrix4',
         '../Core/writeTextToCanvas',
         './BillboardCollection',
-        './HeightReference',
         './HorizontalOrigin',
         './Label',
         './LabelStyle',
@@ -25,7 +24,6 @@ define([
         Matrix4,
         writeTextToCanvas,
         BillboardCollection,
-        HeightReference,
         HorizontalOrigin,
         Label,
         LabelStyle,
@@ -241,7 +239,12 @@ define([
             else {
                 glyph = glyphs[glyphIndex];
                 dimensions = glyph.dimensions;
-                lineWidth += dimensions.computedWidth;
+
+                lineWidth += dimensions.width - dimensions.bounds.minx;
+                if (glyphIndex < glyphLength - 1) {
+                    lineWidth += glyphs[glyphIndex + 1].dimensions.bounds.minx;
+                }
+
                 maxLineWidth = Math.max(maxLineWidth, lineWidth);
                 maxGlyphHeight = Math.max(maxGlyphHeight, dimensions.height);
                 maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
@@ -302,7 +305,13 @@ define([
                 glyph.billboard._setTranslate(glyphPixelOffset);
             }
 
-            glyphPixelOffset.x += dimensions.computedWidth * scale * resolutionScale;
+            //Compute the next x offset taking into acocunt the kerning performed
+            //on both the current letter as well as the next letter to be drawn
+            //as well as any applied scale.
+            if (glyphIndex < glyphLength - 1) {
+                var nextGlyph = glyphs[glyphIndex + 1];
+                glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale * resolutionScale;
+            }
         }
     }
 
