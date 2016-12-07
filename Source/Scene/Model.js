@@ -1807,8 +1807,17 @@ define([
             '    gltf_blend_main(); \n';
 
         // Un-premultiply the alpha so that blending is correct.
+
+        // Avoid divide-by-zero. The code below is equivalent to:
+        // if (gl_FragColor.a > 0.0)
+        // {
+        //     gl_FragColor.rgb /= gl_FragColor.a;
+        // }
+
         if (premultipliedAlpha) {
-            shader += '    gl_FragColor.rgb /= gl_FragColor.a; \n';
+            shader +=
+                '    float alpha = 1.0 - ceil(gl_FragColor.a) + gl_FragColor.a; \n' +
+                '    gl_FragColor.rgb /= alpha; \n';
         }
 
         shader +=
@@ -3601,7 +3610,7 @@ define([
             'void main() \n' +
             '{ \n' +
             '    gltf_silhouette_main(); \n' +
-            '    vec3 n = normalize(v_normal);\n' +
+            '    vec3 n = v_normal;\n' +
             '    n.x *= czm_projection[0][0];\n' +
             '    n.y *= czm_projection[1][1];\n' +
             '    vec4 clip = gl_Position;\n' +
@@ -3692,7 +3701,7 @@ define([
             };
 
             if (isInvisible(model)) {
-                // Disable color and depth writes but still write into the stencil buffer
+                // When the model is invisible disable color and depth writes but still write into the stencil buffer
                 renderState.colorMask = {
                     red : false,
                     green : false,
