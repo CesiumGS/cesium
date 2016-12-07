@@ -1,10 +1,12 @@
 /*global define*/
 define([
     './Cartesian3',
-    './defaultValue'
+    './defaultValue',
+    '../ThirdParty/when'
 ], function(
     Cartesian3,
-    defaultValue) {
+    defaultValue,
+    when) {
     'use strict';
 
     /**
@@ -24,7 +26,7 @@ define([
      * @function
      *
      * @param {String} query The query to be sent to the geocoder service
-     * @param {GeocoderCallback} callback Callback to be called with geocoder results
+     * @returns {Promise<GeocoderResult[]>}
      */
     LongLatGeocoderService.prototype.geocode = function(query, callback) {
         var splitQuery = query.match(/[^\s,\n]+/g);
@@ -38,13 +40,10 @@ define([
                     displayName: query,
                     destination: Cartesian3.fromDegrees(longitude, latitude, height)
                 };
-                callback(undefined, [result]);
-                return;
+                return when.resolve([result]);
             }
-            callback(new Error('invalid coordinates'));
-        } else {
-            callback(undefined, []);
         }
+        return when.resolve([]);
     };
 
     return LongLatGeocoderService;

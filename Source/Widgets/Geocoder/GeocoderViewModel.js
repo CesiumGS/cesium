@@ -192,15 +192,13 @@ define([
             });
 
             geocoderServices.forEach(function (service) {
-                service.geocode(query, function (err, results) {
-                    if (defined(err)) {
-                        return;
-                    }
-                    results.slice(0, 3).forEach(function (result) {
-                        that._suggestions.push(result);
+                service.geocode(query)
+                    .then(function (results) {
+                        results.slice(0, 3).forEach(function(result) {
+                            that._suggestions.push(result);
+                        });
                     });
                 });
-            });
         };
 
         this.handleKeyDown = function (data, event) {
@@ -431,33 +429,27 @@ define([
         });
     }
 
-    function createGeocodeCallback(geocodePromise) {
-        return function (err, results) {
-            if (defined(err)) {
-                geocodePromise.resolve(undefined);
-                return;
-            }
-            if (results.length === 0) {
-                geocodePromise.resolve(undefined);
-                return;
-            }
+    function getFirstResult(results) {
+        if (results.length === 0) {
+            return undefined;
+        }
 
-            var firstResult = results[0];
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(firstResult.displayName)) {
-                throw new DeveloperError('each result must have a displayName');
-            }
-            if (!defined(firstResult.destination)) {
-                throw new DeveloperError('each result must have a rectangle');
-            }
-            //>>includeEnd('debug');
+        var firstResult = results[0];
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(firstResult.displayName)) {
+            throw new DeveloperError('each result must have a displayName');
+        }
+        if (!defined(firstResult.destination)) {
+            throw new DeveloperError('each result must have a rectangle');
+        }
+        //>>includeEnd('debug');
 
-            geocodePromise.resolve({
-                displayName: firstResult.displayName,
-                destination: firstResult.destination
-            });
+        return {
+            displayName: firstResult.displayName,
+            destination: firstResult.destination
         };
     }
+
     function geocode(viewModel, geocoderServices) {
         var query = viewModel.searchText;
 
@@ -473,9 +465,19 @@ define([
 
             viewModel._isSearchInProgress = true;
             viewModel._suggestions.splice(0, viewModel._suggestions().length);
-            var geocodePromise = when.defer();
+            var geocodePromise = geocoderService.geocode(query);
             resultPromises.push(geocodePromise);
-            geocoderService.geocode(query, createGeocodeCallback(geocodePromise));
+            geocodePromise.then(getFirstResult);
+
+            if (typeof geocodePromise.otherwise === 'function') {
+                geocodePromise.otherwise(function (err) {
+                    console.log('otherwise err: ' + err);
+                });
+            } else if (typeof geocodePromise.catch === 'function') {
+                geocodePromise.catch(function (err) {
+                    console.log('catch err: ' + err);
+                });
+            }
         }
         var allReady = when.all(resultPromises);
         allReady.then(function (results) {
@@ -485,9 +487,9 @@ define([
                 return;
             }
             for (var j = 0; j < results.length; j++) {
-                if (defined(results[j])) {
-                    viewModel._searchText = results[j].displayName;
-                    updateCamera(viewModel, results[j].destination);
+                if (defined(results[j]) && results[j].length > 0) {
+                    viewModel._searchText = results[j][0].displayName;
+                    updateCamera(viewModel, results[j][0].destination);
                     return;
                 }
             }

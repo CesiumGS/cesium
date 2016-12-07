@@ -14,12 +14,6 @@ define([
      */
 
     /**
-     * @typedef {Function} GeocoderCallback
-     * @param {Error | undefined} error The error that occurred during geocoding
-     * @param {GeocoderResult[]} [results]
-     */
-
-    /**
      * Provides geocoding through an external service. This type describes an interface and
      * is not intended to be used.
      * @alias GeocoderService
@@ -53,7 +47,7 @@ define([
      * @function
      *
      * @param {String} query The query to be sent to the geocoder service
-     * @param {GeocoderCallback} callback Callback to be called with geocoder results
+     * @returns {Promise<GeocoderResult[]>}
      */
     GeocoderService.prototype.geocode = DeveloperError.throwInstantiationError;
 

@@ -2,17 +2,15 @@
 define([
     './BingMapsApi',
     './defaultValue',
+    './defineProperties',
     './loadJsonp',
     './Rectangle',
-    '../ThirdParty/when',
-    './DeveloperError'
 ], function(
     BingMapsApi,
     defaultValue,
+    defineProperties,
     loadJsonp,
-    Rectangle,
-    when,
-    DeveloperError) {
+    Rectangle) {
     'use strict';
 
    var url = 'https://dev.virtualearth.net/REST/v1/Locations';
@@ -25,10 +23,34 @@ define([
     function BingMapsGeocoderService(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         this._canceled = false;
-        this._key = options.key;
+
+        this._url = 'https://dev.virtualearth.net/REST/v1/Locations';
+        this._key = BingMapsApi.getKey(options.key);
 
         this.autoComplete = defaultValue(options.autoComplete, false);
     }
+
+    defineProperties(BingMapsGeocoderService.prototype, {
+        /**
+         * The URL endpoint for the Bing geocoder service
+         * @type {String}
+         */
+        url : {
+            get : function () {
+                return this._url;
+            }
+        },
+
+        /**
+         * The key for the Bing geocoder service
+         * @type {String}
+         */
+        key : {
+            get : function () {
+                return this._key;
+            }
+        }
+    });
 
     BingMapsGeocoderService.prototype.cancel = function() {
         this._canceled = true;
@@ -38,12 +60,12 @@ define([
      * @function
      *
      * @param {String} query The query to be sent to the geocoder service
-     * @param {GeocoderCallback} callback Callback to be called with geocoder results
+     * @returns {Promise<GeocoderResult[]>}
      */
-    BingMapsGeocoderService.prototype.geocode = function(query, callback) {
+    BingMapsGeocoderService.prototype.geocode = function(query) {
         this._canceled = false;
 
-        var key = BingMapsApi.getKey(this._key);
+        var key = this.key;
         var promise = loadJsonp(url, {
             parameters : {
                 query : query,
@@ -54,18 +76,17 @@ define([
 
         var that = this;
 
-        when(promise, function(result) {
+        return promise.then(function(result) {
             if (that._canceled) {
                 return;
             }
             if (result.resourceSets.length === 0) {
-                callback(undefined, []);
-                return;
+                return [];
             }
 
             var results = result.resourceSets[0].resources;
 
-            callback(undefined, results.map(function (resource) {
+            return results.map(function (resource) {
                 var bbox = resource.bbox;
                 var south = bbox[0];
                 var west = bbox[1];
@@ -75,13 +96,7 @@ define([
                     displayName: resource.name,
                     destination: Rectangle.fromDegrees(west, south, east, north)
                 };
-            }));
-
-        }, function() {
-            if (that._canceled) {
-                return;
-            }
-            callback(new Error('unknown error when geocoding'));
+            });
         });
     };
 

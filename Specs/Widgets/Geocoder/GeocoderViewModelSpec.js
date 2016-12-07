@@ -4,13 +4,15 @@ defineSuite([
         'Core/Cartesian3',
         'Scene/Camera',
         'Specs/createScene',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'ThirdParty/when',
     ], function(
         GeocoderViewModel,
         Cartesian3,
         Camera,
         createScene,
-        pollToPromise) {
+        pollToPromise,
+        when) {
     'use strict';
 
     var scene;
@@ -25,8 +27,8 @@ defineSuite([
     }];
     var customGeocoderOptions = {
         autoComplete: true,
-        geocode: function (input, callback) {
-            callback(undefined, geocoderResults1);
+        geocode: function (input) {
+            return when.resolve(geocoderResults1);
         }
     };
 
@@ -39,15 +41,15 @@ defineSuite([
     }];
     var customGeocoderOptions2 = {
         autoComplete: true,
-        geocode: function (input, callback) {
-            callback(undefined, geocoderResults2);
+        geocode: function (input) {
+            return when.resolve(geocoderResults2);
         }
     };
 
     var noResultsGeocoder = {
         autoComplete: true,
-        geocode: function (input, callback) {
-            callback(undefined, []);
+        geocode: function (input) {
+            return when.resolve([]);
         }
     };
 
@@ -92,7 +94,8 @@ defineSuite([
 
     it('throws is searchText is not a string', function() {
         var viewModel = new GeocoderViewModel({
-            scene : scene
+            scene : scene,
+            geocoderServices : [customGeocoderOptions]
         });
         expect(function() {
             viewModel.searchText = undefined;
@@ -101,7 +104,8 @@ defineSuite([
 
     it('moves camera when search command invoked', function() {
         var viewModel = new GeocoderViewModel({
-            scene : scene
+            scene : scene,
+            geocoderServices : [customGeocoderOptions]
         });
 
         var cameraPosition = Cartesian3.clone(scene.camera.position);

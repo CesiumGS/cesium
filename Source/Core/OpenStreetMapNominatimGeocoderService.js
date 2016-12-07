@@ -31,16 +31,16 @@ define([
      * @function
      *
      * @param {String} query The query to be sent to the geocoder service
-     * @param {GeocoderCallback} callback Callback to be called with geocoder results
+     * @returns {Promise<GeocoderResult[]>}
      */
-    OpenStreetMapNominatimGeocoder.prototype.geocode = function (input, callback) {
+    OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
         var endpoint = 'http://nominatim.openstreetmap.org/search?';
         var query = 'format=json&q=' + input;
         var requestString = endpoint + query;
-        loadJson(requestString)
+        return loadJson(requestString)
             .then(function (results) {
                 var bboxDegrees;
-                callback(undefined, results.map(function (resultObject) {
+                return results.map(function (resultObject) {
                     bboxDegrees = resultObject.boundingbox;
                     return {
                         displayName: resultObject.display_name,
@@ -51,11 +51,8 @@ define([
                             bboxDegrees[1]
                         )
                     };
-                }));
+                });
             })
-            .otherwise(function (err) {
-                callback(err);
-            });
     };
 
     return OpenStreetMapNominatimGeocoder;

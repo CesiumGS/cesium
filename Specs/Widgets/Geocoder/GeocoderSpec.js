@@ -1,19 +1,34 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/Geocoder/Geocoder',
-        'Specs/createScene'
+        'Core/Cartesian3',
+        'Specs/createScene',
+        'ThirdParty/when'
     ], function(
         Geocoder,
-        createScene) {
+        Cartesian3,
+        createScene,
+        when) {
     'use strict';
 
     var scene;
+
+    var mockDestination = new Cartesian3(1.0, 2.0, 3.0);
+    var geocoderResults = [{
+        displayName: 'a',
+        destination: mockDestination
+    }, {
+        displayName: 'b',
+        destination: mockDestination
+    }, {
+        displayName: 'c',
+        destination: mockDestination
+    }];
+
     var customGeocoderOptions = {
-        geocode : function (input, callback) {
-            callback(undefined, ['a', 'b', 'c']);
-        },
-        getSuggestions : function (input) {
-            return ['a', 'b', 'c'];
+        autoComplete : true,
+        geocode : function (input) {
+            return when.resolve(geocoderResults);
         }
     };
     beforeEach(function() {
@@ -96,7 +111,7 @@ defineSuite([
         var geocoder = new Geocoder({
             container : 'testContainer',
             scene : scene,
-            customGeocoder : customGeocoderOptions
+            geocoderServices : [customGeocoderOptions]
         });
         var viewModel = geocoder._viewModel;
         viewModel._searchText = 'some_text';
@@ -104,16 +119,16 @@ defineSuite([
 
         expect(viewModel._selectedSuggestion()).toEqual(undefined);
         viewModel.handleArrowDown();
-        expect(viewModel._selectedSuggestion()).toEqual('a');
+        expect(viewModel._selectedSuggestion().displayName).toEqual('a');
         viewModel.handleArrowDown();
         viewModel.handleArrowDown();
-        expect(viewModel._selectedSuggestion()).toEqual('c');
+        expect(viewModel._selectedSuggestion().displayName).toEqual('c');
         viewModel.handleArrowDown();
-        expect(viewModel._selectedSuggestion()).toEqual('a');
+        expect(viewModel._selectedSuggestion().displayName).toEqual('a');
         viewModel.handleArrowUp();
-        expect(viewModel._selectedSuggestion()).toEqual('c');
+        expect(viewModel._selectedSuggestion().displayName).toEqual('c');
         viewModel.handleArrowUp();
-        expect(viewModel._selectedSuggestion()).toEqual('b');
+        expect(viewModel._selectedSuggestion().displayName).toEqual('b');
     });
 
 }, 'WebGL');

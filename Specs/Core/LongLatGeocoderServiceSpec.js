@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/Cartesian3',
-    'Core/LongLatGeocoderService'
+    'Core/LongLatGeocoderService',
+    'Core/Cartesian3'
 ], function(
-    Cartesian3,
-    LongLatGeocoderService) {
+    LongLatGeocoderService,
+    Cartesian3) {
     'use strict';
 
     var service = new LongLatGeocoderService();
