@@ -10,7 +10,7 @@ define([
     /**
      * @typedef {Object} GeocoderResult
      * @property {String} displayName The display name for a location
-     * @property {Rectangle} rectangle The bounding box for a location
+     * @property {Rectangle|Cartesian3} destination The bounding box for a location
      */
 
     /**
