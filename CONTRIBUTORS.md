@@ -68,6 +68,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Camptocamp SA](https://www.camptocamp.com/)
    * [Frédéric Junod](https://github.com/fredj)
    * [Guillaume Beraudo](https://github.com/gberaudo)
+* [Safe Software](https://www.safe.com)
+   * [Joel Depooter](https://github.com/JDepooter)
+
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
