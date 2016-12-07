@@ -122,8 +122,8 @@ define([
             granXSin : granXSin,
             nwCorner : nwCorner
         };
-
     }
+
     /**
      * @private
      */
@@ -211,8 +211,6 @@ define([
             rectangle.east = east;
             rectangle.west = west;
         }
-
-
 
         if (stRotation !== 0) {
             rotation = rotation - stRotation;
