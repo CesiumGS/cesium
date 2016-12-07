@@ -375,6 +375,16 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (defined(ternaryFunctions[call])) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 3 || args.length > 3) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly three arguments.');
+            }
+            //>>includeEnd('debug');
+            left = createRuntimeAst(expression, args[0]);
+            right = createRuntimeAst(expression, args[1]);
+            var test = createRuntimeAst(expression, args[2]);
+            return new Node(ExpressionNodeType.TERNARY, call, left, right, test);
         } else if (defined(binaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 2 || args.length > 2) {
@@ -404,18 +414,6 @@ define([
             return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'regExp') {
             return parseRegex(expression, ast);
-        } else if (defined(ternaryFunctions[call])) {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 3 || args.length > 3) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly three arguments.');
-            }
-            //>>includeEnd('debug');
-            val = [
-                createRuntimeAst(expression, args[0]),
-                createRuntimeAst(expression, args[1]),
-                createRuntimeAst(expression, args[2])
-            ];
-            return new Node(ExpressionNodeType.TERNARY, call, val);
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -692,7 +690,7 @@ define([
     function getEvaluateTernaryFunction(call) {
         var evaluate = ternaryFunctions[call];
         return function(feature) {
-            return evaluate(this._left.evaluate(feature));
+            return evaluate(this._left.evaluate(feature), this._right.evaluate(feature));
         };
     }
 
