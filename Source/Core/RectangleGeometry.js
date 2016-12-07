@@ -270,10 +270,12 @@ define([
             }
         }
 
+        var XRANGE = (maxX - minX);
+        var YRANGE = (maxY - minY);
         if (vertexFormat.st && (minX < 0.0 || minY < 0.0 || maxX > 1.0 || maxY > 1.0)) {
             for (var k = 0; k < textureCoordinates.length; k += 2) {
-                textureCoordinates[k] = (textureCoordinates[k] - minX) / (maxX - minX);
-                textureCoordinates[k + 1] = (textureCoordinates[k + 1] - minY) / (maxY - minY);
+                textureCoordinates[k] = (textureCoordinates[k] - minX) / XRANGE;
+                textureCoordinates[k + 1] = (textureCoordinates[k + 1] - minY) / YRANGE;
             }
         }
 
@@ -784,6 +786,13 @@ define([
         var textureMatrix = textureMatrixScratch;
         var tangentRotationMatrix = tangentRotationMatrixScratch;
         if (defined(stRotation)) {
+
+            // Someone down the line does not like zeros in the textureMatrix. This appears to fix the
+            // issue with scaling the texture inside the Rectangle, but it's not  obvious why
+            if (stRotation === 0.0) {
+                stRotation = CesiumMath.EPSILON20;
+            }
+
             // negate angle for a counter-clockwise rotation
             Matrix2.fromRotation(-stRotation, textureMatrix);
             var center = Rectangle.center(rectangle, centerScratch);
@@ -796,8 +805,6 @@ define([
             Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
         }
 
-        options.lonScalar = 1.0 / rectangle.width;
-        options.latScalar = 1.0 / rectangle.height;
         options.vertexFormat = vertexFormat;
         options.textureMatrix = textureMatrix;
         options.tangentRotationMatrix = tangentRotationMatrix;
