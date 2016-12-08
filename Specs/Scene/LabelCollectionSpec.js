@@ -48,6 +48,9 @@ defineSuite([
     var labels;
     var labelsWithHeight;
 
+    // This Unicode square block will more reliably cover the center pixel than an 'x' or a 'w' char.
+    var solidBox = '\u25a0';
+
     beforeAll(function() {
         scene = createScene();
         camera = scene.camera;
@@ -343,19 +346,19 @@ defineSuite([
     it('can render after adding a label', function() {
         labels.add({
             position : Cartesian3.ZERO,
-            text : 'w',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
 
         var actual = scene.renderForSpecs();
-        expect(actual[0]).toBeGreaterThan(10);
-        expect(actual[1]).toBeGreaterThan(10);
-        expect(actual[2]).toBeGreaterThan(10);
+        expect(actual[0]).toBeGreaterThan(200);
+        expect(actual[1]).toBeGreaterThan(200);
+        expect(actual[2]).toBeGreaterThan(200);
 
         labels.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-            text : 'x',
+            text : solidBox,
             fillColor : {
                 red : 1.0,
                 green : 0.0,
@@ -367,7 +370,7 @@ defineSuite([
         });
 
         actual = scene.renderForSpecs();
-        expect(actual[0]).toBeGreaterThan(10);
+        expect(actual[0]).toBeGreaterThan(200);
         expect(actual[1]).toBeLessThan(10);
         expect(actual[2]).toBeLessThan(10);
     });
@@ -543,7 +546,7 @@ defineSuite([
         labels.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(1.0, 0.0),
-            text : 'x',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,
             pixelOffsetScaleByDistance: new NearFarScalar(2.0, 0.0, 4.0, 1000.0)
@@ -559,7 +562,7 @@ defineSuite([
     it('renders label with distanceDisplayCondition', function() {
         labels.add({
             position : Cartesian3.ZERO,
-            text : 'm',
+            text : solidBox,
             distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -597,7 +600,7 @@ defineSuite([
     it('can pick a label', function() {
         var label = labels.add({
             position : Cartesian3.ZERO,
-            text : 'x',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,
             id : 'id'
@@ -611,7 +614,7 @@ defineSuite([
     it('can change pick id', function() {
         var label = labels.add({
             position : Cartesian3.ZERO,
-            text : 'x',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,
             id : 'id'
@@ -632,7 +635,7 @@ defineSuite([
         labels.add({
             show : false,
             position : Cartesian3.ZERO,
-            text : 'x',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -644,7 +647,7 @@ defineSuite([
     it('picks a label using translucencyByDistance', function() {
         var label = labels.add({
             position : Cartesian3.ZERO,
-            text : 'x',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -667,7 +670,7 @@ defineSuite([
         var label = labels.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(0.0, 100.0),
-            text : 'x',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -971,8 +974,8 @@ defineSuite([
             scene.renderForSpecs();
 
             var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
-            expect(bbox.y).toBeGreaterThan(bbox.height * -1.0);
-            expect(bbox.y).toBeLessThan(bbox.height * -0.5);
+            expect(bbox.y).toBeGreaterThan(bbox.height * -0.9);
+            expect(bbox.y).toBeLessThan(bbox.height * -0.3);
         });
 
         it('computes screen space bounding box with vertical origin top', function() {
