@@ -1,12 +1,22 @@
 Change Log
 ==========
 
+### 1.29 - 2017-01-02
+
+* Added the ability to blend a `Model` with a color/translucency. Added `color`, `colorBlendMode`, and `colorBlendAmount` properties to `Model`, `ModelGraphics`, and CZML. Added `ColorBlendMode` enum. [#4547](https://github.com/AnalyticalGraphicsInc/cesium/pull/4547)
+* Fixed tooltips for gallery thumbnails in Sandcastle [#4702](https://github.com/AnalyticalGraphicsInc/cesium/pull/4702)
+* Fixed texture rotation for `RectangleGeometry` [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
+
 ### 1.28 - 2016-12-01
-* Deprecated
-    *
-* Breaking changes
-    *
-* Added support for saving html and css in Github Gists. [#4125](https://github.com/AnalyticalGraphicsInc/cesium/issues/4125)
+
+* Improved terrain/imagery load ordering, especially when the terrain is already fully loaded and a new imagery layer is loaded.  This results in a 25% reduction in load times in many cases. [#4616](https://github.com/AnalyticalGraphicsInc/cesium/pull/4616)
+* Improved `Billboard`, `Label`, and `PointPrimitive` visual quality. [#4675](https://github.com/AnalyticalGraphicsInc/cesium/pull/4675)
+   * Corrected odd-width and odd-height billboard sizes from being incorrectly rounded up.
+   * Changed depth testing from `LESS` to `LEQUAL`, allowing label glyphs of equal depths to overlap.
+   * Label glyph positions have been adjusted and corrected.
+   * `TextureAtlas.borderWidthInPixels` has always been applied to the upper and right edges of each internal texture, but is now also applied to the bottom and left edges of the entire TextureAtlas, guaranteeing borders on all sides regardless of position within the atlas.
+* Fall back to packing floats into an unsigned byte texture when floating point textures are unsupported. [#4563](https://github.com/AnalyticalGraphicsInc/cesium/issues/4563)
+* Added support for saving html and css in GitHub Gists. [#4125](https://github.com/AnalyticalGraphicsInc/cesium/issues/4125)
 * Fixed `Cartographic.fromCartesian` when the cartesian is not on the ellipsoid surface. [#4611](https://github.com/AnalyticalGraphicsInc/cesium/issues/4611)
 
 ### 1.27 - 2016-11-01

@@ -2,7 +2,6 @@
 defineSuite([
         'Core/CesiumTerrainProvider',
         'Core/DefaultProxy',
-        'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/getAbsoluteUri',
@@ -12,12 +11,10 @@ defineSuite([
         'Core/QuantizedMeshTerrainData',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
-        'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
         CesiumTerrainProvider,
         DefaultProxy,
-        defined,
         Ellipsoid,
         GeographicTilingScheme,
         getAbsoluteUri,
@@ -27,7 +24,6 @@ defineSuite([
         QuantizedMeshTerrainData,
         TerrainProvider,
         pollToPromise,
-        Uri,
         when) {
     'use strict';
 
