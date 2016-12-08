@@ -3,7 +3,7 @@ Change Log
 
 ### 1.29 - 2017-01-02
 * Deprecated
-    * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.30. This properties will be available on geocoder services that support them, like `BingMapsGeocoderService`;
+    * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.30. These properties will be available on geocoder services that support them, like `BingMapsGeocoderService`.
 * Added support for custom geocoder services [#4723](https://github.com/AnalyticalGraphicsInc/cesium/pull/4723).
 * Added the ability to blend a `Model` with a color/translucency. Added `color`, `colorBlendMode`, and `colorBlendAmount` properties to `Model`, `ModelGraphics`, and CZML. Added `ColorBlendMode` enum. [#4547](https://github.com/AnalyticalGraphicsInc/cesium/pull/4547)
 * Fixed tooltips for gallery thumbnails in Sandcastle [#4702](https://github.com/AnalyticalGraphicsInc/cesium/pull/4702)
