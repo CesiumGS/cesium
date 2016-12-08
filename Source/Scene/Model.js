@@ -1770,8 +1770,17 @@ define([
             '    gltf_blend_main(); \n';
 
         // Un-premultiply the alpha so that blending is correct.
+
+        // Avoid divide-by-zero. The code below is equivalent to:
+        // if (gl_FragColor.a > 0.0)
+        // {
+        //     gl_FragColor.rgb /= gl_FragColor.a;
+        // }
+
         if (premultipliedAlpha) {
-            shader += '    gl_FragColor.rgb /= gl_FragColor.a; \n';
+            shader +=
+                '    float alpha = 1.0 - ceil(gl_FragColor.a) + gl_FragColor.a; \n' +
+                '    gl_FragColor.rgb /= alpha; \n';
         }
 
         shader +=
