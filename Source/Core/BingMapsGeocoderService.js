@@ -18,11 +18,16 @@ define([
     /**
      * Provides geocoding through Bing Maps.
      * @alias BingMapsGeocoderService
+     * @constructor
      *
+     * @param {Object} options Object with the following properties:
+     * @param {String} [key] A key to use with the Bing Maps geocoding service
+     * @param {Boolean} autoComplete Indicates whether this service shall be used to fetch auto-complete suggestions
      */
     function BingMapsGeocoderService(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         this._canceled = false;
+        this._displayName = 'Bing Maps Geocoder Service';
 
         this._url = 'https://dev.virtualearth.net/REST/v1/Locations';
         this._key = BingMapsApi.getKey(options.key);
@@ -31,6 +36,16 @@ define([
     }
 
     defineProperties(BingMapsGeocoderService.prototype, {
+        /**
+         * The display name of the geocoder service
+         * @type {String}
+         */
+        displayName : {
+            get : function () {
+                return this._displayName;
+            }
+        },
+
         /**
          * The URL endpoint for the Bing geocoder service
          * @type {String}

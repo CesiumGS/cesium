@@ -14,21 +14,29 @@ define([
     /**
      * Provides geocoding through OpenStreetMap Nominatim.
      * @alias OpenStreetMapNominatimGeocoder
+     * @constructor
      *
+     * @param {Object} options Object with the following properties:
+     * @param {Boolean} autoComplete Indicates whether this service shall be used to fetch auto-complete suggestions
      */
     function OpenStreetMapNominatimGeocoder(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        this.displayName = defaultValue(options.displayName, 'Nominatim');
+        this.displayName = 'Nominatim';
         this._canceled = false;
         this.autoComplete = defaultValue(options.autoComplete, true);
     }
 
+    /**
+     * The function called when a user cancels geocoding.
+     *
+     * @returns {undefined}
+     */
     OpenStreetMapNominatimGeocoder.prototype.cancel = function() {
         this._canceled = true;
     };
 
     /**
-     * @function
+     * The function called to geocode using this geocoder service.
      *
      * @param {String} query The query to be sent to the geocoder service
      * @returns {Promise<GeocoderResult[]>}
@@ -52,7 +60,7 @@ define([
                         )
                     };
                 });
-            })
+            });
     };
 
     return OpenStreetMapNominatimGeocoder;

@@ -70,8 +70,7 @@ define([
         if (!defined(options.geocoderServices)) {
             this._geocoderServices = [
                 new LongLatGeocoderService(),
-                new BingMapsGeocoderService(),
-                new OpenStreetMapNominatimGeocoderService()
+                new BingMapsGeocoderService()
             ];
         }
 
@@ -105,6 +104,7 @@ define([
         this._selectedSuggestion = knockout.observable();
         this._showSuggestions = knockout.observable(true);
         this._updateCamera = updateCamera;
+        this._adjustSuggestionsScroll = adjustSuggestionsScroll;
 
         var that = this;
 
@@ -124,25 +124,6 @@ define([
             }
         });
 
-        this._adjustSuggestionsScroll = function (focusedItemIndex) {
-            var container = getElement(this._viewContainer);
-            var searchResults = container.getElementsByClassName('search-results')[0];
-            var listItems = container.getElementsByTagName('li');
-            var element = listItems[focusedItemIndex];
-
-            if (focusedItemIndex === 0) {
-                searchResults.scrollTop = 0;
-                return;
-            }
-
-            var offsetTop = element.offsetTop;
-            if (offsetTop + element.clientHeight > searchResults.clientHeight) {
-                searchResults.scrollTop = offsetTop + element.clientHeight;
-            } else if (offsetTop < searchResults.scrollTop) {
-                searchResults.scrollTop = offsetTop;
-            }
-        };
-
         this.handleArrowDown = function () {
             if (that._suggestions().length === 0) {
                 return;
@@ -152,7 +133,7 @@ define([
             var next = (currentIndex + 1) % numberOfSuggestions;
             that._selectedSuggestion(that._suggestions()[next]);
 
-            this._adjustSuggestionsScroll(next);
+            adjustSuggestionsScroll(this, next);
         };
 
         this.handleArrowUp = function () {
@@ -169,7 +150,7 @@ define([
             }
             that._selectedSuggestion(that._suggestions()[next]);
 
-            this._adjustSuggestionsScroll(next);
+            adjustSuggestionsScroll(this, next);
         };
 
         this.deselectSuggestion = function () {
@@ -517,6 +498,25 @@ define([
                 }
                 viewModel._searchText = query + ' (not found)';
             });
+    }
+
+    function adjustSuggestionsScroll(viewModel, focusedItemIndex) {
+        var container = getElement(viewModel._viewContainer);
+        var searchResults = container.getElementsByClassName('search-results')[0];
+        var listItems = container.getElementsByTagName('li');
+        var element = listItems[focusedItemIndex];
+
+        if (focusedItemIndex === 0) {
+            searchResults.scrollTop = 0;
+            return;
+        }
+
+        var offsetTop = element.offsetTop;
+        if (offsetTop + element.clientHeight > searchResults.clientHeight) {
+            searchResults.scrollTop = offsetTop + element.clientHeight;
+        } else if (offsetTop < searchResults.scrollTop) {
+            searchResults.scrollTop = offsetTop;
+        }
     }
 
     function cancelGeocode(viewModel) {
