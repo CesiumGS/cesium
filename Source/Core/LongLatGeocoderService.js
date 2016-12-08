@@ -29,21 +29,25 @@ define([
      * @returns {Promise<GeocoderResult[]>}
      */
     LongLatGeocoderService.prototype.geocode = function(query, callback) {
-        var splitQuery = query.match(/[^\s,\n]+/g);
-        if ((splitQuery.length === 2) || (splitQuery.length === 3)) {
-            var longitude = +splitQuery[0];
-            var latitude = +splitQuery[1];
-            var height = (splitQuery.length === 3) ? +splitQuery[2] : 300.0;
+        try {
+            var splitQuery = query.match(/[^\s,\n]+/g);
+            if ((splitQuery.length === 2) || (splitQuery.length === 3)) {
+                var longitude = +splitQuery[0];
+                var latitude = +splitQuery[1];
+                var height = (splitQuery.length === 3) ? +splitQuery[2] : 300.0;
 
-            if (!isNaN(longitude) && !isNaN(latitude) && !isNaN(height)) {
-                var result = {
-                    displayName: query,
-                    destination: Cartesian3.fromDegrees(longitude, latitude, height)
-                };
-                return when.resolve([result]);
+                if (!isNaN(longitude) && !isNaN(latitude) && !isNaN(height)) {
+                    var result = {
+                        displayName: query,
+                        destination: Cartesian3.fromDegrees(longitude, latitude, height)
+                    };
+                    return when.resolve([result]);
+                }
             }
+            return when.resolve([]);
+        } catch (e) {
+            when.reject(e);
         }
-        return when.resolve([]);
     };
 
     return LongLatGeocoderService;

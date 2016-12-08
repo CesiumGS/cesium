@@ -448,6 +448,29 @@ define([
         };
     }
 
+    function promisesSettled(promises) {
+        var settledPromises = [];
+        promises.forEach(function (promise) {
+            var settled = when.defer();
+            settledPromises.push(settled);
+            promise.then(function (result) {
+                return settled.resolve({state: 'fulfilled', value: result});
+            });
+
+            if (defined(promise.otherwise)) {
+                promise.otherwise(function (err) {
+                    return settled.resolve({state: 'rejected', reason: err});
+                });
+                return;
+            }
+            promise.catch(function (err) {
+                return settled.resolve({state: 'rejected', reason: err});
+            });
+        });
+
+        return when.all(settledPromises);
+    }
+
     function geocode(viewModel, geocoderServices) {
         var query = viewModel.searchText;
 
@@ -466,37 +489,34 @@ define([
             var geocodePromise = geocoderService.geocode(query);
             resultPromises.push(geocodePromise);
             geocodePromise.then(getFirstResult);
-
-            if (typeof geocodePromise.otherwise === 'function') {
-                geocodePromise.otherwise(function (err) {
-                    console.log('otherwise err: ' + err);
-                });
-            } else if (typeof geocodePromise.catch === 'function') {
-                geocodePromise.catch(function (err) {
-                    console.log('catch err: ' + err);
-                });
-            }
         }
-        var allReady = when.all(resultPromises);
-        allReady.then(function (results) {
-            viewModel._isSearchInProgress = false;
-            if (viewModel._cancelGeocode) {
-                viewModel._cancelGeocode = false;
-                return;
-            }
-            for (var j = 0; j < results.length; j++) {
-                if (defined(results[j]) && results[j].length > 0) {
-                    viewModel._searchText = results[j][0].displayName;
-                    updateCamera(viewModel, results[j][0].destination);
+
+        promisesSettled(resultPromises)
+            .then(function (descriptors) {
+                viewModel._isSearchInProgress = false;
+                if (viewModel._cancelGeocode) {
+                    viewModel._cancelGeocode = false;
                     return;
                 }
-            }
-            viewModel._searchText = query + ' (not found)';
-        })
-        .otherwise(function (err) {
-            viewModel._isSearchInProgress = false;
-            viewModel._searchText = query + ' (not found)';
-        });
+                var allFailed = true;
+                for (var j = 0; j < descriptors.length; j++) {
+                    if (descriptors[j].state === 'rejected') {
+                        continue;
+                    }
+                    allFailed = false;
+                    var geocoderResults = descriptors[j].value;
+                    if (defined(geocoderResults) && geocoderResults.length > 0) {
+                        viewModel._searchText = geocoderResults[0].displayName;
+                        updateCamera(viewModel, geocoderResults[0].destination);
+                        return;
+                    }
+                }
+                if (allFailed) {
+                    viewModel._searchText = query + ' (geocoders failed)';
+                    return;
+                }
+                viewModel._searchText = query + ' (not found)';
+            });
     }
 
     function cancelGeocode(viewModel) {
