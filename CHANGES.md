@@ -7,7 +7,7 @@ Change Log
 * Fixed tooltips for gallery thumbnails in Sandcastle [#4702](https://github.com/AnalyticalGraphicsInc/cesium/pull/4702)
 * Fixed `Rectangle.union` to correctly account for rectangles that cross the IDL [#4732](https://github.com/AnalyticalGraphicsInc/cesium/pull/4732).
 * Fixed texture rotation for `RectangleGeometry` [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
-* Moved `WebGLConstants` from Renderer to Core and exposed it as part of the Cesium API. [#4731](https://github.com/AnalyticalGraphicsInc/cesium/pull/4731)
+* Added `WebGLConstants` enum.  Previously, this was part of the private Renderer API. [#4731](https://github.com/AnalyticalGraphicsInc/cesium/pull/4731)
 
 ### 1.28 - 2016-12-01
 
