@@ -1,5 +1,6 @@
 /*global require,Blob,JSHINT*/
 /*global gallery_demos*/// defined by gallery/gallery-index.js, created by build
+/*global hello_world_index*/// defined in gallery/gallery-index.js, created by build
 /*global sandcastleJsHintOptions*/// defined by jsHintOptions.js, created by build
 require({
     baseUrl : '../../Source',
@@ -138,6 +139,7 @@ require({
     var subtabs = {};
     var docError = false;
     var galleryError = false;
+    var notFound = false;
     var galleryTooltipTimer;
     var activeGalleryTooltipDemo;
     var demoTileHeightRule = findCssStyle('.demoTileThumbnail');
@@ -693,6 +695,7 @@ require({
     }
 
     function loadFromGallery(demo) {
+        notFound = false;
         document.getElementById('saveAsFile').download = demo.name + '.html';
         registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
         registry.byId('label').set('value', decodeHTML(demo.label).replace(/\\n/g, '\n'));
@@ -802,6 +805,9 @@ require({
                 }
                 if (galleryError) {
                     appendConsole('consoleError', 'Error loading gallery, please run the build script.', true);
+                }
+                if (notFound) {
+                    appendConsole('consoleLog', 'Unable to load demo named ' + queryObject.src.replace('.html', '') + '\n', true);
                 }
             }
         } else if (Cesium.defined(e.data.log)) {
@@ -1054,8 +1060,15 @@ require({
             url : 'gallery/' + name + '.html',
             handleAs : 'text',
             error : function(error) {
-                appendConsole('consoleError', error, true);
-                galleryError = true;
+                if (error.status === 404) {
+                    loadFromGallery(gallery_demos[hello_world_index])
+                        .then(function() {
+                            notFound = true;
+                        });
+                } else {
+                    galleryError = true;
+                    appendConsole('consoleError', error, true);
+                }
             }
         });
     }
