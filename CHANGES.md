@@ -6,6 +6,7 @@ Change Log
 * Added the ability to blend a `Model` with a color/translucency. Added `color`, `colorBlendMode`, and `colorBlendAmount` properties to `Model`, `ModelGraphics`, and CZML. Added `ColorBlendMode` enum. [#4547](https://github.com/AnalyticalGraphicsInc/cesium/pull/4547)
 * Added new `Label` properties `showBackground`, `backgroundColor`, and `backgroundPadding` to the primitive, Entity, and CZML layers.
 * Added new enum `VerticalOrigin.BASELINE`.  Previously, `VerticalOrigin.BOTTOM` would sometimes align to the baseline depending on the contents of a label.
+* Added support for newlines in `Label`s. [#2402](https://github.com/AnalyticalGraphicsInc/cesium/issues/2402)
 * Fixed tooltips for gallery thumbnails in Sandcastle [#4702](https://github.com/AnalyticalGraphicsInc/cesium/pull/4702)
 * Fixed `Rectangle.union` to correctly account for rectangles that cross the IDL [#4732](https://github.com/AnalyticalGraphicsInc/cesium/pull/4732).
 * Fixed texture rotation for `RectangleGeometry` [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
@@ -84,7 +85,6 @@ Change Log
 * Fixed a bug that was incorrectly clamping Latitudes in KML <GroundOverlay>(s) to the range -PI..PI. Now correctly clamps to -PI/2..PI/2.
 * Added `CesiumMath.clampToLatitudeRange`. A convenience function to clamp a passed radian angle to valid Latitudes.
 * Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
-* Added support for newlines in `Label`s. [#2402](https://github.com/AnalyticalGraphicsInc/cesium/issues/2402)
 
 ### 1.25 - 2016-09-01
 
