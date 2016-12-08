@@ -3612,11 +3612,11 @@ define([
             'void main() \n' +
             '{ \n' +
             '    gltf_silhouette_main(); \n' +
-            '    vec3 n = v_normal; \n' +
+            '    vec3 n = normalize(v_normal); \n' +
             '    n.x *= czm_projection[0][0]; \n' +
             '    n.y *= czm_projection[1][1]; \n' +
             '    vec4 clip = gl_Position; \n' +
-            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize / czm_viewport.z * 2.0; \n' +
+            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize / czm_viewport.z; \n' +
             '    gl_Position = clip; \n' +
             '}';
 
@@ -3639,6 +3639,19 @@ define([
         return silhouetteSupported(frameState.context) && (model.silhouetteSize > 0.0) && (model.silhouetteColor.alpha > 0.0);
     }
 
+    function hasTranslucentCommands(model) {
+        var nodeCommands = model._nodeCommands;
+        var length = nodeCommands.length;
+        for (var i = 0; i < length; ++i) {
+            var nodeCommand = nodeCommands[i];
+            var command = nodeCommand.command;
+            if (command.renderState.blending.enabled) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function isTranslucent(model) {
         return (model.color.alpha > 0.0) && (model.color.alpha < 1.0);
     }
@@ -3652,29 +3665,16 @@ define([
         return (Math.floor(currAlpha) !== Math.floor(prevAlpha)) || (Math.ceil(currAlpha) !== Math.ceil(prevAlpha));
     }
 
-    function updateSilhouette(model, frameState) {
-        // Generate silhouette commands when the silhouette size is greater than 0.0 and the alpha is greater than 0.0
-        // There are two silhouette commands:
-        //     1. silhouetteModelCommand : render model normally while enabling stencil mask
-        //     2. silhouetteColorCommand : render enlarged model with a solid color while enabling stencil tests
-        if (!hasSilhouette(model, frameState)) {
-            return;
-        }
+    // TODO : alternatively increment silhouette length as part of frame state and edit the model render states on the fly
+    var silhouettesLength = 0;
 
-        var nodeCommands = model._nodeCommands;
-        var dirty = alphaDirty(model.color.alpha, model._color.alpha) ||
-                    alphaDirty(model.silhouetteColor.alpha, model._silhouetteColor.alpha) ||
-                    !defined(nodeCommands[0].silhouetteModelCommand);
-
-        Color.clone(model.color, model._color);
-        Color.clone(model.silhouetteColor, model._silhouetteColor);
-
-        if (!dirty) {
-            return;
-        }
-
+    function createSilhouetteCommands(model, frameState) {
+        // If the model is translucent the silhouette needs to be in the translucent pass.
+        // Otherwise the silhouette would be rendered before the model.
+        var silhouetteTranslucent = hasTranslucentCommands(model) || isTranslucent(model) || (model.silhouetteColor.alpha < 1.0);
         var silhouettePrograms = model._rendererResources.silhouettePrograms;
         var scene3DOnly = frameState.scene3DOnly;
+        var nodeCommands = model._nodeCommands;
         var length = nodeCommands.length;
         for (var i = 0; i < length; ++i) {
             var nodeCommand = nodeCommands[i];
@@ -3685,12 +3685,16 @@ define([
             var silhouetteModelCommand = DrawCommand.shallowClone(modelCommand);
             var renderState = clone(modelCommand.renderState);
 
-            // Write the value 1 into the stencil buffer
+            // Wrap around after exceeding the 8-bit stencil limit.
+            // The reference is unique to each model until this point.
+            var stencilReference = (++silhouettesLength) % 255;
+
+            // Write the reference value into the stencil buffer.
             renderState.stencilTest = {
                 enabled : true,
                 frontFunction : WebGLConstants.ALWAYS,
                 backFunction : WebGLConstants.ALWAYS,
-                reference : 1,
+                reference : stencilReference,
                 mask : ~0,
                 frontOperation : {
                     fail : WebGLConstants.KEEP,
@@ -3721,20 +3725,20 @@ define([
             // Create color command
             var silhouetteColorCommand = DrawCommand.shallowClone(command);
             renderState = clone(command.renderState, true);
-            if (model.silhouetteColor.alpha < 1.0) {
+            renderState.depthTest.enabled = true;
+            renderState.cull.enabled = false;
+            if (silhouetteTranslucent) {
                 silhouetteColorCommand.pass = Pass.TRANSLUCENT;
                 renderState.depthMask = false;
                 renderState.blending = BlendingState.ALPHA_BLEND;
             }
-            renderState.depthTest.enabled = true;
-            renderState.cull.enabled = false;
 
-            // Only render if value of the stencil buffer is not 1.
+            // Only render silhouette if the value in the stencil buffer equals the reference
             renderState.stencilTest = {
                 enabled : true,
                 frontFunction : WebGLConstants.NOTEQUAL,
                 backFunction : WebGLConstants.NOTEQUAL,
-                reference : 1,
+                reference : stencilReference,
                 mask : ~0,
                 frontOperation : {
                     fail : WebGLConstants.KEEP,
@@ -3782,6 +3786,28 @@ define([
                 silhouetteModelCommand2D.modelMatrix = command2D.modelMatrix;
                 nodeCommand.silhouetteColorCommand2D = silhouetteColorCommand2D;
             }
+        }
+    }
+
+    function updateSilhouette(model, frameState) {
+        // Generate silhouette commands when the silhouette size is greater than 0.0 and the alpha is greater than 0.0
+        // There are two silhouette commands:
+        //     1. silhouetteModelCommand : render model normally while enabling stencil mask
+        //     2. silhouetteColorCommand : render enlarged model with a solid color while enabling stencil tests
+        if (!hasSilhouette(model, frameState)) {
+            return;
+        }
+
+        var nodeCommands = model._nodeCommands;
+        var dirty = alphaDirty(model.color.alpha, model._color.alpha) ||
+                    alphaDirty(model.silhouetteColor.alpha, model._silhouetteColor.alpha) ||
+                    !defined(nodeCommands[0].silhouetteModelCommand);
+
+        Color.clone(model.color, model._color);
+        Color.clone(model.silhouetteColor, model._silhouetteColor);
+
+        if (dirty) {
+            createSilhouetteCommands(model, frameState);
         }
     }
 
@@ -4245,10 +4271,6 @@ define([
                         }
                     }
                 }
-
-                commandList.push(new ClearCommand({
-                    stencil : 0
-                }));
             }
 
             if (passes.pick && this.allowPicking) {
