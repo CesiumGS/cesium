@@ -6,7 +6,7 @@ Change Log
 * Added the ability to blend a `Model` with a color/translucency. Added `color`, `colorBlendMode`, and `colorBlendAmount` properties to `Model`, `ModelGraphics`, and CZML. Added `ColorBlendMode` enum. [#4547](https://github.com/AnalyticalGraphicsInc/cesium/pull/4547)
 * Fixed tooltips for gallery thumbnails in Sandcastle [#4702](https://github.com/AnalyticalGraphicsInc/cesium/pull/4702)
 * Fixed texture rotation for `RectangleGeometry` [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
-* Moved `WebGLConstants` from Renderer to Core and exposed it as part of the Cesium API. [#4731](https://github.com/AnalyticalGraphicsInc/cesium/pull/4731)
+* Added `WebGLConstants` enum.  Previously, this was part of the private Renderer API. [#4731](https://github.com/AnalyticalGraphicsInc/cesium/pull/4731)
 
 ### 1.28 - 2016-12-01
 
