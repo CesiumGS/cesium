@@ -7,16 +7,13 @@ define([
         './freezeObject',
         './Math'
     ], function(
-        validation,
+        check,
         defaultValue,
         defined,
         DeveloperError,
         freezeObject,
         CesiumMath) {
     'use strict';
-
-    var check = validation.check;
-    var Match = validation.Match;
 
     /**
      * A 3D Cartesian point.
@@ -63,7 +60,7 @@ define([
      */
     Cartesian3.fromSpherical = function(spherical, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(spherical, Object, 'spherical is required');
+        check.type.object(spherical);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -149,8 +146,8 @@ define([
      */
     Cartesian3.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        check(value, Object, 'value is required');
-        check(array, [], 'array is required');
+        check.type.object(value);
+        check.defined(array, 'array');
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -172,7 +169,7 @@ define([
      */
     Cartesian3.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(array, [], 'array is required');
+        check.defined(array, 'array');
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -195,7 +192,7 @@ define([
      */
     Cartesian3.packArray = function(array, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(array, [], 'array is required');
+        check.defined(array, 'array');
         //>>includeEnd('debug');
 
         var length = array.length;
@@ -220,10 +217,8 @@ define([
      */
     Cartesian3.unpackArray = function(array, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(array, [], 'array is required');
-        if (array.length < 3) {
-            throw new DeveloperError();
-        }
+        check.defined(array, 'array');
+        check.numeric.min(array.length, 3);
         if (array.length % 3 !== 0) {
             throw new DeveloperError('array length must be a multiple of 3.');
         }
@@ -271,9 +266,7 @@ define([
      */
     Cartesian3.maximumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
+        check.defined(cartesian, 'cartesian');
         //>>includeEnd('debug');
 
         return Math.max(cartesian.x, cartesian.y, cartesian.z);
@@ -287,7 +280,7 @@ define([
      */
     Cartesian3.minimumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        check(cartesian, Object, 'cartesian is required');
+        check.defined(cartesian, 'cartesian');
         //>>includeEnd('debug');
 
         return Math.min(cartesian.x, cartesian.y, cartesian.z);
@@ -303,9 +296,9 @@ define([
      */
     Cartesian3.minimumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(first, Object, 'first is required.');
-        check(second, Object, 'second is required.');
-        check(result, Object, 'result is required.');
+        check.defined(first,'first');
+        check.defined(second, 'second');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         result.x = Math.min(first.x, second.x);
@@ -325,9 +318,9 @@ define([
      */
     Cartesian3.maximumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(first, Object, 'first is required.');
-        check(second, Object, 'second is required.');
-        check(result, Object, 'result is required.');
+        check.defined(first, 'first');
+        check.defined(second, 'second');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         result.x = Math.max(first.x, second.x);
@@ -344,7 +337,7 @@ define([
      */
     Cartesian3.magnitudeSquared = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        check(cartesian, Object, 'cartesian is required');
+        check.defined(cartesian, 'cartesian');
         //>>includeEnd('debug');
 
         return cartesian.x * cartesian.x + cartesian.y * cartesian.y + cartesian.z * cartesian.z;
@@ -416,8 +409,8 @@ define([
      */
     Cartesian3.normalize = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(cartesian, Object, 'cartesian is required');
-        check(result, Object, 'result is required');
+        check.defined(cartesian, 'cartesian');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         var magnitude = Cartesian3.magnitude(cartesian);
@@ -444,8 +437,8 @@ define([
      */
     Cartesian3.dot = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        check(left, Object, 'left is required');
-        check(right, Object, 'right is required');
+        check.defined(left, 'left');
+        check.defined(right, 'right');
         //>>includeEnd('debug');
 
         return left.x * right.x + left.y * right.y + left.z * right.z;
@@ -461,9 +454,9 @@ define([
      */
     Cartesian3.multiplyComponents = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(left, Object, 'left is required');
-        check(right, Object, 'right is required');
-        check(result, Object, 'result is required');
+        check.defined(left, 'left');
+        check.defined(right, 'right');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         result.x = left.x * right.x;
@@ -482,9 +475,9 @@ define([
      */
     Cartesian3.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(left, Object, 'left is required');
-        check(right, Object, 'right is required');
-        check(result, Object, 'result is required');
+        check.defined(left, 'left');
+        check.defined(right, 'right');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         result.x = left.x + right.x;
@@ -503,9 +496,9 @@ define([
      */
     Cartesian3.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(left, Object, 'left is required');
-        check(right, Object, 'right is required');
-        check(result, Object, 'result is required');
+        check.defined(left, 'left');
+        check.defined(right, 'right');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         result.x = left.x - right.x;
@@ -524,9 +517,9 @@ define([
      */
     Cartesian3.multiplyByScalar = function(cartesian, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(cartesian, Object, 'cartesian is required');
-        check(scalar, Number, 'scalar is required');
-        check(result, Object, 'result is required');
+        check.defined(cartesian, 'cartesian');
+        check.defined(scalar, 'scalar');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         result.x = cartesian.x * scalar;
@@ -545,9 +538,9 @@ define([
      */
     Cartesian3.divideByScalar = function(cartesian, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(cartesian, Object, 'cartesian is required');
-        check(scalar, Number, 'scalar is required');
-        check(result, Object, 'result is required');
+        check.defined(cartesian, 'cartesian');
+        check.defined(scalar, 'scalar');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         result.x = cartesian.x / scalar;
@@ -565,8 +558,8 @@ define([
      */
     Cartesian3.negate = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(cartesian, Object, 'cartesian is required');
-        check(result, Object, 'result is required');
+        check.defined(cartesian, 'cartesian');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         result.x = -cartesian.x;
@@ -584,8 +577,8 @@ define([
      */
     Cartesian3.abs = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(cartesian, Object, 'cartesian is required');
-        check(result, Object, 'result is required');
+        check.defined(cartesian, 'cartesian');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         result.x = Math.abs(cartesian.x);
@@ -606,10 +599,10 @@ define([
      */
     Cartesian3.lerp = function(start, end, t, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(start, Object, 'start is required');
-        check(end, Object, 'end is required');
-        check(t, Number, 'number is required');
-        check(result, Object, 'result is required');
+        check.defined(start, 'start');
+        check.defined(end, 'end');
+        check.defined(t, 't');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         Cartesian3.multiplyByScalar(end, t, lerpScratch);
@@ -628,8 +621,8 @@ define([
      */
     Cartesian3.angleBetween = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        check(left, Object, 'left is required');
-        check(right, Object, 'right is required');
+        check.defined(left, 'left');
+        check.defined(right, 'right');
         //>>includeEnd('debug');
 
         Cartesian3.normalize(left, angleBetweenScratch);
@@ -649,8 +642,8 @@ define([
      */
     Cartesian3.mostOrthogonalAxis = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(cartesian, Object, 'cartesian is required');
-        check(result, Object, 'result is required');
+        check.defined(cartesian, 'cartesian');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         var f = Cartesian3.normalize(cartesian, mostOrthogonalAxisScratch);
@@ -729,9 +722,9 @@ define([
      */
     Cartesian3.cross = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(left, Object, 'left is required');
-        check(right, Object, 'right is required');
-        check(result, Object, 'result is required');
+        check.defined(left, 'left');
+        check.defined(right, 'right');
+        check.defined(result, 'result');
         //>>includeEnd('debug');
 
         var leftX = left.x;
@@ -766,8 +759,8 @@ define([
      */
     Cartesian3.fromDegrees = function(longitude, latitude, height, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(longitude, Number, 'longitude is required');
-        check(latitude, Number, 'latitude is required');
+        check.defined(longitude, 'longitude');
+        check.defined(latitude, 'latitude');
         //>>includeEnd('debug');
 
         longitude = CesiumMath.toRadians(longitude);
@@ -794,8 +787,8 @@ define([
      */
     Cartesian3.fromRadians = function(longitude, latitude, height, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(longitude, Number, 'longitude is required');
-        check(latitude, Number, 'latitude is required');
+        check.defined(longitude, 'longitude');
+        check.defined(latitude, 'latitude');
         //>>includeEnd('debug');
 
         height = defaultValue(height, 0.0);
@@ -831,10 +824,10 @@ define([
      */
     Cartesian3.fromDegreesArray = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(coordinates, [], 'coordinates is required.');
-        check(coordinates.length, Match.Where(function (length) {
-            return length >= 2 && length % 2 === 0;
-        }), 'the number of coordinates must be a multiple of 2 and at least 2');
+        check.type.array(coordinates);
+        if (coordinates.length < 2 || coordinates.length % 2 !== 0) {
+            throw new DeveloperError('the number of coordinates must be a multiple of 2 and at least 2');
+        }
         //>>includeEnd('debug');
 
         var length = coordinates.length;
@@ -867,10 +860,10 @@ define([
      */
     Cartesian3.fromRadiansArray = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(coordinates, [], 'coordinates is required.');
-        check(coordinates.length, Match.Where(function (length) {
-            return length >= 2 && length % 2 === 0;
-        }), 'the number of coordinates must be a multiple of 2 and at least 2');
+        check.type.array(coordinates);
+        if (coordinates.length < 2 || coordinates.length % 2 !== 0) {
+            throw new DeveloperError('the number of coordinates must be a multiple of 2 and at least 2');
+        }
         //>>includeEnd('debug');
 
         var length = coordinates.length;
@@ -903,10 +896,10 @@ define([
      */
     Cartesian3.fromDegreesArrayHeights = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(coordinates, [], 'coordinates is required.');
-        check(coordinates.length, Match.Where(function (length) {
-            return length >= 3 && length % 3 === 0;
-        }), 'the number of coordinates must be a multiple of 3 and at least 2');
+        check.type.array(coordinates);
+        if (coordinates.length < 3 || coordinates.length % 3 !== 0) {
+            throw new DeveloperError('the number of coordinates must be a multiple of 3 and at least 3');
+        }
         //>>includeEnd('debug');
 
         var length = coordinates.length;
@@ -940,10 +933,10 @@ define([
      */
     Cartesian3.fromRadiansArrayHeights = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        check(coordinates, [], 'coordinates is required.');
-        check(coordinates.length, Match.Where(function (length) {
-            return length >= 3 && length % 3 === 0;
-        }), 'the number of coordinates must be a multiple of 3 and at least 2');
+        check.defined(coordinates, 'coordinates');
+        if (coordinates.length < 3 || coordinates.length % 3 !== 0) {
+            throw new DeveloperError('the number of coordinates must be a multiple of 3 and at least 3');
+        }
         //>>includeEnd('debug');
 
         var length = coordinates.length;

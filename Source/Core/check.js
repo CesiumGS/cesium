@@ -8,80 +8,104 @@ define([
             isArray) {
     'use strict';
 
-    var Where = function(condition) {
-        this.condition = condition;
-    };
-
-    var Match = {
-        Where: function(condition) {
-            return new Where(condition);
+    var exports = {
+        defined: checkDefined,
+        numeric: {
+            min: checkMin,
+            minMax: checkMinMax,
+            max: checkMax
+        },
+        type: {
+            array: checkArray,
+            boolean: checkBoolean,
+            function: checkFunction,
+            object: checkObject,
+            number: checkNumber,
+            string: checkString
         }
     };
 
-    function throwUnless(passed, message) {
-        if (!passed) {
-            throw new DeveloperError(message);
-        }
-    }
-
-    function makeErrorMessage(expectedType, seenType, optionalMessage) {
-        if (defined(optionalMessage)) {
-            return optionalMessage;
-        }
-        return 'Expected ' + expectedType + ', got ' + seenType;
-    }
-
-    var typeChecks = [
-        [String, 'string'],
-        [Number, 'number'],
-        [Boolean, 'boolean'],
-        [Function, 'function'],
-    ];
-
-    function check(arg, pattern, optionalMessage) {
-        var typeCheck;
-        var patternValid = false;
-        for (var i = 0; i < typeChecks.length; i++) {
-            typeCheck = typeChecks[i];
-            if (typeCheck[0] === pattern) {
-                patternValid = true;
-                throwUnless(typeof arg === typeCheck[1], makeErrorMessage(typeCheck[1], typeof arg, optionalMessage));
-            }
-        }
-
-        if (pattern === null) {
-            throwUnless(arg === null, makeErrorMessage('null', arg, optionalMessage));
-            return true;
-        }
-        if (pattern instanceof Where) {
-            throwUnless(pattern.condition(arg), 'Failed Match.Where condition for arg: ' + typeof arg);
-            return true;
-        }
-        if (pattern === Object) {
-            throwUnless(typeof arg === 'object' && !isArray(arg), makeErrorMessage('object', typeof arg, optionalMessage));
-            return true;
-        }
-        if (isArray(pattern)) {
-            if (pattern.length !== 1 && pattern.length !== 0) {
-                throw new DeveloperError('invalid pattern: array pattern must contain 0 or 1 element');
-            }
-            if (pattern.length === 1) {
-                for (var j = 0; j < arg.length; j++) {
-                    check(arg[j], pattern[0], optionalMessage ? '(checking array elements) ' + optionalMessage : undefined);
-                }
-            }
-            var isArrayOrTypedArray = isArray(arg) || arg instanceof Float32Array || arg instanceof Float64Array ||
-                                      arg instanceof Int8Array || arg instanceof Int16Array || arg instanceof Int32Array;
-            throwUnless(isArrayOrTypedArray, makeErrorMessage('array', typeof arg), optionalMessage);
-            return true;
-        }
-        if (!patternValid) {
-            throw new DeveloperError('unsupported pattern');
-        }
-    }
-
-    return {
-        Match: Match,
-        check: check
+    var errors = {
+        defined: getUndefinedErrorMessage,
+        failedType: getFailedTypeErrorMessage
     };
+
+    function getUndefinedErrorMessage(name) {
+        return name + ' is required but is undefined.';
+    }
+    function getFailedTypeErrorMessage(actual, expected) {
+        return 'Expected ' + expected + ', got ' + actual;
+    }
+
+    function checkMinMax(test, min, max) {
+        checkNumber(test);
+        checkNumber(max);
+        checkNumber(min);
+        if (min > max) {
+            throw new DeveloperError('Invalid condition: min (' + min + ') must be less than max (' + max + ')');
+        }
+        if (test > max || test < min) {
+            throw new DeveloperError('Invalid argument: expected ' + test + ' to be in range [' + min + ', ' + max + ']');
+        }
+    }
+
+    function checkMax(test, max) {
+        checkNumber(test);
+        checkNumber(max);
+        if (test > max) {
+            throw new DeveloperError('Expected ' + test + ' to be at most ' + max);
+        }
+    }
+
+    function checkMin(test, min) {
+        checkNumber(test);
+        checkNumber(min);
+        if (test < min) {
+            throw new DeveloperError('Expected ' + test + ' to be at least ' + min);
+        }
+    }
+
+    function checkDefined(test, name) {
+        if (test === undefined) {
+            throw new DeveloperError(errors.defined(name));
+        }
+    }
+
+    function checkFunction(test) {
+        if (typeof test !== 'function') {
+            throw new DeveloperError(errors.failedType(typeof test, 'function'));
+        }
+    }
+
+    function checkString(test) {
+        if (typeof test !== 'string') {
+            throw new DeveloperError(errors.failedType(typeof test, 'string'));
+        }
+    }
+
+    function checkNumber(test) {
+        if (typeof test !== 'number') {
+            throw new DeveloperError(errors.failedType(typeof test, 'number'));
+        }
+    }
+
+    function checkObject(test) {
+        if (typeof test !== 'object' || isArray(test)) {
+            throw new DeveloperError(errors.failedType(typeof test, 'object'));
+        }
+    }
+
+    function checkArray(test) {
+        if (!isArray(test)) {
+            throw new DeveloperError(errors.failedType(typeof test, 'array'));
+        }
+    }
+
+    function checkBoolean(test) {
+        if (typeof test !== 'boolean') {
+            throw new DeveloperError(errors.failedType(typeof test, 'boolean'));
+        }
+    }
+
+    return exports;
 });
