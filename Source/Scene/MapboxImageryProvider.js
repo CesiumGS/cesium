@@ -28,7 +28,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.url='//api.mapbox.com/v4/'] The Mapbox server url.
+     * @param {String} [options.url='https://api.mapbox.com/v4/'] The Mapbox server url.
      * @param {String} options.mapId The Mapbox Map ID.
      * @param {String} [options.accessToken] The public access token for the imagery.
      * @param {String} [options.format='png'] The format of the image request.
@@ -61,18 +61,21 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = defaultValue(options.url, '//api.mapbox.com/v4/');
+        var url = defaultValue(options.url, 'https://api.mapbox.com/v4/');
         this._url = url;
         this._mapId = mapId;
         this._accessToken = MapboxApi.getAccessToken(options.accessToken);
         var format = defaultValue(options.format, 'png');
-        this._format = format.replace('.', '');
+        if (!/\./.test(format)) {
+            format = '.' + format;
+        }
+        this._format = format;
 
         var templateUrl = url;
         if (!trailingSlashRegex.test(url)) {
             templateUrl += '/';
         }
-        templateUrl += mapId + '/{z}/{x}/{y}.' + this._format;
+        templateUrl += mapId + '/{z}/{x}/{y}' + this._format;
         if (defined(this._accessToken)) {
             templateUrl += '?access_token=' + this._accessToken;
         }

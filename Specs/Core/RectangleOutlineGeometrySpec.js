@@ -59,9 +59,8 @@ defineSuite([
             granularity : 1.0
         }));
         var positions = m.attributes.position.values;
-        var length = positions.length;
 
-        expect(length).toEqual(8 * 3);
+        expect(positions.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(8 * 2);
 
         var unrotatedNWCorner = Rectangle.northwest(rectangle);
@@ -106,8 +105,8 @@ defineSuite([
         }));
         var positions = m.attributes.position.values;
 
-        expect(positions.length).toEqual(8 * 3 * 2);
-        expect(m.indices.length).toEqual(8 * 2 * 2 + 4 * 2);
+        expect(positions.length).toEqual(16 * 3); // 8 top + 8 bottom
+        expect(m.indices.length).toEqual(20 * 2); // 8 top + 8 bottom + 4 edges
     });
 
     it('compute positions with rotation extruded', function() {
@@ -120,10 +119,9 @@ defineSuite([
             extrudedHeight : 2
         }));
         var positions = m.attributes.position.values;
-        var length = positions.length;
 
-        expect(length).toEqual(8 * 3 * 2);
-        expect(m.indices.length).toEqual(8 * 2 * 2 + 4 * 2);
+        expect(positions.length).toEqual(16 * 3);
+        expect(m.indices.length).toEqual(20 * 2);
 
         var unrotatedNWCorner = Rectangle.northwest(rectangle);
         var projection = new GeographicProjection();

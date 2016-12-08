@@ -590,17 +590,21 @@ define([
     }
 
     function invalidNameError(property, properties) {
+        //>>includeStart('debug', pragmas.debug);
         var errorString = 'fabric: property name \'' + property + '\' is not valid. It should be ';
         for ( var i = 0; i < properties.length; i++) {
             var propertyName = '\'' + properties[i] + '\'';
             errorString += (i === properties.length - 1) ? ('or ' + propertyName + '.') : (propertyName + ', ');
         }
         throw new DeveloperError(errorString);
+        //>>includeEnd('debug');
     }
 
     function duplicateNameError(property, properties) {
+        //>>includeStart('debug', pragmas.debug);
         var errorString = 'fabric: uniforms and materials cannot share the same property \'' + property + '\'';
         throw new DeveloperError(errorString);
+        //>>includeEnd('debug');
     }
 
     var templateProperties = ['type', 'materials', 'uniforms', 'components', 'source'];
@@ -613,9 +617,11 @@ define([
         var components = template.components;
 
         // Make sure source and components do not exist in the same template.
+        //>>includeStart('debug', pragmas.debug);
         if (defined(components) && defined(template.source)) {
             throw new DeveloperError('fabric: cannot have source and components in the same template.');
         }
+        //>>includeEnd('debug');
 
         // Make sure all template and components properties are valid.
         checkForValidProperties(template, templateProperties, invalidNameError, true);
@@ -820,12 +826,20 @@ define([
         var uniformValue = materialUniforms[uniformId];
         var uniformType = getUniformType(uniformValue);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(uniformType)) {
             throw new DeveloperError('fabric: uniform \'' + uniformId + '\' has invalid type.');
-        } else if (uniformType === 'channels') {
-            if (replaceToken(material, uniformId, uniformValue, false) === 0 && strict) {
+        }
+        //>>includeEnd('debug');
+
+        var replacedTokenCount;
+        if (uniformType === 'channels') {
+            replacedTokenCount = replaceToken(material, uniformId, uniformValue, false);
+            //>>includeStart('debug', pragmas.debug);
+            if (replacedTokenCount === 0 && strict) {
                 throw new DeveloperError('strict: shader source does not use channels \'' + uniformId + '\'.');
             }
+            //>>includeEnd('debug');
         } else {
             // Since webgl doesn't allow texture dimension queries in glsl, create a uniform to do it.
             // Check if the shader source actually uses texture dimensions before creating the uniform.
@@ -849,9 +863,13 @@ define([
             }
 
             var newUniformId = uniformId + '_' + material._count++;
-            if (replaceToken(material, uniformId, newUniformId) === 1 && strict) {
+            replacedTokenCount = replaceToken(material, uniformId, newUniformId);
+            //>>includeStart('debug', pragmas.debug);
+            if (replacedTokenCount === 1 && strict) {
                 throw new DeveloperError('strict: shader source does not use uniform \'' + uniformId + '\'.');
             }
+            //>>includeEnd('debug');
+
             // Set uniform value
             material.uniforms[uniformId] = uniformValue;
 
@@ -944,9 +962,12 @@ define([
 
                 // Replace each material id with an czm_getMaterial method call.
                 var materialMethodCall = newMethodName + '(materialInput)';
-                if (replaceToken(material, subMaterialId, materialMethodCall) === 0 && strict) {
+                var tokensReplacedCount = replaceToken(material, subMaterialId, materialMethodCall);
+                //>>includeStart('debug', pragmas.debug);
+                if (tokensReplacedCount === 0 && strict) {
                     throw new DeveloperError('strict: shader source does not use material \'' + subMaterialId + '\'.');
                 }
+                //>>includeEnd('debug');
             }
         }
     }
@@ -1030,15 +1051,15 @@ define([
             uniforms : {
                 image : Material.DefaultImageId,
                 repeat : new Cartesian2(1.0, 1.0),
-                alpha : 1.0
+                color: new Color(1.0, 1.0, 1.0, 1.0)
             },
             components : {
-                diffuse : 'texture2D(image, fract(repeat * materialInput.st)).rgb',
-                alpha : 'texture2D(image, fract(repeat * materialInput.st)).a * alpha'
+                diffuse : 'texture2D(image, fract(repeat * materialInput.st)).rgb * color.rgb',
+                alpha : 'texture2D(image, fract(repeat * materialInput.st)).a * color.a'
             }
         },
         translucent : function(material) {
-            return material.uniforms.alpha < 1.0;
+            return material.uniforms.color.alpha < 1.0;
         }
     });
 

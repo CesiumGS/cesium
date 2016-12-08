@@ -1,13 +1,11 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/DebugModelMatrixPrimitive',
-        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Matrix4',
         'Specs/createScene'
     ], function(
         DebugModelMatrixPrimitive,
-        Cartesian2,
         Cartesian3,
         Matrix4,
         createScene) {
@@ -78,9 +76,9 @@ defineSuite([
             id : 'id'
         }));
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(p);
-        expect(pick.id).toEqual('id');
+        var pick = scene.pickForSpecs();
+        expect(pick.primitive).toBe(p);
+        expect(pick.id).toBe('id');
     });
 
     it('isDestroyed', function() {

@@ -173,11 +173,11 @@ define([
 
             // casing of Fullscreen differs across browsers
             name = prefix + 'FullscreenEnabled';
-            if (defined(document[name])) {
+            if (document[name] !== undefined) {
                 _names.fullscreenEnabled = name;
             } else {
                 name = prefix + 'FullScreenEnabled';
-                if (defined(document[name])) {
+                if (document[name] !== undefined) {
                     _names.fullscreenEnabled = name;
                 }
             }
@@ -188,7 +188,7 @@ define([
                 _names.fullscreenElement = name;
             } else {
                 name = prefix + 'FullScreenElement';
-                if (defined(document[name])) {
+                if (document[name] !== undefined) {
                     _names.fullscreenElement = name;
                 }
             }
@@ -222,7 +222,7 @@ define([
      * If fullscreen mode is not supported by the browser, does nothing.
      *
      * @param {Object} element The HTML element which will be placed into fullscreen mode.
-     * @param {HMDVRDevice} vrDevice The VR device.
+     * @param {HMDVRDevice} [vrDevice] The VR device.
      *
      * @example
      * // Put the entire page into fullscreen.

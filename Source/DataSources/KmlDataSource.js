@@ -1959,6 +1959,15 @@ define([
         Tour : processTour
     };
 
+    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        var featureProcessor = featureTypes[node.localName];
+        if (defined(featureProcessor)) {
+            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+        } else {
+            processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+        }
+    }
+
     function processTour(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
         var name = queryStringValue(node, 'name', namespaces.kml);
         var tour = {'name': name};
@@ -2009,15 +2018,6 @@ define([
         ft['lookAt'] = t.kml.lookAt;
 
         tour['playlist'].push(ft);
-    }
-
-    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureProocessor = featureTypes[node.localName];
-        if (defined(featureProocessor)) {
-            featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
-        } else {
-            console.log('KML - Unsupported feature node: ' + node.localName);
-        }
     }
 
     function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver) {

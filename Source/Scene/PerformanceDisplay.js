@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
@@ -8,7 +7,6 @@ define([
         '../Core/getTimestamp',
         '../Widgets/getElement'
     ], function(
-        Color,
         defaultValue,
         defined,
         destroyObject,
@@ -24,9 +22,11 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var container = getElement(options.container);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required');
         }
+        //>>includeEnd('debug');
 
         this._container = container;
 

@@ -1,37 +1,43 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/LabelCollection',
+        'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/defined',
-        'Core/Ellipsoid',
+        'Core/DistanceDisplayCondition',
         'Core/Math',
         'Core/NearFarScalar',
-        'Renderer/ContextLimits',
+        'Core/Rectangle',
+        'Scene/Globe',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
+        'Scene/Label',
         'Scene/LabelStyle',
-        'Scene/OrthographicFrustum',
         'Scene/VerticalOrigin',
+        'Specs/createGlobe',
         'Specs/createScene'
     ], function(
         LabelCollection,
+        BoundingRectangle,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Color,
         defined,
-        Ellipsoid,
+        DistanceDisplayCondition,
         CesiumMath,
         NearFarScalar,
-        ContextLimits,
+        Rectangle,
+        Globe,
         HeightReference,
         HorizontalOrigin,
+        Label,
         LabelStyle,
-        OrthographicFrustum,
         VerticalOrigin,
+        createGlobe,
         createScene) {
     'use strict';
 
@@ -40,20 +46,16 @@ defineSuite([
     var scene;
     var camera;
     var labels;
-    var heightReferenceSupported;
     var labelsWithHeight;
 
     beforeAll(function() {
         scene = createScene();
         camera = scene.camera;
-
-        heightReferenceSupported = defined(scene._globeDepth) && scene._globeDepth.supported && ContextLimits.maximumVertexTextureImageUnits > 0;
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
     });
-
     beforeEach(function() {
         scene.morphTo3D(0);
 
@@ -63,13 +65,6 @@ defineSuite([
 
         labels = new LabelCollection();
         scene.primitives.add(labels);
-
-        if (heightReferenceSupported) {
-            labelsWithHeight = new LabelCollection({
-                scene : scene
-            });
-            scene.primitives.add(labelsWithHeight);
-        }
     });
 
     afterEach(function() {
@@ -89,12 +84,14 @@ defineSuite([
         expect(label.style).toEqual(LabelStyle.FILL);
         expect(label.pixelOffset).toEqual(Cartesian2.ZERO);
         expect(label.eyeOffset).toEqual(Cartesian3.ZERO);
+        expect(label.heightReference).toEqual(HeightReference.NONE);
         expect(label.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(label.verticalOrigin).toEqual(VerticalOrigin.BOTTOM);
         expect(label.scale).toEqual(1.0);
         expect(label.id).not.toBeDefined();
         expect(label.translucencyByDistance).not.toBeDefined();
         expect(label.pixelOffsetScaleByDistance).not.toBeDefined();
+        expect(label.distanceDisplayCondition).not.toBeDefined();
     });
 
     it('can add a label with specified values', function() {
@@ -124,6 +121,7 @@ defineSuite([
         var scale = 2.0;
         var translucency = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
         var pixelOffsetScale = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
+        var distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
         var label = labels.add({
             show : show,
             position : position,
@@ -140,7 +138,8 @@ defineSuite([
             scale : scale,
             id : 'id',
             translucencyByDistance : translucency,
-            pixelOffsetScaleByDistance : pixelOffsetScale
+            pixelOffsetScaleByDistance : pixelOffsetScale,
+            distanceDisplayCondition : distanceDisplayCondition
         });
 
         expect(label.show).toEqual(show);
@@ -159,6 +158,7 @@ defineSuite([
         expect(label.id).toEqual('id');
         expect(label.translucencyByDistance).toEqual(translucency);
         expect(label.pixelOffsetScaleByDistance).toEqual(pixelOffsetScale);
+        expect(label.distanceDisplayCondition).toEqual(distanceDisplayCondition);
     });
 
     it('can specify font using units other than pixels', function() {
@@ -330,7 +330,7 @@ defineSuite([
     it('can render after adding a label', function() {
         labels.add({
             position : Cartesian3.ZERO,
-            text : 'x',
+            text : 'w',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -506,6 +506,44 @@ defineSuite([
 
         camera.position = new Cartesian3(4.0, 0.0, 0.0);
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+    });
+
+    it('renders label with distanceDisplayCondition', function() {
+        labels.add({
+            position : Cartesian3.ZERO,
+            text : 'm',
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER
+        });
+
+        camera.position = new Cartesian3(200.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        camera.position = new Cartesian3(50.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()[0]).toBeGreaterThan(200);
+        expect(scene.renderForSpecs()[1]).toBeGreaterThan(200);
+        expect(scene.renderForSpecs()[2]).toBeGreaterThan(200);
+
+        camera.position = new Cartesian3(5.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+    });
+
+    it('throws new label with invalid distanceDisplayCondition (near >= far)', function() {
+        var dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function() {
+            labels.add({
+                distanceDisplayCondition : dc
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws distanceDisplayCondition with near >= far', function() {
+        var l = labels.add();
+        var dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function() {
+            l.distanceDisplayCondition = dc;
+        }).toThrowDeveloperError();
     });
 
     it('can pick a label', function() {
@@ -799,10 +837,10 @@ defineSuite([
             var label = labels.add({
                 text : 'abc',
                 position : Cartesian3.ZERO,
-                pixelOffset : new Cartesian2(1.0, 2.0)
+                pixelOffset : new Cartesian2(0.5, 0.5)
             });
             scene.renderForSpecs();
-            expect(label.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(1.5, 2.5), CesiumMath.EPSILON1);
+            expect(label.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(1.0, 1.0), CesiumMath.EPSILON1);
         });
 
         it('can compute screen space position with eyeOffset', function() {
@@ -814,6 +852,168 @@ defineSuite([
             });
             scene.renderForSpecs();
             expect(label.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
+        });
+
+        it('computes screen space bounding box', function() {
+            var scale = 1.5;
+
+            var label = labels.add({
+                text : 'abc',
+                scale : scale
+            });
+            scene.renderForSpecs();
+
+            var width = 0;
+            var height = 0;
+
+            var glyphs = label._glyphs;
+            var length = glyphs.length;
+            for (var i = 0; i < length; ++i) {
+                var glyph = glyphs[i];
+                var billboard = glyph.billboard;
+                if (!defined(billboard)) {
+                    continue;
+                }
+
+                width += billboard.width;
+                height = Math.max(height, billboard.height);
+            }
+
+            width *= scale;
+            height *= scale;
+
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            expect(bbox.x).toEqual(0);
+            expect(bbox.y).toEqual(0);
+            expect(bbox.width).toEqual(width);
+            expect(bbox.height).toEqual(height);
+        });
+
+        it('computes screen space bounding box with result', function() {
+            var scale = 1.5;
+
+            var label = labels.add({
+                text : 'abc',
+                scale : scale
+            });
+            scene.renderForSpecs();
+
+            var width = 0;
+            var height = 0;
+
+            var glyphs = label._glyphs;
+            var length = glyphs.length;
+            for (var i = 0; i < length; ++i) {
+                var glyph = glyphs[i];
+                var billboard = glyph.billboard;
+                if (!defined(billboard)) {
+                    continue;
+                }
+
+                width += billboard.width;
+                height = Math.max(height, billboard.height);
+            }
+
+            width *= scale;
+            height *= scale;
+
+            var result = new BoundingRectangle();
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, result);
+            expect(bbox.x).toEqual(0);
+            expect(bbox.y).toEqual(0);
+            expect(bbox.width).toEqual(width);
+            expect(bbox.height).toEqual(height);
+            expect(bbox).toBe(result);
+        });
+
+        it('computes screen space bounding box with vertical origin', function() {
+            var scale = 1.5;
+
+            var label = labels.add({
+                text : 'abc',
+                scale : scale,
+                verticalOrigin : VerticalOrigin.CENTER
+            });
+            scene.renderForSpecs();
+
+            var width = 0;
+            var height = 0;
+
+            var glyphs = label._glyphs;
+            var length = glyphs.length;
+            for (var i = 0; i < length; ++i) {
+                var glyph = glyphs[i];
+                var billboard = glyph.billboard;
+                if (!defined(billboard)) {
+                    continue;
+                }
+
+                width += billboard.width;
+                height = Math.max(height, billboard.height);
+            }
+
+            width *= scale;
+            height *= scale;
+
+            var halfHeight = height * 0.5;
+
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            expect(bbox.x).toEqual(0);
+            expect(bbox.y).toEqual(-halfHeight);
+            expect(bbox.width).toEqual(width);
+            expect(bbox.height).toEqual(height);
+
+            label.verticalOrigin = VerticalOrigin.TOP;
+            bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            expect(bbox.x).toEqual(0);
+            expect(bbox.y).toEqual(-height);
+            expect(bbox.width).toEqual(width);
+            expect(bbox.height).toEqual(height);
+        });
+
+        it('computes screen space bounding box with horizontal origin', function() {
+            var scale = 1.5;
+
+            var label = labels.add({
+                text : 'abc',
+                scale : scale,
+                horizontalOrigin : HorizontalOrigin.CENTER
+            });
+            scene.renderForSpecs();
+
+            var width = 0;
+            var height = 0;
+
+            var glyphs = label._glyphs;
+            var length = glyphs.length;
+            for (var i = 0; i < length; ++i) {
+                var glyph = glyphs[i];
+                var billboard = glyph.billboard;
+                if (!defined(billboard)) {
+                    continue;
+                }
+
+                width += billboard.width;
+                height = Math.max(height, billboard.height);
+            }
+
+            width *= scale;
+            height *= scale;
+
+            var halfWidth = width * 0.5;
+
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            expect(bbox.x).toEqual(-halfWidth);
+            expect(bbox.y).toEqual(0);
+            expect(bbox.width).toEqual(width);
+            expect(bbox.height).toEqual(height);
+
+            label.horizontalOrigin = HorizontalOrigin.RIGHT;
+            bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            expect(bbox.x).toEqual(-width);
+            expect(bbox.y).toEqual(0);
+            expect(bbox.width).toEqual(width);
+            expect(bbox.height).toEqual(height);
         });
 
         it('can equal another label', function() {
@@ -1259,6 +1459,30 @@ defineSuite([
             expect(label.pixelOffset.y).toEqual(yOffset);
         });
 
+        it('Correctly updates billboard position when height reference changes', function() {
+            scene.globe = new Globe();
+            var labelsWithScene = new LabelCollection({scene : scene});
+            scene.primitives.add(labelsWithScene);
+
+            var position1 = new Cartesian3(1.0, 2.0, 3.0);
+            var label = labelsWithScene.add({
+                position : position1,
+                text : 'abc',
+                heightReference : HeightReference.CLAMP_TO_GROUND
+            });
+
+            scene.renderForSpecs();
+            var glyph = label._glyphs[0];
+            var billboard = glyph.billboard;
+            expect(billboard.position).toEqual(label.position);
+
+            label.heightReference = HeightReference.NONE;
+            scene.renderForSpecs();
+
+            expect(billboard.position).toEqual(label.position);
+            scene.primitives.remove(labelsWithScene);
+        });
+
         it('should set vertexTranslate of billboards correctly when font size changes', function() {
             var label = labels.add({
                 text : 'apl',
@@ -1447,20 +1671,12 @@ defineSuite([
             text : 'two'
         });
 
-        var maxRadii = ellipsoid.maximumRadius;
-        var orthoFrustum = new OrthographicFrustum();
-        orthoFrustum.right = maxRadii * Math.PI;
-        orthoFrustum.left = -orthoFrustum.right;
-        orthoFrustum.top = orthoFrustum.right;
-        orthoFrustum.bottom = -orthoFrustum.top;
-        orthoFrustum.near = 0.01 * maxRadii;
-        orthoFrustum.far = 60.0 * maxRadii;
+        camera.setView({
+            destination : Rectangle.fromDegrees(-60.0, -60.0, -40.0, 60.0)
+        });
 
-        // Update scene state
         scene.morphTo2D(0);
         scene.renderForSpecs();
-
-        camera.frustum = orthoFrustum;
 
         scene.renderForSpecs();
         var actual = scene.frameState.commandList[0].boundingVolume;
@@ -1638,37 +1854,19 @@ defineSuite([
     });
 
     describe('height referenced labels', function() {
-        function createMockGlobe() {
-            var globe = {
-                callback : undefined,
-                removedCallback : false,
-                ellipsoid : Ellipsoid.WGS84,
-                update : function() {},
-                getHeight : function() {
-                    return 0.0;
-                },
-                _surface : {},
-                destroy : function() {}
-            };
+        beforeEach(function() {
+            scene.globe = createGlobe();
 
-            globe._surface.updateHeight = function(position, callback) {
-                globe.callback = callback;
-                return function() {
-                    globe.removedCallback = true;
-                    globe.callback = undefined;
-                };
-            };
-
-            return globe;
-        }
+            labelsWithHeight = new LabelCollection({
+                scene : scene
+            });
+            scene.primitives.add(labelsWithHeight);
+        });
 
         it('explicitly constructs a label with height reference', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             var l = labelsWithHeight.add({
+                text : "test",
                 heightReference : HeightReference.CLAMP_TO_GROUND
             });
 
@@ -1676,23 +1874,17 @@ defineSuite([
         });
 
         it('set label height reference property', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
-            scene.globe = createMockGlobe();
-            var l = labelsWithHeight.add();
+            scene.globe = createGlobe();
+            var l = labelsWithHeight.add({
+                text : "test"
+            });
             l.heightReference = HeightReference.CLAMP_TO_GROUND;
 
             expect(l.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
         });
 
         it('creating with a height reference creates a height update callback', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             labelsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
@@ -1701,11 +1893,7 @@ defineSuite([
         });
 
         it('set height reference property creates a height update callback', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             var l = labelsWithHeight.add({
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
             });
@@ -1714,11 +1902,7 @@ defineSuite([
         });
 
         it('updates the callback when the height reference changes', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             var l = labelsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
@@ -1736,11 +1920,7 @@ defineSuite([
         });
 
         it('changing the position updates the callback', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             var l = labelsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
@@ -1753,11 +1933,7 @@ defineSuite([
         });
 
         it('callback updates the position', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             var l = labelsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)

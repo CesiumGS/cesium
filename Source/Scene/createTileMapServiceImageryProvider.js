@@ -2,12 +2,9 @@
 define([
         '../Core/Cartesian2',
         '../Core/Cartographic',
-        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Event',
         '../Core/GeographicTilingScheme',
         '../Core/joinUrls',
         '../Core/loadXML',
@@ -20,12 +17,9 @@ define([
     ], function(
         Cartesian2,
         Cartographic,
-        Credit,
         defaultValue,
         defined,
-        defineProperties,
         DeveloperError,
-        Event,
         GeographicTilingScheme,
         joinUrls,
         loadXML,
@@ -63,6 +57,7 @@ define([
      * @param {Number} [options.tileHeight=256] Pixel height of image tiles.
      * @param {Boolean} [options.flipXY] Older versions of gdal2tiles.py flipped X and Y values in tilemapresource.xml.
      * Specifying this option will do the same, allowing for loading of these incorrect tilesets.
+     * @returns {UrlTemplateImageryProvider} The imagery provider.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider

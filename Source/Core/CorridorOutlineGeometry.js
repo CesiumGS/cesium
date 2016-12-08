@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
@@ -14,9 +15,10 @@ define([
         './GeometryAttributes',
         './IndexDatatype',
         './Math',
-        './PolylinePipeline',
+        './PolygonPipeline',
         './PrimitiveType'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
@@ -31,7 +33,7 @@ define([
         GeometryAttributes,
         IndexDatatype,
         CesiumMath,
-        PolylinePipeline,
+        PolygonPipeline,
         PrimitiveType) {
     'use strict';
 
@@ -267,8 +269,8 @@ define([
         extrudedPositions.set(positions);
         var newPositions = new Float64Array(length * 2);
 
-        positions = CorridorGeometryLibrary.scaleToGeodeticHeight(positions, height, ellipsoid, positions);
-        extrudedPositions = CorridorGeometryLibrary.scaleToGeodeticHeight(extrudedPositions, extrudedHeight, ellipsoid, extrudedPositions);
+        positions = PolygonPipeline.scaleToGeodeticHeight(positions, height, ellipsoid);
+        extrudedPositions = PolygonPipeline.scaleToGeodeticHeight(extrudedPositions, extrudedHeight, ellipsoid);
         newPositions.set(positions);
         newPositions.set(extrudedPositions, length);
         attributes.position.values = newPositions;
@@ -359,6 +361,8 @@ define([
      * @param {CorridorOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     CorridorOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -388,6 +392,8 @@ define([
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._cornerType;
         array[startingIndex]   = value._granularity;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
@@ -468,7 +474,7 @@ define([
         var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
         var extrude = (height !== extrudedHeight);
 
-        var cleanPositions = PolylinePipeline.removeDuplicates(positions);
+        var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
         if ((cleanPositions.length < 2) || (width <= 0)) {
             return;
@@ -494,7 +500,7 @@ define([
         } else {
             var computedPositions = CorridorGeometryLibrary.computePositions(params);
             attr = combine(computedPositions, params.cornerType);
-            attr.attributes.position.values = CorridorGeometryLibrary.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid, attr.attributes.position.values);
+            attr.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid);
         }
         var attributes = attr.attributes;
         var boundingSphere = BoundingSphere.fromVertices(attributes.position.values, undefined, 3);

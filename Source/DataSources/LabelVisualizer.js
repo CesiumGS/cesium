@@ -4,12 +4,14 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
+        '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
-        '../Scene/LabelCollection',
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
         './BoundingSphereState',
@@ -19,12 +21,14 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
         NearFarScalar,
+        HeightReference,
         HorizontalOrigin,
-        LabelCollection,
         LabelStyle,
         VerticalOrigin,
         BoundingSphereState,
@@ -36,9 +40,10 @@ define([
     var defaultStyle = LabelStyle.FILL;
     var defaultFillColor = Color.WHITE;
     var defaultOutlineColor = Color.BLACK;
-    var defaultOutlineWidth = 1;
+    var defaultOutlineWidth = 1.0;
     var defaultPixelOffset = Cartesian2.ZERO;
     var defaultEyeOffset = Cartesian3.ZERO;
+    var defaultHeightReference = HeightReference.NONE;
     var defaultHorizontalOrigin = HorizontalOrigin.CENTER;
     var defaultVerticalOrigin = VerticalOrigin.CENTER;
 
@@ -49,6 +54,7 @@ define([
     var pixelOffset = new Cartesian2();
     var translucencyByDistance = new NearFarScalar();
     var pixelOffsetScaleByDistance = new NearFarScalar();
+    var distanceDisplayCondition = new DistanceDisplayCondition();
 
     function EntityData(entity) {
         this.entity = entity;
@@ -62,13 +68,13 @@ define([
      * @alias LabelVisualizer
      * @constructor
      *
-     * @param {Scene} scene The scene the primitives will be rendered in.
+     * @param {EntityCluster} entityCluster The entity cluster to manage the collection of billboards and optionally cluster with other entities.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    function LabelVisualizer(scene, entityCollection) {
+    function LabelVisualizer(entityCluster, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
+        if (!defined(entityCluster)) {
+            throw new DeveloperError('entityCluster is required.');
         }
         if (!defined(entityCollection)) {
             throw new DeveloperError('entityCollection is required.');
@@ -77,9 +83,7 @@ define([
 
         entityCollection.collectionChanged.addEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
 
-        this._scene = scene;
-        this._unusedIndexes = [];
-        this._labelCollection = undefined;
+        this._cluster = entityCluster;
         this._entityCollection = entityCollection;
         this._items = new AssociativeArray();
 
@@ -101,7 +105,8 @@ define([
         //>>includeEnd('debug');
 
         var items = this._items.values;
-        var unusedIndexes = this._unusedIndexes;
+        var cluster = this._cluster;
+
         for (var i = 0, len = items.length; i < len; i++) {
             var item = items[i];
             var entity = item.entity;
@@ -118,27 +123,16 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                returnLabel(item, unusedIndexes);
+                returnPrimitive(item, entity, cluster);
                 continue;
             }
 
-            if (!defined(label)) {
-                var labelCollection = this._labelCollection;
-                if (!defined(labelCollection)) {
-                    labelCollection = new LabelCollection();
-                    this._labelCollection = labelCollection;
-                    this._scene.primitives.add(labelCollection);
-                }
+            if (!Property.isConstant(entity._position)) {
+                cluster._clusterDirty = true;
+            }
 
-                var length = unusedIndexes.length;
-                if (length > 0) {
-                    var index = unusedIndexes.pop();
-                    item.index = index;
-                    label = labelCollection.get(index);
-                } else {
-                    label = labelCollection.add();
-                    item.index = labelCollection.length - 1;
-                }
+            if (!defined(label)) {
+                label = cluster.getLabel(entity);
                 label.id = entity;
                 item.label = label;
             }
@@ -154,10 +148,12 @@ define([
             label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, time, defaultOutlineWidth);
             label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, defaultPixelOffset, pixelOffset);
             label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
+            label.heightReference = Property.getValueOrDefault(labelGraphics._heightReference, time, defaultHeightReference);
             label.horizontalOrigin = Property.getValueOrDefault(labelGraphics._horizontalOrigin, time, defaultHorizontalOrigin);
             label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, defaultVerticalOrigin);
             label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistance);
             label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
+            label.distanceDisplayCondition = Property.getValueOrUndefined(labelGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
         }
         return true;
     };
@@ -188,7 +184,8 @@ define([
             return BoundingSphereState.FAILED;
         }
 
-        result.center = Cartesian3.clone(item.label.position, result.center);
+        var label = item.label;
+        result.center = Cartesian3.clone(defaultValue(label._clampedPosition, label.position), result.center);
         result.radius = 0;
         return BoundingSphereState.DONE;
     };
@@ -207,8 +204,9 @@ define([
      */
     LabelVisualizer.prototype.destroy = function() {
         this._entityCollection.collectionChanged.removeEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
-        if (defined(this._labelCollection)) {
-            this._scene.primitives.remove(this._labelCollection);
+        var entities = this._entityCollection.values;
+        for (var i = 0; i < entities.length; i++) {
+            this._cluster.removeLabel(entities[i]);
         }
         return destroyObject(this);
     };
@@ -216,8 +214,8 @@ define([
     LabelVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
         var i;
         var entity;
-        var unusedIndexes = this._unusedIndexes;
         var items = this._items;
+        var cluster = this._cluster;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];
@@ -233,27 +231,22 @@ define([
                     items.set(entity.id, new EntityData(entity));
                 }
             } else {
-                returnLabel(items.get(entity.id), unusedIndexes);
+                returnPrimitive(items.get(entity.id), entity, cluster);
                 items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            returnLabel(items.get(entity.id), unusedIndexes);
+            returnPrimitive(items.get(entity.id), entity, cluster);
             items.remove(entity.id);
         }
     };
 
-    function returnLabel(item, unusedIndexes) {
+    function returnPrimitive(item, entity, cluster) {
         if (defined(item)) {
-            var label = item.label;
-            if (defined(label)) {
-                unusedIndexes.push(item.index);
-                label.show = false;
-                item.label = undefined;
-                item.index = -1;
-            }
+            item.label = undefined;
+            cluster.removeLabel(entity);
         }
     }
 

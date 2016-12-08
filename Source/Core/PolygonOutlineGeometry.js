@@ -1,6 +1,8 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingSphere',
+        './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -20,7 +22,9 @@ define([
         './Queue',
         './WindingOrder'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
+        Cartesian3,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -202,7 +206,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Object} options.polygonHierarchy A polygon hierarchy that can include holes.
+     * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
      * @param {Number} [options.height=0.0] The distance in meters between the polygon and the ellipsoid surface.
      * @param {Number} [options.extrudedHeight] The distance in meters between the polygon's extruded face and the ellipsoid surface.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
@@ -216,66 +220,66 @@ define([
      * @example
      * // 1. create a polygon outline from points
      * var polygon = new Cesium.PolygonOutlineGeometry({
-     *   polygonHierarchy : {
-     *     positions : Cesium.Cartesian3.fromDegreesArray([
+     *   polygonHierarchy : new Cesium.PolygonHierarchy(
+     *     Cesium.Cartesian3.fromDegreesArray([
      *       -72.0, 40.0,
      *       -70.0, 35.0,
      *       -75.0, 30.0,
      *       -70.0, 30.0,
      *       -68.0, 40.0
      *     ])
-     *   }
+     *   )
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
      *
      * // 2. create a nested polygon with holes outline
      * var polygonWithHole = new Cesium.PolygonOutlineGeometry({
-     *   polygonHierarchy : {
-     *     positions : Cesium.Cartesian3.fromDegreesArray([
+     *   polygonHierarchy : new Cesium.PolygonHierarchy(
+     *     Cesium.Cartesian3.fromDegreesArray([
      *       -109.0, 30.0,
      *       -95.0, 30.0,
      *       -95.0, 40.0,
      *       -109.0, 40.0
      *     ]),
-     *     holes : [{
-     *       positions : Cesium.Cartesian3.fromDegreesArray([
+     *     [new Cesium.PolygonHierarchy(
+     *       Cesium.Cartesian3.fromDegreesArray([
      *         -107.0, 31.0,
      *         -107.0, 39.0,
      *         -97.0, 39.0,
      *         -97.0, 31.0
      *       ]),
-     *       holes : [{
-     *         positions : Cesium.Cartesian3.fromDegreesArray([
+     *       [new Cesium.PolygonHierarchy(
+     *         Cesium.Cartesian3.fromDegreesArray([
      *           -105.0, 33.0,
      *           -99.0, 33.0,
      *           -99.0, 37.0,
      *           -105.0, 37.0
      *         ]),
-     *         holes : [{
-     *           positions : Cesium.Cartesian3.fromDegreesArray([
+     *         [new Cesium.PolygonHierarchy(
+     *           Cesium.Cartesian3.fromDegreesArray([
      *             -103.0, 34.0,
      *             -101.0, 34.0,
      *             -101.0, 36.0,
      *             -103.0, 36.0
      *           ])
-     *         }]
-     *       }]
-     *     }]
-     *   }
+     *         )]
+     *       )]
+     *     )]
+     *   )
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygonWithHole);
      *
      * // 3. create extruded polygon outline
      * var extrudedPolygon = new Cesium.PolygonOutlineGeometry({
-     *   polygonHierarchy : {
-     *     positions : Cesium.Cartesian3.fromDegreesArray([
+     *   polygonHierarchy : new Cesium.PolygonHierarchy(
+     *     Cesium.Cartesian3.fromDegreesArray([
      *       -72.0, 40.0,
      *       -70.0, 35.0,
      *       -75.0, 30.0,
      *       -70.0, 30.0,
      *       -68.0, 40.0
      *     ])
-     *   },
+     *   ),
      *   extrudedHeight: 300000
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
@@ -284,6 +288,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.polygonHierarchy)) {
             throw new DeveloperError('options.polygonHierarchy is required.');
+        }
+        if (defined(options.perPositionHeight) && options.perPositionHeight && defined(options.height)) {
+            throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
         }
         //>>includeEnd('debug');
 
@@ -323,6 +330,8 @@ define([
      * @param {PolygonOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     PolygonOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -347,6 +356,8 @@ define([
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
         array[startingIndex++] = value.packedLength;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
@@ -475,7 +486,7 @@ define([
         while (queue.length !== 0) {
             var outerNode = queue.dequeue();
             var outerRing = outerNode.positions;
-            outerRing = PolygonPipeline.removeDuplicates(outerRing);
+            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
             if (outerRing.length < 3) {
                 continue;
             }
@@ -484,7 +495,7 @@ define([
             // The outer polygon contains inner polygons
             for (i = 0; i < numChildren; i++) {
                 var hole = outerNode.holes[i];
-                hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
+                hole.positions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
                 if (hole.positions.length < 3) {
                     continue;
                 }
@@ -520,7 +531,7 @@ define([
         } else {
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositions(ellipsoid, polygons[i], minDistance, perPositionHeight);
-                geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid, !perPositionHeight);
+                geometry.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
                 geometries.push(geometry);
             }
         }

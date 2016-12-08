@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/createGuid',
@@ -28,10 +29,12 @@ define([
         '../Core/mergeSort',
         '../Core/Occluder',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/ComputeEngine',
         '../Renderer/Context',
         '../Renderer/ContextLimits',
+        '../Renderer/DrawCommand',
         '../Renderer/PassState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -45,6 +48,7 @@ define([
         './FrustumCommands',
         './FXAA',
         './GlobeDepth',
+        './MapMode2D',
         './OIT',
         './OrthographicFrustum',
         './Pass',
@@ -59,6 +63,7 @@ define([
         './SceneTransforms',
         './SceneTransitioner',
         './ScreenSpaceCameraController',
+        './ShadowMap',
         './SunPostProcess',
         './TweenCollection'
     ], function(
@@ -68,6 +73,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         Color,
         ColorGeometryInstanceAttribute,
         createGuid,
@@ -90,10 +96,12 @@ define([
         mergeSort,
         Occluder,
         ShowGeometryInstanceAttribute,
+        Transforms,
         ClearCommand,
         ComputeEngine,
         Context,
         ContextLimits,
+        DrawCommand,
         PassState,
         ShaderProgram,
         ShaderSource,
@@ -107,6 +115,7 @@ define([
         FrustumCommands,
         FXAA,
         GlobeDepth,
+        MapMode2D,
         OIT,
         OrthographicFrustum,
         Pass,
@@ -121,6 +130,7 @@ define([
         SceneTransforms,
         SceneTransitioner,
         ScreenSpaceCameraController,
+        ShadowMap,
         SunPostProcess,
         TweenCollection) {
     'use strict';
@@ -176,6 +186,8 @@ define([
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+     * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
+     * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -208,7 +220,7 @@ define([
             creditContainer = document.createElement('div');
             creditContainer.style.position = 'absolute';
             creditContainer.style.bottom = '0';
-            creditContainer.style['text-shadow'] = '0px 0px 2px #000000';
+            creditContainer.style['text-shadow'] = '0 0 2px #000000';
             creditContainer.style.color = '#ffffff';
             creditContainer.style['font-size'] = '10px';
             creditContainer.style['padding-right'] = '5px';
@@ -377,8 +389,6 @@ define([
 
         this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
 
-        this._transitioner = new SceneTransitioner(this, this._mapProjection.ellipsoid);
-
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
@@ -394,6 +404,15 @@ define([
          * @default 1000.0
          */
         this.farToNearRatio = 1000.0;
+
+        /**
+         * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
+         * to the surface shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On the
+         * other hand, increasing this will increase performance but may cause z-fighting among primitives close to thesurface.
+         * @type {Number}
+         * @default 1.75e6
+         */
+        this.nearToFarDistance2D = 1.75e6;
 
         /**
          * This property is for debugging only; it is not for production use.
@@ -533,6 +552,19 @@ define([
          */
         this.fog = new Fog();
 
+        this._sunCamera = new Camera(this);
+
+        /**
+         * The shadow map in the scene. When enabled, models, primitives, and the globe may cast and receive shadows.
+         * By default the light source of the shadow map is the sun.
+         * @type {ShadowMap}
+         */
+        this.shadowMap = new ShadowMap({
+            context : context,
+            lightCamera : this._sunCamera,
+            enabled : defaultValue(options.shadows, false)
+        });
+
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
         this._performanceDisplay = undefined;
@@ -542,6 +574,7 @@ define([
         this._camera = camera;
         this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
+        this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
 
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
@@ -556,6 +589,7 @@ define([
 
             isSunVisible : false,
             isMoonVisible : false,
+            isReadyForAtmosphere : false,
             isSkyAtmosphereVisible : false,
 
             clearGlobeDepth : false,
@@ -575,7 +609,7 @@ define([
         var near = camera.frustum.near;
         var far = camera.frustum.far;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(this.farToNearRatio));
-        updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList);
+        updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList, false, undefined);
 
         // give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameState(this, 0.0, JulianDate.now());
@@ -660,6 +694,7 @@ define([
 
         /**
          * Returns true if the pickPosition function is supported.
+         * @memberof Scene.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -811,6 +846,19 @@ define([
             },
             set : function(terrainProvider) {
                 this.globe.terrainProvider = terrainProvider;
+            }
+        },
+
+        /**
+         * Gets an event that's raised when the terrain provider is changed
+         * @memberof Scene.prototype
+         *
+         * @type {Event}
+         * @readonly
+         */
+        terrainProviderChanged : {
+            get : function() {
+                return this.globe.terrainProviderChanged;
             }
         },
 
@@ -1016,6 +1064,17 @@ define([
                     this._camera.frustum.xOffset = 0.0;
                 }
             }
+        },
+
+        /**
+         * Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         */
+        mapMode2D : {
+            get : function() {
+                return this._mapMode2D;
+            }
         }
     });
 
@@ -1037,6 +1096,44 @@ define([
             Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
             Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
             Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
+    }
+
+    function updateDerivedCommands(scene, command) {
+        var frameState = scene.frameState;
+        var context = scene._context;
+        var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
+        var shadowMaps = frameState.shadowHints.shadowMaps;
+        var lightShadowMaps = frameState.shadowHints.lightShadowMaps;
+        var lightShadowsEnabled = shadowsEnabled && (lightShadowMaps.length > 0);
+
+        // Update derived commands when any shadow maps become dirty
+        var shadowsDirty = false;
+        var lastDirtyTime = frameState.shadowHints.lastDirtyTime;
+        if (command.lastDirtyTime !== lastDirtyTime) {
+            command.lastDirtyTime = lastDirtyTime;
+            command.dirty = true;
+            shadowsDirty = true;
+        }
+
+        if (command.dirty) {
+            command.dirty = false;
+
+            var derivedCommands = command.derivedCommands;
+
+            if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
+                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
+            }
+
+            var oit = scene._oit;
+            if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
+                if (lightShadowsEnabled && command.receiveShadows) {
+                    derivedCommands.oit = defined(derivedCommands.oit) ? derivedCommands.oit : {};
+                    derivedCommands.oit.shadows = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
+                } else {
+                    derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
+                }
+            }
+        }
     }
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
@@ -1066,6 +1163,7 @@ define([
 
         var frameState = scene._frameState;
         frameState.commandList.length = 0;
+        frameState.shadowMaps.length = 0;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
@@ -1079,11 +1177,19 @@ define([
         clearPasses(frameState.passes);
     }
 
-    function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList) {
+    function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, nearToFarDistance2D) {
         frustumCommandsList.length = numFrustums;
         for (var m = 0; m < numFrustums; ++m) {
-            var curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
-            var curFar = Math.min(far, farToNearRatio * curNear);
+            var curNear;
+            var curFar;
+
+            if (!is2D) {
+                curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
+                curFar = Math.min(far, farToNearRatio * curNear);
+            } else {
+                curNear = Math.min(far - nearToFarDistance2D, near + m * nearToFarDistance2D);
+                curFar = Math.min(far, curNear + nearToFarDistance2D);
+            }
 
             var frustumCommands = frustumCommandsList[m];
             if (!defined(frustumCommands)) {
@@ -1098,6 +1204,10 @@ define([
     function insertIntoBin(scene, command, distance) {
         if (scene.debugShowFrustums) {
             command.debugOverlappingFrustums = 0;
+        }
+
+        if (!scene.frameState.passes.pick) {
+            updateDerivedCommands(scene, command);
         }
 
         var frustumCommandsList = scene._frustumCommandsList;
@@ -1177,8 +1287,13 @@ define([
         overlayList.length = 0;
 
         var near = Number.MAX_VALUE;
-        var far = Number.MIN_VALUE;
+        var far = -Number.MAX_VALUE;
         var undefBV = false;
+
+        var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
+        var shadowNear = Number.MAX_VALUE;
+        var shadowFar = -Number.MAX_VALUE;
+        var shadowClosestObjectSize = Number.MAX_VALUE;
 
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
@@ -1192,7 +1307,7 @@ define([
 
         // Determine visibility of celestial and terrestrial environment effects.
         var environmentState = scene._environmentState;
-        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && defined(scene.globe) && scene.globe._surface._tilesToRender.length > 0;
+        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
         environmentState.isSunVisible = isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
         environmentState.isMoonVisible = isVisible(environmentState.moonCommand, cullingVolume, occluder);
 
@@ -1215,6 +1330,23 @@ define([
                     distances = boundingVolume.computePlaneDistances(position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
+
+                    // Compute a tight near and far plane for commands that receive shadows. This helps compute
+                    // good splits for cascaded shadow maps. Ignore commands that exceed the maximum distance.
+                    // When moving the camera low LOD globe tiles begin to load, whose bounding volumes
+                    // throw off the near/far fitting for the shadow map. Only update for globe tiles that the
+                    // camera isn't inside.
+                    if (shadowsEnabled && command.receiveShadows && (distances.start < ShadowMap.MAXIMUM_DISTANCE) &&
+                        !((pass === Pass.GLOBE) && (distances.start < -100.0) && (distances.stop > 100.0))) {
+
+                        // Get the smallest bounding volume the camera is near. This is used to place more shadow detail near the object.
+                        var size = distances.stop - distances.start;
+                        if ((pass !== Pass.GLOBE) && (distances.start < 100.0)) {
+                            shadowClosestObjectSize = Math.min(shadowClosestObjectSize, size);
+                        }
+                        shadowNear = Math.min(shadowNear, distances.start);
+                        shadowFar = Math.max(shadowFar, distances.stop);
+                    }
                 } else {
                     // Clear commands don't need a bounding volume - just add the clear to all frustums.
                     // If another command has no bounding volume, though, we need to use the camera's
@@ -1237,15 +1369,41 @@ define([
             // This will handle the case where the computed near plane is further than the user defined far plane.
             near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
             far = Math.max(Math.min(far, camera.frustum.far), near);
+
+            if (shadowsEnabled) {
+                shadowNear = Math.min(Math.max(shadowNear, camera.frustum.near), camera.frustum.far);
+                shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
+            }
+        }
+
+        // Use the computed near and far for shadows
+        if (shadowsEnabled) {
+            frameState.shadowHints.nearPlane = shadowNear;
+            frameState.shadowHints.farPlane = shadowFar;
+            frameState.shadowHints.closestObjectSize = shadowClosestObjectSize;
         }
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
+        var is2D = scene.mode === SceneMode.SCENE2D;
         var farToNearRatio = scene.farToNearRatio;
-        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+
+        var numFrustums;
+        if (!is2D) {
+            // The multifrustum for 3D/CV is non-uniformly distributed.
+            numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+        } else {
+            // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
+            // the camera i smoved to just before the frustum and the frustum depth is scaled
+            // to be in [1.0, nearToFarDistance2D].
+            far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
+            near = Math.min(near, far);
+            numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.nearToFarDistance2D);
+        }
+
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
                 (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
-            updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
+            updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             createPotentiallyVisibleSet(scene);
         }
     }
@@ -1308,30 +1466,36 @@ define([
         });
     }
 
-    function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
-        if (defined(command.shaderProgram) || defined(shaderProgram)) {
-            // Replace shader for frustum visualization
-            var sp = createDebugFragmentShaderProgram(command, scene, shaderProgram);
-            command.execute(scene.context, passState, renderState, sp);
-            sp.destroy();
-        }
+    function executeDebugCommand(command, scene, passState) {
+        var debugCommand = DrawCommand.shallowClone(command);
+        debugCommand.shaderProgram = createDebugFragmentShaderProgram(command, scene);
+        debugCommand.execute(scene.context, passState);
+        debugCommand.shaderProgram.destroy();
     }
 
     var transformFrom2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                        1.0, 0.0, 0.0, 0.0,
-                                        0.0, 1.0, 0.0, 0.0,
-                                        0.0, 0.0, 0.0, 1.0);
+                                      1.0, 0.0, 0.0, 0.0,
+                                      0.0, 1.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 1.0);
     transformFrom2D = Matrix4.inverseTransformation(transformFrom2D, transformFrom2D);
 
-    function executeCommand(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer) {
+    function executeCommand(command, scene, context, passState, debugFramebuffer) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
         }
 
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
+
         if (scene.debugShowCommands || scene.debugShowFrustums) {
-            executeDebugCommand(command, scene, passState, renderState, shaderProgram);
+            executeDebugCommand(command, scene, passState);
+        } else if (lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
+            // If the command receives shadows, execute the derived shadows command.
+            // Some commands, such as OIT derived commands, do not have derived shadow commands themselves
+            // and instead shadowing is built-in. In this case execute the command regularly below.
+            command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
-            command.execute(context, passState, renderState, shaderProgram);
+            command.execute(context, passState);
         }
 
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
@@ -1462,6 +1626,8 @@ define([
         var context = scene.context;
         var us = context.uniformState;
 
+        us.updateCamera(camera);
+
         // Create a working frustum from the original camera frustum.
         var frustum;
         if (defined(camera.frustum.fov)) {
@@ -1489,9 +1655,11 @@ define([
             executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState);
         }
 
+        var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
+
         if (environmentState.isSunVisible) {
             environmentState.sunDrawCommand.execute(context, passState);
-            if (scene.sunBloom && !scene._useWebVR) {
+            if (scene.sunBloom && !useWebVR) {
                 var framebuffer;
                 if (environmentState.useGlobeDepthFramebuffer) {
                     framebuffer = scene._globeDepth.framebuffer;
@@ -1524,9 +1692,11 @@ define([
         }
 
         var clearGlobeDepth = environmentState.clearGlobeDepth;
-        var useDepthPlane = environmentState.clearGlobeDepth;
+        var useDepthPlane = environmentState.useDepthPlane;
         var clearDepth = scene._depthClearCommand;
         var depthPlane = scene._depthPlane;
+
+        var height2D = camera.position.z;
 
         // Execute commands in each frustum in back to front order
         var j;
@@ -1537,9 +1707,20 @@ define([
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
 
-            // Avoid tearing artifacts between adjacent frustums in the opaque passes
-            frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
-            frustum.far = frustumCommands.far;
+            if (scene.mode === SceneMode.SCENE2D) {
+                // To avoid z-fighting in 2D, move the camera to just before the frustum
+                // and scale the frustum depth to be in [1.0, nearToFarDistance2D].
+                camera.position.z = height2D - frustumCommands.near + 1.0;
+                frustum.far = Math.max(1.0, frustumCommands.far - frustumCommands.near);
+                frustum.near = 1.0;
+                us.update(scene.frameState);
+                us.updateFrustum(frustum);
+            } else {
+                // Avoid tearing artifacts between adjacent frustums in the opaque passes
+                frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
+                frustum.far = frustumCommands.far;
+                us.updateFrustum(frustum);
+            }
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
@@ -1549,7 +1730,6 @@ define([
                 passState.framebuffer = globeDepth.framebuffer;
             }
 
-            us.updateFrustum(frustum);
             clearDepth.execute(context, passState);
 
             us.updatePass(Pass.GLOBE);
@@ -1595,7 +1775,7 @@ define([
                 }
             }
 
-            if (index !== 0) {
+            if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
                 // Do not overlap frustums in the translucent pass to avoid blending artifacts
                 frustum.near = frustumCommands.near;
                 us.updateFrustum(frustum);
@@ -1643,76 +1823,288 @@ define([
         }
     }
 
-    function executeViewportCommands(scene, passState) {
+    function insertShadowCastCommands(scene, commandList, shadowMap) {
+        var shadowVolume = shadowMap.shadowMapCullingVolume;
+        var isPointLight = shadowMap.isPointLight;
+        var passes = shadowMap.passes;
+        var numberOfPasses = passes.length;
+
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            var command = commandList[i];
+            updateDerivedCommands(scene, command);
+
+            if (command.castShadows && (command.pass === Pass.GLOBE || command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT)) {
+                if (isVisible(command, shadowVolume)) {
+                    if (isPointLight) {
+                        for (var k = 0; k < numberOfPasses; ++k) {
+                            passes[k].commandList.push(command);
+                        }
+                    } else if (numberOfPasses === 1) {
+                        passes[0].commandList.push(command);
+                    } else {
+                        var wasVisible = false;
+                        // Loop over cascades from largest to smallest
+                        for (var j = numberOfPasses - 1; j >= 0; --j) {
+                            var cascadeVolume = passes[j].cullingVolume;
+                            if (isVisible(command, cascadeVolume)) {
+                                passes[j].commandList.push(command);
+                                wasVisible = true;
+                            } else if (wasVisible) {
+                                // If it was visible in the previous cascade but now isn't
+                                // then there is no need to check any more cascades
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function executeShadowMapCastCommands(scene) {
+        var frameState = scene.frameState;
+        var shadowMaps = frameState.shadowHints.shadowMaps;
+        var shadowMapLength = shadowMaps.length;
+
+        if (!frameState.shadowHints.shadowsEnabled) {
+            return;
+        }
+
+        var context = scene.context;
+        var uniformState = context.uniformState;
+
+        for (var i = 0; i < shadowMapLength; ++i) {
+            var shadowMap = shadowMaps[i];
+            if (shadowMap.outOfView) {
+                continue;
+            }
+
+            // Reset the command lists
+            var j;
+            var passes = shadowMap.passes;
+            var numberOfPasses = passes.length;
+            for (j = 0; j < numberOfPasses; ++j) {
+                passes[j].commandList.length = 0;
+            }
+
+            // Insert the primitive/model commands into the command lists
+            var sceneCommands = scene.frameState.commandList;
+            insertShadowCastCommands(scene, sceneCommands, shadowMap);
+
+            for (j = 0; j < numberOfPasses; ++j) {
+                var pass = shadowMap.passes[j];
+                uniformState.updateCamera(pass.camera);
+                shadowMap.updatePass(context, j);
+                var numberOfCommands = pass.commandList.length;
+                for (var k = 0; k < numberOfCommands; ++k) {
+                    var command = pass.commandList[k];
+                    // Set the correct pass before rendering into the shadow map because some shaders
+                    // conditionally render based on whether the pass is translucent or opaque.
+                    uniformState.updatePass(command.pass);
+                    executeCommand(command.derivedCommands.shadows.castCommands[i], scene, context, pass.passState);
+                }
+            }
+        }
+    }
+
+    function updateAndExecuteCommands(scene, passState, backgroundColor, picking) {
         var context = scene._context;
 
         var viewport = passState.viewport;
 
         var frameState = scene._frameState;
         var camera = frameState.camera;
+        var mode = frameState.mode;
 
-        if (scene._useWebVR) {
-            if (frameState.mode !== SceneMode.SCENE2D) {
-                // Based on Calculating Stereo pairs by Paul Bourke
-                // http://paulbourke.net/stereographics/stereorender/
+        if (scene._useWebVR && mode !== SceneMode.SCENE2D) {
+            updatePrimitives(scene);
+            createPotentiallyVisibleSet(scene);
+            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
+            executeComputeCommands(scene);
+            executeShadowMapCastCommands(scene);
 
-                viewport.x = 0;
-                viewport.y = 0;
-                viewport.width = context.drawingBufferWidth * 0.5;
-                viewport.height = context.drawingBufferHeight;
+            // Based on Calculating Stereo pairs by Paul Bourke
+            // http://paulbourke.net/stereographics/stereorender/
 
-                var savedCamera = Camera.clone(camera, scene._cameraVR);
+            viewport.x = 0;
+            viewport.y = 0;
+            viewport.width = context.drawingBufferWidth * 0.5;
+            viewport.height = context.drawingBufferHeight;
 
-                var near = camera.frustum.near;
-                var fo = near * 5.0;
-                var eyeSeparation = fo / 30.0;
-                var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
+            var savedCamera = Camera.clone(camera, scene._cameraVR);
 
-                camera.frustum.aspectRatio = viewport.width / viewport.height;
+            var near = camera.frustum.near;
+            var fo = near * 5.0;
+            var eyeSeparation = fo / 30.0;
+            var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
 
-                var offset = 0.5 * eyeSeparation * near / fo;
+            camera.frustum.aspectRatio = viewport.width / viewport.height;
 
-                Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
-                camera.frustum.xOffset = offset;
+            var offset = 0.5 * eyeSeparation * near / fo;
 
-                executeCommands(scene, passState);
+            Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
+            camera.frustum.xOffset = offset;
 
-                viewport.x = passState.viewport.width;
+            executeCommands(scene, passState);
 
-                Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
-                camera.frustum.xOffset = -offset;
+            viewport.x = passState.viewport.width;
 
-                executeCommands(scene, passState);
+            Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
+            camera.frustum.xOffset = -offset;
 
-                Camera.clone(savedCamera, camera);
-            } else {
-                viewport.x = 0;
-                viewport.y = 0;
-                viewport.width = context.drawingBufferWidth * 0.5;
-                viewport.height = context.drawingBufferHeight;
+            executeCommands(scene, passState);
 
-                var savedTop = camera.frustum.top;
-
-                camera.frustum.top = camera.frustum.right * (viewport.height / viewport.width);
-                camera.frustum.bottom = -camera.frustum.top;
-
-                executeCommands(scene, passState);
-
-                viewport.x = passState.viewport.width;
-
-                executeCommands(scene, passState);
-
-                camera.frustum.top = savedTop;
-                camera.frustum.bottom = -savedTop;
-            }
+            Camera.clone(savedCamera, camera);
         } else {
             viewport.x = 0;
             viewport.y = 0;
             viewport.width = context.drawingBufferWidth;
             viewport.height = context.drawingBufferHeight;
 
-            executeCommands(scene, passState);
+            if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
+                executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
+            } else {
+                execute2DViewportCommands(scene, passState, backgroundColor, picking);
+            }
         }
+    }
+
+    var scratch2DViewportCartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO);
+    var scratch2DViewportMaxCoord = new Cartesian3();
+    var scratch2DViewportSavedPosition = new Cartesian3();
+    var scratch2DViewportTransform = new Matrix4();
+    var scratch2DViewportCameraTransform = new Matrix4();
+    var scratch2DViewportEyePoint = new Cartesian3();
+    var scratch2DViewportWindowCoords = new Cartesian3();
+
+    function execute2DViewportCommands(scene, passState, backgroundColor, picking) {
+        var context = scene.context;
+        var frameState = scene.frameState;
+        var camera = scene.camera;
+        var viewport = passState.viewport;
+
+        var maxCartographic = scratch2DViewportCartographic;
+        var maxCoord = scratch2DViewportMaxCoord;
+
+        var projection = scene.mapProjection;
+        projection.project(maxCartographic, maxCoord);
+
+        var position = Cartesian3.clone(camera.position, scratch2DViewportSavedPosition);
+        var transform = Matrix4.clone(camera.transform, scratch2DViewportCameraTransform);
+        var frustum = camera.frustum.clone();
+
+        camera._setTransform(Matrix4.IDENTITY);
+
+        var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, scratch2DViewportTransform);
+        var projectionMatrix = camera.frustum.projectionMatrix;
+
+        var x = camera.positionWC.y;
+        var eyePoint = Cartesian3.fromElements(CesiumMath.sign(x) * maxCoord.x - x, 0.0, -camera.positionWC.x, scratch2DViewportEyePoint);
+        var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint, scratch2DViewportWindowCoords);
+
+        windowCoordinates.x = Math.floor(windowCoordinates.x);
+
+        var viewportX = viewport.x;
+        var viewportWidth = viewport.width;
+
+        if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= context.drawingBufferWidth) {
+            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
+        } else if (Math.abs(context.drawingBufferWidth * 0.5 - windowCoordinates.x) < 1.0) {
+            viewport.width = windowCoordinates.x;
+
+            camera.position.x *= CesiumMath.sign(camera.position.x);
+
+            camera.frustum.right = 0.0;
+
+            frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+            context.uniformState.update(frameState);
+
+            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
+
+            viewport.x = viewport.width;
+
+            camera.position.x = -camera.position.x;
+
+            camera.frustum.right = -camera.frustum.left;
+            camera.frustum.left = 0.0;
+
+            frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+            context.uniformState.update(frameState);
+
+            executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
+        } else if (windowCoordinates.x > context.drawingBufferWidth * 0.5) {
+            viewport.width = windowCoordinates.x;
+
+            var right = camera.frustum.right;
+            camera.frustum.right = maxCoord.x - x;
+
+            frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+            context.uniformState.update(frameState);
+
+            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
+
+            viewport.x += windowCoordinates.x;
+            viewport.width = context.drawingBufferWidth - windowCoordinates.x;
+
+            camera.position.x = -camera.position.x;
+
+            camera.frustum.left = -camera.frustum.right;
+            camera.frustum.right = right - camera.frustum.right * 2.0;
+
+            frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+            context.uniformState.update(frameState);
+
+            executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
+        } else {
+            viewport.x = windowCoordinates.x;
+            viewport.width = context.drawingBufferWidth - windowCoordinates.x;
+
+            var left = camera.frustum.left;
+            camera.frustum.left = -maxCoord.x - x;
+
+            frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+            context.uniformState.update(frameState);
+
+            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
+
+            viewport.x = 0;
+            viewport.width = windowCoordinates.x;
+
+            camera.position.x = -camera.position.x;
+
+            camera.frustum.right = -camera.frustum.left;
+            camera.frustum.left = left - camera.frustum.left * 2.0;
+
+            frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+            context.uniformState.update(frameState);
+
+            executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
+        }
+
+        camera._setTransform(transform);
+        Cartesian3.clone(position, camera.position);
+        camera.frustum = frustum.clone();
+
+        viewport.x = viewportX;
+        viewport.width = viewportWidth;
+    }
+
+    function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor, picking) {
+        if (!firstViewport) {
+            scene.frameState.commandList.length = 0;
+        }
+
+        updatePrimitives(scene);
+        createPotentiallyVisibleSet(scene);
+
+        if (firstViewport) {
+            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
+            executeComputeCommands(scene);
+            executeShadowMapCastCommands(scene);
+        }
+
+        executeCommands(scene, passState);
     }
 
     function updateEnvironment(scene) {
@@ -1722,13 +2114,19 @@ define([
         var environmentState = scene._environmentState;
         var renderPass = frameState.passes.render;
         environmentState.skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
-        environmentState.skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
+        var skyAtmosphere = scene.skyAtmosphere;
+        var globe = scene.globe;
+        if (defined(skyAtmosphere) && defined(globe)) {
+            skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting);
+            environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
+        }
+        environmentState.skyAtmosphereCommand = (renderPass && defined(skyAtmosphere)) ? skyAtmosphere.update(frameState) : undefined;
         var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
         environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
         environmentState.moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
 
-        var clearGlobeDepth = environmentState.clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
+        var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
         if (useDepthPlane) {
             // Update the depth plane that is rendered in 3D when the primitives are
@@ -1737,27 +2135,77 @@ define([
             scene._depthPlane.update(frameState);
         }
     }
+
+    function updateShadowMaps(scene) {
+        var frameState = scene._frameState;
+        var shadowMaps = frameState.shadowMaps;
+        var length = shadowMaps.length;
+
+        var shadowsEnabled = (length > 0) && !frameState.passes.pick && (scene.mode === SceneMode.SCENE3D);
+        if (shadowsEnabled !== frameState.shadowHints.shadowsEnabled) {
+            // Update derived commands when shadowsEnabled changes
+            ++frameState.shadowHints.lastDirtyTime;
+            frameState.shadowHints.shadowsEnabled = shadowsEnabled;
+        }
+
+        if (!shadowsEnabled) {
+            return;
+        }
+
+        // Check if the shadow maps are different than the shadow maps last frame.
+        // If so, the derived commands need to be updated.
+        for (var j = 0; j < length; ++j) {
+            if (shadowMaps[j] !== frameState.shadowHints.shadowMaps[j]) {
+                ++frameState.shadowHints.lastDirtyTime;
+                break;
+            }
+        }
+
+        frameState.shadowHints.shadowMaps.length = 0;
+        frameState.shadowHints.lightShadowMaps.length = 0;
+
+        for (var i = 0; i < length; ++i) {
+            var shadowMap = shadowMaps[i];
+            shadowMap.update(frameState);
+
+            frameState.shadowHints.shadowMaps.push(shadowMap);
+
+            if (shadowMap.fromLightSource) {
+                frameState.shadowHints.lightShadowMaps.push(shadowMap);
+            }
+
+            if (shadowMap.dirty) {
+                ++frameState.shadowHints.lastDirtyTime;
+                shadowMap.dirty = false;
+            }
+        }
+    }
+
     function updatePrimitives(scene) {
         var frameState = scene._frameState;
+
+        scene._groundPrimitives.update(frameState);
+        scene._primitives.update(frameState);
+
+        updateShadowMaps(scene);
 
         if (scene._globe) {
             scene._globe.update(frameState);
         }
-
-        scene._groundPrimitives.update(frameState);
-        scene._primitives.update(frameState);
     }
 
     function updateAndClearFramebuffers(scene, passState, clearColor, picking) {
         var context = scene._context;
         var environmentState = scene._environmentState;
 
+        var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
+
         // Preserve the reference to the original framebuffer.
         environmentState.originalFramebuffer = passState.framebuffer;
 
         // Manage sun bloom post-processing effect.
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
-            if (scene.sunBloom && !scene._useWebVR) {
+            if (scene.sunBloom && !useWebVR) {
                 scene._sunPostProcess = new SunPostProcess();
             } else if(defined(scene._sunPostProcess)){
                 scene._sunPostProcess = scene._sunPostProcess.destroy();
@@ -1807,7 +2255,7 @@ define([
             scene._fxaa.clear(context, passState, clearColor);
         }
 
-        if (environmentState.isSunVisible && scene.sunBloom && !scene._useWebVR) {
+        if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {
             passState.framebuffer = scene._sunPostProcess.update(passState);
         } else if (useGlobeDepthFramebuffer) {
             passState.framebuffer = scene._globeDepth.framebuffer;
@@ -1880,12 +2328,14 @@ define([
         }
 
         this._tweens.update();
-        this._camera.update(this._mode);
 
         this._screenSpaceCameraController.update();
         if (defined(this._deviceOrientationCameraController)) {
             this._deviceOrientationCameraController.update();
         }
+        
+        this._camera.update(this._mode);
+        this._camera._updateCameraChanged();
     };
 
     var scratchEyeTranslation = new Cartesian3();
@@ -1923,6 +2373,13 @@ define([
 
         us.update(frameState);
 
+        var shadowMap = scene.shadowMap;
+        if (defined(shadowMap) && shadowMap.enabled) {
+            // Update the sun's direction
+            Cartesian3.negate(us.sunDirectionWC, scene._sunCamera.direction);
+            frameState.shadowMaps.push(shadowMap);
+        }
+
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;
 
@@ -1931,22 +2388,12 @@ define([
         passState.blendingEnabled = undefined;
         passState.scissorTest = undefined;
 
-        var viewport = passState.viewport;
-        viewport.x = 0;
-        viewport.y = 0;
-        viewport.width = context.drawingBufferWidth;
-        viewport.height = context.drawingBufferHeight;
-
         if (defined(scene.globe)) {
             scene.globe.beginFrame(frameState);
         }
 
         updateEnvironment(scene);
-        updatePrimitives(scene);
-        createPotentiallyVisibleSet(scene);
-        updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
-        executeComputeCommands(scene);
-        executeViewportCommands(scene, passState);
+        updateAndExecuteCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
@@ -2129,10 +2576,7 @@ define([
 
         var passState = this._pickFramebuffer.begin(scratchRectangle);
 
-        updatePrimitives(this);
-        createPotentiallyVisibleSet(this);
-        updateAndClearFramebuffers(this, passState, scratchColorZero, true);
-        executeCommands(this, passState);
+        updateAndExecuteCommands(this, passState, scratchColorZero, true);
         resolveFramebuffers(this, passState);
 
         var object = this._pickFramebuffer.end(scratchRectangle);
@@ -2142,7 +2586,7 @@ define([
     };
 
     var scratchPackedDepth = new Cartesian4();
-    var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 160581375.0);
+    var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
 
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.

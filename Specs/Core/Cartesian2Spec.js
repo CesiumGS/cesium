@@ -2,10 +2,12 @@
 defineSuite([
         'Core/Cartesian2',
         'Core/Math',
+        'Specs/createPackableArraySpecs',
         'Specs/createPackableSpecs'
     ], function(
         Cartesian2,
         CesiumMath,
+        createPackableArraySpecs,
         createPackableSpecs) {
     'use strict';
 
@@ -299,6 +301,12 @@ defineSuite([
         var returnedResult = Cartesian2.normalize(cartesian, cartesian);
         expect(cartesian).toBe(returnedResult);
         expect(cartesian).toEqual(expectedResult);
+    });
+
+    it('normalize throws with zero vector', function() {
+        expect(function() {
+            Cartesian2.normalize(Cartesian2.ZERO, new Cartesian2());
+        }).toThrowDeveloperError();
     });
 
     it('multiplyComponents works with a result parameter', function() {
@@ -802,4 +810,5 @@ defineSuite([
     });
 
     createPackableSpecs(Cartesian2, new Cartesian2(1, 2), [1, 2]);
+    createPackableArraySpecs(Cartesian2, [new Cartesian2(1, 2), new Cartesian2(3, 4)], [1, 2, 3, 4]);
 });

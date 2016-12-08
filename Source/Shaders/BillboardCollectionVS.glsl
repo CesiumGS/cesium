@@ -5,10 +5,11 @@ attribute vec4 positionHighAndScale;
 attribute vec4 positionLowAndRotation;   
 attribute vec4 compressedAttribute0;        // pixel offset, translate, horizontal origin, vertical origin, show, direction, texture coordinates (texture offset)
 attribute vec4 compressedAttribute1;        // aligned axis, translucency by distance, image width
-attribute vec4 compressedAttribute2;        // image height, color, pick color, 15 bits free
+attribute vec4 compressedAttribute2;        // image height, color, pick color, size in meters, valid aligned axis, 13 bits free
 attribute vec4 eyeOffset;                   // eye offset in meters, 4 bytes free (texture range)
 attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
+attribute vec2 distanceDisplayCondition;    // near, far
 
 varying vec2 v_textureCoordinates;
 
@@ -35,32 +36,20 @@ const float SHIFT_RIGHT3 = 1.0 / 8.0;
 const float SHIFT_RIGHT2 = 1.0 / 4.0;
 const float SHIFT_RIGHT1 = 1.0 / 2.0;
 
-vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, float rotation, bool sizeInMeters)
+vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, bool validAlignedAxis, float rotation, bool sizeInMeters)
 {
-    vec2 halfSize = imageSize * scale * czm_resolutionScale;
+    // Note the halfSize cannot be computed in JavaScript because it is sent via
+    // compressed vertex attributes that coerce it to an integer.
+    vec2 halfSize = imageSize * scale * czm_resolutionScale * 0.5;
     halfSize *= ((direction * 2.0) - 1.0);
-    
-    if (sizeInMeters)
-    {
-        positionEC.xy += halfSize;
-    }
-    
-    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
-    
-    if (sizeInMeters)
-    {
-        positionWC.xy += (origin * abs(halfSize)) / czm_metersPerPixel(positionEC);
-    }
-    else
-    {
-        positionWC.xy += (origin * abs(halfSize));
-    }
+
+    vec2 originTranslate = origin * abs(halfSize);
     
 #if defined(ROTATION) || defined(ALIGNED_AXIS)
-    if (!all(equal(alignedAxis, vec3(0.0))) || rotation != 0.0)
+    if (validAlignedAxis || rotation != 0.0)
     {
         float angle = rotation;
-        if (!all(equal(alignedAxis, vec3(0.0))))
+        if (validAlignedAxis)
         {
             vec3 pos = positionEC.xyz + czm_encodedCameraPositionMCHigh + czm_encodedCameraPositionMCLow;
             vec3 normal = normalize(cross(alignedAxis, pos));
@@ -75,7 +64,20 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
         halfSize = rotationMatrix * halfSize;
     }
 #endif
-    
+
+    if (sizeInMeters)
+    {
+        positionEC.xy += halfSize;
+    }
+
+    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
+
+    if (sizeInMeters)
+    {
+        originTranslate += originTranslate / czm_metersPerPixel(positionEC);
+    }
+
+    positionWC.xy += originTranslate;
     if (!sizeInMeters)
     {
         positionWC.xy += halfSize;
@@ -162,8 +164,11 @@ void main()
 
 #ifdef ALIGNED_AXIS
     vec3 alignedAxis = czm_octDecode(floor(compressedAttribute1.y * SHIFT_RIGHT8));
+    temp = compressedAttribute2.z * SHIFT_RIGHT5;
+    bool validAlignedAxis = (temp - floor(temp)) * SHIFT_LEFT1 > 0.0;
 #else
     vec3 alignedAxis = vec3(0.0);
+    bool validAlignedAxis = false;
 #endif
     
 #ifdef RENDER_FOR_PICK
@@ -180,7 +185,7 @@ void main()
     color.r = floor(temp);
     
     temp = compressedAttribute2.z * SHIFT_RIGHT8;
-    bool sizeInMeters = (temp - floor(temp)) * SHIFT_LEFT8 > 0.0;
+    bool sizeInMeters = floor((temp - floor(temp)) * SHIFT_LEFT7) > 0.0;
     temp = floor(temp) * SHIFT_RIGHT8;
     
 #ifdef RENDER_FOR_PICK
@@ -200,7 +205,7 @@ void main()
     
     ///////////////////////////////////////////////////////////////////////////     
 
-#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(EYE_DISTANCE_PIXEL_OFFSET)
+#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(EYE_DISTANCE_PIXEL_OFFSET) || defined(DISTANCE_DISPLAY_CONDITION)
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -237,16 +242,17 @@ void main()
     float pixelOffsetScale = czm_nearFarScalar(pixelOffsetScaleByDistance, lengthSq);
     pixelOffset *= pixelOffsetScale;
 #endif
-    
-#ifdef CLAMPED_TO_GROUND
-    // move slightly closer to camera to avoid depth issues.
-    positionEC.z *= 0.995;
-    
-    // Force bottom vertical origin
-    origin.y = 1.0;
+
+#ifdef DISTANCE_DISPLAY_CONDITION
+    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x;
+    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y;
+    if (lengthSq < nearSq || lengthSq > farSq)
+    {
+        positionEC.xyz = vec3(0.0);
+    }
 #endif
 
-    vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, rotation, sizeInMeters);
+    vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     v_textureCoordinates = textureCoordinates;
 

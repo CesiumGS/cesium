@@ -4,13 +4,15 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './isCrossOriginUrl'
+        './isCrossOriginUrl',
+        './TrustedServers'
     ], function(
         when,
         defaultValue,
         defined,
         DeveloperError,
-        isCrossOriginUrl) {
+        isCrossOriginUrl,
+        TrustedServers) {
     'use strict';
 
     var dataUriRegex = /^data:/;
@@ -84,7 +86,11 @@ define([
         };
 
         if (crossOrigin) {
-            image.crossOrigin = '';
+            if (TrustedServers.contains(url)) {
+                image.crossOrigin = 'use-credentials';
+            } else {
+                image.crossOrigin = '';
+            }
         }
 
         image.src = url;

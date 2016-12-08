@@ -1,11 +1,9 @@
 /*global define*/
 define([
-        '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/defineProperties',
@@ -17,10 +15,8 @@ define([
         '../Core/PrimitiveType',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
-        '../Renderer/ClearCommand',
         '../Renderer/ComputeCommand',
         '../Renderer/DrawCommand',
-        '../Renderer/Framebuffer',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/Texture',
@@ -32,12 +28,10 @@ define([
         './SceneMode',
         './SceneTransforms'
     ], function(
-        BoundingRectangle,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        Color,
         ComponentDatatype,
         defined,
         defineProperties,
@@ -49,10 +43,8 @@ define([
         PrimitiveType,
         Buffer,
         BufferUsage,
-        ClearCommand,
         ComputeCommand,
         DrawCommand,
-        Framebuffer,
         RenderState,
         ShaderProgram,
         Texture,
@@ -180,6 +172,11 @@ define([
             var size = Math.max(drawingBufferWidth, drawingBufferHeight);
             size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0);
 
+            // The size computed above can be less than 1.0 if size < 4.0. This will probably
+            // never happen in practice, but does in the tests. Clamp to 1.0 to prevent WebGL
+            // errors in the tests.
+            size = Math.max(1.0, size);
+
             this._texture = new Texture({
                 context : context,
                 width : size,
@@ -302,11 +299,11 @@ define([
         positionEC.w = 1;
 
         var positionCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
-        var positionWC = SceneTransforms.clipToDrawingBufferCoordinates(scene, positionCC, scratchPositionWC);
+        var positionWC = SceneTransforms.clipToDrawingBufferCoordinates(passState.viewport, positionCC, scratchPositionWC);
 
         positionEC.x = CesiumMath.SOLAR_RADIUS;
         var limbCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
-        var limbWC = SceneTransforms.clipToDrawingBufferCoordinates(scene, limbCC, scratchLimbWC);
+        var limbWC = SceneTransforms.clipToDrawingBufferCoordinates(passState.viewport, limbCC, scratchLimbWC);
 
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);

@@ -12,7 +12,6 @@ define([
         '../Core/PixelFormat',
         '../Core/RuntimeError',
         '../Renderer/Framebuffer',
-        '../Renderer/RenderState',
         '../Renderer/Texture',
         '../ThirdParty/when'
     ], function(
@@ -28,7 +27,6 @@ define([
         PixelFormat,
         RuntimeError,
         Framebuffer,
-        RenderState,
         Texture,
         when) {
     'use strict';
@@ -88,35 +86,9 @@ define([
         this._textureCoordinates = [];
         this._guid = createGuid();
         this._idHash = {};
+        this._initialSize = initialSize;
 
-        // Create initial texture and root.
-        this._texture = new Texture({
-            context : this._context,
-            width : initialSize.x,
-            height : initialSize.y,
-            pixelFormat : this._pixelFormat
-        });
-        this._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialSize.x, initialSize.y));
-
-        var that = this;
-        var uniformMap = {
-            u_texture : function() {
-                return that._texture;
-            }
-        };
-
-        var fs =
-            'uniform sampler2D u_texture;\n' +
-            'varying vec2 v_textureCoordinates;\n' +
-            'void main()\n' +
-            '{\n' +
-            '    gl_FragColor = texture2D(u_texture, v_textureCoordinates);\n' +
-            '}\n';
-
-
-        this._copyCommand = this._context.createViewportQuadCommand(fs, {
-            uniformMap : uniformMap
-        });
+        this._root = undefined;
     }
 
     defineProperties(TextureAtlas.prototype, {
@@ -151,6 +123,14 @@ define([
          */
         texture : {
             get : function() {
+                if(!defined(this._texture)) {
+                    this._texture = new Texture({
+                        context : this._context,
+                        width : this._initialSize.x,
+                        height : this._initialSize.y,
+                        pixelFormat : this._pixelFormat
+                    });
+                }
                 return this._texture;
             }
         },
@@ -189,20 +169,20 @@ define([
         var context = textureAtlas._context;
         var numImages = textureAtlas.numberOfImages;
         var scalingFactor = 2.0;
+        var borderWidthInPixels = textureAtlas._borderWidthInPixels;
         if (numImages > 0) {
             var oldAtlasWidth = textureAtlas._texture.width;
             var oldAtlasHeight = textureAtlas._texture.height;
-            var atlasWidth = scalingFactor * (oldAtlasWidth + image.width + textureAtlas._borderWidthInPixels);
-            var atlasHeight = scalingFactor * (oldAtlasHeight + image.height + textureAtlas._borderWidthInPixels);
+            var atlasWidth = scalingFactor * (oldAtlasWidth + image.width + borderWidthInPixels);
+            var atlasHeight = scalingFactor * (oldAtlasHeight + image.height + borderWidthInPixels);
             var widthRatio = oldAtlasWidth / atlasWidth;
             var heightRatio = oldAtlasHeight / atlasHeight;
 
             // Create new node structure, putting the old root node in the bottom left.
-            var nodeBottomRight = new TextureAtlasNode(new Cartesian2(oldAtlasWidth + textureAtlas._borderWidthInPixels, 0.0), new Cartesian2(atlasWidth, oldAtlasHeight));
+            var nodeBottomRight = new TextureAtlasNode(new Cartesian2(oldAtlasWidth + borderWidthInPixels, borderWidthInPixels), new Cartesian2(atlasWidth, oldAtlasHeight));
             var nodeBottomHalf = new TextureAtlasNode(new Cartesian2(), new Cartesian2(atlasWidth, oldAtlasHeight), textureAtlas._root, nodeBottomRight);
-            var nodeTopHalf = new TextureAtlasNode(new Cartesian2(0.0, oldAtlasHeight + textureAtlas._borderWidthInPixels), new Cartesian2(atlasWidth, atlasHeight));
+            var nodeTopHalf = new TextureAtlasNode(new Cartesian2(borderWidthInPixels, oldAtlasHeight + borderWidthInPixels), new Cartesian2(atlasWidth, atlasHeight));
             var nodeMain = new TextureAtlasNode(new Cartesian2(), new Cartesian2(atlasWidth, atlasHeight), nodeBottomHalf, nodeTopHalf);
-            textureAtlas._root = nodeMain;
 
             // Resize texture coordinates.
             for (var i = 0; i < textureAtlas._textureCoordinates.length; i++) {
@@ -225,30 +205,27 @@ define([
 
             var framebuffer = new Framebuffer({
                 context : context,
-                colorTextures : [newTexture],
+                colorTextures : [textureAtlas._texture],
                 destroyAttachments : false
             });
 
-            var command = textureAtlas._copyCommand;
-            var renderState = {
-                viewport : new BoundingRectangle(0, 0, oldAtlasWidth, oldAtlasHeight)
-            };
-            command.renderState = RenderState.fromCache(renderState);
-
-            // Copy by rendering a viewport quad, instead of using Texture.copyFromFramebuffer,
-            // to workaround a Chrome 45 issue, https://github.com/AnalyticalGraphicsInc/cesium/issues/2997
             framebuffer._bind();
-            command.execute(textureAtlas._context);
+            newTexture.copyFromFramebuffer(0, 0, 0, 0, atlasWidth, atlasHeight);
             framebuffer._unBind();
             framebuffer.destroy();
+            textureAtlas._texture = textureAtlas._texture && textureAtlas._texture.destroy();
             textureAtlas._texture = newTexture;
-
-            RenderState.removeFromCache(renderState);
-            command.renderState = undefined;
+            textureAtlas._root = nodeMain;
         } else {
             // First image exceeds initialSize
-            var initialWidth = scalingFactor * (image.width + textureAtlas._borderWidthInPixels);
-            var initialHeight = scalingFactor * (image.height + textureAtlas._borderWidthInPixels);
+            var initialWidth = scalingFactor * (image.width + 2 * borderWidthInPixels);
+            var initialHeight = scalingFactor * (image.height + 2 * borderWidthInPixels);
+            if(initialWidth < textureAtlas._initialSize.x) {
+                initialWidth = textureAtlas._initialSize.x;
+            }
+            if(initialHeight < textureAtlas._initialSize.y) {
+                initialHeight = textureAtlas._initialSize.y;
+            }
             textureAtlas._texture = textureAtlas._texture && textureAtlas._texture.destroy();
             textureAtlas._texture = new Texture({
                 context : textureAtlas._context,
@@ -256,7 +233,8 @@ define([
                 height : initialHeight,
                 pixelFormat : textureAtlas._pixelFormat
             });
-            textureAtlas._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialWidth, initialHeight));
+            textureAtlas._root = new TextureAtlasNode(new Cartesian2(borderWidthInPixels, borderWidthInPixels),
+                new Cartesian2(initialWidth, initialHeight));
         }
     }
 
@@ -479,7 +457,7 @@ define([
      *
      * @example
      * atlas = atlas && atlas.destroy();
-     * 
+     *
      * @see TextureAtlas#isDestroyed
      */
     TextureAtlas.prototype.destroy = function() {

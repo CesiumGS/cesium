@@ -1,29 +1,22 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/SkyBox',
-        'Core/Cartesian3',
         'Core/loadImage',
-        'Renderer/ClearCommand',
         'Scene/SceneMode',
-        'Specs/createCamera',
-        'Specs/createContext',
-        'Specs/createFrameState'
+        'Specs/createScene'
     ], function(
         SkyBox,
-        Cartesian3,
         loadImage,
-        ClearCommand,
         SceneMode,
-        createCamera,
-        createContext,
-        createFrameState) {
+        createScene) {
     'use strict';
 
-    var context;
+    var scene;
+    var skyBox;
     var loadedImage;
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
 
         return loadImage('./Data/Images/Blue.png').then(function(image) {
             loadedImage = image;
@@ -31,11 +24,20 @@ defineSuite([
     });
 
     afterAll(function() {
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        scene.mode = SceneMode.SCENE3D;
+    });
+
+    afterEach(function() {
+        skyBox = skyBox && skyBox.destroy();
+        scene.skyBox = undefined;
     });
 
     it('draws a sky box from Images', function() {
-        var s = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : loadedImage,
                 negativeX : loadedImage,
@@ -46,26 +48,14 @@ defineSuite([
             }
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        var us = context.uniformState;
-        var frameState = createFrameState(context, createCamera({
-            offset : new Cartesian3(7000000.0, 0.0, 0.0),
-            near : 1.0,
-            far : 20000000.0
-        }));
-        us.update(frameState);
-
-        var command = s.update(frameState);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-
-        s.destroy();
+        scene.skyBox = skyBox;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
     });
 
     it('does not render when show is false', function() {
-        var s = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : './Data/Images/Blue.png',
@@ -77,20 +67,14 @@ defineSuite([
             show : false
         });
 
-        var us = context.uniformState;
-        var frameState = createFrameState(context, createCamera({
-            offset : new Cartesian3(7000000.0, 0.0, 0.0),
-            near : 1.0,
-            far : 20000000.0
-        }));
-        us.update(frameState);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        var command = s.update(frameState);
-        expect(command).not.toBeDefined();
+        scene.skyBox = skyBox;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('does not render in 2D', function() {
-        var s = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : './Data/Images/Blue.png',
@@ -101,21 +85,15 @@ defineSuite([
             }
         });
 
-        var us = context.uniformState;
-        var frameState = createFrameState(context, createCamera({
-            offset : new Cartesian3(7000000.0, 0.0, 0.0),
-            near : 1.0,
-            far : 20000000.0
-        }));
-        frameState.mode = SceneMode.SCENE2D;
-        us.update(frameState);
+        scene.mode = SceneMode.SCENE2D;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        var command = s.update(frameState);
-        expect(command).not.toBeDefined();
+        scene.skyBox = skyBox;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('does not render without a render pass', function() {
-        var s = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : './Data/Images/Blue.png',
@@ -126,21 +104,16 @@ defineSuite([
             }
         });
 
-        var us = context.uniformState;
-        var frameState = createFrameState(context, createCamera({
-            offset : new Cartesian3(7000000.0, 0.0, 0.0),
-            near : 1.0,
-            far : 20000000.0
-        }));
-        frameState.passes.render = false;
-        us.update(frameState);
+        scene.frameState.passes.render = false;
 
-        var command = s.update(frameState);
+        scene.skyBox = skyBox;
+
+        var command = skyBox.update(scene.frameState);
         expect(command).not.toBeDefined();
     });
 
     it('gets constructor options', function() {
-        var s = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : 'positiveX.png',
                 negativeX : 'negativeX.png',
@@ -151,17 +124,17 @@ defineSuite([
             },
             show : false
         });
-        expect(s.sources.positiveX).toEqual('positiveX.png');
-        expect(s.sources.negativeX).toEqual('negativeX.png');
-        expect(s.sources.positiveY).toEqual('positiveY.png');
-        expect(s.sources.negativeY).toEqual('negativeY.png');
-        expect(s.sources.positiveZ).toEqual('positiveZ.png');
-        expect(s.sources.negativeZ).toEqual('negativeZ.png');
-        expect(s.show).toEqual(false);
+        expect(skyBox.sources.positiveX).toEqual('positiveX.png');
+        expect(skyBox.sources.negativeX).toEqual('negativeX.png');
+        expect(skyBox.sources.positiveY).toEqual('positiveY.png');
+        expect(skyBox.sources.negativeY).toEqual('negativeY.png');
+        expect(skyBox.sources.positiveZ).toEqual('positiveZ.png');
+        expect(skyBox.sources.negativeZ).toEqual('negativeZ.png');
+        expect(skyBox.show).toEqual(false);
     });
 
     it('isDestroyed', function() {
-        var s = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : './Data/Images/Blue.png',
@@ -171,13 +144,14 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        expect(s.isDestroyed()).toEqual(false);
-        s.destroy();
-        expect(s.isDestroyed()).toEqual(true);
+        expect(skyBox.isDestroyed()).toEqual(false);
+        skyBox.destroy();
+        expect(skyBox.isDestroyed()).toEqual(true);
+        skyBox = undefined;
     });
 
     it('throws when constructed without positiveX', function() {
-        var skyBox = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 negativeX : './Data/Images/Blue.png',
                 positiveY : './Data/Images/Blue.png',
@@ -186,15 +160,15 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState(context);
+        scene.skyBox = skyBox;
 
         expect(function() {
-            return skyBox.update(frameState);
+            return scene.render();
         }).toThrowDeveloperError();
     });
 
     it('throws when constructed without negativeX', function() {
-        var skyBox = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 positiveY : './Data/Images/Blue.png',
@@ -203,15 +177,15 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState(context);
+        scene.skyBox = skyBox;
 
         expect(function() {
-            return skyBox.update(frameState);
+            return scene.render();
         }).toThrowDeveloperError();
     });
 
     it('throws when constructed without positiveY', function() {
-        var skyBox = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : './Data/Images/Blue.png',
@@ -220,15 +194,15 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState(context);
+        scene.skyBox = skyBox;
 
         expect(function() {
-            return skyBox.update(frameState);
+            return scene.render();
         }).toThrowDeveloperError();
     });
 
     it('throws when constructed without negativeY', function() {
-        var skyBox = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : './Data/Images/Blue.png',
@@ -237,15 +211,15 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState(context);
+        scene.skyBox = skyBox;
 
         expect(function() {
-            return skyBox.update(frameState);
+            return scene.render();
         }).toThrowDeveloperError();
     });
 
     it('throws when constructed without positiveZ', function() {
-        var skyBox = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : './Data/Images/Blue.png',
@@ -254,15 +228,15 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState(context);
+        scene.skyBox = skyBox;
 
         expect(function() {
-            return skyBox.update(frameState);
+            return scene.render();
         }).toThrowDeveloperError();
     });
 
     it('throws when constructed without negativeZ', function() {
-        var skyBox = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : './Data/Images/Blue.png',
@@ -271,15 +245,15 @@ defineSuite([
                 positiveZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState(context);
+        scene.skyBox = skyBox;
 
         expect(function() {
-            return skyBox.update(frameState);
+            return scene.render();
         }).toThrowDeveloperError();
     });
 
     it('throws when constructed when positiveX is a different type', function() {
-        var skyBox = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : loadedImage,
                 negativeX : './Data/Images/Blue.png',
@@ -289,15 +263,15 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState(context);
+        scene.skyBox = skyBox;
 
         expect(function() {
-            return skyBox.update(frameState);
+            return scene.render();
         }).toThrowDeveloperError();
     });
 
     it('throws when constructed when negativeX is a different type', function() {
-        var skyBox = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : loadedImage,
@@ -307,15 +281,15 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState(context);
+        scene.skyBox = skyBox;
 
         expect(function() {
-            return skyBox.update(frameState);
+            return scene.render();
         }).toThrowDeveloperError();
     });
 
     it('throws when constructed when positiveY is a different type', function() {
-        var skyBox = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : './Data/Images/Blue.png',
@@ -325,15 +299,15 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState(context);
+        scene.skyBox = skyBox;
 
         expect(function() {
-            return skyBox.update(frameState);
+            return scene.render();
         }).toThrowDeveloperError();
     });
 
     it('throws when constructed when negativeY is a different type', function() {
-        var skyBox = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : './Data/Images/Blue.png',
@@ -343,15 +317,15 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState(context);
+        scene.skyBox = skyBox;
 
         expect(function() {
-            return skyBox.update(frameState);
+            return scene.render();
         }).toThrowDeveloperError();
     });
 
     it('throws when constructed when positiveZ is a different type', function() {
-        var skyBox = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : './Data/Images/Blue.png',
@@ -361,15 +335,15 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState(context);
+        scene.skyBox = skyBox;
 
         expect(function() {
-            return skyBox.update(frameState);
+            return scene.render();
         }).toThrowDeveloperError();
     });
 
     it('throws when constructed when negativeZ is a different type', function() {
-        var skyBox = new SkyBox({
+        skyBox = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
                 negativeX : './Data/Images/Blue.png',
@@ -379,10 +353,10 @@ defineSuite([
                 negativeZ : loadedImage
             }
         });
-        var frameState = createFrameState(context);
+        scene.skyBox = skyBox;
 
         expect(function() {
-            return skyBox.update(frameState);
+            return scene.render();
         }).toThrowDeveloperError();
     });
 }, 'WebGL');

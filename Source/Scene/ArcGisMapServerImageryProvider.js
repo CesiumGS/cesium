@@ -9,7 +9,6 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/loadJson',
         '../Core/loadJsonp',
@@ -33,7 +32,6 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        GeographicProjection,
         GeographicTilingScheme,
         loadJson,
         loadJsonp,
@@ -105,7 +103,7 @@ define([
      *
      * @example
      * var esri = new Cesium.ArcGisMapServerImageryProvider({
-     *     url: '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+     *     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
      * 
      * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
@@ -179,8 +177,9 @@ define([
                             data.fullExtent.spatialReference.wkid === 102113) {
 
                             var projection = new WebMercatorProjection();
-                            var sw = projection.unproject(new Cartesian2(data.fullExtent.xmin, data.fullExtent.ymin));
-                            var ne = projection.unproject(new Cartesian2(data.fullExtent.xmax, data.fullExtent.ymax));
+                            var extent = data.fullExtent;
+                            var sw = projection.unproject(new Cartesian3(Math.max(extent.xmin, -that._tilingScheme.ellipsoid.maximumRadius * Math.PI), Math.max(extent.ymin, -that._tilingScheme.ellipsoid.maximumRadius * Math.PI), 0.0));
+                            var ne = projection.unproject(new Cartesian3(Math.min(extent.xmax, that._tilingScheme.ellipsoid.maximumRadius * Math.PI), Math.min(extent.ymax, that._tilingScheme.ellipsoid.maximumRadius * Math.PI), 0.0));
                             that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
                         } else if (data.fullExtent.spatialReference.wkid === 4326) {
                             that._rectangle = Rectangle.fromDegrees(data.fullExtent.xmin, data.fullExtent.ymin, data.fullExtent.xmax, data.fullExtent.ymax);

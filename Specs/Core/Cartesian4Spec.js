@@ -3,11 +3,13 @@ defineSuite([
         'Core/Cartesian4',
         'Core/Color',
         'Core/Math',
+        'Specs/createPackableArraySpecs',
         'Specs/createPackableSpecs'
     ], function(
         Cartesian4,
         Color,
         CesiumMath,
+        createPackableArraySpecs,
         createPackableSpecs) {
     'use strict';
 
@@ -435,6 +437,12 @@ defineSuite([
         var returnedResult = Cartesian4.normalize(cartesian, cartesian);
         expect(cartesian).toBe(returnedResult);
         expect(cartesian).toEqual(expectedResult);
+    });
+
+    it('normalize throws with zero vector', function() {
+        expect(function() {
+            Cartesian4.normalize(Cartesian4.ZERO, new Cartesian4());
+        }).toThrowDeveloperError();
     });
 
     it('multiplyComponents works with a result parameter', function() {
@@ -901,4 +909,5 @@ defineSuite([
     });
 
     createPackableSpecs(Cartesian4, new Cartesian4(1, 2, 3, 4), [1, 2, 3, 4]);
+    createPackableArraySpecs(Cartesian4, [new Cartesian4(1, 2, 3, 4), new Cartesian4(5, 6, 7, 8)], [1, 2, 3, 4, 5, 6, 7, 8]);
 });

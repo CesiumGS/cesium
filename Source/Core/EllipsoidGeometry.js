@@ -103,6 +103,8 @@ define([
      * @param {EllipsoidGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     EllipsoidGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -124,6 +126,8 @@ define([
 
         array[startingIndex++] = value._stackPartitions;
         array[startingIndex]   = value._slicePartitions;
+
+        return array;
     };
 
     var scratchRadii = new Cartesian3();
@@ -200,7 +204,7 @@ define([
         var vertexCount = stackPartitions * slicePartitions;
         var positions = new Float64Array(vertexCount * 3);
 
-        var numIndices = 6 * (slicePartitions - 1) * (stackPartitions - 1);
+        var numIndices = 6 * (slicePartitions - 1) * (stackPartitions - 2);
         var indices = IndexDatatype.createTypedArray(vertexCount, numIndices);
 
         var normals = (vertexFormat.normal) ? new Float32Array(vertexCount * 3) : undefined;
@@ -244,7 +248,7 @@ define([
 
         for (i = 0; i < slicePartitions; i++) {
             // duplicate first point for correct
-            // texture coordinates at the north pole.
+            // texture coordinates at the south pole.
             positions[index++] = 0.0;
             positions[index++] = 0.0;
             positions[index++] = -radii.z;
@@ -356,9 +360,17 @@ define([
         }
 
         index = 0;
-        for (i = 0; i < stackPartitions; i++) {
-            var topOffset = i * slicePartitions;
-            var bottomOffset = (i + 1) * slicePartitions;
+        for (j = 0; j < slicePartitions - 1; j++) {
+            indices[index++] = slicePartitions + j;
+            indices[index++] = slicePartitions + j + 1;
+            indices[index++] = j + 1;
+        }
+
+        var topOffset;
+        var bottomOffset;
+        for (i = 1; i < stackPartitions - 2; i++) {
+            topOffset = i * slicePartitions;
+            bottomOffset = (i + 1) * slicePartitions;
 
             for (j = 0; j < slicePartitions - 1; j++) {
                 indices[index++] = bottomOffset + j;
@@ -369,6 +381,16 @@ define([
                 indices[index++] = topOffset + j + 1;
                 indices[index++] = topOffset + j;
             }
+        }
+
+        i = stackPartitions - 2;
+        topOffset = i * slicePartitions;
+        bottomOffset = (i + 1) * slicePartitions;
+
+        for (j = 0; j < slicePartitions - 1; j++) {
+            indices[index++] = bottomOffset + j;
+            indices[index++] = topOffset + j + 1;
+            indices[index++] = topOffset + j;
         }
 
         return new Geometry({

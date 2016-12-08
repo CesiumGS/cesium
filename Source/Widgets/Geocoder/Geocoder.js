@@ -32,7 +32,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Element|String} options.container The DOM element or ID that will contain the widget.
      * @param {Scene} options.scene The Scene instance to use.
-     * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [options.url='https://dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
@@ -69,8 +69,19 @@ define([
 value: searchText,\
 valueUpdate: "afterkeydown",\
 disable: isSearchInProgress,\
-css: { "cesium-geocoder-input-wide" : searchText.length > 0 }');
+css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 }');
+
+        this._onTextBoxFocus = function() {
+            // as of 2016-10-19, setTimeout is required to ensure that the
+            // text is focused on Safari 10
+            setTimeout(function() {
+                textBox.select();
+            }, 0);
+        };
+
+        textBox.addEventListener('focus', this._onTextBoxFocus, false);
         form.appendChild(textBox);
+        this._textBox = textBox;
 
         var searchButton = document.createElement('span');
         searchButton.className = 'cesium-geocoder-searchButton';
@@ -105,11 +116,13 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
         if (FeatureDetection.supportsPointerEvents()) {
             document.addEventListener('pointerdown', this._onInputBegin, true);
             document.addEventListener('pointerup', this._onInputEnd, true);
+            document.addEventListener('pointercancel', this._onInputEnd, true);
         } else {
             document.addEventListener('mousedown', this._onInputBegin, true);
             document.addEventListener('mouseup', this._onInputEnd, true);
             document.addEventListener('touchstart', this._onInputBegin, true);
             document.addEventListener('touchend', this._onInputEnd, true);
+            document.addEventListener('touchcancel', this._onInputEnd, true);
         }
 
     }
@@ -164,6 +177,7 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
 
         knockout.cleanNode(this._form);
         this._container.removeChild(this._form);
+        this._textBox.removeEventListener('focus', this._onTextBoxFocus, false);
 
         return destroyObject(this);
     };

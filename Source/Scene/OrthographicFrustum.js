@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/defined',
@@ -9,7 +8,6 @@ define([
         '../Core/Matrix4',
         './CullingVolume'
     ], function(
-        Cartesian2,
         Cartesian3,
         Cartesian4,
         defined,
@@ -281,7 +279,7 @@ define([
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, new Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, new Cesium.Cartesian2());
      */
     OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
         update(this);

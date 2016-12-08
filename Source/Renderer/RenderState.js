@@ -5,7 +5,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../Core/RuntimeError',
         '../Core/WindingOrder',
         './ContextLimits',
         './WebGLConstants'
@@ -15,7 +14,6 @@ define([
         defaultValue,
         defined,
         DeveloperError,
-        RuntimeError,
         WindingOrder,
         ContextLimits,
         WebGLConstants) {
@@ -754,7 +752,7 @@ define([
             applyBlending(gl, renderState, passState);
         }
 
-        if (previousRenderState !== renderState || previousPassState.context !== passState.context) {
+        if (previousRenderState !== renderState || previousPassState !== passState || previousPassState.context !== passState.context) {
             applyViewport(gl, renderState, passState);
         }
     };

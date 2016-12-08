@@ -238,48 +238,6 @@ define([
         return magnitudeToPoint(scaledSpaceDirectionToPoint, resultMagnitude, result);
     };
 
-    /**
-     * Computes a point that can be used for horizon culling from a list of positions.  If the point is below
-     * the horizon, all of the positions are guaranteed to be below the horizon as well.  The returned point
-     * is expressed in the ellipsoid-scaled space and is suitable for use with
-     * {@link EllipsoidalOccluder#isScaledSpacePointVisible}.
-     *
-     * @param {Cartesian3} directionToPoint The direction that the computed point will lie along.
-     *                     A reasonable direction to use is the direction from the center of the ellipsoid to
-     *                     the center of the bounding sphere computed from the positions.  The direction need not
-     *                     be normalized.
-     * @param {Cartesian3[]} points  The vertices from which to compute the horizon culling point.  The positions
-     *                   must be expressed in a reference frame centered at the ellipsoid and aligned with the
-     *                   ellipsoid's axes.
-     * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
-     * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
-     */
-    EllipsoidalOccluder.prototype.computeHorizonCullingPointFromPoints = function(directionToPoint, points, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(directionToPoint)) {
-            throw new DeveloperError('directionToPoint is required');
-        }
-        if (!defined(points)) {
-            throw new DeveloperError('points is required');
-        }
-        //>>includeEnd('debug');
-
-        if (!defined(result)) {
-            result = new Cartesian3();
-        }
-
-        var ellipsoid = this._ellipsoid;
-        var scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint);
-        var resultMagnitude = 0.0;
-
-        for (var i = 0, len = points.length; i < len; ++i) {
-            var candidateMagnitude = computeMagnitude(ellipsoid, points[i], scaledSpaceDirectionToPoint);
-            resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
-        }
-
-        return magnitudeToPoint(scaledSpaceDirectionToPoint, resultMagnitude, result);
-    };
-
     var subsampleScratch = [];
 
     /**
@@ -347,6 +305,10 @@ define([
     var directionToPointScratch = new Cartesian3();
 
     function computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint) {
+        if (Cartesian3.equals(directionToPoint, Cartesian3.ZERO)) {
+            return directionToPoint;
+        }
+
         ellipsoid.transformPositionToScaledSpace(directionToPoint, directionToPointScratch);
         return Cartesian3.normalize(directionToPointScratch, directionToPointScratch);
     }

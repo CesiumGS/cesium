@@ -3,7 +3,6 @@ define([
         'Cesium/Core/Cartesian3',
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
-        'Cesium/Core/getFilenameFromUri',
         'Cesium/Core/Math',
         'Cesium/Core/objectToQuery',
         'Cesium/Core/queryToObject',
@@ -19,7 +18,6 @@ define([
         Cartesian3,
         defined,
         formatError,
-        getFilenameFromUri,
         CesiumMath,
         objectToQuery,
         queryToObject,
@@ -104,7 +102,10 @@ define([
         } else if (/\.geojson$/i.test(source) || /\.json$/i.test(source) || /\.topojson$/i.test(source)) {
             loadPromise = GeoJsonDataSource.load(source);
         } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
-            loadPromise = KmlDataSource.load(source);
+            loadPromise = KmlDataSource.load(source, {
+                camera: scene.camera,
+                canvas: scene.canvas
+            });
         } else {
             showLoadError(source, 'Unknown format.');
         }

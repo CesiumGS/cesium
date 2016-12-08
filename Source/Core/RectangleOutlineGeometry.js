@@ -122,13 +122,11 @@ define([
         var height = options.height;
         var width = options.width;
 
-        geo = PolygonPipeline.scaleToGeodeticHeight(geo, maxHeight, ellipsoid, false);
-        var topPositions = geo.attributes.position.values;
+        var topPositions = PolygonPipeline.scaleToGeodeticHeight(geo.attributes.position.values, maxHeight, ellipsoid, false);
         var length = topPositions.length;
         var positions = new Float64Array(length*2);
         positions.set(topPositions);
-        geo = PolygonPipeline.scaleToGeodeticHeight(geo, minHeight, ellipsoid);
-        var bottomPositions = geo.attributes.position.values;
+        var bottomPositions = PolygonPipeline.scaleToGeodeticHeight(geo.attributes.position.values, minHeight, ellipsoid);
         positions.set(bottomPositions, length);
         geo.attributes.position.values = positions;
 
@@ -232,6 +230,8 @@ define([
      * @param {RectangleOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     RectangleOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -257,6 +257,8 @@ define([
         array[startingIndex++] = value._rotation;
         array[startingIndex++] = defined(value._extrudedHeight) ? 1.0 : 0.0;
         array[startingIndex] = defaultValue(value._extrudedHeight, 0.0);
+
+        return array;
     };
 
     var scratchRectangle = new Rectangle();
@@ -349,7 +351,7 @@ define([
             boundingSphere = BoundingSphere.union(topBS, bottomBS);
         } else {
             geometry = constructRectangle(options);
-            geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, surfaceHeight, ellipsoid, false);
+            geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
             boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
         }
 

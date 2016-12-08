@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingRectangle',
         './BoundingSphere',
         './Cartesian2',
@@ -16,13 +17,14 @@ define([
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
+        './oneTimeWarning',
         './PolygonPipeline',
-        './PolylinePipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
         './VertexFormat',
         './WindingOrder'
     ], function(
+        arrayRemoveDuplicates,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -39,8 +41,8 @@ define([
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
+        oneTimeWarning,
         PolygonPipeline,
-        PolylinePipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
         VertexFormat,
@@ -163,7 +165,13 @@ define([
         }
 
         if (vertexFormat.tangent || vertexFormat.binormal) {
-            geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+            try {
+                geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+            } catch (e) {
+                oneTimeWarning('polyline-volume-tangent-binormal', 'Unable to compute tangents and binormals for polyline volume geometry');
+                //TODO https://github.com/AnalyticalGraphicsInc/cesium/issues/3609
+            }
+
             if (!vertexFormat.tangent) {
                 geometry.attributes.tangent = undefined;
             }
@@ -253,6 +261,8 @@ define([
      * @param {PolylineVolumeGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     PolylineVolumeGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -292,6 +302,8 @@ define([
 
         array[startingIndex++] = value._cornerType;
         array[startingIndex]   = value._granularity;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
@@ -375,7 +387,7 @@ define([
      */
     PolylineVolumeGeometry.createGeometry = function(polylineVolumeGeometry) {
         var positions = polylineVolumeGeometry._positions;
-        var cleanPositions = PolylinePipeline.removeDuplicates(positions);
+        var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         var shape2D = polylineVolumeGeometry._shape;
         shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
 

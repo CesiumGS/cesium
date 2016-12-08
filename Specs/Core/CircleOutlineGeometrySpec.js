@@ -45,8 +45,8 @@ defineSuite([
             radius : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 8);
-        expect(m.indices.length).toEqual(2 * 8);
+        expect(m.attributes.position.values.length).toEqual(8 * 3);
+        expect(m.indices.length).toEqual(8 * 2);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -56,11 +56,11 @@ defineSuite([
             center : Cartesian3.fromDegrees(0,0),
             granularity : 0.1,
             radius : 1.0,
-            extrudedHeight : 10000
+            extrudedHeight : 5
         }));
 
-        expect(m.attributes.position.values.length).toEqual(2 * 8 * 3);
-        expect(m.indices.length).toEqual(2 * 8 * 2 + 16 * 2);
+        expect(m.attributes.position.values.length).toEqual(16 * 3); //8 top circle + 8 bottom circle
+        expect(m.indices.length).toEqual(24 * 2); //8 top + 8 bottom + 8 vertical
     });
 
     it('computes positions extruded, no lines between top and bottom', function() {
@@ -73,8 +73,8 @@ defineSuite([
             numberOfVerticalLines : 0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(2 * 8 * 3);
-        expect(m.indices.length).toEqual(2 * 8 * 2);
+        expect(m.attributes.position.values.length).toEqual(16 * 3);
+        expect(m.indices.length).toEqual(16 * 2);
     });
 
     it('undefined is returned if radius is equal to or less than zero', function () {

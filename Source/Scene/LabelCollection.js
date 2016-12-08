@@ -194,12 +194,14 @@ define([
                 billboard.pixelOffset = label._pixelOffset;
                 billboard.horizontalOrigin = HorizontalOrigin.LEFT;
                 billboard.verticalOrigin = label._verticalOrigin;
+                billboard.heightReference = label._heightReference;
                 billboard.scale = label._scale;
                 billboard.pickPrimitive = label;
                 billboard.id = label._id;
                 billboard.image = id;
                 billboard.translucencyByDistance = label._translucencyByDistance;
                 billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+                billboard.distanceDisplayCondition = label._distanceDisplayCondition;
             }
         }
 
@@ -223,8 +225,13 @@ define([
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             glyph = glyphs[glyphIndex];
             dimensions = glyph.dimensions;
-            totalWidth += dimensions.computedWidth;
             maxHeight = Math.max(maxHeight, dimensions.height);
+
+            //Computing the total width must also account for the kering that occurs between letters.
+            totalWidth += dimensions.width - dimensions.bounds.minx;
+            if (glyphIndex < glyphLength - 1) {
+                totalWidth += glyphs[glyphIndex + 1].dimensions.bounds.minx;
+            }
         }
 
         var scale = label._scale;
@@ -258,7 +265,13 @@ define([
                 glyph.billboard._setTranslate(glyphPixelOffset);
             }
 
-            glyphPixelOffset.x += dimensions.computedWidth * scale * resolutionScale;
+            //Compute the next x offset taking into acocunt the kerning performed
+            //on both the current letter as well as the next letter to be drawn
+            //as well as any applied scale.
+            if (glyphIndex < glyphLength - 1) {
+                var nextGlyph = glyphs[glyphIndex + 1];
+                glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale * resolutionScale;
+            }
         }
     }
 

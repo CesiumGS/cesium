@@ -4,7 +4,6 @@ define([
         'Core/clone',
         'Core/defaultValue',
         'Core/defined',
-        'Core/queryToObject',
         'Scene/Scene',
         'Specs/createCanvas',
         'Specs/destroyCanvas'
@@ -13,7 +12,6 @@ define([
         clone,
         defaultValue,
         defined,
-        queryToObject,
         Scene,
         createCanvas,
         destroyCanvas) {
@@ -37,8 +35,7 @@ define([
 
         var scene = new Scene(options);
 
-        var parameters = queryToObject(window.location.search.substring(1));
-        if (defined(parameters.webglValidation)) {
+        if (window.webglValidation) {
             var context = scene.context;
             context.validateShaderProgram = true;
             context.validateFramebuffer = true;

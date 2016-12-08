@@ -39,7 +39,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createGeometry returnes undefined with less than 2 unique positions', function() {
+    it('returns undefined with less than 2 unique positions', function() {
         var geometry = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
             positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
@@ -47,7 +47,28 @@ defineSuite([
                 49.0, 18.0, 1000.0
             ])
         }));
-        expect(geometry).not.toBeDefined();
+        expect(geometry).toBeUndefined();
+    });
+
+    it('returns undefined with no heights', function() {
+        var geometry = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                49.0, 18.0,
+                49.0, 18.0,
+                49.0, 18.0
+            ])
+        }));
+        expect(geometry).toBeUndefined();
+
+        geometry = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                49.0, 18.0,
+                49.0, 18.0,
+                49.0, 18.0
+            ]),
+            maximumHeights: [0, 0, 0]
+        }));
+        expect(geometry).toBeUndefined();
     });
 
     it('creates positions relative to ellipsoid', function() {
@@ -60,7 +81,7 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(2 * 2 * 3);
+        expect(positions.length).toEqual(4 * 3);
         expect(w.indices.length).toEqual(4 * 2);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
@@ -82,7 +103,7 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(2 * 2 * 3);
+        expect(positions.length).toEqual(4 * 3);
         expect(w.indices.length).toEqual(4 * 2);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
@@ -112,8 +133,8 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(3 * 2 * 3);
-        expect(w.indices.length).toEqual(7 * 2);
+        expect(positions.length).toEqual(6 * 3);
+        expect(w.indices.length).toEqual(7 * 2); //3 vertical + 4 horizontal
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
         expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
@@ -142,8 +163,8 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(2 * 2 * 3);
-        expect(w.indices.length).toEqual(2 * 4);
+        expect(positions.length).toEqual(4 * 3);
+        expect(w.indices.length).toEqual(4 * 2);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
         expect(cartographic.height).toEqualEpsilon(min, CesiumMath.EPSILON8);
@@ -158,20 +179,6 @@ defineSuite([
         expect(cartographic.height).toEqualEpsilon(max, CesiumMath.EPSILON8);
     });
 
-    it('undefined is returned if there are less than two positions', function() {
-        var wallOutline = WallOutlineGeometry.fromConstantHeights({
-                positions : Cartesian3.fromDegreesArray([
-                19.0, 47.0
-            ]),
-            minimumHeight : 20000.0,
-            maximumHeight : 10000.0
-        });
-
-        var geometry = WallOutlineGeometry.createGeometry(wallOutline);
-
-        expect(geometry).toBeUndefined();
-    });
-
     var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
     var wall = new WallOutlineGeometry({
         positions : positions,
@@ -181,4 +188,3 @@ defineSuite([
     var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.01];
     createPackableSpecs(WallOutlineGeometry, wall, packedInstance);
 });
-

@@ -5,62 +5,45 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Material',
         'Scene/Primitive',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/render'
+        'Specs/createScene'
     ], function(
         EllipsoidSurfaceAppearance,
         ColorGeometryInstanceAttribute,
         GeometryInstance,
         Rectangle,
         RectangleGeometry,
-        ClearCommand,
         Appearance,
         Material,
         Primitive,
-        createContext,
-        createFrameState,
-        render) {
+        createScene) {
     'use strict';
 
-    var context;
-    var frameState;
+    var scene;
     var rectangle;
     var primitive;
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
+        scene.primitives.destroyPrimitives = false;
+        scene.frameState.scene3DOnly = false;
 
         rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
-        primitive = new Primitive({
-            geometryInstances : new GeometryInstance({
-                geometry : new RectangleGeometry({
-                    rectangle : rectangle,
-                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
-                }),
-                attributes : {
-                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
-                }
-            }),
-            asynchronous : false
-        });
     });
 
     beforeEach(function() {
-        frameState = createFrameState(context);
-
-        frameState.camera.setView({ destination : rectangle });
-        var us = context.uniformState;
-        us.update(frameState);
+        scene.camera.setView({ destination : rectangle });
     });
 
     afterAll(function() {
-        primitive = primitive && primitive.destroy();
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
+    });
+
+    afterEach(function() {
+        scene.primitives.removeAll();
+        primitive = primitive && !primitive.isDestroyed() && primitive.destroy();
     });
 
     it('constructor', function() {
@@ -80,13 +63,24 @@ defineSuite([
     });
 
     it('renders', function() {
+        primitive = new Primitive({
+            geometryInstances : new GeometryInstance({
+                geometry : new RectangleGeometry({
+                    rectangle : rectangle,
+                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
+                }),
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            }),
+            asynchronous : false
+        });
         primitive.appearance = new EllipsoidSurfaceAppearance();
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
 }, 'WebGL');

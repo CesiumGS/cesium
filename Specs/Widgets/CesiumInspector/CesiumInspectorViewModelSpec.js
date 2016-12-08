@@ -10,7 +10,6 @@ defineSuite([
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Globe',
         'Scene/GlobeSurfaceTile',
-        'Scene/Material',
         'Scene/Primitive',
         'Scene/QuadtreeTile',
         'Specs/createScene'
@@ -25,7 +24,6 @@ defineSuite([
         EllipsoidSurfaceAppearance,
         Globe,
         GlobeSurfaceTile,
-        Material,
         Primitive,
         QuadtreeTile,
         createScene) {

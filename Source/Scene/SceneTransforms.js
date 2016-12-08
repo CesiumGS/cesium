@@ -9,6 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/Transforms',
         './SceneMode'
     ], function(
         BoundingRectangle,
@@ -20,6 +21,7 @@ define([
         DeveloperError,
         CesiumMath,
         Matrix4,
+        Transforms,
         SceneMode) {
     'use strict';
 
@@ -32,7 +34,10 @@ define([
 
     var actualPositionScratch = new Cartesian4(0, 0, 0, 1);
     var positionCC = new Cartesian4();
-    var viewProjectionScratch = new Matrix4();
+    var scratchViewport = new BoundingRectangle();
+
+    var scratchWindowCoord0 = new Cartesian2();
+    var scratchWindowCoord1 = new Cartesian2();
 
     /**
      * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
@@ -54,6 +59,33 @@ define([
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
     SceneTransforms.wgs84ToWindowCoordinates = function(scene, position, result) {
+        return SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(scene, position, Cartesian3.ZERO, result);
+    };
+
+    var scratchCartesian4 = new Cartesian4();
+    var scratchEyeOffset = new Cartesian3();
+
+    function worldToClip(position, eyeOffset, camera, result) {
+        var viewMatrix = camera.viewMatrix;
+
+        var positionEC = Matrix4.multiplyByVector(viewMatrix, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
+
+        var zEyeOffset = Cartesian3.multiplyComponents(eyeOffset, Cartesian3.normalize(positionEC, scratchEyeOffset), scratchEyeOffset);
+        positionEC.x += eyeOffset.x + zEyeOffset.x;
+        positionEC.y += eyeOffset.y + zEyeOffset.y;
+        positionEC.z += zEyeOffset.z;
+
+        return Matrix4.multiplyByVector(camera.frustum.projectionMatrix, positionEC, result);
+    }
+
+    var scratchMaxCartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO);
+    var scratchProjectedCartesian = new Cartesian3();
+    var scratchCameraPosition = new Cartesian3();
+
+    /**
+     * @private
+     */
+    SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function(scene, position, eyeOffset, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -64,23 +96,102 @@ define([
         //>>includeEnd('debug');
 
         // Transform for 3D, 2D, or Columbus view
-        var actualPosition = SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPositionScratch);
+        var frameState = scene.frameState;
+        var actualPosition = SceneTransforms.computeActualWgs84Position(frameState, position, actualPositionScratch);
 
         if (!defined(actualPosition)) {
             return undefined;
         }
 
-        // View-projection matrix to transform from world coordinates to clip coordinates
-        var camera = scene.camera;
-        var viewProjection = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
-        Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
+        // Assuming viewport takes up the entire canvas...
+        var canvas = scene.canvas;
+        var viewport = scratchViewport;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = canvas.clientWidth;
+        viewport.height = canvas.clientHeight;
 
-        if ((positionCC.z < 0) && (scene.mode !== SceneMode.SCENE2D)) {
-            return undefined;
+        var camera = scene.camera;
+        var cameraCentered = false;
+
+        if (frameState.mode === SceneMode.SCENE2D) {
+            var projection = scene.mapProjection;
+            var maxCartographic = scratchMaxCartographic;
+            var maxCoord = projection.project(maxCartographic, scratchProjectedCartesian);
+
+            var cameraPosition = Cartesian3.clone(camera.position, scratchCameraPosition);
+            var frustum = camera.frustum.clone();
+
+            var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, new Matrix4());
+            var projectionMatrix = camera.frustum.projectionMatrix;
+
+            var x = camera.positionWC.y;
+            var eyePoint = Cartesian3.fromElements(CesiumMath.sign(x) * maxCoord.x - x, 0.0, -camera.positionWC.x);
+            var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
+
+            if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= canvas.clientWidth) {
+                cameraCentered = true;
+            } else {
+                if (windowCoordinates.x > canvas.clientWidth * 0.5) {
+                    viewport.width = windowCoordinates.x;
+
+                    camera.frustum.right = maxCoord.x - x;
+
+                    positionCC = worldToClip(actualPosition, eyeOffset, camera, positionCC);
+                    SceneTransforms.clipToGLWindowCoordinates(viewport, positionCC, scratchWindowCoord0);
+
+                    viewport.x += windowCoordinates.x;
+
+                    camera.position.x = -camera.position.x;
+
+                    var right = camera.frustum.right;
+                    camera.frustum.right = -camera.frustum.left;
+                    camera.frustum.left = -right;
+
+                    positionCC = worldToClip(actualPosition, eyeOffset, camera, positionCC);
+                    SceneTransforms.clipToGLWindowCoordinates(viewport, positionCC, scratchWindowCoord1);
+                } else {
+                    viewport.x += windowCoordinates.x;
+                    viewport.width -= windowCoordinates.x;
+
+                    camera.frustum.left = -maxCoord.x - x;
+
+                    positionCC = worldToClip(actualPosition, eyeOffset, camera, positionCC);
+                    SceneTransforms.clipToGLWindowCoordinates(viewport, positionCC, scratchWindowCoord0);
+
+                    viewport.x = viewport.x - viewport.width;
+
+                    camera.position.x = -camera.position.x;
+
+                    var left = camera.frustum.left;
+                    camera.frustum.left = -camera.frustum.right;
+                    camera.frustum.right = -left;
+
+                    positionCC = worldToClip(actualPosition, eyeOffset, camera, positionCC);
+                    SceneTransforms.clipToGLWindowCoordinates(viewport, positionCC, scratchWindowCoord1);
+                }
+
+                Cartesian3.clone(cameraPosition, camera.position);
+                camera.frustum = frustum.clone();
+
+                result = Cartesian2.clone(scratchWindowCoord0, result);
+                if (result.x < 0.0 || result.x > canvas.clientWidth) {
+                    result.x = scratchWindowCoord1.x;
+                }
+            }
         }
 
-        result = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
-        result.y = scene.canvas.clientHeight - result.y;
+        if (frameState.mode !== SceneMode.SCENE2D || cameraCentered) {
+            // View-projection matrix to transform from world coordinates to clip coordinates
+            positionCC = worldToClip(actualPosition, eyeOffset, camera, positionCC);
+            if (positionCC.z < 0 && frameState.mode !== SceneMode.SCENE2D) {
+                return undefined;
+            }
+
+            result = SceneTransforms.clipToGLWindowCoordinates(viewport, positionCC, result);
+        }
+
+        result.y = canvas.clientHeight - result.y;
         return result;
     };
 
@@ -97,40 +208,19 @@ define([
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
      * var ellipsoid = scene.globe.ellipsoid;
-     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0));
+     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
     SceneTransforms.wgs84ToDrawingBufferCoordinates = function(scene, position, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-
-        if (!defined(position)) {
-            throw new DeveloperError('position is required.');
-        }
-        //>>includeEnd('debug');
-
-        // Transform for 3D, 2D, or Columbus view
-        var actualPosition = SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPositionScratch);
-
-        if (!defined(actualPosition)) {
+        result = SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
+        if (!defined(result)) {
             return undefined;
         }
 
-        // View-projection matrix to transform from world coordinates to clip coordinates
-        var camera = scene.camera;
-        var viewProjection = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
-        Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
-
-        if ((positionCC.z < 0) && (scene.mode !== SceneMode.SCENE2D)) {
-            return undefined;
-        }
-
-        return SceneTransforms.clipToDrawingBufferCoordinates(scene, positionCC, result);
+        return SceneTransforms.transformWindowToDrawingBuffer(scene, result, result);
     };
 
     var projectedPosition = new Cartesian3();
@@ -173,24 +263,17 @@ define([
 
     var positionNDC = new Cartesian3();
     var positionWC = new Cartesian3();
-    var viewport = new BoundingRectangle();
     var viewportTransform = new Matrix4();
 
     /**
      * @private
      */
-    SceneTransforms.clipToGLWindowCoordinates = function(scene, position, result) {
-        var canvas = scene.canvas;
-
+    SceneTransforms.clipToGLWindowCoordinates = function(viewport, position, result) {
         // Perspective divide to transform from clip coordinates to normalized device coordinates
         Cartesian3.divideByScalar(position, position.w, positionNDC);
 
-        // Assuming viewport takes up the entire canvas...
-        viewport.width = canvas.clientWidth;
-        viewport.height = canvas.clientHeight;
-        Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
-
         // Viewport transform to transform from clip coordinates to window coordinates
+        Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
         Matrix4.multiplyByPoint(viewportTransform, positionNDC, positionWC);
 
         return Cartesian2.fromCartesian3(positionWC, result);
@@ -199,15 +282,12 @@ define([
     /**
      * @private
      */
-    SceneTransforms.clipToDrawingBufferCoordinates = function(scene, position, result) {
+    SceneTransforms.clipToDrawingBufferCoordinates = function(viewport, position, result) {
         // Perspective divide to transform from clip coordinates to normalized device coordinates
         Cartesian3.divideByScalar(position, position.w, positionNDC);
 
-        // Assuming viewport takes up the entire canvas...
-        BoundingRectangle.clone(scene._passState.viewport, viewport);
-        Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
-
         // Viewport transform to transform from clip coordinates to drawing buffer coordinates
+        Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
         Matrix4.multiplyByPoint(viewportTransform, positionNDC, positionWC);
 
         return Cartesian2.fromCartesian3(positionWC, result);

@@ -25,7 +25,7 @@ defineSuite([
         context.destroyForSpecs();
     });
 
-    it('has czm_tranpose (2x2)', function() {
+    it('has czm_transpose (2x2)', function() {
         var fs =
             'void main() { ' +
             '  mat2 m = mat2(1.0, 2.0, 3.0, 4.0); ' +
@@ -36,7 +36,7 @@ defineSuite([
         context.verifyDrawForSpecs(fs);
     });
 
-    it('has czm_tranpose (3x3)', function() {
+    it('has czm_transpose (3x3)', function() {
         var fs =
             'void main() { ' +
             '  mat3 m = mat3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0); ' +
@@ -47,7 +47,7 @@ defineSuite([
         context.verifyDrawForSpecs(fs);
     });
 
-    it('has czm_tranpose (4x4)', function() {
+    it('has czm_transpose (4x4)', function() {
         var fs =
             'void main() { ' +
             '  mat4 m = mat4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);' +
@@ -219,7 +219,7 @@ defineSuite([
     it('has czm_decompressTextureCoordinates', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_decompressTextureCoordinates(8390656.0) == vec2(0.5, 0.5)); ' +
+            '  gl_FragColor = vec4(czm_decompressTextureCoordinates(8386559.0) == vec2(0.4998779, 0.4998779)); ' +
             '}';
         context.verifyDrawForSpecs(fs);
     });
@@ -289,6 +289,14 @@ defineSuite([
             '                      czm_nearFarScalar(testNearFarScalar, 10.0 * 10.0) == 1.0, ' +
             '                      czm_nearFarScalar(testNearFarScalar, 20.0 * 20.0) == 0.0, ' +
             '                      czm_nearFarScalar(testNearFarScalar, 50.0 * 50.0) == 0.0); ' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('has czm_cascadeColor', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(all(equal(czm_cascadeColor(vec4(0.5)), vec4(1.0, 0.5, 1.0, 2.0))));' +
             '}';
         context.verifyDrawForSpecs(fs);
     });

@@ -38,6 +38,7 @@ defineSuite([
         expect(viewModel.flightDuration).toBe(flightDuration);
         expect(viewModel.url).toBe(url);
         expect(viewModel.key).toBe(key);
+        expect(viewModel.keepExpanded).toBe(false);
     });
 
     it('can get and set flight duration', function() {

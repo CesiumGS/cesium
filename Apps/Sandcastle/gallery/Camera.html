@@ -20,7 +20,7 @@
 <style>
     @import url(../templates/bucket.css);
     
-    #viewChanged {
+    #viewChanged, #cameraChanged {
         display: none;
         background-color: red;
         color: white;
@@ -28,7 +28,11 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"><div id="viewChanged">View Changed</div></div><script id="cesium_sandcastle_script">
+<div id="toolbar">
+    <div id="viewChanged">View Changed</div>
+    <div id="cameraChanged">Camera Changed</div>
+</div>
+<script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
@@ -140,7 +144,7 @@ function setHeadingPitchRoll() {
     
     var camera = viewer.camera;
     camera.setView({
-        position : Cesium.Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
+        destination : Cesium.Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
         orientation: {
             heading : -Cesium.Math.PI_OVER_TWO,
             pitch : -Cesium.Math.PI_OVER_FOUR,
@@ -187,6 +191,21 @@ function cameraEvents() {
     });
     removeEnd = camera.moveEnd.addEventListener(function() {
         viewChanged.style.display = 'none';
+    });
+}
+
+var cameraChanged = document.getElementById('cameraChanged');
+
+var removeChanged;
+
+function cameraChanges() {
+    Sandcastle.declare(cameraChanges);
+
+    var i = 0;
+    removeChanged = viewer.camera.changed.addEventListener(function(percentage) {
+        ++i;
+        cameraChanged.innerText = 'Camera Changed: ' + i + ', ' + percentage.toFixed(6);
+        cameraChanged.style.display = 'block';
     });
 }
 
@@ -261,7 +280,7 @@ Sandcastle.addToolbarMenu([{
         setHeadingPitchRoll();
         Sandcastle.highlight(setHeadingPitchRoll);
     }
-},{
+}, {
     text : 'View in ICRF',
     onselect : function() {
         viewInICRF();
@@ -273,9 +292,16 @@ Sandcastle.addToolbarMenu([{
         cameraEvents();
         Sandcastle.highlight(cameraEvents);
     }
+}, {
+    text : 'Camera changed event',
+    onselect : function() {
+        cameraChanges();
+        Sandcastle.highlight(cameraChanges);
+    }
 }]);
 
 Sandcastle.reset = function() {
+    scene.completeMorph();
     viewer.entities.removeAll();
     scene.primitives.removeAll();
     scene.tweens.removeAll();
@@ -289,7 +315,14 @@ Sandcastle.reset = function() {
         removeStart = undefined;
         removeEnd = undefined;
     }
-    
+
+    if (Cesium.defined(removeChanged)) {
+        removeChanged();
+        removeChanged = undefined;
+
+        cameraChanged.style.display = 'none';
+    }
+
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
     clock.multiplier = 1.0;

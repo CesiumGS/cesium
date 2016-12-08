@@ -133,6 +133,8 @@ define([
      * @param {WallGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     WallGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -183,6 +185,8 @@ define([
         startingIndex += VertexFormat.packedLength;
 
         array[startingIndex] = value._granularity;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
@@ -297,7 +301,7 @@ define([
      *   maximumHeight : 10000.0
      * });
      * var geometry = Cesium.WallGeometry.createGeometry(wall);
-     * 
+     *
      * @see WallGeometry#createGeometry
      */
     WallGeometry.fromConstantHeights = function(options) {
@@ -358,10 +362,6 @@ define([
         var granularity = wallGeometry._granularity;
         var ellipsoid = wallGeometry._ellipsoid;
 
-        if (wallPositions.length < 2) {
-            return;
-        }
-
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, true);
         if (!defined(pos)) {
             return;
@@ -369,6 +369,7 @@ define([
 
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
+        var numCorners = pos.numCorners;
 
         var length = topPositions.length;
         var size = length * 2;
@@ -536,7 +537,7 @@ define([
         //
 
         var numVertices = size / 3;
-        size -= 6;
+        size -= 6 * (numCorners + 1);
         var indices = IndexDatatype.createTypedArray(numVertices, size);
 
         var edgeIndex = 0;

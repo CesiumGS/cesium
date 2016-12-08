@@ -10,7 +10,6 @@ define([
         '../../Core/loadJsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
-        '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../createCommand'
@@ -25,7 +24,6 @@ define([
         loadJsonp,
         Matrix4,
         Rectangle,
-        SceneMode,
         knockout,
         when,
         createCommand) {
@@ -38,7 +36,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Scene} options.scene The Scene instance to use.
-     * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [options.url='https://dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
@@ -55,12 +53,17 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = defaultValue(options.url, '//dev.virtualearth.net/');
+        this._url = defaultValue(options.url, 'https://dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
         }
 
         this._key = BingMapsApi.getKey(options.key);
+        var errorCredit = BingMapsApi.getErrorCredit(options.key);
+        if (defined(errorCredit)) {
+            options.scene._frameState.creditDisplay.addDefaultCredit(errorCredit);
+        }
+
         this._scene = options.scene;
         this._flightDuration = options.flightDuration;
         this._searchText = '';
@@ -77,7 +80,15 @@ define([
             }
         });
 
-        knockout.track(this, ['_searchText', '_isSearchInProgress']);
+        /**
+         * Gets or sets a value indicating if this instance should always show its text input field.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.keepExpanded = false;
+
+        knockout.track(this, ['_searchText', '_isSearchInProgress', 'keepExpanded']);
 
         /**
          * Gets a value indicating whether a search is currently in progress.  This property is observable.
@@ -210,8 +221,7 @@ define([
                 viewModel._complete.raiseEvent();
             },
             duration : viewModel._flightDuration,
-            endTransform : Matrix4.IDENTITY,
-            convert : false
+            endTransform : Matrix4.IDENTITY
         });
     }
 

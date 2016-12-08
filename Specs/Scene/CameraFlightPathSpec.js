@@ -2,18 +2,14 @@
 defineSuite([
         'Scene/CameraFlightPath',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Math',
-        'Core/Rectangle',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
         CameraFlightPath,
         Cartesian3,
-        Cartographic,
         CesiumMath,
-        Rectangle,
         OrthographicFrustum,
         SceneMode,
         createScene) {
@@ -381,5 +377,46 @@ defineSuite([
         expect(typeof flight.complete).toEqual('function');
         flight.complete();
         expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
+    });
+
+    it('does not go above the maximum height', function() {
+        var camera = scene.camera;
+
+        var startPosition = Cartesian3.fromDegrees(0.0, 0.0, 1000.0);
+        var endPosition = Cartesian3.fromDegrees(10.0, 0.0, 1000.0);
+        var duration = 5.0;
+
+        camera.setView({
+            destination : startPosition
+        });
+
+        var flight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : duration
+        });
+
+        var maximumHeight = Number.NEGATIVE_INFINITY;
+        var i;
+        for (i = 0; i <= duration; ++i) {
+            flight.update({ time : i });
+            maximumHeight = Math.max(maximumHeight, camera.positionCartographic.height);
+        }
+
+        maximumHeight *= 0.5;
+
+        camera.setView({
+            destination : startPosition
+        });
+
+        flight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : duration,
+            maximumHeight : maximumHeight
+        });
+
+        for (i = 0; i <= duration; ++i) {
+            flight.update({ time : i });
+            expect(camera.positionCartographic.height).toBeLessThan(maximumHeight);
+        }
     });
 }, 'WebGL');

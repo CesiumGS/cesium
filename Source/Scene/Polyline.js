@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/arrayRemoveDuplicates',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -7,10 +8,12 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/Matrix4',
         '../Core/PolylinePipeline',
         './Material'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -18,6 +21,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        DistanceDisplayCondition,
         Matrix4,
         PolylinePipeline,
         Material) {
@@ -36,6 +40,7 @@ define([
      * @param {Material} [options.material=Material.ColorType] The material.
      * @param {Cartesian3[]} [options.positions] The positions.
      * @param {Object} [options.id] The user-defined object to be returned when this polyline is picked.
+     * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this polyline will be displayed.
      *
      * @see PolylineCollection
      *
@@ -46,6 +51,7 @@ define([
         this._show = defaultValue(options.show, true);
         this._width = defaultValue(options.width, 1.0);
         this._loop = defaultValue(options.loop, false);
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
 
         this._material = options.material;
         if (!defined(this._material)) {
@@ -60,7 +66,7 @@ define([
         }
 
         this._positions = positions;
-        this._actualPositions = PolylinePipeline.removeDuplicates(positions);
+        this._actualPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
         if (this._loop && this._actualPositions.length > 2) {
             if (this._actualPositions === this._positions) {
@@ -91,12 +97,13 @@ define([
         this._boundingVolume2D = new BoundingSphere(); // modified in PolylineCollection
     }
 
-    var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
-    var WIDTH_INDEX = Polyline.WIDTH_INDEX = 1;
-    var POSITION_INDEX = Polyline.POSITION_INDEX = 2;
+    var POSITION_INDEX = Polyline.POSITION_INDEX = 0;
+    var SHOW_INDEX = Polyline.SHOW_INDEX = 1;
+    var WIDTH_INDEX = Polyline.WIDTH_INDEX = 2;
     var MATERIAL_INDEX = Polyline.MATERIAL_INDEX = 3;
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 4;
-    var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES = 5;
+    var DISTANCE_DISPLAY_CONDITION = Polyline.DISTANCE_DISPLAY_CONDITION = 5;
+    var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES = 6;
 
     function makeDirty(polyline, propertyChanged) {
         ++polyline._propertiesChanged[propertyChanged];
@@ -155,7 +162,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                var positions = PolylinePipeline.removeDuplicates(value);
+                var positions = arrayRemoveDuplicates(value, Cartesian3.equalsEpsilon);
 
                 if (this._loop && positions.length > 2) {
                     if (positions === value) {
@@ -281,6 +288,29 @@ define([
                 this._id = value;
                 if (defined(this._pickId)) {
                     this._pickId.object.id = value;
+                }
+            }
+        },
+
+        /**
+         * Gets or sets the condition specifying at what distance from the camera that this polyline will be displayed.
+         * @memberof Polyline.prototype
+         * @type {DistanceDisplayCondition}
+         * @default undefined
+         */
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && value.far <= value.near) {
+                    throw new DeveloperError('far distance must be greater than near distance.');
+                }
+                //>>includeEnd('debug');
+                if (!DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
+                    this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
+                    makeDirty(this, DISTANCE_DISPLAY_CONDITION);
                 }
             }
         }

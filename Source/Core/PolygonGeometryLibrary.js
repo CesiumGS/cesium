@@ -1,14 +1,15 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
         './defined',
         './Ellipsoid',
-        './EllipsoidTangentPlane',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryPipeline',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
@@ -16,15 +17,16 @@ define([
         './Queue',
         './WindingOrder'
     ], function(
+        arrayRemoveDuplicates,
         Cartesian3,
         ComponentDatatype,
         defaultValue,
         defined,
         Ellipsoid,
-        EllipsoidTangentPlane,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryPipeline,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
@@ -202,11 +204,11 @@ define([
         return geometry;
     };
 
-    PolygonGeometryLibrary.polygonsFromHierarchy = function(polygonHierarchy, perPositionHeight, ellipsoid) {
+    PolygonGeometryLibrary.polygonsFromHierarchy = function(polygonHierarchy, perPositionHeight, tangentPlane, ellipsoid) {
         // create from a polygon hierarchy
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-        var polygons = [];
         var hierarchy = [];
+        var polygons = [];
 
         var queue = new Queue();
         queue.enqueue(polygonHierarchy);
@@ -216,28 +218,52 @@ define([
             var outerRing = outerNode.positions;
             var holes = outerNode.holes;
 
-            outerRing = PolygonPipeline.removeDuplicates(outerRing);
+            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
             if (outerRing.length < 3) {
                 continue;
             }
 
+            var positions2D = tangentPlane.projectPointsOntoPlane(outerRing);
+            var holeIndices = [];
+
+            var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
+            if (originalWindingOrder === WindingOrder.CLOCKWISE) {
+                positions2D.reverse();
+                outerRing = outerRing.slice().reverse();
+            }
+
+            var positions = outerRing.slice();
             var numChildren = defined(holes) ? holes.length : 0;
             var polygonHoles = [];
             var i;
+            var j;
+
             for (i = 0; i < numChildren; i++) {
                 var hole = holes[i];
-                hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
-                if (hole.positions.length < 3) {
+                var holePositions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
+                if (holePositions.length < 3) {
                     continue;
                 }
-                polygonHoles.push(hole.positions);
+
+                var holePositions2D = tangentPlane.projectPointsOntoPlane(holePositions);
+
+                originalWindingOrder = PolygonPipeline.computeWindingOrder2D(holePositions2D);
+                if (originalWindingOrder === WindingOrder.CLOCKWISE) {
+                    holePositions2D.reverse();
+                    holePositions = holePositions.slice().reverse();
+                }
+
+                polygonHoles.push(holePositions);
+                holeIndices.push(positions.length);
+                positions = positions.concat(holePositions);
+                positions2D = positions2D.concat(holePositions2D);
 
                 var numGrandchildren = 0;
                 if (defined(hole.holes)) {
                     numGrandchildren = hole.holes.length;
                 }
 
-                for ( var j = 0; j < numGrandchildren; j++) {
+                for (j = 0; j < numGrandchildren; j++) {
                     queue.enqueue(hole.holes[j]);
                 }
             }
@@ -247,16 +273,22 @@ define([
                     ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
                 }
                 for (i = 0; i < polygonHoles.length; i++) {
-                    ellipsoid.scaleToGeodeticSurface(polygonHoles[i], polygonHoles[i]);
+                    var polygonHole = polygonHoles[i];
+                    for (j = 0; j < polygonHole.length; ++j) {
+                        ellipsoid.scaleToGeodeticSurface(polygonHole[j], polygonHole[j]);
+                    }
                 }
             }
+
             hierarchy.push({
                 outerRing : outerRing,
                 holes : polygonHoles
             });
-
-            var combinedPolygon = polygonHoles.length > 0 ? PolygonPipeline.eliminateHoles(outerRing, polygonHoles) : outerRing;
-            polygons.push(combinedPolygon);
+            polygons.push({
+                positions : positions,
+                positions2D : positions2D,
+                holes : holeIndices
+            });
         }
 
         return {
@@ -265,23 +297,15 @@ define([
         };
     };
 
-    var createGeometryFromPositionsPositions = [];
+    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat) {
+        var indices = PolygonPipeline.triangulate(polygon.positions2D, polygon.holes);
 
-    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, positions, granularity, perPositionHeight) {
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
-
-        var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-        if (originalWindingOrder === WindingOrder.CLOCKWISE) {
-            positions2D.reverse();
-            positions = positions.slice().reverse();
-        }
-
-        var indices = PolygonPipeline.triangulate(positions2D);
         /* If polygon is completely unrenderable, just use the first three vertices */
         if (indices.length < 3) {
             indices = [0, 1, 2];
         }
+
+        var positions = polygon.positions;
 
         if (perPositionHeight) {
             var length = positions.length;
@@ -293,8 +317,7 @@ define([
                 flattenedPositions[index++] = p.y;
                 flattenedPositions[index++] = p.z;
             }
-
-            return new Geometry({
+            var geometry = new Geometry({
                 attributes : {
                     position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
@@ -305,6 +328,12 @@ define([
                 indices : indices,
                 primitiveType : PrimitiveType.TRIANGLES
             });
+
+            if (vertexFormat.normal) {
+                return GeometryPipeline.computeNormal(geometry);
+            }
+
+            return geometry;
         }
 
         return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);

@@ -1,8 +1,6 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -21,6 +19,7 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArrayFacade',
+        '../Renderer/WebGLConstants',
         '../Shaders/PointPrimitiveCollectionFS',
         '../Shaders/PointPrimitiveCollectionVS',
         './BlendingState',
@@ -29,8 +28,6 @@ define([
         './SceneMode'
     ], function(
         BoundingSphere,
-        Cartesian2,
-        Cartesian3,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -49,6 +46,7 @@ define([
         ShaderProgram,
         ShaderSource,
         VertexArrayFacade,
+        WebGLConstants,
         PointPrimitiveCollectionFS,
         PointPrimitiveCollectionVS,
         BlendingState,
@@ -65,6 +63,7 @@ define([
     var PIXEL_SIZE_INDEX = PointPrimitive.PIXEL_SIZE_INDEX;
     var SCALE_BY_DISTANCE_INDEX = PointPrimitive.SCALE_BY_DISTANCE_INDEX;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX;
+    var DISTANCE_DISPLAY_CONDITION_INDEX = PointPrimitive.DISTANCE_DISPLAY_CONDITION_INDEX;
     var NUMBER_OF_PROPERTIES = PointPrimitive.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
@@ -72,7 +71,8 @@ define([
         positionLowAndOutline : 1,
         compressedAttribute0 : 2,        // color, outlineColor, pick color
         compressedAttribute1 : 3,        // show, translucency by distance, some free space
-        scaleByDistance : 4
+        scaleByDistance : 4,
+        distanceDisplayCondition : 5
     };
 
     /**
@@ -132,6 +132,10 @@ define([
         this._shaderTranslucencyByDistance = false;
         this._compiledShaderTranslucencyByDistance = false;
         this._compiledShaderTranslucencyByDistancePick = false;
+
+        this._shaderDistanceDisplayCondition = false;
+        this._compiledShaderDistanceDisplayCondition = false;
+        this._compiledShaderDistanceDisplayConditionPick = false;
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
@@ -205,7 +209,8 @@ define([
                               BufferUsage.STATIC_DRAW, // OUTLINE_WIDTH_INDEX
                               BufferUsage.STATIC_DRAW, // PIXEL_SIZE_INDEX
                               BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
-                              BufferUsage.STATIC_DRAW  // TRANSLUCENCY_BY_DISTANCE_INDEX
+                              BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
+                              BufferUsage.STATIC_DRAW  // DISTANCE_DISPLAY_CONDITION_INDEX
                           ];
 
         var that = this;
@@ -465,6 +470,11 @@ define([
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[SCALE_BY_DISTANCE_INDEX]
+        }, {
+            index : attributeLocations.distanceDisplayCondition,
+            componentsPerAttribute : 2,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX]
         }], numberOfPointPrimitives); // 1 vertex per pointPrimitive
     }
 
@@ -555,7 +565,7 @@ define([
             }
         }
 
-        var show = pointPrimitive.show;
+        var show = pointPrimitive.show && pointPrimitive.clusterShow;
 
         // If the color alphas are zero, do not show this pointPrimitive.  This lets us avoid providing
         // color during the pick pass and also eliminates a discard in the fragment shader.
@@ -600,11 +610,28 @@ define([
         writer(i, near, nearValue, far, farValue);
     }
 
+    function writeDistanceDisplayCondition(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
+        var i = pointPrimitive._index;
+        var writer = vafWriters[attributeLocations.distanceDisplayCondition];
+        var near = 0.0;
+        var far = Number.MAX_VALUE;
+
+        var distanceDisplayCondition = pointPrimitive.distanceDisplayCondition;
+        if (defined(distanceDisplayCondition)) {
+            near = distanceDisplayCondition.near;
+            far = distanceDisplayCondition.far;
+            pointPrimitiveCollection._shaderDistanceDisplayCondition = true;
+        }
+
+        writer(i, near, far);
+    }
+
     function writePointPrimitive(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
         writePositionSizeAndOutline(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
         writeCompressedAttrib0(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
         writeCompressedAttrib1(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
         writeScaleByDistance(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
+        writeDistanceDisplayCondition(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
     }
 
     function recomputeActualPositions(pointPrimitiveCollection, pointPrimitives, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -743,6 +770,10 @@ define([
                     writers.push(writeScaleByDistance);
                 }
 
+                if (properties[DISTANCE_DISPLAY_CONDITION_INDEX]) {
+                    writers.push(writeDistanceDisplayCondition);
+                }
+
                 var numWriters = writers.length;
 
                 vafWriters = this._vaf.writers;
@@ -819,7 +850,8 @@ define([
             if (!defined(this._rs)) {
                 this._rs = RenderState.fromCache({
                     depthTest : {
-                        enabled : true
+                        enabled : true,
+                        func : WebGLConstants.LEQUAL
                     },
                     blending : BlendingState.ALPHA_BLEND
                 });
@@ -827,7 +859,8 @@ define([
 
             if (!defined(this._sp) ||
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
-                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance)) {
+                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
+                    (this._shaderDistanceDisplayCondition && !this._compiledShaderDistanceDisplayCondition)) {
 
                 vs = new ShaderSource({
                     sources : [PointPrimitiveCollectionVS]
@@ -837,6 +870,9 @@ define([
                 }
                 if (this._shaderTranslucencyByDistance) {
                     vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
+                }
+                if (this._shaderDistanceDisplayCondition) {
+                    vs.defines.push('DISTANCE_DISPLAY_CONDITION');
                 }
 
                 this._sp = ShaderProgram.replaceCache({
@@ -849,6 +885,7 @@ define([
 
                 this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
+                this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
             }
 
             va = this._vaf.va;
@@ -882,7 +919,8 @@ define([
 
             if (!defined(this._spPick) ||
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
-                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick)) {
+                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
+                    (this._shaderDistanceDisplayCondition && !this._compiledShaderDistanceDisplayConditionPick)) {
 
                 vs = new ShaderSource({
                     defines : ['RENDER_FOR_PICK'],
@@ -894,6 +932,9 @@ define([
                 }
                 if (this._shaderTranslucencyByDistance) {
                     vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
+                }
+                if (this._shaderDistanceDisplayCondition) {
+                    vs.defines.push('DISTANCE_DISPLAY_CONDITION');
                 }
 
                 fs = new ShaderSource({
@@ -911,6 +952,7 @@ define([
 
                 this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
+                this._compiledShaderDistanceDisplayConditionPick = this._shaderDistanceDisplayCondition;
             }
 
             va = this._vaf.va;

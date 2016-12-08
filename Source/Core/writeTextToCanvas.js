@@ -27,7 +27,9 @@ define([
      * @param {Boolean} [options.stroke=false] Whether to stroke the text.
      * @param {Color} [options.fillColor=Color.WHITE] The fill color.
      * @param {Color} [options.strokeColor=Color.BLACK] The stroke color.
-     * @param {Color} [options.strokeWidth=1] The stroke width.
+     * @param {Number} [options.strokeWidth=1] The stroke width.
+     * @param {Color} [options.backgroundColor=Color.TRANSPARENT] The background color of the canvas.
+     * @param {Number} [options.padding=0] The pixel size of the padding to add around the text.
      * @returns {Canvas} A new canvas with the given text drawn into it.  The dimensions object
      *                   from measureText will also be added to the returned canvas. If text is
      *                   blank, returns undefined.
@@ -47,6 +49,9 @@ define([
         var stroke = defaultValue(options.stroke, false);
         var fill = defaultValue(options.fill, true);
         var strokeWidth = defaultValue(options.strokeWidth, 1);
+        var backgroundColor = defaultValue(options.backgroundColor, Color.TRANSPARENT);
+        var padding = defaultValue(options.padding, 0);
+        var doublePadding = padding * 2.0;
 
         var canvas = document.createElement('canvas');
         canvas.width = 1;
@@ -82,16 +87,28 @@ define([
         document.body.appendChild(canvas);
 
         var dimensions = measureText(context2D, text, stroke, fill);
-        dimensions.computedWidth = Math.max(dimensions.width, dimensions.bounds.maxx - dimensions.bounds.minx);
         canvas.dimensions = dimensions;
 
         document.body.removeChild(canvas);
         canvas.style.visibility = '';
 
-        var baseline = dimensions.height - dimensions.ascent;
-        canvas.width = dimensions.computedWidth;
-        canvas.height = dimensions.height;
-        var y = canvas.height - baseline;
+        //Some characters, such as the letter j, have a non-zero starting position.
+        //This value is used for kerning later, but we need to take it into account
+        //now in order to draw the text completely on the canvas
+        var x = -dimensions.bounds.minx;
+
+        //Expand the width to include the starting position.
+        var width = Math.ceil(dimensions.width) + x + doublePadding;
+
+        //While the height of the letter is correct, we need to adjust
+        //where we start drawing it so that letters like j and y properly dip
+        //below the line.
+        var height = dimensions.height + doublePadding;
+        var baseline = height - dimensions.ascent + doublePadding;
+        var y = height - baseline + doublePadding;
+
+        canvas.width = width;
+        canvas.height = height;
 
         // Properties must be explicitly set again after changing width and height
         context2D.font = font;
@@ -99,16 +116,22 @@ define([
         context2D.lineWidth = strokeWidth;
         context2D[imageSmoothingEnabledName] = false;
 
+        // Draw background
+        if (backgroundColor !== Color.TRANSPARENT) {
+            context2D.fillStyle = backgroundColor.toCssColorString();
+            context2D.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
         if (stroke) {
             var strokeColor = defaultValue(options.strokeColor, Color.BLACK);
             context2D.strokeStyle = strokeColor.toCssColorString();
-            context2D.strokeText(text, 0, y);
+            context2D.strokeText(text, x + padding, y);
         }
 
         if (fill) {
             var fillColor = defaultValue(options.fillColor, Color.WHITE);
             context2D.fillStyle = fillColor.toCssColorString();
-            context2D.fillText(text, 0, y);
+            context2D.fillText(text, x + padding, y);
         }
 
         return canvas;

@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Core/OrientedBoundingBox',
-        'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Ellipsoid',
-        'Core/EllipsoidTangentPlane',
         'Core/Intersect',
         'Core/Math',
         'Core/Matrix3',
@@ -16,12 +14,10 @@ defineSuite([
         'Core/Rectangle'
     ], function(
         OrientedBoundingBox,
-        BoundingRectangle,
         BoundingSphere,
         Cartesian3,
         Cartesian4,
         Ellipsoid,
-        EllipsoidTangentPlane,
         Intersect,
         CesiumMath,
         Matrix3,
@@ -101,6 +97,8 @@ defineSuite([
         var result = rotatePositions(positions, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
         var points = result.points;
         var rotation = result.rotation;
+        rotation[1] = -rotation[1];
+        rotation[3] = -rotation[3];
 
         var box = OrientedBoundingBox.fromPoints(points);
         expect(box.halfAxes).toEqualEpsilon(Matrix3.multiplyByScale(rotation, new Cartesian3(3.0, 2.0, 4.0), new Matrix3()), CesiumMath.EPSILON15);
@@ -111,6 +109,8 @@ defineSuite([
         var result = rotatePositions(positions, Cartesian3.UNIT_Y, CesiumMath.PI_OVER_FOUR);
         var points = result.points;
         var rotation = result.rotation;
+        rotation[2] = -rotation[2];
+        rotation[6] = -rotation[6];
 
         var box = OrientedBoundingBox.fromPoints(points);
         expect(box.halfAxes).toEqualEpsilon(Matrix3.multiplyByScale(rotation, new Cartesian3(4.0, 3.0, 2.0), new Matrix3()), CesiumMath.EPSILON15);
@@ -121,6 +121,8 @@ defineSuite([
         var result = rotatePositions(positions, Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
         var points = result.points;
         var rotation = result.rotation;
+        rotation[5] = -rotation[5];
+        rotation[7] = -rotation[7];
 
         var box = OrientedBoundingBox.fromPoints(points);
         expect(box.halfAxes).toEqualEpsilon(Matrix3.multiplyByScale(rotation, new Cartesian3(2.0, 4.0, 3.0), new Matrix3()), CesiumMath.EPSILON15);
@@ -131,6 +133,8 @@ defineSuite([
         var result = rotatePositions(positions, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
         var points = result.points;
         var rotation = result.rotation;
+        rotation[1] = -rotation[1];
+        rotation[3] = -rotation[3];
 
         var translation = new Cartesian3(-40.0, 20.0, -30.0);
         points = translatePositions(points, translation);
@@ -330,6 +334,9 @@ defineSuite([
             Matrix3.multiplyByVector(axes, tang, tang);
             Matrix3.multiplyByVector(axes, binorm, binorm);
             Cartesian3.cross(tang, binorm, n);
+            if (Cartesian3.magnitude(n) === 0) {
+                return undefined;
+            }
             Cartesian3.normalize(n, n);
 
             Cartesian3.add(p0, center, p0);
