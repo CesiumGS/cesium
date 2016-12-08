@@ -95,6 +95,8 @@ define([
          */
         this.occluder = undefined;
 
+        this.maximumScreenSpaceError = undefined;
+
         this.passes = {
             /**
              * <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.

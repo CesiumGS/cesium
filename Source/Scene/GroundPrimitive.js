@@ -217,7 +217,7 @@ define([
 
         this._uniformMap = {
             u_globeMinimumAltitude: function() {
-                return -11000; //TODO verify
+                return 1100.0; //TODO verify
             }
         };
 

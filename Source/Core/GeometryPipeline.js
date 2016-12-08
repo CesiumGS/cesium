@@ -281,7 +281,8 @@ define([
             'st',
             'binormal',
             'tangent',
-            'isBottom',
+
+            'extrudeDirection', //TODO: do I need this?
 
             // From compressing texture coordinates and normals
             'compressedAttributes'

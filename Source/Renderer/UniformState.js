@@ -149,6 +149,8 @@ define([
         this._resolutionScale = 1.0;
 
         this._fogDensity = undefined;
+
+        this._pixelSizePerMeter = undefined;
     }
 
     defineProperties(UniformState.prototype, {
@@ -767,6 +769,18 @@ define([
             }
         },
 
+        maximumScreenSpaceError: {
+            get: function() {
+                return this._frameState.maximumScreenSpaceError;
+            }
+        },
+
+        pixelSizePerMeter: {
+            get: function() {
+                return this._pixelSizePerMeter;
+            }
+        },
+
         /**
          * @memberof UniformState.prototype
          * @type {Pass}
@@ -935,6 +949,14 @@ define([
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
+
+        var fov = camera.frustum.fov;
+        var viewport = this._viewport;
+        if (viewport.width > viewport.height * camera.frustum.aspectRatio) {
+            this._pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.width;
+        } else {
+            this._pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.height;
+        }
     };
 
     function cleanViewport(uniformState) {

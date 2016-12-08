@@ -330,7 +330,9 @@ define([
         return wallTextures;
     }
 
+    var scratchVertexFormat = new VertexFormat();
     function constructExtrudedRectangle(options) {
+        var shadowVolume = options.shadowVolume;
         var vertexFormat = options.vertexFormat;
         var surfaceHeight = options.surfaceHeight;
         var extrudedHeight = options.extrudedHeight;
@@ -342,10 +344,15 @@ define([
         var ellipsoid = options.ellipsoid;
         var i;
 
+        if (shadowVolume) {
+            options.vertexFormat = VertexFormat.clone(vertexFormat, scratchVertexFormat);
+            options.vertexFormat.normal = true;
+        }
         var topBottomGeo = constructRectangle(options);
         if (CesiumMath.equalsEpsilon(minHeight, maxHeight, CesiumMath.EPSILON10)) {
             return topBottomGeo;
         }
+
         var topPositions = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo.attributes.position.values, maxHeight, ellipsoid, false);
         topPositions = new Float64Array(topPositions);
         var length = topPositions.length;
@@ -356,28 +363,14 @@ define([
         positions.set(bottomPositions, length);
         topBottomGeo.attributes.position.values = positions;
 
-        var isBottom = new Uint8Array(newLength / 3);
-        if (typeof Uint8Array.prototype.fill === 'function') {
-            isBottom.fill(1, length / 3);
-        } else { //IE doesn't support fill
-            for (i = length / 3; i < newLength / 3; i++) {
-                isBottom[i] = 1;
-            }
-        }
-
-        topBottomGeo.attributes.isBottom = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute : 1,
-            values : isBottom
-        });
-
         var normals = (vertexFormat.normal) ? new Float32Array(newLength) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(newLength) : undefined;
         var binormals = (vertexFormat.binormal) ? new Float32Array(newLength) : undefined;
         var textures = (vertexFormat.st) ? new Float32Array(newLength/3*2) : undefined;
         var topSt;
+        var topNormals;
         if (vertexFormat.normal) {
-            var topNormals = topBottomGeo.attributes.normal.values;
+            topNormals = topBottomGeo.attributes.normal.values;
             normals.set(topNormals);
             for (i = 0; i < length; i ++) {
                 topNormals[i] = -topNormals[i];
@@ -385,6 +378,21 @@ define([
             normals.set(topNormals, length);
             topBottomGeo.attributes.normal.values = normals;
         }
+        if (shadowVolume) {
+            topNormals = topBottomGeo.attributes.normal.values;
+            topBottomGeo.attributes.normal = undefined;
+            var extrudeNormals = new Float32Array(newLength);
+            for (i = 0; i < length; i ++) {
+                topNormals[i] = -topNormals[i];
+            }
+            extrudeNormals.set(topNormals, length); //only get normals for bottom layer that's going to be pushed down
+            topBottomGeo.attributes.extrudeDirection = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : extrudeNormals
+            });
+        }
+
         if (vertexFormat.tangent) {
             var topTangents = topBottomGeo.attributes.tangent.values;
             tangents.set(topTangents);
@@ -423,55 +431,88 @@ define([
         var wallCount = (perimeterPositions + 4) * 2;
 
         var wallPositions = new Float64Array(wallCount * 3);
-        var wallisBottom = new Uint8Array(wallCount);
+        var wallExtrudeNormals = shadowVolume ? new Float32Array(wallCount * 3) : undefined;
         var wallTextures = (vertexFormat.st) ? new Float32Array(wallCount * 2) : undefined;
 
         var posIndex = 0;
         var stIndex = 0;
-        var isBottomIndex = 0;
+        var extrudeNormalIndex = 0;
         var area = width * height;
+        var threeI;
         for (i = 0; i < area; i+=width) {
-            wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
+            threeI = i * 3;
+            wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
                 wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
             }
-            wallisBottom[isBottomIndex++] = 0;
-            wallisBottom[isBottomIndex++] = 1;
+            if (shadowVolume) {
+                wallExtrudeNormals[extrudeNormalIndex++] = 0;
+                wallExtrudeNormals[extrudeNormalIndex++] = 0;
+                wallExtrudeNormals[extrudeNormalIndex++] = 0;
+
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
+            }
         }
 
         for (i = area-width; i < area; i++) {
-            wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
+            threeI = i * 3;
+            wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
                 wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
             }
-            wallisBottom[isBottomIndex++] = 0;
-            wallisBottom[isBottomIndex++] = 1;
+            if (shadowVolume) {
+                wallExtrudeNormals[extrudeNormalIndex++] = 0;
+                wallExtrudeNormals[extrudeNormalIndex++] = 0;
+                wallExtrudeNormals[extrudeNormalIndex++] = 0;
+
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
+            }
         }
 
         for (i = area-1; i > 0; i-=width) {
-            wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
+            threeI = i * 3;
+            wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
                 wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
             }
-            wallisBottom[isBottomIndex++] = 0;
-            wallisBottom[isBottomIndex++] = 1;
+            if (shadowVolume) {
+                wallExtrudeNormals[extrudeNormalIndex++] = 0;
+                wallExtrudeNormals[extrudeNormalIndex++] = 0;
+                wallExtrudeNormals[extrudeNormalIndex++] = 0;
+
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
+            }
         }
 
         for (i = width-1; i >= 0; i--) {
-            wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
+            threeI = i * 3;
+            wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
                 wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
             }
-            wallisBottom[isBottomIndex++] = 0;
-            wallisBottom[isBottomIndex++] = 1;
+            if (shadowVolume) {
+                wallExtrudeNormals[extrudeNormalIndex++] = 0;
+                wallExtrudeNormals[extrudeNormalIndex++] = 0;
+                wallExtrudeNormals[extrudeNormalIndex++] = 0;
+
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
+            }
         }
 
         var geo = calculateAttributesWall(wallPositions, vertexFormat, ellipsoid);
@@ -483,11 +524,13 @@ define([
                 values : wallTextures
             });
         }
-        geo.attributes.isBottom = new GeometryAttribute({
-            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute: 1,
-            values: wallisBottom
-        });
+        if (shadowVolume) {
+            geo.attributes.extrudeDirection = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : wallExtrudeNormals
+            });
+        }
 
         var wallIndices = IndexDatatype.createTypedArray(wallCount, perimeterPositions * 6);
 
@@ -622,6 +665,7 @@ define([
         var extrude = defined(extrudedHeight);
         var closeTop = defaultValue(options.closeTop, true);
         var closeBottom = defaultValue(options.closeBottom, true);
+        var shadowVolume = defaultValue(options.shadowVolume, false);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
@@ -646,13 +690,14 @@ define([
         this._closeBottom = closeBottom;
         this._workerName = 'createRectangleGeometry';
         this._rotatedRectangle = computeRectangle(this._rectangle, this._ellipsoid, rotation);
+        this._shadowVolume = shadowVolume;
     }
 
     /**
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 8;
+    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 9;
 
     /**
      * Stores the provided instance into the provided array.
@@ -695,7 +740,8 @@ define([
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
-        array[startingIndex]   = value._closeBottom ? 1.0 : 0.0;
+        array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
+        array[startingIndex] = value._shadowVolume? 1.0 : 0.0;
 
         return array;
     };
@@ -714,7 +760,8 @@ define([
         stRotation : undefined,
         extrudedHeight : undefined,
         closeTop : undefined,
-        closeBottom : undefined
+        closeBottom : undefined,
+        shadowVolume: undefined
     };
 
     /**
@@ -753,7 +800,8 @@ define([
         var extrudedHeight = array[startingIndex++];
         var extrude = array[startingIndex++] === 1.0;
         var closeTop = array[startingIndex++] === 1.0;
-        var closeBottom = array[startingIndex] === 1.0;
+        var closeBottom = array[startingIndex++] === 1.0;
+        var shadowVolume = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
             scratchOptions.granularity = granularity;
@@ -763,6 +811,7 @@ define([
             scratchOptions.extrudedHeight = extrude ? extrudedHeight : undefined;
             scratchOptions.closeTop = closeTop;
             scratchOptions.closeBottom = closeBottom;
+            scratchOptions.shadowVolume = shadowVolume;
             return new RectangleGeometry(scratchOptions);
         }
 
@@ -778,6 +827,7 @@ define([
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;
         result._rotatedRectangle = rotatedRectangle;
+        result._shadowVolume = shadowVolume;
 
         return result;
     };
@@ -829,6 +879,7 @@ define([
         options.stRotation = stRotation;
         options.tangentRotationMatrix = tangentRotationMatrix;
         options.size = options.width * options.height;
+        options.shadowVolume = rectangleGeometry._shadowVolume;
 
         var geometry;
         var boundingSphere;
@@ -877,7 +928,8 @@ define([
             height : minHeight,
             closeTop : true,
             closeBottom : true,
-            vertexFormat : VertexFormat.POSITION_AND_NORMAL
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            shadowVolume: true
         });
     };
 

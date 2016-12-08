@@ -1478,11 +1478,11 @@ define([
             }
         }),
 
-        czm_LODNegativeGeometricToleranceOverDistance : new AutomaticUniform({
+        czm_geometricToleranceOverDistance : new AutomaticUniform({
             size: 1,
             datatype: WebGLConstants.FLOAT,
             getValue: function(uniformState) {
-                return -10000; //TODO
+                return uniformState.pixelSizePerMeter * uniformState.maximumScreenSpaceError;
             }
         })
     };
