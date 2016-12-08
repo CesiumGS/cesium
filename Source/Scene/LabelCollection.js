@@ -314,6 +314,7 @@ define([
 
         var scale = label._scale;
         var horizontalOrigin = label._horizontalOrigin;
+        var verticalOrigin = label._verticalOrigin;
         var widthOffset = 0;
         if (horizontalOrigin === HorizontalOrigin.CENTER) {
             widthOffset -= maxLineWidth / 2 * scale;
@@ -324,78 +325,63 @@ define([
         }
 
         var LEADING = 0.2*maxLineHeight; // Traditionally, leading is %20 of the font size.
-        var totalTextHeight = (maxLineHeight * numberOfLines) + (LEADING * (numberOfLines-1));
-
-        var topOffset = 0;
-        var verticalOrigin = label._verticalOrigin;
-        /*
-        var heightReference = label._heightReference;
-        var verticalOrigin = (heightReference === HeightReference.NONE) ? label._verticalOrigin : VerticalOrigin.BOTTOM;
-        if (verticalOrigin === VerticalOrigin.CENTER) {
-            topOffset += ((totalTextHeight / 2)  - (maxGlyphHeight/2))  * scale;
-        } else if (verticalOrigin === VerticalOrigin.BOTTOM) {
-            // Subtract maxGlyphHeight for backwards compatibility
-            topOffset += (totalTextHeight * scale) - maxGlyphHeight;
-        }
-        */
+        var otherLinesHeight = (maxLineHeight + LEADING) * (numberOfLines - 1);
 
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
 
-
         var glyphNewlineOffset = 0;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             if (text.charAt(glyphIndex) === '\n') {
-                glyphNewlineOffset += (maxLineHeight + LEADING) * scale;
+                glyphNewlineOffset += (maxLineHeight + LEADING);
                 glyphPixelOffset.x = widthOffset;
-                continue;
-            }
-
-            glyph = glyphs[glyphIndex];
-            dimensions = glyph.dimensions;
-
-            if (verticalOrigin === VerticalOrigin.BASELINE) {
-                glyphPixelOffset.y = topOffset - dimensions.descent * scale;
-            } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = topOffset - (maxGlyphY - dimensions.height + dimensions.descent + backgroundPadding.y) * scale;
-            } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                glyphPixelOffset.y = topOffset - (maxGlyphY - dimensions.height) / 2 * scale - dimensions.descent * scale;
             } else {
-                // VerticalOrigin.BOTTOM
-                glyphPixelOffset.y = topOffset + (maxGlyphDescent - dimensions.descent + backgroundPadding.y) * scale;
-            }
+                glyph = glyphs[glyphIndex];
+                dimensions = glyph.dimensions;
 
-            glyphPixelOffset.y -= glyphNewlineOffset;
-            glyphPixelOffset.y *= resolutionScale;
+                if (verticalOrigin === VerticalOrigin.TOP) {
+                    glyphPixelOffset.y = dimensions.height - maxGlyphY - backgroundPadding.y;
+                } else if (verticalOrigin === VerticalOrigin.CENTER) {
+                    glyphPixelOffset.y = (otherLinesHeight + dimensions.height - maxGlyphY) / 2;
+                } else if (verticalOrigin === VerticalOrigin.BASELINE) {
+                    glyphPixelOffset.y = otherLinesHeight;
+                } else {
+                    // VerticalOrigin.BOTTOM
+                    glyphPixelOffset.y = otherLinesHeight + maxGlyphDescent + backgroundPadding.y;
+                }
+                glyphPixelOffset.y = (glyphPixelOffset.y - dimensions.descent - glyphNewlineOffset) * scale * resolutionScale;
 
-            if (defined(glyph.billboard)) {
-                glyph.billboard._setTranslate(glyphPixelOffset);
-            }
+                if (defined(glyph.billboard)) {
+                    glyph.billboard._setTranslate(glyphPixelOffset);
+                }
 
-            //Compute the next x offset taking into acocunt the kerning performed
-            //on both the current letter as well as the next letter to be drawn
-            //as well as any applied scale.
-            if (glyphIndex < glyphLength - 1) {
-                var nextGlyph = glyphs[glyphIndex + 1];
-                glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale * resolutionScale;
+                //Compute the next x offset taking into acocunt the kerning performed
+                //on both the current letter as well as the next letter to be drawn
+                //as well as any applied scale.
+                if (glyphIndex < glyphLength - 1) {
+                    var nextGlyph = glyphs[glyphIndex + 1];
+                    glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale * resolutionScale;
+                }
             }
         }
 
         if (defined(backgroundBillboard) && (glyphLength > 0)) {
             glyphPixelOffset.x = (widthOffset - backgroundPadding.x * scale) * resolutionScale;
-            if (verticalOrigin === VerticalOrigin.BASELINE) {
-                glyphPixelOffset.y = -backgroundPadding.y * scale - maxGlyphDescent * scale;
-            } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = -(maxGlyphY - maxLineHeight) * scale - maxGlyphDescent * scale;
+
+            if (verticalOrigin === VerticalOrigin.TOP) {
+                glyphPixelOffset.y = maxLineHeight - maxGlyphY - maxGlyphDescent;
             } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                glyphPixelOffset.y = -(maxGlyphY - maxLineHeight) / 2 * scale - maxGlyphDescent * scale;
+                glyphPixelOffset.y = (maxLineHeight - maxGlyphY) / 2 - maxGlyphDescent;
+            } else if (verticalOrigin === VerticalOrigin.BASELINE) {
+                glyphPixelOffset.y = -backgroundPadding.y - maxGlyphDescent;
             } else {
                 // VerticalOrigin.BOTTOM
                 glyphPixelOffset.y = 0;
             }
-            glyphPixelOffset.y *= resolutionScale;
+            glyphPixelOffset.y = glyphPixelOffset.y * scale * resolutionScale;
+
             backgroundBillboard.width = maxLineWidth + (backgroundPadding.x * 2);
-            backgroundBillboard.height = maxLineHeight + (backgroundPadding.y * 2);
+            backgroundBillboard.height = maxLineHeight + otherLinesHeight + (backgroundPadding.y * 2);
             backgroundBillboard._setTranslate(glyphPixelOffset);
         }
     }
