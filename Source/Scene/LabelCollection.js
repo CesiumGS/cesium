@@ -137,7 +137,7 @@ define([
         // presize glyphs to match the new text length
         glyphs.length = textLength;
 
-        var showBackground = label._showBackground && (glyphs.length > 0);
+        var showBackground = label._showBackground && (text.split('\n').join('').length > 0);
         var backgroundBillboard = label._backgroundBillboard;
         var backgroundBillboardCollection = labelCollection._backgroundBillboardCollection;
         if (!showBackground) {
@@ -324,8 +324,9 @@ define([
             widthOffset += backgroundPadding.x * scale;
         }
 
-        var LEADING = 0.2*maxLineHeight; // Traditionally, leading is %20 of the font size.
-        var otherLinesHeight = (maxLineHeight + LEADING) * (numberOfLines - 1);
+        // TODO: New property Label.prototype.lineSpacing
+        var lineSpacing = 1.2 * maxLineHeight; // Traditionally, leading is %20 of the font size.
+        var otherLinesHeight = lineSpacing * (numberOfLines - 1);
 
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
@@ -333,7 +334,7 @@ define([
         var glyphNewlineOffset = 0;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             if (text.charAt(glyphIndex) === '\n') {
-                glyphNewlineOffset += (maxLineHeight + LEADING);
+                glyphNewlineOffset += lineSpacing;
                 glyphPixelOffset.x = widthOffset;
             } else {
                 glyph = glyphs[glyphIndex];
@@ -365,7 +366,7 @@ define([
             }
         }
 
-        if (defined(backgroundBillboard) && (glyphLength > 0)) {
+        if (defined(backgroundBillboard) && (text.split('\n').join('').length > 0)) {
             glyphPixelOffset.x = (widthOffset - backgroundPadding.x * scale) * resolutionScale;
 
             if (verticalOrigin === VerticalOrigin.TOP) {
