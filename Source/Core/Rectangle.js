@@ -741,8 +741,8 @@ define([
             rectangleWest += CesiumMath.TWO_PI;
         }
 
-        var west = CesiumMath.negativePiToPi(Math.min(rectangleWest, otherRectangleWest));
-        var east = CesiumMath.negativePiToPi(Math.max(rectangleEast, otherRectangleEast));
+        var west = CesiumMath.convertLongitudeRange(Math.min(rectangleWest, otherRectangleWest));
+        var east = CesiumMath.convertLongitudeRange(Math.max(rectangleEast, otherRectangleEast));
 
         result.west = west;
         result.south = Math.min(rectangle.south, otherRectangle.south);

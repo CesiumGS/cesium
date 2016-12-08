@@ -564,7 +564,7 @@ defineSuite([
         var rectangle2 = new Rectangle(0.4, 0.0, 0.85, 0.8);
         var expected = new Rectangle(0.4, 0.0, 0.85, 0.9);
         var returnedResult = Rectangle.union(rectangle1, rectangle2);
-        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+        expect(returnedResult).toEqual(expected);
     });
 
     it('union works with a result parameter', function() {
@@ -574,7 +574,7 @@ defineSuite([
         var result = new Rectangle(-1.0, -1.0, 10.0, 10.0);
         var returnedResult = Rectangle.union(rectangle1, rectangle2, result);
         expect(result).toBe(returnedResult);
-        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+        expect(returnedResult).toEqual(expected);
     });
 
     it('union works with first rectangle crossing the IDL', function() {
