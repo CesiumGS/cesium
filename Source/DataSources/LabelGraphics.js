@@ -35,6 +35,9 @@ define([
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the outline {@link Color}.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the outline width.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the label.
+     * @param {Property} [options.showBackground=true] A boolean Property specifying the visibility of the background behind the label.
+     * @param {Property} [options.backgroundColor=new Color(0.165, 0.165, 0.165, 0.8)] A Property specifying the background {@link Color}.
+     * @param {Property} [options.backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Property specifying the horizontal and vertical background padding in pixels.
      * @param {Property} [options.scale=1.0] A numeric Property specifying the scale to apply to the text.
      * @param {Property} [options.horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
      * @param {Property} [options.verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
@@ -74,6 +77,12 @@ define([
         this._scaleSubscription = undefined;
         this._show = undefined;
         this._showSubscription = undefined;
+        this._showBackground = undefined;
+        this._showBackgroundSubscription = undefined;
+        this._backgroundColor = undefined;
+        this._backgroundColorSubscription = undefined;
+        this._backgroundPadding = undefined;
+        this._backgroundPaddingSubscription = undefined;
         this._translucencyByDistance = undefined;
         this._translucencyByDistanceSubscription = undefined;
         this._pixelOffsetScaleByDistance = undefined;
@@ -234,6 +243,31 @@ define([
         show : createPropertyDescriptor('show'),
 
         /**
+         * Gets or sets the boolean Property specifying the visibility of the background behind the label.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        showBackground : createPropertyDescriptor('showBackground'),
+
+        /**
+         * Gets or sets the Property specifying the background {@link Color}.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         * @default new Color(0.165, 0.165, 0.165, 0.8)
+         */
+        backgroundColor : createPropertyDescriptor('backgroundColor'),
+
+        /**
+         * Gets or sets the {@link Cartesian2} Property specifying the label's horizontal and vertical
+         * background padding in pixels.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         * @default new Cartesian2(7, 5)
+         */
+        backgroundPadding : createPropertyDescriptor('backgroundPadding'),
+
+        /**
          * Gets or sets {@link NearFarScalar} Property specifying the translucency of the label based on the distance from the camera.
          * A label's translucency will interpolate between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
@@ -280,6 +314,9 @@ define([
         result.fillColor = this.fillColor;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
+        result.showBackground = this.showBackground;
+        result.backgroundColor = this.backgroundColor;
+        result.backgroundPadding = this.backgroundPadding;
         result.scale = this.scale;
         result.horizontalOrigin = this.horizontalOrigin;
         result.verticalOrigin = this.verticalOrigin;
@@ -312,6 +349,9 @@ define([
         this.fillColor = defaultValue(this.fillColor, source.fillColor);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+        this.showBackground = defaultValue(this.showBackground, source.showBackground);
+        this.backgroundColor = defaultValue(this.backgroundColor, source.backgroundColor);
+        this.backgroundPadding = defaultValue(this.backgroundPadding, source.backgroundPadding);
         this.scale = defaultValue(this.scale, source.scale);
         this.horizontalOrigin = defaultValue(this.horizontalOrigin, source.horizontalOrigin);
         this.verticalOrigin = defaultValue(this.verticalOrigin, source.verticalOrigin);
