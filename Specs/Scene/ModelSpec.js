@@ -235,9 +235,8 @@ defineSuite([
         expect(texturedBoxModel.debugShowBoundingVolume).toEqual(false);
         expect(texturedBoxModel.debugWireframe).toEqual(false);
         expect(texturedBoxModel.distanceDisplayCondition).toBeUndefined();
-        expect(texturedBoxModel.highlight).toEqual(false);
-        expect(texturedBoxModel.highlightSize).toEqual(2.0);
-        expect(texturedBoxModel.highlightColor).toEqual(new Color());
+        expect(texturedBoxModel.silhouetteColor).toEqual(Color.RED);
+        expect(texturedBoxModel.silhouetteSize).toEqual(0.0);
 
     });
 
