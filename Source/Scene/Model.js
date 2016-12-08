@@ -342,7 +342,7 @@ define([
         var cacheKey = options.cacheKey;
         this._cacheKey = cacheKey;
         this._cachedGltf = undefined;
-        this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
+        this._releaseGltfJson = true;//defaultValue(options.releaseGltfJson, false);
         this._animationIds = undefined;
 
         var cachedGltf;
@@ -1233,7 +1233,7 @@ define([
                     child._transformToRoot = getTransform(child);
                     Matrix4.multiplyTransformation(transformToRoot, child._transformToRoot, child._transformToRoot);
                     nodeStack.push(child);
-                }
+                } 
                 delete n._transformToRoot;
             }
         }
@@ -1791,6 +1791,8 @@ define([
         return shader;
     }
 
+	var useHashAlpha = true;
+	
     function createProgram(id, model, context) {
         var programs = model.gltf.programs;
         var shaders = model._loadResources.shaders;
@@ -1820,6 +1822,46 @@ define([
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(blendFS, id, model._fragmentShaderLoaded);
+
+	if (useHashAlpha) {
+	    drawFS = '#extension GL_OES_standard_derivatives : enable \n' +
+		ShaderSource.replaceMain(drawFS, 'hash_alpha_main');
+	    drawFS +=
+		'float hash( vec2 coord ) {\n' +
+		'    return fract( 1.0e4 * sin( 17.0*coord.x + 0.1*coord.y ) * \n' + 
+		'		( 0.1 + abs( sin( 13.0*coord.y + coord.x ))) \n' +
+		'               );\n' +
+	        '}\n';
+
+	    drawFS +=
+		'float g_HashScale = 1.0; \n' +
+		'void main() { \n' +
+		'    hash_alpha_main(); \n' +
+		'    float maxDeriv = max( length(dFdx(v_texcoord0)), \n' +
+		'		      length(dFdy(v_texcoord0)) ); \n' +
+		'    float pixScale = 1.0/(g_HashScale*maxDeriv); \n' +
+		'    vec2 pixScales = vec2( exp2(floor(log2(pixScale))), \n' +
+		'                           exp2(ceil(log2(pixScale))) ); \n' +
+		'    vec2 alpha=vec2(hash(floor(pixScales.x*v_texcoord0)), \n' +
+		'	             hash(floor(pixScales.y*v_texcoord0))); \n' +
+		'    float lerpFactor = fract( log2(pixScale) ); \n' +
+		'    float x = (1.0-lerpFactor)*alpha.x + lerpFactor*alpha.y; \n' +
+		'    float a = min( lerpFactor, 1.0-lerpFactor ); \n' +
+		'    vec3 cases = vec3( x*x/(2.0*a*(1.0-a)), \n' +
+		'	               (x-0.5*a)/(1.0-a), \n' +
+		'	               1.0-((1.0-x)*(1.0-x)/(2.0*a*(1.0-a))) ); \n' +
+		'    float alphaTau = (x < (1.0-a)) ? \n' +
+		'                    ((x < a) ? cases.x : cases.y) : \n' +
+		'                               cases.z; \n' +
+		'    alphaTau = clamp( alphaTau , 1.0e-6, 1.0 ); \n ' +
+		'    if (gl_FragColor.a < alphaTau) { \n' +
+		//'    if (gl_FragColor.a == 0.0) { \n' +
+		'        discard; \n' +
+		'    } \n' +
+	    	'} \n';
+
+	    useHashAlpha = !useHashAlpha;
+	}
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,

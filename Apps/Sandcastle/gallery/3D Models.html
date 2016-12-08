@@ -29,14 +29,15 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox : false,
-    selectionIndicator : false,
-    shadows : true
+    selectionIndicator : false//,
+    //shadows : true
 });
 
-function createModel(url, height) {
-    viewer.entities.removeAll();
+function createModel(url, height, offset) {
+    offset = Cesium.defaultValue(offset, Cesium.Cartesian2.ZERO);
+    //viewer.entities.removeAll();
 
-    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+    var position = Cesium.Cartesian3.fromDegrees(-123.0744619 + offset.x, 44.0503706 + offset.y, height);
     var heading = Cesium.Math.toRadians(135);
     var pitch = 0;
     var roll = 0;
@@ -53,13 +54,15 @@ function createModel(url, height) {
             maximumScale : 20000
         }
     });
-    viewer.trackedEntity = entity;
+viewer.trackedEntity = entity;
+    //viewer.zoomTo(entity);
 }
 
 var options = [{
     text : 'Aircraft',
     onselect : function() {
-        createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', 5000.0);
+        createModel('../../SampleData/models/tree_billboard.glb', 10.0);
+        createModel('../../SampleData/models/tree_billboard.glb', 10.0, new Cesium.Cartesian2(0.00015, 0.0));
     }
 }, {
     text : 'Ground vehicle',
