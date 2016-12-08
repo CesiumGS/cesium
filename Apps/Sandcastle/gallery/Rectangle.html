@@ -42,13 +42,29 @@ var redRectangle = viewer.entities.add({
 var greenRectangle = viewer.entities.add({
     name : 'Green translucent, rotated, and extruded rectangle at height with outline',
     rectangle : {
-        coordinates : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
+        coordinates : Cesium.Rectangle.fromDegrees(-110.0, 30.0, -100.0, 40.0),
         material : Cesium.Color.GREEN.withAlpha(0.5),
         rotation : Cesium.Math.toRadians(45),
         extrudedHeight : 300000.0,
         height : 100000.0,
         outline : true,
         outlineColor : Cesium.Color.GREEN
+    }
+});
+
+var rotation = Cesium.Math.toRadians(30);
+
+function getRotationValue() {
+    rotation += 0.005;
+    return rotation;
+}
+viewer.entities.add({
+    name: 'Rotating rectangle with rotating texture coordinate',
+    rectangle: {
+        coordinates: Cesium.Rectangle.fromDegrees(-92.0, 30.0, -76.0, 40.0),
+        material: '../images/Cesium_Logo_Color.jpg',
+        rotation: new Cesium.CallbackProperty(getRotationValue, false),
+        stRotation: new Cesium.CallbackProperty(getRotationValue, false)
     }
 });
 
