@@ -1155,7 +1155,7 @@ function createGalleryList() {
       }
     });
 
-    var helloWorldIndex = demoObjects.indexOf(helloWorld);
+    var helloWorldIndex = Math.max(demoObjects.indexOf(helloWorld), 0);
 
     var i;
     for (i = 0; i < demoObjects.length; ++i) {

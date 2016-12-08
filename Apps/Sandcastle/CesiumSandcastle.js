@@ -807,7 +807,7 @@ require({
                     appendConsole('consoleError', 'Error loading gallery, please run the build script.', true);
                 }
                 if (notFound) {
-                    appendConsole('consoleLog', 'Demo at ' + queryObject.src + ' was not found\n', true);
+                    appendConsole('consoleLog', 'Unable to load demo named ' + queryObject.src.replace('.html', '') + '\n', true);
                 }
             }
         } else if (Cesium.defined(e.data.log)) {
