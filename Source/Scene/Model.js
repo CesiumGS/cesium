@@ -35,7 +35,6 @@ define([
         '../Core/Transforms',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
-        '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
@@ -98,7 +97,6 @@ define([
         Transforms,
         Buffer,
         BufferUsage,
-        ClearCommand,
         DrawCommand,
         RenderState,
         Sampler,
@@ -3669,6 +3667,10 @@ define([
     var silhouettesLength = 0;
 
     function createSilhouetteCommands(model, frameState) {
+        // Wrap around after exceeding the 8-bit stencil limit.
+        // The reference is unique to each model until this point.
+        var stencilReference = (++silhouettesLength) % 255;
+
         // If the model is translucent the silhouette needs to be in the translucent pass.
         // Otherwise the silhouette would be rendered before the model.
         var silhouetteTranslucent = hasTranslucentCommands(model) || isTranslucent(model) || (model.silhouetteColor.alpha < 1.0);
@@ -3684,10 +3686,6 @@ define([
             var modelCommand = isTranslucent(model) ? nodeCommand.translucentCommand : command;
             var silhouetteModelCommand = DrawCommand.shallowClone(modelCommand);
             var renderState = clone(modelCommand.renderState);
-
-            // Wrap around after exceeding the 8-bit stencil limit.
-            // The reference is unique to each model until this point.
-            var stencilReference = (++silhouettesLength) % 255;
 
             // Write the reference value into the stencil buffer.
             renderState.stencilTest = {
