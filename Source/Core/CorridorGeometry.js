@@ -561,7 +561,7 @@ define([
 
     function computePositionsExtruded(params, vertexFormat) {
         var topVertexFormat = new VertexFormat({
-            position : vertexFormat.positon,
+            position : vertexFormat.position,
             normal : (vertexFormat.normal || vertexFormat.binormal),
             tangent : vertexFormat.tangent,
             binormal : (vertexFormat.normal || vertexFormat.binormal),
@@ -589,6 +589,26 @@ define([
         newPositions.set(extrudedPositions, length);
         newPositions.set(wallPositions, length * 2);
         attributes.position.values = newPositions;
+
+        var sectionLength = length / 3;
+        var isBottom = new Uint8Array(sectionLength * 6);
+        if (typeof Uint8Array.prototype.fill === 'function') {
+            isBottom.fill(1, sectionLength, sectionLength * 2);
+            isBottom.fill(1, sectionLength * 4);
+        } else { //IE doesn't support fill
+            for (i = sectionLength; i < sectionLength * 2; i++) {
+                isBottom[i] = 1;
+            }
+            for (i = sectionLength * 4; i < sectionLength * 6; i++) {
+                isBottom[i] = 1;
+            }
+        }
+
+        attributes.isBottom = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 1,
+            values : isBottom
+        });
 
         length /= 3;
         var i;

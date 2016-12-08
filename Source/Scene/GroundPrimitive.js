@@ -215,7 +215,11 @@ define([
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
 
-        this._uniformMap = {};
+        this._uniformMap = {
+            u_globeMinimumAltitude: function() {
+                return -11000; //TODO verify
+            }
+        };
 
         this._boundingVolumes = [];
         this._boundingVolumes2D = [];
@@ -252,7 +256,7 @@ define([
             releaseGeometryInstances : defaultValue(options.releaseGeometryInstances, true),
             allowPicking : defaultValue(options.allowPicking, true),
             asynchronous : defaultValue(options.asynchronous, true),
-            compressVertices : defaultValue(options.compressVertices, true),
+            compressVertices : false,//defaultValue(options.compressVertices, true),
             _readOnlyInstanceAttributes : readOnlyAttributes,
             _createRenderStatesFunction : undefined,
             _createShaderProgramFunction : undefined,

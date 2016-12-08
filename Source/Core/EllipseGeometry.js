@@ -229,6 +229,23 @@ define([
                 values : binormals
             });
         }
+
+        if (extrude) {
+            var isBottom = new Uint8Array(size);
+            if (typeof Uint8Array.prototype.fill === 'function') {
+                isBottom.fill(1, size / 2);
+            } else { //IE doesn't support fill
+                for (i = size / 2; i < size; i++) {
+                    isBottom[i] = 1;
+                }
+            }
+
+            attributes.isBottom = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values : isBottom
+            });
+        }
         return attributes;
     }
 
@@ -527,6 +544,22 @@ define([
                 values : binormals
             });
         }
+
+        var isBottom = new Uint8Array(size);
+        if (typeof Uint8Array.prototype.fill === 'function') {
+            isBottom.fill(1, size / 2);
+        } else { //IE doesn't support fill
+            for (i = size / 2; i < size; i++) {
+                isBottom[i] = 1;
+            }
+        }
+
+        attributes.isBottom = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 1,
+            values : isBottom
+        });
+
         return attributes;
     }
 

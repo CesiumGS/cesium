@@ -346,6 +346,7 @@ define([
     PolygonGeometryLibrary.computeWallGeometry = function(positions, ellipsoid, granularity, perPositionHeight) {
         var edgePositions;
         var topEdgeLength;
+        var positionLength;
         var i;
         var p1;
         var p2;
@@ -353,6 +354,7 @@ define([
         var length = positions.length;
         var index = 0;
 
+        var isBottom;
         if (!perPositionHeight) {
             var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
@@ -361,7 +363,8 @@ define([
                 numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
             }
 
-            topEdgeLength = (numVertices + length) * 3;
+            positionLength = numVertices + length;
+            topEdgeLength = positionLength * 3;
             edgePositions = new Array(topEdgeLength * 2);
             for (i = 0; i < length; i++) {
                 p1 = positions[i];
@@ -387,7 +390,8 @@ define([
                 ++index;
             }
         } else {
-            topEdgeLength = length * 3 * 2;
+            positionLength = length * 2;
+            topEdgeLength = positionLength * 3;
             edgePositions = new Array(topEdgeLength * 2);
             for (i = 0; i < length; i++) {
                 p1 = positions[i];
@@ -404,6 +408,15 @@ define([
                 ++index;
                 edgePositions[index] = edgePositions[index + topEdgeLength] = p2.z;
                 ++index;
+            }
+        }
+
+        isBottom = new Uint8Array(positionLength * 2);
+        if (typeof Uint8Array.prototype.fill === 'function') {
+            isBottom.fill(1, positionLength);
+        } else { //IE doesn't support fill
+            for (i = positionLength; i < positionLength * 2; i++) {
+                isBottom[i] = 1;
             }
         }
 
@@ -432,7 +445,7 @@ define([
             indices[edgeIndex++] = LR;
         }
 
-        return new Geometry({
+        var geometry = new Geometry({
             attributes : new GeometryAttributes({
                 position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.DOUBLE,
@@ -443,6 +456,13 @@ define([
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES
         });
+        geometry.attributes.isBottom = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 1,
+            values : isBottom
+        });
+
+        return geometry;
     };
 
     return PolygonGeometryLibrary;

@@ -356,6 +356,21 @@ define([
         positions.set(bottomPositions, length);
         topBottomGeo.attributes.position.values = positions;
 
+        var isBottom = new Uint8Array(newLength / 3);
+        if (typeof Uint8Array.prototype.fill === 'function') {
+            isBottom.fill(1, length / 3);
+        } else { //IE doesn't support fill
+            for (i = length / 3; i < newLength / 3; i++) {
+                isBottom[i] = 1;
+            }
+        }
+
+        topBottomGeo.attributes.isBottom = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 1,
+            values : isBottom
+        });
+
         var normals = (vertexFormat.normal) ? new Float32Array(newLength) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(newLength) : undefined;
         var binormals = (vertexFormat.binormal) ? new Float32Array(newLength) : undefined;
@@ -408,10 +423,12 @@ define([
         var wallCount = (perimeterPositions + 4) * 2;
 
         var wallPositions = new Float64Array(wallCount * 3);
+        var wallisBottom = new Uint8Array(wallCount);
         var wallTextures = (vertexFormat.st) ? new Float32Array(wallCount * 2) : undefined;
 
         var posIndex = 0;
         var stIndex = 0;
+        var isBottomIndex = 0;
         var area = width * height;
         for (i = 0; i < area; i+=width) {
             wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
@@ -420,6 +437,8 @@ define([
                 wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
             }
+            wallisBottom[isBottomIndex++] = 0;
+            wallisBottom[isBottomIndex++] = 1;
         }
 
         for (i = area-width; i < area; i++) {
@@ -429,6 +448,8 @@ define([
                 wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
             }
+            wallisBottom[isBottomIndex++] = 0;
+            wallisBottom[isBottomIndex++] = 1;
         }
 
         for (i = area-1; i > 0; i-=width) {
@@ -438,6 +459,8 @@ define([
                 wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
             }
+            wallisBottom[isBottomIndex++] = 0;
+            wallisBottom[isBottomIndex++] = 1;
         }
 
         for (i = width-1; i >= 0; i--) {
@@ -447,6 +470,8 @@ define([
                 wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
             }
+            wallisBottom[isBottomIndex++] = 0;
+            wallisBottom[isBottomIndex++] = 1;
         }
 
         var geo = calculateAttributesWall(wallPositions, vertexFormat, ellipsoid);
@@ -458,6 +483,11 @@ define([
                 values : wallTextures
             });
         }
+        geo.attributes.isBottom = new GeometryAttribute({
+            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute: 1,
+            values: wallisBottom
+        });
 
         var wallIndices = IndexDatatype.createTypedArray(wallCount, perimeterPositions * 6);
 
@@ -819,7 +849,7 @@ define([
         }
 
         return new Geometry({
-            attributes : new GeometryAttributes(geometry.attributes),
+            attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : geometry.primitiveType,
             boundingSphere : boundingSphere
@@ -847,7 +877,7 @@ define([
             height : minHeight,
             closeTop : true,
             closeBottom : true,
-            vertexFormat : VertexFormat.POSITION_ONLY
+            vertexFormat : VertexFormat.POSITION_AND_NORMAL
         });
     };
 

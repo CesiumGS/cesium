@@ -281,6 +281,7 @@ define([
             'st',
             'binormal',
             'tangent',
+            'isBottom',
 
             // From compressing texture coordinates and normals
             'compressedAttributes'

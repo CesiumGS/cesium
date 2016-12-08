@@ -363,14 +363,23 @@ define([
             var numPositions;
             var newIndices;
 
+            var isBottom;
             if (closeTop && closeBottom) {
                 var topBottomPositions = edgePoints.concat(edgePoints);
+                isBottom = new Uint8Array(topBottomPositions.length / 3);
+                if (typeof Uint8Array.prototype.fill === 'function') {
+                    isBottom.fill(1, isBottom.length / 2);
+                } else { //IE doesn't support fill
+                    for (i = isBottom.length / 2; i < isBottom.length; i++) {
+                        isBottom[i] = 1;
+                    }
+                }
+
                 numPositions = topBottomPositions.length / 3;
 
                 newIndices = IndexDatatype.createTypedArray(numPositions, indices.length * 2);
                 newIndices.set(indices);
                 var ilength = indices.length;
-
 
                 var length = numPositions / 2;
 
@@ -390,6 +399,11 @@ define([
                     topGeo.attributes.normal.values = new Float32Array(topBottomPositions.length);
                     topGeo.attributes.normal.values.set(normals);
                 }
+                topGeo.attributes.isBottom = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentsPerAttribute : 1,
+                    values : isBottom
+                });
                 topGeo.indices = newIndices;
             } else if (closeBottom) {
                 numPositions = edgePoints.length / 3;
