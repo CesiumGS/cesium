@@ -41,7 +41,7 @@ define([
      * @throws {DeveloperError}
      */
     Check.defined = function (test, name) {
-        if (test === undefined) {
+        if (!defined(test)) {
             throw new DeveloperError(errors.defined(name));
         }
     };
