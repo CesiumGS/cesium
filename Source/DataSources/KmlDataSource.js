@@ -2091,7 +2091,7 @@ define([
         GroundOverlay : processGroundOverlay,
         PhotoOverlay : processUnsupportedFeature,
         ScreenOverlay : processUnsupportedFeature,
-        Tour : porcessTour
+        Tour : processTour
     };
 
     function processTour(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
