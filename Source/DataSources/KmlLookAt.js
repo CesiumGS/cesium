@@ -31,6 +31,18 @@ define([
         this.range = defaultValue(options.range, 0);
     }
 
+    KmlLookAt.prototype.getBoundingSphere = function() {
+      var origin = Cartesian3.fromDegrees(this.longitude, this.latitude, this.altitude);
+      return new BoundingSphere(origin);
+    };
+
+    KmlLookAt.prototype.getHeadingPitchRangeCameraOffset = function() {
+      var heading = CesiumMath.toRadians(this.heading);
+      var pitch = CesiumMath.toRadians(this.tilt - 90);
+      var range = this.range;
+      return new HeadingPitchRange(heading, pitch, range);
+    };
+
     KmlLookAt.prototype.flyToMe = function(viewer) {
         var camera = (viewer && viewer.camera) ? viewer.camera : viewer;
         var heading = CesiumMath.toRadians(this.heading);

@@ -98,14 +98,12 @@ function FlyToPlayer(scene, done, context) {
 }
 
 FlyToPlayer.prototype.play = function() {
-  console.log(this.scene);
-  this.camera.flyTo({
-    destination : Cesium.Cartesian3.fromDegrees(-122.19, 46.25, 5000.0),
-    orientation : {
-        heading : Cesium.CesiumMath.toRadians(175.0),
-        pitch : Cesium.CesiumMath.toRadians(-35.0),
-        roll : 0.0
-    },
+  var lookAt = this.scene.lookAt;
+  var target = lookAt.getBoundingSphere();
+  var offset = lookAt.getHeadingPitchRangeCameraOffset();
+
+  this.camera.flyToBoundingSphere(target, {
+    offset: offset,
     duration: this.scene.duration,
     complete: this.done
   });
