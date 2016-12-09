@@ -4,14 +4,10 @@ function TourPlayer(viewer, datasource) {
   this.viewer = viewer;
   this.activeScenePlayer = null;
 
-  if(this.datasource.kml && this.datasource.kmlTour) {
+  if(this.datasource && this.datasource.kmlTour) {
     this.tour = this.datasource.kmlTour;
     this.playlist = this.tour.playlist;
   }
-
-  this.playEntry.bind(this);
-  this.playWait.bind(this);
-  this.playFlyTo.bind(this);
 
   this.players = {
     'Wait': WaitPlayer,
@@ -22,7 +18,7 @@ function TourPlayer(viewer, datasource) {
 TourPlayer.prototype.play = function(done) {
   if(this.playlist) {
     var self = this;
-    chainPlaylist(this.playlist, this.playEntry, function(){
+    chainPlaylist(this.playlist, this.playEntry.bind(this), function() {
       // Clean player
       self.activeScenePlayer = null;
       done && done();
@@ -50,20 +46,34 @@ function chainPlaylist(playlist, onEach, done) {
   var next = function(success) {
     if (success === undefined || success) {
       var entry = generator.next();
-      onEach(entry[0], entry[1], next);
+      if (!entry.done) {
+        var v = entry.value;
+        onEach(v[0], v[1], next);
+      }
+      // We've done
+      else {
+        cleanup();
+        done();
+      }
     }
+    // User brakes the loop
     else {
-      delete generator;
-      delete next;
-      return;
+      cleanup();
     }
+  }
+
+  // Make a first step
+  next();
+
+  function cleanup() {
+    delete generator;
+    delete next;
   }
 
   function* generate(playlist) {
     for (var i = 0; i < playlist.length; i++) {
-      yeld [playlist[i], i];
+      yield [playlist[i], i];
     }
-    done();
   }
 }
 
@@ -84,16 +94,19 @@ function FlyToPlayer(scene, done, context) {
   this.scene = scene;
   this.done = done;
   this.context = context;
-  this.camera = context.player.camera;
+  this.camera = context.player.viewer.camera;
 }
 
 FlyToPlayer.prototype.play = function() {
-  viewer.camera.flyTo({
+  console.log(this.scene);
+  this.camera.flyTo({
     destination : Cesium.Cartesian3.fromDegrees(-122.19, 46.25, 5000.0),
     orientation : {
-        heading : Cesium.Math.toRadians(175.0),
-        pitch : Cesium.Math.toRadians(-35.0),
+        heading : Cesium.CesiumMath.toRadians(175.0),
+        pitch : Cesium.CesiumMath.toRadians(-35.0),
         roll : 0.0
-    }
+    },
+    duration: this.scene.duration,
+    complete: this.done
   });
-}
+};

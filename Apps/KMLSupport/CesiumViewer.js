@@ -36,6 +36,11 @@ define([
         HeadingPitchRange) {
     'use strict';
 
+    // Expose some Cesium internals
+    window.Cesium = {};
+    window.Cesium.Cartesian3 = Cartesian3;
+    window.Cesium.CesiumMath = CesiumMath;
+
     /*
      * 'debug'  : true/false,   // Full WebGL error reporting at substantial performance cost.
      * 'lookAt' : CZML id,      // The CZML ID of the object to track at startup.
