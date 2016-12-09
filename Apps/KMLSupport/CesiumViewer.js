@@ -118,11 +118,8 @@ define([
 
         if (defined(loadPromise)) {
             viewer.dataSources.add(loadPromise).then(function(dataSource) {
-
-                console.log('loaded', dataSource);
-                console.log('loaded', dataSource.kmlTour);
-                //var player = new TourPlayer(viewer, dataSource);
-
+                var player = new TourPlayer(viewer, dataSource);
+                player.play();
             }).otherwise(function(error) {
                 showLoadError(source, error);
             });
