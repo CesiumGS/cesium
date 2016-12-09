@@ -108,39 +108,20 @@ define([
         } else if (/\.geojson$/i.test(source) || /\.json$/i.test(source) || /\.topojson$/i.test(source)) {
             loadPromise = GeoJsonDataSource.load(source);
         } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
-            loadPromise = KmlDataSource.load(source);
+            loadPromise = KmlDataSource.load(source, {
+                camera: scene.camera,
+                canvas: scene.canvas
+            });
         } else {
             showLoadError(source, 'Unknown format.');
         }
 
         if (defined(loadPromise)) {
             viewer.dataSources.add(loadPromise).then(function(dataSource) {
-                /*
-                var lookAt = endUserOptions.lookAt;
-                if (defined(lookAt)) {
-                    var entity = dataSource.entities.getById(lookAt);
-                    if (defined(entity)) {
-                        viewer.trackedEntity = entity;
-                    } else {
-                        var error = 'No entity with id "' + lookAt + '" exists in the provided data source.';
-                        showLoadError(source, error);
-                    }
-                } else if (!defined(view)) {
-                    viewer.flyTo(dataSource);
-                }*/
-                /*
-                var entries = dataSource.entities.values;
-                for(var i = 0; i < entries.length; i++) {
-                    if(entries[i].kml && entries[i].kml.lookAt) {
-                        window.setTimeout(function(){
-                            //buggy i is reference
-                            entries[i].kml.lookAt.flyToMe(viewer);
-                        }, 3000);
-                        break;
-                    }
-                }*/
 
-                var player = new TourPlayer(viewer, dataSource);
+                console.log('loaded', dataSource);
+                console.log('loaded', dataSource.kmlTour);
+                //var player = new TourPlayer(viewer, dataSource);
 
             }).otherwise(function(error) {
                 showLoadError(source, error);

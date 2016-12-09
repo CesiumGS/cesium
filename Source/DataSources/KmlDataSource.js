@@ -2094,7 +2094,7 @@ define([
         Tour : processTour
     };
 
-    function processTour(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+    function processTour(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
         var name = queryStringValue(node, 'name', namespaces.kml);
         var tour = {'name': name};
 
