@@ -12,7 +12,6 @@ define([
         '../Core/writeTextToCanvas',
         './BillboardCollection',
         './HorizontalOrigin',
-        './HeightReference',
         './Label',
         './LabelStyle',
         './TextureAtlas',
@@ -30,7 +29,6 @@ define([
         writeTextToCanvas,
         BillboardCollection,
         HorizontalOrigin,
-        HeightReference,
         Label,
         LabelStyle,
         TextureAtlas,
@@ -56,6 +54,9 @@ define([
         this.index = index;
         this.dimensions = dimensions;
     }
+
+    // Traditionally, leading is %20 of the font size.
+    var defaultLineSpacingPercent = 1.2;
 
     var whitePixelCanvasId = 'ID_WHITE_PIXEL';
     var whitePixelSize = new Cartesian2(4, 4);
@@ -324,8 +325,7 @@ define([
             widthOffset += backgroundPadding.x * scale;
         }
 
-        // TODO: New property Label.prototype.lineSpacing
-        var lineSpacing = 1.2 * maxLineHeight; // Traditionally, leading is %20 of the font size.
+        var lineSpacing = defaultLineSpacingPercent * maxLineHeight;
         var otherLinesHeight = lineSpacing * (numberOfLines - 1);
 
         glyphPixelOffset.x = widthOffset * resolutionScale;
