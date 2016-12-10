@@ -13,14 +13,21 @@ function TourPlayer(viewer, datasource) {
     'Wait': WaitPlayer,
     'FlyTo': FlyToPlayer
   };
+
+  this.tourStart = new Cesium.Event();
+  this.tourEnd = new Cesium.Event();
+  this.sceneStart = new Cesium.Event();
+  this.sceneEnd = new Cesium.Event();
 }
 
 TourPlayer.prototype.play = function(done) {
   if(this.playlist) {
     var self = this;
+    this.tourStart.raiseEvent();
     chainPlaylist(this.playlist, this.playEntry.bind(this), function() {
       // Clean player
       self.activeScenePlayer = null;
+      self.tourEnd.raiseEvent();
       done && done();
     });
   }
@@ -33,8 +40,15 @@ TourPlayer.prototype.playEntry = function(entry, index, next) {
     playlist: this.playlist,
     index: index
   };
-  this.activeScenePlayer = new PlayerConstructor(entry, next, context);
+
+  this.activeScenePlayer = new PlayerConstructor(entry, (function() {
+    this.sceneEnd.raiseEvent(entry._type, entry.duration);
+    next();
+  }).bind(this), context);
+
+  this.sceneStart.raiseEvent(entry._type, entry.duration);
   this.activeScenePlayer.play();
+
 };
 
 /*

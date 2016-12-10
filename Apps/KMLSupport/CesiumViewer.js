@@ -15,6 +15,7 @@ define([
         'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
         'Cesium/Widgets/Viewer/viewerDragDropMixin',
         'Cesium/Core/Color',
+        'Cesium/Core/Event',
         'Cesium/Core/HeadingPitchRange',
         'domReady!'
     ], function(
@@ -33,6 +34,7 @@ define([
         viewerCesiumInspectorMixin,
         viewerDragDropMixin,
         CesiumColor,
+        CesiumEvent,
         HeadingPitchRange) {
     'use strict';
 
@@ -40,6 +42,7 @@ define([
     window.Cesium = {};
     window.Cesium.Cartesian3 = Cartesian3;
     window.Cesium.CesiumMath = CesiumMath;
+    window.Cesium.Event = CesiumEvent;
 
     /*
      * 'debug'  : true/false,   // Full WebGL error reporting at substantial performance cost.
@@ -124,7 +127,26 @@ define([
         if (defined(loadPromise)) {
             viewer.dataSources.add(loadPromise).then(function(dataSource) {
                 var player = new TourPlayer(viewer, dataSource);
+
+                player.sceneStart.addEventListener(function(type, duration) {
+                  console.log('start', type, duration);
+                });
+
+                player.sceneEnd.addEventListener(function(type, duration) {
+                  console.log('end', type, duration);
+                });
+
+                player.tourStart.addEventListener(function() {
+                  console.log('Tour Start');
+                });
+
+                player.tourEnd.addEventListener(function() {
+                  console.log('Tour End');
+                });
+
                 player.play();
+
+
             }).otherwise(function(error) {
                 showLoadError(source, error);
             });
