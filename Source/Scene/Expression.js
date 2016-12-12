@@ -62,7 +62,7 @@ define([
         asin : Math.asin,
         atan : Math.atan,
         radians : CesiumMath.toRadians,
-        degrees : CesiumMath.toDegrees,
+        degrees : CesiumMath.toDegrees
     };
 
     /**
