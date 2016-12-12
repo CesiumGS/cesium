@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/defined',
         '../Renderer/ShaderSource'
     ], function(
-        defaultValue,
         defined,
         ShaderSource) {
     'use strict';

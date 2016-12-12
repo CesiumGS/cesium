@@ -2,18 +2,14 @@
 defineSuite([
         'Scene/CameraFlightPath',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Math',
-        'Core/Rectangle',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
         CameraFlightPath,
         Cartesian3,
-        Cartographic,
         CesiumMath,
-        Rectangle,
         OrthographicFrustum,
         SceneMode,
         createScene) {

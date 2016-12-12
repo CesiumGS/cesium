@@ -21,12 +21,10 @@ defineSuite([
         'Core/PrimitiveType',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Core/RuntimeError',
         'Core/ShowGeometryInstanceAttribute',
         'Core/Transforms',
         'Scene/Camera',
         'Scene/MaterialAppearance',
-        'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
         'Scene/SceneMode',
         'Specs/BadGeometry',
@@ -54,12 +52,10 @@ defineSuite([
         PrimitiveType,
         Rectangle,
         RectangleGeometry,
-        RuntimeError,
         ShowGeometryInstanceAttribute,
         Transforms,
         Camera,
         MaterialAppearance,
-        OrthographicFrustum,
         PerInstanceColorAppearance,
         SceneMode,
         BadGeometry,
@@ -1035,7 +1031,7 @@ defineSuite([
                 positions : []
             }),
             attributes : {
-                color : new ColorGeometryInstanceAttribute(1.0, 0.0, 1.0, 1.0),
+                color : new ColorGeometryInstanceAttribute(1.0, 0.0, 1.0, 1.0)
             },
             id : 'invalid'
         }));

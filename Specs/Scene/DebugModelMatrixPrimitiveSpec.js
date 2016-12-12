@@ -1,13 +1,11 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/DebugModelMatrixPrimitive',
-        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Matrix4',
         'Specs/createScene'
     ], function(
         DebugModelMatrixPrimitive,
-        Cartesian2,
         Cartesian3,
         Matrix4,
         createScene) {

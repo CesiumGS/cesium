@@ -917,7 +917,6 @@ define([
 
         source = ShaderSource.replaceMain(source, 'tile_main');
         source = source.replace(declaration, ''); // Remove uniform declaration for now so the replace below don't affect it
-        source = source.replace('void tile_main()', 'void tile_main(vec4 tile_diffuse)');
 
         // If the tile color is white, use the source color. This implies the feature has not been styled.
         // Highlight: tile_colorBlend is 0.0 and the source color is used
@@ -946,16 +945,19 @@ define([
             source = source.replace(regex, replaceDiffuse);
             setColor =
                 '    vec4 source = ' + sourceDiffuse + '; \n' +
-                '    vec4 diffuse = tile_diffuse_final(source, tile_featureColor); \n' +
-                '    tile_main(diffuse); \n';
+                '    tile_diffuse = tile_diffuse_final(source, tile_featureColor); \n' +
+                '    tile_main(); \n';
         } else if (type === 'sampler2D') {
             regex = new RegExp('texture2D\\(' + diffuseUniformName + '.*?\\)', 'g');
             source = source.replace(regex, 'tile_diffuse_final($&, tile_diffuse)');
-            setColor = '    tile_main(tile_featureColor); \n';
+            setColor =
+                '    tile_diffuse = tile_featureColor; \n' +
+                '    tile_main(); \n';
         }
 
         source =
             'uniform float tile_colorBlend; \n' +
+            'vec4 tile_diffuse = vec4(1.0); \n' +
             finalDiffuseFunction +
             declaration + '\n' +
             source + '\n' +

@@ -1,24 +1,20 @@
 /*global define*/
 define([
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
-        '../Renderer/Texture',
-        '../Shaders/PostProcessFilters/PassThrough'
+        '../Renderer/Texture'
     ], function(
         defined,
-        defineProperties,
         destroyObject,
         PixelFormat,
         Framebuffer,
         PixelDatatype,
         RenderState,
-        Texture,
-        PassThrough) {
+        Texture) {
     'use strict';
 
     /**

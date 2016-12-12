@@ -10,7 +10,6 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
         '../Core/isArray',
         '../Core/loadJson',
@@ -20,7 +19,6 @@ define([
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/RequestScheduler',
-        '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './ImageryProvider'
@@ -35,7 +33,6 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        freezeObject,
         GeographicTilingScheme,
         isArray,
         loadJson,
@@ -45,7 +42,6 @@ define([
         CesiumMath,
         Rectangle,
         RequestScheduler,
-        TileProviderError,
         WebMercatorTilingScheme,
         when,
         ImageryProvider) {

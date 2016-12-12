@@ -194,6 +194,7 @@ define([
          * of removing it and re-adding it to the collection.
          * @memberof Billboard.prototype
          * @type {Boolean}
+         * @default true
          */
         show : {
             get : function() {
@@ -468,7 +469,7 @@ define([
 
         /**
          * Gets or sets the horizontal origin of this billboard, which determines if the billboard is
-         * to the left, center, or right of its position.
+         * to the left, center, or right of its anchor position.
          * <br /><br />
          * <div align='center'>
          * <img src='images/Billboard.setHorizontalOrigin.png' width='400' height='300' /><br />
@@ -500,10 +501,10 @@ define([
 
         /**
          * Gets or sets the vertical origin of this billboard, which determines if the billboard is
-         * to the above, below, or at the center of its position.
+         * to the above, below, or at the center of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setVerticalOrigin.png' width='400' height='300' /><br />
+         * <img src='images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
          * </div>
          * @memberof Billboard.prototype
          * @type {VerticalOrigin}
@@ -1132,9 +1133,7 @@ define([
         return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
     };
 
-    var scratchCartesian2 = new Cartesian2();
     var scratchCartesian3 = new Cartesian3();
-    var scratchComputePixelOffset = new Cartesian2();
 
     // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, scene, result) {
@@ -1148,10 +1147,7 @@ define([
         }
 
         // Apply pixel offset
-        pixelOffset = Cartesian2.clone(pixelOffset, scratchComputePixelOffset);
-        var po = Cartesian2.multiplyByScalar(pixelOffset, scene.context.uniformState.resolutionScale, scratchCartesian2);
-        positionWC.x += po.x;
-        positionWC.y += po.y;
+        Cartesian2.add(positionWC, pixelOffset, positionWC);
 
         return positionWC;
     };
@@ -1227,7 +1223,7 @@ define([
         }
 
         var y = screenSpacePosition.y;
-        if (billboard.verticalOrigin === VerticalOrigin.TOP) {
+        if (billboard.verticalOrigin === VerticalOrigin.BOTTOM || billboard.verticalOrigin === VerticalOrigin.BASELINE) {
             y -= height;
         } else if (billboard.verticalOrigin === VerticalOrigin.CENTER) {
             y -= height * 0.5;

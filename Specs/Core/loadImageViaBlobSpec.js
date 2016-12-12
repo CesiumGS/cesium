@@ -1,11 +1,9 @@
 /*global defineSuite*/
 defineSuite([
         'Core/loadImageViaBlob',
-        'Core/defined',
         'ThirdParty/when'
     ], function(
         loadImageViaBlob,
-        defined,
         when) {
     'use strict';
 

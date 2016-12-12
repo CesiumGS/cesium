@@ -22,7 +22,6 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/Globe',
-        'Scene/PrimitiveCollection',
         'Scene/ShadowMode',
         'Specs/createDynamicProperty',
         'Specs/createScene'
@@ -49,7 +48,6 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         Globe,
-        PrimitiveCollection,
         ShadowMode,
         createDynamicProperty,
         createScene) {

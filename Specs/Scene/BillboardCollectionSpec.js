@@ -7,16 +7,11 @@ defineSuite([
         'Core/Cartesian3',
         'Core/CesiumTerrainProvider',
         'Core/Color',
-        'Core/defined',
-        'Core/defineProperties',
         'Core/DistanceDisplayCondition',
-        'Core/Ellipsoid',
-        'Core/Event',
         'Core/loadImage',
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Rectangle',
-        'Renderer/ContextLimits',
         'Scene/Billboard',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
@@ -35,16 +30,11 @@ defineSuite([
         Cartesian3,
         CesiumTerrainProvider,
         Color,
-        defined,
-        defineProperties,
         DistanceDisplayCondition,
-        Ellipsoid,
-        Event,
         loadImage,
         CesiumMath,
         NearFarScalar,
         Rectangle,
-        ContextLimits,
         Billboard,
         HeightReference,
         HorizontalOrigin,
@@ -73,13 +63,13 @@ defineSuite([
         camera = scene.camera;
 
         return when.join(
-            loadImage('./Data/Images/Green.png').then(function(result) {
+            loadImage('./Data/Images/Green2x2.png').then(function(result) {
                 greenImage = result;
             }),
-            loadImage('./Data/Images/Blue.png').then(function(result) {
+            loadImage('./Data/Images/Blue2x2.png').then(function(result) {
                 blueImage = result;
             }),
-            loadImage('./Data/Images/White.png').then(function(result) {
+            loadImage('./Data/Images/White2x2.png').then(function(result) {
                 whiteImage = result;
             }),
             loadImage('./Data/Images/Blue10x10.png').then(function(result) {
@@ -1164,14 +1154,14 @@ defineSuite([
 
         var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
         expect(bbox.x).toEqual(-halfWidth);
-        expect(bbox.y).toEqual(0);
+        expect(bbox.y).toEqual(-height);
         expect(bbox.width).toEqual(width);
         expect(bbox.height).toEqual(height);
 
         b.verticalOrigin = VerticalOrigin.TOP;
         bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
         expect(bbox.x).toEqual(-halfWidth);
-        expect(bbox.y).toEqual(-height);
+        expect(bbox.y).toEqual(0);
         expect(bbox.width).toEqual(width);
         expect(bbox.height).toEqual(height);
     });
@@ -1438,11 +1428,11 @@ defineSuite([
         scene.renderForSpecs();
 
         var one = billboards.add({
-            image : './Data/Images/Green.png'
+            image : './Data/Images/Green2x2.png'
         });
 
         expect(one.ready).toEqual(false);
-        expect(one.image).toEqual('./Data/Images/Green.png');
+        expect(one.image).toEqual('./Data/Images/Green2x2.png');
 
         return pollToPromise(function() {
             return one.ready;
@@ -1501,18 +1491,18 @@ defineSuite([
         scene.renderForSpecs();
 
         var one = billboards.add({
-            image : './Data/Images/Green.png'
+            image : './Data/Images/Green2x2.png'
         });
 
         expect(one.ready).toEqual(false);
-        expect(one.image).toEqual('./Data/Images/Green.png');
+        expect(one.image).toEqual('./Data/Images/Green2x2.png');
 
         return pollToPromise(function() {
             return one.ready;
         }).then(function() {
             expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
 
-            one.image = './Data/Images/Green.png';
+            one.image = './Data/Images/Green2x2.png';
 
             expect(one.ready).toEqual(true);
             expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
@@ -1571,7 +1561,7 @@ defineSuite([
 
         var one = billboards.add({
             image : './Data/Images/Red16x16.png',
-            imageSubRegion : new BoundingRectangle(0.0, 0.0, 1.0, 2.0)
+            imageSubRegion : new BoundingRectangle(0.0, 0.0, 2.0, 3.0)
         });
 
         expect(one.ready).toEqual(false);

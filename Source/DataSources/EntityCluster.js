@@ -3,54 +3,36 @@ define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/destroyObject',
         '../Core/EllipsoidalOccluder',
         '../Core/Event',
         '../Core/Matrix4',
         '../Scene/Billboard',
         '../Scene/BillboardCollection',
-        '../Scene/HeightReference',
-        '../Scene/HorizontalOrigin',
         '../Scene/Label',
         '../Scene/LabelCollection',
-        '../Scene/LabelStyle',
         '../Scene/PointPrimitive',
         '../Scene/PointPrimitiveCollection',
-        '../Scene/SceneTransforms',
-        '../Scene/VerticalOrigin',
-        '../ThirdParty/kdbush',
-        './Entity',
-        './Property'
+        '../ThirdParty/kdbush'
     ], function(
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
-        Color,
         defaultValue,
         defined,
         defineProperties,
-        destroyObject,
         EllipsoidalOccluder,
         Event,
         Matrix4,
         Billboard,
         BillboardCollection,
-        HeightReference,
-        HorizontalOrigin,
         Label,
         LabelCollection,
-        LabelStyle,
         PointPrimitive,
         PointPrimitiveCollection,
-        SceneTransforms,
-        VerticalOrigin,
-        kdbush,
-        Entity,
-        Property) {
+        kdbush) {
     'use strict';
 
     /**
@@ -166,7 +148,7 @@ define([
         cluster.label.show = true;
         cluster.label.text = numPoints.toLocaleString();
         cluster.billboard.position = cluster.label.position = cluster.point.position = position;
-        
+
         entityCluster._clusterEvent.raiseEvent(ids, cluster);
     }
 

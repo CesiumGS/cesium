@@ -2,13 +2,11 @@
 defineSuite([
         'Core/loadWithXhr',
         'Core/loadImage',
-        'Core/RequestErrorEvent',
-        'Core/RuntimeError'
+        'Core/RequestErrorEvent'
     ], function(
         loadWithXhr,
         loadImage,
-        RequestErrorEvent,
-        RuntimeError) {
+        RequestErrorEvent) {
     'use strict';
 
     it('throws with no url', function() {

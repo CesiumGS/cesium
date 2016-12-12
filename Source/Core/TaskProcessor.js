@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../ThirdParty/Uri',
         '../ThirdParty/when',
         './buildModuleUrl',
         './defaultValue',
@@ -12,7 +11,6 @@ define([
         './RuntimeError',
         'require'
     ], function(
-        Uri,
         when,
         buildModuleUrl,
         defaultValue,

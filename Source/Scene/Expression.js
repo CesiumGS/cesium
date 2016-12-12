@@ -45,6 +45,13 @@ define([
         }
     };
 
+    var binaryFunctions = {
+        atan2 : Math.atan2,
+        pow : Math.pow,
+        min : Math.min,
+        max : Math.max
+    };
+
     var unaryFunctions = {
         abs : Math.abs,
         sqrt : Math.sqrt,
@@ -275,7 +282,7 @@ define([
     function parseCall(expression, ast) {
         var args = ast.arguments;
         var call;
-        var val;
+        var val, left, right;
 
         // Member function calls
         if (ast.callee.type === 'MemberExpression') {
@@ -295,8 +302,8 @@ define([
                         return new Node(ExpressionNodeType.LITERAL_NULL, null);
                     }
                 }
-                var left = createRuntimeAst(expression, object);
-                var right = createRuntimeAst(expression, args[0]);
+                left = createRuntimeAst(expression, object);
+                right = createRuntimeAst(expression, args[0]);
                 return new Node(ExpressionNodeType.FUNCTION_CALL, call, left, right);
             } else if (call === 'toString') {
                 val = createRuntimeAst(expression, object);
@@ -378,6 +385,15 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (defined(binaryFunctions[call])) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 2 || args.length > 2) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly two arguments.');
+            }
+            //>>includeEnd('debug');
+            left = createRuntimeAst(expression, args[0]);
+            right = createRuntimeAst(expression, args[1]);
+            return new Node(ExpressionNodeType.BINARY, call, left, right);
         } else if (call === 'Boolean') {
             if (args.length === 0) {
                 return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
@@ -601,6 +617,8 @@ define([
                 node.evaluate = node._evaluateRegExpMatch;
             } else if (node._value === '!~') {
                 node.evaluate = node._evaluateRegExpNotMatch;
+            } else if (defined(binaryFunctions[node._value])) {
+                node.evaluate = getEvaluateBinaryFunction(node._value);
             }
         } else if (node._type === ExpressionNodeType.UNARY) {
             if (node._value === '!') {
@@ -657,6 +675,13 @@ define([
 
     function evaluateTime(frameState, feature) {
         return feature._content._tileset.timeSinceLoad;
+    }
+
+    function getEvaluateBinaryFunction(call) {
+        var evaluate = binaryFunctions[call];
+        return function(feature) {
+            return evaluate(this._left.evaluate(feature), this._right.evaluate(feature));
+        };
     }
 
     function getEvaluateUnaryFunction(call) {
@@ -1215,6 +1240,10 @@ define([
                     return '(' + left + ' == ' + right + ')';
                 } else if (value === '!==') {
                     return '(' + left + ' != ' + right + ')';
+                } else if (value === 'atan2') {
+                    return 'atan(' + left + ', ' + right + ')';
+                } else if (defined(binaryFunctions[value])) {
+                    return value + '(' + left + ', ' + right + ')';
                 }
                 return '(' + left + ' ' + value + ' ' + right + ')';
             case ExpressionNodeType.CONDITIONAL:
