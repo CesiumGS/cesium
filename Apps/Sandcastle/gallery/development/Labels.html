@@ -77,19 +77,27 @@ function inReferenceFrame() {
     labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
     labels.add({
         position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
-        text     : 'Center'
+        text : 'Center',
+        font : '13pt sans-serif',
+        showBackground : true
     });
     labels.add({
         position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
-        text     : 'East'
+        text : 'East',
+        font : '13pt sans-serif',
+        showBackground : true
     });
     labels.add({
         position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
-        text     : 'North'
+        text : 'North',
+        font : '13pt sans-serif',
+        showBackground : true
     });
     labels.add({
         position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
-        text     : 'Up'
+        text : 'Up',
+        font : '13pt sans-serif',
+        showBackground : true
     });
 }
 
@@ -108,8 +116,9 @@ function offsetByDistance() {
         var labels = scene.primitives.add(new Cesium.LabelCollection());
         labels.add({
             position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
-            text     : 'Label on top of scaling billboard',
+            text : 'Label on top of scaling billboard',
             font : '20px sans-serif',
+            showBackground : true,
             horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
             pixelOffset : new Cesium.Cartesian2(0.0, -image.height),
             pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)
