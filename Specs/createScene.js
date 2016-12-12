@@ -4,6 +4,7 @@ define([
         'Core/clone',
         'Core/defaultValue',
         'Core/defined',
+        'Core/defineProperties',
         'Scene/Scene',
         'Specs/createCanvas',
         'Specs/destroyCanvas'
@@ -12,18 +13,17 @@ define([
         clone,
         defaultValue,
         defined,
+        defineProperties,
         Scene,
         createCanvas,
         destroyCanvas) {
     'use strict';
 
-// TODO: expectRenderForSpecs that passes in time for ModelSpec.js and maybe others
-// TODO: expectRenderForSpecs for picking
+// TODO: ass in stub context from Spec directory so it's not included in release builds
+// TODO: use custom matcher
+// TODO: test with WebGL 2 now or later?
 // TODO: update https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/TestingGuide with when/why to use these
 //    * index.html and command line:  npm run test-webgl-stub
-// TODO: test with WebGL 2
-// TODO: this makes the WebGL category less useful, still keep it?
-// TODO: it would be nice to include this in release test builds, but not release builds
 
     function createScene(options) {
         options = defaultValue(options, {});
@@ -61,32 +61,6 @@ define([
             destroyCanvas(canvas);
         };
 
-        scene.expectRenderForSpecs = function(expectationCallbackOrExpectedRgba) {
-            this.initializeFrame();
-            this.render();
-            var rgba = this.context.readPixels();
-
-            // When the WebGL stub is used, all WebGL function calls are noops so
-            // the expectation is not verified.  This allows running all the WebGL
-            // tests, to exercise as much Cesium code as possible, even if the system
-            // doesn't have a WebGL implementation or a reliable one.
-            if (!webglStub) {
-                // Most tests want to compare the rendered rgba to a known rgba, but some
-                // only want to compare some rgba components or use a more complicated
-                // expectation.  These cases are handled with a callback.
-                if (expectationCallbackOrExpectedRgba instanceof Function) {
-                    return expectationCallbackOrExpectedRgba(rgba);
-                }
-
-                expect(rgba).toEqual(expectationCallbackOrExpectedRgba);
-            } else {
-                // To avoid Jasmine's spec has no expectations error
-                expect(true).toEqual(true);
-            }
-
-            return undefined;
-        };
-
         scene.renderForSpecs = function(time) {
             this.initializeFrame();
             this.render(time);
@@ -97,10 +71,102 @@ define([
             return this.pick(new Cartesian2(0, 0));
         };
 
+        scene.expectRender = function(time) {
+            scene.initializeFrame();
+            scene.render(time);
+            return new ExpectRenderStub(scene.context.readPixels(), webglStub);
+        };
+
+        scene.expectPick = function(callback) {
+            var result = this.pick(new Cartesian2(0, 0));
+            return new ExpectPickStub(result, webglStub)
+        };
+
         scene.rethrowRenderErrors = defaultValue(options.rethrowRenderErrors, true);
 
         return scene;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    function ExpectRenderStub(actualRgba, skipExpectation) {
+        this._actualRgba = actualRgba;
+        this._skipExpectation = skipExpectation;
+        this._not = undefined;
+    }
+
+    defineProperties(ExpectRenderStub.prototype, {
+        not : {
+            get : function() {
+                if (!defined(this._not)) {
+                    this._not = new NotExpectRenderStub(this._actualRgba, this._skipExpectation);
+                }
+
+                return this._not;
+            }
+        }
+    });
+
+    ExpectRenderStub.prototype.toEqual = function(expectedRgba) {
+        expectRenderForSpecs(this._actualRgba, expectedRgba, true, this._skipExpectation);
+    };
+
+    ExpectRenderStub.prototype.toCall = function(expectationCallback) {
+        expectRenderForSpecs(this._actualRgba, expectationCallback, true, this._skipExpectation);
+    };
+
+    function NotExpectRenderStub(actualRgba, skipExpectation) {
+        this._actualRgba = actualRgba;
+        this._skipExpectation = skipExpectation;
+    }
+
+    NotExpectRenderStub.prototype.toEqual = function(rgba) {
+        expectRenderForSpecs(this._actualRgba, rgba, false, this._skipExpectation);
+    };
+
+    function expectRenderForSpecs(actualRgba, expectationCallbackOrExpectedRgba, expectEqual, skipExpectation) {
+        // When the WebGL stub is used, all WebGL function calls are noops so
+        // the expectation is not verified.  This allows running all the WebGL
+        // tests, to exercise as much Cesium code as possible, even if the system
+        // doesn't have a WebGL implementation or a reliable one.
+        if (!skipExpectation) {
+            // Most tests want to compare the rendered rgba to a known rgba, but some
+            // only want to compare some rgba components or use a more complicated
+            // expectation.  These cases are handled with a callback.
+            if (expectationCallbackOrExpectedRgba instanceof Function) {
+                return expectationCallbackOrExpectedRgba(actualRgba);
+            }
+
+            if (expectEqual) {
+                expect(actualRgba).toEqual(expectationCallbackOrExpectedRgba);
+            } else {
+                expect(actualRgba).not.toEqual(expectationCallbackOrExpectedRgba);
+            }
+        } else {
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
+        }
+
+        return undefined;
+    }
+
+    function ExpectPickStub(result, skipExpectation) {
+        this._result = result;
+        this._skipExpectation = skipExpectation;
+    }
+
+    ExpectPickStub.prototype.toCall = function(callback) {
+        if (!this._skipExpectation) {
+            return callback(this._result);
+        }
+
+        // To avoid Jasmine's spec has no expectations error
+        expect(true).toEqual(true);
+
+        return undefined;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
 
     return createScene;
 });
