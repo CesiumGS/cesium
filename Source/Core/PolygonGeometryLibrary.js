@@ -354,7 +354,6 @@ define([
         var length = positions.length;
         var index = 0;
 
-        var isBottom;
         if (!perPositionHeight) {
             var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
@@ -411,15 +410,6 @@ define([
             }
         }
 
-        isBottom = new Uint8Array(positionLength * 2);
-        if (typeof Uint8Array.prototype.fill === 'function') {
-            isBottom.fill(1, positionLength);
-        } else { //IE doesn't support fill
-            for (i = positionLength; i < positionLength * 2; i++) {
-                isBottom[i] = 1;
-            }
-        }
-
         length = edgePositions.length;
         var indices = IndexDatatype.createTypedArray(length / 3, length - positions.length * 6);
         var edgeIndex = 0;
@@ -445,7 +435,7 @@ define([
             indices[edgeIndex++] = LR;
         }
 
-        var geometry = new Geometry({
+        return new Geometry({
             attributes : new GeometryAttributes({
                 position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.DOUBLE,
@@ -456,13 +446,6 @@ define([
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES
         });
-        geometry.attributes.isBottom = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute : 1,
-            values : isBottom
-        });
-
-        return geometry;
     };
 
     return PolygonGeometryLibrary;

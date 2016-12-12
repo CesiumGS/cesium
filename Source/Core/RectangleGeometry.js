@@ -380,7 +380,9 @@ define([
         }
         if (shadowVolume) {
             topNormals = topBottomGeo.attributes.normal.values;
-            topBottomGeo.attributes.normal = undefined;
+            if (!vertexFormat.normal) {
+                topBottomGeo.attributes.normal = undefined;
+            }
             var extrudeNormals = new Float32Array(newLength);
             for (i = 0; i < length; i ++) {
                 topNormals[i] = -topNormals[i];
@@ -655,17 +657,6 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var rectangle = options.rectangle;
-        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var surfaceHeight = defaultValue(options.height, 0.0);
-        var rotation = defaultValue(options.rotation, 0.0);
-        var stRotation = defaultValue(options.stRotation, 0.0);
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        var extrudedHeight = options.extrudedHeight;
-        var extrude = defined(extrudedHeight);
-        var closeTop = defaultValue(options.closeTop, true);
-        var closeBottom = defaultValue(options.closeBottom, true);
-        var shadowVolume = defaultValue(options.shadowVolume, false);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
@@ -678,19 +669,19 @@ define([
         //>>includeEnd('debug');
 
         this._rectangle = rectangle;
-        this._granularity = granularity;
-        this._ellipsoid = Ellipsoid.clone(ellipsoid);
-        this._surfaceHeight = surfaceHeight;
-        this._rotation = rotation;
-        this._stRotation = stRotation;
-        this._vertexFormat = VertexFormat.clone(vertexFormat);
-        this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
-        this._extrude = extrude;
-        this._closeTop = closeTop;
-        this._closeBottom = closeBottom;
+        this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
+        this._surfaceHeight = defaultValue(options.height, 0.0);
+        this._rotation = defaultValue(options.rotation, 0.0);
+        this._stRotation = defaultValue(options.stRotation, 0.0);
+        this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
+        this._extrudedHeight = defaultValue(options.extrudedHeight, 0.0);
+        this._extrude = defined(options.extrudedHeight);
+        this._closeTop = defaultValue(options.closeTop, true);
+        this._closeBottom = defaultValue(options.closeBottom, true);
+        this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createRectangleGeometry';
         this._rotatedRectangle = computeRectangle(this._rectangle, this._ellipsoid, rotation);
-        this._shadowVolume = shadowVolume;
     }
 
     /**
@@ -741,7 +732,7 @@ define([
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
         array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
-        array[startingIndex] = value._shadowVolume? 1.0 : 0.0;
+        array[startingIndex] = value._shadowVolume ? 1.0 : 0.0;
 
         return array;
     };
@@ -879,12 +870,12 @@ define([
         options.stRotation = stRotation;
         options.tangentRotationMatrix = tangentRotationMatrix;
         options.size = options.width * options.height;
-        options.shadowVolume = rectangleGeometry._shadowVolume;
 
         var geometry;
         var boundingSphere;
         rectangle = rectangleGeometry._rectangle;
         if (extrude) {
+            options.shadowVolume = rectangleGeometry._shadowVolume;
             geometry = constructExtrudedRectangle(options);
             var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
             var bottomBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, extrudedHeight, bottomBoundingSphere);

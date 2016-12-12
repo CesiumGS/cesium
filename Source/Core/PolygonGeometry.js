@@ -134,6 +134,7 @@ define([
             var top = options.top || wall;
             var bottom = options.bottom || wall;
             var perPositionHeight = options.perPositionHeight;
+            var shadowVolume = options.shadowVolume;
 
             var origin = appendTextureCoordinatesOrigin;
             origin.x = boundingRectangle.x;
@@ -153,6 +154,7 @@ define([
             }
             var tangents = vertexFormat.tangent ? new Float32Array(length) : undefined;
             var binormals = vertexFormat.binormal ? new Float32Array(length) : undefined;
+            var extrudeNormals = shadowVolume ? new Float32Array(length) : undefined;
 
             var textureCoordIndex = 0;
             var attrIndex = 0;
@@ -198,7 +200,7 @@ define([
                     textureCoordIndex += 2;
                 }
 
-                if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal || shadowVolume) {
                     var attrIndex1 = attrIndex + 1;
                     var attrIndex2 = attrIndex + 2;
 
@@ -264,6 +266,15 @@ define([
                             normals[attrIndex1] = normal.y;
                             normals[attrIndex2] = normal.z;
                         }
+                    }
+
+                    if (shadowVolume) {
+                        if (wall) {
+                            normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+                        }
+                        extrudeNormals[attrIndex + bottomOffset] = -normal.x;
+                        extrudeNormals[attrIndex1 + bottomOffset] = -normal.y;
+                        extrudeNormals[attrIndex2 + bottomOffset] = -normal.z;
                     }
 
                     if (vertexFormat.tangent) {
@@ -343,6 +354,14 @@ define([
                     values : binormals
                 });
             }
+
+            if (shadowVolume) {
+                geometry.attributes.extrudeDirection = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : extrudeNormals
+                });
+            }
         }
         return geometry;
     }
@@ -363,17 +382,8 @@ define([
             var numPositions;
             var newIndices;
 
-            var isBottom;
             if (closeTop && closeBottom) {
                 var topBottomPositions = edgePoints.concat(edgePoints);
-                isBottom = new Uint8Array(topBottomPositions.length / 3);
-                if (typeof Uint8Array.prototype.fill === 'function') {
-                    isBottom.fill(1, isBottom.length / 2);
-                } else { //IE doesn't support fill
-                    for (i = isBottom.length / 2; i < isBottom.length; i++) {
-                        isBottom[i] = 1;
-                    }
-                }
 
                 numPositions = topBottomPositions.length / 3;
 
@@ -399,11 +409,6 @@ define([
                     topGeo.attributes.normal.values = new Float32Array(topBottomPositions.length);
                     topGeo.attributes.normal.values.set(normals);
                 }
-                topGeo.attributes.isBottom = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                    componentsPerAttribute : 1,
-                    values : isBottom
-                });
                 topGeo.indices = newIndices;
             } else if (closeBottom) {
                 numPositions = edgePoints.length / 3;
@@ -593,6 +598,7 @@ define([
         this._closeBottom = defaultValue(options.closeBottom, true);
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
+        this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createPolygonGeometry';
 
         var positions = polygonHierarchy.positions;
@@ -606,7 +612,7 @@ define([
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 9;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 10;
     }
 
     /**
@@ -707,6 +713,7 @@ define([
         array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
         array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
         array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
+        array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
         array[startingIndex] = value.packedLength;
 
         return array;
@@ -758,6 +765,7 @@ define([
         var perPositionHeight = array[startingIndex++] === 1.0;
         var closeTop = array[startingIndex++] === 1.0;
         var closeBottom = array[startingIndex++] === 1.0;
+        var shadowVolume = array[startingIndex++] === 1.0;
         var packedLength = array[startingIndex];
 
         if (!defined(result)) {
@@ -776,6 +784,7 @@ define([
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;
         result._rectangle = Rectangle.clone(rectangle);
+        result._shadowVolume = shadowVolume;
         result.packedLength = packedLength;
         return result;
     };
@@ -838,6 +847,7 @@ define([
         if (extrude) {
             options.top = closeTop;
             options.bottom = closeBottom;
+            options.shadowVolume = polygonGeometry._shadowVolume;
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
 
@@ -918,7 +928,8 @@ define([
             perPositionHeight : false,
             extrudedHeight : minHeight,
             height : maxHeight,
-            vertexFormat : VertexFormat.POSITION_ONLY
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            shadowVolume: true
         });
     };
 
