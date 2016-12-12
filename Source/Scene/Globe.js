@@ -433,35 +433,19 @@ define([
         var ray = scratchGetHeightRay;
         var surfaceNormal = ellipsoid.geodeticSurfaceNormal(cartesian, ray.direction);
 
-        // compute origin point
-
         // Try to find the intersection point between the surface normal and z-axis.
-        // Ellipsoid is a surface of revolution, so surface normal intersects the rotation axis (z-axis)
+        // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+        var rayOrigin = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesian, 11500.0, ray.origin);
 
-        // compute the magnitude required to bring surface normal to x=0, y=0, from cartesian
-        var magnitude;
 
-        // avoid dividing by zero
-        if (Math.abs(surfaceNormal.x) > CesiumMath.EPSILON16){
-            magnitude = cartesian.x / surfaceNormal.x;
-        } else if (Math.abs(surfaceNormal.y) > CesiumMath.EPSILON16){
-            magnitude = cartesian.y / surfaceNormal.y;
-        } else if (Math.abs(surfaceNormal.z) > CesiumMath.EPSILON16){ //surface normal is (0,0,1) | (0,0,-1) | (0,0,0)
-            magnitude = cartesian.z / surfaceNormal.z;
-        } else { //(0,0,0), just for case
-            magnitude = 0;
-        }
-
-        var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, magnitude, scratchGetHeightIntersection);
-        Cartesian3.subtract(cartesian, vectorToMinimumPoint, ray.origin);
-
-        // Theoretically, the intersection point can be outside the ellipsoid, so we have to check if the result's 'z' is inside the ellipsoid (with some buffer)
-        if (Math.abs(ray.origin.z) >= ellipsoid.radii.z -11500.0){
+        // Theoretically, not with Earth datums, the intersection point can be outside the ellipsoid
+        if (!defined(rayOrigin)){
             // intersection point is outside the ellipsoid, try other value
-            magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
+            // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+            var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
 
             // multiply by the *positive* value of the magnitude
-            vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchGetHeightIntersection);
+            var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchGetHeightIntersection);
             Cartesian3.subtract(cartesian, vectorToMinimumPoint, ray.origin);
         }
 

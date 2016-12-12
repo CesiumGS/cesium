@@ -610,64 +610,50 @@ define([
         return this._radii.toString();
     };
 
-    var vectorToZAxisScratch = new Cartesian3();
     /**
-     * Computes a ray which its direction is the geodetic surface normal at a position and its
-     * origin is the intersection of this normal with the z-axis.
+     * Computes a point which is the intersection of the surface normal with the z-axis.
      *
-     * There is no guarantee that the result would be inside the ellipsoid.
-     *
-     * @param {Cartesian3} position the position *on the surface of the ellipsoid*
-     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid for which to compute this ray
-     * @param {Ray} [result] The cartesian to which to copy the result, or undefined to create and
+     * @param {Cartesian3} position the position. must be on the surface of the ellipsoid.
+     * @param {Number} [buffer = 0.0] A buffer to subtract from the ellipsoid size when checking if the point is inside the ellipsoid.
+     *                                In earth case, with common earth datums, there is no need for this buffer since the intersection point is always (relatively) very close to the center.
+     *                                In WGS84 datum, intersection point is at max z = +-42841.31151331382 (0.673% of z-axis).
+     *                                Intersection point could be outside the ellipsoid if the ratio of MajorAxis / MinorAxis is bigger than the square root of 2
+     * @param {Cartesian} [result] The cartesian to which to copy the result, or undefined to create and
      *        return a new instance.
-     * @returns {Ray} the ray
+     * @returns {Cartesian | undefined} the intersection point if it's inside the ellipsoid, undefined otherwise
      *
      * @exception {DeveloperError} position is required.
      * @exception {DeveloperError} Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y).
-     * @exception {DeveloperError} Result is not on the z-axis. Please ensure that your input data is valid.
      */
-    Ellipsoid.prototype.getSurfaceNormalRayFromZAxis = function(position, ellipsoid, result) {
+
+    Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function(position, buffer, result) {
+
+        var ellipsoid = this;
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
-        if (defined(ellipsoid) && !CesiumMath.equalsEpsilon(ellipsoid.radii.x, ellipsoid.radii.y, CesiumMath.EPSILON15)) {
+        if (!CesiumMath.equalsEpsilon(ellipsoid.radii.x, ellipsoid.radii.y, CesiumMath.EPSILON15)) {
             throw new DeveloperError('Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)');
         }
         //>>includeEnd('debug');
 
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        buffer = defaultValue(buffer, 0.0);
+
+        var sqauredAOverSquaredB = ellipsoid.radiiSquared.x / ellipsoid.radiiSquared.z;
 
         if (!defined(result)){
-            result = new Ray();
+            result = new Cartesian3();
         }
 
-        var surfaceNormal = ellipsoid.geodeticSurfaceNormal(position, result.direction);
-
-        // compute the magnitude required to bring surface normal to x=0, y=0, from position
-        var magnitude;
-
-        // avoid dividing by zero
-        if (Math.abs(surfaceNormal.x) > CesiumMath.EPSILON16){
-            magnitude = cartesian.x / surfaceNormal.x;
-        } else if (Math.abs(surfaceNormal.y) > CesiumMath.EPSILON16){
-            magnitude = cartesian.y / surfaceNormal.y;
-        } else if (Math.abs(surfaceNormal.z) > CesiumMath.EPSILON16){ //surface normal is (0,0,1) | (0,0,-1) | (0,0,0)
-            magnitude = cartesian.z / surfaceNormal.z;
-        } else { //(0,0,0), just in case
-            magnitude = 0;
+        result.x = 0;
+        result.y = 0;
+        result.z = position.z * (1 - sqauredAOverSquaredB);
+        if (Math.abs(result.z) >= ellipsoid.radii.z - buffer){
+            return undefined;
         }
 
-        var vectorToZAxis = Cartesian3.multiplyByScalar(surfaceNormal, magnitude, vectorToZAxisScratch);
-        Cartesian3.subtract(position, vectorToZAxis, result.origin);
-
-        //>>includeStart('debug', pragmas.debug);
-        // sub millimeter accuracy
-        if (Math.abs(result.origin.x > CesiumMath.EPSILON4) || Math.abs(result.origin.y > CesiumMath.EPSILON4)){
-            throw new DeveloperError('Result is not on the z-axis. Please ensure that your input data is valid.');
-        }
-        //>>includeEnd('debug');
 
         return result;
     };
