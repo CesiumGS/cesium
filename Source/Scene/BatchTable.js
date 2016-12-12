@@ -9,6 +9,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/Math',
         '../Core/PixelFormat',
         '../Core/RuntimeError',
         '../Renderer/ContextLimits',
@@ -27,6 +28,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        CesiumMath,
         PixelFormat,
         RuntimeError,
         ContextLimits,
@@ -289,7 +291,7 @@ define([
             exponent = BIAS;
         } else {
             value = Math.abs(value);
-            exponent = Math.floor(Math.log10(value)) + 1.0;
+            exponent = Math.floor(CesiumMath.logBase(value, 10)) + 1.0;
             value = value / Math.pow(10.0, exponent);
         }
 
