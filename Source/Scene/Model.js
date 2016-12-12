@@ -328,7 +328,7 @@ define([
      * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
      * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
-     * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color.
+     * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
@@ -3663,7 +3663,6 @@ define([
         return (Math.floor(currAlpha) !== Math.floor(prevAlpha)) || (Math.ceil(currAlpha) !== Math.ceil(prevAlpha));
     }
 
-    // TODO : alternatively increment silhouette length as part of frame state and edit the model render states on the fly
     var silhouettesLength = 0;
 
     function createSilhouetteCommands(model, frameState) {
