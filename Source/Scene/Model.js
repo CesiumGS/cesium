@@ -3614,7 +3614,7 @@ define([
             'void main() \n' +
             '{ \n' +
             '    gltf_silhouette_main(); \n' +
-            '    vec3 n = normalize(czm_normal * ' + normalAttributeName + '); \n' +
+            '    vec3 n = normalize(czm_normal3D * ' + normalAttributeName + '); \n' +
             '    n.x *= czm_projection[0][0]; \n' +
             '    n.y *= czm_projection[1][1]; \n' +
             '    vec4 clip = gl_Position; \n' +
@@ -3647,7 +3647,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var nodeCommand = nodeCommands[i];
             var command = nodeCommand.command;
-            if (command.renderState.blending.enabled) {
+            if (command.pass === Pass.TRANSLUCENT) {
                 return true;
             }
         }
