@@ -612,6 +612,11 @@ define([
             var indexInClass = hierarchy.classIndexes[instanceIndex];
             var propertyValues = instanceClass.instances[name];
             if (defined(propertyValues)) {
+                //>>includeStart('debug', pragmas.debug);
+                if (instanceIndex !== batchId) {
+                    throw new DeveloperError('Inherited property "' + name + '" is read-only.');
+                }
+                //>>includeEnd('debug');
                 if (defined(propertyValues.typedArray)) {
                     setBinaryProperty(propertyValues, indexInClass, value);
                 } else {

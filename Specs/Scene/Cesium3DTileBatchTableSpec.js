@@ -780,15 +780,15 @@ defineSuite([
         doorFeature.setProperty('height', 10.0);
         expect(doorFeature.getProperty('height')).toBe(10.0);
 
-        // Sets class property.
+        // Sets class property
         doorFeature.setProperty('door_name', 'new_door');
         expect(doorFeature.getProperty('door_name')).toBe('new_door');
         expect(roofFeature.getProperty('door_name')).toBeUndefined();
 
-        // Sets inherited property. Check that both door and roof respond to the property change.
-        doorFeature.setProperty('building_name', 'new_building');
-        expect(doorFeature.getProperty('building_name')).toBe('new_building');
-        expect(roofFeature.getProperty('building_name')).toBe('new_building');
+        // Throws error when setting inherited property
+        expect(function() {
+            doorFeature.setProperty('building_name', 'new_building');
+        }).toThrowDeveloperError();
 
         // Check properties when there is no hierarchy
         batchTable._batchTableHierarchy = undefined;
