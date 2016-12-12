@@ -363,7 +363,7 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'getClassName') {
+        } else if (call === 'getExactClassName') {
             //>>includeStart('debug', pragmas.debug);
             if (args.length > 0) {
                 throw new DeveloperError('Error: ' + call + ' does not take any argument.');
@@ -617,8 +617,8 @@ define([
                 node.evaluate = node._evaluateIsExactClass;
             } else if (node._value === 'isClass') {
                 node.evaluate = node._evaluateIsClass;
-            } else if (node._value === 'getClassName') {
-                node.evaluate = node._evaluateGetClassName;
+            } else if (node._value === 'getExactClassName') {
+                node.evaluate = node._evaluategetExactClassName;
             } else if (defined(unaryFunctions[node._value])) {
                 node.evaluate = getEvaluateUnaryFunction(node._value);
             } else if (node._value === 'Boolean') {
@@ -971,8 +971,8 @@ define([
         return feature.isClass(this._left.evaluate(frameState, feature));
     };
 
-    Node.prototype._evaluateGetClassName = function(frameState, feature) {
-        return feature.getClassName();
+    Node.prototype._evaluategetExactClassName = function(frameState, feature) {
+        return feature.getExactClassName();
     };
 
     Node.prototype._evaluateBooleanConversion = function(frameState, feature) {
@@ -1202,7 +1202,7 @@ define([
                     return 'sqrt(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
-                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getClassName')) {
+                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {
                     throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
                 }
                 //>>includeEnd('debug');

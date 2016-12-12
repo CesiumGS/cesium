@@ -206,8 +206,9 @@ define([
     }
 
     //>>includeStart('debug', pragmas.debug);
+    var scratchValidateStack = [];
     function validateHierarchy(hierarchy) {
-        var stack = scratchStack;
+        var stack = scratchValidateStack;
         stack.length = 0;
 
         var classIds = hierarchy.classIds;
@@ -657,10 +658,10 @@ define([
         }
         //>>includeEnd('debug');
 
-        return (this.getClassName(batchId) === className);
+        return (this.getExactClassName(batchId) === className);
     };
 
-    Cesium3DTileBatchTable.prototype.getClassName = function(batchId) {
+    Cesium3DTileBatchTable.prototype.getExactClassName = function(batchId) {
         var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
@@ -689,17 +690,7 @@ define([
         //>>includeEnd('debug');
 
         var json = this.batchTableJson;
-        if (defined(json) && defined(json[name])) {
-            return true;
-        }
-
-        if (defined(this._batchTableHierarchy)) {
-            if (hasPropertyInHierarchy(this, batchId, name)) {
-                return true;
-            }
-        }
-
-        return false;
+        return (defined(json) && defined(json[name])) || (defined(this._batchTableHierarchy) && hasPropertyInHierarchy(this, batchId, name));
     };
 
     Cesium3DTileBatchTable.prototype.getPropertyNames = function(batchId) {

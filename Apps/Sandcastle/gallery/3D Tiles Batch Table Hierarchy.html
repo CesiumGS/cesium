@@ -29,12 +29,64 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 
+// In this demo doorknobs, doors, roofs, and walls are styled via the batch table hierarchy.
+// Since buildings and zones are not backed by geometry they are not styled directly. However
+// styles may be written that take building and zone properties into account.
+//
+// Hierarchy layout (doorknobs are children of doors):
+//
+//   zone0
+//     building0
+//       roof0
+//       wall0
+//       door0 - doorknob0
+//       door1 - doorknob1
+//       door2 - doorknob2
+//       door3 - doorknob3
+//     building1
+//       roof1
+//       wall1
+//       door4 - doorknob4
+//       door5 - doorknob5
+//       door6 - doorknob6
+//       door7 - doorknob7
+//     building2
+//       roof2
+//       wall2
+//       door8 - doorknob8
+//       door9 - doorknob9
+//       door10 - doorknob10
+//       door11 - doorknob11
+//
+// Class properties:
+//
+//   zone:
+//     * zone_building
+//     * zone_name
+//   building:
+//     * building_area
+//     * building_name
+//   wall:
+//     * wall_paint
+//     * wall_windows
+//     * wall_name
+//   roof:
+//     * roof_paint
+//     * roof_name
+//   door:
+//     * door_mass
+//     * door_width
+//     * door_name
+//   doorknob:
+//     * doorknob_size
+//     * doorknob_name
+
 var viewer = new Cesium.Viewer('cesiumContainer', {
     scene3DOnly : true
 });
 
 var scene = viewer.scene;
-var tilesetUrl = '../../../Specs/Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents';
+var tilesetUrl = '../../../Specs/Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy';
 var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
     url : tilesetUrl
 }));
@@ -84,6 +136,18 @@ addStyle('Color all features derived from door', {
     }
 });
 
+addStyle('Color features by class name', {
+    "color" : {
+        "expression" : "regExp('door(.*)').exec(getExactClassName())",
+        "conditions" : [
+            ["${expression} === 'knob'", "color('yellow')"],
+            ["${expression} === ''", "color('lime')"],
+            ["${expression} === null", "color('gray')"],
+            ["true", "color('blue'"]
+        ]
+    }
+});
+
 addStyle('Style by height', {
     "color" : {
         "conditions" : [
@@ -91,17 +155,6 @@ addStyle('Style by height', {
             ["${height} >= 6", "color('red')"],
             ["${height} >= 5", "color('orange')"],
             ["true", "color('blue')"]
-        ]
-    }
-});
-
-addStyle('Style by classifier', {
-    "color" : {
-        "conditions" : [
-            ["isClass('classifier_new') && isClass('classifier_old')", "color('purple')"],
-            ["isClass('classifier_new')", "color('red')"],
-            ["isClass('classifier_old')", "color('blue')"],
-            ["true", "color()"]
         ]
     }
 });
@@ -212,7 +265,7 @@ handler.setInputAction(function(movement) {
 
     var feature = current.feature;
     if (Cesium.defined(feature)) {
-        console.log('Class: ' + feature.getClassName());
+        console.log('Class: ' + feature.getExactClassName());
         console.log('Properties:');
         var propertyNames = feature.getPropertyNames();
         var length = propertyNames.length;

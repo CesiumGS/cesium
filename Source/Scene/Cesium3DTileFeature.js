@@ -240,8 +240,8 @@ define([
      *
      * @private
      */
-    Cesium3DTileFeature.prototype.getClassName = function() {
-        return this._batchTable.getClassName(this._batchId);
+    Cesium3DTileFeature.prototype.getExactClassName = function() {
+        return this._batchTable.getExactClassName(this._batchId);
     };
 
     return Cesium3DTileFeature;

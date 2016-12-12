@@ -48,7 +48,7 @@ defineSuite([
         return (this._className === className) || (this._inheritedClassName === className);
     };
 
-    MockFeature.prototype.getClassName = function() {
+    MockFeature.prototype.getExactClassName = function() {
         return this._className;
     };
 
@@ -892,16 +892,16 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('evaluates getClassName function', function() {
+    it('evaluates getExactClassName function', function() {
         var feature = new MockFeature();
         feature.setClass('door');
-        var expression = new Expression('getClassName()');
+        var expression = new Expression('getExactClassName()');
         expect(expression.evaluate(frameState, feature)).toEqual('door');
     });
 
-    it('throws if getClassName takes an invalid number of arguments', function() {
+    it('throws if getExactClassName takes an invalid number of arguments', function() {
         expect(function() {
-            return new Expression('getClassName("door")');
+            return new Expression('getExactClassName("door")');
         }).toThrowDeveloperError();
     });
 
@@ -1989,8 +1989,8 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws when getting shader expression for getClassName', function() {
-        var expression = new Expression('getClassName()');
+    it('throws when getting shader expression for getExactClassName', function() {
+        var expression = new Expression('getExactClassName()');
         expect(function() {
             return expression.getShaderExpression('', {});
         }).toThrowDeveloperError();
