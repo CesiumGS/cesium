@@ -50,6 +50,7 @@ define([
         '../ThirdParty/when',
         './BlendingState',
         './ColorBlendMode',
+        './getAttributeOrUniformBySemantic',
         './getBinaryAccessor',
         './HeightReference',
         './ModelAnimationCache',
@@ -112,6 +113,7 @@ define([
         when,
         BlendingState,
         ColorBlendMode,
+        getAttributeOrUniformBySemantic,
         getBinaryAccessor,
         HeightReference,
         ModelAnimationCache,
@@ -416,6 +418,7 @@ define([
          */
         this.silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
         this._silhouetteColor = new Color();
+        this._normalAttributeName = undefined;
 
         /**
          * The size of the silhouette in pixels.
@@ -3599,9 +3602,10 @@ define([
         }
     }
 
-    function createSilhouetteProgram(program, frameState) {
+    function createSilhouetteProgram(model, program, frameState) {
         var vs = program.vertexShaderSource.sources[0];
         var attributeLocations = program._attributeLocations;
+        var normalAttributeName = model._normalAttributeName;
 
         // Modified from http://forum.unity3d.com/threads/toon-outline-but-with-diffuse-surface.24668/
         vs = ShaderSource.replaceMain(vs, 'gltf_silhouette_main');
@@ -3610,7 +3614,7 @@ define([
             'void main() \n' +
             '{ \n' +
             '    gltf_silhouette_main(); \n' +
-            '    vec3 n = normalize(v_normal); \n' +
+            '    vec3 n = normalize(czm_normal * ' + normalAttributeName + '); \n' +
             '    n.x *= czm_projection[0][0]; \n' +
             '    n.y *= czm_projection[1][1]; \n' +
             '    vec4 clip = gl_Position; \n' +
@@ -3634,7 +3638,7 @@ define([
     }
 
     function hasSilhouette(model, frameState) {
-        return silhouetteSupported(frameState.context) && (model.silhouetteSize > 0.0) && (model.silhouetteColor.alpha > 0.0);
+        return silhouetteSupported(frameState.context) && (model.silhouetteSize > 0.0) && (model.silhouetteColor.alpha > 0.0) && defined(model._normalAttributeName);
     }
 
     function hasTranslucentCommands(model) {
@@ -3755,7 +3759,7 @@ define([
             var id = getProgramId(model, program);
             var silhouetteProgram = silhouettePrograms[id];
             if (!defined(silhouetteProgram)) {
-                silhouetteProgram = createSilhouetteProgram(program, frameState);
+                silhouetteProgram = createSilhouetteProgram(model, program, frameState);
                 silhouettePrograms[id] = silhouetteProgram;
             }
 
@@ -4133,6 +4137,9 @@ define([
                 cachedResources.samplers = resources.samplers;
                 cachedResources.renderStates = resources.renderStates;
                 cachedResources.ready = true;
+
+                // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
+                this._normalAttributeName = getAttributeOrUniformBySemantic(this.gltf, 'NORMAL');
 
                 // Vertex arrays are unique to this model, do not store in cache.
                 if (defined(this._precreatedAttributes)) {
