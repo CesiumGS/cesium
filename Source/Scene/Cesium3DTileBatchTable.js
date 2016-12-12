@@ -491,8 +491,9 @@ define([
         }
     }
 
-    var scratchStack = [];
+    // The size of this array equals the maximum instance count among all loaded tiles, which has the potential to be large.
     var scratchVisited = [];
+    var scratchStack = [];
     var marker = 0;
     function traverseHierarchyMultipleParents(hierarchy, instanceIndex, endConditionCallback) {
         var classIds = hierarchy.classIds;
