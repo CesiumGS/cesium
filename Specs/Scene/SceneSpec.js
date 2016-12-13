@@ -165,10 +165,10 @@ defineSuite([
     });
 
     it('draws background color', function() {
-        scene.expectRender().toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.backgroundColor = Color.BLUE;
-        scene.expectRender().toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it('calls afterRender functions', function() {
@@ -239,7 +239,7 @@ defineSuite([
         scene.primitives.add(new CommandMockPrimitive(c));
         scene.depthTestAgainstTerrain = true;
 
-        scene.expectRender().toCall(function(rgba) {
+        expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);  // Red bounding sphere
         });
     });
@@ -290,10 +290,10 @@ defineSuite([
         rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
         scene.primitives.add(rectanglePrimitive);
-        scene.expectRender().toEqual([255, 0, 0, 255]);
+        expect(scene).toRender([255, 0, 0, 255]);
 
         scene.debugShowGlobeDepth = true;
-        scene.expectRender().toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.debugShowGlobeDepth = false;
     });
@@ -312,14 +312,14 @@ defineSuite([
         primitives.add(rectanglePrimitive2);
 
         scene.camera.setView({ destination : rectangle });
-        scene.expectRender().toCall(function(rgba) {
+        expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).not.toEqual(0);
             expect(rgba[2]).toEqual(0);
         });
 
         primitives.raiseToTop(rectanglePrimitive1);
-        scene.expectRender().toCall(function(rgba) {
+        expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).not.toEqual(0);
             expect(rgba[2]).toEqual(0);
@@ -340,14 +340,14 @@ defineSuite([
         primitives.add(rectanglePrimitive2);
 
         scene.camera.setView({ destination : rectangle });
-        scene.expectRender().toCall(function(rgba) {
+        expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).toEqual(0);
             expect(rgba[2]).toEqual(0);
         });
 
         primitives.raiseToTop(rectanglePrimitive1);
-        scene.expectRender().toCall(function(rgba) {
+        expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).toEqual(0);
             expect(rgba[2]).toEqual(0);
@@ -364,7 +364,7 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.camera.setView({ destination : rectangle });
-        scene.expectRender().toCall(function(rgba) {
+        expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).toEqual(0);
             expect(rgba[2]).toEqual(0);
@@ -382,7 +382,7 @@ defineSuite([
 
         scene.camera.setView({ destination : rectangle });
         scene.fxaa = false;
-        scene.expectRender().toCall(function(rgba) {
+        expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).toEqual(0);
             expect(rgba[2]).toEqual(0);
@@ -440,7 +440,7 @@ defineSuite([
 
         s.camera.setView({ destination : rectangle });
 
-        s.expectRender().toCall(function(rgba) {
+        expect(s).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).toEqual(0);
             expect(rgba[2]).toEqual(0);
@@ -484,7 +484,7 @@ defineSuite([
         // To avoid Jasmine's spec has no expectations error
         expect(true).toEqual(true);
 
-        return s.expectRender().toCall(function() {
+        return expect(s).toRenderAndCall(function() {
             return pollToPromise(function() {
                 render(s.frameState, s.globe);
                 return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
@@ -509,7 +509,7 @@ defineSuite([
 
                 s.camera.setView({ destination : rectangle });
 
-                s.expectRender().toCall(function(rgba) {
+                expect(s).toRenderAndCall(function(rgba) {
                     expect(rgba[0]).not.toEqual(0);
                     expect(rgba[1]).toEqual(0);
                     expect(rgba[2]).toEqual(0);
@@ -539,7 +539,7 @@ defineSuite([
 
             s.camera.setView({ destination : rectangle });
 
-            s.expectRender().toCall(function(rgba) {
+            expect(s).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).not.toEqual(0);
                 expect(rgba[1]).toEqual(0);
                 expect(rgba[2]).toEqual(0);
@@ -564,7 +564,7 @@ defineSuite([
             convert : false
         });
 
-        scene.expectRender().toCall(function(rgba) {
+        expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).toEqual(0);
             expect(rgba[2]).toEqual(0);
@@ -590,7 +590,7 @@ defineSuite([
             convert : false
         });
 
-        s.expectRender().toCall(function(rgba) {
+        expect(s).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).toEqual(0);
             expect(rgba[2]).toEqual(0);
@@ -614,12 +614,12 @@ defineSuite([
 
             var uniformState = scene.context.uniformState;
 
-            scene.expectRender().toCall(function(rgba) {
+            expect(scene).toRenderAndCall(function(rgba) {
                 expect(uniformState.globeDepthTexture).not.toBeDefined();
             });
 
             scene.copyGlobeDepth = true;
-            scene.expectRender().toCall(function(rgba) {
+            expect(scene).toRenderAndCall(function(rgba) {
                 expect(uniformState.globeDepthTexture).toBeDefined();
             });
         }
@@ -638,7 +638,7 @@ defineSuite([
         var canvas = scene.canvas;
         var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        scene.expectRender().toCall(function() {
+        expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
             expect(position).not.toBeDefined();
 
@@ -649,7 +649,7 @@ defineSuite([
             primitives.add(rectanglePrimitive);
         });
 
-        scene.expectRender().toCall(function() {
+        expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
             expect(position).toBeDefined();
         });
@@ -675,13 +675,13 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.useDepthPicking = false;
-        scene.expectRender().toCall(function() {
+        expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
             expect(position).not.toBeDefined();
         });
 
         scene.useDepthPicking = true;
-        scene.expectRender().toCall(function() {
+        expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
             expect(position).toBeDefined();
         });
