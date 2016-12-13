@@ -37,8 +37,60 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 
+/**
+ * This class is an example of a custom geocoder. It provides geocoding through the OpenStreetMap Nominatim service.
+ * @alias OpenStreetMapNominatimGeocoder
+ * @constructor
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Boolean} autoComplete Indicates whether this service shall be used to fetch auto-complete suggestions
+ */
+function OpenStreetMapNominatimGeocoder(options) {
+    options = Cesium.defaultValue(options, Cesium.defaultValue.EMPTY_OBJECT);
+    this.displayName = 'Nominatim';
+    this._canceled = false;
+    this.autoComplete = Cesium.defaultValue(options.autoComplete, true);
+}
+
+/**
+ * The function called when a user cancels geocoding.
+ *
+ * @returns {undefined}
+ */
+OpenStreetMapNominatimGeocoder.prototype.cancel = function() {
+    this._canceled = true;
+};
+
+/**
+ * The function called to geocode using this geocoder service.
+ *
+ * @param {String} query The query to be sent to the geocoder service
+ * @returns {Promise<GeocoderResult[]>}
+ */
+OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
+    var endpoint = 'http://nominatim.openstreetmap.org/search?';
+    var query = 'format=json&q=' + input;
+    var requestString = endpoint + query;
+    return Cesium.loadJson(requestString)
+        .then(function (results) {
+            var bboxDegrees;
+            return results.map(function (resultObject) {
+                bboxDegrees = resultObject.boundingbox;
+                return {
+                    displayName: resultObject.display_name,
+                    destination: Cesium.Rectangle.fromDegrees(
+                        bboxDegrees[2],
+                        bboxDegrees[0],
+                        bboxDegrees[3],
+                        bboxDegrees[1]
+                    )
+                };
+            });
+        });
+};
+
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    geocoder: new Cesium.OpenStreetMapNominatimGeocoderService()
+    geocoder: new OpenStreetMapNominatimGeocoder()
 });
 
 //Sandcastle_End
