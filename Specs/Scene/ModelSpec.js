@@ -817,7 +817,7 @@ defineSuite([
         cesiumAirModel.show = true;
         cesiumAirModel.zoomTo();
 
-        expect(scene).toPick(function(result) {
+        expect(scene).toPickAndCall(function(result) {
             expect(result.primitive).toEqual(cesiumAirModel);
             expect(result.id).toEqual(cesiumAirUrl);
             expect(result.node).toBeDefined();
@@ -838,7 +838,7 @@ defineSuite([
         cesiumAirModel.show = true;
         cesiumAirModel.zoomTo();
 
-        expect(scene).toPick(function(result) {
+        expect(scene).toPickAndCall(function(result) {
             expect(result.primitive).toEqual(cesiumAirModel);
             expect(result.id).toEqual('id');
         });
@@ -850,7 +850,7 @@ defineSuite([
     it('cesiumAir is not picked (show === false)', function() {
         cesiumAirModel.zoomTo();
 
-        expect(scene).toPick(function(result) {
+        expect(scene).toPickAndCall(function(result) {
             expect(result).not.toBeDefined();
         });
     });
@@ -1840,7 +1840,7 @@ defineSuite([
 
         return loadModelJson(texturedBoxModel.gltf, options).then(function(model) {
             model.show = true;
-            expect(scene).toPick(function(result) {
+            expect(scene).toPickAndCall(function(result) {
                 expect(result.custom).toEqual('custom');
             });
 

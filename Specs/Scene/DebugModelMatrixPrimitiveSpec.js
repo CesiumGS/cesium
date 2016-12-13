@@ -76,7 +76,7 @@ defineSuite([
             id : 'id'
         }));
 
-        expect(scene).toPick(function(result) {
+        expect(scene).toPickAndCall(function(result) {
             expect(result.primitive).toBe(p);
             expect(result.id).toBe('id');
         });

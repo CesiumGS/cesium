@@ -248,7 +248,7 @@ define([
                 };
             },
 
-            toPick : function(util, customEqualityTesters) {
+            toPickAndCall : function(util, customEqualityTesters) {
                 return {
                     compare: function(actual, expected) {
                         if (!webglStub) {
