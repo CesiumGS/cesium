@@ -10,7 +10,8 @@ define([
     'use strict';
 
     /**
-     * Provides geocoding through Bing Maps.
+     * Geocodes queries containing longitude and latitude coordinates and an optional height.
+     * Query format: `longitude latitude (height)` with longitude/latitude in degrees and height in meters.
      *
      * @alias CartographicGeocoderService
      * @constructor
