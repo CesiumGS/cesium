@@ -282,7 +282,8 @@ define([
             'binormal',
             'tangent',
 
-            'extrudeDirection', //TODO: do I need this?
+            // For shadow volumes
+            'extrudeDirection',
 
             // From compressing texture coordinates and normals
             'compressedAttributes'
@@ -1879,8 +1880,8 @@ define([
     var s1Scratch = new Cartesian2();
     var s2Scratch = new Cartesian2();
 
-    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex) {
-        if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords)) {
+    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex) {
+        if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords) && !defined(extrudeDirections)) {
             return;
         }
 
@@ -1903,6 +1904,29 @@ define([
             Cartesian3.normalize(normal, normal);
 
             Cartesian3.pack(normal, currentAttributes.normal.values, insertedIndex * 3);
+        }
+
+        if (defined(extrudeDirections)) {
+            var d0 = Cartesian3.fromArray(extrudeDirections, i0 * 3, p0Scratch);
+            var d1 = Cartesian3.fromArray(extrudeDirections, i1 * 3, p1Scratch);
+            var d2 = Cartesian3.fromArray(extrudeDirections, i2 * 3, p2Scratch);
+
+            Cartesian3.multiplyByScalar(d0, coords.x, d0);
+            Cartesian3.multiplyByScalar(d1, coords.y, d1);
+            Cartesian3.multiplyByScalar(d2, coords.z, d2);
+
+            var direction;
+            if (!Cartesian3.equals(d0, Cartesian3.ZERO) || !Cartesian3.equals(d1, Cartesian3.ZERO) || !Cartesian3.equals(d2, Cartesian3.ZERO)) {
+                direction = Cartesian3.add(d0, d1, d0);
+                Cartesian3.add(direction, d2, direction);
+                Cartesian3.normalize(direction, direction);
+            } else {
+                direction = p0Scratch;
+                direction.x = 0;
+                direction.y = 0;
+                direction.z = 0;
+            }
+            Cartesian3.pack(direction, currentAttributes.extrudeDirection.values, insertedIndex * 3);
         }
 
         if (defined(binormals)) {
@@ -1984,6 +2008,7 @@ define([
         var binormals = (defined(attributes.binormal)) ? attributes.binormal.values : undefined;
         var tangents = (defined(attributes.tangent)) ? attributes.tangent.values : undefined;
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
+        var extrudeDirections = (defined(attributes.extrudeDirection)) ? attributes.extrudeDirection.values : undefined;
         var indices = geometry.indices;
 
         var eastGeometry = copyGeometryForSplit(geometry);
@@ -2037,7 +2062,7 @@ define([
                     }
 
                     insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, resultIndex < 3 ? i + resultIndex : -1, point);
-                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
+                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
                 }
             } else {
                 if (defined(result)) {
@@ -2057,13 +2082,13 @@ define([
                 }
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i, p0);
-                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 1, p1);
-                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 2, p2);
-                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
             }
         }
 

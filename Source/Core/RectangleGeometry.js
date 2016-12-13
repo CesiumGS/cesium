@@ -668,11 +668,12 @@ define([
         }
         //>>includeEnd('debug');
 
+        var rotation = defaultValue(options.rotation, 0.0);
         this._rectangle = rectangle;
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._surfaceHeight = defaultValue(options.height, 0.0);
-        this._rotation = defaultValue(options.rotation, 0.0);
+        this._rotation = rotation;
         this._stRotation = defaultValue(options.stRotation, 0.0);
         this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
         this._extrudedHeight = defaultValue(options.extrudedHeight, 0.0);

@@ -217,7 +217,7 @@ define([
 
         this._uniformMap = {
             u_globeMinimumAltitude: function() {
-                return 1100.0; //TODO verify
+                return 33000.0;
             }
         };
 
@@ -256,7 +256,7 @@ define([
             releaseGeometryInstances : defaultValue(options.releaseGeometryInstances, true),
             allowPicking : defaultValue(options.allowPicking, true),
             asynchronous : defaultValue(options.asynchronous, true),
-            compressVertices : false,//defaultValue(options.compressVertices, true),
+            compressVertices : defaultValue(options.compressVertices, true),
             _readOnlyInstanceAttributes : readOnlyAttributes,
             _createRenderStatesFunction : undefined,
             _createShaderProgramFunction : undefined,

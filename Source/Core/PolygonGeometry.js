@@ -123,7 +123,8 @@ define([
     function computeAttributes(options) {
         var vertexFormat = options.vertexFormat;
         var geometry = options.geometry;
-        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+        var shadowVolume = options.shadowVolume;
+        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal || shadowVolume) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
             // PERFORMANCE_IDEA: Compute with createGeometryFromPositions() for fast path when there's no holes.
             var boundingRectangle = options.boundingRectangle;
@@ -134,7 +135,6 @@ define([
             var top = options.top || wall;
             var bottom = options.bottom || wall;
             var perPositionHeight = options.perPositionHeight;
-            var shadowVolume = options.shadowVolume;
 
             var origin = appendTextureCoordinatesOrigin;
             origin.x = boundingRectangle.x;

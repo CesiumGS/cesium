@@ -248,6 +248,7 @@ define([
                 values : extrudeNormals
             });
         }
+
         return attributes;
     }
 
@@ -390,6 +391,9 @@ define([
         var tangents = (vertexFormat.tangent) ? new Float32Array(size * 3) : undefined;
         var binormals = (vertexFormat.binormal) ? new Float32Array(size * 3) : undefined;
 
+        var shadowVolume = options.shadowVolume;
+        var extrudeNormals = (shadowVolume) ? new Float32Array(size * 3) : undefined;
+
         var textureCoordIndex = 0;
 
         // Raise positions to a height above the ellipsoid and compute the
@@ -440,6 +444,13 @@ define([
             position = ellipsoid.scaleToGeodeticSurface(position, position);
             extrudedPosition = Cartesian3.clone(position, scratchCartesian2);
             normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+
+            if (shadowVolume) {
+                extrudeNormals[i + length] = -normal.x;
+                extrudeNormals[i1 + length] = -normal.y;
+                extrudeNormals[i2 + length] = -normal.z;
+            }
+
             var scaledNormal = Cartesian3.multiplyByScalar(normal, height, scratchCartesian4);
             position = Cartesian3.add(position, scaledNormal, position);
             scaledNormal = Cartesian3.multiplyByScalar(normal, extrudedHeight, scaledNormal);
@@ -547,6 +558,14 @@ define([
             });
         }
 
+        if (shadowVolume) {
+            attributes.extrudeDirection = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : extrudeNormals
+            });
+        }
+
         return attributes;
     }
 
@@ -610,13 +629,6 @@ define([
         });
 
         var wallAttributes = computeWallAttributes(outerPositions, options);
-        if (options.shadowVolume) {
-            wallAttributes.extrudeDirection = new GeometryAttribute({
-                componentDatatype: ComponentDatatype.FLOAT,
-                componentsPerAttribute: 3,
-                values: topBottomAttributes.extrudeDirection.slice()
-            });
-        }
         indices = computeWallIndices(outerPositions);
         var wallIndices = IndexDatatype.createTypedArray(outerPositions.length * 2 / 3, indices);
 
