@@ -12,6 +12,7 @@ Change Log
 * Fixed texture rotation for `RectangleGeometry` [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
 * Added `WebGLConstants` enum.  Previously, this was part of the private Renderer API. [#4731](https://github.com/AnalyticalGraphicsInc/cesium/pull/4731)
 * Fixed an bug that caused `GroundPrimitive` to render incorrectly on systems without the `WEBGL_depth_texture` extension. [#4747](https://github.com/AnalyticalGraphicsInc/cesium/pull/4747)
+* Fixed default Mapbox token and added a watermark to notify users that they need to sign up for their own token.
 
 ### 1.28 - 2016-12-01
 
