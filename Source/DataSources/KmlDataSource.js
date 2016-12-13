@@ -213,6 +213,8 @@ define([
     var BILLBOARD_FAR_DISTANCE = 1.6093e+7;
     var BILLBOARD_FAR_RATIO = 0.1;
 
+    var FAIL_ON_NETWORK_LINK_CALL_FAILS = false;
+
     function isZipFile(blob) {
         var magicBlob = blob.slice(0, Math.min(4, blob.size));
         var deferred = when.defer();
@@ -2075,9 +2077,13 @@ define([
                     } else if (viewRefreshMode === 'onRegion'){
                         console.log('KML - Unsupported viewRefreshMode: onRegion');
                     }
+                }).otherwise(function(){
+                  console.log('KML - Failed to call NetworkLink');
                 });
 
-                promises.push(promise);
+                if (FAIL_ON_NETWORK_LINK_CALL_FAILS) {
+                  promises.push(promise);
+                }
             }
         }
     }
