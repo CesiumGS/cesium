@@ -14,6 +14,7 @@ define([
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
+        '../Core/WebGLConstants',
         '../Shaders/ViewportQuadVS',
         './BufferUsage',
         './ClearCommand',
@@ -27,8 +28,7 @@ define([
         './ShaderProgram',
         './Texture',
         './UniformState',
-        './VertexArray',
-        './WebGLConstants'
+        './VertexArray'
     ], function(
         clone,
         Color,
@@ -44,6 +44,7 @@ define([
         Matrix4,
         PrimitiveType,
         RuntimeError,
+        WebGLConstants,
         ViewportQuadVS,
         BufferUsage,
         ClearCommand,
@@ -57,8 +58,7 @@ define([
         ShaderProgram,
         Texture,
         UniformState,
-        VertexArray,
-        WebGLConstants) {
+        VertexArray) {
     'use strict';
     /*global WebGLRenderingContext*/
     /*global WebGL2RenderingContext*/
@@ -1101,7 +1101,7 @@ define([
      *
      * @example
      * var object = context.getObjectByPickColor(pickColor);
-     * 
+     *
      * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
@@ -1152,7 +1152,7 @@ define([
      *   primitive : this,
      *   id : this.id
      * });
-     * 
+     *
      * @see Context#getObjectByPickColor
      */
     Context.prototype.createPickId = function(object) {

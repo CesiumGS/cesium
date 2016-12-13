@@ -23,9 +23,9 @@ defineSuite([
         'Core/Matrix4',
         'Core/PrimitiveType',
         'Core/Transforms',
+        'Core/WebGLConstants',
         'Renderer/RenderState',
         'Renderer/ShaderSource',
-        'Renderer/WebGLConstants',
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
@@ -56,9 +56,9 @@ defineSuite([
         Matrix4,
         PrimitiveType,
         Transforms,
+        WebGLConstants,
         RenderState,
         ShaderSource,
-        WebGLConstants,
         ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
@@ -2050,7 +2050,7 @@ defineSuite([
                 scene.renderForSpecs();
                 expect(scene.globe.removedCallback).toEqual(true);
                 expect(scene.globe.callback).not.toBeDefined();
-                
+
                 primitives.remove(model);
             });
         });
