@@ -279,25 +279,18 @@ define([
     }
 
     function renderEquals(util, customEqualityTesters, actual, expected, expectEqual) {
-        var scene = actual;
-        scene.initializeFrame();
+        var scene;
 
-        var expectedRgba;
-        if (Array.isArray(expected) || (expected instanceof Uint8Array)) {
-            expectedRgba = expected;
-
-            scene.render();
-        } else if (defined(expected)) {
-            // expected might not actually be defined when the WebGL stub is used, e.g.,
-            // because it is set in a callback passed to toRenderAndCall that isn't called.
-
-            var options = expected;
-            expectedRgba = options.rgba;
-            if (!defined(expectedRgba)) {
-                throw new DeveloperError('toRender and notToRender matchers require options.rgba.');
-            }
-
+        if (defined(actual.scene) && defined(actual.time)) {
+            // options were passed to render the scene at a given time
+            var options = actual;
+            scene = actual.scene;
+            scene.initializeFrame();
             scene.render(options.time);
+        } else {
+            scene = actual;
+            scene.initializeFrame();
+            scene.render();
         }
 
         var actualRgba = scene.context.readPixels();
@@ -312,12 +305,12 @@ define([
             };
         }
 
-        var eq = equals(util, customEqualityTesters, actualRgba, expectedRgba);
+        var eq = equals(util, customEqualityTesters, actualRgba, expected);
         var pass = expectEqual ? eq : !eq;
 
         var message;
         if (!pass) {
-            message = 'Expected to render [' + expectedRgba + '], but actually rendered [' + actualRgba + '].';
+            message = 'Expected to render [' + expected + '], but actually rendered [' + actualRgba + '].';
         }
 
         return {

@@ -1208,16 +1208,16 @@ defineSuite([
 
             for (var i = 1; i < 4; ++i) {
                 var t = JulianDate.addSeconds(time, i, new JulianDate());
-                expect(scene).toRender({
-                    time : t,
-                    rgba : [0, 0, 0, 255]
-                });
+                expect({
+                    scene : scene,
+                    time : t
+                }).toRender([0, 0, 0, 255]);
 
                 m.show = true;
-                expect(scene).notToRender({
-                    time : t,
-                    rgba : [0, 0, 0, 255]
-                });
+                expect({
+                    scene : scene,
+                    time : t
+                }).notToRender([0, 0, 0, 255]);
                 m.show = false;
 
                 expect(node.matrix).not.toEqual(previousMatrix);
@@ -1252,16 +1252,16 @@ defineSuite([
 
         for (var i = 0; i < 6; ++i) {
             var t = JulianDate.addSeconds(time, 0.25 * i, new JulianDate());
-            expect(scene).toRender({
-                time : t,
-                rgba : [0, 0, 0, 255]
-            });
+            expect({
+                scene : scene,
+                time : t
+            }).toRender([0, 0, 0, 255]);
 
             riggedFigureModel.show = true;
-            expect(scene).notToRender({
-                time : t,
-                rgba : [0, 0, 0, 255]
-            });
+            expect({
+                scene : scene,
+                time : t
+            }).notToRender([0, 0, 0, 255]);
             riggedFigureModel.show = false;
         }
 
