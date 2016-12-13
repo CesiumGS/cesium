@@ -48,6 +48,9 @@ defineSuite([
     var labels;
     var labelsWithHeight;
 
+    // This Unicode square block will more reliably cover the center pixel than an 'x' or a 'w' char.
+    var solidBox = '\u25a0';
+
     beforeAll(function() {
         scene = createScene();
         camera = scene.camera;
@@ -56,6 +59,7 @@ defineSuite([
     afterAll(function() {
         scene.destroyForSpecs();
     });
+
     beforeEach(function() {
         scene.morphTo3D(0);
 
@@ -81,12 +85,15 @@ defineSuite([
         expect(label.fillColor).toEqual(Color.WHITE);
         expect(label.outlineColor).toEqual(Color.BLACK);
         expect(label.outlineWidth).toEqual(1);
+        expect(label.showBackground).toEqual(false);
+        expect(label.backgroundColor).toEqual(new Color(0.165, 0.165, 0.165, 0.8));
+        expect(label.backgroundPadding).toEqual(new Cartesian2(7, 5));
         expect(label.style).toEqual(LabelStyle.FILL);
         expect(label.pixelOffset).toEqual(Cartesian2.ZERO);
         expect(label.eyeOffset).toEqual(Cartesian3.ZERO);
         expect(label.heightReference).toEqual(HeightReference.NONE);
         expect(label.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
-        expect(label.verticalOrigin).toEqual(VerticalOrigin.BOTTOM);
+        expect(label.verticalOrigin).toEqual(VerticalOrigin.BASELINE);
         expect(label.scale).toEqual(1.0);
         expect(label.id).not.toBeDefined();
         expect(label.translucencyByDistance).not.toBeDefined();
@@ -119,6 +126,9 @@ defineSuite([
         var horizontalOrigin = HorizontalOrigin.LEFT;
         var verticalOrigin = VerticalOrigin.BOTTOM;
         var scale = 2.0;
+        var showBackground = true;
+        var backgroundColor = Color.BLUE;
+        var backgroundPadding = new Cartesian2(11, 12);
         var translucency = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
         var pixelOffsetScale = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
         var distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
@@ -131,6 +141,9 @@ defineSuite([
             outlineColor : outlineColor,
             outlineWidth : outlineWidth,
             style : style,
+            showBackground : showBackground,
+            backgroundColor : backgroundColor,
+            backgroundPadding : backgroundPadding,
             pixelOffset : pixelOffset,
             eyeOffset : eyeOffset,
             horizontalOrigin : horizontalOrigin,
@@ -150,6 +163,9 @@ defineSuite([
         expect(label.outlineColor).toEqual(outlineColor);
         expect(label.outlineWidth).toEqual(outlineWidth);
         expect(label.style).toEqual(style);
+        expect(label.showBackground).toEqual(showBackground);
+        expect(label.backgroundColor).toEqual(backgroundColor);
+        expect(label.backgroundPadding).toEqual(backgroundPadding);
         expect(label.pixelOffset).toEqual(pixelOffset);
         expect(label.eyeOffset).toEqual(eyeOffset);
         expect(label.horizontalOrigin).toEqual(horizontalOrigin);
@@ -330,19 +346,19 @@ defineSuite([
     it('can render after adding a label', function() {
         labels.add({
             position : Cartesian3.ZERO,
-            text : 'w',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
 
         var actual = scene.renderForSpecs();
-        expect(actual[0]).toBeGreaterThan(10);
-        expect(actual[1]).toBeGreaterThan(10);
-        expect(actual[2]).toBeGreaterThan(10);
+        expect(actual[0]).toBeGreaterThan(200);
+        expect(actual[1]).toBeGreaterThan(200);
+        expect(actual[2]).toBeGreaterThan(200);
 
         labels.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-            text : 'x',
+            text : solidBox,
             fillColor : {
                 red : 1.0,
                 green : 0.0,
@@ -354,7 +370,7 @@ defineSuite([
         });
 
         actual = scene.renderForSpecs();
-        expect(actual[0]).toBeGreaterThan(10);
+        expect(actual[0]).toBeGreaterThan(200);
         expect(actual[1]).toBeLessThan(10);
         expect(actual[2]).toBeLessThan(10);
     });
@@ -429,6 +445,22 @@ defineSuite([
         expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
     });
 
+    it('can render a label background', function() {
+        var label = labels.add({
+            position : Cartesian3.ZERO,
+            text : '_',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER,
+            showBackground : true,
+            backgroundColor : Color.BLUE
+        });
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+
+        labels.remove(label);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+    });
+
     it('does not render labels with show set to false', function() {
         var label = labels.add({
             position : Cartesian3.ZERO,
@@ -444,6 +476,25 @@ defineSuite([
 
         label.show = true;
         expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+    });
+
+    it('does not render label background with show set to false', function() {
+        var label = labels.add({
+            position : Cartesian3.ZERO,
+            text : '_',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER,
+            showBackground : true,
+            backgroundColor : Color.BLUE
+        });
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+
+        label.show = false;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        label.show = true;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
     });
 
     it('does not render labels that are behind the viewer', function() {
@@ -495,7 +546,7 @@ defineSuite([
         labels.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(1.0, 0.0),
-            text : 'x',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,
             pixelOffsetScaleByDistance: new NearFarScalar(2.0, 0.0, 4.0, 1000.0)
@@ -511,7 +562,7 @@ defineSuite([
     it('renders label with distanceDisplayCondition', function() {
         labels.add({
             position : Cartesian3.ZERO,
-            text : 'm',
+            text : solidBox,
             distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -549,7 +600,7 @@ defineSuite([
     it('can pick a label', function() {
         var label = labels.add({
             position : Cartesian3.ZERO,
-            text : 'x',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,
             id : 'id'
@@ -563,7 +614,7 @@ defineSuite([
     it('can change pick id', function() {
         var label = labels.add({
             position : Cartesian3.ZERO,
-            text : 'x',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,
             id : 'id'
@@ -584,7 +635,7 @@ defineSuite([
         labels.add({
             show : false,
             position : Cartesian3.ZERO,
-            text : 'x',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -596,7 +647,7 @@ defineSuite([
     it('picks a label using translucencyByDistance', function() {
         var label = labels.add({
             position : Cartesian3.ZERO,
-            text : 'x',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -619,7 +670,7 @@ defineSuite([
         var label = labels.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(0.0, 100.0),
-            text : 'x',
+            text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -718,14 +769,34 @@ defineSuite([
         });
         scene.renderForSpecs();
         expect(labels._billboardCollection.length).toEqual(3);
+        expect(labels._spareBillboards.length).toEqual(0);
 
         label.text = 'a';
         scene.renderForSpecs();
         expect(labels._billboardCollection.length).toEqual(3);
+        expect(labels._spareBillboards.length).toEqual(2);
 
         label.text = 'def';
         scene.renderForSpecs();
         expect(labels._billboardCollection.length).toEqual(3);
+        expect(labels._spareBillboards.length).toEqual(0);
+    });
+
+    it('should not reuse background billboards that are not needed any more', function() {
+        var label = labels.add({
+            text : 'abc',
+            showBackground : true
+        });
+        scene.renderForSpecs();
+        expect(labels._backgroundBillboardCollection.length).toEqual(1);
+
+        label.showBackground = false;
+        scene.renderForSpecs();
+        expect(labels._backgroundBillboardCollection.length).toEqual(0);
+
+        label.showBackground = true;
+        scene.renderForSpecs();
+        expect(labels._backgroundBillboardCollection.length).toEqual(1);
     });
 
     describe('Label', function() {
@@ -863,30 +934,13 @@ defineSuite([
             });
             scene.renderForSpecs();
 
-            var width = 0;
-            var height = 0;
-
-            var glyphs = label._glyphs;
-            var length = glyphs.length;
-            for (var i = 0; i < length; ++i) {
-                var glyph = glyphs[i];
-                var billboard = glyph.billboard;
-                if (!defined(billboard)) {
-                    continue;
-                }
-
-                width += billboard.width;
-                height = Math.max(height, billboard.height);
-            }
-
-            width *= scale;
-            height *= scale;
-
             var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
-            expect(bbox.x).toEqual(0);
-            expect(bbox.y).toEqual(0);
-            expect(bbox.width).toEqual(width);
-            expect(bbox.height).toEqual(height);
+            expect(bbox.x).toBeDefined();
+            expect(bbox.y).toBeDefined();
+            expect(bbox.width).toBeGreaterThan(30);
+            expect(bbox.width).toBeLessThan(200);
+            expect(bbox.height).toBeGreaterThan(10);
+            expect(bbox.height).toBeLessThan(50);
         });
 
         it('computes screen space bounding box with result', function() {
@@ -898,35 +952,18 @@ defineSuite([
             });
             scene.renderForSpecs();
 
-            var width = 0;
-            var height = 0;
-
-            var glyphs = label._glyphs;
-            var length = glyphs.length;
-            for (var i = 0; i < length; ++i) {
-                var glyph = glyphs[i];
-                var billboard = glyph.billboard;
-                if (!defined(billboard)) {
-                    continue;
-                }
-
-                width += billboard.width;
-                height = Math.max(height, billboard.height);
-            }
-
-            width *= scale;
-            height *= scale;
-
             var result = new BoundingRectangle();
             var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO, result);
-            expect(bbox.x).toEqual(0);
-            expect(bbox.y).toEqual(0);
-            expect(bbox.width).toEqual(width);
-            expect(bbox.height).toEqual(height);
+            expect(bbox.x).toBeDefined();
+            expect(bbox.y).toBeDefined();
+            expect(bbox.width).toBeGreaterThan(30);
+            expect(bbox.width).toBeLessThan(200);
+            expect(bbox.height).toBeGreaterThan(10);
+            expect(bbox.height).toBeLessThan(50);
             expect(bbox).toBe(result);
         });
 
-        it('computes screen space bounding box with vertical origin', function() {
+        it('computes screen space bounding box with vertical origin center', function() {
             var scale = 1.5;
 
             var label = labels.add({
@@ -936,39 +973,39 @@ defineSuite([
             });
             scene.renderForSpecs();
 
-            var width = 0;
-            var height = 0;
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            expect(bbox.y).toBeGreaterThan(bbox.height * -0.9);
+            expect(bbox.y).toBeLessThan(bbox.height * -0.3);
+        });
 
-            var glyphs = label._glyphs;
-            var length = glyphs.length;
-            for (var i = 0; i < length; ++i) {
-                var glyph = glyphs[i];
-                var billboard = glyph.billboard;
-                if (!defined(billboard)) {
-                    continue;
-                }
+        it('computes screen space bounding box with vertical origin top', function() {
+            var scale = 1.5;
 
-                width += billboard.width;
-                height = Math.max(height, billboard.height);
-            }
-
-            width *= scale;
-            height *= scale;
-
-            var halfHeight = height * 0.5;
+            var label = labels.add({
+                text : 'abc',
+                scale : scale,
+                verticalOrigin : VerticalOrigin.TOP
+            });
+            scene.renderForSpecs();
 
             var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
-            expect(bbox.x).toEqual(0);
-            expect(bbox.y).toEqual(-halfHeight);
-            expect(bbox.width).toEqual(width);
-            expect(bbox.height).toEqual(height);
+            expect(bbox.y).toBeLessThan(5);
+            expect(bbox.y).toBeGreaterThan(-5);
+        });
 
-            label.verticalOrigin = VerticalOrigin.TOP;
-            bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
-            expect(bbox.x).toEqual(0);
-            expect(bbox.y).toEqual(-height);
-            expect(bbox.width).toEqual(width);
-            expect(bbox.height).toEqual(height);
+        it('computes screen space bounding box with vertical origin baseline', function() {
+            var scale = 1.5;
+
+            var label = labels.add({
+                text : 'abc',
+                scale : scale,
+                verticalOrigin : VerticalOrigin.BASELINE
+            });
+            scene.renderForSpecs();
+
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            expect(bbox.y).toBeLessThan(bbox.height * -0.8);
+            expect(bbox.y).toBeGreaterThan(bbox.height * -1.2);
         });
 
         it('computes screen space bounding box with horizontal origin', function() {
@@ -981,37 +1018,47 @@ defineSuite([
             });
             scene.renderForSpecs();
 
-            var width = 0;
-            var height = 0;
+            var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            expect(bbox.x).toBeLessThan(bbox.width * -0.3);
+            expect(bbox.x).toBeGreaterThan(bbox.width * -0.7);
 
-            var glyphs = label._glyphs;
-            var length = glyphs.length;
-            for (var i = 0; i < length; ++i) {
-                var glyph = glyphs[i];
-                var billboard = glyph.billboard;
-                if (!defined(billboard)) {
-                    continue;
-                }
+            label.horizontalOrigin = HorizontalOrigin.RIGHT;
+            scene.renderForSpecs();
+            bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+            expect(bbox.x).toBeLessThan(bbox.width * -0.8);
+            expect(bbox.x).toBeGreaterThan(bbox.width * -1.2);
+        });
 
-                width += billboard.width;
-                height = Math.max(height, billboard.height);
-            }
+        it('computes screen space bounding box with padded background', function() {
+            var scale = 1.5;
 
-            width *= scale;
-            height *= scale;
+            var label = labels.add({
+                text : 'abc',
+                scale : scale,
+                showBackground : true,
+                backgroundPadding : new Cartesian2(15, 10)
+            });
+            scene.renderForSpecs();
 
-            var halfWidth = width * 0.5;
+            var backgroundBillboard = label._backgroundBillboard;
+            var width = backgroundBillboard.width * scale;
+            var height = backgroundBillboard.height * scale;
+            var x = backgroundBillboard._translate.x;
+            var y = -(backgroundBillboard._translate.y + height);
 
             var bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
-            expect(bbox.x).toEqual(-halfWidth);
-            expect(bbox.y).toEqual(0);
+            expect(bbox.x).toEqual(x);
+            expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
             expect(bbox.height).toEqual(height);
 
-            label.horizontalOrigin = HorizontalOrigin.RIGHT;
+            label.verticalOrigin = VerticalOrigin.CENTER;
+            scene.renderForSpecs();
+            y = -(backgroundBillboard._translate.y + height * 0.5);
+
             bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
-            expect(bbox.x).toEqual(-width);
-            expect(bbox.y).toEqual(0);
+            expect(bbox.x).toEqual(x);
+            expect(bbox.y).toEqual(y);
             expect(bbox.width).toEqual(width);
             expect(bbox.height).toEqual(height);
         });
@@ -1094,7 +1141,7 @@ defineSuite([
             var eyeOffset1 = new Cartesian3(6.0, 7.0, 8.0);
             var eyeOffset2 = new Cartesian3(16.0, 17.0, 18.0);
             var verticalOrigin1 = VerticalOrigin.TOP;
-            var verticalOrigin2 = VerticalOrigin.BOTTOM;
+            var verticalOrigin2 = VerticalOrigin.BASELINE;
             var scale1 = 2.0;
             var scale2 = 3.0;
             var id1 = 'id1';
@@ -1113,7 +1160,8 @@ defineSuite([
                 scale : scale1,
                 id : id1,
                 translucencyByDistance : translucency1,
-                pixelOffsetScaleByDistance : pixelOffsetScale1
+                pixelOffsetScaleByDistance : pixelOffsetScale1,
+                showBackground : true
             });
 
             scene.renderForSpecs();
@@ -1160,7 +1208,8 @@ defineSuite([
                     scale : 2.0,
                     id : 'id1',
                     translucencyByDistance : new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0),
-                    pixelOffsetScaleByDistance : new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0)
+                    pixelOffsetScaleByDistance : new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0),
+                    showBackground : true
                 });
                 scene.renderForSpecs();
             });
@@ -1228,6 +1277,26 @@ defineSuite([
                 });
             });
 
+            it('showBackground', function() {
+                expect(label.showBackground).toEqual(true);
+                label.showBackground = false;
+                expect(label.showBackground).toEqual(false);
+            });
+
+            it('backgroundColor', function() {
+                var newValue = Color.RED;
+                expect(label.backgroundColor).not.toEqual(newValue);
+                label.backgroundColor = newValue;
+                expect(label.backgroundColor).toEqual(newValue);
+            });
+
+            it('backgroundPadding', function() {
+                var newValue = new Cartesian2(8, 5);
+                expect(label.backgroundPadding).not.toEqual(newValue);
+                label.backgroundPadding = newValue;
+                expect(label.backgroundPadding).toEqual(newValue);
+            });
+
             it('id', function() {
                 var newValue = 'id2';
                 expect(label.id).not.toEqual(newValue);
@@ -1282,6 +1351,12 @@ defineSuite([
                     expect(billboard.pixelOffsetScaleByDistance).toEqual(label.pixelOffsetScaleByDistance);
                 });
             });
+
+            it('clusterShow', function() {
+                expect(label.clusterShow).toEqual(true);
+                label.clusterShow = false;
+                expect(label.clusterShow).toEqual(false);
+            });
         });
 
         it('should set vertexTranslate of billboards correctly when vertical origin is changed', function() {
@@ -1300,10 +1375,8 @@ defineSuite([
             label.verticalOrigin = VerticalOrigin.TOP;
             scene.renderForSpecs();
 
-            // vertical origin TOP should decrease (or equal) Y offset compared to CENTER
-            expect(getGlyphBillboardVertexTranslate(label, 0).y).toBeLessThanOrEqualTo(offset0.y);
-            expect(getGlyphBillboardVertexTranslate(label, 1).y).toBeLessThanOrEqualTo(offset1.y);
-            expect(getGlyphBillboardVertexTranslate(label, 2).y).toBeLessThanOrEqualTo(offset2.y);
+            // Because changing the label's vertical origin also changes the vertical origin of each
+            // individual glyph, it is not safe to assume anything about Y offsets being more or less.
 
             // X offset should be unchanged
             expect(getGlyphBillboardVertexTranslate(label, 0).x).toEqual(offset0.x);
@@ -1312,11 +1385,6 @@ defineSuite([
 
             label.verticalOrigin = VerticalOrigin.BOTTOM;
             scene.renderForSpecs();
-
-            // vertical origin BOTTOM should increase (or equal) Y offset compared to CENTER
-            expect(getGlyphBillboardVertexTranslate(label, 0).y).toBeGreaterThanOrEqualTo(offset0.y);
-            expect(getGlyphBillboardVertexTranslate(label, 1).y).toBeGreaterThanOrEqualTo(offset1.y);
-            expect(getGlyphBillboardVertexTranslate(label, 2).y).toBeGreaterThanOrEqualTo(offset2.y);
 
             // X offset should be unchanged
             expect(getGlyphBillboardVertexTranslate(label, 0).x).toEqual(offset0.x);
@@ -1394,20 +1462,9 @@ defineSuite([
             offset1 = getGlyphBillboardVertexTranslate(label, 1);
             offset2 = getGlyphBillboardVertexTranslate(label, 2);
 
-            // vertical origin TOP should decrease (or equal) Y offset compared to CENTER
-            expect(getGlyphBillboardVertexTranslate(label, 0).y).toBeLessThanOrEqualTo(offset0.y);
-            expect(getGlyphBillboardVertexTranslate(label, 1).y).toBeLessThanOrEqualTo(offset1.y);
-            expect(getGlyphBillboardVertexTranslate(label, 2).y).toBeLessThanOrEqualTo(offset2.y);
+            // Because changing the label's vertical origin also changes the vertical origin of each
+            // individual glyph, it is not safe to assume anything about Y offsets being more or less.
 
-            label.verticalOrigin = VerticalOrigin.BOTTOM;
-            scene.renderForSpecs();
-
-            // vertical origin BOTTOM should increase (or equal) Y offset compared to CENTER
-            expect(getGlyphBillboardVertexTranslate(label, 0).y).toBeGreaterThanOrEqualTo(offset0.y);
-            expect(getGlyphBillboardVertexTranslate(label, 1).y).toBeGreaterThanOrEqualTo(offset1.y);
-            expect(getGlyphBillboardVertexTranslate(label, 2).y).toBeGreaterThanOrEqualTo(offset2.y);
-
-            label.verticalOrigin = VerticalOrigin.CENTER;
             label.horizontalOrigin = HorizontalOrigin.LEFT;
             scene.renderForSpecs();
 
