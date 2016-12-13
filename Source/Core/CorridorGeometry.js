@@ -868,8 +868,8 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._cornerType;
-        array[startingIndex++]   = value._granularity;
-        array[startingIndex]   = value._shadowVolume ? 1.0 : 0.0;
+        array[startingIndex++] = value._granularity;
+        array[startingIndex] = value._shadowVolume ? 1.0 : 0.0;
 
         return array;
     };

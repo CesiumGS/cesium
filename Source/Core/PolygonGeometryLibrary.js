@@ -346,7 +346,6 @@ define([
     PolygonGeometryLibrary.computeWallGeometry = function(positions, ellipsoid, granularity, perPositionHeight) {
         var edgePositions;
         var topEdgeLength;
-        var positionLength;
         var i;
         var p1;
         var p2;
@@ -362,8 +361,7 @@ define([
                 numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
             }
 
-            positionLength = numVertices + length;
-            topEdgeLength = positionLength * 3;
+            topEdgeLength = (numVertices + length) * 3;
             edgePositions = new Array(topEdgeLength * 2);
             for (i = 0; i < length; i++) {
                 p1 = positions[i];
@@ -389,8 +387,7 @@ define([
                 ++index;
             }
         } else {
-            positionLength = length * 2;
-            topEdgeLength = positionLength * 3;
+            topEdgeLength = length * 3 * 2;
             edgePositions = new Array(topEdgeLength * 2);
             for (i = 0; i < length; i++) {
                 p1 = positions[i];

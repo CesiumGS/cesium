@@ -450,10 +450,6 @@ define([
                 stIndex += 4;
             }
             if (shadowVolume) {
-                wallExtrudeNormals[extrudeNormalIndex++] = 0;
-                wallExtrudeNormals[extrudeNormalIndex++] = 0;
-                wallExtrudeNormals[extrudeNormalIndex++] = 0;
-
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
@@ -469,10 +465,6 @@ define([
                 stIndex += 4;
             }
             if (shadowVolume) {
-                wallExtrudeNormals[extrudeNormalIndex++] = 0;
-                wallExtrudeNormals[extrudeNormalIndex++] = 0;
-                wallExtrudeNormals[extrudeNormalIndex++] = 0;
-
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
@@ -488,10 +480,6 @@ define([
                 stIndex += 4;
             }
             if (shadowVolume) {
-                wallExtrudeNormals[extrudeNormalIndex++] = 0;
-                wallExtrudeNormals[extrudeNormalIndex++] = 0;
-                wallExtrudeNormals[extrudeNormalIndex++] = 0;
-
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
@@ -507,10 +495,6 @@ define([
                 stIndex += 4;
             }
             if (shadowVolume) {
-                wallExtrudeNormals[extrudeNormalIndex++] = 0;
-                wallExtrudeNormals[extrudeNormalIndex++] = 0;
-                wallExtrudeNormals[extrudeNormalIndex++] = 0;
-
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];

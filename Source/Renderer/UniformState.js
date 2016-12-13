@@ -769,12 +769,24 @@ define([
             }
         },
 
+        /**
+         * The maximum screen-space error used to drive level-of-detail refinement.  Higher
+         * values will provide better performance but lower visual quality.
+         *
+         * @type {Number}
+         * @default 2
+         */
         maximumScreenSpaceError: {
             get: function() {
                 return this._frameState.maximumScreenSpaceError;
             }
         },
 
+        /**
+         * The size of one pixel in meters
+         *
+         * @type {Number}
+         */
         pixelSizePerMeter: {
             get: function() {
                 return this._pixelSizePerMeter;
