@@ -1,15 +1,19 @@
 /*global define*/
 define([
         './equals',
+        'Core/Cartesian2',
         'Core/defined',
         'Core/DeveloperError',
         'Core/RuntimeError'
     ], function(
         equals,
+        Cartesian2,
         defined,
         DeveloperError,
         RuntimeError) {
     'use strict';
+
+    var webglStub = !!window.webglStub;
 
     function createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype) {
         return function() {
@@ -206,6 +210,64 @@ define([
                 };
             },
 
+            toRender : function(util, customEqualityTesters) {
+                return {
+                    compare: function(actual, expected) {
+                        return renderEquals(util, customEqualityTesters, actual, expected, true);
+                    }
+                };
+            },
+
+            notToRender : function(util, customEqualityTesters) {
+                return {
+                    compare: function(actual, expected) {
+                        return renderEquals(util, customEqualityTesters, actual, expected, false);
+                    }
+                };
+            },
+
+            toRenderAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare: function(actual, expected) {
+                        if (!webglStub) {
+                            var scene = actual;
+                            scene.initializeFrame();
+                            scene.render();
+                            var actualRgba = scene.context.readPixels();
+
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(actualRgba);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toPick : function(util, customEqualityTesters) {
+                return {
+                    compare: function(actual, expected) {
+                        if (!webglStub) {
+                            var scene = actual;
+                            var result = scene.pick(new Cartesian2(0, 0));
+
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(result);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
             toThrow : function(expectedConstructor) {
                 throw new Error('Do not use toThrow.  Use toThrowDeveloperError or toThrowRuntimeError instead.');
             },
@@ -213,6 +275,54 @@ define([
             toThrowDeveloperError : makeThrowFunction(debug, DeveloperError, 'DeveloperError'),
 
             toThrowRuntimeError : makeThrowFunction(true, RuntimeError, 'RuntimeError')
+        };
+    }
+
+    function renderEquals(util, customEqualityTesters, actual, expected, expectEqual) {
+        var scene = actual;
+        scene.initializeFrame();
+
+        var expectedRgba;
+        if (Array.isArray(expected) || (expected instanceof Uint8Array)) {
+            expectedRgba = expected;
+
+            scene.render();
+        } else if (defined(expected)) {
+            // expected might not actually be defined when the WebGL stub is used, e.g.,
+            // because it is set in a callback passed to toRenderAndCall that isn't called.
+
+            var options = expected;
+            expectedRgba = options.rgba;
+            if (!defined(expectedRgba)) {
+                throw new DeveloperError('toRender and notToRender matchers require options.rgba.');
+            }
+
+            scene.render(options.time);
+        }
+
+        var actualRgba = scene.context.readPixels();
+
+        // When the WebGL stub is used, all WebGL function calls are noops so
+        // the expectation is not verified.  This allows running all the WebGL
+        // tests, to exercise as much Cesium code as possible, even if the system
+        // doesn't have a WebGL implementation or a reliable one.
+        if (webglStub) {
+            return {
+                pass : true
+            };
+        }
+
+        var eq = equals(util, customEqualityTesters, actualRgba, expectedRgba);
+        var pass = expectEqual ? eq : !eq;
+
+        var message;
+        if (!pass) {
+            message = 'Expected to render [' + expectedRgba + '], but actually rendered [' + actualRgba + '].';
+        }
+
+        return {
+            pass : pass,
+            message : message
         };
     }
 
