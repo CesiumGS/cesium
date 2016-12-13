@@ -3,7 +3,7 @@
  * @module WebGLConstants
  */
 define([
-        './freezeObject'
+        '../Core/freezeObject'
     ], function(
         freezeObject) {
     'use strict';
@@ -13,443 +13,94 @@ define([
      * for use without an active WebGL context, or in cases where certain constants are unavailable using the WebGL context
      * (For example, in [Safari 9]{@link https://github.com/AnalyticalGraphicsInc/cesium/issues/2989}).
      *
-     * @readonly
+     * These match the constants from the [WebGL 1.0]{@link https://www.khronos.org/registry/webgl/specs/latest/1.0/}
+     * and [WebGL 2.0]{@link https://www.khronos.org/registry/webgl/specs/latest/2.0/}
+     * specifications.
+     *
      * @alias WebGLConstants
+     * @readonly
      * @enum {Number}
      */
     var WebGLConstants = {
-        /**
-         * Passed to [gl.clear]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/clear}
-         * to clear the current depth buffer.
-         */
         DEPTH_BUFFER_BIT : 0x00000100,
-        /**
-         * Passed to [gl.clear]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/clear}
-         * to clear the current stencil buffer.
-         */
         STENCIL_BUFFER_BIT : 0x00000400,
-        /**
-         * Passed to [gl.clear]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/clear}
-         * to clear the current color buffer.
-         */
         COLOR_BUFFER_BIT : 0x00004000,
-        /**
-         * Passed to [gl.drawElements]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawElements}
-         * or [gl.drawArrays]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawArrays}
-         * to draw single points.
-         */
         POINTS : 0x0000,
-        /**
-         * Passed to [gl.drawElements]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawElements}
-         * or [gl.drawArrays]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawArrays}
-         * to draw lines. Each vertex connects to the one after it.
-         */
         LINES : 0x0001,
-        /**
-         * Passed to [gl.drawElements]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawElements}
-         * or [gl.drawArrays]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawArrays}
-         * to draw draw lines. Each set of two vertices is treated as a separate line segment.
-         */
         LINE_LOOP : 0x0002,
-        /**
-         * Passed to [gl.drawElements]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawElements}
-         * or [gl.drawArrays]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawArrays}
-         * to draw a connected group of line segments from the first vertex to the last.
-         */
         LINE_STRIP : 0x0003,
-        /**
-         * Passed to [gl.drawElements]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawElements}
-         * or [gl.drawArrays]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawArrays}
-         * to draw triangles. Each set of three vertices creates a separate triangle.
-         */
         TRIANGLES : 0x0004,
-        /**
-         * Passed to [gl.drawElements]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawElements}
-         * or [gl.drawArrays]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawArrays}
-         * to draw a connected group of triangles.
-         */
         TRIANGLE_STRIP : 0x0005,
-        /**
-         * Passed to [gl.drawElements]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawElements}
-         * or [gl.drawArrays]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawArrays}
-         * to draw a connected group of triangles. Each vertex connects to the previous and the first vertex in the fan.
-         */
         TRIANGLE_FAN : 0x0006,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to turn off a component.
-         */
         ZERO : 0,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to turn on a component.
-         */
         ONE : 1,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to multiply a component by the source color.
-         */
         SRC_COLOR : 0x0300,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to multiply a component by one minus the source color.
-         */
         ONE_MINUS_SRC_COLOR : 0x0301,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to multiply a component by the source alpha.
-         */
         SRC_ALPHA : 0x0302,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to multiply a component by one minus the source alpha.
-         */
         ONE_MINUS_SRC_ALPHA : 0x0303,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to multiply a component by the destination alpha.
-         */
         DST_ALPHA : 0x0304,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to multiply a component by one minus the destination alpha.
-         */
         ONE_MINUS_DST_ALPHA : 0x0305,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to multiply a component by the destination color.
-         */
         DST_COLOR : 0x0306,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to multiply a component by one minus the destination color.
-         */
         ONE_MINUS_DST_COLOR : 0x0307,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to multiply a component by the minimum of the source alpha or one minus the destination alpha.
-         */
         SRC_ALPHA_SATURATE : 0x0308,
-        /**
-         * Passed to [gl.blendEquation]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendEquation}
-         * or [gl.blendEquationSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendEquationSeparate}
-         * to set an addition blend function.
-         */
         FUNC_ADD : 0x8006,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current RGB blend function.
-         */
         BLEND_EQUATION : 0x8009,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current RGB blend function, same as BLEND_EQUATION.
-         */
-        BLEND_EQUATION_RGB : 0x8009,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current alpha blend function.
-         */
+        BLEND_EQUATION_RGB : 0x8009, // same as BLEND_EQUATION
         BLEND_EQUATION_ALPHA : 0x883D,
-        /**
-         * Passed to [gl.blendEquation]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendEquation}
-         * or [gl.blendEquationSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendEquationSeparate}
-         * to set a subtraction blend function (source - destination).
-         */
         FUNC_SUBTRACT : 0x800A,
-        /**
-         * Passed to [gl.blendEquation]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendEquation}
-         * or [gl.blendEquationSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendEquationSeparate}
-         * to set a subtraction blend function (destination - source).
-         */
         FUNC_REVERSE_SUBTRACT : 0x800B,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current destination RGB blend function.
-         */
         BLEND_DST_RGB : 0x80C8,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current source RGB blend function.
-         */
         BLEND_SRC_RGB : 0x80C9,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current destination alpha blend function.
-         */
         BLEND_DST_ALPHA : 0x80CA,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current source alpha blend function.
-         */
         BLEND_SRC_ALPHA : 0x80CB,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to specify a constant color blend function.
-         */
         CONSTANT_COLOR : 0x8001,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to specify one minus a constant color blend function.
-         */
         ONE_MINUS_CONSTANT_COLOR : 0x8002,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to specify a constant alpha blend function.
-         */
         CONSTANT_ALPHA : 0x8003,
-        /**
-         * Passed to [gl.blendFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc}
-         * or [gl.blendFuncSeparate]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate}
-         * to specify one minus a constant alpha blend function.
-         */
         ONE_MINUS_CONSTANT_ALPHA : 0x8004,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to return the current blend color.
-         */
         BLEND_COLOR : 0x8005,
-        /**
-         * Passed to [gl.bindBuffer]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindBuffer}
-         * or [gl.bufferData]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData}
-         * to specify that the buffer is used for vertex attributes.
-         */
         ARRAY_BUFFER : 0x8892,
-        /**
-         * Passed to [gl.bindBuffer]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindBuffer}
-         * or [gl.bufferData]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData}
-         * to specify that the buffer is used for element indices.
-         */
         ELEMENT_ARRAY_BUFFER : 0x8893,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the array buffer binding.
-         */
         ARRAY_BUFFER_BINDING : 0x8894,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current element array buffer.
-         */
         ELEMENT_ARRAY_BUFFER_BINDING : 0x8895,
-        /**
-         * Passed to [gl.bufferData]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData}
-         * as a hint about whether the contents of the buffer are likely to not be used often.
-         */
         STREAM_DRAW : 0x88E0,
-        /**
-         * Passed to [gl.bufferData]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData}
-         * as a hint about whether the contents of the buffer are likely to be used often and not change often.
-         */
         STATIC_DRAW : 0x88E4,
-        /**
-         * Passed to [gl.bufferData]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData}
-         * as a hint about whether the contents of the buffer are likely to be used often and change often.
-         */
         DYNAMIC_DRAW : 0x88E8,
-        /**
-         * Passed to [gl.getBufferParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getBufferParameter}
-         * to get a buffer's size.
-         */
         BUFFER_SIZE : 0x8764,
-        /**
-         * Passed to [gl.getBufferParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getBufferParameter}
-         * to get the hint for the buffer passed in when it was created.
-         */
         BUFFER_USAGE : 0x8765,
-        /**
-         * Passed to [gl.getVertexAttrib]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getVertexAttrib}
-         * to read back the current vertex attribute.
-         */
         CURRENT_VERTEX_ATTRIB : 0x8626,
-        /**
-         * Passed to [gl.cullFace]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/cullFace}
-         * to specify that only front faces should be drawn.
-         */
         FRONT : 0x0404,
-        /**
-         * Passed to [gl.cullFace]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/cullFace}
-         * to specify that only back faces should be drawn.
-         */
         BACK : 0x0405,
-        /**
-         * Passed to [gl.cullFace]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/cullFace}
-         * to specify that front and back faces should be drawn.
-         */
         FRONT_AND_BACK : 0x0408,
-        /**
-         * Passed to [gl.enable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/enable}/[disable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/disable}
-         * to turn on/off culling. Can also be used with [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to find the current culling method.
-         */
         CULL_FACE : 0x0B44,
-        /**
-         * Passed to [gl.enable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/enable}/[disable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/disable}
-         * to turn on/off blending. Can also be used with [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to find the current blending method.
-         */
         BLEND : 0x0BE2,
-        /**
-         * Passed to [gl.enable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/enable}/[disable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/disable}
-         * to turn on/off dithering. Can also be used with [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to find the current dithering method.
-         */
         DITHER : 0x0BD0,
-        /**
-         * Passed to [gl.enable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/enable}/[disable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/disable}
-         * to turn on/off the stencil test. Can also be used with [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to query the stencil test.
-         */
         STENCIL_TEST : 0x0B90,
-        /**
-         * Passed to [gl.enable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/enable}/[disable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/disable}
-         * to turn on/off the depth test. Can also be used with [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to query the depth test.
-         */
         DEPTH_TEST : 0x0B71,
-        /**
-         * Passed to [gl.enable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/enable}/[disable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/disable}
-         * to turn on/off the scissor test. Can also be used with [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to query the scissor test.
-         */
         SCISSOR_TEST : 0x0C11,
-        /**
-         * Passed to [gl.enable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/enable}/[disable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/disable}
-         * to turn on/off the polygon offset. Useful for rendering hidden-line images, decals, and or solids with highlighted edges.
-         */
         POLYGON_OFFSET_FILL : 0x8037,
-        /**
-         * Passed to [gl.enable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/enable}/[disable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/disable}
-         * to turn on/off the alpha to coverage. Used in multi-sampling alpha channels.
-         */
         SAMPLE_ALPHA_TO_COVERAGE : 0x809E,
-        /**
-         * Passed to [gl.enable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/enable}/[disable]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/disable}
-         * to turn on/off the sample coverage. Used in multi-sampling.
-         */
         SAMPLE_COVERAGE : 0x80A0,
-        /**
-         * Returned from [gl.getError]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getError}.
-         * Indicates that no error has been recorded.
-         */
         NO_ERROR : 0,
-        /**
-         * Returned from [gl.getError]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getError}.
-         * Indicates that an unacceptable value has been specified for an enumerated argument.
-         */
         INVALID_ENUM : 0x0500,
-        /**
-         * Returned from [gl.getError]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getError}.
-         * Indicates that a numeric argument is out of range.
-         */
         INVALID_VALUE : 0x0501,
-        /**
-         * Returned from [gl.getError]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getError}.
-         * Indicates that the specified command is not allowed for the current state.
-         */
         INVALID_OPERATION : 0x0502,
-        /**
-         * Returned from [gl.getError]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getError}.
-         * Indicates that the not enough memory is left to execute the command.
-         */
         OUT_OF_MEMORY : 0x0505,
-        /**
-         * Passed to [gl.frontFace]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/frontFace}
-         * to specify the front face of a polygon is drawn in the clockwise direction.
-         */
         CW : 0x0900,
-        /**
-         * Passed to [gl.frontFace]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/frontFace}
-         * to specify the front face of a polygon is drawn in the counter-clockwise direction.
-         */
         CCW : 0x0901,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current lineWidth (set by [gl.lineWidth]{https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/lineWidth}).
-         */
         LINE_WIDTH : 0x0B21,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current size of a drawn point.
-         */
         ALIASED_POINT_SIZE_RANGE : 0x846D,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the range of available widths for a line. Returns a length-2 array with the lo value at 0, and hight at 1.
-         */
         ALIASED_LINE_WIDTH_RANGE : 0x846E,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current value of cullFace. Should return FRONT, BACK, or FRONT_AND_BACK.
-         */
         CULL_FACE_MODE : 0x0B45,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to determine the current value of [gl.frontFace]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/frontFace}.
-         */
         FRONT_FACE : 0x0B46,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to return a length-2 array of floats giving the current depth range.
-         */
         DEPTH_RANGE : 0x0B70,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to determine if the depth write mask is enabled.
-         */
         DEPTH_WRITEMASK : 0x0B72,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to determine the current depth clear value.
-         */
         DEPTH_CLEAR_VALUE : 0x0B73,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current depth function. Returns NEVER, ALWAYS, LESS, EQUAL, LEQUAL, GREATER, GEQUAL, or NOTEQUAL.
-         */
         DEPTH_FUNC : 0x0B74,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the value the stencil will be cleared to.
-         */
         STENCIL_CLEAR_VALUE : 0x0B91,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current stencil function. Returns NEVER, ALWAYS, LESS, EQUAL, LEQUAL, GREATER, GEQUAL, or NOTEQUAL.
-         */
         STENCIL_FUNC : 0x0B92,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current stencil fail function. Should return KEEP, REPLACE, INCR, DECR, INVERT, INCR_WRAP, or DECR_WRAP.
-         */
         STENCIL_FAIL : 0x0B94,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current stencil fail function should the depth buffer test fail. Should return KEEP, REPLACE, INCR, DECR, INVERT, INCR_WRAP, or DECR_WRAP.
-         */
         STENCIL_PASS_DEPTH_FAIL : 0x0B95,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the current stencil fail function should the depth buffer test pass. Should return KEEP, REPLACE, INCR, DECR, INVERT, INCR_WRAP, or DECR_WRAP.
-         */
         STENCIL_PASS_DEPTH_PASS : 0x0B96,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get the reference value used for stencil tests.
-         */
         STENCIL_REF : 0x0B97,
         STENCIL_VALUE_MASK : 0x0B93,
         STENCIL_WRITEMASK : 0x0B98,
@@ -460,15 +111,7 @@ define([
         STENCIL_BACK_REF : 0x8CA3,
         STENCIL_BACK_VALUE_MASK : 0x8CA4,
         STENCIL_BACK_WRITEMASK : 0x8CA5,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get an Int32Array with four elements for the current viewport dimensions.
-         */
         VIEWPORT : 0x0BA2,
-        /**
-         * Passed to [gl.getParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter}
-         * to get an Int32Array with four elements for the current scissor box dimensions.
-         */
         SCISSOR_BOX : 0x0C10,
         COLOR_CLEAR_VALUE : 0x0C22,
         COLOR_WRITEMASK : 0x0C23,
@@ -491,26 +134,9 @@ define([
         SAMPLE_COVERAGE_VALUE : 0x80AA,
         SAMPLE_COVERAGE_INVERT : 0x80AB,
         COMPRESSED_TEXTURE_FORMATS : 0x86A3,
-        /**
-         * Passed to [gl.hint]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/hint}
-         * There is no preference for this behavior.
-         */
         DONT_CARE : 0x1100,
-        /**
-         * Passed to [gl.hint]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/hint}
-         * The most efficient behavior should be used.
-         */
         FASTEST : 0x1101,
-        /**
-         * Passed to [gl.hint]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/hint}
-         * The most correct or the highest quality option should be used.
-         */
         NICEST : 0x1102,
-        /**
-         * Passed to [gl.hint]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/hint}
-         * for the quality of filtering when generating mipmap images with
-         * [gl.generateMipmap]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/generateMipmap}.
-         */
         GENERATE_MIPMAP_HINT : 0x8192,
         BYTE : 0x1400,
         UNSIGNED_BYTE : 0x1401,
@@ -528,15 +154,7 @@ define([
         UNSIGNED_SHORT_4_4_4_4 : 0x8033,
         UNSIGNED_SHORT_5_5_5_1 : 0x8034,
         UNSIGNED_SHORT_5_6_5 : 0x8363,
-        /**
-         * Passed to [gl.createShader]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/createShader}
-         * to define a fragment shader.
-         */
         FRAGMENT_SHADER : 0x8B30,
-        /**
-         * Passed to [gl.createShader]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/createShader}
-         * to define a vertex shader.
-         */
         VERTEX_SHADER : 0x8B31,
         MAX_VERTEX_ATTRIBS : 0x8869,
         MAX_VERTEX_UNIFORM_VECTORS : 0x8DFB,
@@ -546,125 +164,28 @@ define([
         MAX_TEXTURE_IMAGE_UNITS : 0x8872,
         MAX_FRAGMENT_UNIFORM_VECTORS : 0x8DFD,
         SHADER_TYPE : 0x8B4F,
-        /**
-         * Passed to [gl.getShaderParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getShaderParameter}
-         * to determine if a shader was deleted via [gl.deleteShader]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/deleteShader}.
-         */
         DELETE_STATUS : 0x8B80,
-        /**
-         * Passed to [gl.getProgramParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getProgramParameter}
-         * after calling [gl.linkProgram]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/linkProgram}
-         * to determine if a program was linked correctly.
-         */
         LINK_STATUS : 0x8B82,
-        /**
-         * Passed to [gl.getProgramParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getProgramParameter}
-         * after calling [gl.validateProgram]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/validateProgram}
-         * to determine if it is valid.
-         */
         VALIDATE_STATUS : 0x8B83,
-        /**
-         * Passed to [gl.getProgramParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getProgramParameter}
-         * after calling [gl.attachShader]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/validateProgram}
-         * to determine if the shader was attached correctly.
-         */
         ATTACHED_SHADERS : 0x8B85,
-        /**
-         * Passed to [gl.getProgramParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getProgramParameter}
-         * to get the number of uniforms active in a program.
-          */
         ACTIVE_UNIFORMS : 0x8B86,
-        /**
-         * Passed to [gl.getProgramParameter]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getProgramParameter}
-         * to get the number of attributes active in a program.
-         */
         ACTIVE_ATTRIBUTES : 0x8B89,
         SHADING_LANGUAGE_VERSION : 0x8B8C,
         CURRENT_PROGRAM : 0x8B8D,
-        /**
-         * Passed to [gl.depthFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc}
-         * or [gl.stencilFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilFunc}
-         * to specify depth or stencil tests will never pass. i.e. Nothing will be drawn.
-         */
         NEVER : 0x0200,
-        /**
-         * Passed to [gl.depthFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc}
-         * or [gl.stencilFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilFunc}
-         * to specify depth or stencil tests will pass if the new depth value is less than the stored value.
-         */
         LESS : 0x0201,
-        /**
-         * Passed to [gl.depthFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc}
-         * or [gl.stencilFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilFunc}
-         * to specify depth or stencil tests will pass if the new depth value is equals to the stored value.
-         */
         EQUAL : 0x0202,
-        /**
-         * Passed to [gl.depthFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc}
-         * or [gl.stencilFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilFunc}
-         * to specify depth or stencil tests will pass if the new depth value is less than or equal to the stored value.
-         */
         LEQUAL : 0x0203,
-        /**
-         * Passed to [gl.depthFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc}
-         * or [gl.stencilFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilFunc}
-         * to specify depth or stencil tests will pass if the new depth value is greater than the stored value.
-         */
         GREATER : 0x0204,
-        /**
-         * Passed to [gl.depthFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc}
-         * or [gl.stencilFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilFunc}
-         * to specify depth or stencil tests will pass if the new depth value is not equal to the stored value.
-         */
         NOTEQUAL : 0x0205,
-        /**
-         * Passed to [gl.depthFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc}
-         * or [gl.stencilFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilFunc}
-         * to specify depth or stencil tests will pass if the new depth value is greater than or equal to the stored value.
-         */
         GEQUAL : 0x0206,
-        /**
-         * Passed to [gl.depthFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc}
-         * or [gl.stencilFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilFunc}
-         * to specify depth or stencil tests will always pass. i.e. Pixels will be drawn in the order they are drawn.
-         */
         ALWAYS : 0x0207,
-        /**
-         * Passed to [gl.stencilOp]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilOp}
-         * to keep the current value when the stencil test fails.
-         */
         KEEP : 0x1E00,
-        /**
-         * Passed to [gl.stencilOp]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilOp}
-         * to set the stencil buffer value to the reference value as specified by
-         * [gl.stencilFunc]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilFunc}
-         * when the stencil test fails.
-         */
         REPLACE : 0x1E01,
-        /**
-         * Passed to [gl.stencilOp]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilOp}
-         * to increment the current stencil buffer value when the stencil test fails. Clamps to the maximum representable unsigned value.
-         */
         INCR : 0x1E02,
-        /**
-         * Passed to [gl.stencilOp]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilOp}
-         * to decrement the current stencil buffer value when the stencil test fails. Clamps to zero.
-         */
         DECR : 0x1E03,
-        /**
-         * Passed to [gl.stencilOp]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilOp}
-         * to invert the current stencil buffer value bitwise when the stencil test fails.
-         */
         INVERT : 0x150A,
-        /**
-         * Passed to [gl.stencilOp]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilOp}
-         * to increment the current stencil buffer value when the stencil test fails. Wraps stencil buffer value to zero when incrementing the maximum representable unsigned value.
-         */
         INCR_WRAP : 0x8507,
-        /**
-         * Passed to [gl.stencilOp]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilOp}
-         * to decrement the current stencil buffer value when the stencil test fails. Wraps stencil buffer value to the maximum representable unsigned value when decrementing a stencil buffer value of zero.
-         */
         DECR_WRAP : 0x8508,
         VENDOR : 0x1F00,
         RENDERER : 0x1F01,
@@ -690,9 +211,6 @@ define([
         TEXTURE_CUBE_MAP_POSITIVE_Z : 0x8519,
         TEXTURE_CUBE_MAP_NEGATIVE_Z : 0x851A,
         MAX_CUBE_MAP_TEXTURE_SIZE : 0x851C,
-        /**
-         * Used to address texture units.
-         */
         TEXTURE0 : 0x84C0,
         TEXTURE1 : 0x84C1,
         TEXTURE2 : 0x84C2,
@@ -725,9 +243,6 @@ define([
         TEXTURE29 : 0x84DD,
         TEXTURE30 : 0x84DE,
         TEXTURE31 : 0x84DF,
-        /**
-         * Used to address the current active texture unit.
-         */
         ACTIVE_TEXTURE : 0x84E0,
         REPEAT : 0x2901,
         CLAMP_TO_EDGE : 0x812F,
@@ -965,9 +480,6 @@ define([
         READ_FRAMEBUFFER_BINDING : 0x8CAA,
         RENDERBUFFER_SAMPLES : 0x8CAB,
         FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER : 0x8CD4,
-        /**
-         * Maximum number of framebuffer color attachment points.
-         */
         MAX_COLOR_ATTACHMENTS : 0x8CDF,
         COLOR_ATTACHMENT1 : 0x8CE1,
         COLOR_ATTACHMENT2 : 0x8CE2,
