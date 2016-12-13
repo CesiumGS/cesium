@@ -270,8 +270,7 @@ define([
         label._repositionAllGlyphs = true;
     }
 
-    function calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding)
-    {
+    function calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding) {
         if (horizontalOrigin === HorizontalOrigin.CENTER) {
             return -lineWidth / 2;
         } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
@@ -406,7 +405,7 @@ define([
 
     function destroyLabel(labelCollection, label) {
         var glyphs = label._glyphs;
-        for ( var i = 0, len = glyphs.length; i < len; ++i) {
+        for (var i = 0, len = glyphs.length; i < len; ++i) {
             unbindGlyph(labelCollection, glyphs[i]);
         }
         if (defined(label._backgroundBillboard)) {
@@ -667,7 +666,7 @@ define([
     LabelCollection.prototype.removeAll = function() {
         var labels = this._labels;
 
-        for ( var i = 0, len = labels.length; i < len; ++i) {
+        for (var i = 0, len = labels.length; i < len; ++i) {
             destroyLabel(this, labels[i]);
         }
 
