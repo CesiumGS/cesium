@@ -193,6 +193,7 @@ define([
 
         // Override select WebGL defaults
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
+        webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
 
         var defaultToWebgl2 = false;
         var webgl2Supported = (typeof WebGL2RenderingContext !== 'undefined');
