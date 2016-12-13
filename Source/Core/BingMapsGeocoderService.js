@@ -43,16 +43,6 @@ define([
 
     defineProperties(BingMapsGeocoderService.prototype, {
         /**
-         * The display name of the geocoder service
-         * @type {String}
-         */
-        displayName : {
-            get : function () {
-                return this._displayName;
-            }
-        },
-
-        /**
          * The URL endpoint for the Bing geocoder service
          * @type {String}
          */

@@ -64,8 +64,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._geocoderServices = options.geocoderServices;
-        if (!defined(options.geocoderServices)) {
+        if (defined(options.geocoderServices)) {
+            this._geocoderServices = options.geocoderServices;
+        } else {
             this._geocoderServices = [
                 new CartographicGeocoderService(),
                 new BingMapsGeocoderService()
@@ -98,21 +99,25 @@ define([
         this._isSearchInProgress = false;
         this._geocodeInProgress = undefined;
         this._complete = new Event();
-        this._suggestions = knockout.observableArray();
-        this._selectedSuggestion = knockout.observable();
-        this._showSuggestions = knockout.observable(true);
+        this._suggestions = [];
+        this._selectedSuggestion = undefined;
+        this._showSuggestions = true;
         this._updateCamera = updateCamera;
         this._adjustSuggestionsScroll = adjustSuggestionsScroll;
 
         var that = this;
 
         this._suggestionsVisible = knockout.pureComputed(function () {
-            return that._suggestions().length > 0 && that._showSuggestions();
+            var suggestions = knockout.getObservable(that, '_suggestions');
+            var suggestionsNotEmpty = suggestions().length > 0;
+            var showSuggestions = knockout.getObservable(that, '_showSuggestions')();
+            return suggestionsNotEmpty && showSuggestions;
         });
 
         this._searchCommand = createCommand(function() {
-            if (defined(that._selectedSuggestion())) {
-                that.activateSuggestion(that._selectedSuggestion());
+            that.hideSuggestions();
+            if (defined(that._selectedSuggestion)) {
+                that.activateSuggestion(that._selectedSuggestion);
                 return false;
             }
             if (that.isSearchInProgress) {
@@ -122,79 +127,29 @@ define([
             }
         });
 
-        this.handleArrowDown = function () {
-            if (that._suggestions().length === 0) {
-                return;
-            }
-            var numberOfSuggestions = that._suggestions().length;
-            var currentIndex = that._suggestions().indexOf(that._selectedSuggestion());
-            var next = (currentIndex + 1) % numberOfSuggestions;
-            that._selectedSuggestion(that._suggestions()[next]);
-
-            adjustSuggestionsScroll(this, next);
-        };
-
-        this.handleArrowUp = function () {
-            if (that._suggestions().length === 0) {
-                return;
-            }
-            var numberOfSuggestions = that._suggestions().length;
-            var next;
-            var currentIndex = that._suggestions().indexOf(that._selectedSuggestion());
-            if (currentIndex === -1 || currentIndex === 0) {
-               next = numberOfSuggestions - 1;
-            } else {
-                next = currentIndex - 1;
-            }
-            that._selectedSuggestion(that._suggestions()[next]);
-
-            adjustSuggestionsScroll(this, next);
-        };
-
         this.deselectSuggestion = function () {
-            that._selectedSuggestion(undefined);
+            that._selectedSuggestion = undefined;
         };
 
-        this.updateSearchSuggestions = function () {
-            var query = that.searchText;
-
-            if (hasOnlyWhitespace(query)) {
-                that._suggestions.splice(0, that._suggestions().length);
-                return;
-            }
-
-            that._suggestions.splice(0, that._suggestions().length);
-            var geocoderServices = that._geocoderServices.filter(function (service) {
-                return service.autoComplete === true;
-            });
-
-            geocoderServices.forEach(function (service) {
-                service.geocode(query)
-                    .then(function (results) {
-                        results.slice(0, 3).forEach(function(result) {
-                            that._suggestions.push(result);
-                        });
-                    });
-                });
-        };
-
-        this.handleKeyDown = function (data, event) {
-            var key = event.which;
-            if (key === 38) {
-                event.preventDefault();
-            } else if (key === 40) {
+        this.handleKeyDown = function(data, event) {
+            var downKey = event.key === 'ArrowDown' || event.key === 'Down' || event.keyCode === 40;
+            var upKey = event.key === 'ArrowUp' || event.key === 'Up' || event.keyCode === 38;
+            if (downKey || upKey) {
                 event.preventDefault();
             }
+
             return true;
         };
 
         this.handleKeyUp = function (data, event) {
-            var key = event.which;
-            if (key === 38) {
-                that.handleArrowUp();
-            } else if (key === 40) {
-                that.handleArrowDown();
-            } else if (key === 13) {
+            var downKey = event.key === 'ArrowDown' || event.key === 'Down' || event.keyCode === 40;
+            var upKey = event.key === 'ArrowUp' || event.key === 'Up' || event.keyCode === 38;
+            var enterKey = event.key === 'Enter' || event.keyCode === 13;
+            if (upKey) {
+                handleArrowUp(that);
+            } else if (downKey) {
+                handleArrowDown(that);
+            } else if (enterKey) {
                 that._searchCommand();
             }
             return true;
@@ -203,22 +158,22 @@ define([
         this.activateSuggestion = function (data) {
             that._searchText = data.displayName;
             var destination = data.destination;
-            that._suggestions.splice(0, that._suggestions().length);
+            clearSuggestions(that);
             updateCamera(that, destination);
         };
 
         this.hideSuggestions = function () {
-            that._showSuggestions(false);
-            that._selectedSuggestion(undefined);
+            that._showSuggestions = false;
+            that._selectedSuggestion = undefined;
         };
 
         this.showSuggestions = function () {
-            that._showSuggestions(true);
+            that._showSuggestions = true;
         };
 
         this.handleMouseover = function (data, event) {
-            if (data !== that._selectedSuggestion()) {
-                that._selectedSuggestion(data);
+            if (data !== that._selectedSuggestion) {
+                that._selectedSuggestion = data;
             }
         };
 
@@ -230,8 +185,15 @@ define([
          */
         this.keepExpanded = false;
 
-        knockout.track(this, ['_searchText', '_isSearchInProgress', 'keepExpanded']);
+        this._focusTextbox = false;
 
+        knockout.track(this, ['_searchText', '_isSearchInProgress', 'keepExpanded', '_suggestions', '_selectedSuggestion', '_showSuggestions', '_focusTextbox']);
+
+        var searchTextObservable = knockout.getObservable(this, '_searchText');
+        searchTextObservable.extend({ rateLimit: { timeout: 500, method: "notifyWhenChangesStop" } });
+        this._suggestionSubscription = searchTextObservable.subscribe(function() {
+            updateSearchSuggestions(that);
+        });
         /**
          * Gets a value indicating whether a search is currently in progress.  This property is observable.
          *
@@ -256,6 +218,7 @@ define([
                 if (this.isSearchInProgress) {
                     return 'Searching...';
                 }
+
                 return this._searchText;
             },
             set : function(value) {
@@ -265,7 +228,6 @@ define([
                 }
                 //>>includeEnd('debug');
                 this._searchText = value;
-                this.updateSearchSuggestions();
             }
         });
 
@@ -381,19 +343,39 @@ define([
             get : function() {
                 return this._suggestions;
             }
-        },
-
-        /**
-         * Indicates whether search suggestions should be visible. True if there are at least 1 suggestion.
-         *
-         * @type {Boolean}
-         */
-        suggestionsVisible : {
-            get : function() {
-                return this._suggestionsVisible;
-            }
         }
     });
+
+    GeocoderViewModel.prototype.destroy = function() {
+        this._suggestionSubscription.dispose();
+    };
+
+    function handleArrowUp(viewModel) {
+        if (viewModel._suggestions.length === 0) {
+            return;
+        }
+        var next;
+        var currentIndex = viewModel._suggestions.indexOf(viewModel._selectedSuggestion);
+        if (currentIndex === -1 || currentIndex === 0) {
+            viewModel._selectedSuggestion = undefined;
+            return;
+        }
+        next = currentIndex - 1;
+        viewModel._selectedSuggestion = viewModel._suggestions[next];
+        adjustSuggestionsScroll(viewModel, next);
+    }
+
+    function handleArrowDown(viewModel) {
+        if (viewModel._suggestions.length === 0) {
+            return;
+        }
+        var numberOfSuggestions = viewModel._suggestions.length;
+        var currentIndex = viewModel._suggestions.indexOf(viewModel._selectedSuggestion);
+        var next = (currentIndex + 1) % numberOfSuggestions;
+        viewModel._selectedSuggestion = viewModel._suggestions[next];
+
+        adjustSuggestionsScroll(viewModel, next);
+    }
 
     function updateCamera(viewModel, destination) {
         viewModel._scene.camera.flyTo({
@@ -451,7 +433,7 @@ define([
     }
 
     function geocode(viewModel, geocoderServices) {
-        var query = viewModel.searchText;
+        var query = viewModel._searchText;
 
         if (hasOnlyWhitespace(query)) {
             return;
@@ -464,7 +446,7 @@ define([
             var geocoderService = geocoderServices[i];
 
             viewModel._isSearchInProgress = true;
-            viewModel._suggestions.splice(0, viewModel._suggestions().length);
+            clearSuggestions(viewModel);
             var geocodePromise = geocoderService.geocode(query);
             resultPromises.push(geocodePromise);
             geocodePromise.then(getFirstResult);
@@ -527,6 +509,32 @@ define([
 
     function hasOnlyWhitespace(string) {
         return /^\s*$/.test(string);
+    }
+
+    function clearSuggestions(viewModel) {
+        knockout.getObservable(viewModel, '_suggestions').removeAll();
+    }
+
+    function updateSearchSuggestions(viewModel) {
+        var query = viewModel._searchText;
+
+        clearSuggestions(viewModel);
+        if (hasOnlyWhitespace(query)) {
+            return;
+        }
+
+        var geocoderServices = viewModel._geocoderServices.filter(function (service) {
+            return service.autoComplete === true;
+        });
+
+        geocoderServices.forEach(function (service) {
+            service.geocode(query)
+                .then(function (results) {
+                    results.slice(0, 3).forEach(function(result) {
+                        viewModel._suggestions.push(result);
+                    });
+                });
+        });
     }
 
     return GeocoderViewModel;

@@ -31,18 +31,6 @@ define([
         this.autoComplete = false;
     }
 
-    defineProperties(GeocoderService.prototype, {
-        /**
-         * The name of this service to be displayed next to suggestions
-         * in case more than one geocoder is in use
-         * @type {String}
-         *
-         */
-        displayName : {
-            get : DeveloperError.throwInstantiationError
-        }
-    });
-
     /**
      * @function
      *

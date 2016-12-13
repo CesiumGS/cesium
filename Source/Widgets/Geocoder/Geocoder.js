@@ -70,7 +70,8 @@ define([
 textInput: searchText,\
 disable: isSearchInProgress,\
 event: { keyup: handleKeyUp, keydown: handleKeyDown, mouseover: deselectSuggestion },\
-css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 }');
+css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 },\
+hasFocus: _focusTextbox');
 
         this._onTextBoxFocus = function() {
             // as of 2016-10-19, setTimeout is required to ensure that the
@@ -95,16 +96,16 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
 
         var searchSuggestionsContainer = document.createElement('div');
         searchSuggestionsContainer.className = 'search-results';
-        searchSuggestionsContainer.setAttribute('data-bind', 'visible: suggestionsVisible');
+        searchSuggestionsContainer.setAttribute('data-bind', 'visible: _suggestionsVisible');
 
         var suggestionsList = document.createElement('ul');
-        suggestionsList.setAttribute('data-bind', 'foreach: suggestions');
+        suggestionsList.setAttribute('data-bind', 'foreach: _suggestions');
         var suggestions = document.createElement('li');
         suggestionsList.appendChild(suggestions);
         suggestions.setAttribute('data-bind', 'text: $data.displayName, \
 click: $parent.activateSuggestion, \
-event: { mouseover: $parent.handleMouseover }, \
-css: { active: $data === $parent.selectedSuggestion() }');
+event: { mouseover: $parent.handleMouseover}, \
+css: { active: $data === $parent._selectedSuggestion }');
 
         searchSuggestionsContainer.appendChild(suggestionsList);
         container.appendChild(searchSuggestionsContainer);
@@ -119,14 +120,14 @@ css: { active: $data === $parent.selectedSuggestion() }');
 
         this._onInputBegin = function(e) {
             if (!container.contains(e.target)) {
-                textBox.blur();
+                viewModel._focusTextbox = false;
                 viewModel.hideSuggestions();
             }
         };
 
         this._onInputEnd = function(e) {
             if (container.contains(e.target)) {
-                textBox.focus();
+                viewModel._focusTextbox = true;
                 viewModel.showSuggestions();
             }
         };
@@ -207,7 +208,7 @@ css: { active: $data === $parent.selectedSuggestion() }');
             document.removeEventListener('touchstart', this._onInputBegin, true);
             document.removeEventListener('touchend', this._onInputEnd, true);
         }
-
+        this._viewModel.destory();
         knockout.cleanNode(this._form);
         knockout.cleanNode(this._searchSuggestionsContainer);
         this._container.removeChild(this._form);
