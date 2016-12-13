@@ -196,15 +196,12 @@ defineSuite([
         });
     });
 
-    it('Check.defined does not throw when passed value that is not undefined', function () {
+    it('Check.defined does not throw unless passed value that is undefined or null', function () {
         expect(function () {
             Check.defined({});
         }).not.toThrowDeveloperError();
         expect(function () {
             Check.defined([]);
-        }).not.toThrowDeveloperError();
-        expect(function () {
-            Check.defined(null);
         }).not.toThrowDeveloperError();
         expect(function () {
             Check.defined(2);
