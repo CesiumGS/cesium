@@ -90,6 +90,7 @@ define([
         this._minimumRadius = undefined;
         this._maximumRadius = undefined;
         this._centerToleranceSquared = undefined;
+        this._sqauredAOverSquaredB = undefined;
 
         initialize(this, x, y, z);
     }
