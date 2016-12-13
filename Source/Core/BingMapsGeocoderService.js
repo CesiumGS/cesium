@@ -32,6 +32,12 @@ define([
         this._url = 'https://dev.virtualearth.net/REST/v1/Locations';
         this._key = BingMapsApi.getKey(options.key);
 
+        /**
+         * Indicates whether this geocoding service is to be used for autocomplete.
+         *
+         * @type {boolean}
+         * @default false
+         */
         this.autoComplete = defaultValue(options.autoComplete, false);
     }
 

@@ -20,9 +20,8 @@ define([
      * @constructor
      *
      * @see BingMapsGeocoderService
-     * @see OpenStreetMapNominatimGeocoderService
      */
-    function GeocoderService () {
+    function GeocoderService() {
         /**
          * Indicates whether this geocoding service is to be used for autocomplete.
          *

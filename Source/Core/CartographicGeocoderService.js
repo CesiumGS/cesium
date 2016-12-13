@@ -2,10 +2,12 @@
 define([
     './Cartesian3',
     './defaultValue',
+    './defineProperties',
     '../ThirdParty/when'
 ], function(
     Cartesian3,
     defaultValue,
+    defineProperties,
     when) {
     'use strict';
 
@@ -17,8 +19,21 @@ define([
      * @constructor
      */
     function CartographicGeocoderService() {
-        this.autoComplete = false;
+        this._autoComplete = false;
     }
+
+    defineProperties(CartographicGeocoderService.prototype, {
+        /**
+         * This geocoder does not support autocomplete, so this property will always be false.
+         *
+         * @type {boolean}
+         */
+        autoComplete : {
+            get : function () {
+                return this._autoComplete;
+            }
+        }
+    });
 
     /**
      * This service completes geocoding synchronously and therefore does not
