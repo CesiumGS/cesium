@@ -57,6 +57,8 @@ define([
         ellipsoid._maximumRadius = Math.max(x, y, z);
 
         ellipsoid._centerToleranceSquared = CesiumMath.EPSILON1;
+
+        ellipsoid._sqauredAOverSquaredB = ellipsoid.radiiSquared.x / ellipsoid.radiiSquared.z;
     }
 
     /**
@@ -641,7 +643,7 @@ define([
 
         buffer = defaultValue(buffer, 0.0);
 
-        var sqauredAOverSquaredB = ellipsoid.radiiSquared.x / ellipsoid.radiiSquared.z;
+        var sqauredAOverSquaredB = ellipsoid._sqauredAOverSquaredB;
 
         if (!defined(result)){
             result = new Cartesian3();
