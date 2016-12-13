@@ -230,10 +230,7 @@ define([
                 return {
                     compare: function(actual, expected) {
                         if (!webglStub) {
-                            var scene = actual;
-                            scene.initializeFrame();
-                            scene.render();
-                            var actualRgba = scene.context.readPixels();
+                            var actualRgba = renderAndReadPixels(actual);
 
                             // The callback may have expectations that fail, which still makes the
                             // spec fail, as we desired, even though this matcher sets pass to true.
@@ -278,22 +275,30 @@ define([
         };
     }
 
-    function renderEquals(util, customEqualityTesters, actual, expected, expectEqual) {
+    function renderAndReadPixels(options) {
         var scene;
 
-        if (defined(actual.scene) && defined(actual.time)) {
-            // options were passed to render the scene at a given time
-            var options = actual;
-            scene = actual.scene;
+        if (defined(options.scene)) {
+            // options were passed to render the scene at a given time or prime shadow map
+            scene = options.scene;
+            var time = options.time;
+
             scene.initializeFrame();
-            scene.render(options.time);
+            if (defined(options.primeShadowMap)) {
+                scene.render(time); // Computes shadow near/far for next frame
+            }
+            scene.render(time);
         } else {
-            scene = actual;
+            scene = options;
             scene.initializeFrame();
             scene.render();
         }
 
-        var actualRgba = scene.context.readPixels();
+        return scene.context.readPixels();
+    }
+
+    function renderEquals(util, customEqualityTesters, actual, expected, expectEqual) {
+        var actualRgba = renderAndReadPixels(actual);
 
         // When the WebGL stub is used, all WebGL function calls are noops so
         // the expectation is not verified.  This allows running all the WebGL
