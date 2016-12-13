@@ -822,7 +822,7 @@ define([
      */
     Cartesian3.fromDegreesArray = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.type.array(coordinates);
+        Check.defined(coordinates, 'coordinates');
         if (coordinates.length < 2 || coordinates.length % 2 !== 0) {
             throw new DeveloperError('the number of coordinates must be a multiple of 2 and at least 2');
         }
@@ -858,7 +858,7 @@ define([
      */
     Cartesian3.fromRadiansArray = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.type.array(coordinates);
+        Check.defined(coordinates, 'coordinates');
         if (coordinates.length < 2 || coordinates.length % 2 !== 0) {
             throw new DeveloperError('the number of coordinates must be a multiple of 2 and at least 2');
         }
@@ -894,7 +894,7 @@ define([
      */
     Cartesian3.fromDegreesArrayHeights = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.type.array(coordinates);
+        Check.defined(coordinates, 'coordinates');
         if (coordinates.length < 3 || coordinates.length % 3 !== 0) {
             throw new DeveloperError('the number of coordinates must be a multiple of 3 and at least 3');
         }

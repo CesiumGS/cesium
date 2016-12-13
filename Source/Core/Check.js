@@ -134,16 +134,6 @@ define([
      * @param {} test The value to test
      * @throws {DeveloperError}
      */
-    Check.type.array = function (test) {
-        if (!isArray(test)) {
-            throw new DeveloperError(errors.failedType(typeof test, 'array'));
-        }
-    };
-
-    /**
-     * @param {} test The value to test
-     * @throws {DeveloperError}
-     */
     Check.type.boolean = function (test) {
         if (typeof test !== 'boolean') {
             throw new DeveloperError(errors.failedType(typeof test, 'boolean'));

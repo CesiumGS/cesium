@@ -6,35 +6,6 @@ defineSuite([
     'use strict';
 
     describe('type checks', function () {
-        it('Check.type.array does not throw when passed an array', function () {
-            expect(function () {
-                Check.type.array([]);
-            }).not.toThrowDeveloperError();
-        });
-        it('Check.type.array does not throw when passed a typed array', function () {
-            expect(function () {
-                Check.type.array([]);
-            }).not.toThrowDeveloperError();
-        });
-
-        it('Check.type.array throws when passed non-array', function () {
-            expect(function () {
-                Check.type.array({});
-            }).toThrowDeveloperError();
-            expect(function () {
-                Check.type.array(true);
-            }).toThrowDeveloperError();
-            expect(function () {
-                Check.type.array(1);
-            }).toThrowDeveloperError();
-            expect(function () {
-                Check.type.array('snth');
-            }).toThrowDeveloperError();
-            expect(function () {
-                Check.type.array(function () {return true;});
-            }).toThrowDeveloperError();
-        });
-
         it('Check.type.boolean does not throw when passed a boolean', function () {
             expect(function () {
                 Check.type.boolean(true);
