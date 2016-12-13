@@ -58,7 +58,9 @@ define([
 
         ellipsoid._centerToleranceSquared = CesiumMath.EPSILON1;
 
-        ellipsoid._sqauredAOverSquaredB = ellipsoid.radiiSquared.x / ellipsoid.radiiSquared.z;
+        if (ellipsoid._radiiSquared.z !== 0){
+            ellipsoid._sqauredAOverSquaredB = ellipsoid._radiiSquared.x / ellipsoid._radiiSquared.z;
+        }
     }
 
     /**
@@ -627,6 +629,7 @@ define([
      *
      * @exception {DeveloperError} position is required.
      * @exception {DeveloperError} Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y).
+     * @exception {DeveloperError} Ellipsoid.radii.z must be greater than 0.
      */
 
     Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function(position, buffer, result) {
@@ -639,6 +642,9 @@ define([
         }
         if (!CesiumMath.equalsEpsilon(ellipsoid.radii.x, ellipsoid.radii.y, CesiumMath.EPSILON15)) {
             throw new DeveloperError('Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)');
+        }
+        if (ellipsoid.radii.z === 0) {
+            throw new DeveloperError('Ellipsoid.radii.z must be greater than 0');
         }
         //>>includeEnd('debug');
 

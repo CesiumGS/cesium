@@ -448,6 +448,14 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('getSurfaceNormalIntersectionWithZAxis throws if the ellipsoid has radii.z === 0', function() {
+        expect(function() {
+            var ellipsoid = new Ellipsoid(1,2,0);
+            var cartesian = new Cartesian3();
+            ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesian);
+        }).toThrowDeveloperError();
+    });
+
     it('getSurfaceNormalIntersectionWithZAxis works without a result parameter', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var cartographic  = Cartographic.fromDegrees(35.23,33.23);
