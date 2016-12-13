@@ -9,7 +9,7 @@ define([
     '../../Core/deprecationWarning',
     '../../Core/DeveloperError',
     '../../Core/Event',
-    '../../Core/LongLatGeocoderService',
+    '../../Core/CartographicGeocoderService',
     '../../Core/loadJsonp',
     '../../Core/Matrix4',
     '../../Core/OpenStreetMapNominatimGeocoderService',
@@ -28,7 +28,7 @@ define([
         deprecationWarning,
         DeveloperError,
         Event,
-        LongLatGeocoderService,
+        CartographicGeocoderService,
         loadJsonp,
         Matrix4,
         OpenStreetMapNominatimGeocoderService,
@@ -69,7 +69,7 @@ define([
         this._geocoderServices = options.geocoderServices;
         if (!defined(options.geocoderServices)) {
             this._geocoderServices = [
-                new LongLatGeocoderService(),
+                new CartographicGeocoderService(),
                 new BingMapsGeocoderService()
             ];
         }

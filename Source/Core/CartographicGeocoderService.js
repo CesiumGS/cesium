@@ -12,10 +12,10 @@ define([
     /**
      * Provides geocoding through Bing Maps.
      *
-     * @alias LongLatGeocoderService
+     * @alias CartographicGeocoderService
      * @constructor
      */
-    function LongLatGeocoderService() {
+    function CartographicGeocoderService() {
         this.autoComplete = false;
     }
 
@@ -23,7 +23,7 @@ define([
      * This service completes geocoding synchronously and therefore does not
      * need to handle canceled requests that have not finished yet.
      */
-    LongLatGeocoderService.prototype.cancel = function() {
+    CartographicGeocoderService.prototype.cancel = function() {
     };
 
     /**
@@ -32,7 +32,7 @@ define([
      * @param {String} query The query to be sent to the geocoder service
      * @returns {Promise<GeocoderResult[]>}
      */
-    LongLatGeocoderService.prototype.geocode = function(query) {
+    CartographicGeocoderService.prototype.geocode = function(query) {
         try {
             var splitQuery = query.match(/[^\s,\n]+/g);
             if ((splitQuery.length === 2) || (splitQuery.length === 3)) {
@@ -54,5 +54,5 @@ define([
         }
     };
 
-    return LongLatGeocoderService;
+    return CartographicGeocoderService;
 });

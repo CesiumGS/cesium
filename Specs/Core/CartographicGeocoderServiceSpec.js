@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/LongLatGeocoderService',
+    'Core/CartographicGeocoderService',
     'Core/Cartesian3'
 ], function(
-    LongLatGeocoderService,
+    CartographicGeocoderService,
     Cartesian3) {
     'use strict';
 
-    var service = new LongLatGeocoderService();
+    var service = new CartographicGeocoderService();
 
     it('returns cartesian with matching coordinates for long/lat/height input', function (done) {
         var query = ' 1.0, 2.0, 3.0 ';
