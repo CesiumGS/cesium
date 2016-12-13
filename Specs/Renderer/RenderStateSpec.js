@@ -1,15 +1,15 @@
 /*global defineSuite*/
 defineSuite([
-        'Renderer/RenderState',
+        'Core/WebGLConstants',
         'Core/WindingOrder',
+        'Renderer/RenderState',
         'Renderer/ContextLimits',
-        'Renderer/WebGLConstants',
         'Specs/createContext'
     ], function(
-        RenderState,
-        WindingOrder,
-        ContextLimits,
         WebGLConstants,
+        WindingOrder,
+        RenderState,
+        ContextLimits,
         createContext) {
     'use strict';
 

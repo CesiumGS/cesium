@@ -28,7 +28,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.text] A Property specifying the text.
+     * @param {Property} [options.text] A Property specifying the text. Explicit newlines '\n' are supported.
      * @param {Property} [options.font='10px sans-serif'] A Property specifying the CSS font.
      * @param {Property} [options.style=LabelStyle.FILL] A Property specifying the {@link LabelStyle}.
      * @param {Property} [options.fillColor=Color.WHITE] A Property specifying the fill {@link Color}.
@@ -110,6 +110,7 @@ define([
 
         /**
          * Gets or sets the string Property specifying the text of the label.
+         * Explicit newlines '\n' are supported.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
