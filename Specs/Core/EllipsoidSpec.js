@@ -536,11 +536,11 @@ defineSuite([
 
     });
 
-    it('ellipsoid is initialized with _sqauredAOverSquaredB property', function() {
+    it('ellipsoid is initialized with _sqauredXOverSquaredZ property', function() {
        var ellipsoid = new Ellipsoid(4 , 4 , 3);
 
-       var squaredAOverB = ellipsoid.radiiSquared.x / ellipsoid.radiiSquared.z;
-       expect(ellipsoid._sqauredAOverSquaredB).toEqual(squaredAOverB);
+       var sqauredXOverSquaredZ = ellipsoid.radiiSquared.x / ellipsoid.radiiSquared.z;
+       expect(ellipsoid._sqauredXOverSquaredZ).toEqual(sqauredXOverSquaredZ);
     });
 
     createPackableSpecs(Ellipsoid, Ellipsoid.WGS84, [Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z]);

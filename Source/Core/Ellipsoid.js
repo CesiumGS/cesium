@@ -8,7 +8,6 @@ define([
         './DeveloperError',
         './freezeObject',
         './Math',
-        './Ray',
         './scaleToGeodeticSurface'
     ], function(
         Cartesian3,
@@ -19,7 +18,6 @@ define([
         DeveloperError,
         freezeObject,
         CesiumMath,
-        Ray,
         scaleToGeodeticSurface) {
     'use strict';
 
@@ -59,7 +57,7 @@ define([
         ellipsoid._centerToleranceSquared = CesiumMath.EPSILON1;
 
         if (ellipsoid._radiiSquared.z !== 0){
-            ellipsoid._sqauredAOverSquaredB = ellipsoid._radiiSquared.x / ellipsoid._radiiSquared.z;
+            ellipsoid._sqauredXOverSquaredZ = ellipsoid._radiiSquared.x / ellipsoid._radiiSquared.z;
         }
     }
 
@@ -92,7 +90,7 @@ define([
         this._minimumRadius = undefined;
         this._maximumRadius = undefined;
         this._centerToleranceSquared = undefined;
-        this._sqauredAOverSquaredB = undefined;
+        this._sqauredXOverSquaredZ = undefined;
 
         initialize(this, x, y, z);
     }
@@ -622,7 +620,7 @@ define([
      * @param {Number} [buffer = 0.0] A buffer to subtract from the ellipsoid size when checking if the point is inside the ellipsoid.
      *                                In earth case, with common earth datums, there is no need for this buffer since the intersection point is always (relatively) very close to the center.
      *                                In WGS84 datum, intersection point is at max z = +-42841.31151331382 (0.673% of z-axis).
-     *                                Intersection point could be outside the ellipsoid if the ratio of MajorAxis / MinorAxis is bigger than the square root of 2
+     *                                Intersection point could be outside the ellipsoid if the ratio of MajorAxis / AxisOfRotation is bigger than the square root of 2
      * @param {Cartesian} [result] The cartesian to which to copy the result, or undefined to create and
      *        return a new instance.
      * @returns {Cartesian | undefined} the intersection point if it's inside the ellipsoid, undefined otherwise
@@ -634,23 +632,21 @@ define([
 
     Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function(position, buffer, result) {
 
-        var ellipsoid = this;
-
         //>>includeStart('debug', pragmas.debug);
         if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
-        if (!CesiumMath.equalsEpsilon(ellipsoid.radii.x, ellipsoid.radii.y, CesiumMath.EPSILON15)) {
+        if (!CesiumMath.equalsEpsilon(this._radii.x, this._radii.y, CesiumMath.EPSILON15)) {
             throw new DeveloperError('Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)');
         }
-        if (ellipsoid.radii.z === 0) {
+        if (this._radii.z === 0) {
             throw new DeveloperError('Ellipsoid.radii.z must be greater than 0');
         }
         //>>includeEnd('debug');
 
         buffer = defaultValue(buffer, 0.0);
 
-        var sqauredAOverSquaredB = ellipsoid._sqauredAOverSquaredB;
+        var sqauredXOverSquaredZ = this._sqauredXOverSquaredZ;
 
         if (!defined(result)){
             result = new Cartesian3();
@@ -658,8 +654,8 @@ define([
 
         result.x = 0;
         result.y = 0;
-        result.z = position.z * (1 - sqauredAOverSquaredB);
-        if (Math.abs(result.z) >= ellipsoid.radii.z - buffer){
+        result.z = position.z * (1 - sqauredXOverSquaredZ);
+        if (Math.abs(result.z) >= this._radii.z - buffer){
             return undefined;
         }
 
