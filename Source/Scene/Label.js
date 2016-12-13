@@ -671,7 +671,7 @@ define([
          * to the left, center, or right of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setHorizontalOrigin.png' width='400' height='300' /><br />
+         * <img src='images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
          * </div>
          * @memberof Label.prototype
          * @type {HorizontalOrigin}
