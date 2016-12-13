@@ -741,7 +741,6 @@ define([
     var scratchRectangle = new Rectangle();
     var scratchRotatedRectangle = new Rectangle();
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
-    var scratchVertexFormat = new VertexFormat();
     var scratchOptions = {
         rectangle : scratchRectangle,
         ellipsoid : scratchEllipsoid,
