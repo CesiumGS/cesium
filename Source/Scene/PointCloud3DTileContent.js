@@ -189,9 +189,9 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    PointCloud3DTileContent.prototype.hasProperty = function(name) {
+    PointCloud3DTileContent.prototype.hasProperty = function(batchId, name) {
         if (defined(this.batchTable)) {
-            return this.batchTable.hasProperty(name);
+            return this.batchTable.hasProperty(batchId, name);
         }
         return false;
     };

@@ -103,7 +103,6 @@ define([
         if (!content.applyStyleWithShader(frameState, style)) {
             applyStyleWithBatchTable(frameState, content, stats, style);
         }
-
     }
 
     function applyStyleWithBatchTable(frameState, content, stats, style) {

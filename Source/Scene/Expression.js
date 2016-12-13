@@ -362,6 +362,21 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'isExactClass' || call === 'isClass') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'getExactClassName') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length > 0) {
+                throw new DeveloperError('Error: ' + call + ' does not take any argument.');
+            }
+            //>>includeEnd('debug');
+            return new Node(ExpressionNodeType.UNARY, call);
         } else if (defined(unaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
@@ -616,6 +631,12 @@ define([
                 node.evaluate = node._evaluateNaN;
             } else if (node._value === 'isFinite') {
                 node.evaluate = node._evaluateIsFinite;
+            } else if (node._value === 'isExactClass') {
+                node.evaluate = node._evaluateIsExactClass;
+            } else if (node._value === 'isClass') {
+                node.evaluate = node._evaluateIsClass;
+            } else if (node._value === 'getExactClassName') {
+                node.evaluate = node._evaluategetExactClassName;
             } else if (defined(unaryFunctions[node._value])) {
                 node.evaluate = getEvaluateUnaryFunction(node._value);
             } else if (node._value === 'Boolean') {
@@ -967,6 +988,18 @@ define([
         return isFinite(this._left.evaluate(frameState, feature));
     };
 
+    Node.prototype._evaluateIsExactClass = function(frameState, feature) {
+        return feature.isExactClass(this._left.evaluate(frameState, feature));
+    };
+
+    Node.prototype._evaluateIsClass = function(frameState, feature) {
+        return feature.isClass(this._left.evaluate(frameState, feature));
+    };
+
+    Node.prototype._evaluategetExactClassName = function(frameState, feature) {
+        return feature.getExactClassName();
+    };
+
     Node.prototype._evaluateBooleanConversion = function(frameState, feature) {
         return Boolean(this._left.evaluate(frameState, feature));
     };
@@ -1194,7 +1227,7 @@ define([
                     return 'sqrt(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
-                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
+                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {
                     throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
                 }
                 //>>includeEnd('debug');
