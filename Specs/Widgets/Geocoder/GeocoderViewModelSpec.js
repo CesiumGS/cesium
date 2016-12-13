@@ -5,7 +5,7 @@ defineSuite([
         'Scene/Camera',
         'Specs/createScene',
         'Specs/pollToPromise',
-        'ThirdParty/when',
+        'ThirdParty/when'
     ], function(
         GeocoderViewModel,
         Cartesian3,
@@ -165,8 +165,8 @@ defineSuite([
             geocoderServices : [customGeocoderOptions]
         });
         geocoder._searchText = 'some_text';
-        geocoder.updateSearchSuggestions();
-        expect(geocoder._suggestions().length).toEqual(2);
+        geocoder._updateSearchSuggestions(geocoder);
+        expect(geocoder._suggestions.length).toEqual(2);
     });
 
     it('update search suggestions results in empty list if the query is empty', function() {
@@ -176,8 +176,8 @@ defineSuite([
         });
         geocoder._searchText = '';
         spyOn(geocoder, '_adjustSuggestionsScroll');
-        geocoder.updateSearchSuggestions();
-        expect(geocoder._suggestions().length).toEqual(0);
+        geocoder._updateSearchSuggestions(geocoder);
+        expect(geocoder._suggestions.length).toEqual(0);
     });
 
     it('can activate selected search suggestion', function () {
@@ -189,7 +189,7 @@ defineSuite([
         spyOn(geocoder, '_adjustSuggestionsScroll');
 
         var suggestion = {displayName: 'a', destination: {west: 0.0, east: 0.1, north: 0.1, south: -0.1}};
-        geocoder._selectedSuggestion(suggestion);
+        geocoder._selectedSuggestion = suggestion;
         geocoder.activateSuggestion(suggestion);
         expect(geocoder._searchText).toEqual('a');
     });
@@ -214,8 +214,8 @@ defineSuite([
         geocoder._searchText = 'sthsnth'; // an empty query will prevent geocoding
         spyOn(geocoder, '_updateCamera');
         spyOn(geocoder, '_adjustSuggestionsScroll');
-        geocoder.updateSearchSuggestions();
-        expect(geocoder._suggestions().length).toEqual(geocoderResults1.length + geocoderResults2.length);
+        geocoder._updateSearchSuggestions(geocoder);
+        expect(geocoder._suggestions.length).toEqual(geocoderResults1.length + geocoderResults2.length);
     });
 
 }, 'WebGL');

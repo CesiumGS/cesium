@@ -115,20 +115,21 @@ defineSuite([
         });
         var viewModel = geocoder._viewModel;
         viewModel._searchText = 'some_text';
-        viewModel.updateSearchSuggestions();
+        viewModel._updateSearchSuggestions(viewModel);
 
-        expect(viewModel._selectedSuggestion()).toEqual(undefined);
-        viewModel.handleArrowDown();
-        expect(viewModel._selectedSuggestion().displayName).toEqual('a');
-        viewModel.handleArrowDown();
-        viewModel.handleArrowDown();
-        expect(viewModel._selectedSuggestion().displayName).toEqual('c');
-        viewModel.handleArrowDown();
-        expect(viewModel._selectedSuggestion().displayName).toEqual('a');
-        viewModel.handleArrowUp();
-        expect(viewModel._selectedSuggestion().displayName).toEqual('c');
-        viewModel.handleArrowUp();
-        expect(viewModel._selectedSuggestion().displayName).toEqual('b');
+        expect(viewModel._selectedSuggestion).toEqual(undefined);
+        viewModel._handleArrowDown(viewModel);
+        expect(viewModel._selectedSuggestion.displayName).toEqual('a');
+        viewModel._handleArrowDown(viewModel);
+        viewModel._handleArrowDown(viewModel);
+        expect(viewModel._selectedSuggestion.displayName).toEqual('c');
+        viewModel._handleArrowDown(viewModel);
+        expect(viewModel._selectedSuggestion.displayName).toEqual('a');
+        viewModel._handleArrowDown(viewModel);
+        viewModel._handleArrowUp(viewModel);
+        expect(viewModel._selectedSuggestion.displayName).toEqual('a');
+        viewModel._handleArrowUp(viewModel);
+        expect(viewModel._selectedSuggestion).toBeUndefined();
     });
 
 }, 'WebGL');

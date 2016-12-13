@@ -104,6 +104,9 @@ define([
         this._showSuggestions = true;
         this._updateCamera = updateCamera;
         this._adjustSuggestionsScroll = adjustSuggestionsScroll;
+        this._updateSearchSuggestions = updateSearchSuggestions;
+        this._handleArrowDown = handleArrowDown;
+        this._handleArrowUp = handleArrowUp;
 
         var that = this;
 

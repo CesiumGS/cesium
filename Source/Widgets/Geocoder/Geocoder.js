@@ -208,7 +208,7 @@ css: { active: $data === $parent._selectedSuggestion }');
             document.removeEventListener('touchstart', this._onInputBegin, true);
             document.removeEventListener('touchend', this._onInputEnd, true);
         }
-        this._viewModel.destory();
+        this._viewModel.destroy();
         knockout.cleanNode(this._form);
         knockout.cleanNode(this._searchSuggestionsContainer);
         this._container.removeChild(this._form);
