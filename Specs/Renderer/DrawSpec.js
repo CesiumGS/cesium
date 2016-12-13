@@ -5,6 +5,7 @@ defineSuite([
         'Core/ComponentDatatype',
         'Core/IndexDatatype',
         'Core/PrimitiveType',
+        'Core/WebGLConstants',
         'Core/WindingOrder',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
@@ -14,7 +15,6 @@ defineSuite([
         'Renderer/RenderState',
         'Renderer/ShaderProgram',
         'Renderer/VertexArray',
-        'Renderer/WebGLConstants',
         'Scene/BlendingState',
         'Specs/createContext'
     ], 'Renderer/Draw', function(
@@ -23,6 +23,7 @@ defineSuite([
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
+        WebGLConstants,
         WindingOrder,
         Buffer,
         BufferUsage,
@@ -32,7 +33,6 @@ defineSuite([
         RenderState,
         ShaderProgram,
         VertexArray,
-        WebGLConstants,
         BlendingState,
         createContext) {
     'use strict';

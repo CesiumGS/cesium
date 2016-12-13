@@ -2,7 +2,7 @@
 define([
         '../Core/Cartesian3',
         '../Core/Matrix4',
-        './WebGLConstants'
+        '../Core/WebGLConstants'
     ], function(
         Cartesian3,
         Matrix4,

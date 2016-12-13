@@ -5,18 +5,18 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/WebGLConstants',
         '../Core/WindingOrder',
-        './ContextLimits',
-        './WebGLConstants'
+        './ContextLimits'
     ], function(
         BoundingRectangle,
         Color,
         defaultValue,
         defined,
         DeveloperError,
+        WebGLConstants,
         WindingOrder,
-        ContextLimits,
-        WebGLConstants) {
+        ContextLimits) {
     'use strict';
 
     function validateBlendEquation(blendEquation) {
@@ -393,7 +393,7 @@ define([
      *
      * @see DrawCommand
      * @see ClearCommand
-     * 
+     *
      * @private
      */
     RenderState.fromCache = function(renderState) {

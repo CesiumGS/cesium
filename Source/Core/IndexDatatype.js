@@ -1,16 +1,16 @@
 /*global define*/
 define([
-        '../Renderer/WebGLConstants',
         './defined',
         './DeveloperError',
         './freezeObject',
-        './Math'
+        './Math',
+        './WebGLConstants'
     ], function(
-        WebGLConstants,
         defined,
         DeveloperError,
         freezeObject,
-        CesiumMath) {
+        CesiumMath,
+        WebGLConstants) {
     'use strict';
 
     /**

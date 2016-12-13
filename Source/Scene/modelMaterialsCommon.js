@@ -2,7 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Renderer/WebGLConstants'
+        '../Core/WebGLConstants'
     ], function(
         defaultValue,
         defined,
@@ -622,7 +622,7 @@ define([
         } else {
             value = paramValue;
         }
-     
+
         switch (paramName)  {
             case 'ambient':
                 return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
@@ -636,13 +636,13 @@ define([
                 return WebGLConstants.FLOAT;
             case 'transparency':
                 return WebGLConstants.FLOAT;
-                
+
             // these two are usually not used directly within shaders,
             // they are just added here for completeness
             case 'transparent':
-                return WebGLConstants.BOOL;                
+                return WebGLConstants.BOOL;
             case 'doubleSided':
-                return WebGLConstants.BOOL;                
+                return WebGLConstants.BOOL;
         }
     }
 
