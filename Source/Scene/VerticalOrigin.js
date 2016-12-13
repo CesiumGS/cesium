@@ -6,17 +6,23 @@ define([
     'use strict';
 
     /**
-     * The vertical location of an origin relative to an object, e.g., a {@link Billboard}.
-     * For example, the vertical origin is used to display a billboard above or below (in
-     * screen space) of the actual position.
+     * The vertical location of an origin relative to an object, e.g., a {@link Billboard}
+     * or {@link Label}.  For example, setting the vertical origin to <code>TOP</code>
+     * or <code>BOTTOM</code> will display a billboard above or below (in screen space)
+     * the anchor position.
+     * <br /><br />
+     * <div align='center'>
+     * <img src='images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
+     * </div>
      *
      * @exports VerticalOrigin
      *
      * @see Billboard#verticalOrigin
+     * @see Label#verticalOrigin
      */
     var VerticalOrigin = {
         /**
-         * The origin is at the vertical center of the object.
+         * The origin is at the vertical center between <code>BASELINE</code> and <code>TOP</code>.
          *
          * @type {Number}
          * @constant
@@ -30,6 +36,14 @@ define([
          * @constant
          */
         BOTTOM : 1,
+
+        /**
+         * If the object contains text, the origin is at the baseline of the text, else the origin is at the bottom of the object.
+         *
+         * @type {Number}
+         * @constant
+         */
+        BASELINE : 2,
 
         /**
          * The origin is at the top of the object.

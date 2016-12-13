@@ -148,7 +148,7 @@ define([
         cluster.label.show = true;
         cluster.label.text = numPoints.toLocaleString();
         cluster.billboard.position = cluster.label.position = cluster.point.position = position;
-        
+
         entityCluster._clusterEvent.raiseEvent(ids, cluster);
     }
 
