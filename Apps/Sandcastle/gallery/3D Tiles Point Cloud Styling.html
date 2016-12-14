@@ -130,18 +130,18 @@ addStyle('Pow', {
 });
 
 addStyle('Min and Max', {
-    color : "rgb(min(${POSITION}[0], 0.75) * 255, max(${POSITION}[2], 0.25) * 255, 255)",
+    color : "rgb(min(${POSITION}.x, 0.75) * 255, max(${POSITION}.z, 0.25) * 255, 255)",
     pointSize : "5"
 });
 
+// secondaryColor is originally a vec3 - so add vec4(0.0, 0.0, 0.0, 1.0) to make the point cloud opaque
 addStyle('Secondary Color', {
     color : {
-        expression : "[${secondaryColor}[0], ${secondaryColor}[1], ${secondaryColor}[2], 1.0]",
         conditions : [
-            ["${id} < 250", "${expression}"],
-            ["${id} < 500", "${expression} * ${expression}"],
-            ["${id} < 750", "${expression} / 5.0"],
-            ["${id} < 1000", "rgb(0, 0, Number(${expression}[0] < 0.5) * 255)"]
+            ["${id} < 250", "${secondaryColor} + vec4(0.0, 0.0, 0.0, 1.0)"],
+            ["${id} < 500", "${secondaryColor} * ${secondaryColor} + vec4(0.0, 0.0, 0.0, 1.0)"],
+            ["${id} < 750", "${secondaryColor} / 5.0 + vec4(0.0, 0.0, 0.0, 1.0)"],
+            ["${id} < 1000", "rgb(0, 0, Number(${secondaryColor}.x < 0.5) * 255)"]
         ]
     }
 });
@@ -154,8 +154,9 @@ addStyle('Use point positions', {
     show : "${POSITION}[0] > 0.5 || ${POSITION}[1] > 0.5 || ${POSITION}[2] > 0.5"
 });
 
+// POSITION contains 0 as its last component, so add 1.0 to make the point cloud opaque
 addStyle('Color based on position', {
-    color : "rgb(${POSITION}[0] * 255, ${POSITION}[1] * 255, ${POSITION}[2] * 255)"
+    color : "${POSITION} + vec4(0.0, 0.0, 0.0, 1.0)"
 });
 
 addStyle('Style point size', {

@@ -800,7 +800,8 @@ define([
         }
 
         // Edit the function header to accept the point position, color, and normal
-        return source.replace('()', '(vec3 position, vec4 color, vec3 normal)');
+        // The styling language expects all vectors to be vec4
+        return source.replace('()', '(vec4 position, vec4 color, vec4 normal)');
     }
 
     function createShaders(content, frameState, style) {
@@ -908,12 +909,9 @@ define([
             attributeLocations.a_batchId = batchIdLocation;
         }
 
-        var vs = 'attribute vec3 a_position; \n' +
-                 'varying vec4 v_color; \n' +
-                 'uniform float u_pointSize; \n' +
-                 'uniform vec4 u_constantColor; \n' +
-                 'uniform vec4 u_highlightColor; \n' +
-                 'uniform float u_tilesetTime; \n';
+        var attributeDeclarations = '';
+        var attributeGlobals = '';
+        var attributeDefaults = '';
 
         var length = styleableProperties.length;
         for (i = 0; i < length; ++i) {
@@ -930,13 +928,34 @@ define([
             var attributeType;
             if (componentCount === 1) {
                 attributeType = 'float';
+            } else if (componentCount === 4) {
+                attributeType = 'vec4';
             } else {
-                attributeType = 'vec' + componentCount;
+                // The styling language expects all vectors to be vec4. GLSL can cast vertex attributes to vec4 but sets
+                // the w component to 1.0, while the styling language expects 0.0. Since vertex attributes are read-only,
+                // create global variables and set their w component to 0.0 in main().
+                attributeType = 'vec4';
+                if (componentCount < 4) {
+                    var globalName = 'czm_tiles3d_style_' + name;
+                    attributeName = 'czm_tiles3d_attribute_' + name;
+                    attributeGlobals = 'vec4 ' + globalName + '; \n';
+                    attributeDefaults += '    ' + globalName + ' = vec4(' + attributeName + '.xyz, 0.0); \n';
+                }
             }
 
-            vs += 'attribute ' + attributeType + ' ' + attributeName + '; \n';
+            attributeDeclarations += 'attribute ' + attributeType + ' ' + attributeName + '; \n';
             attributeLocations[attributeName] = attribute.location;
         }
+
+        var vs = 'attribute vec3 a_position; \n' +
+                 'varying vec4 v_color; \n' +
+                 'uniform float u_pointSize; \n' +
+                 'uniform vec4 u_constantColor; \n' +
+                 'uniform vec4 u_highlightColor; \n' +
+                 'uniform float u_tilesetTime; \n';
+
+        vs += attributeDeclarations;
+        vs += attributeGlobals;
 
         if (usesColors) {
             if (isTranslucent) {
@@ -984,6 +1003,8 @@ define([
         vs += 'void main() \n' +
               '{ \n';
 
+        vs += attributeDefaults;
+
         if (usesColors) {
             if (isTranslucent) {
                 vs += '    vec4 color = a_color; \n';
@@ -1020,15 +1041,15 @@ define([
         }
 
         if (hasColorStyle) {
-            vs += '    color = getColorFromStyle(position, color, normal); \n';
+            vs += '    color = getColorFromStyle(vec4(position, 0.0), color, vec4(normal, 0.0)); \n';
         }
 
         if (hasShowStyle) {
-            vs += '    float show = float(getShowFromStyle(position, color, normal)); \n';
+            vs += '    float show = float(getShowFromStyle(vec4(position, 0.0), color, vec4(normal, 0.0))); \n';
         }
 
         if (hasPointSizeStyle) {
-            vs += '    gl_PointSize = getPointSizeFromStyle(position, color, normal); \n';
+            vs += '    gl_PointSize = getPointSizeFromStyle(vec4(position, 0.0), color, vec4(normal, 0.0)); \n';
         } else {
             vs += '    gl_PointSize = u_pointSize; \n';
         }
