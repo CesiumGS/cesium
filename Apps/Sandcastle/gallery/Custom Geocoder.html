@@ -47,7 +47,6 @@ function startup(Cesium) {
  */
 function OpenStreetMapNominatimGeocoder(options) {
     options = Cesium.defaultValue(options, Cesium.defaultValue.EMPTY_OBJECT);
-    this.displayName = 'Nominatim';
     this._canceled = false;
     this.autoComplete = Cesium.defaultValue(options.autoComplete, true);
 }

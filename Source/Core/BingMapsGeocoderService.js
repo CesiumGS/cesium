@@ -27,8 +27,6 @@ define([
     function BingMapsGeocoderService(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         this._canceled = false;
-        this._displayName = 'Bing Maps Geocoder Service';
-
         this._url = 'https://dev.virtualearth.net/REST/v1/Locations';
         this._key = BingMapsApi.getKey(options.key);
 
