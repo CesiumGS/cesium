@@ -1167,6 +1167,10 @@ defineSuite([
             return Cartesian2.clone(label._glyphs[index].billboard._translate, new Cartesian2());
         }
 
+        function getBackgroundBillboardVertexTranslate(label) {
+            return Cartesian2.clone(label._backgroundBillboard._translate, new Cartesian2());
+        }
+
         it('sets billboard properties properly when they change on the label', function() {
             var position1 = new Cartesian3(1.0, 2.0, 3.0);
             var position2 = new Cartesian3(4.0, 5.0, 6.0);
@@ -1430,7 +1434,8 @@ defineSuite([
             var label = labels.add({
                 text : 'apl',
                 font : '90px "Open Sans"',
-                horizontalOrigin : HorizontalOrigin.CENTER
+                horizontalOrigin : HorizontalOrigin.CENTER,
+                showBackground : true
             });
             scene.renderForSpecs();
 
@@ -1438,6 +1443,7 @@ defineSuite([
             var offset0 = getGlyphBillboardVertexTranslate(label, 0);
             var offset1 = getGlyphBillboardVertexTranslate(label, 1);
             var offset2 = getGlyphBillboardVertexTranslate(label, 2);
+            var offsetBack = getBackgroundBillboardVertexTranslate(label);
 
             label.horizontalOrigin = HorizontalOrigin.LEFT;
             scene.renderForSpecs();
@@ -1446,11 +1452,13 @@ defineSuite([
             expect(getGlyphBillboardVertexTranslate(label, 0).x).toBeGreaterThan(offset0.x);
             expect(getGlyphBillboardVertexTranslate(label, 1).x).toBeGreaterThan(offset1.x);
             expect(getGlyphBillboardVertexTranslate(label, 2).x).toBeGreaterThan(offset2.x);
+            expect(getBackgroundBillboardVertexTranslate(label).x).toBeGreaterThan(offsetBack.x);
 
             // Y offset should be unchanged
             expect(getGlyphBillboardVertexTranslate(label, 0).y).toEqual(offset0.y);
             expect(getGlyphBillboardVertexTranslate(label, 1).y).toEqual(offset1.y);
             expect(getGlyphBillboardVertexTranslate(label, 2).y).toEqual(offset2.y);
+            expect(getBackgroundBillboardVertexTranslate(label).y).toEqual(offsetBack.y);
 
             label.horizontalOrigin = HorizontalOrigin.RIGHT;
             scene.renderForSpecs();
@@ -1459,11 +1467,13 @@ defineSuite([
             expect(getGlyphBillboardVertexTranslate(label, 0).x).toBeLessThan(offset0.x);
             expect(getGlyphBillboardVertexTranslate(label, 1).x).toBeLessThan(offset1.x);
             expect(getGlyphBillboardVertexTranslate(label, 2).x).toBeLessThan(offset2.x);
+            expect(getBackgroundBillboardVertexTranslate(label).x).toBeLessThan(offsetBack.x);
 
             // Y offset should be unchanged
             expect(getGlyphBillboardVertexTranslate(label, 0).y).toEqual(offset0.y);
             expect(getGlyphBillboardVertexTranslate(label, 1).y).toEqual(offset1.y);
             expect(getGlyphBillboardVertexTranslate(label, 2).y).toEqual(offset2.y);
+            expect(getBackgroundBillboardVertexTranslate(label).y).toEqual(offsetBack.y);
         });
 
         it('should set vertexTranslate of billboards correctly when scale is changed', function() {
@@ -1700,6 +1710,23 @@ defineSuite([
             expect(dimensions.height).toBeLessThan(originalDimensions.height);
             expect(dimensions.descent).toBeLessThanOrEqualTo(originalDimensions.descent);
         });
+
+        it('should increase label height and decrease width when adding newlines', function() {
+            var label = labels.add({
+                text : 'apl apl apl',
+            });
+            scene.renderForSpecs();
+
+            var originalBbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+
+            label.text = 'apl\napl\napl';
+            scene.renderForSpecs();
+            var newlinesBbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+
+            expect(newlinesBbox.width).toBeLessThan(originalBbox.width);
+            expect(newlinesBbox.height).toBeGreaterThan(originalBbox.height);
+        });
+
     }, 'WebGL');
 
     it('computes bounding sphere in 3D', function() {
