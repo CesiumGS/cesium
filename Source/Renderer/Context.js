@@ -335,9 +335,7 @@ define([
 
     function getStubWarning() {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('A stub for this get/is function is not defined.  Can it use getStub() or does it need a new one?');
-        }
+        throw new DeveloperError('A stub for this get/is function is not defined.  Can it use getStub() or does it need a new one?');
         //>>includeEnd('debug');
     }
 

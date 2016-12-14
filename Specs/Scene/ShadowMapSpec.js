@@ -739,6 +739,7 @@ defineSuite([
         ];
 
         for (var i = 0; i < 6; ++i) {
+            /* jshint loopfunc: true */
             var box = scene.primitives.add(Model.fromGltf({
                 url : boxUrl,
                 modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], new HeadingPitchRoll()),
@@ -1057,7 +1058,6 @@ defineSuite([
 
         // Set a maximum distance where the shadows start to fade out
         scene.shadowMap.maximumDistance = 6.0;
-        var fadedColor;
         renderAndCall(function(rgba) {
             expect(rgba).not.toEqual(backgroundColor);
             expect(rgba).not.toEqual(unshadowedColor);
