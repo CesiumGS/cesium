@@ -37,7 +37,7 @@ define([
 
     /**
      * @param {} test The value that is to be checked
-     * @param {string} name The name of the variable being tested: makes
+     * @param {string} name The name of the variable being tested
      * @throws {DeveloperError}
      */
     Check.defined = function (test, name) {
