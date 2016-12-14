@@ -60,7 +60,7 @@ define([
      */
     Cartesian3.fromSpherical = function(spherical, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.type.object(spherical);
+        Check.typeOf.object(spherical);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -146,7 +146,7 @@ define([
      */
     Cartesian3.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        Check.type.object(value);
+        Check.typeOf.object(value);
         Check.defined(array, 'array');
         //>>includeEnd('debug');
 

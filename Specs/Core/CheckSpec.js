@@ -6,123 +6,120 @@ defineSuite([
     'use strict';
 
     describe('type checks', function () {
-        it('Check.type.boolean does not throw when passed a boolean', function () {
+        it('Check.typeOf.boolean does not throw when passed a boolean', function () {
             expect(function () {
-                Check.type.boolean(true);
+                Check.typeOf.boolean(true);
             }).not.toThrowDeveloperError();
         });
 
-        it('Check.type.boolean throws when passed a non-boolean', function () {
+        it('Check.typeOf.boolean throws when passed a non-boolean', function () {
             expect(function () {
-                Check.type.boolean({});
+                Check.typeOf.boolean({});
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.boolean([]);
+                Check.typeOf.boolean([]);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.boolean(1);
+                Check.typeOf.boolean(1);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.boolean('snth');
+                Check.typeOf.boolean('snth');
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.boolean(function () {return true;});
+                Check.typeOf.boolean(function () {return true;});
             }).toThrowDeveloperError();
         });
 
-        it('Check.type.function does not throw when passed a function', function () {
+        it('Check.typeOf.function does not throw when passed a function', function () {
             expect(function () {
-                Check.type.function(function () {return true;});
+                Check.typeOf.function(function () {return true;});
             }).not.toThrowDeveloperError();
         });
 
-        it('Check.type.function throws when passed a non-function', function () {
+        it('Check.typeOf.function throws when passed a non-function', function () {
             expect(function () {
-                Check.type.function({});
+                Check.typeOf.function({});
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.function([]);
+                Check.typeOf.function([]);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.function(1);
+                Check.typeOf.function(1);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.function('snth');
+                Check.typeOf.function('snth');
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.function(true);
+                Check.typeOf.function(true);
             }).toThrowDeveloperError();
         });
 
-        it('Check.type.object does not throw when passed object', function() {
+        it('Check.typeOf.object does not throw when passed object', function() {
             expect(function () {
-                Check.type.object({});
+                Check.typeOf.object({});
             }).not.toThrowDeveloperError();
         });
 
-        it('Check.type.object throws when passed non-object', function() {
+        it('Check.typeOf.object throws when passed non-object', function() {
             expect(function () {
-                Check.type.object('snth');
+                Check.typeOf.object('snth');
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.object(true);
+                Check.typeOf.object(true);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.object(1);
+                Check.typeOf.object(1);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.object([2]);
-            }).toThrowDeveloperError();
-            expect(function () {
-                Check.type.object(function () {return true;});
+                Check.typeOf.object(function () {return true;});
             }).toThrowDeveloperError();
         });
 
-        it('Check.type.number does not throw when passed number', function() {
+        it('Check.typeOf.number does not throw when passed number', function() {
             expect(function () {
-                Check.type.number(2);
+                Check.typeOf.number(2);
             }).not.toThrowDeveloperError();
         });
 
-        it('Check.type.number throws when passed non-number', function() {
+        it('Check.typeOf.number throws when passed non-number', function() {
             expect(function () {
-                Check.type.number('snth');
+                Check.typeOf.number('snth');
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.number(true);
+                Check.typeOf.number(true);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.number({});
+                Check.typeOf.number({});
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.number([2]);
+                Check.typeOf.number([2]);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.number(function () {return true;});
+                Check.typeOf.number(function () {return true;});
             }).toThrowDeveloperError();
         });
 
-        it('Check.type.string does not throw when passed a string', function () {
+        it('Check.typeOf.string does not throw when passed a string', function () {
             expect(function () {
-                Check.type.string('s');
+                Check.typeOf.string('s');
             }).not.toThrowDeveloperError();
         });
 
-        it('Check.type.string throws on non-string', function () {
+        it('Check.typeOf.string throws on non-string', function () {
             expect(function () {
-                Check.type.string({});
+                Check.typeOf.string({});
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.string(true);
+                Check.typeOf.string(true);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.string(1);
+                Check.typeOf.string(1);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.string([2]);
+                Check.typeOf.string([2]);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.type.string(function () {return true;});
+                Check.typeOf.string(function () {return true;});
             }).toThrowDeveloperError();
         });
     });

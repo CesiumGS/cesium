@@ -20,7 +20,7 @@ define([
      */
     var Check = {};
 
-    Check.type = {};
+    Check.typeOf = {};
     Check.numeric = {};
 
     var errors = {
@@ -29,7 +29,7 @@ define([
     };
 
     function getUndefinedErrorMessage(name) {
-        return defaultValue(name, 'variable') + ' is required but is undefined.';
+        return defaultValue(name, 'a value') + ' is required but is undefined.';
     }
     function getFailedTypeErrorMessage(actual, expected) {
         return 'Expected ' + expected + ', got ' + actual;
@@ -53,9 +53,9 @@ define([
      * @throws {DeveloperError}
      */
     Check.numeric.withinRange = function (test, min, max) {
-        Check.type.number(test);
-        Check.type.number(max);
-        Check.type.number(min);
+        Check.typeOf.number(test);
+        Check.typeOf.number(max);
+        Check.typeOf.number(min);
         if (min > max) {
             throw new DeveloperError('Invalid condition: min (' + min + ') must be less than max (' + max + ')');
         }
@@ -70,8 +70,8 @@ define([
      * @throws {DeveloperError}
      */
     Check.numeric.maximum = function (test, max) {
-        Check.type.number(test);
-        Check.type.number(max);
+        Check.typeOf.number(test);
+        Check.typeOf.number(max);
         if (test > max) {
             throw new DeveloperError('Expected ' + test + ' to be at most ' + max);
         }
@@ -83,8 +83,8 @@ define([
      * @throws {DeveloperError}
      */
     Check.numeric.minimum = function (test, min) {
-        Check.type.number(test);
-        Check.type.number(min);
+        Check.typeOf.number(test);
+        Check.typeOf.number(min);
         if (test < min) {
             throw new DeveloperError('Expected ' + test + ' to be at least ' + min);
         }
@@ -94,7 +94,7 @@ define([
      * @param {} test The value to test
      * @throws {DeveloperError}
      */
-    Check.type.function = function (test) {
+    Check.typeOf.function = function (test) {
         if (typeof test !== 'function') {
             throw new DeveloperError(errors.failedType(typeof test, 'function'));
         }
@@ -104,7 +104,7 @@ define([
      * @param {} test The value to test
      * @throws {DeveloperError}
      */
-    Check.type.string = function (test) {
+    Check.typeOf.string = function (test) {
         if (typeof test !== 'string') {
             throw new DeveloperError(errors.failedType(typeof test, 'string'));
         }
@@ -114,7 +114,7 @@ define([
      * @param {} test The value to test
      * @throws {DeveloperError}
      */
-    Check.type.number = function (test) {
+    Check.typeOf.number = function (test) {
         if (typeof test !== 'number') {
             throw new DeveloperError(errors.failedType(typeof test, 'number'));
         }
@@ -124,8 +124,8 @@ define([
      * @param {} test The value to test
      * @throws {DeveloperError}
      */
-    Check.type.object = function (test) {
-        if (typeof test !== 'object' || isArray(test)) {
+    Check.typeOf.object = function (test) {
+        if (typeof test !== 'object') {
             throw new DeveloperError(errors.failedType(typeof test, 'object'));
         }
     };
@@ -134,7 +134,7 @@ define([
      * @param {} test The value to test
      * @throws {DeveloperError}
      */
-    Check.type.boolean = function (test) {
+    Check.typeOf.boolean = function (test) {
         if (typeof test !== 'boolean') {
             throw new DeveloperError(errors.failedType(typeof test, 'boolean'));
         }
