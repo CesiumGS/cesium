@@ -644,9 +644,7 @@ defineSuite([
             color : Color.WHITE
         });
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).not.toBeDefined();
-        });
+        expect(scene).notToPick();
     });
 
     it('picks a pointPrimitive using scaleByDistance', function() {
@@ -666,9 +664,7 @@ defineSuite([
         scaleByDistance.farValue = 0.0;
         p.scaleByDistance = scaleByDistance;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).not.toBeDefined();
-        });
+        expect(scene).notToPick();
     });
 
     it('picks a pointPrimitive using translucencyByDistance', function() {
@@ -688,9 +684,7 @@ defineSuite([
         translucency.farValue = 0.0;
         p.translucencyByDistance = translucency;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).not.toBeDefined();
-        });
+        expect(scene).notToPick();
     });
 
     it('computes screen space position', function() {

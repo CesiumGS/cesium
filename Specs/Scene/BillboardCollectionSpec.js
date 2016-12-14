@@ -949,9 +949,7 @@ defineSuite([
             image : whiteImage
         });
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).not.toBeDefined();
-        });
+        expect(scene).notToPick();
     });
 
     it('picks a billboard using scaleByDistance', function() {
@@ -971,9 +969,7 @@ defineSuite([
         scaleByDistance.farValue = 0.0;
         b.scaleByDistance = scaleByDistance;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).not.toBeDefined();
-        });
+        expect(scene).notToPick();
     });
 
     it('picks a billboard using translucencyByDistance', function() {
@@ -993,9 +989,7 @@ defineSuite([
         translucency.farValue = 0.0;
         b.translucencyByDistance = translucency;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).not.toBeDefined();
-        });
+        expect(scene).notToPick();
     });
 
     it('picks a billboard using pixelOffsetScaleByDistance', function() {
@@ -1016,9 +1010,7 @@ defineSuite([
         pixelOffsetScale.farValue = 10.0;
         b.pixelOffsetScaleByDistance = pixelOffsetScale;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).not.toBeDefined();
-        });
+        expect(scene).notToPick();
     });
 
     it('can pick a billboard using the rotation property', function() {

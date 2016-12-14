@@ -284,7 +284,7 @@ defineSuite([
     }, 'WebGL');
 
     it('renders in 2D geographic', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png'
@@ -293,12 +293,12 @@ defineSuite([
         switchViewMode(SceneMode.SCENE2D, new GeographicProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
         });
     });
 
     it('renders in 2D web mercator', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png'
@@ -307,12 +307,12 @@ defineSuite([
         switchViewMode(SceneMode.SCENE2D, new WebMercatorProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
         });
     });
 
     it('renders in Columbus View geographic', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png'
@@ -321,12 +321,12 @@ defineSuite([
         switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
         });
     });
 
     it('renders in Columbus View web mercator', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png'
@@ -335,12 +335,12 @@ defineSuite([
         switchViewMode(SceneMode.COLUMBUS_VIEW, new WebMercatorProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 128, 255]);
+            expect(scene).notToRender([0, 0, 128, 255]);
         });
     });
 
     it('renders in 3D', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png'
@@ -349,12 +349,12 @@ defineSuite([
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
         });
     });
 
     it('renders in 3D (2)', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png'
@@ -363,13 +363,13 @@ defineSuite([
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
         });
     });
 
     describe('fog', function() {
         it('culls tiles in full fog', function() {
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
             scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
                 url : 'Data/Images/Red16x16.png'
             }));
@@ -378,20 +378,20 @@ defineSuite([
             switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
             return updateUntilDone(scene.globe).then(function() {
-                expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+                expect(scene).notToRender([0, 0, 0, 255]);
 
                 scene.fog.enabled = true;
                 scene.fog.density = 1.0;
                 scene.fog.screenSpaceErrorFactor = 0.0;
 
-                expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+                expect(scene).toRender([0, 0, 0, 255]);
 
                 scene.fog = oldFog;
             });
         });
 
         it('culls tiles because of increased SSE', function() {
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
             scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
                 url : 'Data/Images/Red16x16.png'
             }));
@@ -400,17 +400,20 @@ defineSuite([
             switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
             return updateUntilDone(scene.globe).then(function() {
-                expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+                expect(scene).notToRender([0, 0, 0, 255]);
 
                 scene.fog.enabled = true;
                 scene.fog.density = 0.001;
                 scene.fog.screenSpaceErrorFactor = 0.0;
-                var result = scene.renderForSpecs();
-                expect(result).not.toEqual([0, 0, 0, 255]);
+                var result;
+                expect(scene).toRenderAndCall(function(rgba) {
+                    result = rgba;
+                    expect(rgba).not.toEqual([0, 0, 0, 255]);
+                });
 
                 scene.fog.screenSpaceErrorFactor = 10000.0;
 
-                expect(scene.renderForSpecs()).not.toEqual(result);
+                expect(scene).notToRender(result);
 
                 scene.fog = oldFog;
             });
@@ -418,15 +421,13 @@ defineSuite([
     });
 
     it('can change baseColor', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.globe.baseColor = Color.RED;
         scene.fog.enabled = false;
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            var result = scene.renderForSpecs();
-            expect(result).not.toEqual([0, 0, 0, 255]);
-            expect(result).toEqual([255, 0, 0, 255]);
+            expect(scene).toRender([255, 0, 0, 255]);
         });
     });
 
@@ -437,18 +438,18 @@ defineSuite([
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
 
             switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
 
             return updateUntilDone(scene.globe).then(function() {
-                expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+                expect(scene).notToRender([0, 0, 0, 255]);
             });
         });
     });
 
     it('renders even if imagery root tiles fail to load', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         var providerWithInvalidRootTiles = new WebMapServiceImageryProvider({
             url : '/invalid',
@@ -459,12 +460,12 @@ defineSuite([
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
         });
     });
 
     it('passes layer adjustment values as uniforms', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         var layer = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png'
@@ -480,7 +481,7 @@ defineSuite([
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
 
             var tileCommandCount = 0;
             var commandList = scene.frameState.commandList;
@@ -517,7 +518,7 @@ defineSuite([
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
 
             var tileCommandCount = 0;
             var commandList = scene.frameState.commandList;
@@ -549,7 +550,7 @@ defineSuite([
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
 
             var renderStateWithAlphaBlending = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND

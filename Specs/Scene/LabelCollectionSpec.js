@@ -675,9 +675,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).not.toBeDefined();
-        });
+        expect(scene).notToPick();
     });
 
     it('picks a label using translucencyByDistance', function() {
@@ -699,9 +697,7 @@ defineSuite([
         translucency.farValue = 0.0;
         label.translucencyByDistance = translucency;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).not.toBeDefined();
-        });
+        expect(scene).notToPick();
     });
 
     it('picks a label using pixelOffsetScaleByDistance', function() {
@@ -724,9 +720,7 @@ defineSuite([
         pixelOffsetScale.farValue = 10.0;
         label.pixelOffsetScaleByDistance = pixelOffsetScale;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).not.toBeDefined();
-        });
+        expect(scene).notToPick();
     });
 
     it('throws when calling get without an index', function() {

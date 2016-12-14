@@ -265,6 +265,23 @@ define([
                 };
             },
 
+            notToPick : function(util, customEqualityTesters) {
+                return {
+                    compare: function(actual, expected) {
+                        var pass = true;
+                        if (!webglStub) {
+                            var scene = actual;
+                            var result = scene.pick(new Cartesian2(0, 0));
+                            pass = !defined(result);
+                        }
+
+                        return {
+                            pass : pass
+                        };
+                    }
+                };
+            },
+
             toThrow : function(expectedConstructor) {
                 throw new Error('Do not use toThrow.  Use toThrowDeveloperError or toThrowRuntimeError instead.');
             },

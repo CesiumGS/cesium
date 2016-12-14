@@ -850,9 +850,7 @@ defineSuite([
     it('cesiumAir is not picked (show === false)', function() {
         cesiumAirModel.zoomTo();
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).not.toBeDefined();
-        });
+        expect(scene).notToPick();
     });
 
     ///////////////////////////////////////////////////////////////////////////
