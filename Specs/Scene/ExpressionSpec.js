@@ -15,8 +15,6 @@ defineSuite([
 
     function MockFeature() {
         this._properties = {};
-        this._className = undefined;
-        this._inheritedClassName = undefined;
         this._content = {
             _tileset : {
                 timeSinceLoad : 0.0
@@ -30,26 +28,6 @@ defineSuite([
 
     MockFeature.prototype.getProperty = function(name) {
         return this._properties[name];
-    };
-
-    MockFeature.prototype.setClass = function(className) {
-        this._className = className;
-    };
-
-    MockFeature.prototype.setInheritedClass = function(className) {
-        this._inheritedClassName = className;
-    };
-
-    MockFeature.prototype.isExactClass = function(className) {
-        return this._className === className;
-    };
-
-    MockFeature.prototype.isClass = function(className) {
-        return (this._className === className) || (this._inheritedClassName === className);
-    };
-
-    MockFeature.prototype.getExactClassName = function() {
-        return this._className;
     };
 
     it('parses backslashes', function() {
@@ -851,60 +829,6 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
     });
 
-    it('evaluates isExactClass function', function() {
-        var feature = new MockFeature();
-        feature.setClass('door');
-
-        var expression = new Expression('isExactClass("door")');
-        expect(expression.evaluate(frameState, feature)).toEqual(true);
-
-        expression = new Expression('isExactClass("roof")');
-        expect(expression.evaluate(frameState, feature)).toEqual(false);
-    });
-
-    it('throws if isExactClass takes an invalid number of arguments', function() {
-        expect(function() {
-            return new Expression('isExactClass()');
-        }).toThrowDeveloperError();
-
-        expect(function() {
-            return new Expression('isExactClass("door", "roof")');
-        }).toThrowDeveloperError();
-    });
-
-    it('evaluates isClass function', function() {
-        var feature = new MockFeature();
-
-        feature.setClass('door');
-        feature.setInheritedClass('building');
-
-        var expression = new Expression('isClass("door") && isClass("building")');
-        expect(expression.evaluate(frameState, feature)).toEqual(true);
-    });
-
-    it('throws if isClass takes an invalid number of arguments', function() {
-        expect(function() {
-            return new Expression('isClass()');
-        }).toThrowDeveloperError();
-
-        expect(function() {
-            return new Expression('isClass("door", "building")');
-        }).toThrowDeveloperError();
-    });
-
-    it('evaluates getExactClassName function', function() {
-        var feature = new MockFeature();
-        feature.setClass('door');
-        var expression = new Expression('getExactClassName()');
-        expect(expression.evaluate(frameState, feature)).toEqual('door');
-    });
-
-    it('throws if getExactClassName takes an invalid number of arguments', function() {
-        expect(function() {
-            return new Expression('getExactClassName("door")');
-        }).toThrowDeveloperError();
-    });
-
     it('evaluates abs function', function() {
         var expression = new Expression('abs(-1)');
         expect(expression.evaluate(frameState, undefined)).toEqual(1);
@@ -1061,6 +985,58 @@ defineSuite([
 
         expect(function() {
             return new Expression('sqrt(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates clamp function', function() {
+        var expression = new Expression('clamp(50.0, 0.0, 100.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(50.0);
+
+        expression = new Expression('clamp(50.0, 0.0, 25.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(25.0);
+
+        expression = new Expression('clamp(50.0, 75.0, 100.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(75.0);
+    });
+
+    it('throws if clamp function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('clamp()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('clamp(1)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('clamp(1, 2)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('clamp(1, 2, 3, 4)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates mix function', function() {
+        var expression = new Expression('mix(0.0, 2.0, 0.5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+    });
+
+    it('throws if mix function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('mix()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('mix(1)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('mix(1, 2)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('mix(1, 2, 3, 4)');
         }).toThrowDeveloperError();
     });
 
@@ -1955,6 +1931,20 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
+    it('gets shader expression for clamp', function() {
+        var expression = new Expression('clamp(50.0, 0.0, 100.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'clamp(50.0, 0.0, 100.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for mix', function() {
+        var expression = new Expression('mix(0.0, 2.0, 0.5)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'mix(0.0, 2.0, 0.5)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
     it('gets shader expression for atan2', function() {
         var expression = new Expression('atan2(0.0,1.0)');
         var shaderExpression = expression.getShaderExpression('', {});
@@ -2070,27 +2060,6 @@ defineSuite([
 
     it('throws when getting shader expression for isFinite', function() {
         var expression = new Expression('isFinite(1.0)');
-        expect(function() {
-            return expression.getShaderExpression('', {});
-        }).toThrowDeveloperError();
-    });
-
-    it('throws when getting shader expression for isExactClass', function() {
-        var expression = new Expression('isExactClass("door")');
-        expect(function() {
-            return expression.getShaderExpression('', {});
-        }).toThrowDeveloperError();
-    });
-
-    it('throws when getting shader expression for isClass', function() {
-        var expression = new Expression('isClass("door")');
-        expect(function() {
-            return expression.getShaderExpression('', {});
-        }).toThrowDeveloperError();
-    });
-
-    it('throws when getting shader expression for getExactClassName', function() {
-        var expression = new Expression('getExactClassName()');
         expect(function() {
             return expression.getShaderExpression('', {});
         }).toThrowDeveloperError();

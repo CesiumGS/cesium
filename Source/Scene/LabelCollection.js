@@ -1,8 +1,6 @@
 /*global define*/
 define([
-        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
-        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -17,9 +15,7 @@ define([
         './TextureAtlas',
         './VerticalOrigin'
     ], function(
-        BoundingRectangle,
         Cartesian2,
-        Color,
         defaultValue,
         defined,
         defineProperties,
@@ -55,27 +51,6 @@ define([
         this.dimensions = dimensions;
     }
 
-    // Traditionally, leading is %20 of the font size.
-    var defaultLineSpacingPercent = 1.2;
-
-    var whitePixelCanvasId = 'ID_WHITE_PIXEL';
-    var whitePixelSize = new Cartesian2(4, 4);
-    var whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
-
-    function addWhitePixelCanvas(textureAtlas, labelCollection) {
-        var canvas = document.createElement('canvas');
-        canvas.width = whitePixelSize.x;
-        canvas.height = whitePixelSize.y;
-
-        var context2D = canvas.getContext('2d');
-        context2D.fillStyle = '#fff';
-        context2D.fillRect(0, 0, canvas.width, canvas.height);
-
-        textureAtlas.addImage(whitePixelCanvasId, canvas).then(function(index) {
-            labelCollection._whitePixelIndex = index;
-        });
-    }
-
     // reusable object for calling writeTextToCanvas
     var writeTextToCanvasParameters = {};
     function createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin) {
@@ -84,13 +59,13 @@ define([
         writeTextToCanvasParameters.strokeColor = outlineColor;
         writeTextToCanvasParameters.strokeWidth = outlineWidth;
 
-        if (verticalOrigin === VerticalOrigin.CENTER) {
-            writeTextToCanvasParameters.textBaseline = 'middle';
+        if (verticalOrigin === VerticalOrigin.BOTTOM) {
+            writeTextToCanvasParameters.textBaseline = 'bottom';
         } else if (verticalOrigin === VerticalOrigin.TOP) {
             writeTextToCanvasParameters.textBaseline = 'top';
         } else {
-            // VerticalOrigin.BOTTOM and VerticalOrigin.BASELINE
-            writeTextToCanvasParameters.textBaseline = 'bottom';
+            // VerticalOrigin.CENTER
+            writeTextToCanvasParameters.textBaseline = 'middle';
         }
 
         writeTextToCanvasParameters.fill = style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE;
@@ -137,40 +112,6 @@ define([
 
         // presize glyphs to match the new text length
         glyphs.length = textLength;
-
-        var showBackground = label._showBackground && (text.split('\n').join('').length > 0);
-        var backgroundBillboard = label._backgroundBillboard;
-        var backgroundBillboardCollection = labelCollection._backgroundBillboardCollection;
-        if (!showBackground) {
-            if (defined(backgroundBillboard)) {
-                backgroundBillboardCollection.remove(backgroundBillboard);
-                label._backgroundBillboard = backgroundBillboard = undefined;
-            }
-        } else {
-            if (!defined(backgroundBillboard)) {
-                backgroundBillboard = backgroundBillboardCollection.add({
-                    collection : labelCollection,
-                    image : whitePixelCanvasId,
-                    imageSubRegion : whitePixelBoundingRegion
-                });
-                label._backgroundBillboard = backgroundBillboard;
-            }
-
-            backgroundBillboard.color = label._backgroundColor;
-            backgroundBillboard.show = label._show;
-            backgroundBillboard.position = label._position;
-            backgroundBillboard.eyeOffset = label._eyeOffset;
-            backgroundBillboard.pixelOffset = label._pixelOffset;
-            backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
-            backgroundBillboard.verticalOrigin = label._verticalOrigin;
-            backgroundBillboard.heightReference = label._heightReference;
-            backgroundBillboard.scale = label._scale;
-            backgroundBillboard.pickPrimitive = label;
-            backgroundBillboard.id = label._id;
-            backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
-            backgroundBillboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
-            backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
-        }
 
         var glyphTextureCache = labelCollection._glyphTextureCache;
 
@@ -236,10 +177,9 @@ define([
             // if we have a texture, configure the existing billboard, or obtain one
             if (glyphTextureInfo.index !== -1) {
                 var billboard = glyph.billboard;
-                var spareBillboards = labelCollection._spareBillboards;
                 if (!defined(billboard)) {
-                    if (spareBillboards.length > 0) {
-                        billboard = spareBillboards.pop();
+                    if (labelCollection._spareBillboards.length > 0) {
+                        billboard = labelCollection._spareBillboards.pop();
                     } else {
                         billboard = labelCollection._billboardCollection.add({
                             collection : labelCollection
@@ -270,147 +210,75 @@ define([
         label._repositionAllGlyphs = true;
     }
 
-    function calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding) {
-        if (horizontalOrigin === HorizontalOrigin.CENTER) {
-            return -lineWidth / 2;
-        } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
-            return -(lineWidth + backgroundPadding.x);
-        }
-        return backgroundPadding.x;
-    }
-
-    // reusable Cartesian2 instances
+    // reusable Cartesian2 instance
     var glyphPixelOffset = new Cartesian2();
-    var scratchBackgroundPadding = new Cartesian2();
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
-        var text = label._text;
         var glyph;
         var dimensions;
-        var lastLineWidth = 0;
-        var maxLineWidth = 0;
-        var lineWidths = [];
-        var maxGlyphDescent = Number.NEGATIVE_INFINITY;
-        var maxGlyphY = 0;
-        var numberOfLines = 1;
+        var totalWidth = 0;
+        var maxHeight = 0;
+
         var glyphIndex = 0;
         var glyphLength = glyphs.length;
-
-        var backgroundBillboard = label._backgroundBillboard;
-        var backgroundPadding = scratchBackgroundPadding;
-        Cartesian2.clone(
-            (defined(backgroundBillboard) ? label._backgroundPadding : Cartesian2.ZERO),
-            backgroundPadding);
-
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-            if (text.charAt(glyphIndex) === '\n') {
-                lineWidths.push(lastLineWidth);
-                ++numberOfLines;
-                lastLineWidth = 0;
-            } else {
-                glyph = glyphs[glyphIndex];
-                dimensions = glyph.dimensions;
-                maxGlyphY = Math.max(maxGlyphY, dimensions.height - dimensions.descent);
-                maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
+            glyph = glyphs[glyphIndex];
+            dimensions = glyph.dimensions;
+            maxHeight = Math.max(maxHeight, dimensions.height);
 
-                //Computing the line width must also account for the kerning that occurs between letters.
-                lastLineWidth += dimensions.width - dimensions.bounds.minx;
-                if (glyphIndex < glyphLength - 1) {
-                    lastLineWidth += glyphs[glyphIndex + 1].dimensions.bounds.minx;
-                }
-                maxLineWidth = Math.max(maxLineWidth, lastLineWidth);
+            //Computing the total width must also account for the kering that occurs between letters.
+            totalWidth += dimensions.width - dimensions.bounds.minx;
+            if (glyphIndex < glyphLength - 1) {
+                totalWidth += glyphs[glyphIndex + 1].dimensions.bounds.minx;
             }
         }
-        lineWidths.push(lastLineWidth);
-        var maxLineHeight = maxGlyphY + maxGlyphDescent;
 
         var scale = label._scale;
         var horizontalOrigin = label._horizontalOrigin;
-        var verticalOrigin = label._verticalOrigin;
-        var lineIndex = 0;
-        var lineWidth = lineWidths[lineIndex];
-        var widthOffset = calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding);
-        var lineSpacing = defaultLineSpacingPercent * maxLineHeight;
-        var otherLinesHeight = lineSpacing * (numberOfLines - 1);
-
-        glyphPixelOffset.x = widthOffset * scale * resolutionScale;
-        glyphPixelOffset.y = 0;
-
-        var lineOffsetY = 0;
-        for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-            if (text.charAt(glyphIndex) === '\n') {
-                ++lineIndex;
-                lineOffsetY += lineSpacing;
-                lineWidth = lineWidths[lineIndex];
-                widthOffset = calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding);
-                glyphPixelOffset.x = widthOffset * scale * resolutionScale;
-            } else {
-                glyph = glyphs[glyphIndex];
-                dimensions = glyph.dimensions;
-
-                if (verticalOrigin === VerticalOrigin.TOP) {
-                    glyphPixelOffset.y = dimensions.height - maxGlyphY - backgroundPadding.y;
-                } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                    glyphPixelOffset.y = (otherLinesHeight + dimensions.height - maxGlyphY) / 2;
-                } else if (verticalOrigin === VerticalOrigin.BASELINE) {
-                    glyphPixelOffset.y = otherLinesHeight;
-                } else {
-                    // VerticalOrigin.BOTTOM
-                    glyphPixelOffset.y = otherLinesHeight + maxGlyphDescent + backgroundPadding.y;
-                }
-                glyphPixelOffset.y = (glyphPixelOffset.y - dimensions.descent - lineOffsetY) * scale * resolutionScale;
-
-                if (defined(glyph.billboard)) {
-                    glyph.billboard._setTranslate(glyphPixelOffset);
-                }
-
-                //Compute the next x offset taking into acocunt the kerning performed
-                //on both the current letter as well as the next letter to be drawn
-                //as well as any applied scale.
-                if (glyphIndex < glyphLength - 1) {
-                    var nextGlyph = glyphs[glyphIndex + 1];
-                    glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale * resolutionScale;
-                }
-            }
+        var widthOffset = 0;
+        if (horizontalOrigin === HorizontalOrigin.CENTER) {
+            widthOffset -= totalWidth / 2 * scale;
+        } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
+            widthOffset -= totalWidth * scale;
         }
 
-        if (defined(backgroundBillboard) && (text.split('\n').join('').length > 0)) {
-            if (horizontalOrigin === HorizontalOrigin.CENTER) {
-                widthOffset = -maxLineWidth / 2 - backgroundPadding.x;
-            } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
-                widthOffset = -(maxLineWidth + backgroundPadding.x * 2);
-            } else {
-                widthOffset = 0;
-            }
-            glyphPixelOffset.x = widthOffset * scale * resolutionScale;
+        glyphPixelOffset.x = widthOffset * resolutionScale;
+        glyphPixelOffset.y = 0;
 
-            if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = maxLineHeight - maxGlyphY - maxGlyphDescent;
+        var verticalOrigin = label._verticalOrigin;
+        for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
+            glyph = glyphs[glyphIndex];
+            dimensions = glyph.dimensions;
+
+            if (verticalOrigin === VerticalOrigin.BOTTOM || dimensions.height === maxHeight) {
+                glyphPixelOffset.y = -dimensions.descent * scale;
+            } else if (verticalOrigin === VerticalOrigin.TOP) {
+                glyphPixelOffset.y = -(maxHeight - dimensions.height) * scale - dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                glyphPixelOffset.y = (maxLineHeight - maxGlyphY) / 2 - maxGlyphDescent;
-            } else if (verticalOrigin === VerticalOrigin.BASELINE) {
-                glyphPixelOffset.y = -backgroundPadding.y - maxGlyphDescent;
-            } else {
-                // VerticalOrigin.BOTTOM
-                glyphPixelOffset.y = 0;
+                glyphPixelOffset.y = -(maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
             }
-            glyphPixelOffset.y = glyphPixelOffset.y * scale * resolutionScale;
 
-            backgroundBillboard.width = maxLineWidth + (backgroundPadding.x * 2);
-            backgroundBillboard.height = maxLineHeight + otherLinesHeight + (backgroundPadding.y * 2);
-            backgroundBillboard._setTranslate(glyphPixelOffset);
+            glyphPixelOffset.y *= resolutionScale;
+
+            if (defined(glyph.billboard)) {
+                glyph.billboard._setTranslate(glyphPixelOffset);
+            }
+
+            //Compute the next x offset taking into acocunt the kerning performed
+            //on both the current letter as well as the next letter to be drawn
+            //as well as any applied scale.
+            if (glyphIndex < glyphLength - 1) {
+                var nextGlyph = glyphs[glyphIndex + 1];
+                glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale * resolutionScale;
+            }
         }
     }
 
     function destroyLabel(labelCollection, label) {
         var glyphs = label._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; ++i) {
+        for ( var i = 0, len = glyphs.length; i < len; ++i) {
             unbindGlyph(labelCollection, glyphs[i]);
-        }
-        if (defined(label._backgroundBillboard)) {
-            labelCollection._backgroundBillboardCollection.remove(label._backgroundBillboard);
-            label._backgroundBillboard = undefined;
         }
         label._labelCollection = undefined;
 
@@ -471,13 +339,6 @@ define([
         this._scene = options.scene;
 
         this._textureAtlas = undefined;
-        this._backgroundTextureAtlas = undefined;
-        this._whitePixelIndex = undefined;
-
-        this._backgroundBillboardCollection = new BillboardCollection({
-            scene : this._scene
-        });
-        this._backgroundBillboardCollection.destroyTextureAtlas = false;
 
         this._billboardCollection = new BillboardCollection({
             scene : this._scene
@@ -574,20 +435,12 @@ define([
      *   font : '30px sans-serif',
      *   fillColor : Cesium.Color.WHITE,
      *   outlineColor : Cesium.Color.BLACK,
-     *   outlineWidth : 1.0,
-     *   showBackground : false,
-     *   backgroundColor : new Cesium.Color(0.165, 0.165, 0.165, 0.8),
-     *   backgroundPadding : new Cesium.Cartesian2(7, 5),
      *   style : Cesium.LabelStyle.FILL,
      *   pixelOffset : Cesium.Cartesian2.ZERO,
      *   eyeOffset : Cesium.Cartesian3.ZERO,
      *   horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
-     *   verticalOrigin : Cesium.VerticalOrigin.BASELINE,
-     *   scale : 1.0,
-     *   translucencyByDistance : undefined,
-     *   pixelOffsetScaleByDistance : undefined,
-     *   heightReference : HeightReference.NONE,
-     *   distanceDisplayCondition : undefined
+     *   verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+     *   scale : 1.0
      * });
      *
      * @example
@@ -666,7 +519,7 @@ define([
     LabelCollection.prototype.removeAll = function() {
         var labels = this._labels;
 
-        for (var i = 0, len = labels.length; i < len; ++i) {
+        for ( var i = 0, len = labels.length; i < len; ++i) {
             destroyLabel(this, labels[i]);
         }
 
@@ -728,12 +581,9 @@ define([
      */
     LabelCollection.prototype.update = function(frameState) {
         var billboardCollection = this._billboardCollection;
-        var backgroundBillboardCollection = this._backgroundBillboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
         billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
-        backgroundBillboardCollection.modelMatrix = this.modelMatrix;
-        backgroundBillboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
         var context = frameState.context;
 
@@ -742,15 +592,6 @@ define([
                 context : context
             });
             billboardCollection.textureAtlas = this._textureAtlas;
-        }
-
-        if (!defined(this._backgroundTextureAtlas)) {
-            this._backgroundTextureAtlas = new TextureAtlas({
-                context : context,
-                initialSize : whitePixelSize
-            });
-            backgroundBillboardCollection.textureAtlas = this._backgroundTextureAtlas;
-            addWhitePixelCanvas(this._backgroundTextureAtlas, this);
         }
 
         var uniformState = context.uniformState;
@@ -789,7 +630,6 @@ define([
         }
 
         this._labelsToUpdate.length = 0;
-        backgroundBillboardCollection.update(frameState);
         billboardCollection.update(frameState);
     };
 
@@ -829,8 +669,6 @@ define([
         this.removeAll();
         this._billboardCollection = this._billboardCollection.destroy();
         this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
-        this._backgroundBillboardCollection = this._backgroundBillboardCollection.destroy();
-        this._backgroundTextureAtlas = this._backgroundTextureAtlas && this._backgroundTextureAtlas.destroy();
 
         return destroyObject(this);
     };

@@ -38,12 +38,7 @@ var handler;
 Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', function() {
     var entity = viewer.entities.add({
         label : {
-            show : false,
-            showBackground : true,
-            font : '14px monospace',
-            horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
-            verticalOrigin : Cesium.VerticalOrigin.TOP,
-            pixelOffset : new Cesium.Cartesian2(15, 0)
+            show : false
         }
     });
 
@@ -58,9 +53,7 @@ Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', f
 
             entity.position = cartesian;
             entity.label.show = true;
-            entity.label.text =
-                'Lon: ' + ('   ' + longitudeString).slice(-7) + '\u00B0' +
-                '\nLat: ' + ('   ' + latitudeString).slice(-7) + '\u00B0';
+            entity.label.text = '(' + longitudeString + ', ' + latitudeString + ')';
         } else {
             entity.label.show = false;
         }
@@ -166,11 +159,7 @@ Sandcastle.addToolbarButton('Pick position', function() {
     var labelEntity = viewer.entities.add({
         label : {
             show : false,
-            showBackground : true,
-            font : '14px monospace',
-            horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
-            verticalOrigin : Cesium.VerticalOrigin.TOP,
-            pixelOffset : new Cesium.Cartesian2(15, 0)
+            horizontalOrigin : Cesium.HorizontalOrigin.LEFT
         }
     });
 
@@ -192,11 +181,8 @@ Sandcastle.addToolbarButton('Pick position', function() {
     
                 labelEntity.position = cartesian;
                 labelEntity.label.show = true;
-                labelEntity.label.text =
-                    'Lon: ' + ('   ' + longitudeString).slice(-7) + '\u00B0' +
-                    '\nLat: ' + ('   ' + latitudeString).slice(-7) + '\u00B0' +
-                    '\nAlt: ' + ('   ' + heightString).slice(-7) + 'm';
-
+                labelEntity.label.text = '(' + longitudeString + ', ' + latitudeString + ', ' + heightString + ')';
+                
                 var camera = scene.camera;
                 labelEntity.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, camera.frustum.near * 1.5 - Cesium.Cartesian3.distance(cartesian, camera.position));
                 
@@ -215,7 +201,7 @@ Sandcastle.reset = function() {
     handler = handler && handler.destroy();
 };
 //Sandcastle_End
-    Sandcastle.finishedLoading();
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);

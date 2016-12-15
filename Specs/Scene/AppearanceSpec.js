@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/WebGLConstants',
         'Scene/Appearance',
+        'Renderer/WebGLConstants',
         'Scene/BlendingState',
         'Scene/Material'
     ], function(
-        WebGLConstants,
         Appearance,
+        WebGLConstants,
         BlendingState,
         Material) {
     'use strict';

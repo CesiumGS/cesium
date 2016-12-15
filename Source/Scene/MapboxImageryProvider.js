@@ -65,7 +65,6 @@ define([
         this._url = url;
         this._mapId = mapId;
         this._accessToken = MapboxApi.getAccessToken(options.accessToken);
-        this._accessTokenErrorCredit = MapboxApi.getErrorCredit(options.key);
         var format = defaultValue(options.format, 'png');
         if (!/\./.test(format)) {
             format = '.' + format;
@@ -303,11 +302,7 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     MapboxImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        var credits = defaultCredit2.slice();
-        if (defined(this._accessTokenErrorCredit)) {
-            credits.push(this._accessTokenErrorCredit);
-        }
-        return credits;
+        return defaultCredit2;
     };
 
     /**

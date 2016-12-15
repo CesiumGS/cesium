@@ -1,10 +1,8 @@
 /*global define*/
 define([
-    './defined',
-    './Credit'
-], function(
-    defined,
-    Credit) {
+        './defined'
+    ], function(
+        defined) {
     'use strict';
 
     var MapboxApi = {
@@ -23,10 +21,7 @@ define([
      */
     MapboxApi.defaultAccessToken = undefined;
 
-    var printedMapboxWarning = false;
-    var errorCredit;
-    var errorString = 'This application is using Cesium\'s default Mapbox access token.  Please create a new access token for the application as soon as possible and prior to deployment by visiting https://www.mapbox.com/account/apps/, and provide your token to Cesium by setting the Cesium.MapboxApi.defaultAccessToken property before constructing the CesiumWidget or any other object that uses the Mapbox API.';
-
+    var printedMpaboxWarning = false;
 
     MapboxApi.getAccessToken = function(providedToken) {
         if (defined(providedToken)) {
@@ -34,26 +29,14 @@ define([
         }
 
         if (!defined(MapboxApi.defaultAccessToken)) {
-            if (!printedMapboxWarning) {
-                console.log(errorString);
-                printedMapboxWarning = true;
+            if (!printedMpaboxWarning) {
+                console.log('This application is using Cesium\'s default Mapbox access token.  Please create a new access token for the application as soon as possible and prior to deployment by visiting https://www.mapbox.com/account/apps/, and provide your token to Cesium by setting the Cesium.MapboxApi.defaultAccessToken property before constructing the CesiumWidget or any other object that uses the Mapbox API.');
+                printedMpaboxWarning = true;
             }
-            return 'pk.eyJ1IjoiYW5hbHl0aWNhbGdyYXBoaWNzIiwiYSI6ImNpd204Zm4wejAwNzYyeW5uNjYyZmFwdWEifQ.7i-VIZZWX8pd1bTfxIVj9g';
+            return 'pk.eyJ1IjoiYW5hbHl0aWNhbGdyYXBoaWNzIiwiYSI6IjA2YzBjOTM3YzFlYzljYmQ5NDAxZWI1Y2ZjNzZlM2E1In0.vDZL2SPFEpi_f7ziAIP_yw';
         }
 
         return MapboxApi.defaultAccessToken;
-    };
-
-    MapboxApi.getErrorCredit = function(providedToken) {
-        if (defined(providedToken) || defined(MapboxApi.defaultAccessToken)) {
-            return undefined;
-        }
-
-        if (!defined(errorCredit)) {
-            errorCredit = new Credit(errorString);
-        }
-
-        return errorCredit;
     };
 
     return MapboxApi;

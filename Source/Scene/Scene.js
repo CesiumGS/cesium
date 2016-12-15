@@ -290,9 +290,6 @@ define([
             depth : 1.0,
             owner : this
         });
-        this._stencilClearCommand = new ClearCommand({
-            stencil : 0
-        });
 
         this._pickDepths = [];
         this._debugGlobeDepths = [];
@@ -1760,11 +1757,6 @@ define([
             length = frustumCommands.indices[Pass.GROUND];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
-            }
-
-            // Clear the stencil after the ground pass
-            if (length > 0 && context.stencilBuffer) {
-                scene._stencilClearCommand.execute(context, passState);
             }
 
             if (clearGlobeDepth) {

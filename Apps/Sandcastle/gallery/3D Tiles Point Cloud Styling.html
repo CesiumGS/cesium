@@ -134,6 +134,11 @@ addStyle('Min and Max', {
     pointSize : "5"
 });
 
+addStyle('Clamp and Mix', {
+    color : "clamp(color(), 0.0, 100.0)",
+    pointSize : "mix(0.0, 2.0, 0.5) * 5"
+});
+
 addStyle('Secondary Color', {
     color : {
         expression : "[${secondaryColor}[0], ${secondaryColor}[1], ${secondaryColor}[2], 1.0]",

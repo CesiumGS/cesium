@@ -577,30 +577,6 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
-    it('union works with first rectangle crossing the IDL', function() {
-        var rectangle1 = new Rectangle(0.5, 0.1, -0.5, 0.9);
-        var rectangle2 = new Rectangle(-0.85, 0.0, -0.4, 0.8);
-        var expected = new Rectangle(0.5, 0.0, -0.4, 0.9);
-        var returnedResult = Rectangle.union(rectangle1, rectangle2);
-        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
-    });
-
-    it('union works with second rectangle crossing the IDL', function() {
-        var rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
-        var rectangle2 = new Rectangle(0.6, 0.0, -0.2, 0.8);
-        var expected = new Rectangle(0.5, 0.0, -0.2, 0.9);
-        var returnedResult = Rectangle.union(rectangle1, rectangle2);
-        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
-    });
-
-    it('union works with both rectangles crossing the IDL', function() {
-        var rectangle1 = new Rectangle(0.5, 0.1, -0.4, 0.9);
-        var rectangle2 = new Rectangle(0.4, 0.0, -0.5, 0.8);
-        var expected = new Rectangle(0.4, 0.0, -0.4, 0.9);
-        var returnedResult = Rectangle.union(rectangle1, rectangle2);
-        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
-    });
-
     it('expand works if rectangle needs to grow right', function() {
         var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
         var cartographic = new Cartographic(0.85, 0.5);

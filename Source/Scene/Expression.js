@@ -55,14 +55,19 @@ define([
     var unaryFunctions = {
         abs : Math.abs,
         sqrt : Math.sqrt,
-        cos : Math.cos,
         sin : Math.sin,
+        cos : Math.cos,
         tan : Math.tan,
         acos : Math.acos,
         asin : Math.asin,
         atan : Math.atan,
-        radians : CesiumMath.toRadians,
-        degrees : CesiumMath.toDegrees
+        degrees : CesiumMath.toDegrees,
+        radians : CesiumMath.toRadians
+    };
+
+    var ternaryFunctions = {
+        clamp : CesiumMath.clamp,
+        mix : CesiumMath.lerp
     };
 
     /**
@@ -362,21 +367,6 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'isExactClass' || call === 'isClass') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
-            }
-            //>>includeEnd('debug');
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'getExactClassName') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length > 0) {
-                throw new DeveloperError('Error: ' + call + ' does not take any argument.');
-            }
-            //>>includeEnd('debug');
-            return new Node(ExpressionNodeType.UNARY, call);
         } else if (defined(unaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
@@ -385,6 +375,16 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (defined(ternaryFunctions[call])) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 3 || args.length > 3) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly three arguments.');
+            }
+            //>>includeEnd('debug');
+            left = createRuntimeAst(expression, args[0]);
+            right = createRuntimeAst(expression, args[1]);
+            var test = createRuntimeAst(expression, args[2]);
+            return new Node(ExpressionNodeType.TERNARY, call, left, right, test);
         } else if (defined(binaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 2 || args.length > 2) {
@@ -582,6 +582,26 @@ define([
             } else if (node._value === 'toString') {
                 node.evaluate = node._evaluateToString;
             }
+        } else if (node._type === ExpressionNodeType.UNARY) {
+            if (node._value === '!') {
+                node.evaluate = node._evaluateNot;
+            } else if (node._value === '-') {
+                node.evaluate = node._evaluateNegative;
+            } else if (node._value === '+') {
+                node.evaluate = node._evaluatePositive;
+            } else if (node._value === 'isNaN') {
+                node.evaluate = node._evaluateNaN;
+            } else if (node._value === 'isFinite') {
+                node.evaluate = node._evaluateIsFinite;
+            } else if (defined(unaryFunctions[node._value])) {
+                node.evaluate = getEvaluateUnaryFunction(node._value);
+            } else if (node._value === 'Boolean') {
+                node.evaluate = node._evaluateBooleanConversion;
+            } else if (node._value === 'Number') {
+                node.evaluate = node._evaluateNumberConversion;
+            } else if (node._value === 'String') {
+                node.evaluate = node._evaluateStringConversion;
+            }
         } else if (node._type === ExpressionNodeType.BINARY) {
             if (node._value === '+') {
                 node.evaluate = node._evaluatePlus;
@@ -620,32 +640,8 @@ define([
             } else if (defined(binaryFunctions[node._value])) {
                 node.evaluate = getEvaluateBinaryFunction(node._value);
             }
-        } else if (node._type === ExpressionNodeType.UNARY) {
-            if (node._value === '!') {
-                node.evaluate = node._evaluateNot;
-            } else if (node._value === '-') {
-                node.evaluate = node._evaluateNegative;
-            } else if (node._value === '+') {
-                node.evaluate = node._evaluatePositive;
-            } else if (node._value === 'isNaN') {
-                node.evaluate = node._evaluateNaN;
-            } else if (node._value === 'isFinite') {
-                node.evaluate = node._evaluateIsFinite;
-            } else if (node._value === 'isExactClass') {
-                node.evaluate = node._evaluateIsExactClass;
-            } else if (node._value === 'isClass') {
-                node.evaluate = node._evaluateIsClass;
-            } else if (node._value === 'getExactClassName') {
-                node.evaluate = node._evaluategetExactClassName;
-            } else if (defined(unaryFunctions[node._value])) {
-                node.evaluate = getEvaluateUnaryFunction(node._value);
-            } else if (node._value === 'Boolean') {
-                node.evaluate = node._evaluateBooleanConversion;
-            } else if (node._value === 'Number') {
-                node.evaluate = node._evaluateNumberConversion;
-            } else if (node._value === 'String') {
-                node.evaluate = node._evaluateStringConversion;
-            }
+        } else if (node._type === ExpressionNodeType.TERNARY) {
+            node.evaluate = getEvaluateTernaryFunction(node._value);
         } else if (node._type === ExpressionNodeType.MEMBER) {
             if (node._value === 'brackets') {
                 node.evaluate = node._evaluateMemberBrackets;
@@ -688,6 +684,13 @@ define([
         var evaluate = unaryFunctions[call];
         return function(feature) {
             return evaluate(this._left.evaluate(feature));
+        };
+    }
+
+    function getEvaluateTernaryFunction(call) {
+        var evaluate = ternaryFunctions[call];
+        return function(feature) {
+            return evaluate(this._left.evaluate(feature), this._right.evaluate(feature), this._test.evaluate(feature));
         };
     }
 
@@ -988,18 +991,6 @@ define([
         return isFinite(this._left.evaluate(frameState, feature));
     };
 
-    Node.prototype._evaluateIsExactClass = function(frameState, feature) {
-        return feature.isExactClass(this._left.evaluate(frameState, feature));
-    };
-
-    Node.prototype._evaluateIsClass = function(frameState, feature) {
-        return feature.isClass(this._left.evaluate(frameState, feature));
-    };
-
-    Node.prototype._evaluategetExactClassName = function(frameState, feature) {
-        return feature.getExactClassName();
-    };
-
     Node.prototype._evaluateBooleanConversion = function(frameState, feature) {
         return Boolean(this._left.evaluate(frameState, feature));
     };
@@ -1219,15 +1210,9 @@ define([
                     return 'float(' + left + ')';
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
-                } else if (value === 'abs') {
-                    return 'abs(' + left + ')';
-                } else if (value === 'cos') {
-                    return 'cos(' + left + ')';
-                } else if (value === 'sqrt') {
-                    return 'sqrt(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
-                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {
+                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
                     throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
                 }
                 //>>includeEnd('debug');
@@ -1359,6 +1344,11 @@ define([
             case ExpressionNodeType.LITERAL_GLOBAL:
                 if (value === 'TILES3D_TILESET_TIME') {
                     return 'u_tilesetTime';
+                }
+                break;
+            case ExpressionNodeType.TERNARY:
+                if (defined(ternaryFunctions[value])) {
+                    return value + '(' + left + ', ' + right + ', ' + test + ')';
                 }
         }
     };

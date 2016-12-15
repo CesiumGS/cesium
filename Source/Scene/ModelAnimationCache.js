@@ -7,7 +7,7 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
-        '../Core/WebGLConstants',
+        '../Renderer/WebGLConstants',
         './getBinaryAccessor'
     ], function(
         Cartesian3,

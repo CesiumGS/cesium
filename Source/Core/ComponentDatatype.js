@@ -1,18 +1,18 @@
 /*global define*/
 define([
+        '../Renderer/WebGLConstants',
         './defaultValue',
         './defined',
         './DeveloperError',
         './FeatureDetection',
-        './freezeObject',
-        './WebGLConstants'
+        './freezeObject'
     ], function(
+        WebGLConstants,
         defaultValue,
         defined,
         DeveloperError,
         FeatureDetection,
-        freezeObject,
-        WebGLConstants) {
+        freezeObject) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function

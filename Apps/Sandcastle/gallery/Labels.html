@@ -64,7 +64,6 @@ function setProperties() {
     });
 
     entity.label.scale = 2.0;
-    entity.label.showBackground = true;
 }
 
 function offsetByDistance() {
@@ -81,7 +80,6 @@ function offsetByDistance() {
             label : {
                 text : 'Label on top of scaling billboard',
                 font : '20px sans-serif',
-                showBackground : true,
                 horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
                 pixelOffset : new Cesium.Cartesian2(0.0, -image.height),
                 pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)

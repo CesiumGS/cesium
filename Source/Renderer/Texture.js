@@ -8,13 +8,13 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/PixelFormat',
-        '../Core/WebGLConstants',
         './ContextLimits',
         './MipmapHint',
         './PixelDatatype',
         './Sampler',
         './TextureMagnificationFilter',
-        './TextureMinificationFilter'
+        './TextureMinificationFilter',
+        './WebGLConstants'
     ], function(
         Cartesian2,
         defaultValue,
@@ -24,15 +24,15 @@ define([
         DeveloperError,
         CesiumMath,
         PixelFormat,
-        WebGLConstants,
         ContextLimits,
         MipmapHint,
         PixelDatatype,
         Sampler,
         TextureMagnificationFilter,
-        TextureMinificationFilter) {
+        TextureMinificationFilter,
+        WebGLConstants) {
     'use strict';
-
+    
     function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -209,9 +209,9 @@ define([
      * var t = Texture.fromFramebuffer({
      *     context : context
      * });
-     *
+     * 
      * @see Sampler
-     *
+     * 
      * @private
      */
     Texture.fromFramebuffer = function(options) {
