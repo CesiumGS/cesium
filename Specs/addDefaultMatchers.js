@@ -272,12 +272,18 @@ define([
                         var result = scene.pick(new Cartesian2(0, 0));
 
                         var pass = true;
+                        var message;
+
                         if (!webglStub) {
                             pass = !defined(result);
+                            if (!pass) {
+                                message = 'Expected not to pick, but picked: ' + result;
+                            }
                         }
 
                         return {
-                            pass : pass
+                            pass : pass,
+                            message : message
                         };
                     }
                 };

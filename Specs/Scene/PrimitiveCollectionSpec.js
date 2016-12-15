@@ -333,7 +333,9 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).notToPick();
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(p1);
+        });
     });
 
     it('picks a primitive added with render order (1)', function() {
@@ -451,7 +453,7 @@ defineSuite([
         verifyPrimitivesRender(primitives);
 
         expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p1);
+            expect(result.primitive).toEqual(p0);
         });
     });
 
