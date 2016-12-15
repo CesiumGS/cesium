@@ -67,7 +67,7 @@ define([
 
     var ternaryFunctions = {
         clamp : CesiumMath.clamp,
-        mix: CesiumMath.lerp
+        mix : CesiumMath.lerp
     };
 
     /**
@@ -582,6 +582,26 @@ define([
             } else if (node._value === 'toString') {
                 node.evaluate = node._evaluateToString;
             }
+        } else if (node._type === ExpressionNodeType.UNARY) {
+            if (node._value === '!') {
+                node.evaluate = node._evaluateNot;
+            } else if (node._value === '-') {
+                node.evaluate = node._evaluateNegative;
+            } else if (node._value === '+') {
+                node.evaluate = node._evaluatePositive;
+            } else if (node._value === 'isNaN') {
+                node.evaluate = node._evaluateNaN;
+            } else if (node._value === 'isFinite') {
+                node.evaluate = node._evaluateIsFinite;
+            } else if (defined(unaryFunctions[node._value])) {
+                node.evaluate = getEvaluateUnaryFunction(node._value);
+            } else if (node._value === 'Boolean') {
+                node.evaluate = node._evaluateBooleanConversion;
+            } else if (node._value === 'Number') {
+                node.evaluate = node._evaluateNumberConversion;
+            } else if (node._value === 'String') {
+                node.evaluate = node._evaluateStringConversion;
+            }
         } else if (node._type === ExpressionNodeType.BINARY) {
             if (node._value === '+') {
                 node.evaluate = node._evaluatePlus;
@@ -620,26 +640,8 @@ define([
             } else if (defined(binaryFunctions[node._value])) {
                 node.evaluate = getEvaluateBinaryFunction(node._value);
             }
-        } else if (node._type === ExpressionNodeType.UNARY) {
-            if (node._value === '!') {
-                node.evaluate = node._evaluateNot;
-            } else if (node._value === '-') {
-                node.evaluate = node._evaluateNegative;
-            } else if (node._value === '+') {
-                node.evaluate = node._evaluatePositive;
-            } else if (node._value === 'isNaN') {
-                node.evaluate = node._evaluateNaN;
-            } else if (node._value === 'isFinite') {
-                node.evaluate = node._evaluateIsFinite;
-            } else if (defined(unaryFunctions[node._value])) {
-                node.evaluate = getEvaluateUnaryFunction(node._value);
-            } else if (node._value === 'Boolean') {
-                node.evaluate = node._evaluateBooleanConversion;
-            } else if (node._value === 'Number') {
-                node.evaluate = node._evaluateNumberConversion;
-            } else if (node._value === 'String') {
-                node.evaluate = node._evaluateStringConversion;
-            }
+        } else if (node._type === ExpressionNodeType.TERNARY) {
+            node.evaluate = getEvaluateTernaryFunction(node._value);
         } else if (node._type === ExpressionNodeType.MEMBER) {
             if (node._value === 'brackets') {
                 node.evaluate = node._evaluateMemberBrackets;
@@ -662,8 +664,6 @@ define([
             if (node._value === 'TILES3D_TILESET_TIME') {
                 node.evaluate = evaluateTime;
             }
-        } else if (node._type === ExpressionNodeType.TERNARY) {
-            node.evaluate = getEvaluateTernaryFunction(node._value);
         } else {
             node.evaluate = node._evaluateLiteral;
         }
@@ -690,7 +690,7 @@ define([
     function getEvaluateTernaryFunction(call) {
         var evaluate = ternaryFunctions[call];
         return function(feature) {
-            return evaluate(this._left.evaluate(feature), this._right.evaluate(feature));
+            return evaluate(this._left.evaluate(feature), this._right.evaluate(feature), this._test.evaluate(feature));
         };
     }
 

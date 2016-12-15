@@ -11,8 +11,8 @@ define([
     var ExpressionNodeType = {
         VARIABLE : 0,
         UNARY : 1,
-        TERNARY : 2,
-        BINARY : 3,
+        BINARY : 2,
+        TERNARY : 3,
         CONDITIONAL : 4,
         MEMBER : 5,
         FUNCTION_CALL : 6,
