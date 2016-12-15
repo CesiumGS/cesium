@@ -19,6 +19,7 @@ define([
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
+        '../Core/WebGLConstants',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -26,7 +27,6 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
-        '../Renderer/WebGLConstants',
         '../ThirdParty/when',
         './BlendingState',
         './Cesium3DTileBatchTable',
@@ -55,6 +55,7 @@ define([
         Request,
         RequestScheduler,
         RequestType,
+        WebGLConstants,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -62,7 +63,6 @@ define([
         ShaderProgram,
         ShaderSource,
         VertexArray,
-        WebGLConstants,
         when,
         BlendingState,
         Cesium3DTileBatchTable,
@@ -189,9 +189,9 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    PointCloud3DTileContent.prototype.hasProperty = function(name) {
+    PointCloud3DTileContent.prototype.hasProperty = function(batchId, name) {
         if (defined(this.batchTable)) {
-            return this.batchTable.hasProperty(name);
+            return this.batchTable.hasProperty(batchId, name);
         }
         return false;
     };

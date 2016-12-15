@@ -2,10 +2,12 @@
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
+        '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
+        '../Scene/ColorBlendMode',
         '../Scene/HeightReference',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
@@ -15,10 +17,12 @@ define([
     ], function(
         AssociativeArray,
         BoundingSphere,
+        Color,
         defined,
         destroyObject,
         DeveloperError,
         Matrix4,
+        ColorBlendMode,
         HeightReference,
         Model,
         ModelAnimationLoop,
@@ -32,7 +36,13 @@ define([
     var defaultIncrementallyLoadTextures = true;
     var defaultShadows = ShadowMode.ENABLED;
     var defaultHeightReference = HeightReference.NONE;
+    var defaultSilhouetteColor = Color.RED;
+    var defaultSilhouetteSize = 0.0;
+    var defaultColor = Color.WHITE;
+    var defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
+    var defaultColorBlendAmount = 0.5;
 
+    var color = new Color();
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
 
@@ -139,6 +149,11 @@ define([
             model.shadows = Property.getValueOrDefault(modelGraphics._shadows, time, defaultShadows);
             model.heightReference = Property.getValueOrDefault(modelGraphics._heightReference, time, defaultHeightReference);
             model.distanceDisplayCondition = Property.getValueOrUndefined(modelGraphics._distanceDisplayCondition, time);
+            model.silhouetteColor = Property.getValueOrDefault(modelGraphics.silhouetteColor, time, defaultSilhouetteColor);
+            model.silhouetteSize = Property.getValueOrDefault(modelGraphics.silhouetteSize, time, defaultSilhouetteSize);
+            model.color = Property.getValueOrDefault(modelGraphics._color, time, defaultColor, color);
+            model.colorBlendMode = Property.getValueOrDefault(modelGraphics._colorBlendMode, time, defaultColorBlendMode);
+            model.colorBlendAmount = Property.getValueOrDefault(modelGraphics._colorBlendAmount, time, defaultColorBlendAmount);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);

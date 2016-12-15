@@ -86,8 +86,11 @@ define([
         this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
         this._outlineColor = Color.clone(defaultValue(options.outlineColor, Color.BLACK));
         this._outlineWidth = defaultValue(options.outlineWidth, 1.0);
+        this._showBackground = defaultValue(options.showBackground, false);
+        this._backgroundColor = defaultValue(options.backgroundColor, new Color(0.165, 0.165, 0.165, 0.8));
+        this._backgroundPadding = defaultValue(options.backgroundPadding, new Cartesian2(7, 5));
         this._style = defaultValue(options.style, LabelStyle.FILL);
-        this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.BOTTOM);
+        this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.BASELINE);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.LEFT);
         this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
@@ -101,6 +104,7 @@ define([
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
+        this._backgroundBillboard = undefined;
 
         this._rebindAllGlyphs = true;
         this._repositionAllGlyphs = true;
@@ -120,6 +124,7 @@ define([
          * of removing it and re-adding it to the collection.
          * @memberof Label.prototype
          * @type {Boolean}
+         * @default true
          */
         show : {
             get : function() {
@@ -141,6 +146,10 @@ define([
                         if (defined(billboard)) {
                             billboard.show = value;
                         }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.show = value;
                     }
                 }
             }
@@ -173,6 +182,10 @@ define([
                             billboard.position = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.position = value;
+                    }
 
                     if (this._heightReference !== HeightReference.NONE) {
                         this._updateClamping();
@@ -185,6 +198,7 @@ define([
          * Gets or sets the height reference of this billboard.
          * @memberof Label.prototype
          * @type {HeightReference}
+         * @default HeightReference.NONE
          */
         heightReference : {
             get : function() {
@@ -206,6 +220,10 @@ define([
                         if (defined(billboard)) {
                             billboard.heightReference = value;
                         }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.heightReference = value;
                     }
 
                     repositionAllGlyphs(this);
@@ -242,6 +260,7 @@ define([
          * Gets or sets the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
          * @memberof Label.prototype
          * @type {String}
+         * @default '30px sans-serif'
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles|HTML canvas 2D context text styles}
          */
         font : {
@@ -266,6 +285,7 @@ define([
          * Gets or sets the fill color of this label.
          * @memberof Label.prototype
          * @type {Color}
+         * @default Color.WHITE
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
          */
         fillColor : {
@@ -291,6 +311,7 @@ define([
          * Gets or sets the outline color of this label.
          * @memberof Label.prototype
          * @type {Color}
+         * @default Color.BLACK
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
          */
         outlineColor : {
@@ -316,6 +337,7 @@ define([
          * Gets or sets the outline width of this label.
          * @memberof Label.prototype
          * @type {Number}
+         * @default 1.0
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
          */
         outlineWidth : {
@@ -337,9 +359,89 @@ define([
         },
 
         /**
+         * Determines if a background behind this label will be shown.
+         * @memberof Label.prototype
+         * @default false
+         * @type {Boolean}
+         */
+        showBackground : {
+            get : function() {
+                return this._showBackground;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                if (this._showBackground !== value) {
+                    this._showBackground = value;
+                    rebindAllGlyphs(this);
+                }
+            }
+        },
+
+        /**
+         * Gets or sets the background color of this label.
+         * @memberof Label.prototype
+         * @type {Color}
+         * @default new Color(0.165, 0.165, 0.165, 0.8)
+         */
+        backgroundColor : {
+            get : function() {
+                return this._backgroundColor;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                var backgroundColor = this._backgroundColor;
+                if (!Color.equals(backgroundColor, value)) {
+                    Color.clone(value, backgroundColor);
+
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.color = backgroundColor;
+                    }
+                }
+            }
+        },
+
+        /**
+         * Gets or sets the background padding, in pixels, of this label.  The <code>x</code> value
+         * controls horizontal padding, and the <code>y</code> value controls vertical padding.
+         * @memberof Label.prototype
+         * @type {Cartesian2}
+         * @default new Cartesian2(7, 5)
+         */
+        backgroundPadding : {
+            get : function() {
+                return this._backgroundPadding;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                var backgroundPadding = this._backgroundPadding;
+                if (!Cartesian2.equals(backgroundPadding, value)) {
+                    Cartesian2.clone(value, backgroundPadding);
+                    repositionAllGlyphs(this);
+                }
+            }
+        },
+
+        /**
          * Gets or sets the style of this label.
          * @memberof Label.prototype
          * @type {LabelStyle}
+         * @default LabelStyle.FILL
          */
         style : {
             get : function() {
@@ -374,6 +476,7 @@ define([
          * </div>
          * @memberof Label.prototype
          * @type {Cartesian2}
+         * @default Cartesian2.ZERO
          */
         pixelOffset : {
             get : function() {
@@ -396,6 +499,10 @@ define([
                         if (defined(glyph.billboard)) {
                             glyph.billboard.pixelOffset = value;
                         }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.pixelOffset = value;
                     }
                 }
             }
@@ -444,6 +551,10 @@ define([
                         if (defined(glyph.billboard)) {
                             glyph.billboard.translucencyByDistance = value;
                         }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.translucencyByDistance = value;
                     }
                 }
             }
@@ -494,6 +605,10 @@ define([
                             glyph.billboard.pixelOffsetScaleByDistance = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.pixelOffsetScaleByDistance = value;
+                    }
                 }
             }
         },
@@ -519,6 +634,7 @@ define([
          * </div>
          * @memberof Label.prototype
          * @type {Cartesian3}
+         * @default Cartesian3.ZERO
          */
         eyeOffset : {
             get : function() {
@@ -542,19 +658,24 @@ define([
                             glyph.billboard.eyeOffset = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.eyeOffset = value;
+                    }
                 }
             }
         },
 
         /**
          * Gets or sets the horizontal origin of this label, which determines if the label is drawn
-         * to the left, center, or right of its position.
+         * to the left, center, or right of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setHorizontalOrigin.png' width='400' height='300' /><br />
+         * <img src='images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
          * </div>
          * @memberof Label.prototype
          * @type {HorizontalOrigin}
+         * @default HorizontalOrigin.LEFT
          * @example
          * // Use a top, right origin
          * l.horizontalOrigin = Cesium.HorizontalOrigin.RIGHT;
@@ -580,13 +701,14 @@ define([
 
         /**
          * Gets or sets the vertical origin of this label, which determines if the label is
-         * to the above, below, or at the center of its position.
+         * to the above, below, or at the center of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setVerticalOrigin.png' width='400' height='300' /><br />
+         * <img src='images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
          * </div>
          * @memberof Label.prototype
          * @type {VerticalOrigin}
+         * @default VerticalOrigin.BASELINE
          * @example
          * // Use a top, right origin
          * l.horizontalOrigin = Cesium.HorizontalOrigin.RIGHT;
@@ -613,6 +735,10 @@ define([
                             glyph.billboard.verticalOrigin = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.verticalOrigin = value;
+                    }
 
                     repositionAllGlyphs(this);
                 }
@@ -635,6 +761,7 @@ define([
          * </div>
          * @memberof Label.prototype
          * @type {Number}
+         * @default 1.0
          */
         scale : {
             get : function() {
@@ -656,6 +783,10 @@ define([
                         if (defined(glyph.billboard)) {
                             glyph.billboard.scale = value;
                         }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.scale = value;
                     }
 
                     repositionAllGlyphs(this);
@@ -689,6 +820,10 @@ define([
                             glyph.billboard.distanceDisplayCondition = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.distanceDisplayCondition = value;
+                    }
                 }
             }
         },
@@ -713,6 +848,10 @@ define([
                             glyph.billboard.id = value;
                         }
                     }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.id = value;
+                    }
                 }
             }
         },
@@ -731,18 +870,22 @@ define([
                 this._actualClampedPosition = Cartesian3.clone(value, this._actualClampedPosition);
 
                 var glyphs = this._glyphs;
+                value = defaultValue(value, this._position);
                 for (var i = 0, len = glyphs.length; i < len; i++) {
                     var glyph = glyphs[i];
                     if (defined(glyph.billboard)) {
                         // Set all the private values here, because we already clamped to ground
                         //  so we don't want to do it again for every glyph
-
                         glyph.billboard._clampedPosition = value;
-
-                        value = defaultValue(value, this._position);
                         Cartesian3.clone(value, glyph.billboard._position);
                         Cartesian3.clone(value, glyph.billboard._actualPosition);
                     }
+                }
+                var backgroundBillboard = this._backgroundBillboard;
+                if (defined(backgroundBillboard)) {
+                    backgroundBillboard._clampedPosition = value;
+                    Cartesian3.clone(value, backgroundBillboard._position);
+                    Cartesian3.clone(value, backgroundBillboard._actualPosition);
                 }
             }
         },
@@ -751,6 +894,7 @@ define([
          * Determines whether or not this label will be shown or hidden because it was clustered.
          * @memberof Label.prototype
          * @type {Boolean}
+         * @default true
          * @private
          */
         clusterShow : {
@@ -765,10 +909,12 @@ define([
                     for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
-                            // Set all the private values here, because we already clamped to ground
-                            //  so we don't want to do it again for every glyph
                             glyph.billboard.clusterShow = value;
                         }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.clusterShow = value;
                     }
                 }
             }
@@ -825,38 +971,58 @@ define([
      * @private
      */
     Label.getScreenSpaceBoundingBox = function(label, screenSpacePosition, result) {
+        var x = 0;
+        var y = 0;
         var width = 0;
         var height = 0;
+        var scale = label.scale;
+        var resolutionScale = label._labelCollection._resolutionScale;
 
-        var glyphs = label._glyphs;
-        var length = glyphs.length;
-        for (var i = 0; i < length; ++i) {
-            var glyph = glyphs[i];
-            var billboard = glyph.billboard;
-            if (!defined(billboard)) {
-                continue;
+        var backgroundBillboard = label._backgroundBillboard;
+        if (defined(backgroundBillboard)) {
+            x = screenSpacePosition.x + (backgroundBillboard._translate.x / resolutionScale);
+            y = screenSpacePosition.y - (backgroundBillboard._translate.y / resolutionScale);
+            width = backgroundBillboard.width * scale;
+            height = backgroundBillboard.height * scale;
+
+            if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
+                y -= height;
+            } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
+                y -= height * 0.5;
+            }
+        } else {
+            x = Number.POSITIVE_INFINITY;
+            y = Number.POSITIVE_INFINITY;
+            var maxX = 0;
+            var maxY = 0;
+            var glyphs = label._glyphs;
+            var length = glyphs.length;
+            for (var i = 0; i < length; ++i) {
+                var glyph = glyphs[i];
+                var billboard = glyph.billboard;
+                if (!defined(billboard)) {
+                    continue;
+                }
+
+                var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
+                var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
+                var glyphWidth = billboard.width * scale;
+                var glyphHeight = billboard.height * scale;
+
+                if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
+                    glyphY -= glyphHeight;
+                } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
+                    glyphY -= glyphHeight * 0.5;
+                }
+
+                x = Math.min(x, glyphX);
+                y = Math.min(y, glyphY);
+                maxX = Math.max(maxX, glyphX + glyphWidth);
+                maxY = Math.max(maxY, glyphY + glyphHeight);
             }
 
-            width += billboard.width;
-            height = Math.max(height, billboard.height);
-        }
-
-        var scale = label.scale;
-        width *= scale;
-        height *= scale;
-
-        var x = screenSpacePosition.x;
-        if (label.horizontalOrigin === HorizontalOrigin.RIGHT) {
-            x -= width;
-        } else if (label.horizontalOrigin === HorizontalOrigin.CENTER) {
-            x -= width * 0.5;
-        }
-
-        var y = screenSpacePosition.y;
-        if (label.verticalOrigin === VerticalOrigin.TOP) {
-            y -= height;
-        } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
-            y -= height * 0.5;
+            width = maxX - x;
+            height = maxY - y;
         }
 
         if (!defined(result)) {
@@ -883,6 +1049,8 @@ define([
                defined(other) &&
                this._show === other._show &&
                this._scale === other._scale &&
+               this._outlineWidth === other._outlineWidth &&
+               this._showBackground === other._showBackground &&
                this._style === other._style &&
                this._verticalOrigin === other._verticalOrigin &&
                this._horizontalOrigin === other._horizontalOrigin &&
@@ -892,6 +1060,8 @@ define([
                Cartesian3.equals(this._position, other._position) &&
                Color.equals(this._fillColor, other._fillColor) &&
                Color.equals(this._outlineColor, other._outlineColor) &&
+               Color.equals(this._backgroundColor, other._backgroundColor) &&
+               Cartesian2.equals(this._backgroundPadding, other._backgroundPadding) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&

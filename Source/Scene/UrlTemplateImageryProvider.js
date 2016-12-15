@@ -284,6 +284,7 @@ define([
          *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
          *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@link GetFeatureInfoFormat}.</li>
          * </ul>
+         * @memberof UrlTemplateImageryProvider.prototype
          * @type {String}
          * @readonly
          */

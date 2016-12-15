@@ -15,6 +15,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/WebGLConstants',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -22,7 +23,6 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArrayFacade',
-        '../Renderer/WebGLConstants',
         '../Shaders/BillboardCollectionFS',
         '../Shaders/BillboardCollectionVS',
         './Billboard',
@@ -49,6 +49,7 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix4,
+        WebGLConstants,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -56,7 +57,6 @@ define([
         ShaderProgram,
         ShaderSource,
         VertexArrayFacade,
-        WebGLConstants,
         BillboardCollectionFS,
         BillboardCollectionVS,
         Billboard,
@@ -406,12 +406,23 @@ define([
      *   position : Cesium.Cartesian3.ZERO,
      *   pixelOffset : Cesium.Cartesian2.ZERO,
      *   eyeOffset : Cesium.Cartesian3.ZERO,
+     *   heightReference : Cesium.HeightReference.NONE,
      *   horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
      *   verticalOrigin : Cesium.VerticalOrigin.CENTER,
      *   scale : 1.0,
      *   image : 'url/to/image',
+     *   imageSubRegion : undefined,
      *   color : Cesium.Color.WHITE,
-     *   id : undefined
+     *   id : undefined,
+     *   rotation : 0.0,
+     *   alignedAxis : Cesium.Cartesian3.ZERO,
+     *   width : undefined,
+     *   height : undefined,
+     *   scaleByDistance : undefined,
+     *   translucencyByDistance : undefined,
+     *   pixelOffsetScaleByDistance : undefined,
+     *   sizeInMeters : false,
+     *   distanceDisplayCondition : undefined
      * });
      *
      * @example
@@ -811,6 +822,11 @@ define([
         // color during the pick pass and also eliminates a discard in the fragment shader.
         if (billboard.color.alpha === 0.0) {
             show = false;
+        }
+
+        // Raw billboards don't distinguish between BASELINE and BOTTOM, only LabelCollection does that.
+        if (verticalOrigin === VerticalOrigin.BASELINE) {
+            verticalOrigin = VerticalOrigin.BOTTOM;
         }
 
         billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER;

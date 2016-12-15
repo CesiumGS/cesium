@@ -367,6 +367,21 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'isExactClass' || call === 'isClass') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'getExactClassName') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length > 0) {
+                throw new DeveloperError('Error: ' + call + ' does not take any argument.');
+            }
+            //>>includeEnd('debug');
+            return new Node(ExpressionNodeType.UNARY, call);
         } else if (defined(unaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
@@ -991,6 +1006,18 @@ define([
         return isFinite(this._left.evaluate(frameState, feature));
     };
 
+    Node.prototype._evaluateIsExactClass = function(frameState, feature) {
+        return feature.isExactClass(this._left.evaluate(frameState, feature));
+    };
+
+    Node.prototype._evaluateIsClass = function(frameState, feature) {
+        return feature.isClass(this._left.evaluate(frameState, feature));
+    };
+
+    Node.prototype._evaluategetExactClassName = function(frameState, feature) {
+        return feature.getExactClassName();
+    };
+
     Node.prototype._evaluateBooleanConversion = function(frameState, feature) {
         return Boolean(this._left.evaluate(frameState, feature));
     };
@@ -1212,7 +1239,7 @@ define([
                     return value + '(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
-                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String')) {
+                else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {
                     throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
                 }
                 //>>includeEnd('debug');
