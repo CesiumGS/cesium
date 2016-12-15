@@ -1,16 +1,16 @@
 /*global define*/
 define([
+        '../Renderer/WebGLConstants',
         './defined',
         './DeveloperError',
         './freezeObject',
-        './Math',
-        './WebGLConstants'
+        './Math'
     ], function(
+        WebGLConstants,
         defined,
         DeveloperError,
         freezeObject,
-        CesiumMath,
-        WebGLConstants) {
+        CesiumMath) {
     'use strict';
 
     /**
@@ -96,7 +96,7 @@ define([
      * or <code>Uint32Array</code> depending on the number of vertices.
      *
      * @param {Number} numberOfVertices Number of vertices that the indices will reference.
-     * @param {*} indicesLengthOrArray Passed through to the typed array constructor.
+     * @param {Any} indicesLengthOrArray Passed through to the typed array constructor.
      * @returns {Uint16Array|Uint32Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>indicesLengthOrArray</code>.
      *
      * @example

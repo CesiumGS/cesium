@@ -35,7 +35,6 @@ define([
         '../Core/Spherical',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
-        '../Scene/ColorBlendMode',
         '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
@@ -121,7 +120,6 @@ define([
         Spherical,
         TimeInterval,
         TimeIntervalCollection,
-        ColorBlendMode,
         HeightReference,
         HorizontalOrigin,
         LabelStyle,
@@ -434,8 +432,6 @@ define([
                 return unwrapCartesianInterval(czmlInterval);
             case Color:
                 return unwrapColorInterval(czmlInterval);
-            case ColorBlendMode:
-                return ColorBlendMode[defaultValue(czmlInterval.colorBlendMode, czmlInterval)];
             case CornerType:
                 return CornerType[defaultValue(czmlInterval.cornerType, czmlInterval)];
             case HeightReference:
@@ -1380,9 +1376,6 @@ define([
         processPacketData(String, label, 'font', labelData.font, interval, sourceUri, entityCollection);
         processPacketData(LabelStyle, label, 'style', labelData.style, interval, sourceUri, entityCollection);
         processPacketData(Number, label, 'scale', labelData.scale, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, label, 'showBackground', labelData.showBackground, interval, sourceUri, entityCollection);
-        processPacketData(Color, label, 'backgroundColor', labelData.backgroundColor, interval, sourceUri, entityCollection);
-        processPacketData(Cartesian2, label, 'backgroundPadding', labelData.backgroundPadding, interval, sourceUri, entityCollection);
         processPacketData(Cartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri, entityCollection);
         processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri, entityCollection);
         processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri, entityCollection);
@@ -1422,11 +1415,6 @@ define([
         processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, model, 'shadows', modelData.shadows, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, model, 'heightReference', modelData.heightReference, interval, sourceUri, entityCollection);
-        processPacketData(Color, model, 'silhouetteColor', modelData.silhouetteColor, interval, sourceUri, entityCollection);
-        processPacketData(Number, model, 'silhouetteSize', modelData.silhouetteSize, interval, sourceUri, entityCollection);
-        processPacketData(Color, model, 'color', modelData.color, interval, sourceUri, entityCollection);
-        processPacketData(ColorBlendMode, model, 'colorBlendMode', modelData.colorBlendMode, interval, sourceUri, entityCollection);
-        processPacketData(Number, model, 'colorBlendAmount', modelData.colorBlendAmount, interval, sourceUri, entityCollection);
 
         var nodeTransformationsData = modelData.nodeTransformations;
         if (defined(nodeTransformationsData)) {

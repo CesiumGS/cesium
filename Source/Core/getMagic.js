@@ -1,7 +1,7 @@
 /*global define*/
 define([
-        './defaultValue',
-        './getStringFromTypedArray'
+        '../Core/defaultValue',
+        '../Core/getStringFromTypedArray'
     ], function(
         defaultValue,
         getStringFromTypedArray) {

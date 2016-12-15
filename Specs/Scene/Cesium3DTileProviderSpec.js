@@ -14,7 +14,7 @@ defineSuite([
             return content.innerContents;
         }).toThrowDeveloperError();
         expect(function() {
-            return content.hasProperty(0, 'height');
+            return content.hasProperty('height');
         }).toThrowDeveloperError();
         expect(function() {
             return content.getFeature(0);

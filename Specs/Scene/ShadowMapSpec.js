@@ -17,11 +17,11 @@ defineSuite([
         'Core/Math',
         'Core/PixelFormat',
         'Core/Transforms',
-        'Core/WebGLConstants',
         'Renderer/Context',
         'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
         'Renderer/Texture',
+        'Renderer/WebGLConstants',
         'Scene/Camera',
         'Scene/Globe',
         'Scene/Model',
@@ -50,11 +50,11 @@ defineSuite([
         CesiumMath,
         PixelFormat,
         Transforms,
-        WebGLConstants,
         Context,
         Framebuffer,
         PixelDatatype,
         Texture,
+        WebGLConstants,
         Camera,
         Globe,
         Model,
@@ -900,7 +900,7 @@ defineSuite([
         render();
         expect(scene.frameState.commandList.length).toBe(0);
     });
-
+    
     it('enable fitNearFar', function() {
         box.show = true;
         floor.show = true;

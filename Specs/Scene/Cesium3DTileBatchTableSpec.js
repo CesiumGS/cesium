@@ -10,7 +10,6 @@ defineSuite([
         'Core/Matrix3',
         'Core/Matrix4',
         'Renderer/ContextLimits',
-        'Scene/Cesium3DTileStyle',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
@@ -24,7 +23,6 @@ defineSuite([
         Matrix3,
         Matrix4,
         ContextLimits,
-        Cesium3DTileStyle,
         Cesium3DTilesTester,
         createScene) {
     'use strict';
@@ -36,9 +34,6 @@ defineSuite([
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
     var batchLengthZeroUrl = './Data/Cesium3DTiles/Batched/BatchedNoBuildings/';
-    var batchTableHierarchyUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/';
-    var batchTableHierarchyBinaryUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyBinary/';
-    var batchTableHierarchyMultipleParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents/';
 
     var result = new Color();
 
@@ -51,9 +46,9 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
 
-        // One feature is located at the center, point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 20.0));
+        // One building in each data set is always located in the center, so point the camera there
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
     });
 
     afterAll(function() {
@@ -234,23 +229,10 @@ defineSuite([
         expect(batchTable.getColor(0, result)).toEqual(Color.YELLOW);
     });
 
-    it('hasProperty throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
-        expect(function() {
-            batchTable.hasProperty();
-        }).toThrowDeveloperError();
-        expect(function() {
-            batchTable.hasProperty(-1);
-        }).toThrowDeveloperError();
-        expect(function() {
-            batchTable.hasProperty(2);
-        }).toThrowDeveloperError();
-    });
-
     it('hasProperty throws with undefined name', function() {
         var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            batchTable.hasProperty(0);
+            batchTable.hasProperty();
         }).toThrowDeveloperError();
     });
 
@@ -259,33 +241,20 @@ defineSuite([
             height: [0.0]
         };
         var batchTable = new Cesium3DTileBatchTable(mockContent, 1, batchTableJson);
-        expect(batchTable.hasProperty(0, 'height')).toEqual(true);
-        expect(batchTable.hasProperty(0, 'id')).toEqual(false);
-    });
-
-    it('getPropertyNames throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
-        expect(function() {
-            batchTable.getPropertyNames();
-        }).toThrowDeveloperError();
-        expect(function() {
-            batchTable.getPropertyNames(-1);
-        }).toThrowDeveloperError();
-        expect(function() {
-            batchTable.getPropertyNames(2);
-        }).toThrowDeveloperError();
+        expect(batchTable.hasProperty('height')).toEqual(true);
+        expect(batchTable.hasProperty('id')).toEqual(false);
     });
 
     it('getPropertyNames', function() {
         var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
-        expect(batchTable.getPropertyNames(0)).toEqual([]);
+        expect(batchTable.getPropertyNames()).toEqual([]);
 
         var batchTableJson = {
             height: [0.0],
             id : [0]
         };
         batchTable = new Cesium3DTileBatchTable(mockContent, 1, batchTableJson);
-        expect(batchTable.getPropertyNames(0)).toEqual(['height', 'id']);
+        expect(batchTable.getPropertyNames()).toEqual(['height', 'id']);
     });
 
     it('getProperty throws with invalid batchId', function() {
@@ -572,7 +541,7 @@ defineSuite([
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
             // Reset maximum texture size
-            ContextLimits._maximumTextureSize = maximumTextureSize;
+            ContextLimits._maximumVertexTextureImageUnits = maximumTextureSize;
         });
     });
 
@@ -655,351 +624,6 @@ defineSuite([
             // Re-enable VTF
             ContextLimits._maximumVertexTextureImageUnits = maximumVertexTextureImageUnits;
         });
-    });
-
-    it('isExactClass throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
-        expect(function() {
-            batchTable.isExactClass();
-        }).toThrowDeveloperError();
-        expect(function() {
-            batchTable.isExactClass(2, 'door');
-        }).toThrowDeveloperError();
-        expect(function() {
-            batchTable.isExactClass(-1, 'door');
-        }).toThrowDeveloperError();
-    });
-
-    it('isExactClass throws with undefined className', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
-        expect(function() {
-            batchTable.isExactClass(0);
-        }).toThrowDeveloperError();
-    });
-
-    it('isClass throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
-        expect(function() {
-            batchTable.isClass();
-        }).toThrowDeveloperError();
-        expect(function() {
-            batchTable.isClass(2, 'door');
-        }).toThrowDeveloperError();
-        expect(function() {
-            batchTable.isClass(-1, 'door');
-        }).toThrowDeveloperError();
-    });
-
-    it('isClass throws with undefined className', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
-        expect(function() {
-            batchTable.isClass(0);
-        }).toThrowDeveloperError();
-    });
-
-    it('getExactClassName throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
-        expect(function() {
-            batchTable.getExactClassName();
-        }).toThrowDeveloperError();
-        expect(function() {
-            batchTable.getExactClassName(1000);
-        }).toThrowDeveloperError();
-        expect(function() {
-            batchTable.getExactClassName(-1);
-        }).toThrowDeveloperError();
-    });
-
-    function checkHierarchyStyling(tileset) {
-        // Check that a feature is colored from a generic batch table property.
-        tileset.style = new Cesium3DTileStyle({color : "${height} === 6.0 ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
-
-        // Check that a feature is colored from a class property.
-        tileset.style = new Cesium3DTileStyle({color : "${roof_name} === 'roof2' ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
-
-        // Check that a feature is colored from an inherited property.
-        tileset.style = new Cesium3DTileStyle({color : "${building_name} === 'building2' ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
-
-        // Check isExactClass
-        tileset.style = new Cesium3DTileStyle({color : "isExactClass('roof') ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
-        tileset.style = new Cesium3DTileStyle({color : "isExactClass('door') ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[1]).toBeGreaterThan(0); // Expect green
-
-        // Check isClass
-        tileset.style = new Cesium3DTileStyle({color : "isClass('roof') ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
-        tileset.style = new Cesium3DTileStyle({color : "isClass('zone') ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
-
-        // Check getExactClassName
-        tileset.style = new Cesium3DTileStyle({color : "getExactClassName() === 'roof' ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
-        tileset.style = new Cesium3DTileStyle({color : "getExactClassName() === 'zone' ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[1]).toBeGreaterThan(0); // Expect green
-    }
-
-    function checkHierarchyProperties(tileset, multipleParents) {
-        // Check isExactClass, isClass, and getExactClassName in Cesium3DTileFeature
-        var content = tileset._root.content;
-        var batchTable = content.batchTable;
-        var hierarchy = batchTable._batchTableHierarchy;
-
-        var doorFeature = content.getFeature(4);
-        var roofFeature = content.getFeature(8);
-        expect(doorFeature.isExactClass('door')).toBe(true);
-        expect(doorFeature.isExactClass('building')).toBe(false);
-        expect(doorFeature.isClass('door')).toBe(true);
-        expect(doorFeature.isClass('doorknob')).toBe(false);
-        expect(doorFeature.isClass('building')).toBe(true);
-        expect(doorFeature.getExactClassName()).toBe('door');
-        expect(doorFeature.hasProperty('door_name')).toBe(true);
-        expect(doorFeature.hasProperty('height')).toBe(true);
-
-        // Includes batch table properties and hierarchy properties from all inherited classes
-        var expectedPropertyNames = ['height', 'area', 'door_mass', 'door_width', 'door_name', 'building_area', 'building_name', 'zone_buildings', 'zone_name'];
-
-        // door0 has two parents - building0 and classifier_old
-        // building0 has two parents - zone0 and classifier_new
-        if (multipleParents) {
-            expectedPropertyNames.push('year', 'color', 'name', 'architect'); // classier_new
-            expectedPropertyNames.push('description', 'inspection'); // classifier_old
-        }
-
-        var propertyNames = doorFeature.getPropertyNames();
-        expect(expectedPropertyNames.sort()).toEqual(propertyNames.sort());
-
-        expect(doorFeature.getProperty('height')).toBe(5.0); // Gets generic property
-        expect(doorFeature.getProperty('door_name')).toBe('door0'); // Gets class property
-        expect(doorFeature.getProperty('building_name')).toBe('building0'); // Gets inherited property
-
-        // Sets generic property
-        doorFeature.setProperty('height', 10.0);
-        expect(doorFeature.getProperty('height')).toBe(10.0);
-
-        // Sets class property
-        doorFeature.setProperty('door_name', 'new_door');
-        expect(doorFeature.getProperty('door_name')).toBe('new_door');
-        expect(roofFeature.getProperty('door_name')).toBeUndefined();
-
-        // Throws error when setting inherited property
-        expect(function() {
-            doorFeature.setProperty('building_name', 'new_building');
-        }).toThrowDeveloperError();
-
-        // Check properties when there is no hierarchy
-        batchTable._batchTableHierarchy = undefined;
-        expect(doorFeature.isExactClass('door')).toBe(false);
-        expect(doorFeature.isClass('door')).toBe(false);
-        expect(doorFeature.getExactClassName()).toBeUndefined();
-        expect(doorFeature.hasProperty('door_name')).toBe(false);
-        expect(doorFeature.hasProperty('height')).toBe(true);
-        expect(doorFeature.getPropertyNames()).toEqual(['height', 'area']);
-        expect(doorFeature.getProperty('height')).toBe(10.0);
-        expect(doorFeature.getProperty('door_name')).toBeUndefined();
-        expect(doorFeature.getProperty('building_name')).toBeUndefined();
-        batchTable._batchTableHierarchy = hierarchy;
-    }
-
-    function checkBatchTableHierarchy(url, multipleParents) {
-        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
-            checkHierarchyStyling(tileset);
-            checkHierarchyProperties(tileset, multipleParents);
-        });
-    }
-
-    it('renders tileset with batch table hierarchy', function() {
-        return checkBatchTableHierarchy(batchTableHierarchyUrl, false);
-    });
-
-    it('renders tileset with batch table hierarchy using binary properties', function() {
-        return checkBatchTableHierarchy(batchTableHierarchyBinaryUrl, false);
-    });
-
-    it('renders tileset with batch table hierarchy with multiple parent classes', function() {
-        return checkBatchTableHierarchy(batchTableHierarchyMultipleParentsUrl, true);
-    });
-
-    it('validates hierarchy with multiple parents', function() {
-        //     building0
-        //     /      \
-        //  door0    door1
-        //     \      /
-        //      window0
-        var batchTableJson = {
-            HIERARCHY : {
-                instancesLength : 4,
-                classIds : [0, 1, 1, 2],
-                parentCounts : [2, 1, 1, 0],
-                parentIds : [1, 2, 3, 3],
-                classes : [{
-                    name : 'window',
-                    length : 1,
-                    instances : {
-                        window_name : ['window0']
-                    }
-                }, {
-                    name : 'door',
-                    length : 2,
-                    instances : {
-                        door_name : ['door0', 'door1']
-                    }
-                }, {
-                    name : 'building',
-                    length : 1,
-                    instances : {
-                        building_name : ['building0']
-                    }
-                }]
-            }
-        };
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 4, batchTableJson);
-        expect(batchTable.getPropertyNames(0).sort()).toEqual(['building_name', 'door_name', 'window_name']);
-    });
-
-    it('validates hierarchy with multiple parents (2)', function() {
-        //             zone
-        //             / |  \
-        //   building0   |   \
-        //     /      \  |    \
-        //    door0  door1    /
-        //        \    |     /
-        //           window0
-        var batchTableJson = {
-            HIERARCHY : {
-                instancesLength : 4,
-                classIds : [0, 1, 1, 2, 3],
-                parentCounts : [3, 1, 2, 1, 0],
-                parentIds : [1, 2, 4, 3, 3, 4, 4],
-                classes : [{
-                    name : 'window',
-                    length : 1,
-                    instances : {
-                        window_name : ['window0']
-                    }
-                }, {
-                    name : 'door',
-                    length : 2,
-                    instances : {
-                        door_name : ['door0', 'door1']
-                    }
-                }, {
-                    name : 'building',
-                    length : 1,
-                    instances : {
-                        building_name : ['building0']
-                    }
-                }, {
-                    name : 'zone',
-                    length : 1,
-                    instances : {
-                        zone_name : ['zone0']
-                    }
-                }]
-            }
-        };
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 5, batchTableJson);
-        expect(batchTable.getPropertyNames(0).sort()).toEqual(['building_name', 'door_name', 'window_name', 'zone_name']); // check window
-        expect(batchTable.hasProperty(1, 'zone_name')).toEqual(true); // check door0
-        expect(batchTable.hasProperty(2, 'zone_name')).toEqual(true); // check door1
-    });
-
-    //>>includeStart('debug', pragmas.debug);
-    // Circular dependencies are only caught in debug builds.
-    it('throws if hierarchy has a circular dependency', function() {
-        // window0 -> door0 -> building0 -> window0
-        var batchTableJson = {
-            HIERARCHY : {
-                instancesLength : 3,
-                classIds : [0, 1, 2],
-                parentIds : [1, 2, 0],
-                classes : [{
-                    name : 'window',
-                    length : 1,
-                    instances : {
-                        window_name : ['window0']
-                    }
-                }, {
-                    name : 'door',
-                    length : 1,
-                    instances : {
-                        door_name : ['door0']
-                    }
-                }, {
-                    name : 'building',
-                    length : 1,
-                    instances : {
-                        building_name : ['building0']
-                    }
-                }]
-            }
-        };
-        expect(function() {
-            return new Cesium3DTileBatchTable(mockContent, 3, batchTableJson);
-        }).toThrowDeveloperError();
-    });
-
-    it('throws if hierarchy has a circular dependency (2)', function() {
-        // window0 -> door0 -> building0 -> window1 -> door0
-        var batchTableJson = {
-            HIERARCHY : {
-                instancesLength : 4,
-                classIds : [0, 1, 2, 0],
-                parentIds : [1, 2, 3, 1],
-                classes : [{
-                    name : 'window',
-                    length : 2,
-                    instances : {
-                        window_name : ['window0', 'window1']
-                    }
-                }, {
-                    name : 'door',
-                    length : 1,
-                    instances : {
-                        door_name : ['door0']
-                    }
-                }, {
-                    name : 'building',
-                    length : 1,
-                    instances : {
-                        building_name : ['building0']
-                    }
-                }]
-            }
-        };
-        expect(function() {
-            return new Cesium3DTileBatchTable(mockContent, 4, batchTableJson);
-        }).toThrowDeveloperError();
-    });
-    //>>includeEnd('debug');
-
-    it('throws if an instance\'s parentId exceeds instancesLength', function() {
-        var batchTableJson = {
-            HIERARCHY : {
-                instancesLength : 2,
-                classIds : [0, 1],
-                parentIds : [1, 2],
-                classes : [{
-                    name : 'window',
-                    length : 1,
-                    instances : {
-                        window_name : ['window0']
-                    }
-                }, {
-                    name : 'door',
-                    length : 1,
-                    instances : {
-                        door_name : ['door0']
-                    }
-                }]
-            }
-        };
-        expect(function() {
-            return new Cesium3DTileBatchTable(mockContent, 2, batchTableJson);
-        }).toThrowDeveloperError();
     });
 
     it('destroys', function() {

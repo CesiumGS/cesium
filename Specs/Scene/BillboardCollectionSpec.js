@@ -1154,14 +1154,14 @@ defineSuite([
 
         var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
         expect(bbox.x).toEqual(-halfWidth);
-        expect(bbox.y).toEqual(-height);
+        expect(bbox.y).toEqual(0);
         expect(bbox.width).toEqual(width);
         expect(bbox.height).toEqual(height);
 
         b.verticalOrigin = VerticalOrigin.TOP;
         bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
         expect(bbox.x).toEqual(-halfWidth);
-        expect(bbox.y).toEqual(0);
+        expect(bbox.y).toEqual(-height);
         expect(bbox.width).toEqual(width);
         expect(bbox.height).toEqual(height);
     });

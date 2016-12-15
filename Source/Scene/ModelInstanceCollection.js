@@ -195,9 +195,8 @@ define([
         var instancedUniformsByProgram = {};
         collection._instancedUniformsByProgram = instancedUniformsByProgram;
 
-        // When using CESIUM_RTC_MODELVIEW the CESIUM_RTC center is ignored. Instances are always rendered relative-to-center.
-        var modelSemantics = ['MODEL', 'MODELVIEW', 'CESIUM_RTC_MODELVIEW', 'MODELVIEWPROJECTION', 'MODELINVERSE', 'MODELVIEWINVERSE', 'MODELVIEWPROJECTIONINVERSE', 'MODELINVERSETRANSPOSE', 'MODELVIEWINVERSETRANSPOSE'];
-        var supportedSemantics = ['MODELVIEW', 'CESIUM_RTC_MODELVIEW', 'MODELVIEWPROJECTION', 'MODELVIEWINVERSETRANSPOSE'];
+        var modelSemantics = ['MODEL', 'MODELVIEW', 'MODELVIEWPROJECTION', 'MODELINVERSE', 'MODELVIEWINVERSE', 'MODELVIEWPROJECTIONINVERSE', 'MODELINVERSETRANSPOSE', 'MODELVIEWINVERSETRANSPOSE'];
+        var supportedSemantics = ['MODELVIEW', 'MODELVIEWPROJECTION', 'MODELVIEWINVERSETRANSPOSE'];
 
         var gltf = collection._model.gltf;
         var techniques = gltf.techniques;
@@ -254,7 +253,7 @@ define([
                 if (instancedUniforms.hasOwnProperty(uniform)) {
                     var semantic = instancedUniforms[uniform];
                     var varName;
-                    if (semantic === 'MODELVIEW' || semantic === 'CESIUM_RTC_MODELVIEW') {
+                    if (semantic === 'MODELVIEW') {
                         varName = 'czm_instanced_modelView';
                     } else if (semantic === 'MODELVIEWPROJECTION') {
                         varName = 'czm_instanced_modelViewProjection';

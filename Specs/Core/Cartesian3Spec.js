@@ -400,25 +400,6 @@ defineSuite([
         expect(left).toEqual(expectedResult);
     });
 
-    it('divideComponents works with a result parameter', function() {
-        var left = new Cartesian3(2.0, 3.0, 6.0);
-        var right = new Cartesian3(4.0, 5.0, 8.0);
-        var result = new Cartesian3();
-        var expectedResult = new Cartesian3(0.5, 0.6, 0.75);
-        var returnedResult = Cartesian3.divideComponents(left, right, result);
-        expect(result).toBe(returnedResult);
-        expect(result).toEqual(expectedResult);
-    });
-
-    it('divideComponents works with a result parameter that is an input parameter', function() {
-        var left = new Cartesian3(2.0, 3.0, 6.0);
-        var right = new Cartesian3(4.0, 5.0, 8.0);
-        var expectedResult = new Cartesian3(0.5, 0.6, 0.75);
-        var returnedResult = Cartesian3.divideComponents(left, right, left);
-        expect(left).toBe(returnedResult);
-        expect(left).toEqual(expectedResult);
-    });
-
     it('dot', function() {
         var left = new Cartesian3(2.0, 3.0, 6.0);
         var right = new Cartesian3(4.0, 5.0, 7.0);
@@ -758,20 +739,6 @@ defineSuite([
         var left = new Cartesian3(4.0, 5.0, 6.0);
         expect(function() {
             Cartesian3.multiplyComponents(left, undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('divideComponents throw with no left parameter', function() {
-        var right = new Cartesian3(4.0, 5.0, 6.0);
-        expect(function() {
-            Cartesian3.divideComponents(undefined, right);
-        }).toThrowDeveloperError();
-    });
-
-    it('divideComponents throw with no right parameter', function() {
-        var left = new Cartesian3(4.0, 5.0, 6.0);
-        expect(function() {
-            Cartesian3.divideComponents(left, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -1179,12 +1146,6 @@ defineSuite([
     it('multiplyComponents throws with no result', function() {
         expect(function() {
             Cartesian3.multiplyComponents(new Cartesian3(), new Cartesian3());
-        }).toThrowDeveloperError();
-    });
-
-    it('divideComponents throws with no result', function() {
-        expect(function() {
-            Cartesian3.divideComponents(new Cartesian3(), new Cartesian3());
         }).toThrowDeveloperError();
     });
 

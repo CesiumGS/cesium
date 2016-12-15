@@ -386,7 +386,6 @@ define([
          * {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
          * features) without communicating with the server.  Set this property to false if you know your data
          * source does not support picking features or if you don't want this provider's features to be pickable.
-         * @memberof WebMapServiceImageryProvider.prototype
          * @type {Boolean}
          * @default true
          */

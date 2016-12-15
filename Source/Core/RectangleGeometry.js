@@ -752,9 +752,9 @@ define([
         return result;
     };
 
+    var textureMatrixScratch = new Matrix2();
     var tangentRotationMatrixScratch = new Matrix3();
     var nwScratch = new Cartographic();
-    var stNwScratch = new Cartographic();
     var quaternionScratch = new Quaternion();
     var centerScratch = new Cartographic();
     /**
@@ -776,27 +776,30 @@ define([
         var surfaceHeight = rectangleGeometry._surfaceHeight;
         var extrude = rectangleGeometry._extrude;
         var extrudedHeight = rectangleGeometry._extrudedHeight;
-        var rotation = rectangleGeometry._rotation;
         var stRotation = rectangleGeometry._stRotation;
         var vertexFormat = rectangleGeometry._vertexFormat;
 
-        var options = RectangleGeometryLibrary.computeOptions(rectangleGeometry, rectangle, nwScratch, stNwScratch);
+        var options = RectangleGeometryLibrary.computeOptions(rectangleGeometry, rectangle, nwScratch);
 
+        var textureMatrix = textureMatrixScratch;
         var tangentRotationMatrix = tangentRotationMatrixScratch;
-        if (stRotation !== 0 || rotation !== 0) {
+        if (defined(stRotation)) {
+            // negate angle for a counter-clockwise rotation
+            Matrix2.fromRotation(-stRotation, textureMatrix);
             var center = Rectangle.center(rectangle, centerScratch);
-            var axis = ellipsoid.geodeticSurfaceNormalCartographic(center, v1Scratch);
+            var axis = ellipsoid.cartographicToCartesian(center, v1Scratch);
+            Cartesian3.normalize(axis, axis);
             Quaternion.fromAxisAngle(axis, -stRotation, quaternionScratch);
             Matrix3.fromQuaternion(quaternionScratch, tangentRotationMatrix);
         } else {
+            Matrix2.clone(Matrix2.IDENTITY, textureMatrix);
             Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
         }
 
-        options.lonScalar = 1.0 / rectangleGeometry._rectangle.width;
-        options.latScalar = 1.0 / rectangleGeometry._rectangle.height;
+        options.lonScalar = 1.0 / rectangle.width;
+        options.latScalar = 1.0 / rectangle.height;
         options.vertexFormat = vertexFormat;
-        options.rotation = rotation;
-        options.stRotation = stRotation;
+        options.textureMatrix = textureMatrix;
         options.tangentRotationMatrix = tangentRotationMatrix;
         options.size = options.width * options.height;
 
