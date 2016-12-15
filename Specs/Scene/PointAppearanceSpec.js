@@ -78,9 +78,9 @@ defineSuite([
 
     it('renders', function() {
         primitive.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         primitive.show = true;
-        expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+        expect(scene).toRender([255, 0, 0, 255]);
         primitive.show = false;
     });
 
@@ -89,16 +89,17 @@ defineSuite([
         primitive.appearance.uniforms.highlightColor.alpha = 0.5;
 
         primitive.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         primitive.show = true;
-        var pixelColor = scene.renderForSpecs();
-        expect(pixelColor[0]).toBeGreaterThan(0);
-        expect(pixelColor[0]).toBeLessThan(255);
-        expect(pixelColor[1]).toBeGreaterThan(0);
-        expect(pixelColor[1]).toBeLessThan(255);
-        expect(pixelColor[2]).toEqual(0);
-        expect(pixelColor[3]).toEqual(255);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0);
+            expect(rgba[0]).toBeLessThan(255);
+            expect(rgba[1]).toBeGreaterThan(0);
+            expect(rgba[1]).toBeLessThan(255);
+            expect(rgba[2]).toEqual(0);
+            expect(rgba[3]).toEqual(255);
+        });
         primitive.show = false;
     });
 
@@ -128,9 +129,9 @@ defineSuite([
         scene.primitives.add(primitive);
 
         primitive.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         primitive.show = true;
-        expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+        expect(scene).toRender([255, 0, 0, 255]);
 
         scene.primitives.remove(primitive);
     });

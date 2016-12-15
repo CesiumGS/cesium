@@ -71,15 +71,15 @@ defineSuite([
             destination : rectangle
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.primitives.add(primitive);
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         if (scene.mode !== SceneMode.SCENE2D) {
             // move the camera through the rectangle so that is behind the view frustum
             scene.camera.moveForward(100000000.0);
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
         }
     }
 
@@ -104,15 +104,15 @@ defineSuite([
             destination : rectangle
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.primitives.add(primitive);
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         // create the globe; it should occlude the primitive
         scene.globe = new Globe();
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.globe = undefined;
     }

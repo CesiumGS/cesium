@@ -334,10 +334,10 @@ defineSuite([
         if (defined(rectangle)){
             scene.camera.setView({ destination : rectangle });
         }
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     }
 
     it('renders in Columbus view when scene3DOnly is false', function() {
@@ -602,11 +602,12 @@ defineSuite([
 
         scene.primitives.add(primitive);
         scene.camera.setView({ destination : rectangle1 });
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toBeGreaterThanOrEqualTo(0);
-        expect(pixels[2]).toBeGreaterThanOrEqualTo(0);
-        expect(pixels[3]).toEqual(255);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
+            expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+            expect(rgba[3]).toEqual(255);
+        });
     });
 
     it('transforms to world coordinates', function() {
@@ -671,16 +672,20 @@ defineSuite([
 
         scene.camera.setView({ destination : rectangle1 });
         scene.primitives.add(primitive);
-        var pixels = scene.renderForSpecs();
-        expect(pixels).not.toEqual([0, 0, 0, 255]);
+        var pixels;
+        expect(scene).toRenderAndCall(function(rgba) {
+            pixels = rgba;
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
 
         var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
         expect(attributes.color).toBeDefined();
         attributes.color = [255, 255, 255, 255];
 
-        var newPixels = scene.renderForSpecs();
-        expect(newPixels).not.toEqual([0, 0, 0, 255]);
-        expect(newPixels).not.toEqual(pixels);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+            expect(rgba).not.toEqual(pixels);
+        });
     });
 
     it('modify show instance attribute', function() {
@@ -692,15 +697,13 @@ defineSuite([
 
         scene.primitives.add(primitive);
         scene.camera.setView({ destination : rectangle1 });
-        var pixels = scene.renderForSpecs();
-        expect(pixels).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
         expect(attributes.show).toBeDefined();
         attributes.show = [0];
 
-        var newPixels = scene.renderForSpecs();
-        expect(newPixels).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('get bounding sphere from per instance attribute', function() {
@@ -750,13 +753,13 @@ defineSuite([
         var radius = boundingSphere.radius;
 
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius));
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near + 1.0));
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 1.0));
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('primitive with display condition properly transforms boundingSphere', function() {
@@ -851,15 +854,17 @@ defineSuite([
 
         verifyPrimitiveRender(primitive, rectangle1);
 
-        var pickObject = scene.pickForSpecs();
-        expect(pickObject.primitive).toEqual(primitive);
-        expect(pickObject.id).toEqual('rectangle1');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(primitive);
+            expect(result.id).toEqual('rectangle1');
+        });
 
         verifyPrimitiveRender(primitive, rectangle2);
 
-        pickObject = scene.pickForSpecs();
-        expect(pickObject.primitive).toEqual(primitive);
-        expect(pickObject.id).toEqual('rectangle2');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(primitive);
+            expect(result.id).toEqual('rectangle2');
+        });
     });
 
     it('does not pick when allowPicking is false', function() {
@@ -872,8 +877,7 @@ defineSuite([
 
         verifyPrimitiveRender(primitive, rectangle1);
 
-        var pickObject = scene.pickForSpecs();
-        expect(pickObject).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     it('does not cull when cull is false', function() {
@@ -1060,6 +1064,10 @@ defineSuite([
     });
 
     it('shader validation', function() {
+        if (!!window.webglStub) {
+            return;
+        }
+
         primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new MaterialAppearance({
