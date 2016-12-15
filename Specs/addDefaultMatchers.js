@@ -229,9 +229,9 @@ define([
             toRenderAndCall : function(util, customEqualityTesters) {
                 return {
                     compare: function(actual, expected) {
-                        if (!webglStub) {
-                            var actualRgba = renderAndReadPixels(actual);
+                        var actualRgba = renderAndReadPixels(actual);
 
+                        if (!webglStub) {
                             // The callback may have expectations that fail, which still makes the
                             // spec fail, as we desired, even though this matcher sets pass to true.
                             var callback = expected;
@@ -248,10 +248,10 @@ define([
             toPickAndCall : function(util, customEqualityTesters) {
                 return {
                     compare: function(actual, expected) {
-                        if (!webglStub) {
-                            var scene = actual;
-                            var result = scene.pick(new Cartesian2(0, 0));
+                        var scene = actual;
+                        var result = scene.pick(new Cartesian2(0, 0));
 
+                        if (!webglStub) {
                             // The callback may have expectations that fail, which still makes the
                             // spec fail, as we desired, even though this matcher sets pass to true.
                             var callback = expected;
@@ -268,10 +268,11 @@ define([
             notToPick : function(util, customEqualityTesters) {
                 return {
                     compare: function(actual, expected) {
+                        var scene = actual;
+                        var result = scene.pick(new Cartesian2(0, 0));
+
                         var pass = true;
                         if (!webglStub) {
-                            var scene = actual;
-                            var result = scene.pick(new Cartesian2(0, 0));
                             pass = !defined(result);
                         }
 
