@@ -737,6 +737,18 @@ define([
         },
 
         /**
+         * <code>true</code> if the WebGL context supports stencil buffers.
+         * Stencil buffers are not supported by all systems.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         */
+        stencilBuffer : {
+            get : function() {
+                return this._stencilBits >= 8;
+            }
+        },
+
+        /**
          * <code>true</code> if the WebGL context supports antialiasing.  By default
          * antialiasing is requested, but it is not supported by all systems.
          * @memberof Context.prototype

@@ -29,6 +29,7 @@ defineSuite([
         'Renderer/ShaderSource',
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
+        'Scene/Pass',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
         'Specs/pollToPromise',
@@ -63,6 +64,7 @@ defineSuite([
         ShaderSource,
         ColorBlendMode,
         HeightReference,
+        Pass,
         ModelAnimationLoop,
         createScene,
         pollToPromise,
@@ -236,6 +238,11 @@ defineSuite([
         expect(texturedBoxModel.debugShowBoundingVolume).toEqual(false);
         expect(texturedBoxModel.debugWireframe).toEqual(false);
         expect(texturedBoxModel.distanceDisplayCondition).toBeUndefined();
+        expect(texturedBoxModel.silhouetteColor).toEqual(Color.RED);
+        expect(texturedBoxModel.silhouetteSize).toEqual(0.0);
+        expect(texturedBoxModel.color).toEqual(Color.WHITE);
+        expect(texturedBoxModel.colorBlendMode).toEqual(ColorBlendMode.HIGHLIGHT);
+        expect(texturedBoxModel.colorBlendAmount).toEqual(0.5);
     });
 
     it('renders', function() {
@@ -1971,6 +1978,130 @@ defineSuite([
             scene.renderForSpecs();
             var commands = scene.frameState.commandList;
             expect(commands.length).toBe(0);
+        });
+    });
+
+    it('silhouetteSupported', function() {
+        expect(Model.silhouetteSupported(scene)).toBe(true);
+        scene.context._stencilBits = 0;
+        expect(Model.silhouetteSupported(scene)).toBe(false);
+        scene.context._stencilBits = 8;
+    });
+
+    it('renders with a silhouette', function() {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            var commands = scene.frameState.commandList;
+
+            // No silhouette
+            model.silhouetteSize = 0.0;
+            scene.renderForSpecs();
+            expect(commands.length).toBe(1);
+            expect(commands[0].renderState.stencilTest.enabled).toBe(false);
+            expect(commands[0].pass).toBe(Pass.OPAQUE);
+
+            // Opaque silhouette
+            model.silhouetteSize = 1.0;
+            scene.renderForSpecs();
+            expect(commands.length).toBe(2);
+            expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+            expect(commands[0].pass).toBe(Pass.OPAQUE);
+            expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+            expect(commands[1].pass).toBe(Pass.OPAQUE);
+
+            // Translucent silhouette
+            model.silhouetteColor = Color.fromAlpha(Color.GREEN, 0.5);
+            scene.renderForSpecs();
+            expect(commands.length).toBe(2);
+            expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+            expect(commands[0].pass).toBe(Pass.OPAQUE);
+            expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+            expect(commands[1].pass).toBe(Pass.TRANSLUCENT);
+
+            // Invisible silhouette. The model is rendered normally.
+            model.silhouetteColor = Color.fromAlpha(Color.GREEN, 0.0);
+            scene.renderForSpecs();
+            expect(commands.length).toBe(1);
+            expect(commands[0].renderState.stencilTest.enabled).toBe(false);
+            expect(commands[0].pass).toBe(Pass.OPAQUE);
+
+            // Invisible model with no silhouette. No commands.
+            model.color = Color.fromAlpha(Color.WHITE, 0.0);
+            model.silhouetteColor = Color.GREEN;
+            model.silhouetteSize = 0.0;
+            scene.renderForSpecs();
+            expect(commands.length).toBe(0);
+
+            // Invisible model with silhouette. Model command is stencil-only.
+            model.silhouetteSize = 1.0;
+            scene.renderForSpecs();
+            expect(commands.length).toBe(2);
+            expect(commands[0].renderState.colorMask).toEqual({
+                red : false,
+                green : false,
+                blue : false,
+                alpha : false
+            });
+            expect(commands[0].renderState.depthMask).toEqual(false);
+            expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+            expect(commands[0].pass).toBe(Pass.OPAQUE);
+            expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+            expect(commands[1].pass).toBe(Pass.OPAQUE);
+
+            // Translucent model with opaque silhouette. Silhouette is placed in the translucent pass.
+            model.color = Color.fromAlpha(Color.WHITE, 0.5);
+            scene.renderForSpecs();
+            expect(commands.length).toBe(2);
+            expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+            expect(commands[0].pass).toBe(Pass.TRANSLUCENT);
+            expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+            expect(commands[1].pass).toBe(Pass.TRANSLUCENT);
+
+            // Model with translucent commands with silhouette
+            model.color = Color.WHITE;
+            model._nodeCommands[0].command.pass = Pass.TRANSLUCENT;
+            scene.renderForSpecs();
+            expect(commands.length).toBe(2);
+            expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+            expect(commands[0].pass).toBe(Pass.TRANSLUCENT);
+            expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+            expect(commands[1].pass).toBe(Pass.TRANSLUCENT);
+            model._nodeCommands[0].command.pass = Pass.OPAQUE; // Revert change
+
+            // Translucent model with translucent silhouette.
+            model.color = Color.fromAlpha(Color.WHITE, 0.5);
+            model.silhouetteColor = Color.fromAlpha(Color.GREEN, 0.5);
+            scene.renderForSpecs();
+            expect(commands.length).toBe(2);
+            expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+            expect(commands[0].pass).toBe(Pass.TRANSLUCENT);
+            expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+            expect(commands[1].pass).toBe(Pass.TRANSLUCENT);
+
+            model.color = Color.WHITE;
+            model.silhouetteColor = Color.GREEN;
+
+            // Load a second model
+            return loadModel(boxUrl).then(function(model) {
+                model.show = true;
+                model.silhouetteSize = 1.0;
+                scene.renderForSpecs();
+                expect(commands.length).toBe(4);
+                expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+                expect(commands[0].pass).toBe(Pass.OPAQUE);
+                expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+                expect(commands[1].pass).toBe(Pass.OPAQUE);
+                expect(commands[2].renderState.stencilTest.enabled).toBe(true);
+                expect(commands[2].pass).toBe(Pass.OPAQUE);
+                expect(commands[3].renderState.stencilTest.enabled).toBe(true);
+                expect(commands[3].pass).toBe(Pass.OPAQUE);
+
+                var reference1 = commands[0].renderState.stencilTest.reference;
+                var reference2 = commands[2].renderState.stencilTest.reference;
+                expect(reference2).toEqual(reference1 + 1);
+            });
         });
     });
 

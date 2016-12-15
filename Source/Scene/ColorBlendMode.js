@@ -24,6 +24,9 @@ define([
         MIX : 2
     };
 
+    /**
+     * @private
+     */
     ColorBlendMode.getColorBlend = function(colorBlendMode, colorBlendAmount) {
         if (colorBlendMode === ColorBlendMode.HIGHLIGHT) {
             return 0.0;
