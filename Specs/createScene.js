@@ -18,7 +18,9 @@ define([
     'use strict';
 
 // TODO: Pass in stub context from Spec directory so it's not included in release builds
-// TODO: Search for all calls to renderForSpecs and pickForSpecs.  Replace renderForSpecs with version that doesn't readPixels.
+// TODO: Search for all calls to renderForSpecs.  Replace original renderForSpecs with version that doesn't readPixels.
+// TODO: merge into 3d-tiles branch
+// TODO: tech blog post?
 // TODO: Test with WebGL 2 now or later?
 // TODO: Update https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/TestingGuide with when/why to use these
 //    * index.html and command line:  npm run test-webgl-stub
@@ -61,10 +63,6 @@ define([
             this.initializeFrame();
             this.render(time);
             return this.context.readPixels();
-        };
-
-        scene.pickForSpecs = function() {
-            return this.pick(new Cartesian2(0, 0));
         };
 
         scene.rethrowRenderErrors = defaultValue(options.rethrowRenderErrors, true);

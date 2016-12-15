@@ -92,24 +92,21 @@ defineSuite([
         }
 
         var rectangle = createRectangle();
-        var pickedObject = scene.pick(new Cartesian2(0, 0));
-        expect(pickedObject.primitive).toEqual(rectangle);
+        expect(scene).toPickPrimitive(rectangle);
     });
 
     it('does not pick primitives when show is false', function() {
         var rectangle = createRectangle();
         rectangle.show = false;
 
-        var pickedObject = scene.pick(new Cartesian2(0, 0));
-        expect(pickedObject).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     it('does not pick primitives when alpha is zero', function() {
         var rectangle = createRectangle();
         rectangle.appearance.material.uniforms.color.alpha = 0.0;
 
-        var pickedObject = scene.pick(new Cartesian2(0, 0));
-        expect(pickedObject).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     it('picks the top primitive', function() {
@@ -117,8 +114,7 @@ defineSuite([
         var rectangle2 = createRectangle();
         rectangle2.height = 0.01;
 
-        var pickedObject = scene.pick(new Cartesian2(0, 0));
-        expect(pickedObject.primitive).toEqual(rectangle2);
+        expect(scene).toPickPrimitive(rectangle2);
     });
 
     it('does not drill pick undefined window positions', function() {
@@ -305,9 +301,7 @@ defineSuite([
         camera.setView({ destination : primitiveRectangle });
         var rectangle = createRectangle();
         scene.initializeFrame();
-        var pickedObject = scene.pick(new Cartesian2(0, 0));
-        expect(pickedObject).toBeDefined();
-        expect(pickedObject.primitive).toEqual(rectangle);
+        expect(scene).toPickPrimitive(rectangle);
         scene.morphTo3D(0.0);
     });
 
@@ -316,9 +310,7 @@ defineSuite([
         camera.setView({ destination : primitiveRectangle });
         var rectangle = createRectangle();
         scene.initializeFrame();
-        var pickedObject = scene.pick(new Cartesian2(0.0, 0.0));
-        expect(pickedObject).toBeDefined();
-        expect(pickedObject.primitive).toEqual(rectangle);
+        expect(scene).toPickPrimitive(rectangle);
         scene.morphTo3D(0.0);
     });
 }, 'WebGL');
