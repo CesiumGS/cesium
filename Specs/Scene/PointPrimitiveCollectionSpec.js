@@ -656,9 +656,7 @@ defineSuite([
         var scaleByDistance = new NearFarScalar(1.0, 4.0, 3.0e9, 2.0);
         p.scaleByDistance = scaleByDistance;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p);
-        });
+        expect(scene).toPickPrimitive(p);
 
         scaleByDistance.nearValue = 0.0;
         scaleByDistance.farValue = 0.0;
@@ -676,9 +674,7 @@ defineSuite([
         var translucency = new NearFarScalar(1.0, 0.9, 3.0e9, 0.8);
         p.translucencyByDistance = translucency;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p);
-        });
+        expect(scene).toPickPrimitive(p);
 
         translucency.nearValue = 0.0;
         translucency.farValue = 0.0;

@@ -961,9 +961,7 @@ defineSuite([
         var scaleByDistance = new NearFarScalar(1.0, 4.0, 3.0e9, 2.0);
         b.scaleByDistance = scaleByDistance;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(b);
-        });
+        expect(scene).toPickPrimitive(b);
 
         scaleByDistance.nearValue = 0.0;
         scaleByDistance.farValue = 0.0;
@@ -981,9 +979,7 @@ defineSuite([
         var translucency = new NearFarScalar(1.0, 0.9, 3.0e9, 0.8);
         b.translucencyByDistance = translucency;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(b);
-        });
+        expect(scene).toPickPrimitive(b);
 
         translucency.nearValue = 0.0;
         translucency.farValue = 0.0;
@@ -1002,9 +998,7 @@ defineSuite([
         var pixelOffsetScale = new NearFarScalar(1.0, 0.0, 3.0e9, 0.0);
         b.pixelOffsetScaleByDistance = pixelOffsetScale;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(b);
-        });
+        expect(scene).toPickPrimitive(b);
 
         pixelOffsetScale.nearValue = 10.0;
         pixelOffsetScale.farValue = 10.0;
@@ -1020,9 +1014,7 @@ defineSuite([
         });
 
         b.rotation = CesiumMath.PI_OVER_TWO;
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(b);
-        });
+        expect(scene).toPickPrimitive(b);
     });
 
     it('can pick a billboard using the aligned axis property', function() {
@@ -1032,9 +1024,7 @@ defineSuite([
         });
 
         b.alignedAxis = Cartesian3.UNIT_X;
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(b);
-        });
+        expect(scene).toPickPrimitive(b);
     });
 
     it('computes screen space position', function() {

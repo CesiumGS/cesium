@@ -293,9 +293,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(l);
-        });
+        expect(scene).toPickPrimitive(l);
     });
 
     it('does not pick', function() {
@@ -319,9 +317,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(l);
-        });
+        expect(scene).toPickPrimitive(l);
     });
 
     it('picks a primitive added with render order (0)', function() {
@@ -333,9 +329,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p1);
-        });
+        expect(scene).toPickPrimitive(p1);
     });
 
     it('picks a primitive added with render order (1)', function() {
@@ -347,9 +341,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p0);
-        });
+        expect(scene).toPickPrimitive(p0);
     });
 
     it('picks a primitive added with raise (0)', function() {
@@ -362,9 +354,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p1);
-        });
+        expect(scene).toPickPrimitive(p1);
     });
 
     it('picks a primitive added with raise (1)', function() {
@@ -377,9 +367,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p0);
-        });
+        expect(scene).toPickPrimitive(p0);
     });
 
     it('picks a primitive added with raiseToTop (0)', function() {
@@ -392,9 +380,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p1);
-        });
+        expect(scene).toPickPrimitive(p1);
     });
 
     it('picks a primitive added with raiseToTop (1)', function() {
@@ -407,9 +393,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p0);
-        });
+        expect(scene).toPickPrimitive(p0);
     });
 
     it('picks a primitive added with lower (0)', function() {
@@ -422,9 +406,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p0);
-        });
+        expect(scene).toPickPrimitive(p0);
     });
 
     it('picks a primitive added with lower (1)', function() {
@@ -437,9 +419,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p1);
-        });
+        expect(scene).toPickPrimitive(p1);
     });
 
     it('picks a primitive added with lowerToBottom (0)', function() {
@@ -452,9 +432,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p0);
-        });
+        expect(scene).toPickPrimitive(p0);
     });
 
     it('picks a primitive added with lowerToBottom (1)', function() {
@@ -467,9 +445,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(p1);
-        });
+        expect(scene).toPickPrimitive(p1);
     });
 
     it('is not destroyed when first constructed', function() {

@@ -245,6 +245,22 @@ define([
                 };
             },
 
+            toPickPrimitive : function(util, customEqualityTesters) {
+                return {
+                    compare: function(actual, expected) {
+                        return pickPrimitiveEquals(actual, expected);
+                    }
+                };
+            },
+
+            notToPick : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected) {
+                        return pickPrimitiveEquals(actual, undefined);
+                    }
+                };
+            },
+
             toPickAndCall : function(util, customEqualityTesters) {
                 return {
                     compare: function(actual, expected) {
@@ -260,30 +276,6 @@ define([
 
                         return {
                             pass : true
-                        };
-                    }
-                };
-            },
-
-            notToPick : function(util, customEqualityTesters) {
-                return {
-                    compare: function(actual, expected) {
-                        var scene = actual;
-                        var result = scene.pick(new Cartesian2(0, 0));
-
-                        var pass = true;
-                        var message;
-
-                        if (!webglStub) {
-                            pass = !defined(result);
-                            if (!pass) {
-                                message = 'Expected not to pick, but picked: ' + result;
-                            }
-                        }
-
-                        return {
-                            pass : pass,
-                            message : message
                         };
                     }
                 };
@@ -340,6 +332,31 @@ define([
         var message;
         if (!pass) {
             message = 'Expected to render [' + expected + '], but actually rendered [' + actualRgba + '].';
+        }
+
+        return {
+            pass : pass,
+            message : message
+        };
+    }
+
+    function pickPrimitiveEquals(actual, expected) {
+        var scene = actual;
+        var result = scene.pick(new Cartesian2(0, 0));
+
+        var pass = true;
+        var message;
+
+        if (!webglStub) {
+            if (defined(expected)) {
+                pass = (result.primitive === expected);
+            } else {
+                pass = !defined(result);
+            }
+
+            if (!pass) {
+                message = 'Expected to pick ' + expected + ', but picked: ' + result;
+            }
         }
 
         return {

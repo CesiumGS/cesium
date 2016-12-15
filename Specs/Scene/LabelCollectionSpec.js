@@ -689,9 +689,7 @@ defineSuite([
         var translucency = new NearFarScalar(1.0, 0.9, 3.0e9, 0.8);
         label.translucencyByDistance = translucency;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(label);
-        });
+        expect(scene).toPickPrimitive(label);
 
         translucency.nearValue = 0.0;
         translucency.farValue = 0.0;
@@ -712,9 +710,7 @@ defineSuite([
         var pixelOffsetScale = new NearFarScalar(1.0, 0.0, 3.0e9, 0.0);
         label.pixelOffsetScaleByDistance = pixelOffsetScale;
 
-        expect(scene).toPickAndCall(function(result) {
-            expect(result.primitive).toEqual(label);
-        });
+        expect(scene).toPickPrimitive(label);
 
         pixelOffsetScale.nearValue = 10.0;
         pixelOffsetScale.farValue = 10.0;
