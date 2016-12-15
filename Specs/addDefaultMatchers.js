@@ -281,6 +281,26 @@ define([
                 };
             },
 
+            toDrillPickAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare: function(actual, expected) {
+                        var scene = actual;
+                        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
+
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(pickedObjects);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
             toThrow : function(expectedConstructor) {
                 throw new Error('Do not use toThrow.  Use toThrowDeveloperError or toThrowRuntimeError instead.');
             },

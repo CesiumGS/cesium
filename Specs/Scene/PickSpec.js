@@ -128,10 +128,11 @@ defineSuite([
         var rectangle2 = createRectangle();
         rectangle2.height = 0.01;
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
-        expect(pickedObjects.length).toEqual(2);
-        expect(pickedObjects[0].primitive).toEqual(rectangle2);
-        expect(pickedObjects[1].primitive).toEqual(rectangle1);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(2);
+            expect(pickedObjects[0].primitive).toEqual(rectangle2);
+            expect(pickedObjects[1].primitive).toEqual(rectangle1);
+        });
     });
 
     it('does not drill pick when show is false', function() {
@@ -140,9 +141,10 @@ defineSuite([
         rectangle2.height = 0.01;
         rectangle2.show = false;
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
-        expect(pickedObjects.length).toEqual(1);
-        expect(pickedObjects[0].primitive).toEqual(rectangle1);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(1);
+            expect(pickedObjects[0].primitive).toEqual(rectangle1);
+        });
     });
 
     it('does not drill pick when alpha is zero', function() {
@@ -151,9 +153,10 @@ defineSuite([
         rectangle2.height = 0.01;
         rectangle2.appearance.material.uniforms.color.alpha = 0.0;
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
-        expect(pickedObjects.length).toEqual(1);
-        expect(pickedObjects[0].primitive).toEqual(rectangle1);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(1);
+            expect(pickedObjects[0].primitive).toEqual(rectangle1);
+        });
     });
 
     it('can drill pick batched Primitives with show attribute', function() {
@@ -200,12 +203,13 @@ defineSuite([
             appearance : new EllipsoidSurfaceAppearance()
         }));
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
-        expect(pickedObjects.length).toEqual(2);
-        expect(pickedObjects[0].primitive).toEqual(primitive);
-        expect(pickedObjects[0].id).toEqual(3);
-        expect(pickedObjects[1].primitive).toEqual(primitive);
-        expect(pickedObjects[1].id).toEqual(1);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(2);
+            expect(pickedObjects[0].primitive).toEqual(primitive);
+            expect(pickedObjects[0].id).toEqual(3);
+            expect(pickedObjects[1].primitive).toEqual(primitive);
+            expect(pickedObjects[1].id).toEqual(1);
+        });
     });
 
     it('can drill pick without ID', function() {
@@ -235,9 +239,10 @@ defineSuite([
             appearance : new EllipsoidSurfaceAppearance()
         }));
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
-        expect(pickedObjects.length).toEqual(1);
-        expect(pickedObjects[0].primitive).toEqual(primitive);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(1);
+            expect(pickedObjects[0].primitive).toEqual(primitive);
+        });
     });
 
     it('can drill pick batched Primitives without show attribute', function() {
@@ -275,10 +280,11 @@ defineSuite([
             appearance : new EllipsoidSurfaceAppearance()
         }));
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
-        expect(pickedObjects.length).toEqual(1);
-        expect(pickedObjects[0].primitive).toEqual(primitive);
-        expect(pickedObjects[0].id).toEqual(3);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(1);
+            expect(pickedObjects[0].primitive).toEqual(primitive);
+            expect(pickedObjects[0].id).toEqual(3);
+        });
     });
 
     it('stops drill picking when the limit is reached.', function() {
@@ -289,11 +295,12 @@ defineSuite([
         rectangle3.height = 0.02;
         rectangle4.height = 0.03;
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0), 3);
-        expect(pickedObjects.length).toEqual(3);
-        expect(pickedObjects[0].primitive).toEqual(rectangle4);
-        expect(pickedObjects[1].primitive).toEqual(rectangle3);
-        expect(pickedObjects[2].primitive).toEqual(rectangle2);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(3);
+            expect(pickedObjects[0].primitive).toEqual(rectangle4);
+            expect(pickedObjects[1].primitive).toEqual(rectangle3);
+            expect(pickedObjects[2].primitive).toEqual(rectangle2);
+        });
     });
 
     it('picks in 2D', function() {
