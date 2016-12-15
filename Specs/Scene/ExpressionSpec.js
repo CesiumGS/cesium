@@ -2134,7 +2134,7 @@ defineSuite([
         expect(shaderExpression).toEqual('vec4(1.0, property, vec4(1.0, 2.0, 0.0, 0.0)[0], 0.0)');
     });
 
-    it('gets shader expression for color components', function() {
+    it('gets shader expression for vector components', function() {
         // .x, .y, .z, .w
         var expression = new Expression('vec4().x + vec4().y + vec4().z + vec4().w');
         var shaderExpression = expression.getShaderExpression('', {});
