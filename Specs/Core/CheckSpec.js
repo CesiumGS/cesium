@@ -124,42 +124,28 @@ defineSuite([
         });
     });
 
-    describe('numeric tests: min/max/min-max', function () {
-        it('min throws on value less than min', function () {
+    describe('Check.numeric', function () {
+        it('minimum throws on value less than minimum', function () {
             expect(function () {
                 Check.numeric.minimum(4, 5);
             }).toThrowDeveloperError();
         });
-        it('min does not throw on value at least as big as min', function () {
+        it('minimum does not throw on value at least as big as minimum', function () {
             expect(function () {
                 Check.numeric.minimum(4, 4);
                 Check.numeric.minimum(4, 3);
             }).not.toThrowDeveloperError();
         });
 
-        it('max throws on value greater than max', function () {
+        it('maximum throws on value greater than maximum', function () {
             expect(function () {
                 Check.numeric.maximum(6, 5);
             }).toThrowDeveloperError();
         });
-        it('max does not throw on value at most as big as max', function () {
+        it('maximum does not throw on value at most as big as maximum', function () {
             expect(function () {
                 Check.numeric.maximum(5, 5);
                 Check.numeric.maximum(4, 5);
-            }).not.toThrowDeveloperError();
-        });
-
-        it('minMax throws on value outside range', function () {
-            expect(function () {
-                Check.numeric.withinRange(-2, 3, 5);
-                Check.numeric.withinRange(6, 3, 5);
-            }).toThrowDeveloperError();
-        });
-        it('minMax does not throw on value inside range', function () {
-            expect(function () {
-                Check.numeric.withinRange(3, 3, 5);
-                Check.numeric.withinRange(5, 3, 5);
-                Check.numeric.withinRange(4, 3, 5);
             }).not.toThrowDeveloperError();
         });
     });
