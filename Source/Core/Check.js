@@ -55,6 +55,7 @@ define([
      * @param {Number} test The value to test
      * @param {Number} maximum The maximum allowed value
      * @exception {DeveloperError} test must not be greater than maximum
+     * @exception {DeveloperError} Both test and maximum must be typeof 'number'
      */
     Check.numeric.maximum = function (test, maximum) {
         Check.typeOf.number(test);
@@ -70,6 +71,7 @@ define([
      * @param {Number} test The value to test
      * @param {Number} minimum The minimum allowed value
      * @exception {DeveloperError} test must not be less than mininum
+     * @exception {DeveloperError} Both test and maximum must be typeof 'number'
      */
     Check.numeric.minimum = function (test, minimum) {
         Check.typeOf.number(test);
