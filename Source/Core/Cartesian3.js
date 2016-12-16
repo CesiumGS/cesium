@@ -599,7 +599,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object(start, 'start');
         Check.typeOf.object(end, 'end');
-        Check.typeOf.number(t, 't);');
+        Check.typeOf.number(t, 't');
         Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
