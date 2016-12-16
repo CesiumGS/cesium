@@ -15,128 +15,147 @@ define([
      * Contains functions for checking that supplied arguments are of a specified type
      * or meet specified conditions
      * @private
-     *
-     * @exports Check
      */
     var Check = {};
 
+    /**
+     * Contains type checking functions, all using the typeof operator
+     */
     Check.typeOf = {};
+
+    /**
+     * Contains functions for checking numeric conditions such as minimum and maximum values
+     */
     Check.numeric = {};
 
-    var errors = {
-        defined: getUndefinedErrorMessage,
-        failedType: getFailedTypeErrorMessage
-    };
-
     function getUndefinedErrorMessage(name) {
-        return defaultValue(name, 'a value') + ' is required but is undefined.';
+        return defaultValue(name, 'A value') + ' was required but undefined.';
     }
+
     function getFailedTypeErrorMessage(actual, expected) {
         return 'Expected ' + expected + ', got ' + actual;
     }
 
     /**
-     * @param {} test The value that is to be checked
-     * @param {string} name The name of the variable being tested
-     * @throws {DeveloperError}
+     * Throws if test is not defined
+     *
+     * @param {*} test The value that is to be checked
+     * @param {String} name The name of the variable being tested
+     * @exception {DeveloperError} test must be defined
      */
     Check.defined = function (test, name) {
         if (!defined(test)) {
-            throw new DeveloperError(errors.defined(name));
+            throw new DeveloperError(getUndefinedErrorMessage(name));
         }
     };
 
     /**
-     * @param {} test The value to test
-     * @param {number} min The minimum allowed value
-     * @param {number} max The maximum allowed value
-     * @throws {DeveloperError}
+     * Throws if test is not with range [minimum, maximum]
+     *
+     * @param {*} test The value to test
+     * @param {Number} minimum The minimum allowed value
+     * @param {Number} maximum The maximum allowed value
+     * @exception {DeveloperError} test must be a number in the range [minimum, maximum]
      */
-    Check.numeric.withinRange = function (test, min, max) {
+    Check.numeric.withinRange = function (test, minimum, maximum) {
         Check.typeOf.number(test);
-        Check.typeOf.number(max);
-        Check.typeOf.number(min);
-        if (min > max) {
-            throw new DeveloperError('Invalid condition: min (' + min + ') must be less than max (' + max + ')');
+        Check.typeOf.number(maximum);
+        Check.typeOf.number(minimum);
+        if (minimum > maximum) {
+            throw new DeveloperError('Invalid condition: minimum (' + minimum + ') must be less than maximum (' + maximum + ')');
         }
-        if (test > max || test < min) {
-            throw new DeveloperError('Invalid argument: expected ' + test + ' to be in range [' + min + ', ' + max + ']');
+        if (test > maximum || test < minimum) {
+            throw new DeveloperError('Invalid argument: expected ' + test + ' to be in range [' + minimum + ', ' + maximum + ']');
         }
     };
 
     /**
-     * @param {number} test The value to test
-     * @param {number} max The maximum allowed value
-     * @throws {DeveloperError}
+     * Throws if test is greater than maximum
+     *
+     * @param {Number} test The value to test
+     * @param {Number} maximum The maximum allowed value
+     * @exception {DeveloperError} test must not be greater than maximum
      */
-    Check.numeric.maximum = function (test, max) {
+    Check.numeric.maximum = function (test, maximum) {
         Check.typeOf.number(test);
-        Check.typeOf.number(max);
-        if (test > max) {
-            throw new DeveloperError('Expected ' + test + ' to be at most ' + max);
+        Check.typeOf.number(maximum);
+        if (test > maximum) {
+            throw new DeveloperError('Expected ' + test + ' to be at most ' + maximum);
         }
     };
 
     /**
-     * @param {number} test The value to test
-     * @param {number} min The minimum allowed value
-     * @throws {DeveloperError}
+     * Throws if test is less than minimum
+     *
+     * @param {Number} test The value to test
+     * @param {Number} minimum The minimum allowed value
+     * @exception {DeveloperError} test must not be less than mininum
      */
-    Check.numeric.minimum = function (test, min) {
+    Check.numeric.minimum = function (test, minimum) {
         Check.typeOf.number(test);
-        Check.typeOf.number(min);
-        if (test < min) {
-            throw new DeveloperError('Expected ' + test + ' to be at least ' + min);
+        Check.typeOf.number(minimum);
+        if (test < minimum) {
+            throw new DeveloperError('Expected ' + test + ' to be at least ' + minimum);
         }
     };
 
     /**
-     * @param {} test The value to test
-     * @throws {DeveloperError}
+     * Throws if test is not typeof 'function'
+     *
+     * @param {*} test The value to test
+     * @exception {DeveloperError} test must be typeof 'function'
      */
     Check.typeOf.function = function (test) {
         if (typeof test !== 'function') {
-            throw new DeveloperError(errors.failedType(typeof test, 'function'));
+            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'function'));
         }
     };
 
     /**
-     * @param {} test The value to test
-     * @throws {DeveloperError}
+     * Throws if test is not typeof 'string'
+     *
+     * @param {*} test The value to test
+     * @exception {DeveloperError} test must be typeof 'string'
      */
     Check.typeOf.string = function (test) {
         if (typeof test !== 'string') {
-            throw new DeveloperError(errors.failedType(typeof test, 'string'));
+            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'string'));
         }
     };
 
     /**
-     * @param {} test The value to test
-     * @throws {DeveloperError}
+     * Throws if test is not typeof 'number'
+     *
+     * @param {*} test The value to test
+     * @exception {DeveloperError} test must be typeof 'number'
      */
     Check.typeOf.number = function (test) {
         if (typeof test !== 'number') {
-            throw new DeveloperError(errors.failedType(typeof test, 'number'));
+            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'number'));
         }
     };
 
     /**
-     * @param {} test The value to test
-     * @throws {DeveloperError}
+     * Throws if test is not typeof 'object'
+     *
+     * @param {*} test The value to test
+     * @exception {DeveloperError} test must be typeof 'object'
      */
     Check.typeOf.object = function (test) {
         if (typeof test !== 'object') {
-            throw new DeveloperError(errors.failedType(typeof test, 'object'));
+            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'object'));
         }
     };
 
     /**
-     * @param {} test The value to test
-     * @throws {DeveloperError}
+     * Throws if test is not typeof 'boolean'
+     *
+     * @param {*} test The value to test
+     * @exception {DeveloperError} test must be typeof 'boolean'
      */
     Check.typeOf.boolean = function (test) {
         if (typeof test !== 'boolean') {
-            throw new DeveloperError(errors.failedType(typeof test, 'boolean'));
+            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'boolean'));
         }
     };
 
