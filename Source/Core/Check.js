@@ -50,26 +50,6 @@ define([
     };
 
     /**
-     * Throws if test is not with range [minimum, maximum]
-     *
-     * @param {*} test The value to test
-     * @param {Number} minimum The minimum allowed value
-     * @param {Number} maximum The maximum allowed value
-     * @exception {DeveloperError} test must be a number in the range [minimum, maximum]
-     */
-    Check.numeric.withinRange = function (test, minimum, maximum) {
-        Check.typeOf.number(test);
-        Check.typeOf.number(maximum);
-        Check.typeOf.number(minimum);
-        if (minimum > maximum) {
-            throw new DeveloperError('Invalid condition: minimum (' + minimum + ') must be less than maximum (' + maximum + ')');
-        }
-        if (test > maximum || test < minimum) {
-            throw new DeveloperError('Invalid argument: expected ' + test + ' to be in range [' + minimum + ', ' + maximum + ']');
-        }
-    };
-
-    /**
      * Throws if test is greater than maximum
      *
      * @param {Number} test The value to test
