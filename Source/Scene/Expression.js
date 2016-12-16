@@ -65,6 +65,11 @@ define([
         degrees : CesiumMath.toDegrees
     };
 
+    var ternaryFunctions = {
+        clamp : CesiumMath.clamp,
+        mix : CesiumMath.lerp
+    };
+
     /**
      * Evaluates an expression defined using the
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
@@ -394,6 +399,16 @@ define([
             left = createRuntimeAst(expression, args[0]);
             right = createRuntimeAst(expression, args[1]);
             return new Node(ExpressionNodeType.BINARY, call, left, right);
+        } else if (defined(ternaryFunctions[call])) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 3 || args.length > 3) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly three arguments.');
+            }
+            //>>includeEnd('debug');
+            left = createRuntimeAst(expression, args[0]);
+            right = createRuntimeAst(expression, args[1]);
+            var test = createRuntimeAst(expression, args[2]);
+            return new Node(ExpressionNodeType.TERNARY, call, left, right, test);
         } else if (call === 'Boolean') {
             if (args.length === 0) {
                 return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
@@ -582,6 +597,32 @@ define([
             } else if (node._value === 'toString') {
                 node.evaluate = node._evaluateToString;
             }
+        } else if (node._type === ExpressionNodeType.UNARY) {
+            if (node._value === '!') {
+                node.evaluate = node._evaluateNot;
+            } else if (node._value === '-') {
+                node.evaluate = node._evaluateNegative;
+            } else if (node._value === '+') {
+                node.evaluate = node._evaluatePositive;
+            } else if (node._value === 'isNaN') {
+                node.evaluate = node._evaluateNaN;
+            } else if (node._value === 'isFinite') {
+                node.evaluate = node._evaluateIsFinite;
+            } else if (node._value === 'isExactClass') {
+                node.evaluate = node._evaluateIsExactClass;
+            } else if (node._value === 'isClass') {
+                node.evaluate = node._evaluateIsClass;
+            } else if (node._value === 'getExactClassName') {
+                node.evaluate = node._evaluategetExactClassName;
+            } else if (defined(unaryFunctions[node._value])) {
+                node.evaluate = getEvaluateUnaryFunction(node._value);
+            } else if (node._value === 'Boolean') {
+                node.evaluate = node._evaluateBooleanConversion;
+            } else if (node._value === 'Number') {
+                node.evaluate = node._evaluateNumberConversion;
+            } else if (node._value === 'String') {
+                node.evaluate = node._evaluateStringConversion;
+            }
         } else if (node._type === ExpressionNodeType.BINARY) {
             if (node._value === '+') {
                 node.evaluate = node._evaluatePlus;
@@ -620,32 +661,8 @@ define([
             } else if (defined(binaryFunctions[node._value])) {
                 node.evaluate = getEvaluateBinaryFunction(node._value);
             }
-        } else if (node._type === ExpressionNodeType.UNARY) {
-            if (node._value === '!') {
-                node.evaluate = node._evaluateNot;
-            } else if (node._value === '-') {
-                node.evaluate = node._evaluateNegative;
-            } else if (node._value === '+') {
-                node.evaluate = node._evaluatePositive;
-            } else if (node._value === 'isNaN') {
-                node.evaluate = node._evaluateNaN;
-            } else if (node._value === 'isFinite') {
-                node.evaluate = node._evaluateIsFinite;
-            } else if (node._value === 'isExactClass') {
-                node.evaluate = node._evaluateIsExactClass;
-            } else if (node._value === 'isClass') {
-                node.evaluate = node._evaluateIsClass;
-            } else if (node._value === 'getExactClassName') {
-                node.evaluate = node._evaluategetExactClassName;
-            } else if (defined(unaryFunctions[node._value])) {
-                node.evaluate = getEvaluateUnaryFunction(node._value);
-            } else if (node._value === 'Boolean') {
-                node.evaluate = node._evaluateBooleanConversion;
-            } else if (node._value === 'Number') {
-                node.evaluate = node._evaluateNumberConversion;
-            } else if (node._value === 'String') {
-                node.evaluate = node._evaluateStringConversion;
-            }
+        } else if (node._type === ExpressionNodeType.TERNARY) {
+            node.evaluate = getEvaluateTernaryFunction(node._value);
         } else if (node._type === ExpressionNodeType.MEMBER) {
             if (node._value === 'brackets') {
                 node.evaluate = node._evaluateMemberBrackets;
@@ -677,6 +694,13 @@ define([
         return feature._content._tileset.timeSinceLoad;
     }
 
+    function getEvaluateUnaryFunction(call) {
+        var evaluate = unaryFunctions[call];
+        return function(feature) {
+            return evaluate(this._left.evaluate(feature));
+        };
+    }
+
     function getEvaluateBinaryFunction(call) {
         var evaluate = binaryFunctions[call];
         return function(feature) {
@@ -684,10 +708,10 @@ define([
         };
     }
 
-    function getEvaluateUnaryFunction(call) {
-        var evaluate = unaryFunctions[call];
+    function getEvaluateTernaryFunction(call) {
+        var evaluate = ternaryFunctions[call];
         return function(feature) {
-            return evaluate(this._left.evaluate(feature));
+            return evaluate(this._left.evaluate(feature), this._right.evaluate(feature), this._test.evaluate(feature));
         };
     }
 
@@ -1246,6 +1270,11 @@ define([
                     return value + '(' + left + ', ' + right + ')';
                 }
                 return '(' + left + ' ' + value + ' ' + right + ')';
+            case ExpressionNodeType.TERNARY:
+                if (defined(ternaryFunctions[value])) {
+                    return value + '(' + left + ', ' + right + ', ' + test + ')';
+                }
+                break;
             case ExpressionNodeType.CONDITIONAL:
                 return '(' + test + ' ? ' + left + ' : ' + right + ')';
             case ExpressionNodeType.MEMBER:
