@@ -18,7 +18,6 @@ define([
     'use strict';
 
 // TODO: Pass in stub context from Spec directory so it's not included in release builds
-// TODO: Search for all calls to renderForSpecs.  Replace original renderForSpecs with version that doesn't readPixels.
 // TODO: merge into 3d-tiles branch
 // TODO: tech blog post?
 // TODO: Test with WebGL 2 now or later?
@@ -63,7 +62,6 @@ define([
         scene.renderForSpecs = function(time) {
             this.initializeFrame();
             this.render(time);
-            return this.context.readPixels();
         };
 
         scene.rethrowRenderErrors = defaultValue(options.rethrowRenderErrors, true);
