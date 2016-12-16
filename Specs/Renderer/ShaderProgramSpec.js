@@ -79,7 +79,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,

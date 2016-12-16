@@ -148,7 +148,7 @@ defineSuite([
 
         command.color = Color.WHITE;
         command.execute(context);
-        expect(context.readPixels()).toEqual(Color.WHITE.toBytes());
+        expect(context).toReadPixels(Color.WHITE.toBytes());
 
         expect(renderFragment(context)).toEqual(Color.RED.toBytes());
     });
@@ -168,14 +168,14 @@ defineSuite([
             color : Color.RED
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual(Color.RED.toBytes());
+        expect(context).toReadPixels(Color.RED.toBytes());
 
         texture.copyFromFramebuffer();
 
         // Clear to white
         command.color = Color.WHITE;
         command.execute(context);
-        expect(context.readPixels()).toEqual(Color.WHITE.toBytes());
+        expect(context).toReadPixels(Color.WHITE.toBytes());
 
         // Render red
         expect(renderFragment(context)).toEqual(Color.RED.toBytes());
@@ -271,12 +271,12 @@ defineSuite([
         // Blue on top
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
         command.execute(context);
-        expect(context.readPixels()).toEqual(Color.BLUE.toBytes());
+        expect(context).toReadPixels(Color.BLUE.toBytes());
 
         // Red on bottom
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
         command.execute(context);
-        expect(context.readPixels()).toEqual(Color.RED.toBytes());
+        expect(context).toReadPixels(Color.RED.toBytes());
     });
 
     it('can be created from a typed array', function() {
@@ -362,12 +362,12 @@ defineSuite([
         // Blue on top
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
         command.execute(context);
-        expect(context.readPixels()).toEqual(Color.BLUE.toBytes());
+        expect(context).toReadPixels(Color.BLUE.toBytes());
 
         // Red on bottom
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
         command.execute(context);
-        expect(context.readPixels()).toEqual(Color.RED.toBytes());
+        expect(context).toReadPixels(Color.RED.toBytes());
 
         // After copy...
         texture.copyFrom(greenImage, 0, 1);
@@ -375,12 +375,12 @@ defineSuite([
         // Now green on top
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
         command.execute(context);
-        expect(context.readPixels()).toEqual(Color.LIME.toBytes());
+        expect(context).toReadPixels(Color.LIME.toBytes());
 
         // Still red on bottom
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
         command.execute(context);
-        expect(context.readPixels()).toEqual(Color.RED.toBytes());
+        expect(context).toReadPixels(Color.RED.toBytes());
     });
 
     it('can generate mipmaps', function() {

@@ -168,7 +168,7 @@ defineSuite([
     it('clears a color attachment', function() {
         // 1 of 4.  Clear default color buffer to black.
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 2 of 4.  Clear framebuffer color attachment to green.
         var colorTexture = new Texture({
@@ -188,7 +188,7 @@ defineSuite([
         clearCommand.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -222,7 +222,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+        expect(context).toReadPixels([0, 255, 0, 255]);
     });
 
     it('clears a cube map face color attachment', function() {
@@ -234,7 +234,7 @@ defineSuite([
 
         // 1 of 4.  Clear default color buffer to black.
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 2 of 4.  Clear framebuffer color attachment to green.
         framebuffer = new Framebuffer({
@@ -250,7 +250,7 @@ defineSuite([
         clearCommand.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -284,7 +284,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+        expect(context).toReadPixels([0, 255, 0, 255]);
 
         cubeMap = cubeMap.destroy();
     });
@@ -302,7 +302,7 @@ defineSuite([
 
         // 1 of 4.  Clear default color buffer to black.
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 2 of 4.  Render green point into color attachment.
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -335,7 +335,7 @@ defineSuite([
         command.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -356,7 +356,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+        expect(context).toReadPixels([0, 255, 0, 255]);
 
         sp2 = sp2.destroy();
     });
@@ -400,7 +400,7 @@ defineSuite([
         command.execute(context);
 
         // 2 of 3.  Verify default color buffer is still black.
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 3 of 3.  Render green to default color buffer by reading from previous color attachment
         var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -519,9 +519,10 @@ defineSuite([
             framebuffer : framebuffer
         });
         clearCommand.execute(context);
-        expect(context.readPixels({
-            framebuffer : framebuffer
-        })).toEqual([0, 0, 0, 0]);
+        expect({
+            context: context,
+            framebuffer: framebuffer
+        }).toReadPixels([0, 0, 0, 0]);
 
         // 2 of 3.  Does not pass depth test
         var command = new DrawCommand({
@@ -537,9 +538,10 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels({
-            framebuffer : framebuffer
-        })).toEqual([0, 0, 0, 0]);
+        expect({
+            context: context,
+            framebuffer: framebuffer
+        }).toReadPixels([0, 0, 0, 0]);
 
         // 3 of 3.  Passes depth test
         command = new DrawCommand({
@@ -555,9 +557,10 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels({
-            framebuffer : framebuffer
-        })).toEqual([255, 255, 255, 255]);
+        expect({
+            context: context,
+            framebuffer: framebuffer
+        }).toReadPixels([255, 255, 255, 255]);
     });
 
     it('draws with multiple render targets', function() {
@@ -579,7 +582,7 @@ defineSuite([
 
             // 1 of 5.  Clear default color buffer to black.
             ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+            expect(context).toReadPixels([0, 0, 0, 0]);
 
             // 2 of 5.  Render red point into color attachment 0 and green point to color attachment 1.
             var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -612,7 +615,7 @@ defineSuite([
             command.execute(context);
 
             // 3 of 5.  Verify default color buffer is still black.
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+            expect(context).toReadPixels([0, 0, 0, 0]);
 
             // 4 of 5.  Render yellow to default color buffer by reading from previous color attachments
             var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -634,7 +637,7 @@ defineSuite([
                 vertexArray : va
             });
             command.execute(context);
-            expect(context.readPixels()).toEqual([255, 255, 0, 255]);
+            expect(context).toReadPixels([255, 255, 0, 255]);
 
             // 5 of 5. Verify clearing multiple color attachments
             var clearCommand = new ClearCommand({
@@ -649,7 +652,7 @@ defineSuite([
                 vertexArray : va
             });
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+            expect(context).toReadPixels([0, 0, 0, 0]);
 
             sp2 = sp2.destroy();
         }

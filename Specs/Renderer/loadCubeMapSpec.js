@@ -79,32 +79,32 @@ defineSuite([
             // +X is green
             sp.allUniforms.u_direction.value = new Cartesian3(1, 0, 0);
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+            expect(context).toReadPixels([0, 255, 0, 255]);
 
             // -X is blue
             sp.allUniforms.u_direction.value = new Cartesian3(-1, 0, 0);
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+            expect(context).toReadPixels([0, 0, 255, 255]);
 
             // +Y is green
             sp.allUniforms.u_direction.value = new Cartesian3(0, 1, 0);
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+            expect(context).toReadPixels([0, 255, 0, 255]);
 
             // -Y is blue
             sp.allUniforms.u_direction.value = new Cartesian3(0, -1, 0);
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+            expect(context).toReadPixels([0, 0, 255, 255]);
 
             // +Z is green
             sp.allUniforms.u_direction.value = new Cartesian3(0, 0, 1);
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+            expect(context).toReadPixels([0, 255, 0, 255]);
 
             // -Z is blue
             sp.allUniforms.u_direction.value = new Cartesian3(0, 0, -1);
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+            expect(context).toReadPixels([0, 0, 255, 255]);
 
             sp.destroy();
             va.destroy();

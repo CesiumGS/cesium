@@ -82,7 +82,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -90,7 +90,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('draws a white point with an index buffer', function() {
@@ -129,7 +129,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -137,7 +137,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -183,7 +183,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -191,7 +191,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        expect(context).toReadPixels([255, 0, 0, 255]);
     });
 
     it('draws a red point with one interleaved vertex buffers', function() {
@@ -236,7 +236,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -244,7 +244,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        expect(context).toReadPixels([255, 0, 0, 255]);
     });
 
     it('draws with scissor test', function() {
@@ -271,7 +271,7 @@ defineSuite([
 
         // 1 of 3:  Clear to black
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 2 of 3:  Render point - fails scissor test
         var command = new DrawCommand({
@@ -286,7 +286,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 3 of 3:  Render point - passes scissor test
         command = new DrawCommand({
@@ -301,7 +301,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('draws with color mask', function() {
@@ -328,7 +328,7 @@ defineSuite([
 
         // 1 of 3:  Clear to black
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 2 of 3:  Render point - blue color mask
         var command = new DrawCommand({
@@ -345,7 +345,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 0, 0]);
+        expect(context).toReadPixels([255, 0, 0, 0]);
 
         // 3 of 3:  Render point - red color mask (blue channel not touched)
         command = new DrawCommand({
@@ -362,7 +362,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 255, 0]);
+        expect(context).toReadPixels([255, 0, 255, 0]);
     });
 
     it('draws with additive blending', function() {
@@ -389,7 +389,7 @@ defineSuite([
 
         // 1 of 3:  Clear to black
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -441,7 +441,7 @@ defineSuite([
 
         // 1 of 3:  Clear to black
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -492,7 +492,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -547,7 +547,7 @@ defineSuite([
 
         // 1 of 3:  Clear to black
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 2 of 3:  Cull front faces - nothing is drawn
         var command = new DrawCommand({
@@ -562,7 +562,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 3 of 3:  Cull back faces - nothing is culled
         command = new DrawCommand({
@@ -577,7 +577,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('draws with front face winding order', function() {
@@ -604,7 +604,7 @@ defineSuite([
 
         // 1 of 3:  Clear to black
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 2 of 3:  Cull back faces with opposite winding order - nothing is drawn
         var command = new DrawCommand({
@@ -620,7 +620,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 3 of 3:  Cull back faces with correct winding order - nothing is culled
         command = new DrawCommand({
@@ -636,7 +636,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('draws with the depth test', function() {
@@ -680,20 +680,20 @@ defineSuite([
             depth : 1.0
         });
         clearCommand.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         // 2 of 2.  Triangle fan fails the depth test.
         clearCommand.color = new Color (0.0, 0.0, 0.0, 0.0);
         clearCommand.depth = 0.0;
         clearCommand.execute(context);
 
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
     });
 
     it('draws with depth range', function() {
@@ -719,7 +719,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -733,7 +733,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([64, 191, 0, 255]);
+        expect(context).toReadPixels([64, 191, 0, 255]);
     });
 
     it('draws with line width', function() {
@@ -759,7 +759,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.LINES,
@@ -775,7 +775,7 @@ defineSuite([
         // I believe different GL implementations are allowed to AA
         // in different ways (or at least that is what we see in practice),
         // so verify it at least rendered something.
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(context).notToReadPixels([0, 0, 0, 0]);
     });
 
     it('draws with polygon offset', function() {
@@ -801,7 +801,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -816,7 +816,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('draws with sample coverage', function() {
@@ -847,7 +847,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -862,7 +862,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -875,7 +875,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('draws with stencil test (front)', function() {
@@ -915,7 +915,7 @@ defineSuite([
 
         // 1 of 4.  Clear, including stencil
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 2 of 4.  Render where stencil is set - nothing is drawn
         var command = new DrawCommand({
@@ -925,7 +925,7 @@ defineSuite([
             renderState : rs
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 3 of 4.  Render to stencil only, increment
         command = new DrawCommand({
@@ -948,7 +948,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 4 of 4.  Render where stencil is set
         command = new DrawCommand({
@@ -958,7 +958,7 @@ defineSuite([
             renderState : rs
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('draws with stencil test (back)', function() {
@@ -998,7 +998,7 @@ defineSuite([
 
         // 1 of 4.  Clear, including stencil
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 2 of 4.  Render where stencil is set - nothing is drawn
         var command = new DrawCommand({
@@ -1008,7 +1008,7 @@ defineSuite([
             renderState : rs
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 3 of 4.  Render to stencil only, increment
         command = new DrawCommand({
@@ -1032,7 +1032,7 @@ defineSuite([
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // 4 of 4.  Render where stencil is set
         command = new DrawCommand({
@@ -1042,7 +1042,7 @@ defineSuite([
             renderState : rs
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('draws with an offset and count', function() {
@@ -1068,7 +1068,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         // The first point in the vertex buffer does not generate any pixels
         var command = new DrawCommand({
@@ -1079,7 +1079,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 0]);
 
         command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -1089,7 +1089,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('draws two instances of a point with different per-instance colors', function() {
@@ -1135,7 +1135,7 @@ defineSuite([
             });
 
             ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+            expect(context).toReadPixels([0, 0, 0, 0]);
 
             var command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
@@ -1147,7 +1147,7 @@ defineSuite([
                 })
             });
             command.execute(context);
-            expect(context.readPixels()).toEqual([255, 255, 0, 255]);
+            expect(context).toReadPixels([255, 255, 0, 255]);
         }
     });
 

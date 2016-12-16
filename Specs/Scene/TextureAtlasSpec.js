@@ -116,7 +116,7 @@ void main() {\n\
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 255]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,

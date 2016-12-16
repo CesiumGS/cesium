@@ -270,7 +270,7 @@ defineSuite([
         });
         command.execute(context);
 
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -321,7 +321,7 @@ defineSuite([
         });
         command.execute(context);
 
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -372,7 +372,7 @@ defineSuite([
         });
         command.execute(context);
 
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -423,7 +423,7 @@ defineSuite([
         });
         command.execute(context);
 
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();

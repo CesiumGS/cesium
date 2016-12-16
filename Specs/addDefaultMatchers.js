@@ -315,6 +315,73 @@ define([
                 };
             },
 
+            toReadPixels : function(util, customEqualityTesters) {
+                return {
+                    compare: function(actual, expected) {
+                        var context;
+                        var framebuffer;
+
+                        var options = actual;
+                        if (defined(options.context)) {
+                            // options were passed to to a framebuffer
+                            context = options.context;
+                            framebuffer = options.framebuffer;
+                        } else {
+                            context = options;
+                        }
+
+                        var rgba = context.readPixels({
+                            framebuffer : framebuffer
+                        });
+
+                        var pass = true;
+                        var message;
+
+                        if (!webglStub) {
+                            if ((rgba[0] !== expected[0]) ||
+                                (rgba[1] !== expected[1]) ||
+                                (rgba[2] !== expected[2]) ||
+                                (rgba[3] !== expected[3])) {
+                                pass = false;
+                                message = 'Expected context to render ' + expected + ', but rendered: ' + rgba;
+                            }
+                        }
+
+                        return {
+                            pass : pass,
+                            message : message
+                        };
+                    }
+                };
+            },
+
+            notToReadPixels : function(util, customEqualityTesters) {
+                return {
+                    compare: function(actual, expected) {
+                        var context = actual;
+                        var rgba = context.readPixels();
+
+                        var pass = true;
+                        var message;
+
+                        if (!webglStub) {
+                            if ((rgba[0] === expected[0]) &&
+                                (rgba[1] === expected[1]) &&
+                                (rgba[2] === expected[2]) &&
+                                (rgba[3] === expected[3])) {
+                                pass = false;
+                                message = 'Expected context not to render ' + expected + ', but rendered: ' + rgba;
+                            }
+                        }
+
+                        return {
+                            pass : pass,
+                            message : message
+                        };
+                    }
+                };
+            },
+
             toRenderFragmentShader : function(util, customEqualityTesters) {
                 return {
                     compare: function(actual, expected) {
