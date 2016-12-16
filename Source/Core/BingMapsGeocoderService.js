@@ -2,13 +2,17 @@
 define([
     './BingMapsApi',
     './defaultValue',
+    './defined',
     './defineProperties',
+    './DeveloperError',
     './loadJsonp',
-    './Rectangle',
+    './Rectangle'
 ], function(
     BingMapsApi,
     defaultValue,
+    defined,
     defineProperties,
+    DeveloperError,
     loadJsonp,
     Rectangle) {
     'use strict';
@@ -26,23 +30,16 @@ define([
      */
     function BingMapsGeocoderService(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        this._canceled = false;
         this._url = 'https://dev.virtualearth.net/REST/v1/Locations';
         this._key = BingMapsApi.getKey(options.key);
-
-        /**
-         * Indicates whether this geocoding service is to be used for autocomplete.
-         *
-         * @type {boolean}
-         * @default false
-         */
-        this.autoComplete = defaultValue(options.autoComplete, false);
     }
 
     defineProperties(BingMapsGeocoderService.prototype, {
         /**
          * The URL endpoint for the Bing geocoder service
          * @type {String}
+         * @memberof {BingMapsGeocoderService.prototype}
+         * @readonly
          */
         url : {
             get : function () {
@@ -53,6 +50,8 @@ define([
         /**
          * The key for the Bing geocoder service
          * @type {String}
+         * @memberof {BingMapsGeocoderService.prototype}
+         * @readonly
          */
         key : {
             get : function () {
@@ -61,10 +60,6 @@ define([
         }
     });
 
-    BingMapsGeocoderService.prototype.cancel = function() {
-        this._canceled = true;
-    };
-
     /**
      * @function
      *
@@ -72,7 +67,11 @@ define([
      * @returns {Promise<GeocoderResult[]>}
      */
     BingMapsGeocoderService.prototype.geocode = function(query) {
-        this._canceled = false;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(query)) {
+            throw new DeveloperError('query must be defined');
+        }
+        //>>includeEnd('debug');
 
         var key = this.key;
         var promise = loadJsonp(url, {
@@ -83,12 +82,7 @@ define([
             callbackParameterName : 'jsonp'
         });
 
-        var that = this;
-
         return promise.then(function(result) {
-            if (that._canceled) {
-                return;
-            }
             if (result.resourceSets.length === 0) {
                 return [];
             }

@@ -3,11 +3,15 @@ define([
     './Cartesian3',
     './defaultValue',
     './defineProperties',
+    './defined',
+    './DeveloperError',
     '../ThirdParty/when'
 ], function(
     Cartesian3,
     defaultValue,
     defineProperties,
+    defined,
+    DeveloperError,
     when) {
     'use strict';
 
@@ -19,28 +23,7 @@ define([
      * @constructor
      */
     function CartographicGeocoderService() {
-        this._autoComplete = false;
     }
-
-    defineProperties(CartographicGeocoderService.prototype, {
-        /**
-         * This geocoder does not support autocomplete, so this property will always be false.
-         *
-         * @type {boolean}
-         */
-        autoComplete : {
-            get : function () {
-                return this._autoComplete;
-            }
-        }
-    });
-
-    /**
-     * This service completes geocoding synchronously and therefore does not
-     * need to handle canceled requests that have not finished yet.
-     */
-    CartographicGeocoderService.prototype.cancel = function() {
-    };
 
     /**
      * @function
@@ -49,6 +32,12 @@ define([
      * @returns {Promise<GeocoderResult[]>}
      */
     CartographicGeocoderService.prototype.geocode = function(query) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(query)) {
+            throw new DeveloperError('query must be defined');
+        }
+        //>>includeEnd('debug');
+
         try {
             var splitQuery = query.match(/[^\s,\n]+/g);
             if ((splitQuery.length === 2) || (splitQuery.length === 3)) {

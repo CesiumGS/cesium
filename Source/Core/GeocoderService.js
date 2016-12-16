@@ -22,13 +22,6 @@ define([
      * @see BingMapsGeocoderService
      */
     function GeocoderService() {
-        /**
-         * Indicates whether this geocoding service is to be used for autocomplete.
-         *
-         * @type {boolean}
-         * @default false
-         */
-        this.autoComplete = false;
     }
 
     /**
@@ -38,15 +31,6 @@ define([
      * @returns {Promise<GeocoderResult[]>}
      */
     GeocoderService.prototype.geocode = DeveloperError.throwInstantiationError;
-
-    /**
-     * A function that is called when geocoding is canceled by the user, so that the
-     * geocoding service can stop processing current requests.
-     * @function
-     *
-     * @returns {undefined}
-     */
-    GeocoderService.prototype.cancel = DeveloperError.throwInstantiationError;
 
     return GeocoderService;
 });

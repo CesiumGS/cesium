@@ -40,6 +40,7 @@
 .cesium-viewer-geocoderContainer .search-results {
     position: absolute;
     background-color: #000;
+    color: #eee;
     overflow-y: auto;
     opacity: 0.8;
     width: 100%;

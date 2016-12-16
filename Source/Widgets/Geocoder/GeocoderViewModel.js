@@ -97,7 +97,7 @@ define([
         this._flightDuration = options.flightDuration;
         this._searchText = '';
         this._isSearchInProgress = false;
-        this._geocodeInProgress = undefined;
+        this._geocodePromise = undefined;
         this._complete = new Event();
         this._suggestions = [];
         this._selectedSuggestion = undefined;
@@ -159,6 +159,7 @@ define([
         };
 
         this.activateSuggestion = function (data) {
+            that.hideSuggestions();
             that._searchText = data.displayName;
             var destination = data.destination;
             clearSuggestions(that);
@@ -188,12 +189,19 @@ define([
          */
         this.keepExpanded = false;
 
+        /**
+         * True if the geocoder should query as the user types to autocomplete
+         * @type {Booelan}
+         * @default true
+         */
+        this.autoComplete = defaultValue(options.autocomplete, true);
+
         this._focusTextbox = false;
 
         knockout.track(this, ['_searchText', '_isSearchInProgress', 'keepExpanded', '_suggestions', '_selectedSuggestion', '_showSuggestions', '_focusTextbox']);
 
         var searchTextObservable = knockout.getObservable(this, '_searchText');
-        searchTextObservable.extend({ rateLimit: { timeout: 500, method: "notifyWhenChangesStop" } });
+        searchTextObservable.extend({ rateLimit: { timeout: 500 } });
         this._suggestionSubscription = searchTextObservable.subscribe(function() {
             updateSearchSuggestions(that);
         });
@@ -391,48 +399,27 @@ define([
         });
     }
 
-    function getFirstResult(results) {
-        if (results.length === 0) {
-            return undefined;
-        }
-
-        var firstResult = results[0];
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(firstResult.displayName)) {
-            throw new DeveloperError('each result must have a displayName');
-        }
-        if (!defined(firstResult.destination)) {
-            throw new DeveloperError('each result must have a rectangle');
-        }
-        //>>includeEnd('debug');
-
-        return {
-            displayName: firstResult.displayName,
-            destination: firstResult.destination
-        };
-    }
-
-    function promisesSettled(promises) {
-        var settledPromises = [];
-        promises.forEach(function (promise) {
-            var settled = when.defer();
-            settledPromises.push(settled);
-            promise.then(function (result) {
-                return settled.resolve({state: 'fulfilled', value: result});
+    function chainPromise(promise, geocoderService, query) {
+        return promise
+            .then(function(result) {
+                if (defined(result) && result.state === 'fulfilled' && result.value.length > 0){
+                    return result;
+                }
+                var nextPromise = geocoderService.geocode(query)
+                    .then(function (result) {
+                        return {state: 'fulfilled', value: result};
+                    });
+                if (defined(nextPromise.otherwise)) {
+                    nextPromise.otherwise(function (err) {
+                        return {state: 'rejected', reason: err};
+                    });
+                } else if (defined(nextPromise.catch)) {
+                    nextPromise.catch(function (err) {
+                        return {state: 'rejected', reason: err};
+                    });
+                }
+                return nextPromise;
             });
-
-            if (defined(promise.otherwise)) {
-                promise.otherwise(function (err) {
-                    return settled.resolve({state: 'rejected', reason: err});
-                });
-                return;
-            }
-            promise.catch(function (err) {
-                return settled.resolve({state: 'rejected', reason: err});
-            });
-        });
-
-        return when.all(settledPromises);
     }
 
     function geocode(viewModel, geocoderServices) {
@@ -442,41 +429,25 @@ define([
             return;
         }
 
-        viewModel._geocodeInProgress = true;
+        viewModel._isSearchInProgress = true;
 
-        var resultPromises = [];
+        var promise = when.resolve();
         for (var i = 0; i < geocoderServices.length; i++) {
-            var geocoderService = geocoderServices[i];
-
-            viewModel._isSearchInProgress = true;
-            clearSuggestions(viewModel);
-            var geocodePromise = geocoderService.geocode(query);
-            resultPromises.push(geocodePromise);
-            geocodePromise.then(getFirstResult);
+            promise = chainPromise(promise, geocoderServices[i], query);
         }
 
-        promisesSettled(resultPromises)
-            .then(function (descriptors) {
-                viewModel._isSearchInProgress = false;
-                if (viewModel._cancelGeocode) {
-                    viewModel._cancelGeocode = false;
+        viewModel._geocodePromise = promise;
+        promise
+            .then(function (result) {
+                if (promise.cancel || promise !== viewModel._geocodePromise) {
                     return;
                 }
-                var allFailed = true;
-                for (var j = 0; j < descriptors.length; j++) {
-                    if (descriptors[j].state === 'rejected') {
-                        continue;
-                    }
-                    allFailed = false;
-                    var geocoderResults = descriptors[j].value;
-                    if (defined(geocoderResults) && geocoderResults.length > 0) {
-                        viewModel._searchText = geocoderResults[0].displayName;
-                        updateCamera(viewModel, geocoderResults[0].destination);
-                        return;
-                    }
-                }
-                if (allFailed) {
-                    viewModel._searchText = query + ' (geocoders failed)';
+                viewModel._isSearchInProgress = false;
+
+                var geocoderResults = result.value;
+                if (result.state === 'fulfilled' && defined(geocoderResults) && geocoderResults.length > 0) {
+                    viewModel._searchText = geocoderResults[0].displayName;
+                    updateCamera(viewModel, geocoderResults[0].destination);
                     return;
                 }
                 viewModel._searchText = query + ' (not found)';
@@ -504,9 +475,9 @@ define([
 
     function cancelGeocode(viewModel) {
         viewModel._isSearchInProgress = false;
-        if (defined(viewModel._geocodeInProgress)) {
-            viewModel._cancelGeocode = true;
-            viewModel._geocodeInProgress = undefined;
+        if (defined(viewModel._geocodePromise)) {
+            viewModel._geocodePromise.cancel = true;
+            viewModel._geocodePromise = undefined;
         }
     }
 
@@ -519,6 +490,10 @@ define([
     }
 
     function updateSearchSuggestions(viewModel) {
+        if (!viewModel.autoComplete) {
+            return;
+        }
+
         var query = viewModel._searchText;
 
         clearSuggestions(viewModel);
@@ -526,18 +501,26 @@ define([
             return;
         }
 
-        var geocoderServices = viewModel._geocoderServices.filter(function (service) {
-            return service.autoComplete === true;
-        });
-
-        geocoderServices.forEach(function (service) {
-            service.geocode(query)
-                .then(function (results) {
-                    results.slice(0, 3).forEach(function(result) {
-                        viewModel._suggestions.push(result);
+        var promise = when.resolve([]);
+        viewModel._geocoderServices.forEach(function (service) {
+            promise = promise.then(function(results) {
+                if (results.length >= 5) {
+                    return results;
+                }
+                return service.geocode(query)
+                    .then(function(newResults) {
+                        results = results.concat(newResults);
+                        return results;
                     });
-                });
+            });
         });
+        promise
+            .then(function (results) {
+                var suggestions = viewModel._suggestions;
+                for (var i = 0; i < results.length; i++) {
+                    suggestions.push(results[i]);
+                }
+            });
     }
 
     return GeocoderViewModel;
