@@ -29,11 +29,11 @@ define([
     Check.numeric = {};
 
     function getUndefinedErrorMessage(name) {
-        return defaultValue(name, 'A value') + ' was required but undefined.';
+        return name + ' was required but undefined.';
     }
 
-    function getFailedTypeErrorMessage(actual, expected) {
-        return 'Expected ' + expected + ', got ' + actual;
+    function getFailedTypeErrorMessage(actual, expected, name) {
+        return 'Expected ' + name + ' to be typeof ' + expected + ', got ' + actual;
     }
 
     /**
@@ -83,11 +83,12 @@ define([
      * Throws if test is not typeof 'function'
      *
      * @param {*} test The value to test
+     * @param {String} name The name of the variable being tested
      * @exception {DeveloperError} test must be typeof 'function'
      */
-    Check.typeOf.function = function (test) {
+    Check.typeOf.function = function (test, name) {
         if (typeof test !== 'function') {
-            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'function'));
+            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'function', name));
         }
     };
 
@@ -95,11 +96,12 @@ define([
      * Throws if test is not typeof 'string'
      *
      * @param {*} test The value to test
+     * @param {String} name The name of the variable being tested
      * @exception {DeveloperError} test must be typeof 'string'
      */
-    Check.typeOf.string = function (test) {
+    Check.typeOf.string = function (test, name) {
         if (typeof test !== 'string') {
-            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'string'));
+            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'string', name));
         }
     };
 
@@ -107,11 +109,12 @@ define([
      * Throws if test is not typeof 'number'
      *
      * @param {*} test The value to test
+     * @param {String} name The name of the variable being tested
      * @exception {DeveloperError} test must be typeof 'number'
      */
-    Check.typeOf.number = function (test) {
+    Check.typeOf.number = function (test, name) {
         if (typeof test !== 'number') {
-            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'number'));
+            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'number', name));
         }
     };
 
@@ -119,11 +122,12 @@ define([
      * Throws if test is not typeof 'object'
      *
      * @param {*} test The value to test
+     * @param {String} name The name of the variable being tested
      * @exception {DeveloperError} test must be typeof 'object'
      */
-    Check.typeOf.object = function (test) {
+    Check.typeOf.object = function (test, name) {
         if (typeof test !== 'object') {
-            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'object'));
+            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'object', name));
         }
     };
 
@@ -131,11 +135,12 @@ define([
      * Throws if test is not typeof 'boolean'
      *
      * @param {*} test The value to test
+     * @param {String} name The name of the variable being tested
      * @exception {DeveloperError} test must be typeof 'boolean'
      */
-    Check.typeOf.boolean = function (test) {
+    Check.typeOf.boolean = function (test, name) {
         if (typeof test !== 'boolean') {
-            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'boolean'));
+            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'boolean', name));
         }
     };
 

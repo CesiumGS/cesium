@@ -60,7 +60,7 @@ define([
      */
     Cartesian3.fromSpherical = function(spherical, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(spherical);
+        Check.typeOf.object(spherical, 'spherical');
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -146,7 +146,7 @@ define([
      */
     Cartesian3.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(value);
+        Check.typeOf.object(value, 'value');
         Check.defined(array, 'array');
         //>>includeEnd('debug');
 
@@ -266,7 +266,7 @@ define([
      */
     Cartesian3.maximumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian);
+        Check.typeOf.object(cartesian, 'cartesian');
         //>>includeEnd('debug');
 
         return Math.max(cartesian.x, cartesian.y, cartesian.z);
@@ -280,7 +280,7 @@ define([
      */
     Cartesian3.minimumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian);
+        Check.typeOf.object(cartesian, 'cartesian');
         //>>includeEnd('debug');
 
         return Math.min(cartesian.x, cartesian.y, cartesian.z);
@@ -296,9 +296,9 @@ define([
      */
     Cartesian3.minimumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(first);
-        Check.typeOf.object(second);
-        Check.typeOf.object(result);
+        Check.typeOf.object(first, 'first');
+        Check.typeOf.object(second, 'second');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         result.x = Math.min(first.x, second.x);
@@ -318,9 +318,9 @@ define([
      */
     Cartesian3.maximumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(first);
-        Check.typeOf.object(second);
-        Check.typeOf.object(result);
+        Check.typeOf.object(first, 'first');
+        Check.typeOf.object(second, 'second');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         result.x = Math.max(first.x, second.x);
@@ -337,7 +337,7 @@ define([
      */
     Cartesian3.magnitudeSquared = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian);
+        Check.typeOf.object(cartesian, 'cartesian');
         //>>includeEnd('debug');
 
         return cartesian.x * cartesian.x + cartesian.y * cartesian.y + cartesian.z * cartesian.z;
@@ -368,8 +368,8 @@ define([
      */
     Cartesian3.distance = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left);
-        Check.typeOf.object(right);
+        Check.typeOf.object(left, 'left');
+        Check.typeOf.object(right, 'right');
         //>>includeEnd('debug');
 
         Cartesian3.subtract(left, right, distanceScratch);
@@ -390,8 +390,8 @@ define([
      */
     Cartesian3.distanceSquared = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left);
-        Check.typeOf.object(right);
+        Check.typeOf.object(left, 'left');
+        Check.typeOf.object(right, 'right');
         //>>includeEnd('debug');
 
         Cartesian3.subtract(left, right, distanceScratch);
@@ -407,8 +407,8 @@ define([
      */
     Cartesian3.normalize = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian);
-        Check.typeOf.object(result);
+        Check.typeOf.object(cartesian, 'cartesian');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         var magnitude = Cartesian3.magnitude(cartesian);
@@ -435,8 +435,8 @@ define([
      */
     Cartesian3.dot = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left);
-        Check.typeOf.object(right);
+        Check.typeOf.object(left, 'left');
+        Check.typeOf.object(right, 'right');
         //>>includeEnd('debug');
 
         return left.x * right.x + left.y * right.y + left.z * right.z;
@@ -452,9 +452,9 @@ define([
      */
     Cartesian3.multiplyComponents = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left);
-        Check.typeOf.object(right);
-        Check.typeOf.object(result);
+        Check.typeOf.object(left, 'left');
+        Check.typeOf.object(right, 'right');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         result.x = left.x * right.x;
@@ -473,9 +473,9 @@ define([
      */
     Cartesian3.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left);
-        Check.typeOf.object(right);
-        Check.typeOf.object(result);
+        Check.typeOf.object(left, 'left');
+        Check.typeOf.object(right, 'right');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         result.x = left.x + right.x;
@@ -494,9 +494,9 @@ define([
      */
     Cartesian3.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left);
-        Check.typeOf.object(right);
-        Check.typeOf.object(result);
+        Check.typeOf.object(left, 'left');
+        Check.typeOf.object(right, 'right');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         result.x = left.x - right.x;
@@ -515,9 +515,9 @@ define([
      */
     Cartesian3.multiplyByScalar = function(cartesian, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian);
-        Check.typeOf.number(scalar);
-        Check.typeOf.object(result);
+        Check.typeOf.object(cartesian, 'cartesian');
+        Check.typeOf.number(scalar, 'scalar');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         result.x = cartesian.x * scalar;
@@ -536,9 +536,9 @@ define([
      */
     Cartesian3.divideByScalar = function(cartesian, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian);
-        Check.typeOf.number(scalar);
-        Check.typeOf.object(result);
+        Check.typeOf.object(cartesian, 'cartesian');
+        Check.typeOf.number(scalar, 'scalar');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         result.x = cartesian.x / scalar;
@@ -556,8 +556,8 @@ define([
      */
     Cartesian3.negate = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian);
-        Check.typeOf.object(result);
+        Check.typeOf.object(cartesian, 'cartesian');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         result.x = -cartesian.x;
@@ -575,8 +575,8 @@ define([
      */
     Cartesian3.abs = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian);
-        Check.typeOf.object(result);
+        Check.typeOf.object(cartesian, 'cartesian');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         result.x = Math.abs(cartesian.x);
@@ -597,10 +597,10 @@ define([
      */
     Cartesian3.lerp = function(start, end, t, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(start);
-        Check.typeOf.object(end);
-        Check.typeOf.number(t);
-        Check.typeOf.object(result);
+        Check.typeOf.object(start, 'start');
+        Check.typeOf.object(end, 'end');
+        Check.typeOf.number(t, 't);');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         Cartesian3.multiplyByScalar(end, t, lerpScratch);
@@ -619,8 +619,8 @@ define([
      */
     Cartesian3.angleBetween = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left);
-        Check.typeOf.object(right);
+        Check.typeOf.object(left, 'left');
+        Check.typeOf.object(right, 'right');
         //>>includeEnd('debug');
 
         Cartesian3.normalize(left, angleBetweenScratch);
@@ -640,8 +640,8 @@ define([
      */
     Cartesian3.mostOrthogonalAxis = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian);
-        Check.typeOf.object(result);
+        Check.typeOf.object(cartesian, 'cartesian');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         var f = Cartesian3.normalize(cartesian, mostOrthogonalAxisScratch);
@@ -720,9 +720,9 @@ define([
      */
     Cartesian3.cross = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left);
-        Check.typeOf.object(right);
-        Check.typeOf.object(result);
+        Check.typeOf.object(left, 'left');
+        Check.typeOf.object(right, 'right');
+        Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
         var leftX = left.x;
@@ -757,8 +757,8 @@ define([
      */
     Cartesian3.fromDegrees = function(longitude, latitude, height, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number(longitude);
-        Check.typeOf.number(latitude);
+        Check.typeOf.number(longitude, 'longitude');
+        Check.typeOf.number(latitude, 'latitude');
         //>>includeEnd('debug');
 
         longitude = CesiumMath.toRadians(longitude);
@@ -785,8 +785,8 @@ define([
      */
     Cartesian3.fromRadians = function(longitude, latitude, height, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number(longitude);
-        Check.typeOf.number(latitude);
+        Check.typeOf.number(longitude, 'longitude');
+        Check.typeOf.number(latitude, 'latitude');
         //>>includeEnd('debug');
 
         height = defaultValue(height, 0.0);
