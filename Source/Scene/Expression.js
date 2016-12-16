@@ -384,7 +384,7 @@ define([
             return new Node(ExpressionNodeType.UNARY, call);
         } else if (defined(unaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
-            if (args.length < 1 || args.length > 1) {
+            if (args.length !== 1) {
                 throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
             }
             //>>includeEnd('debug');
@@ -392,7 +392,7 @@ define([
             return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (defined(binaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
-            if (args.length < 2 || args.length > 2) {
+            if (args.length !== 2) {
                 throw new DeveloperError('Error: ' + call + ' requires exactly two arguments.');
             }
             //>>includeEnd('debug');
@@ -401,7 +401,7 @@ define([
             return new Node(ExpressionNodeType.BINARY, call, left, right);
         } else if (defined(ternaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
-            if (args.length < 3 || args.length > 3) {
+            if (args.length !== 3) {
                 throw new DeveloperError('Error: ' + call + ' requires exactly three arguments.');
             }
             //>>includeEnd('debug');
@@ -614,14 +614,14 @@ define([
                 node.evaluate = node._evaluateIsClass;
             } else if (node._value === 'getExactClassName') {
                 node.evaluate = node._evaluategetExactClassName;
-            } else if (defined(unaryFunctions[node._value])) {
-                node.evaluate = getEvaluateUnaryFunction(node._value);
             } else if (node._value === 'Boolean') {
                 node.evaluate = node._evaluateBooleanConversion;
             } else if (node._value === 'Number') {
                 node.evaluate = node._evaluateNumberConversion;
             } else if (node._value === 'String') {
                 node.evaluate = node._evaluateStringConversion;
+            } else if (defined(unaryFunctions[node._value])) {
+                node.evaluate = getEvaluateUnaryFunction(node._value);
             }
         } else if (node._type === ExpressionNodeType.BINARY) {
             if (node._value === '+') {
@@ -1241,14 +1241,14 @@ define([
                     return 'bool(' + left + ')';
                 } else if (value === 'Number') {
                     return 'float(' + left + ')';
-                } else if (defined(unaryFunctions[value])) {
-                    return value + '(' + left + ')';
                 } else if (value === 'abs') {
                     return 'abs(' + left + ')';
                 } else if (value === 'cos') {
                     return 'cos(' + left + ')';
                 } else if (value === 'sqrt') {
                     return 'sqrt(' + left + ')';
+                } else if (defined(unaryFunctions[value])) {
+                    return value + '(' + left + ')';
                 }
                 //>>includeStart('debug', pragmas.debug);
                 else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {

@@ -1,8 +1,8 @@
 /*global define*/
 define([
-    '../Core/freezeObject'
+        '../Core/freezeObject'
 ], function(
-    freezeObject) {
+        freezeObject) {
     'use strict';
 
     /**
