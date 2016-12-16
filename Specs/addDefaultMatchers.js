@@ -4,13 +4,27 @@ define([
         'Core/Cartesian2',
         'Core/defined',
         'Core/DeveloperError',
-        'Core/RuntimeError'
+        'Core/PrimitiveType',
+        'Core/RuntimeError',
+        'Renderer/Buffer',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
+        'Renderer/VertexArray',
     ], function(
         equals,
         Cartesian2,
         defined,
         DeveloperError,
-        RuntimeError) {
+        PrimitiveType,
+        RuntimeError,
+        Buffer,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        ShaderProgram,
+        VertexArray) {
     'use strict';
 
     var webglStub = !!window.webglStub;
@@ -293,6 +307,87 @@ define([
                             var callback = expected;
                             callback(pickedObjects);
                         }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toRenderFragmentShader : function(util, customEqualityTesters) {
+                return {
+                    compare: function(actual, expected) {
+                        var options = actual;
+                        var context = options.context;
+                        var fs = options.fragmentShader;
+                        var uniformMap = options.uniformMap;
+                        var modelMatrix = options.modelMatrix;
+
+                        if (!defined(context)) {
+                            throw new DeveloperError('options.context is required.');
+                        }
+
+                        if (!defined(fs)) {
+                            throw new DeveloperError('options.fragmentShader is required.');
+                        }
+
+                        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+                        var sp = ShaderProgram.fromCache({
+                            context : context,
+                            vertexShaderSource : vs,
+                            fragmentShaderSource : fs
+                        });
+                        var va = new VertexArray({
+                            context : context,
+                            attributes : [{
+                                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                                vertexBuffer : Buffer.createVertexBuffer({
+                                    context : context,
+                                    typedArray : new Float32Array([0, 0, 0, 1]),
+                                    usage : BufferUsage.STATIC_DRAW
+                                }),
+                                componentsPerAttribute : 4
+                            }]
+                        });
+
+                        ClearCommand.ALL.execute(context);
+                        var clearedRgba = context.readPixels();
+                        if (!webglStub) {
+                            if ((clearedRgba[0] !== 0) ||
+                                (clearedRgba[1] !== 0) ||
+                                (clearedRgba[2] !== 0) ||
+                                (clearedRgba[3] !== 0)) {
+                                    return {
+                                        pass : false,
+                                        message : 'Expected context to render [0, 0, 0, 0], but rendered: ' + clearedRgba
+                                    };
+                            }
+                        }
+
+                        var command = new DrawCommand({
+                            primitiveType : PrimitiveType.POINTS,
+                            shaderProgram : sp,
+                            vertexArray : va,
+                            uniformMap : uniformMap,
+                            modelMatrix : modelMatrix
+                        });
+                        command.execute(context);
+                        var rgba = context.readPixels();
+                        if (!webglStub) {
+                            if ((rgba[0] !== 255) ||
+                                (rgba[1] !== 255) ||
+                                (rgba[2] !== 255) ||
+                                (rgba[3] !== 255)) {
+                                    return {
+                                        pass : false,
+                                        message : 'Expected context to render [255, 255, 255, 255], but rendered: ' + rgba
+                                    };
+                            }
+                        }
+
+                        sp = sp.destroy();
+                        va = va.destroy();
 
                         return {
                             pass : true

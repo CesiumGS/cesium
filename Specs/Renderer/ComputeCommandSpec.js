@@ -153,9 +153,9 @@ defineSuite([
         viewportQuad.material = Material.fromType(Material.ImageType);
         viewportQuad.material.uniforms.image = outputTexture;
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.primitives.add(new CommandMockPrimitive(computeCommand));
         scene.primitives.add(viewportQuad);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 }, 'WebGL');
