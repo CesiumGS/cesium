@@ -113,19 +113,27 @@ define([
     function updateTextures(oit, context, width, height) {
         destroyTextures(oit);
 
+        var source = new Float32Array(width * height * 4);
+
         oit._accumulationTexture = new Texture({
             context : context,
-            width : width,
-            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT
+            pixelDatatype : PixelDatatype.FLOAT,
+            source : {
+                arrayBufferView : source,
+                width : width,
+                height : height
+            }
         });
         oit._revealageTexture = new Texture({
             context : context,
-            width : width,
-            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT
+            pixelDatatype : PixelDatatype.FLOAT,
+            source : {
+                arrayBufferView : source,
+                width : width,
+                height : height
+            }
         });
     }
 
