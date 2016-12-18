@@ -15,6 +15,7 @@ Change Log
 * Added `WebGLConstants` enum.  Previously, this was part of the private Renderer API. [#4731](https://github.com/AnalyticalGraphicsInc/cesium/pull/4731)
 * Fixed an bug that caused `GroundPrimitive` to render incorrectly on systems without the `WEBGL_depth_texture` extension. [#4747](https://github.com/AnalyticalGraphicsInc/cesium/pull/4747)
 * Fixed default Mapbox token and added a watermark to notify users that they need to sign up for their own token.
+* Fixed translucency in Firefox 50. https://github.com/AnalyticalGraphicsInc/cesium/pull/4762
 
 ### 1.28 - 2016-12-01
 
