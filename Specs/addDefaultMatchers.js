@@ -387,104 +387,15 @@ define([
             toRenderFragmentShader : function(util, customEqualityTesters) {
                 return {
                     compare: function(actual, expected) {
-                        var options = actual;
-                        var context = options.context;
-                        var vs = options.vertexShader;
-                        var fs = options.fragmentShader;
-                        var sp = options.shaderProgram;
-                        var uniformMap = options.uniformMap;
-                        var modelMatrix = options.modelMatrix;
-                        var depth = defaultValue(options.depth, 0.0);
-                        var clear = defaultValue(options.clear, true);
+                        return expectContextToRender(actual, expected, true);
+                    }
+                };
+            },
 
-                        if (!defined(expected)) {
-                            expected = [255, 255, 255, 255];
-                        }
-
-                        if (!defined(context)) {
-                            throw new DeveloperError('options.context is required.');
-                        }
-
-                        if (!defined(fs) && !defined(sp)) {
-                            throw new DeveloperError('options.fragmentShader or options.shaderProgram is required.');
-                        }
-
-                        if (defined(fs) && defined(sp)) {
-                            throw new DeveloperError('Both options.fragmentShader and options.shaderProgram can not be used at the same time.');
-                        }
-
-                        if (defined(vs) && defined(sp)) {
-                            throw new DeveloperError('Both options.vertexShader and options.shaderProgram can not be used at the same time.');
-                        }
-
-                        if (!defined(sp)) {
-                            if (!defined(vs)) {
-                                vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-                            }
-                            sp = ShaderProgram.fromCache({
-                                context : context,
-                                vertexShaderSource : vs,
-                                fragmentShaderSource : fs
-                            });
-                        }
-
-                        var va = new VertexArray({
-                            context : context,
-                            attributes : [{
-                                index : !webglStub ? sp.vertexAttributes.position.index : 0,
-                                vertexBuffer : Buffer.createVertexBuffer({
-                                    context : context,
-                                    typedArray : new Float32Array([0.0, 0.0, depth, 1.0]),
-                                    usage : BufferUsage.STATIC_DRAW
-                                }),
-                                componentsPerAttribute : 4
-                            }]
-                        });
-
-                        if (clear) {
-                            ClearCommand.ALL.execute(context);
-
-                            var clearedRgba = context.readPixels();
-                            if (!webglStub) {
-                                if ((clearedRgba[0] !== 0) ||
-                                    (clearedRgba[1] !== 0) ||
-                                    (clearedRgba[2] !== 0) ||
-                                    (clearedRgba[3] !== 0)) {
-                                        return {
-                                            pass : false,
-                                            message : 'Expected context to render [0, 0, 0, 0], but rendered: ' + clearedRgba
-                                        };
-                                }
-                            }
-                        }
-
-                        var command = new DrawCommand({
-                            primitiveType : PrimitiveType.POINTS,
-                            shaderProgram : sp,
-                            vertexArray : va,
-                            uniformMap : uniformMap,
-                            modelMatrix : modelMatrix
-                        });
-                        command.execute(context);
-                        var rgba = context.readPixels();
-                        if (!webglStub) {
-                            if ((rgba[0] !== expected[0]) ||
-                                (rgba[1] !== expected[1]) ||
-                                (rgba[2] !== expected[2]) ||
-                                (rgba[3] !== expected[3])) {
-                                    return {
-                                        pass : false,
-                                        message : 'Expected context to render ' + expected + ', but rendered: ' + rgba
-                                    };
-                            }
-                        }
-
-                        sp = sp.destroy();
-                        va = va.destroy();
-
-                        return {
-                            pass : true
-                        };
+            notToRenderFragmentShader : function(util, customEqualityTesters) {
+                return {
+                    compare: function(actual, expected) {
+                        return expectContextToRender(actual, expected, false);
                     }
                 };
             },
@@ -539,7 +450,7 @@ define([
 
         var message;
         if (!pass) {
-            message = 'Expected to render [' + expected + '], but actually rendered [' + actualRgba + '].';
+            message = 'Expected ' + (expectEqual ? '' : 'not ')  + 'to render [' + expected + '], but actually rendered [' + actualRgba + '].';
         }
 
         return {
@@ -570,6 +481,119 @@ define([
         return {
             pass : pass,
             message : message
+        };
+    }
+
+    function expectContextToRender(actual, expected, expectEqual) {
+        var options = actual;
+        var context = options.context;
+        var vs = options.vertexShader;
+        var fs = options.fragmentShader;
+        var sp = options.shaderProgram;
+        var uniformMap = options.uniformMap;
+        var modelMatrix = options.modelMatrix;
+        var depth = defaultValue(options.depth, 0.0);
+        var clear = defaultValue(options.clear, true);
+
+        if (!defined(expected)) {
+            expected = [255, 255, 255, 255];
+        }
+
+        if (!defined(context)) {
+            throw new DeveloperError('options.context is required.');
+        }
+
+        if (!defined(fs) && !defined(sp)) {
+            throw new DeveloperError('options.fragmentShader or options.shaderProgram is required.');
+        }
+
+        if (defined(fs) && defined(sp)) {
+            throw new DeveloperError('Both options.fragmentShader and options.shaderProgram can not be used at the same time.');
+        }
+
+        if (defined(vs) && defined(sp)) {
+            throw new DeveloperError('Both options.vertexShader and options.shaderProgram can not be used at the same time.');
+        }
+
+        if (!defined(sp)) {
+            if (!defined(vs)) {
+                vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+            }
+            sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs
+            });
+        }
+
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0.0, 0.0, depth, 1.0]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 4
+            }]
+        });
+
+        if (clear) {
+            ClearCommand.ALL.execute(context);
+
+            var clearedRgba = context.readPixels();
+            if (!webglStub) {
+                if ((clearedRgba[0] !== 0) ||
+                    (clearedRgba[1] !== 0) ||
+                    (clearedRgba[2] !== 0) ||
+                    (clearedRgba[3] !== 0)) {
+                    return {
+                        pass : false,
+                        message : 'Expected context to render [0, 0, 0, 0], but rendered: ' + clearedRgba
+                    };
+                }
+            }
+        }
+
+        var command = new DrawCommand({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va,
+            uniformMap : uniformMap,
+            modelMatrix : modelMatrix
+        });
+        command.execute(context);
+        var rgba = context.readPixels();
+        if (!webglStub) {
+            if (expectEqual) {
+                if ((rgba[0] !== expected[0]) ||
+                    (rgba[1] !== expected[1]) ||
+                    (rgba[2] !== expected[2]) ||
+                    (rgba[3] !== expected[3])) {
+                    return {
+                        pass : false,
+                        message : 'Expected context to render ' + expected + ', but rendered: ' + rgba
+                    };
+                }
+            } else {
+                if ((rgba[0] == expected[0]) &&
+                    (rgba[1] == expected[1]) &&
+                    (rgba[2] == expected[2]) &&
+                    (rgba[3] == expected[3])) {
+                    return {
+                        pass : false,
+                        message : 'Expected context not to render ' + expected + ', but rendered: ' + rgba
+                    };
+                }
+            }
+        }
+
+        sp = sp.destroy();
+        va = va.destroy();
+
+        return {
+            pass : true
         };
     }
 
