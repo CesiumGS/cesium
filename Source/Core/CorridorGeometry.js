@@ -602,8 +602,7 @@ define([
             }
             //only get normals for bottom layer that's going to be pushed down
             extrudeNormals.set(topNormals, length); //bottom face
-            extrudeNormals.set(topNormals, length * 4); //bottom wall positions
-            extrudeNormals.set(topNormals, length * 5); //duplicate bottom wall positions
+            extrudeNormals = addWallPositions(topNormals, length*4, extrudeNormals); //bottom wall
             attributes.extrudeDirection = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,

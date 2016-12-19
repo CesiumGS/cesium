@@ -1479,12 +1479,12 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform scalar representing the geometric tolerance per distance
+         * An automatic GLSL uniform scalar representing the geometric tolerance per meter
          *
-         * @alias czm_geometricToleranceOverDistance
+         * @alias czm_geometricToleranceOverMeter
          * @glslUniform
          */
-        czm_geometricToleranceOverDistance : new AutomaticUniform({
+        czm_geometricToleranceOverMeter : new AutomaticUniform({
             size: 1,
             datatype: WebGLConstants.FLOAT,
             getValue: function(uniformState) {

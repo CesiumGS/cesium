@@ -901,7 +901,7 @@ define([
         result._granularity = granularity;
         result._extrudedHeight = extrudedHeight;
         result._extrude = extrude;
-        result._shadowVoluem = shadowVolume;
+        result._shadowVolume = shadowVolume;
         result._rectangle = Rectangle.clone(rectangle);
 
         return result;

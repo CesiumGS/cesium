@@ -22,9 +22,9 @@ void main()
     v_color = color;
 
     vec4 position = czm_computePosition();
-    float delta = min(u_globeMinimumAltitude, czm_geometricToleranceOverDistance * length(position.xyz));
+    float delta = min(u_globeMinimumAltitude, czm_geometricToleranceOverMeter * length(position.xyz));
 
     //extrudeDirection is zero for the top layer
-    position = position + vec4(extrudeDirection.xyz * delta, 0);
+    position = position + vec4(extrudeDirection * delta, 0.0);
     gl_Position = depthClampFarPlane(czm_modelViewProjectionRelativeToEye * position);
 }
