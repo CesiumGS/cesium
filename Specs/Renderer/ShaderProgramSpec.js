@@ -79,7 +79,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -298,7 +298,6 @@ defineSuite([
     });
 
     it('has predefined constants', function() {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'void main() { ' +
             '  float f = ((czm_pi > 0.0) && \n' +
@@ -314,13 +313,11 @@ defineSuite([
             '    (czm_degreesPerRadian > 0.0)) ? 1.0 : 0.0; \n' +
             '  gl_FragColor = vec4(f); \n' +
             '}';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
 
-        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).toRenderFragmentShader();
     });
 
     it('has built-in constant, structs, and functions', function() {
@@ -334,13 +331,11 @@ defineSuite([
             '  material.diffuse = czm_hue(material.diffuse, czm_twoPi); \n' +
             '  gl_FragColor = vec4(material.diffuse, material.alpha); \n' +
             '}';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
 
-        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).toRenderFragmentShader();
     });
 
     it('creates duplicate uniforms if precision of uniforms in vertex and fragment shader do not match', function() {
