@@ -811,7 +811,9 @@ define([
                 });
                 this._reprojectComputeCommands.push(computeCommand);
         } else {
-            imagery.texture = texture;
+            if (needGeographicProjection) {
+                imagery.texture = texture;
+            }
             finalizeReprojectTexture(this, context, imagery, texture);
         }
     };
