@@ -6,8 +6,7 @@ defineSuite([
         'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ContextLimits',
-        'Specs/createContext',
-        'Specs/renderFragment'
+        'Specs/createContext'
     ], function(
         Context,
         Color,
@@ -15,8 +14,7 @@ defineSuite([
         Buffer,
         BufferUsage,
         ContextLimits,
-        createContext,
-        renderFragment) {
+        createContext) {
     'use strict';
 
     var context;
@@ -137,13 +135,11 @@ defineSuite([
          
          fs += '}';
 
-        var pixel = renderFragment(context, fs);
-
-        if (context.standardDerivatives) {
-            expect(pixel).toEqual([0, 0, 255, 255]);
-        } else {
-            expect(pixel).toEqual([255, 255, 255, 255]);
-        }
+        var expected = context.standardDerivatives ? [0, 0, 255, 255] : [255, 255, 255, 255];
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).toRenderFragmentShader(expected);
     });
 
     it('gets the element index uint extension', function() {
@@ -199,8 +195,11 @@ defineSuite([
             '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
             '}';
 
-        var pixel = renderFragment(context, fs, 0.5, true);
-        expect(pixel).toEqual([255, 0, 0, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            depth : 0.5
+        }).toRenderFragmentShader([255, 0, 0, 255]);
 
         var fsFragDepth = '';
         
@@ -223,13 +222,13 @@ defineSuite([
         
         fsFragDepth += '}\n';
 
-        pixel = renderFragment(context, fsFragDepth, 1.0, false);
-
-        if (context.fragmentDepth) {
-            expect(pixel).toEqual([0, 255, 0, 255]);
-        } else {
-            expect(pixel).toEqual([255, 0, 0, 255]);
-        }
+        var expected = context.fragmentDepth ? [0, 255, 0, 255] : [255, 0, 0, 255];
+        expect({
+            context : context,
+            fragmentShader : fs,
+            depth : 1.0,
+            clear : false
+        }).toRenderFragmentShader(expected);
     });
 
     it('get the draw buffers extension', function() {
