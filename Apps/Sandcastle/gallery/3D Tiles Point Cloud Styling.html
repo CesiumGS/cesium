@@ -135,8 +135,8 @@ addStyle('Min and Max', {
 });
 
 addStyle('Clamp and Mix', {
-    color : "clamp(${temperature}, 0.1, 0.2)",
-    pointSize : "mix(0.0, 2.0, 0.5) * 5"
+    color : "color() * clamp(${temperature}, 0.1, 0.2)",
+    pointSize : "mix(${temperature}, 2.0, 0.5) * 0.2"
 });
 
 addStyle('Secondary Color', {
