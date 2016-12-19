@@ -62,7 +62,16 @@ define([
         asin : Math.asin,
         atan : Math.atan,
         radians : CesiumMath.toRadians,
-        degrees : CesiumMath.toDegrees
+        degrees : CesiumMath.toDegrees,
+        sign : Math.sign,
+        floor : Math.floor,
+        ceil : Math.ceil,
+        round : Math.round,
+        exp: Math.exp,
+        log: Math.log,
+        exp2 : Math.exp2,
+        log2: Math.log2,
+        fract: CesiumMath.fract
     };
 
     /**
