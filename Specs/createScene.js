@@ -4,7 +4,6 @@ define([
         'Core/clone',
         'Core/defaultValue',
         'Core/defined',
-        'Core/queryToObject',
         'Scene/Scene',
         'Specs/createCanvas',
         'Specs/destroyCanvas'
@@ -13,7 +12,6 @@ define([
         clone,
         defaultValue,
         defined,
-        queryToObject,
         Scene,
         createCanvas,
         destroyCanvas) {

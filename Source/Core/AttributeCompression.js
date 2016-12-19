@@ -2,14 +2,12 @@
 define([
         './Cartesian2',
         './Cartesian3',
-        './defaultValue',
         './defined',
         './DeveloperError',
         './Math'
     ], function(
         Cartesian2,
         Cartesian3,
-        defaultValue,
         defined,
         DeveloperError,
         CesiumMath) {

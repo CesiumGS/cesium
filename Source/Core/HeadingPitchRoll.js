@@ -1,14 +1,14 @@
 /*global define*/
 define([
-    './defaultValue',
-    './defined',
-    './DeveloperError',
-    './Math'
-], function(
-    defaultValue,
-    defined,
-    DeveloperError,
-    CesiumMath) {
+        './defaultValue',
+        './defined',
+        './DeveloperError',
+        './Math'
+    ], function(
+        defaultValue,
+        defined,
+        DeveloperError,
+        CesiumMath) {
     "use strict";
 
     /**

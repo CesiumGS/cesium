@@ -58,7 +58,7 @@ var sphere = viewer.entities.add({
 viewer.trackedEntity = sphere;
 
 var synchronizer;
-Sandcastle.addToolbarButton('Toggle clock synchronization', function() {
+Sandcastle.addToggleButton('Clock synchronization', false, function(checked) {
     // By default, the video plays normally and simply shows
     // whatever frame the video is currently on.
     // We can synchronize the video with the scene clock
@@ -79,8 +79,8 @@ Sandcastle.addToolbarButton('Toggle clock synchronization', function() {
 // Since it's just an image material, we can modify the number
 // of times the video repeats in each direction..
 var isRepeating = true;
-Sandcastle.addToolbarButton('Toggle Image Repeat', function() {
-    isRepeating = !isRepeating;
+Sandcastle.addToggleButton('Image Repeat', isRepeating, function(checked) {
+    isRepeating = checked;
 });
 
 sphere.ellipsoid.material.repeat = new Cesium.CallbackProperty(function(time, result) {
@@ -99,12 +99,12 @@ sphere.ellipsoid.material.repeat = new Cesium.CallbackProperty(function(time, re
 
 // Like Image, the video element doesn't have to be part of the DOM or
 // otherwise on the screen to be used as a texture.
-Sandcastle.addToolbarButton('Toggle Video Overlay', function() {
-    if(videoElement.style.display === 'none'){
+Sandcastle.addToggleButton('Video Overlay', false, function(checked) {
+    if (checked){
         videoElement.style.display = '';
-        return;
+    } else {
+        videoElement.style.display = 'none';
     }
-    videoElement.style.display = 'none';
 });
 
 // Older browsers do not support WebGL video textures,

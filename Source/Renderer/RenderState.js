@@ -5,7 +5,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../Core/RuntimeError',
         '../Core/WindingOrder',
         './ContextLimits',
         './WebGLConstants'
@@ -15,7 +14,6 @@ define([
         defaultValue,
         defined,
         DeveloperError,
-        RuntimeError,
         WindingOrder,
         ContextLimits,
         WebGLConstants) {

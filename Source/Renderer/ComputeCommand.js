@@ -1,11 +1,9 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/PrimitiveType',
         '../Scene/Pass'
     ], function(
         defaultValue,
-        PrimitiveType,
         Pass) {
     'use strict';
 

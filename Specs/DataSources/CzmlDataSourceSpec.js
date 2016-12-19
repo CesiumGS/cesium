@@ -9,7 +9,6 @@ defineSuite([
         'Core/ClockStep',
         'Core/Color',
         'Core/CornerType',
-        'Core/defined',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/ExtrapolationType',
@@ -33,7 +32,6 @@ defineSuite([
         'Scene/LabelStyle',
         'Scene/ShadowMode',
         'Scene/VerticalOrigin',
-        'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         CzmlDataSource,
@@ -45,7 +43,6 @@ defineSuite([
         ClockStep,
         Color,
         CornerType,
-        defined,
         Ellipsoid,
         Event,
         ExtrapolationType,
@@ -69,7 +66,6 @@ defineSuite([
         LabelStyle,
         ShadowMode,
         VerticalOrigin,
-        pollToPromise,
         when) {
     'use strict';
 

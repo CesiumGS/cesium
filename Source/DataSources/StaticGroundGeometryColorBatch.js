@@ -2,7 +2,6 @@
 define([
         '../Core/AssociativeArray',
         '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
@@ -13,7 +12,6 @@ define([
     ], function(
         AssociativeArray,
         Color,
-        ColorGeometryInstanceAttribute,
         defined,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,

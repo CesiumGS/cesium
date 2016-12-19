@@ -15,7 +15,6 @@ define([
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
         './BoundingSphereState',
-        './EntityCluster',
         './Property'
     ], function(
         AssociativeArray,
@@ -33,7 +32,6 @@ define([
         LabelStyle,
         VerticalOrigin,
         BoundingSphereState,
-        EntityCluster,
         Property) {
     'use strict';
 

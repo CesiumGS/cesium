@@ -6,8 +6,8 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/destroyObject',
         '../Core/defineProperties',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
@@ -23,8 +23,8 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
-        '../Renderer/ShaderSource',
         '../Renderer/ShaderProgram',
+        '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Renderer/WebGLConstants',
         '../ThirdParty/when',
@@ -42,8 +42,8 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
-        destroyObject,
         defineProperties,
+        destroyObject,
         DeveloperError,
         getMagic,
         getStringFromTypedArray,
@@ -59,8 +59,8 @@ define([
         BufferUsage,
         DrawCommand,
         RenderState,
-        ShaderSource,
         ShaderProgram,
+        ShaderSource,
         VertexArray,
         WebGLConstants,
         when,
@@ -547,6 +547,9 @@ define([
             },
             u_constantColor : function() {
                 return content._constantColor;
+            },
+            u_tilesetTime : function() {
+                return content._tileset.timeSinceLoad;
             }
         };
 
@@ -909,7 +912,8 @@ define([
                  'varying vec4 v_color; \n' +
                  'uniform float u_pointSize; \n' +
                  'uniform vec4 u_constantColor; \n' +
-                 'uniform vec4 u_highlightColor; \n';
+                 'uniform vec4 u_highlightColor; \n' +
+                 'uniform float u_tilesetTime; \n';
 
         var length = styleableProperties.length;
         for (i = 0; i < length; ++i) {

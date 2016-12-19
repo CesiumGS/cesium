@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -8,7 +7,6 @@ define([
         '../Core/Matrix3',
         '../Core/Quaternion'
     ], function(
-        defaultValue,
         defined,
         destroyObject,
         DeveloperError,

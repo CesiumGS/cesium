@@ -14,7 +14,6 @@ define([
         './Sampler',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
-        './TextureWrap',
         './WebGLConstants'
     ], function(
         Cartesian2,
@@ -31,7 +30,6 @@ define([
         Sampler,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        TextureWrap,
         WebGLConstants) {
     'use strict';
     

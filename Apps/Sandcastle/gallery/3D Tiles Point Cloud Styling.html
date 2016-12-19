@@ -109,12 +109,17 @@ addStyle('Abs', {
     color : "color() * abs(${temperature} - 0.5)"
 });
 
-addStyle('Cos', {
-    color : "color() * cos(${temperature} - 0)"
+addStyle('Trigonometric Functions', {
+    color : "color() * radians(cos(${temperature})) + color() * sin(${temperature}) + color() * tan(${temperature})"
+
+});
+
+addStyle('Arc Trigonometric Functions', {
+    color : "color() * acos(degrees(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature})"
 });
 
 addStyle('Sqrt', {
-    color : "color() * sqrt(${temperature} - 0.5)",
+    color : "color() * sqrt(${temperature})",
     pointSize : "10"
 });
 

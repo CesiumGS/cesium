@@ -15,9 +15,9 @@ define([
         '../Core/RequestScheduler',
         '../Core/RequestType',
         '../ThirdParty/when',
-        './Cesium3DTileFeature',
         './Cesium3DTileBatchTable',
         './Cesium3DTileContentState',
+        './Cesium3DTileFeature',
         './getAttributeOrUniformBySemantic',
         './Model'
     ], function(
@@ -36,9 +36,9 @@ define([
         RequestScheduler,
         RequestType,
         when,
-        Cesium3DTileFeature,
         Cesium3DTileBatchTable,
         Cesium3DTileContentState,
+        Cesium3DTileFeature,
         getAttributeOrUniformBySemantic,
         Model) {
     'use strict';
@@ -302,7 +302,8 @@ define([
             uniformMapLoaded : batchTable.getUniformMapCallback(),
             pickVertexShaderLoaded : getPickVertexShaderCallback(this),
             pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
-            pickUniformMapLoaded : batchTable.getPickUniformMapCallback()
+            pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
+            addBatchIdToGeneratedShaders : (batchLength > 0) // If the batch table has values in it, generated shaders will need a batchId attribute
         });
 
         this._model = model;
