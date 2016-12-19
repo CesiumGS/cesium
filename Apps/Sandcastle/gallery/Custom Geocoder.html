@@ -41,29 +41,14 @@ function startup(Cesium) {
  * This class is an example of a custom geocoder. It provides geocoding through the OpenStreetMap Nominatim service.
  * @alias OpenStreetMapNominatimGeocoder
  * @constructor
- *
- * @param {Object} options Object with the following properties:
- * @param {Boolean} autoComplete Indicates whether this service shall be used to fetch auto-complete suggestions
  */
-function OpenStreetMapNominatimGeocoder(options) {
-    options = Cesium.defaultValue(options, Cesium.defaultValue.EMPTY_OBJECT);
-    this._canceled = false;
-    this.autoComplete = Cesium.defaultValue(options.autoComplete, true);
+function OpenStreetMapNominatimGeocoder() {
 }
-
-/**
- * The function called when a user cancels geocoding.
- *
- * @returns {undefined}
- */
-OpenStreetMapNominatimGeocoder.prototype.cancel = function() {
-    this._canceled = true;
-};
 
 /**
  * The function called to geocode using this geocoder service.
  *
- * @param {String} query The query to be sent to the geocoder service
+ * @param {String} input The query to be sent to the geocoder service
  * @returns {Promise<GeocoderResult[]>}
  */
 OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
