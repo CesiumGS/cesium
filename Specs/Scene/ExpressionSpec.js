@@ -988,6 +988,168 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('evaluates sign function', function() {
+        var expression = new Expression('sign(5.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('sign(0.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('sign(-5.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(-1.0);
+    });
+
+    it('throws if sign function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('sign()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('sign(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates floor function', function() {
+        var expression = new Expression('floor(5.5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(5.0);
+
+        expression = new Expression('floor(0.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('floor(-1.2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(-2.0);
+    });
+
+    it('throws if floor function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('floor()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('floor(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates ceil function', function() {
+        var expression = new Expression('ceil(5.5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(6.0);
+
+        expression = new Expression('ceil(0.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('ceil(-1.2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(-1.0);
+    });
+
+    it('throws if ceil function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('ceil()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('ceil(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates round function', function() {
+        var expression = new Expression('round(5.5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(6.0);
+
+        expression = new Expression('round(0.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('round(-1.6)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(-2.0);
+    });
+
+    it('throws if round function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('round()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('round(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates exp function', function() {
+        var expression = new Expression('exp(1.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(Math.E);
+
+        expression = new Expression('exp(0.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+    });
+
+    it('throws if exp function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('exp()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('exp(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates exp2 function', function() {
+        var expression = new Expression('exp2(1.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(2.0);
+
+        expression = new Expression('exp2(0.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('exp2(2.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(4.0);
+    });
+
+    it('throws if exp2 function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('exp2()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('exp2(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates log function', function() {
+        var expression = new Expression('log(1.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('log(Math.E)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+    });
+
+    it('throws if log function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('log()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('log(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates log2 function', function() {
+        var expression = new Expression('log2(1.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('log2(2.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('log2(4.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(2.0);
+    });
+
+    it('throws if log2 function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('log2()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('log2(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates atan2 function', function() {
         var expression = new Expression('atan2(0,1)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.0, CesiumMath.EPSILON10);
