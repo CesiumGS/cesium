@@ -806,6 +806,22 @@ define([
     };
 
     /**
+     * Returns the fractional part of a number, i.e. number minus floor(number)
+     *
+     * @param {Number} angle The angle between the two points.
+     * @param {Number} radius The radius of the circle.
+     * @returns {Number} The chord length.
+     */
+    CesiumMath.fract = function(number) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(number)) {
+            throw new DeveloperError('number is required.');
+        }
+        //>>includeEnd('debug');
+        return number - Math.floor(number);
+    };
+
+    /**
      * Finds the logarithm of a number to a base.
      *
      * @param {Number} number The number.
