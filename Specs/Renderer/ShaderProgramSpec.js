@@ -25,7 +25,6 @@ defineSuite([
 
     var context;
     var sp;
-    var va;
 
     var injectedTestFunctions = {
         czm_circularDependency1 : 'void czm_circularDependency1() { czm_circularDependency2(); }',
@@ -62,6 +61,10 @@ defineSuite([
                 delete ShaderSource._czmBuiltinsAndUniforms[functionName];
             }
         }
+    });
+
+    afterEach(function() {
+        sp = sp && sp.destroy();
     });
 
     it('has vertex and fragment shader source', function() {

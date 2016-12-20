@@ -577,10 +577,10 @@ define([
                     };
                 }
             } else {
-                if ((rgba[0] == expected[0]) &&
-                    (rgba[1] == expected[1]) &&
-                    (rgba[2] == expected[2]) &&
-                    (rgba[3] == expected[3])) {
+                if ((rgba[0] === expected[0]) &&
+                    (rgba[1] === expected[1]) &&
+                    (rgba[2] === expected[2]) &&
+                    (rgba[3] === expected[3])) {
                     return {
                         pass : false,
                         message : 'Expected context not to render ' + expected + ', but rendered: ' + rgba

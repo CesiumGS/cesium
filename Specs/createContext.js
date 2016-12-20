@@ -19,8 +19,6 @@ define([
         destroyCanvas) {
     'use strict';
 
-    var webglStub = !!window.webglStub;
-
     function createContext(options, canvasWidth, canvasHeight) {
         // clone options so we can change properties
         options = clone(defaultValue(options, {}));
