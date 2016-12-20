@@ -420,6 +420,16 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('fract', function() {
+        expect(CesiumMath.fract(1.25)).toEqual(0.25);
+    });
+
+    it('fract throws without number', function() {
+        expect(function() {
+            CesiumMath.fract(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('logBase', function() {
         expect(CesiumMath.logBase(64, 4)).toEqual(3);
     });
