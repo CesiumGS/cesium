@@ -2,7 +2,7 @@
 define([
         'Core/defined',
         'Core/Intersect',
-        'Scene/Pass',
+        'Renderer/Pass',
         'Scene/SceneMode'
     ], function(
         defined,
