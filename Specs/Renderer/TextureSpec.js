@@ -223,7 +223,7 @@ defineSuite([
         fragmentShaderSource += 'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
 
         var txCoords;
-        var uniforms = {
+        var um = {
             u_texture : function() {
                 return texture;
             },
@@ -237,7 +237,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fragmentShaderSource,
-            uniformMap : uniforms
+            uniformMap : um
         }).toRenderFragmentShader([0, 0, 255, 255]);
 
         // Red on bottom
@@ -245,7 +245,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fragmentShaderSource,
-            uniformMap : uniforms
+            uniformMap : um
         }).toRenderFragmentShader([255, 0, 0, 255]);
     });
 
@@ -306,7 +306,7 @@ defineSuite([
         fragmentShaderSource += 'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
 
         var txCoords;
-        var uniforms = {
+        var um = {
             u_texture : function() {
                 return texture;
             },
@@ -320,7 +320,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fragmentShaderSource,
-            uniformMap : uniforms
+            uniformMap : um
         }).toRenderFragmentShader([0, 0, 255, 255]);
 
         // Red on bottom
@@ -328,7 +328,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fragmentShaderSource,
-            uniformMap : uniforms
+            uniformMap : um
         }).toRenderFragmentShader([255, 0, 0, 255]);
 
         // After copy...
@@ -339,7 +339,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fragmentShaderSource,
-            uniformMap : uniforms
+            uniformMap : um
         }).toRenderFragmentShader(Color.LIME.toBytes());
 
         // Still red on bottom
@@ -347,7 +347,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fragmentShaderSource,
-            uniformMap : uniforms
+            uniformMap : um
         }).toRenderFragmentShader([255, 0, 0, 255]);
     });
 
