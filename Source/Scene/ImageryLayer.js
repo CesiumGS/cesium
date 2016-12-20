@@ -700,6 +700,7 @@ define([
      */
     ImageryLayer.prototype._createTexture = function(context, imagery) {
         var imageryProvider = this._imageryProvider;
+        var image = imagery.image;
 
         // If this imagery provider has a discard policy, use it to check if this
         // image should be discarded.
@@ -714,7 +715,7 @@ define([
                 }
 
                 // Mark discarded imagery tiles invalid.  Parent imagery will be used instead.
-                if (discardPolicy.shouldDiscardImage(imagery.image)) {
+                if (discardPolicy.shouldDiscardImage(image)) {
                     imagery.state = ImageryState.INVALID;
                     return;
                 }
@@ -723,20 +724,20 @@ define([
 
         // Imagery does not need to be discarded, so upload it to WebGL.
         var texture;
-        if (defined(imagery.image.internalFormat)) {
+        if (defined(image.internalFormat)) {
             texture = new Texture({
                 context : context,
-                pixelFormat : imagery.image.internalFormat,
-                width : imagery.image.width,
-                height : imagery.image.height,
+                pixelFormat : image.internalFormat,
+                width : image.width,
+                height : image.height,
                 source : {
-                    arrayBufferView : imagery.image.bufferView
+                    arrayBufferView : image.bufferView
                 }
             });
         } else {
             texture = new Texture({
                 context : context,
-                source : imagery.image,
+                source : image,
                 pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
             });
         }
