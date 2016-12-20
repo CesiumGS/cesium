@@ -1150,6 +1150,27 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('evaluates fract function', function() {
+        var expression = new Expression('fract(1.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('fract(2.25)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.25);
+
+        expression = new Expression('fract(-2.25)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.75);
+    });
+
+    it('throws if fract function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('log2()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('log2(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates atan2 function', function() {
         var expression = new Expression('atan2(0,1)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.0, CesiumMath.EPSILON10);
