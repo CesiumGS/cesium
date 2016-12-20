@@ -2020,7 +2020,7 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
-    it('gets shader expression for sin', function() {
+     it('gets shader expression for sin', function() {
         var expression = new Expression('sin(0.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'sin(0.0)';
