@@ -67,11 +67,11 @@ define([
         floor : Math.floor,
         ceil : Math.ceil,
         round : Math.round,
-        exp: Math.exp,
-        log: Math.log,
-        exp2 : Math.exp2,
-        log2: Math.log2,
-        fract: CesiumMath.fract
+        exp : Math.exp,
+        exp2 : CesiumMath.exp2,
+        log : Math.log,
+        log2 : Math.log2,
+        fract : CesiumMath.fract
     };
 
     /**
