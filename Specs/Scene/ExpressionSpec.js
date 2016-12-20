@@ -2020,7 +2020,7 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
-     it('gets shader expression for sin', function() {
+    it('gets shader expression for sin', function() {
         var expression = new Expression('sin(0.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'sin(0.0)';
@@ -2059,6 +2059,69 @@ defineSuite([
         var expression = new Expression('sqrt(1.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'sqrt(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for sign', function() {
+        var expression = new Expression('sign(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'sign(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for floor', function() {
+        var expression = new Expression('floor(1.5)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'floor(1.5)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for ceil', function() {
+        var expression = new Expression('ceil(1.2)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'ceil(1.2)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for round', function() {
+        var expression = new Expression('round(1.2)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'round(1.2)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for exp', function() {
+        var expression = new Expression('exp(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'exp(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for exp2', function() {
+        var expression = new Expression('exp2(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'exp2(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for log', function() {
+        var expression = new Expression('log(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'log(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for log2', function() {
+        var expression = new Expression('log2(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'log2(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for fract', function() {
+        var expression = new Expression('fract(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'fract(1.0)';
         expect(shaderExpression).toEqual(expected);
     });
 
