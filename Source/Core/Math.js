@@ -808,9 +808,8 @@ define([
     /**
      * Returns the fractional part of a number, i.e. number minus floor(number)
      *
-     * @param {Number} angle The angle between the two points.
-     * @param {Number} radius The radius of the circle.
-     * @returns {Number} The chord length.
+     * @param {Number} number The number whose fractional part will be returned.
+     * @returns {Number} The fractional part.
      */
     CesiumMath.fract = function(number) {
         //>>includeStart('debug', pragmas.debug);
@@ -819,6 +818,21 @@ define([
         }
         //>>includeEnd('debug');
         return number - Math.floor(number);
+    };
+
+    /**
+     * Returns 2 raised to the power of exponent.
+     *
+     * @param {Number} exponent The power to which 2 will be raised.
+     * @returns {Number} The value of 2 raised to the power of exponent.
+     */
+    CesiumMath.exp2 = function(exponent) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(number)) {
+            throw new DeveloperError('number is required.');
+        }
+        //>>includeEnd('debug');
+        return Math.pow(2.0,exponent);
     };
 
     /**

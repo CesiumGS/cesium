@@ -1053,13 +1053,13 @@ defineSuite([
 
     it('evaluates round function', function() {
         var expression = new Expression('round(5.5)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(6.0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(6);
 
         expression = new Expression('round(0.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(0);
 
-        expression = new Expression('round(-1.6)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(-2.0);
+        expression = new Expression('round(1.2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1);
     });
 
     it('throws if round function takes an invalid number of arguments', function() {
