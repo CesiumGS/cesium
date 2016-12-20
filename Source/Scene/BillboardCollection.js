@@ -19,6 +19,7 @@ define([
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -29,7 +30,6 @@ define([
         './BlendingState',
         './HeightReference',
         './HorizontalOrigin',
-        './Pass',
         './SceneMode',
         './TextureAtlas',
         './VerticalOrigin'
@@ -53,6 +53,7 @@ define([
         Buffer,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -63,7 +64,6 @@ define([
         BlendingState,
         HeightReference,
         HorizontalOrigin,
-        Pass,
         SceneMode,
         TextureAtlas,
         VerticalOrigin) {
