@@ -69,7 +69,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Frédéric Junod](https://github.com/fredj)
    * [Guillaume Beraudo](https://github.com/gberaudo)
 
-
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
 * [Caleb Morse](https://github.com/cmorse)
