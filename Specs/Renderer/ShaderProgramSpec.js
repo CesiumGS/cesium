@@ -323,8 +323,14 @@ defineSuite([
             }
         };
 
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
         expect(sp.allUniforms.u_value).toBeDefined();
         expect(sp.allUniforms.czm_mediump_u_value).toBeDefined();
+
         expect({
             context : context,
             vertexShader : vs,

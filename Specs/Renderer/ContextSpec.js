@@ -225,7 +225,7 @@ defineSuite([
         var expected = context.fragmentDepth ? [0, 255, 0, 255] : [255, 0, 0, 255];
         expect({
             context : context,
-            fragmentShader : fs,
+            fragmentShader : fsFragDepth,
             depth : 1.0,
             clear : false
         }).toRenderFragmentShader(expected);
