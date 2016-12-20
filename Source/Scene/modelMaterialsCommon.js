@@ -167,7 +167,7 @@ define([
     var vertexShaderCount = 0;
     var fragmentShaderCount = 0;
     var programCount = 0;
-    function generateTechnique(gltf, khrMaterialsCommon, lightParameters, options) {
+    function generateTechnique(gltf, khrMaterialsCommon, lightParameters) {
         var techniques = gltf.techniques;
         var shaders = gltf.shaders;
         var programs = gltf.programs;
@@ -195,7 +195,7 @@ define([
         var techniqueParameters = {
             // Add matrices
             modelViewMatrix: {
-                semantic: options.useCesiumRTCMatrixInShaders ? 'CESIUM_RTC_MODELVIEW' : 'MODELVIEW',
+                semantic: 'MODELVIEW',
                 type: WebGLConstants.FLOAT_MAT4
             },
             projectionMatrix: {
@@ -348,15 +348,6 @@ define([
 
             vertexShader += 'attribute vec4 a_joint;\n';
             vertexShader += 'attribute vec4 a_weight;\n';
-        }
-        
-        if (options.addBatchIdToGeneratedShaders) {
-            techniqueAttributes.a_batchId = 'batchId';
-            techniqueParameters.batchId = {
-                semantic: 'BATCHID',
-                type: WebGLConstants.FLOAT
-            };
-            vertexShader += 'attribute float a_batchId;\n';
         }
 
         var hasSpecular = hasNormals && ((lightingModel === 'BLINN') || (lightingModel === 'PHONG')) &&
@@ -692,12 +683,10 @@ define([
      *
      * @private
      */
-    function modelMaterialsCommon(gltf, options) {
+    function modelMaterialsCommon(gltf) {
         if (!defined(gltf)) {
             return undefined;
         }
-        
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var hasExtension = false;
         var extensionsUsed = gltf.extensionsUsed;
@@ -724,9 +713,6 @@ define([
             }
 
             var lightParameters = generateLightParameters(gltf);
-            
-            var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
-            var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
 
             var techniques = {};
             var materials = gltf.materials;
@@ -738,10 +724,7 @@ define([
                         var techniqueKey = getTechniqueKey(khrMaterialsCommon);
                         var technique = techniques[techniqueKey];
                         if (!defined(technique)) {
-                            technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters, {
-                                addBatchIdToGeneratedShaders : addBatchIdToGeneratedShaders,
-                                useCesiumRTCMatrixInShaders : hasCesiumRTCExtension
-                            });
+                            technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters);
                             techniques[techniqueKey] = technique;
                         }
 
