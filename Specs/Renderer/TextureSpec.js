@@ -49,9 +49,15 @@ defineSuite([
     var blueAlphaImage;
     var blueOverRedImage;
 
-    var sp;
-    var va;
+    var fs =
+        'uniform sampler2D u_texture;' +
+        'void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
     var texture;
+    var uniformMap = {
+        u_texture : function() {
+            return texture;
+        }
+    };
 
     beforeAll(function() {
         context = createContext();
@@ -78,51 +84,8 @@ defineSuite([
     });
 
     afterEach(function() {
-        sp = sp && sp.destroy();
-        va = va && va.destroy();
         texture = texture && texture.destroy();
     });
-
-    function renderFragment(context) {
-        var vs = '';
-        vs += 'attribute vec4 position;';
-        vs += 'void main() { gl_PointSize = 1.0; gl_Position = position; }';
-
-        var fs = '';
-        fs += 'uniform sampler2D u_texture;';
-        fs += 'void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
-
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
-            }
-        });
-        sp.allUniforms.u_texture.value = texture;
-
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        command.execute(context);
-
-        return context.readPixels();
-    }
 
     it('has expected default values for pixel format and datatype', function() {
         texture = new Texture({
@@ -148,9 +111,13 @@ defineSuite([
 
         command.color = Color.WHITE;
         command.execute(context);
-        expect(context).toReadPixels(Color.WHITE.toBytes());
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
-        expect(renderFragment(context)).toEqual(Color.RED.toBytes());
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).toRenderFragmentShader([255, 0, 0, 255]);
     });
 
     it('can copy from the framebuffer', function() {
@@ -161,7 +128,11 @@ defineSuite([
         });
 
         // Render blue
-        expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).toRenderFragmentShader([0, 0, 255, 255]);
 
         // Clear to red
         var command = new ClearCommand({
@@ -178,7 +149,11 @@ defineSuite([
         expect(context).toReadPixels(Color.WHITE.toBytes());
 
         // Render red
-        expect(renderFragment(context)).toEqual(Color.RED.toBytes());
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).toRenderFragmentShader([255, 0, 0, 255]);
     });
 
     it('draws the expected texture color', function() {
@@ -188,7 +163,11 @@ defineSuite([
             pixelFormat : PixelFormat.RGBA
         });
 
-        expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).toRenderFragmentShader([0, 0, 255, 255]);
     });
 
     it('draws the expected floating-point texture color', function() {
@@ -207,8 +186,11 @@ defineSuite([
                 }
             });
 
-            var pixels = renderFragment(context);
-            expect(pixels).toEqual(color.toBytes());
+            expect({
+                context : context,
+                fragmentShader : fs,
+                uniformMap : uniformMap
+            }).toRenderFragmentShader(color.toBytes());
         }
     });
 
@@ -221,7 +203,11 @@ defineSuite([
         });
         expect(texture.preMultiplyAlpha).toEqual(true);
 
-        expect(renderFragment(context)).toEqual([0, 0, 127, 127]);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).toRenderFragmentShader([0, 0, 127, 127]);
     });
 
     it('draws textured blue and red points', function() {
@@ -231,56 +217,40 @@ defineSuite([
             pixelFormat : PixelFormat.RGBA
         });
 
-        var vs = '';
-        vs += 'attribute vec4 position;';
-        vs += 'void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fragmentShaderSource = '';
+        fragmentShaderSource += 'uniform sampler2D u_texture;';
+        fragmentShaderSource += 'uniform mediump vec2 u_txCoords;';
+        fragmentShaderSource += 'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
 
-        var fs = '';
-        fs += 'uniform sampler2D u_texture;';
-        fs += 'uniform mediump vec2 u_txCoords;';
-        fs += 'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
-
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
+        var txCoords;
+        var uniforms = {
+            u_texture : function() {
+                return texture;
+            },
+            u_txCoords : function() {
+                return txCoords;
             }
-        });
-        sp.allUniforms.u_texture.value = texture;
-
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
+        };
 
         // Blue on top
-        sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
-        command.execute(context);
-        expect(context).toReadPixels(Color.BLUE.toBytes());
+        txCoords = new Cartesian2(0.5, 0.75);
+        expect({
+            context : context,
+            fragmentShader : fragmentShaderSource,
+            uniformMap : uniforms
+        }).toRenderFragmentShader([0, 0, 255, 255]);
 
         // Red on bottom
-        sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
-        command.execute(context);
-        expect(context).toReadPixels(Color.RED.toBytes());
+        txCoords = new Cartesian2(0.5, 0.25);
+        expect({
+            context : context,
+            fragmentShader : fragmentShaderSource,
+            uniformMap : uniforms
+        }).toRenderFragmentShader([255, 0, 0, 255]);
     });
 
     it('can be created from a typed array', function() {
-        var bytes = new Uint8Array(Color.GREEN.toBytes());
+        var bytes = new Uint8Array([0, 255, 0, 255]);
 
         texture = new Texture({
             context : context,
@@ -293,7 +263,11 @@ defineSuite([
             }
         });
 
-        expect(renderFragment(context)).toEqual(Color.GREEN.toBytes());
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).toRenderFragmentShader([0, 255, 0, 255]);
     });
 
     it('can copy from a typed array', function() {
@@ -312,7 +286,11 @@ defineSuite([
             arrayBufferView : bytes
         });
 
-        expect(renderFragment(context)).toEqual(Color.NAVY.toBytes());
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).toRenderFragmentShader(Color.NAVY.toBytes());
     });
 
     it('can replace a subset of a texture', function() {
@@ -322,65 +300,55 @@ defineSuite([
             pixelFormat : PixelFormat.RGBA
         });
 
-        var vs = '';
-        vs += 'attribute vec4 position;';
-        vs += 'void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fragmentShaderSource = '';
+        fragmentShaderSource += 'uniform sampler2D u_texture;';
+        fragmentShaderSource += 'uniform mediump vec2 u_txCoords;';
+        fragmentShaderSource += 'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
 
-        var fs = '';
-        fs += 'uniform sampler2D u_texture;';
-        fs += 'uniform mediump vec2 u_txCoords;';
-        fs += 'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
-
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
+        var txCoords;
+        var uniforms = {
+            u_texture : function() {
+                return texture;
+            },
+            u_txCoords : function() {
+                return txCoords;
             }
-        });
-        sp.allUniforms.u_texture.value = texture;
-
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
+        };
 
         // Blue on top
-        sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
-        command.execute(context);
-        expect(context).toReadPixels(Color.BLUE.toBytes());
+        txCoords = new Cartesian2(0.5, 0.75);
+        expect({
+            context : context,
+            fragmentShader : fragmentShaderSource,
+            uniformMap : uniforms
+        }).toRenderFragmentShader([0, 0, 255, 255]);
 
         // Red on bottom
-        sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
-        command.execute(context);
-        expect(context).toReadPixels(Color.RED.toBytes());
+        txCoords = new Cartesian2(0.5, 0.25);
+        expect({
+            context : context,
+            fragmentShader : fragmentShaderSource,
+            uniformMap : uniforms
+        }).toRenderFragmentShader([255, 0, 0, 255]);
 
         // After copy...
         texture.copyFrom(greenImage, 0, 1);
 
         // Now green on top
-        sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
-        command.execute(context);
-        expect(context).toReadPixels(Color.LIME.toBytes());
+        txCoords = new Cartesian2(0.5, 0.75);
+        expect({
+            context : context,
+            fragmentShader : fragmentShaderSource,
+            uniformMap : uniforms
+        }).toRenderFragmentShader(Color.LIME.toBytes());
 
         // Still red on bottom
-        sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
-        command.execute(context);
-        expect(context).toReadPixels(Color.RED.toBytes());
+        txCoords = new Cartesian2(0.5, 0.25);
+        expect({
+            context : context,
+            fragmentShader : fragmentShaderSource,
+            uniformMap : uniforms
+        }).toRenderFragmentShader([255, 0, 0, 255]);
     });
 
     it('can generate mipmaps', function() {
@@ -394,7 +362,11 @@ defineSuite([
         });
         texture.generateMipmap();
 
-        expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).toRenderFragmentShader([0, 0, 255, 255]);
     });
 
     it('can set a sampler property', function() {
