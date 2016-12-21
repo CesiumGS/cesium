@@ -2,6 +2,7 @@
 define([
         '../ThirdParty/when',
         './defined',
+        './definedProperties',
         './DeveloperError',
         './loadArrayBuffer',
         './PixelFormat',
@@ -9,6 +10,7 @@ define([
     ], function(
         when,
         defined,
+        defineProperties,
         DeveloperError,
         loadArrayBuffer,
         PixelFormat,
@@ -21,13 +23,35 @@ define([
      * or reject if the URL failed to load or failed to parse the data.  The data is loaded
      * using XMLHttpRequest, which means that in order to make requests to another origin,
      * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     * <p>
+     * The following are part of the KTX format specification but are not supported:
+     * <ul>
+     *     <li>Big-endian files</li>
+     *     <li>Metadata</li>
+     *     <li>3D textures</li>
+     *     <li>Texture Arrays</li>
+     *     <li>Cubemaps</li>
+     *     <li>Mipmaps</li>
+     * </ul>
+     * </p>
      *
      * @exports loadKTX
      *
      * @param {String|Promise.<String>|ArrayBuffer} urlOrBuffer The URL of the binary data, a promise for the URL, or an ArrayBuffer.
      * @param {Object} [headers] HTTP headers to send with the requests.
-     * @returns {Promise.<Object>} A promise that will resolve to the requested data when loaded.
+     * @returns {Promise.<CompressedTextureBuffer>} A promise that will resolve to the requested data when loaded.
      *
+     * @exception {RuntimeError} Invalid KTX file.
+     * @exception {RuntimeError} File is the wrong endianness.
+     * @exception {RuntimeError} glInternalFormat is not a valid format.
+     * @exception {RuntimeError} glType must be zero when the texture is compressed.
+     * @exception {RuntimeError} The type size for compressed textures must be 1.
+     * @exception {RuntimeError} glFormat must be zero when the texture is compressed.
+     * @exception {RuntimeError} Generating mipmaps for a compressed texture is unsupported.
+     * @exception {RuntimeError} The base internal format must be the same as the format for uncompressed textures.
+     * @exception {RuntimeError} 3D textures are not supported.
+     * @exception {RuntimeError} Texture arrays are not supported.
+     * @exception {RuntimeError} Cubemaps are not supported.
      *
      * @example
      * // load a single URL asynchronously
@@ -63,6 +87,64 @@ define([
             return parseKTX(data);
         });
     }
+
+    /**
+     * Describes a compressed texture and contains a compressed texture buffer.
+     *
+     * @param {PixelFormat} internalFormat The pixel format of the compressed texture.
+     * @param {Number} width The width of the texture.
+     * @param {Number} height The height of the texture.
+     * @param {Uint8Array} buffer The compressed texture buffer.
+     */
+    function CompressedTextureBuffer(internalFormat, width, height, buffer) {
+        this._format = internalFormat;
+        this._width = width;
+        this._height = height;
+        this._buffer =  buffer;
+    }
+
+    defineProperties(CompressedTextureBuffer.prototype, {
+        /**
+         * The format of the compressed texture.
+         * @type PixelFormat
+         * @readonly
+         */
+        internalFormat : {
+            get : function() {
+                return this._format;
+            }
+        },
+        /**
+         * The width of the texture.
+         * @type Number
+         * @readonly
+         */
+        width : {
+            get : function() {
+                return this._width;
+            }
+        },
+        /**
+         * The height of the texture.
+         * @type Number
+         * @readonly
+         */
+        height : {
+            get : function() {
+                return this._height;
+            }
+        },
+        /**
+         * The compressed texture buffer.
+         * @type Uint8Array
+         * @readonly
+         */
+        bufferView : {
+            get : function() {
+                return this._buffer;
+            }
+        }
+    });
 
     var fileIdentifier = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
     var endiannessTest = 0x04030201;
@@ -100,7 +182,6 @@ define([
         var endianness = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
         if (endianness !== endiannessTest) {
-            // TODO: Switch endianness?
             throw new RuntimeError('File is the wrong endianness.');
         }
 
@@ -129,7 +210,7 @@ define([
         var bytesOfKeyValueByteSize = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        // TODO: read metadata? At least need to check for KTXorientation
+        // skip metadata
         byteOffset += bytesOfKeyValueByteSize;
 
         var imageSize = view.getUint32(byteOffset, true);
@@ -172,7 +253,6 @@ define([
             throw new RuntimeError('3D textures are unsupported.');
         }
 
-        // TODO: support texture arrays and cubemaps
         if (numberOfArrayElements !== 0) {
             throw new RuntimeError('Texture arrays are unsupported.');
         }
@@ -180,18 +260,13 @@ define([
             throw new RuntimeError('Cubemaps are unsupported.');
         }
 
-        // TODO: multiple mipmap levels
+        // Only use the level 0 mipmap
         if (PixelFormat.isCompressedFormat(glInternalFormat) && numberOfMipmapLevels > 1) {
             var levelSize = PixelFormat.compressedTextureSize(glInternalFormat, pixelWidth, pixelHeight);
             texture = new Uint8Array(texture.buffer, 0, levelSize);
         }
 
-        return {
-            bufferView : texture,
-            width : pixelWidth,
-            height : pixelHeight,
-            internalFormat : glInternalFormat
-        };
+        return new CompressedTextureBuffer(glInternalFormat, pixelWidth, pixelHeight, texture);
     }
 
     return loadKTX;
