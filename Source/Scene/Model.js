@@ -2033,7 +2033,7 @@ define([
                 width : gltfTexture.width,
                 height : gltfTexture.height,
                 pixelFormat : internalFormat,
-                flipY : false
+                sampler : sampler
             });
         } else if (defined(source)) {
             var npot = !CesiumMath.isPowerOfTwo(source.width) || !CesiumMath.isPowerOfTwo(source.height);
