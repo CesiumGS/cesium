@@ -2,7 +2,7 @@
 define([
         '../ThirdParty/when',
         './defined',
-        './definedProperties',
+        './defineProperties',
         './DeveloperError',
         './loadArrayBuffer',
         './PixelFormat',
