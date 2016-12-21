@@ -166,11 +166,11 @@ defineSuite([
     });
 
     it('clears a color attachment', function() {
-        // 1 of 4.  Clear default color buffer to black.
+        // 1 of 3.  Clear default color buffer to black.
         ClearCommand.ALL.execute(context);
         expect(context).toReadPixels([0, 0, 0, 255]);
 
-        // 2 of 4.  Clear framebuffer color attachment to green.
+        // 2 of 3.  Clear framebuffer color attachment to green.
         var colorTexture = new Texture({
             context : context,
             width : 1,
@@ -187,47 +187,19 @@ defineSuite([
         });
         clearCommand.execute(context);
 
-        // 3 of 4.  Verify default color buffer is still black.
-        expect(context).toReadPixels([0, 0, 0, 255]);
-
-        // 4 of 4.  Render green to default color buffer by reading from previous color attachment
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        // 3 of 3.  Render green to default color buffer by reading from previous color attachment
         var fs = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
-            }
-        });
         var uniformMap = {
             u_texture : function() {
                 return colorTexture;
             }
         };
 
-        va = new VertexArray({
+        expect({
             context : context,
-            attributes : [{
-                index : 0,
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va,
+            fragmentShader : fs,
             uniformMap : uniformMap
-        });
-        command.execute(context);
-        expect(context).toReadPixels([0, 255, 0, 255]);
+        }).contextToRender([0, 255, 0, 255]);
     });
 
     it('clears a cube map face color attachment', function() {
@@ -237,11 +209,11 @@ defineSuite([
             height : 1
         });
 
-        // 1 of 4.  Clear default color buffer to black.
+        // 1 of 3.  Clear default color buffer to black.
         ClearCommand.ALL.execute(context);
         expect(context).toReadPixels([0, 0, 0, 255]);
 
-        // 2 of 4.  Clear framebuffer color attachment to green.
+        // 2 of 3.  Clear framebuffer color attachment to green.
         framebuffer = new Framebuffer({
             context : context,
             colorTextures : [cubeMap.positiveX],
@@ -254,47 +226,19 @@ defineSuite([
         });
         clearCommand.execute(context);
 
-        // 3 of 4.  Verify default color buffer is still black.
-        expect(context).toReadPixels([0, 0, 0, 255]);
-
-        // 4 of 4.  Render green to default color buffer by reading from previous color attachment
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        // 3 of 3.  Render green to default color buffer by reading from previous color attachment
         var fs = 'uniform samplerCube u_cubeMap; void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
-            }
-        });
         var uniformMap = {
             u_cubeMap : function() {
                 return cubeMap;
             }
         };
 
-        va = new VertexArray({
+        expect({
             context : context,
-            attributes : [{
-                index : 0,
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va,
+            fragmentShader : fs,
             uniformMap : uniformMap
-        });
-        command.execute(context);
-        expect(context).toReadPixels([0, 255, 0, 255]);
+        }).contextToRender([0, 255, 0, 255]);
 
         cubeMap = cubeMap.destroy();
     });
@@ -351,32 +295,18 @@ defineSuite([
         expect(context).toReadPixels([0, 0, 0, 255]);
 
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
-        var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs2 = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
-        var sp2 = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs2,
-            fragmentShaderSource : fs2,
-            attributeLocations : {
-                position : 0
-            }
-        });
         var uniformMap = {
             u_texture : function() {
                 return colorTexture;
             }
         };
 
-        command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp2,
-            vertexArray : va,
+        expect({
+            context : context,
+            fragmentShader : fs2,
             uniformMap : uniformMap
-        });
-        command.execute(context);
-        expect(context).toReadPixels([0, 255, 0, 255]);
-
-        sp2 = sp2.destroy();
+        }).contextToRender([0, 255, 0, 255]);
     });
 
     function renderDepthAttachment(framebuffer, texture) {
@@ -593,108 +523,110 @@ defineSuite([
     });
 
     it('draws with multiple render targets', function() {
-        if (context.drawBuffers) {
-            var colorTexture0 = new Texture({
-                context : context,
-                width : 1,
-                height : 1
-            });
-            var colorTexture1 = new Texture({
-                context : context,
-                width : 1,
-                height : 1
-            });
-            framebuffer = new Framebuffer({
-                context : context,
-                colorTextures : [colorTexture0, colorTexture1]
-            });
-
-            // 1 of 5.  Clear default color buffer to black.
-            ClearCommand.ALL.execute(context);
-            expect(context).toReadPixels([0, 0, 0, 255]);
-
-            // 2 of 5.  Render red point into color attachment 0 and green point to color attachment 1.
-            var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-            var fs = '#extension GL_EXT_draw_buffers : enable \n void main() { gl_FragData[0] = vec4(1.0, 0.0, 0.0, 1.0); gl_FragData[1] = vec4(0.0, 1.0, 0.0, 1.0); }';
-            sp = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : vs,
-                fragmentShaderSource : fs,
-                attributeLocations : {
-                    position : 0
-                }
-            });
-
-            va = new VertexArray({
-                context : context,
-                attributes : [{
-                    index : 0,
-                    vertexBuffer : Buffer.createVertexBuffer({
-                        context : context,
-                        typedArray : new Float32Array([0, 0, 0, 1]),
-                        usage : BufferUsage.STATIC_DRAW
-                    }),
-                    componentsPerAttribute : 4
-                }]
-            });
-
-            var command = new DrawCommand({
-                primitiveType : PrimitiveType.POINTS,
-                shaderProgram : sp,
-                vertexArray : va,
-                framebuffer : framebuffer
-            });
-            command.execute(context);
-
-            // 3 of 5.  Verify default color buffer is still black.
-            expect(context).toReadPixels([0, 0, 0, 255]);
-
-            // 4 of 5.  Render yellow to default color buffer by reading from previous color attachments
-            var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-            var fs2 = 'uniform sampler2D u_texture0; uniform sampler2D u_texture1; void main() { gl_FragColor = texture2D(u_texture0, vec2(0.0)) + texture2D(u_texture1, vec2(0.0)); }';
-            var sp2 = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : vs2,
-                fragmentShaderSource : fs2,
-                attributeLocations : {
-                    position : 0
-                }
-            });
-            var uniformMap = {
-                u_texture0 : function() {
-                    return colorTexture0;
-                },
-                u_texture1 : function() {
-                    return colorTexture1;
-                },
-            };
-
-            command = new DrawCommand({
-                primitiveType : PrimitiveType.POINTS,
-                shaderProgram : sp2,
-                vertexArray : va,
-                uniformMap : uniformMap
-            });
-            command.execute(context);
-            expect(context).toReadPixels([255, 255, 0, 255]);
-
-            // 5 of 5. Verify clearing multiple color attachments
-            var clearCommand = new ClearCommand({
-                color : new Color (0.0, 0.0, 0.0, 0.0),
-                framebuffer : framebuffer
-            });
-            clearCommand.execute(context);
-
-            command = new DrawCommand({
-                primitiveType : PrimitiveType.POINTS,
-                shaderProgram : sp2,
-                vertexArray : va
-            });
-            command.execute(context);
-            expect(context).toReadPixels([0, 0, 0, 255]);
-
-            sp2 = sp2.destroy();
+        if (!context.drawBuffers) {
+            return;
         }
+
+        var colorTexture0 = new Texture({
+            context : context,
+            width : 1,
+            height : 1
+        });
+        var colorTexture1 = new Texture({
+            context : context,
+            width : 1,
+            height : 1
+        });
+        framebuffer = new Framebuffer({
+            context : context,
+            colorTextures : [colorTexture0, colorTexture1]
+        });
+
+        // 1 of 5.  Clear default color buffer to black.
+        ClearCommand.ALL.execute(context);
+        expect(context).toReadPixels([0, 0, 0, 255]);
+
+        // 2 of 5.  Render red point into color attachment 0 and green point to color attachment 1.
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = '#extension GL_EXT_draw_buffers : enable \n void main() { gl_FragData[0] = vec4(1.0, 0.0, 0.0, 1.0); gl_FragData[1] = vec4(0.0, 1.0, 0.0, 1.0); }';
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
+        });
+
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : 0,
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 4
+            }]
+        });
+
+        var command = new DrawCommand({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va,
+            framebuffer : framebuffer
+        });
+        command.execute(context);
+
+        // 3 of 5.  Verify default color buffer is still black.
+        expect(context).toReadPixels([0, 0, 0, 255]);
+
+        // 4 of 5.  Render yellow to default color buffer by reading from previous color attachments
+        var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs2 = 'uniform sampler2D u_texture0; uniform sampler2D u_texture1; void main() { gl_FragColor = texture2D(u_texture0, vec2(0.0)) + texture2D(u_texture1, vec2(0.0)); }';
+        var sp2 = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs2,
+            fragmentShaderSource : fs2,
+            attributeLocations : {
+                position : 0
+            }
+        });
+        var uniformMap = {
+            u_texture0 : function() {
+                return colorTexture0;
+            },
+            u_texture1 : function() {
+                return colorTexture1;
+            },
+        };
+
+        command = new DrawCommand({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp2,
+            vertexArray : va,
+            uniformMap : uniformMap
+        });
+        command.execute(context);
+        expect(context).toReadPixels([255, 255, 0, 255]);
+
+        // 5 of 5. Verify clearing multiple color attachments
+        var clearCommand = new ClearCommand({
+            color : new Color (0.0, 0.0, 0.0, 0.0),
+            framebuffer : framebuffer
+        });
+        clearCommand.execute(context);
+
+        command = new DrawCommand({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp2,
+            vertexArray : va
+        });
+        command.execute(context);
+        expect(context).toReadPixels([0, 0, 0, 255]);
+
+        sp2 = sp2.destroy();
     });
 
     it('gets the status of a complete framebuffer', function() {
