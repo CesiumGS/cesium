@@ -10,13 +10,13 @@ define([
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/VertexArray',
         '../Shaders/DepthPlaneFS',
         '../Shaders/DepthPlaneVS',
         './DepthFunction',
-        './Pass',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -29,13 +29,13 @@ define([
         PrimitiveType,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         VertexArray,
         DepthPlaneFS,
         DepthPlaneVS,
         DepthFunction,
-        Pass,
         SceneMode) {
     'use strict';
 
