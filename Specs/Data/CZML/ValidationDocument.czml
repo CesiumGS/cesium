@@ -105,7 +105,8 @@
           121,42,244,168
         ]
       },
-      "outlineWidth":15323
+      "outlineWidth":15323,
+      "shadows":"CAST_ONLY"
     },
     "corridor":{
       "show":true,
@@ -135,7 +136,8 @@
           198,25,134,60
         ]
       },
-      "outlineWidth":9132
+      "outlineWidth":9132,
+      "shadows":"CAST_ONLY"
     },
     "cylinder":{
       "show":true,
@@ -160,7 +162,8 @@
       },
       "outlineWidth":64018,
       "numberOfVerticalLines":38567,
-      "slices":39979
+      "slices":39979,
+      "shadows":"CAST_ONLY"
     },
     "ellipse":{
       "show":true,
@@ -188,7 +191,8 @@
         ]
       },
       "outlineWidth":8839,
-      "numberOfVerticalLines":38878
+      "numberOfVerticalLines":38878,
+      "shadows":"CAST_ONLY"
     },
     "ellipsoid":{
       "show":true,
@@ -216,7 +220,8 @@
       "outlineWidth":47507,
       "stackPartitions":54278,
       "slicePartitions":28562,
-      "subdivisions":14008
+      "subdivisions":14008,
+      "shadows":"CAST_ONLY"
     },
     "label":{
       "show":true,
@@ -224,6 +229,17 @@
       "font":"14px sans-serif",
       "style":"FILL_AND_OUTLINE",
       "scale":6510,
+      "showBackground":true,
+      "backgroundColor":{
+        "rgba":[
+          225,114,54,128
+        ]
+      },
+      "backgroundPadding":{
+        "cartesian2":[
+          5508,56341
+        ]
+      },
       "pixelOffset":{
         "cartesian2":[
           25913,30821
@@ -267,7 +283,14 @@
       "maximumScale":64305,
       "incrementallyLoadTextures":true,
       "runAnimations":true,
+      "shadows":"CAST_ONLY",
       "heightReference":"CLAMP_TO_GROUND",
+      "silhouetteColor":{
+        "rgba":[
+          29,61,52,101
+        ]
+      },
+      "silhouetteSize":4645,
       "color":{
         "rgba":[
           0,52,75,73
@@ -367,7 +390,8 @@
       "outlineWidth":62220,
       "perPositionHeight":true,
       "closeTop":true,
-      "closeBottom":true
+      "closeBottom":true,
+      "shadows":"CAST_ONLY"
     },
     "polyline":{
       "show":true,
@@ -387,7 +411,8 @@
           }
         }
       },
-      "followSurface":true
+      "followSurface":true,
+      "shadows":"CAST_ONLY"
     },
     "rectangle":{
       "show":true,
@@ -419,7 +444,8 @@
       },
       "outlineWidth":59794,
       "closeTop":true,
-      "closeBottom":true
+      "closeBottom":true,
+      "shadows":"CAST_ONLY"
     },
     "wall":{
       "show":true,
@@ -455,7 +481,8 @@
           107,196,96,198
         ]
       },
-      "outlineWidth":50458
+      "outlineWidth":50458,
+      "shadows":"CAST_ONLY"
     },
     "agi_conicSensor":{
       "show":true,
@@ -1552,6 +1579,16 @@
     }
   },
   {
+    "id":"constant_label_backgroundColor_rgbaf",
+    "label":{
+      "backgroundColor":{
+        "rgbaf":[
+          0.8941176470588236,0.9490196078431372,0.49411764705882355,0.8431372549019608
+        ]
+      }
+    }
+  },
+  {
     "id":"constant_label_fillColor_rgbaf",
     "label":{
       "fillColor":{
@@ -1567,6 +1604,16 @@
       "outlineColor":{
         "rgbaf":[
           0.4588235294117647,0.3254901960784314,0.9098039215686274,0.6784313725490196
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_model_silhouetteColor_rgbaf",
+    "model":{
+      "silhouetteColor":{
+        "rgbaf":[
+          0.29411764705882354,0.3137254901960784,0.4196078431372549,0.8784313725490196
         ]
       }
     }
@@ -5207,6 +5254,9 @@
       },
       "outlineWidth":{
         "reference":"Constant#box.outlineWidth"
+      },
+      "shadows":{
+        "reference":"Constant#box.shadows"
       }
     },
     "corridor":{
@@ -5251,6 +5301,9 @@
       },
       "outlineWidth":{
         "reference":"Constant#corridor.outlineWidth"
+      },
+      "shadows":{
+        "reference":"Constant#corridor.shadows"
       }
     },
     "cylinder":{
@@ -5290,6 +5343,9 @@
       },
       "slices":{
         "reference":"Constant#cylinder.slices"
+      },
+      "shadows":{
+        "reference":"Constant#cylinder.shadows"
       }
     },
     "ellipse":{
@@ -5338,6 +5394,9 @@
       },
       "numberOfVerticalLines":{
         "reference":"Constant#ellipse.numberOfVerticalLines"
+      },
+      "shadows":{
+        "reference":"Constant#ellipse.shadows"
       }
     },
     "ellipsoid":{
@@ -5374,6 +5433,9 @@
       },
       "subdivisions":{
         "reference":"Constant#ellipsoid.subdivisions"
+      },
+      "shadows":{
+        "reference":"Constant#ellipsoid.shadows"
       }
     },
     "label":{
@@ -5391,6 +5453,15 @@
       },
       "scale":{
         "reference":"Constant#label.scale"
+      },
+      "showBackground":{
+        "reference":"Constant#label.showBackground"
+      },
+      "backgroundColor":{
+        "reference":"Constant#label.backgroundColor"
+      },
+      "backgroundPadding":{
+        "reference":"Constant#label.backgroundPadding"
       },
       "pixelOffset":{
         "reference":"Constant#label.pixelOffset"
@@ -5445,8 +5516,17 @@
       "runAnimations":{
         "reference":"Constant#model.runAnimations"
       },
+      "shadows":{
+        "reference":"Constant#model.shadows"
+      },
       "heightReference":{
         "reference":"Constant#model.heightReference"
+      },
+      "silhouetteColor":{
+        "reference":"Constant#model.silhouetteColor"
+      },
+      "silhouetteSize":{
+        "reference":"Constant#model.silhouetteSize"
       },
       "color":{
         "reference":"Constant#model.color"
@@ -5569,6 +5649,9 @@
       },
       "closeBottom":{
         "reference":"Constant#polygon.closeBottom"
+      },
+      "shadows":{
+        "reference":"Constant#polygon.shadows"
       }
     },
     "polyline":{
@@ -5595,6 +5678,9 @@
       },
       "followSurface":{
         "reference":"Constant#polyline.followSurface"
+      },
+      "shadows":{
+        "reference":"Constant#polyline.shadows"
       }
     },
     "rectangle":{
@@ -5643,6 +5729,9 @@
       },
       "closeBottom":{
         "reference":"Constant#rectangle.closeBottom"
+      },
+      "shadows":{
+        "reference":"Constant#rectangle.shadows"
       }
     },
     "wall":{
@@ -5685,6 +5774,9 @@
       },
       "outlineWidth":{
         "reference":"Constant#wall.outlineWidth"
+      },
+      "shadows":{
+        "reference":"Constant#wall.shadows"
       }
     },
     "agi_conicSensor":{
@@ -8310,6 +8402,20 @@
           3600,42123
         ]
       },
+      "backgroundColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,30,92,161,169,
+          3600,85,52,166,62
+        ]
+      },
+      "backgroundPadding":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "cartesian2":[
+          0,32945,5504,
+          3600,35323,6281
+        ]
+      },
       "pixelOffset":{
         "epoch":"2016-06-17T12:00:00Z",
         "cartesian2":[
@@ -8380,6 +8486,20 @@
         "number":[
           0,8290,
           3600,25558
+        ]
+      },
+      "silhouetteColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,33,239,70,81,
+          3600,60,48,26,123
+        ]
+      },
+      "silhouetteSize":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,65103,
+          3600,29065
         ]
       },
       "color":{
@@ -10092,6 +10212,18 @@
     }
   },
   {
+    "id":"sampled_label_backgroundColor_rgbaf",
+    "label":{
+      "backgroundColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.9607843137254902,0.18823529411764706,0.8705882352941177,0.27058823529411763,
+          3600,0.8823529411764706,0.796078431372549,0.6039215686274509,0.8235294117647058
+        ]
+      }
+    }
+  },
+  {
     "id":"sampled_label_fillColor_rgbaf",
     "label":{
       "fillColor":{
@@ -10111,6 +10243,18 @@
         "rgbaf":[
           0,0.6313725490196078,0.7098039215686275,0.27058823529411763,0.792156862745098,
           3600,0.43529411764705883,0.17647058823529413,0.23529411764705882,0.6313725490196078
+        ]
+      }
+    }
+  },
+  {
+    "id":"sampled_model_silhouetteColor_rgbaf",
+    "model":{
+      "silhouetteColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.23137254901960785,0.8666666666666667,0.26666666666666666,0.6352941176470588,
+          3600,0.7490196078431373,0.22745098039215686,0.807843137254902,0.08235294117647059
         ]
       }
     }
