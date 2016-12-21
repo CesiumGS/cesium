@@ -5,6 +5,7 @@ define([
         'Core/defaultValue',
         'Core/defined',
         'Core/DeveloperError',
+        'Core/Math',
         'Core/PrimitiveType',
         'Core/RuntimeError',
         'Renderer/Buffer',
@@ -19,6 +20,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        CesiumMath,
         PrimitiveType,
         RuntimeError,
         Buffer,
@@ -322,12 +324,14 @@ define([
                     compare: function(actual, expected) {
                         var context;
                         var framebuffer;
+                        var epsilon = 0;
 
                         var options = actual;
                         if (defined(options.context)) {
                             // options were passed to to a framebuffer
                             context = options.context;
                             framebuffer = options.framebuffer;
+                            epsilon = defaultValue(options.epsilon, epsilon);
                         } else {
                             context = options;
                         }
@@ -340,12 +344,16 @@ define([
                         var message;
 
                         if (!webglStub) {
-                            if ((rgba[0] !== expected[0]) ||
-                                (rgba[1] !== expected[1]) ||
-                                (rgba[2] !== expected[2]) ||
-                                (rgba[3] !== expected[3])) {
+                            if (!CesiumMath.equalsEpsilon(rgba[0], expected[0], 0, epsilon) ||
+                                !CesiumMath.equalsEpsilon(rgba[1], expected[1], 0, epsilon) ||
+                                !CesiumMath.equalsEpsilon(rgba[2], expected[2], 0, epsilon) ||
+                                !CesiumMath.equalsEpsilon(rgba[3], expected[3], 0, epsilon)) {
                                 pass = false;
-                                message = 'Expected context to render ' + expected + ', but rendered: ' + rgba;
+                                if (epsilon === 0) {
+                                    message = 'Expected context to render ' + expected + ', but rendered: ' + rgba;
+                                } else {
+                                    message = 'Expected context to render ' + expected + ' with epsilon = ' + epsilon + ', but rendered: ' + rgba;
+                                }
                             }
                         }
 

@@ -37,16 +37,13 @@ defineSuite([
         createContext) {
     'use strict';
 
+    var webglStub = !!window.webglStub;
     var context;
     var sp;
     var va;
 
     beforeAll(function() {
-        context = createContext({
-            webgl : {
-                stencil : true
-            }
-        });
+        context = createContext();
     });
 
     afterAll(function() {
@@ -71,7 +68,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -117,7 +114,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -164,7 +161,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -172,7 +169,7 @@ defineSuite([
                 }),
                 componentsPerAttribute : 4
             }, {
-                index : sp.vertexAttributes.intensity.index,
+                index : !webglStub ? sp.vertexAttributes.intensity.index : 1,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([1]),
@@ -221,13 +218,13 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : vertexBuffer,
                 componentsPerAttribute : 4,
                 offsetInBytes : 0,
                 strideInBytes : stride
             }, {
-                index : sp.vertexAttributes.intensity.index,
+                index : !webglStub ? sp.vertexAttributes.intensity.index : 1,
                 vertexBuffer : vertexBuffer,
                 componentsPerAttribute : 1,
                 offsetInBytes : 4 * Float32Array.BYTES_PER_ELEMENT,
@@ -259,7 +256,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -316,7 +313,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -377,7 +374,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -410,11 +407,17 @@ defineSuite([
 
         // 2 of 3:  Blend:  0 + 0.5
         command.execute(context);
-        expect(context.readPixels()).toEqualEpsilon([127, 127, 127, 127], 1);
+        expect({
+            context: context,
+            epsilon: 1
+        }).toReadPixels([127, 127, 127, 127]);
 
         // 3 of 3:  Blend:  0.5 + 0.5
         command.execute(context);
-        expect(context.readPixels()).toEqualEpsilon([254, 254, 254, 254], 1);
+        expect({
+            context: context,
+            epsilon: 1
+        }).toReadPixels([254, 254, 254, 254]);
     });
 
     it('draws with alpha blending', function() {
@@ -429,7 +432,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -462,11 +465,18 @@ defineSuite([
 
         // 2 of 3:  Blend:  RGB:  (255 * 0.5) + (0 * 0.5), Alpha: 0.5 + 0
         command.execute(context);
-        expect(context.readPixels()).toEqualEpsilon([127, 127, 127, 127], 1);
+        expect({
+            context: context,
+            epsilon: 1
+        }).toReadPixels([127, 127, 127, 127]);
 
         // 3 of 3:  Blend:  RGB:  (255 * 0.5) + (127 * 0.5), Alpha: 0.5 + 0
         command.execute(context);
-        expect(context.readPixels()).toEqualEpsilon([191, 191, 191, 127], 2);
+        expect({
+            context: context,
+            epsilon: 2
+        }).toReadPixels([191, 191, 191, 127]);
+
     });
 
     it('draws with blend color', function() {
@@ -481,7 +491,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -520,7 +530,10 @@ defineSuite([
         // 2 of 3:  Blend:  RGB:  255 - 127, Alpha: 255 - (255 - 255)
         //   Epsilon of 1 because ANGLE gives 127 and desktop GL gives 128.
         command.execute(context);
-        expect(context.readPixels()).toEqualEpsilon([128, 128, 128, 255], 1);
+        expect({
+            context: context,
+            epsilon: 1
+        }).toReadPixels([128, 128, 128, 255]);
     });
 
     it('draws with culling', function() {
@@ -535,7 +548,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
@@ -592,7 +605,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
@@ -651,7 +664,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
@@ -708,7 +721,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -748,7 +761,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, 1000, 0, 1]),
@@ -790,7 +803,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -836,7 +849,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -894,7 +907,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
@@ -977,7 +990,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
@@ -1057,7 +1070,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, -1, 0, 0, 0, 1]),
@@ -1113,7 +1126,7 @@ defineSuite([
             va = new VertexArray({
                 context : context,
                 attributes : [{
-                    index : sp.vertexAttributes.position.index,
+                    index : !webglStub ? sp.vertexAttributes.position.index : 0,
                     vertexBuffer : Buffer.createVertexBuffer({
                         context : context,
                         typedArray : new Float32Array([0, 0, 0, 1]),
@@ -1121,7 +1134,7 @@ defineSuite([
                     }),
                     componentsPerAttribute : 4
                 }, {
-                    index : sp.vertexAttributes.color.index,
+                    index : !webglStub ? sp.vertexAttributes.color.index : 1,
                     vertexBuffer : Buffer.createVertexBuffer({
                         context : context,
                         typedArray : new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255]),
@@ -1249,7 +1262,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -1284,7 +1297,7 @@ defineSuite([
             va = new VertexArray({
                 context : context,
                 attributes : [{
-                    index : sp.vertexAttributes.position.index,
+                    index : !webglStub ? sp.vertexAttributes.position.index : 0,
                     vertexBuffer : Buffer.createVertexBuffer({
                         context : context,
                         typedArray : new Float32Array([0, 0, 0, 1]),
