@@ -328,7 +328,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -390,7 +390,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -476,7 +476,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -555,7 +555,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,

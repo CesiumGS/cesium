@@ -172,7 +172,7 @@ defineSuite([
 
     it('draws the expected floating-point texture color', function() {
         if (context.floatingPointTexture) {
-            var color = new Color(0.2, 0.4, 0.6, 0.8);
+            var color = new Color(0.2, 0.4, 0.6, 1.0);
             var floats = new Float32Array([color.red, color.green, color.blue, color.alpha]);
 
             texture = new Texture({
@@ -195,19 +195,32 @@ defineSuite([
     });
 
     it('renders with premultiplied alpha', function() {
-        texture = new Texture({
-            context : context,
+        var cxt = createContext({
+            webgl : {
+                alpha : true
+            }
+        });
+        var texture = new Texture({
+            context : cxt,
             source : blueAlphaImage,
             pixelFormat : PixelFormat.RGBA,
             preMultiplyAlpha : true
         });
-        expect(texture.preMultiplyAlpha).toEqual(true);
+        var uniformMap = {
+            u_texture : function() {
+                return texture;
+            }
+        };
 
+        expect(texture.preMultiplyAlpha).toEqual(true);
         expect({
-            context : context,
+            context : cxt,
             fragmentShader : fs,
             uniformMap : uniformMap
         }).contextToRender([0, 0, 127, 127]);
+
+        texture.destroy();
+        cxt.destroyForSpecs();
     });
 
     it('draws textured blue and red points', function() {

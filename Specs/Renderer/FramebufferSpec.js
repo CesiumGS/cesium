@@ -169,7 +169,7 @@ defineSuite([
     it('clears a color attachment', function() {
         // 1 of 4.  Clear default color buffer to black.
         ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         // 2 of 4.  Clear framebuffer color attachment to green.
         var colorTexture = new Texture({
@@ -189,7 +189,7 @@ defineSuite([
         clearCommand.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -240,7 +240,7 @@ defineSuite([
 
         // 1 of 4.  Clear default color buffer to black.
         ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         // 2 of 4.  Clear framebuffer color attachment to green.
         framebuffer = new Framebuffer({
@@ -256,7 +256,7 @@ defineSuite([
         clearCommand.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -313,7 +313,7 @@ defineSuite([
 
         // 1 of 4.  Clear default color buffer to black.
         ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         // 2 of 4.  Render green point into color attachment.
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -346,7 +346,7 @@ defineSuite([
         command.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -416,7 +416,7 @@ defineSuite([
         command.execute(context);
 
         // 2 of 3.  Verify default color buffer is still black.
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         // 3 of 3.  Render green to default color buffer by reading from previous color attachment
         var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -467,7 +467,7 @@ defineSuite([
             });
 
             if (framebuffer.status === WebGLConstants.FRAMEBUFFER_COMPLETE) {
-                expect(renderDepthAttachment(framebuffer, framebuffer.depthTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
+                expect(renderDepthAttachment(framebuffer, framebuffer.depthTexture)).toEqualEpsilon([128, 128, 128, 255], 1);
             }
         }
     });
@@ -491,7 +491,7 @@ defineSuite([
             });
 
             if (framebuffer.status === WebGLConstants.FRAMEBUFFER_COMPLETE) {
-                expect(renderDepthAttachment(framebuffer, framebuffer.depthStencilTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
+                expect(renderDepthAttachment(framebuffer, framebuffer.depthStencilTexture)).toEqualEpsilon([128, 128, 128, 255], 1);
             }
         }
     });
@@ -603,7 +603,7 @@ defineSuite([
 
             // 1 of 5.  Clear default color buffer to black.
             ClearCommand.ALL.execute(context);
-            expect(context).toReadPixels([0, 0, 0, 0]);
+            expect(context).toReadPixels([0, 0, 0, 255]);
 
             // 2 of 5.  Render red point into color attachment 0 and green point to color attachment 1.
             var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -636,7 +636,7 @@ defineSuite([
             command.execute(context);
 
             // 3 of 5.  Verify default color buffer is still black.
-            expect(context).toReadPixels([0, 0, 0, 0]);
+            expect(context).toReadPixels([0, 0, 0, 255]);
 
             // 4 of 5.  Render yellow to default color buffer by reading from previous color attachments
             var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -680,7 +680,7 @@ defineSuite([
                 vertexArray : va
             });
             command.execute(context);
-            expect(context).toReadPixels([0, 0, 0, 0]);
+            expect(context).toReadPixels([0, 0, 0, 255]);
 
             sp2 = sp2.destroy();
         }

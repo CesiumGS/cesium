@@ -240,12 +240,12 @@ defineSuite([
         expectCubeMapFaces({
             cubeMap : cubeMap,
             expectedColors : [
-                [0, 0, 127, 127], // +X
-                [0, 0, 127, 127], // -X
-                [0, 0, 127, 127], // +Y
-                [0, 0, 127, 127], // -Y
-                [0, 0, 127, 127], // +Z
-                [0, 0, 127, 127]  // -Z
+                [0, 0, 127, 255], // +X
+                [0, 0, 127, 255], // -X
+                [0, 0, 127, 255], // +Y
+                [0, 0, 127, 255], // -Y
+                [0, 0, 127, 255], // +Z
+                [0, 0, 127, 255]  // -Z
             ]
         });
     });
@@ -271,32 +271,32 @@ defineSuite([
                 positiveX : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([0, 0, 0, 255])
+                    arrayBufferView : new Uint8Array([0, 255, 255, 255])
                 },
                 negativeX : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([0, 0, 255, 0])
+                    arrayBufferView : new Uint8Array([0, 0, 255, 255])
                 },
                 positiveY : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([0, 255, 0, 0])
+                    arrayBufferView : new Uint8Array([0, 255, 0, 255])
                 },
                 negativeY : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([255, 0, 0, 0])
+                    arrayBufferView : new Uint8Array([255, 0, 0, 255])
                 },
                 positiveZ : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([0, 0, 255, 255])
+                    arrayBufferView : new Uint8Array([255, 0, 255, 255])
                 },
                 negativeZ : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([255, 255, 0, 0])
+                    arrayBufferView : new Uint8Array([255, 255, 0, 255])
                 }
             }
         });
@@ -304,12 +304,12 @@ defineSuite([
         expectCubeMapFaces({
             cubeMap : cubeMap,
             expectedColors : [
-                [0, 0, 0, 255],   // +X
-                [0, 0, 255, 0],   // -X
-                [0, 255, 0, 0],   // +Y
-                [255, 0, 0, 0],   // -Y
-                [0, 0, 255, 255], // +Z
-                [255, 255, 0, 0]  // -Z
+                [0, 255, 255, 255], // +X
+                [0, 0, 255, 255],   // -X
+                [0, 255, 0, 255],   // +Y
+                [255, 0, 0, 255],   // -Y
+                [255, 0, 255, 255], // +Z
+                [255, 255, 0, 255]  // -Z
             ]
         });
     });
@@ -319,12 +319,12 @@ defineSuite([
             return;
         }
 
-        var positiveXColor = new Color(0.0, 0.0, 0.0, 1.0);
-        var negativeXColor = new Color(0.0, 0.0, 1.0, 0.0);
-        var positiveYColor = new Color(0.0, 1.0, 0.0, 0.0);
-        var negativeYColor = new Color(1.0, 0.0, 0.0, 0.0);
-        var positiveZColor = new Color(0.0, 0.0, 1.0, 1.0);
-        var negativeZColor = new Color(1.0, 1.0, 0.0, 0.0);
+        var positiveXColor = new Color(0.0, 1.0, 1.0, 1.0);
+        var negativeXColor = new Color(0.0, 0.0, 1.0, 1.0);
+        var positiveYColor = new Color(0.0, 1.0, 0.0, 1.0);
+        var negativeYColor = new Color(1.0, 0.0, 0.0, 1.0);
+        var positiveZColor = new Color(1.0, 0.0, 1.0, 1.0);
+        var negativeZColor = new Color(1.0, 1.0, 0.0, 1.0);
 
         cubeMap = new CubeMap({
             context : context,
@@ -366,12 +366,12 @@ defineSuite([
         expectCubeMapFaces({
             cubeMap : cubeMap,
             expectedColors : [
-                positiveXColor.toBytes(),
-                negativeXColor.toBytes(),
-                positiveYColor.toBytes(),
-                negativeYColor.toBytes(),
-                positiveZColor.toBytes(),
-                negativeZColor.toBytes()
+                [0, 255, 255, 255], // +X
+                [0, 0, 255, 255],   // -X
+                [0, 255, 0, 255],   // +Y
+                [255, 0, 0, 255],   // -Y
+                [255, 0, 255, 255], // +Z
+                [255, 255, 0, 255]  // -Z
             ]
         });
     });
@@ -385,12 +385,12 @@ defineSuite([
                 positiveY : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([0, 255, 0, 0])
+                    arrayBufferView : new Uint8Array([0, 255, 0, 255])
                 },
                 negativeY : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([255, 0, 0, 0])
+                    arrayBufferView : new Uint8Array([255, 0, 0, 255])
                 },
                 positiveZ : {
                     width : 1,
@@ -400,7 +400,7 @@ defineSuite([
                 negativeZ : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([255, 255, 0, 0])
+                    arrayBufferView : new Uint8Array([255, 255, 0, 255])
                 }
             }
         });
@@ -408,12 +408,12 @@ defineSuite([
         expectCubeMapFaces({
             cubeMap : cubeMap,
             expectedColors : [
-                [0, 0, 255, 255], // +X
-                [0, 255, 0, 255], // -X
-                [0, 255, 0, 0],   // +Y
-                [255, 0, 0, 0],   // -Y
-                [0, 0, 255, 255], // +Z
-                [255, 255, 0, 0]  // -Z
+                [0, 0, 255, 255],   // +X
+                [0, 255, 0, 255],   // -X
+                [0, 255, 0, 255],   // +Y
+                [255, 0, 0, 255],   // -Y
+                [0, 0, 255, 255],   // +Z
+                [255, 255, 0, 255]  // -Z
             ]
         });
     });
@@ -453,50 +453,56 @@ defineSuite([
         cubeMap.positiveX.copyFrom({
             width : 1,
             height : 1,
-            arrayBufferView : new Uint8Array([0, 0, 0, 255])
+            arrayBufferView : new Uint8Array([0, 255, 255, 255])
         });
         cubeMap.negativeX.copyFrom({
             width : 1,
             height : 1,
-            arrayBufferView : new Uint8Array([0, 0, 255, 0])
+            arrayBufferView : new Uint8Array([0, 0, 255, 255])
         });
         cubeMap.positiveY.copyFrom({
             width : 1,
             height : 1,
-            arrayBufferView : new Uint8Array([0, 255, 0, 0])
+            arrayBufferView : new Uint8Array([0, 255, 0, 255])
         });
         cubeMap.negativeY.copyFrom({
             width : 1,
             height : 1,
-            arrayBufferView : new Uint8Array([255, 0, 0, 0])
+            arrayBufferView : new Uint8Array([255, 0, 0, 255])
         });
         cubeMap.positiveZ.copyFrom({
             width : 1,
             height : 1,
-            arrayBufferView : new Uint8Array([0, 0, 255, 255])
+            arrayBufferView : new Uint8Array([255, 0, 255, 255])
         });
         cubeMap.negativeZ.copyFrom({
             width : 1,
             height : 1,
-            arrayBufferView : new Uint8Array([255, 255, 0, 0])
+            arrayBufferView : new Uint8Array([255, 255, 0, 255])
         });
 
         expectCubeMapFaces({
             cubeMap : cubeMap,
             expectedColors : [
-                [0, 0, 0, 255], // +X
-                [0, 0, 255, 0], // -X
-                [0, 255, 0, 0], // +Y
-                [255, 0, 0, 0], // -Y
-                [0, 0, 255, 255], // +Z
-                [255, 255, 0, 0]  // -Z
+                [0, 255, 255, 255], // +X
+                [0, 0, 255, 255],   // -X
+                [0, 255, 0, 255],   // +Y
+                [255, 0, 0, 255],   // -Y
+                [255, 0, 255, 255], // +Z
+                [255, 255, 0, 255]  // -Z
             ]
         });
     });
 
     it('copies from the framebuffer', function() {
+        var cxt = createContext({
+            webgl : {
+                alpha : true // Seems to be required for copyFromFramebuffer()
+            }
+        });
+
         cubeMap = new CubeMap({
-            context : context,
+            context : cxt,
             width : 1,
             height : 1
         });
@@ -514,7 +520,7 @@ defineSuite([
 
         // +X is blue
         expect({
-            context : context,
+            context : cxt,
             fragmentShader : fs,
             uniformMap : uniformMap
         }).contextToRender([0, 0, 255, 255]);
@@ -524,19 +530,21 @@ defineSuite([
             color : new Color (1.0, 0.0, 0.0, 1.0)
         });
 
-        clearCommand.execute(context);
-        expect(context).toReadPixels([255, 0, 0, 255]);
+        clearCommand.execute(cxt);
+        expect(cxt).toReadPixels([255, 0, 0, 255]);
         cubeMap.positiveX.copyFromFramebuffer();
 
-        ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(cxt);
+        expect(cxt).toReadPixels([0, 0, 0, 0]);
 
         // +X is red now
         expect({
-            context : context,
+            context : cxt,
             fragmentShader : fs,
             uniformMap : uniformMap
         }).contextToRender([255, 0, 0, 255]);
+
+        cxt.destroyForSpecs();
     });
 
     it('draws with a cube map and a texture', function() {

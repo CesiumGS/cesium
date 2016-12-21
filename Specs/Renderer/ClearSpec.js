@@ -29,12 +29,12 @@ defineSuite([
 
     it('default clear', function() {
         ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
     });
 
     it('clears to white', function() {
         ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new ClearCommand({
             color : Color.WHITE
@@ -45,7 +45,7 @@ defineSuite([
 
     it('clears with a color mask', function() {
         ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new ClearCommand({
             color : Color.WHITE,
@@ -54,12 +54,12 @@ defineSuite([
                     red : true,
                     green : false,
                     blue : true,
-                    alpha : false
+                    alpha : true
                 }
             })
         });
         command.execute(context);
-        expect(context).toReadPixels([255, 0, 255, 0]);
+        expect(context).toReadPixels([255, 0, 255, 255]);
     });
 
     it('clears with scissor test', function() {

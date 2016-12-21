@@ -23,7 +23,6 @@ define([
         // clone options so we can change properties
         options = clone(defaultValue(options, {}));
         options.webgl = clone(defaultValue(options.webgl, {}));
-        options.webgl.alpha = defaultValue(options.webgl.alpha, true);
         options.webgl.antialias = defaultValue(options.webgl.antialias, false);
         options.webglStub = !!window.webglStub;
 

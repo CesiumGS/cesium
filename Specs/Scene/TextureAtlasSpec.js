@@ -43,13 +43,7 @@ defineSuite([
     var bigGreenImage;
 
     beforeAll(function() {
-        scene = createScene({
-            contextOptions : {
-                webgl : {
-                    alpha : true
-                }
-            }
-        });
+        scene = createScene();
 
         return when.join(
             loadImage('./Data/Images/Green.png').then(function(image) {
