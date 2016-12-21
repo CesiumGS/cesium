@@ -88,7 +88,7 @@ define([
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE
             });
 
-            if (context.depthStencilTexture) {
+            if (context.depthTexture) {
                 this._depthStencilTexture = new Texture({
                     context : context,
                     width : width,
