@@ -37,7 +37,6 @@ defineSuite([
         createContext) {
     'use strict';
 
-    var webglStub = !!window.webglStub;
     var context;
     var sp;
     var va;
@@ -62,13 +61,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -99,7 +101,10 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         // Two indices instead of one is a workaround for NVIDIA:
@@ -114,7 +119,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -155,13 +160,17 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0,
+                intensity : 1
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -169,7 +178,7 @@ defineSuite([
                 }),
                 componentsPerAttribute : 4
             }, {
-                index : !webglStub ? sp.vertexAttributes.intensity.index : 1,
+                index : 1,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([1]),
@@ -205,7 +214,11 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0,
+                intensity : 1
+            }
         });
 
         var stride = 5 * Float32Array.BYTES_PER_ELEMENT;
@@ -218,13 +231,13 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : vertexBuffer,
                 componentsPerAttribute : 4,
                 offsetInBytes : 0,
                 strideInBytes : stride
             }, {
-                index : !webglStub ? sp.vertexAttributes.intensity.index : 1,
+                index : 1,
                 vertexBuffer : vertexBuffer,
                 componentsPerAttribute : 1,
                 offsetInBytes : 4 * Float32Array.BYTES_PER_ELEMENT,
@@ -250,13 +263,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -307,13 +323,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -374,13 +393,16 @@ defineSuite([
         var sp = ShaderProgram.fromCache({
             context : cxt,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         var va = new VertexArray({
             context : cxt,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : cxt,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -442,13 +464,16 @@ defineSuite([
         var sp = ShaderProgram.fromCache({
             context : cxt,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         var va = new VertexArray({
             context : cxt,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : cxt,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -504,13 +529,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -561,13 +589,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
@@ -618,13 +649,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
@@ -677,13 +711,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
@@ -734,13 +771,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -774,13 +814,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, 1000, 0, 1]),
@@ -816,13 +859,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -862,13 +908,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -920,13 +969,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
@@ -1003,13 +1055,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
@@ -1083,13 +1138,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, -1, 0, 0, 0, 1]),
@@ -1139,13 +1197,17 @@ defineSuite([
             sp = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : vs,
-                fragmentShaderSource : fs
+                fragmentShaderSource : fs,
+                attributeLocations: {
+                    position: 0,
+                    color: 1
+                }
             });
 
             va = new VertexArray({
                 context : context,
                 attributes : [{
-                    index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                    index : 0,
                     vertexBuffer : Buffer.createVertexBuffer({
                         context : context,
                         typedArray : new Float32Array([0, 0, 0, 1]),
@@ -1153,7 +1215,7 @@ defineSuite([
                     }),
                     componentsPerAttribute : 4
                 }, {
-                    index : !webglStub ? sp.vertexAttributes.color.index : 1,
+                    index : 1,
                     vertexBuffer : Buffer.createVertexBuffer({
                         context : context,
                         typedArray : new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255]),
@@ -1275,13 +1337,16 @@ defineSuite([
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs
+            fragmentShaderSource : fs,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -1310,13 +1375,16 @@ defineSuite([
             sp = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : vs,
-                fragmentShaderSource : fs
+                fragmentShaderSource : fs,
+                attributeLocations: {
+                    position: 0
+                }
             });
 
             va = new VertexArray({
                 context : context,
                 attributes : [{
-                    index : !webglStub ? sp.vertexAttributes.position.index : 0,
+                    index : 0,
                     vertexBuffer : Buffer.createVertexBuffer({
                         context : context,
                         typedArray : new Float32Array([0, 0, 0, 1]),
