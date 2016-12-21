@@ -5,6 +5,7 @@ define([
         '../Core/DeveloperError',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
+        '../Core/loadKTX',
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType'
@@ -14,6 +15,7 @@ define([
         DeveloperError,
         loadImage,
         loadImageViaBlob,
+        loadKTX,
         Request,
         RequestScheduler,
         RequestType) {
@@ -299,6 +301,8 @@ define([
      */
     ImageryProvider.prototype.pickFeatures = DeveloperError.throwInstantiationError;
 
+    var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
+
     /**
      * Loads an image from a given URL.  If the server referenced by the URL already has
      * too many requests pending, this function will instead return undefined, indicating
@@ -313,7 +317,14 @@ define([
      *          Image or a Canvas DOM object.
      */
     ImageryProvider.loadImage = function(imageryProvider, url, distance) {
-        var requestFunction = defined(imageryProvider.tileDiscardPolicy) ? loadImageViaBlob : loadImage;
+        var requestFunction;
+        if (ktxRegex.test(url)) {
+            requestFunction = loadKTX;
+        } else if (defined(imageryProvider.tileDiscardPolicy)) {
+            requestFunction = loadImageViaBlob;
+        } else {
+            requestFunction = loadImage;
+        }
 
         return RequestScheduler.schedule(new Request({
             url : url,

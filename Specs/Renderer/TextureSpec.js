@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Color',
         'Core/loadImage',
+        'Core/loadKTX',
         'Core/PixelFormat',
         'Core/PrimitiveType',
         'Renderer/Buffer',
@@ -25,6 +26,7 @@ defineSuite([
         Cartesian2,
         Color,
         loadImage,
+        loadKTX,
         PixelFormat,
         PrimitiveType,
         Buffer,
@@ -49,6 +51,10 @@ defineSuite([
     var blueAlphaImage;
     var blueOverRedImage;
 
+    var greenDXTImage;
+    var greenPVRImage;
+    var greenETC1Image;
+
     var sp;
     var va;
     var texture;
@@ -68,6 +74,15 @@ defineSuite([
         }));
         promises.push(loadImage('./Data/Images/BlueOverRed.png').then(function(image) {
             blueOverRedImage = image;
+        }));
+        promises.push(loadKTX('./Data/Images/Green4x4DXT1.ktx').then(function(image) {
+            greenDXTImage = image;
+        }));
+        promises.push(loadKTX('./Data/Images/Green4x4PVR.ktx').then(function(image) {
+            greenPVRImage = image;
+        }));
+        promises.push(loadKTX('./Data/Images/Green4x4ETC1.ktx').then(function(image) {
+            greenETC1Image = image;
         }));
 
         return when.all(promises);
@@ -209,6 +224,60 @@ defineSuite([
 
             var pixels = renderFragment(context);
             expect(pixels).toEqual(color.toBytes());
+        }
+    });
+
+    it('draws the expected DXT compressed texture color', function() {
+        if (context.s3tc) {
+            texture = new Texture({
+                context : context,
+                pixelFormat : greenDXTImage.internalFormat,
+                source : {
+                    width : greenDXTImage.width,
+                    height : greenDXTImage.height,
+                    arrayBufferView : greenDXTImage.bufferView
+                }
+            });
+
+            var pixels = renderFragment(context);
+            expect(pixels).toEqual([0, 255, 0, 255]);
+        }
+    });
+
+    it('draws the expected PVR compressed texture color', function() {
+        if (context.pvrtc) {
+            texture = new Texture({
+                context : context,
+                pixelFormat : greenPVRImage.internalFormat,
+                source : {
+                    width : greenPVRImage.width,
+                    height : greenPVRImage.height,
+                    arrayBufferView : greenPVRImage.bufferView
+                }
+            });
+
+            var pixels = renderFragment(context);
+            expect(pixels).toEqual([0, 255, 0, 255]);
+        }
+    });
+
+    it('draws the expected ETC1 compressed texture color', function() {
+        if (context.etc1) {
+            texture = new Texture({
+                context : context,
+                pixelFormat : greenETC1Image.internalFormat,
+                source : {
+                    width : greenETC1Image.width,
+                    height : greenETC1Image.height,
+                    arrayBufferView : greenETC1Image.bufferView
+                }
+            });
+
+            var pixels = renderFragment(context);
+            expect(pixels[0]).toEqual(0);
+            expect(pixels[1]).toBeGreaterThan(250);
+            expect(pixels[2]).toEqual(0);
+            expect(pixels[3]).toEqual(255);
         }
     });
 
@@ -639,6 +708,81 @@ defineSuite([
         }
     });
 
+    it('throws when creating compressed texture and the array buffer source is undefined', function() {
+        expect(function() {
+            texture = new Texture({
+                context : context,
+                width : 4,
+                height : 4,
+                pixelFormat : PixelFormat.RGBA_DXT3
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when creating compressed texture when s3tc is unsupported', function() {
+        if (!context.s3tc) {
+            expect(function() {
+                texture = new Texture({
+                    context : context,
+                    width :greenDXTImage.width,
+                    height : greenDXTImage.height,
+                    pixelFormat : greenDXTImage.internalFormat,
+                    source : {
+                        arrayBufferView : greenDXTImage.bufferView
+                    }
+                });
+            }).toThrowDeveloperError();
+        }
+    });
+
+    it('throws when creating compressed texture when pvrtc is unsupported', function() {
+        if (!context.pvrtc) {
+            expect(function() {
+                texture = new Texture({
+                    context : context,
+                    width :greenPVRImage.width,
+                    height : greenPVRImage.height,
+                    pixelFormat : greenPVRImage.internalFormat,
+                    source : {
+                        arrayBufferView : greenPVRImage.bufferView
+                    }
+                });
+            }).toThrowDeveloperError();
+        }
+    });
+
+    it('throws when creating compressed texture when etc1 is unsupported', function() {
+        if (!context.etc1) {
+            expect(function() {
+                texture = new Texture({
+                    context : context,
+                    width :greenETC1Image.width,
+                    height : greenETC1Image.height,
+                    pixelFormat : greenETC1Image.internalFormat,
+                    source : {
+                        arrayBufferView : greenETC1Image.bufferView
+                    }
+                });
+            }).toThrowDeveloperError();
+        }
+    });
+
+    it('throws when creating compressed texture and the array buffer is not the right length', function() {
+        if (context.s3tc) {
+            expect(function() {
+                texture = new Texture({
+                    context : context,
+                    width :greenDXTImage.width + 1,
+                    height : greenDXTImage.height,
+                    pixelFormat : greenDXTImage.internalFormat,
+                    source : {
+                        arrayBufferView : greenDXTImage.bufferView
+                    }
+                });
+            }).toThrowDeveloperError();
+        }
+    });
+
     it('throws when creating from the framebuffer with an invalid pixel format', function() {
         expect(function() {
             texture = Texture.fromFramebuffer({
@@ -711,6 +855,24 @@ defineSuite([
                 height : 1,
                 pixelFormat : PixelFormat.DEPTH_COMPONENT,
                 pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
+
+            expect(function() {
+                texture.copyFromFramebuffer();
+            }).toThrowDeveloperError();
+        }
+    });
+
+    it('throws when copying to a texture from the framebuffer with a compressed pixel format', function() {
+        if (context.s3tc) {
+            texture = new Texture({
+                context : context,
+                width : greenDXTImage.width,
+                height : greenDXTImage.height,
+                pixelFormat : greenDXTImage.internalFormat,
+                source : {
+                    arrayBufferView : greenDXTImage.bufferView
+                }
             });
 
             expect(function() {
@@ -880,6 +1042,25 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws when copyFrom is given a source with a compressed pixel format', function() {
+        if (context.s3tc) {
+            texture = new Texture({
+                context : context,
+                width : greenDXTImage.width,
+                height : greenDXTImage.height,
+                pixelFormat : greenDXTImage.internalFormat,
+                source : {
+                    arrayBufferView : greenDXTImage.bufferView
+                }
+            });
+
+            var image = new Image();
+            expect(function() {
+                texture.copyFrom(image);
+            }).toThrowDeveloperError();
+        }
+    });
+
     it('throws when generating mipmaps with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
         if (context.depthTexture) {
             texture = new Texture({
@@ -888,6 +1069,24 @@ defineSuite([
                 height : 1,
                 pixelFormat : PixelFormat.DEPTH_COMPONENT,
                 pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
+
+            expect(function() {
+                texture.generateMipmap();
+            }).toThrowDeveloperError();
+        }
+    });
+
+    it('throws when generating mipmaps with a compressed pixel format', function() {
+        if (context.s3tc) {
+            texture = new Texture({
+                context : context,
+                width : greenDXTImage.width,
+                height : greenDXTImage.height,
+                pixelFormat : greenDXTImage.internalFormat,
+                source : {
+                    arrayBufferView : greenDXTImage.bufferView
+                }
             });
 
             expect(function() {
