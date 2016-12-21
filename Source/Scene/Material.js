@@ -12,6 +12,7 @@ define([
         '../Core/DeveloperError',
         '../Core/isArray',
         '../Core/loadImage',
+        '../Core/loadKTX',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -43,6 +44,7 @@ define([
         DeveloperError,
         isArray,
         loadImage,
+        loadKTX,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -413,10 +415,23 @@ define([
             uniformId = loadedImage.id;
             var image = loadedImage.image;
 
-            var texture = new Texture({
-                context : context,
-                source : image
-            });
+            var texture;
+            if (defined(image.internalFormat)) {
+                texture = new Texture({
+                    context : context,
+                    pixelFormat : image.internalFormat,
+                    width : image.width,
+                    height : image.height,
+                    source : {
+                        arrayBufferView : image.bufferView
+                    }
+                });
+            } else {
+                texture = new Texture({
+                    context : context,
+                    source : image
+                });
+            }
 
             this._textures[uniformId] = texture;
 
@@ -663,6 +678,8 @@ define([
         'mat4' : Matrix4
     };
 
+    var ktxRegex = /\.ktx$/i;
+
     function createTexture2DUpdateFunction(uniformId) {
         var oldUniformValue;
         return function(material, context) {
@@ -741,12 +758,21 @@ define([
 
             if (uniformValue !== material._texturePaths[uniformId]) {
                 if (typeof uniformValue === 'string') {
-                    when(loadImage(uniformValue), function(image) {
-                        material._loadedImages.push({
-                            id : uniformId,
-                            image : image
+                    if (ktxRegex.test(uniformValue)) {
+                        when(loadKTX(uniformValue), function(image) {
+                            material._loadedImages.push({
+                                id : uniformId,
+                                image : image
+                            });
                         });
-                    });
+                    } else {
+                        when(loadImage(uniformValue), function(image) {
+                            material._loadedImages.push({
+                                id : uniformId,
+                                image : image
+                            });
+                        });
+                    }
                 } else if (uniformValue instanceof HTMLCanvasElement) {
                     material._loadedImages.push({
                         id : uniformId,
