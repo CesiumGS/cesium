@@ -41,6 +41,7 @@ defineSuite([
         createContext) {
     'use strict';
 
+    var webglStub = !!window.webglStub;
     var context;
     var sp;
     var va;
@@ -201,12 +202,16 @@ defineSuite([
                 position : 0
             }
         });
-        sp.allUniforms.u_texture.value = colorTexture;
+        var uniformMap = {
+            u_texture : function() {
+                return colorTexture;
+            }
+        };
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -219,7 +224,8 @@ defineSuite([
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
-            vertexArray : va
+            vertexArray : va,
+            uniformMap : uniformMap
         });
         command.execute(context);
         expect(context).toReadPixels([0, 255, 0, 255]);
@@ -263,12 +269,16 @@ defineSuite([
                 position : 0
             }
         });
-        sp.allUniforms.u_cubeMap.value = cubeMap;
+        var uniformMap = {
+            u_cubeMap : function() {
+                return cubeMap;
+            }
+        };
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -281,7 +291,8 @@ defineSuite([
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
-            vertexArray : va
+            vertexArray : va,
+            uniformMap : uniformMap
         });
         command.execute(context);
         expect(context).toReadPixels([0, 255, 0, 255]);
@@ -316,7 +327,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -348,12 +359,17 @@ defineSuite([
                 position : 0
             }
         });
-        sp2.allUniforms.u_texture.value = colorTexture;
+        var uniformMap = {
+            u_texture : function() {
+                return colorTexture;
+            }
+        };
 
         command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp2,
-            vertexArray : va
+            vertexArray : va,
+            uniformMap : uniformMap
         });
         command.execute(context);
         expect(context).toReadPixels([0, 255, 0, 255]);
@@ -376,7 +392,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -413,12 +429,17 @@ defineSuite([
                 position : 0
             }
         });
-        sp2.allUniforms.u_texture.value = texture;
+        var uniformMap = {
+            u_texture : function() {
+                return texture;
+            }
+        };
 
         command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp2,
-            vertexArray : va
+            vertexArray : va,
+            uniformMap : uniformMap
         });
         command.execute(context);
 
@@ -502,7 +523,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -596,7 +617,7 @@ defineSuite([
             va = new VertexArray({
                 context : context,
                 attributes : [{
-                    index : sp.vertexAttributes.position.index,
+                    index : !webglStub ? sp.vertexAttributes.position.index : 0,
                     vertexBuffer : Buffer.createVertexBuffer({
                         context : context,
                         typedArray : new Float32Array([0, 0, 0, 1]),
@@ -628,13 +649,20 @@ defineSuite([
                     position : 0
                 }
             });
-            sp2.allUniforms.u_texture0.value = colorTexture0;
-            sp2.allUniforms.u_texture1.value = colorTexture1;
+            var uniformMap = {
+                u_texture0 : function() {
+                    return colorTexture0;
+                },
+                u_texture1 : function() {
+                    return colorTexture1;
+                },
+            };
 
             command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp2,
-                vertexArray : va
+                vertexArray : va,
+                uniformMap : uniformMap
             });
             command.execute(context);
             expect(context).toReadPixels([255, 255, 0, 255]);
@@ -677,6 +705,10 @@ defineSuite([
     });
 
     it('gets the status of a incomplete framebuffer', function() {
+        if (webglStub) {
+            return;
+        }
+
         framebuffer = new Framebuffer({
             context : context,
             colorTextures : [new Texture({
@@ -828,7 +860,7 @@ defineSuite([
         va = new VertexArray({
             context : context,
             attributes : [{
-                index : sp.vertexAttributes.position.index,
+                index : !webglStub ? sp.vertexAttributes.position.index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
