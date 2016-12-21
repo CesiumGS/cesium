@@ -83,13 +83,16 @@ defineSuite([
         var shaderProgram = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vertexShader,
-            fragmentShaderSource : fragmentShader
+            fragmentShaderSource : fragmentShader,
+            attributeLocations: {
+                position: 0
+            }
         });
 
         var vertexArray = new VertexArray({
             context : context,
             attributes : [{
-                index : shaderProgram.vertexAttributes.position.index,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),

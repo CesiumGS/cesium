@@ -23,6 +23,7 @@ defineSuite([
         createContext) {
     'use strict';
 
+    var webglStub = !!window.webglStub;
     var context;
     var sp;
 
@@ -98,6 +99,10 @@ defineSuite([
             fragmentShaderSource : fs
         });
 
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
+
         expect(sp.numberOfVertexAttributes).toEqual(1);
         expect(sp.vertexAttributes.position.name).toEqual('position');
     });
@@ -123,6 +128,10 @@ defineSuite([
             attributeLocations : attributes
         });
 
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
+
         expect(sp.numberOfVertexAttributes).toEqual(3);
         expect(sp.vertexAttributes.position.name).toEqual('position');
         expect(sp.vertexAttributes.position.index).toEqual(attributes.position);
@@ -140,6 +149,10 @@ defineSuite([
             vertexShaderSource : vs,
             fragmentShaderSource : fs
         });
+
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
 
         expect(sp.allUniforms.u_vec4.name).toEqual('u_vec4');
         expect(sp.allUniforms.czm_viewport.name).toEqual('czm_viewport');
@@ -174,6 +187,10 @@ defineSuite([
             fragmentShaderSource : fs
         });
 
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
+
         expect(sp.allUniforms.u_float.name).toEqual('u_float');
         expect(sp.allUniforms.u_vec2.name).toEqual('u_vec2');
         expect(sp.allUniforms.u_vec3.name).toEqual('u_vec3');
@@ -201,6 +218,10 @@ defineSuite([
             vertexShaderSource : vs,
             fragmentShaderSource : fs
         });
+
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
 
         expect(sp.allUniforms['u_struct.f'].name).toEqual('u_struct.f');
         expect(sp.allUniforms['u_struct.v'].name).toEqual('u_struct.v');
@@ -234,6 +255,10 @@ defineSuite([
             vertexShaderSource : vs,
             fragmentShaderSource : fs
         });
+
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
 
         expect(sp.allUniforms.u_float.name).toEqual('u_float');
         expect(sp.allUniforms.u_vec2.name).toEqual('u_vec2');
@@ -328,8 +353,12 @@ defineSuite([
             vertexShaderSource : vs,
             fragmentShaderSource : fs
         });
-        expect(sp.allUniforms.u_value).toBeDefined();
-        expect(sp.allUniforms.czm_mediump_u_value).toBeDefined();
+
+        if (!webglStub) {
+            // WebGL Stub does not return vertex attribute and uniforms in the shader
+            expect(sp.allUniforms.u_value).toBeDefined();
+            expect(sp.allUniforms.czm_mediump_u_value).toBeDefined();
+        }
 
         expect({
             context : context,
@@ -468,6 +497,10 @@ defineSuite([
     });
 
     it('fails vertex shader compile', function() {
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
+
         var vs = 'does not compile.';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = ShaderProgram.fromCache({
@@ -482,6 +515,10 @@ defineSuite([
     });
 
     it('fails fragment shader compile', function() {
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
+
         var vs = 'void main() { gl_Position = vec4(0.0); }';
         var fs = 'does not compile.';
         sp = ShaderProgram.fromCache({
@@ -496,6 +533,10 @@ defineSuite([
     });
 
     it('fails to link', function() {
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
+
         var vs = 'void nomain() { }';
         var fs = 'void nomain() { }';
         sp = ShaderProgram.fromCache({

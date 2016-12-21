@@ -55,41 +55,11 @@ defineSuite([
     });
 
     it('draws a white point', function() {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-
-        sp = ShaderProgram.fromCache({
+        expect({
             context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
-            }
-        });
-
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                index : 0,
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 255]);
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        command.execute(context);
-        expect(context).toReadPixels([255, 255, 255, 255]);
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('draws a white point with an index buffer', function() {
