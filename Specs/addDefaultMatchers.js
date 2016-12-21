@@ -392,7 +392,7 @@ define([
                 };
             },
 
-            toRenderFragmentShader : function(util, customEqualityTesters) {
+            contextToRender : function(util, customEqualityTesters) {
                 return {
                     compare: function(actual, expected) {
                         return expectContextToRender(actual, expected, true);
@@ -400,7 +400,7 @@ define([
                 };
             },
 
-            notToRenderFragmentShader : function(util, customEqualityTesters) {
+            notContextToRender : function(util, customEqualityTesters) {
                 return {
                     compare: function(actual, expected) {
                         return expectContextToRender(actual, expected, false);

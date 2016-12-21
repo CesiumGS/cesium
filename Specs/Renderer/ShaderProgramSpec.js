@@ -292,7 +292,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has built-in constant, structs, and functions', function() {
@@ -309,7 +309,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('creates duplicate uniforms if precision of uniforms in vertex and fragment shader do not match', function() {
@@ -336,7 +336,7 @@ defineSuite([
             vertexShader : vs,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).notToRenderFragmentShader([0, 0, 0, 0]);
+        }).notContextToRender([0, 0, 0, 0]);
 
         ContextLimits._highpFloatSupported = highpFloatSupported;
     });
@@ -350,7 +350,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('2 level function dependency', function() {
@@ -362,7 +362,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('3 level function dependency', function() {
@@ -374,7 +374,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('diamond dependency', function() {
@@ -389,7 +389,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('diamond plus 3 level function dependency', function() {
@@ -404,7 +404,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('big mess of function dependencies', function() {
@@ -419,7 +419,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('doc comment with reference to another function', function() {
@@ -432,7 +432,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('compiles with #version at the top', function() {

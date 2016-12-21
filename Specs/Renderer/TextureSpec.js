@@ -117,7 +117,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader([255, 0, 0, 255]);
+        }).contextToRender([255, 0, 0, 255]);
     });
 
     it('can copy from the framebuffer', function() {
@@ -132,7 +132,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader([0, 0, 255, 255]);
+        }).contextToRender([0, 0, 255, 255]);
 
         // Clear to red
         var command = new ClearCommand({
@@ -153,7 +153,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader([255, 0, 0, 255]);
+        }).contextToRender([255, 0, 0, 255]);
     });
 
     it('draws the expected texture color', function() {
@@ -167,7 +167,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader([0, 0, 255, 255]);
+        }).contextToRender([0, 0, 255, 255]);
     });
 
     it('draws the expected floating-point texture color', function() {
@@ -190,7 +190,7 @@ defineSuite([
                 context : context,
                 fragmentShader : fs,
                 uniformMap : uniformMap
-            }).toRenderFragmentShader(color.toBytes());
+            }).contextToRender(color.toBytes());
         }
     });
 
@@ -207,7 +207,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader([0, 0, 127, 127]);
+        }).contextToRender([0, 0, 127, 127]);
     });
 
     it('draws textured blue and red points', function() {
@@ -238,7 +238,7 @@ defineSuite([
             context : context,
             fragmentShader : fragmentShaderSource,
             uniformMap : um
-        }).toRenderFragmentShader([0, 0, 255, 255]);
+        }).contextToRender([0, 0, 255, 255]);
 
         // Red on bottom
         txCoords = new Cartesian2(0.5, 0.25);
@@ -246,7 +246,7 @@ defineSuite([
             context : context,
             fragmentShader : fragmentShaderSource,
             uniformMap : um
-        }).toRenderFragmentShader([255, 0, 0, 255]);
+        }).contextToRender([255, 0, 0, 255]);
     });
 
     it('can be created from a typed array', function() {
@@ -267,7 +267,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader([0, 255, 0, 255]);
+        }).contextToRender([0, 255, 0, 255]);
     });
 
     it('can copy from a typed array', function() {
@@ -290,7 +290,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader(Color.NAVY.toBytes());
+        }).contextToRender(Color.NAVY.toBytes());
     });
 
     it('can replace a subset of a texture', function() {
@@ -321,7 +321,7 @@ defineSuite([
             context : context,
             fragmentShader : fragmentShaderSource,
             uniformMap : um
-        }).toRenderFragmentShader([0, 0, 255, 255]);
+        }).contextToRender([0, 0, 255, 255]);
 
         // Red on bottom
         txCoords = new Cartesian2(0.5, 0.25);
@@ -329,7 +329,7 @@ defineSuite([
             context : context,
             fragmentShader : fragmentShaderSource,
             uniformMap : um
-        }).toRenderFragmentShader([255, 0, 0, 255]);
+        }).contextToRender([255, 0, 0, 255]);
 
         // After copy...
         texture.copyFrom(greenImage, 0, 1);
@@ -340,7 +340,7 @@ defineSuite([
             context : context,
             fragmentShader : fragmentShaderSource,
             uniformMap : um
-        }).toRenderFragmentShader(Color.LIME.toBytes());
+        }).contextToRender(Color.LIME.toBytes());
 
         // Still red on bottom
         txCoords = new Cartesian2(0.5, 0.25);
@@ -348,7 +348,7 @@ defineSuite([
             context : context,
             fragmentShader : fragmentShaderSource,
             uniformMap : um
-        }).toRenderFragmentShader([255, 0, 0, 255]);
+        }).contextToRender([255, 0, 0, 255]);
     });
 
     it('can generate mipmaps', function() {
@@ -366,7 +366,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader([0, 0, 255, 255]);
+        }).contextToRender([0, 0, 255, 255]);
     });
 
     it('can set a sampler property', function() {

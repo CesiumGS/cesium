@@ -83,7 +83,7 @@ defineSuite([
                 context : context,
                 fragmentShader : fs,
                 uniformMap : uniformMap
-            }).toRenderFragmentShader(expectedColors[i]);
+            }).contextToRender(expectedColors[i]);
         }
     }
 
@@ -517,7 +517,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader([0, 0, 255, 255]);
+        }).contextToRender([0, 0, 255, 255]);
 
         // Clear framebuffer to red and copy to +X face
         var clearCommand = new ClearCommand({
@@ -536,7 +536,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader([255, 0, 0, 255]);
+        }).contextToRender([255, 0, 0, 255]);
     });
 
     it('draws with a cube map and a texture', function() {
@@ -575,7 +575,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader([0, 255, 255, 255]);
+        }).contextToRender([0, 255, 255, 255]);
 
         texture = texture.destroy();
     });
@@ -612,7 +612,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader([0, 0, 255, 255]);
+        }).contextToRender([0, 0, 255, 255]);
     });
 
     it('destroys', function() {

@@ -36,7 +36,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_transpose (3x3)', function() {
@@ -50,7 +50,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_transpose (4x4)', function() {
@@ -64,7 +64,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_eyeToWindowCoordinates', function() {
@@ -93,7 +93,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_windowToEyeCoordinates', function() {
@@ -122,7 +122,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_tangentToEyeSpaceMatrix', function() {
@@ -138,7 +138,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_translateRelativeToEye', function() {
@@ -171,7 +171,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_antialias', function() {
@@ -185,7 +185,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('czm_pointAlongRay: point at ray origin', function() {
@@ -196,7 +196,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('czm_pointAlongRay: point in front of ray origin', function() {
@@ -207,7 +207,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('czm_pointAlongRay: point behind ray origin', function() {
@@ -218,7 +218,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_octDecode(vec2)', function() {
@@ -229,7 +229,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_octDecode(float)', function() {
@@ -240,7 +240,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_octDecode(vec2, vec3, vec3, vec3)', function() {
@@ -256,7 +256,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_decompressTextureCoordinates', function() {
@@ -267,7 +267,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has signNotZero : float', function() {
@@ -280,7 +280,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has signNotZero : vec2', function() {
@@ -294,7 +294,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has signNotZero : vec3', function() {
@@ -308,7 +308,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has signNotZero : vec4', function() {
@@ -322,7 +322,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_cosineAndSine in all 4 quadrants', function() {
@@ -339,7 +339,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('can calculate nearFarScalar', function() {
@@ -354,7 +354,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_cascadeColor', function() {
@@ -365,6 +365,6 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 }, 'WebGL');

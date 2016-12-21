@@ -46,7 +46,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets vec2 uniform', function() {
@@ -66,7 +66,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets vec3 uniform (Cartesian3)', function() {
@@ -86,7 +86,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets vec3 uniform (Color)', function() {
@@ -106,7 +106,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets vec4 uniform (Cartesian4)', function() {
@@ -126,7 +126,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets vec4 uniform (Color)', function() {
@@ -146,7 +146,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets int uniform', function() {
@@ -166,7 +166,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets ivec2 uniform', function() {
@@ -186,7 +186,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets ivec3 uniform', function() {
@@ -206,7 +206,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets ivec4 uniform', function() {
@@ -226,7 +226,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets bool uniform', function() {
@@ -246,7 +246,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets bvec2 uniform', function() {
@@ -266,7 +266,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets bvec3 uniform', function() {
@@ -286,7 +286,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets bvec4 uniform', function() {
@@ -306,7 +306,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets mat2 uniform', function() {
@@ -331,7 +331,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets mat3 uniform', function() {
@@ -358,7 +358,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets mat4 uniform', function() {
@@ -387,7 +387,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets a struct uniform', function() {
@@ -415,7 +415,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets float uniform array', function() {
@@ -442,7 +442,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets vec2 uniform array', function() {
@@ -468,7 +468,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets vec3 uniform array', function() {
@@ -494,7 +494,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets vec4 uniform array', function() {
@@ -520,7 +520,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets int uniform array', function() {
@@ -547,7 +547,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets ivec2 uniform array', function() {
@@ -573,7 +573,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets ivec3 uniform array', function() {
@@ -599,7 +599,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets ivec4 uniform array', function() {
@@ -625,7 +625,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets bool uniform array', function() {
@@ -652,7 +652,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets bvec2 uniform array', function() {
@@ -678,7 +678,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets bvec3 uniform array', function() {
@@ -704,7 +704,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets bvec4 uniform array', function() {
@@ -730,7 +730,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets mat2 uniform array', function() {
@@ -763,7 +763,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets mat3 uniform array', function() {
@@ -800,7 +800,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('sets mat4 uniform array', function() {
@@ -841,6 +841,6 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 }, 'WebGL');

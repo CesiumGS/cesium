@@ -139,7 +139,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader(expected);
+        }).contextToRender(expected);
     });
 
     it('gets the element index uint extension', function() {
@@ -199,7 +199,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             depth : 0.5
-        }).toRenderFragmentShader([255, 0, 0, 255]);
+        }).contextToRender([255, 0, 0, 255]);
 
         var fsFragDepth = '';
         
@@ -228,7 +228,7 @@ defineSuite([
             fragmentShader : fsFragDepth,
             depth : 1.0,
             clear : false
-        }).toRenderFragmentShader(expected);
+        }).contextToRender(expected);
     });
 
     it('get the draw buffers extension', function() {

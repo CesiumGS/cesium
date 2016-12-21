@@ -71,7 +71,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_viewport', function() {
@@ -82,7 +82,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_viewportOrthographic', function() {
@@ -97,7 +97,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_viewportTransformation', function() {
@@ -112,7 +112,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_globeDepthTexture', function() {
@@ -131,7 +131,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_model', function() {
@@ -152,7 +152,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseModel', function() {
@@ -173,7 +173,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_view', function() {
@@ -196,7 +196,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_view3D', function() {
@@ -219,7 +219,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_viewRotation', function() {
@@ -241,7 +241,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_viewRotation3D', function() {
@@ -263,7 +263,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseView', function() {
@@ -286,7 +286,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseView3D', function() {
@@ -309,7 +309,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseViewRotation', function() {
@@ -332,7 +332,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseViewRotation3D', function() {
@@ -355,7 +355,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_projection', function() {
@@ -379,7 +379,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseProjection', function() {
@@ -403,7 +403,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseProjectionOIT', function() {
@@ -427,7 +427,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseProjectionOIT in 2D', function() {
@@ -453,7 +453,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_infiniteProjection', function() {
@@ -475,7 +475,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_modelView', function() {
@@ -504,7 +504,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_modelView3D', function() {
@@ -533,7 +533,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_modelViewRelativeToEye', function() {
@@ -562,7 +562,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseModelView', function() {
@@ -586,7 +586,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseModelView3D', function() {
@@ -610,7 +610,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_viewProjection', function() {
@@ -637,7 +637,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseViewProjection', function() {
@@ -664,7 +664,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_modelViewProjection', function() {
@@ -697,7 +697,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseModelViewProjection', function() {
@@ -730,7 +730,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_modelViewProjectionRelativeToEye', function() {
@@ -763,7 +763,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_modelViewInfiniteProjection', function() {
@@ -797,7 +797,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_normal', function() {
@@ -818,7 +818,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseNormal', function() {
@@ -839,7 +839,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_normal3D', function() {
@@ -860,7 +860,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_inverseNormal3D', function() {
@@ -881,7 +881,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             modelMatrix : m
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_encodedCameraPositionMCHigh and czm_encodedCameraPositionMCLow', function() {
@@ -897,7 +897,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_entireFrustum', function() {
@@ -908,7 +908,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_frustumPlanes', function() {
@@ -919,7 +919,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_sunPositionWC', function() {
@@ -930,7 +930,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_sunPositionColumbusView', function() {
@@ -941,7 +941,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_sunDirectionEC', function() {
@@ -952,7 +952,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_sunDirectionWC', function() {
@@ -963,7 +963,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_moonDirectionEC', function() {
@@ -974,7 +974,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_viewerPositionWC', function() {
@@ -985,7 +985,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_frameNumber', function() {
@@ -996,7 +996,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_morphTime', function() {
@@ -1007,7 +1007,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_temeToPseudoFixed', function() {
@@ -1025,7 +1025,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_pass and czm_passEnvironment', function() {
@@ -1039,7 +1039,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_pass and czm_passCompute', function() {
@@ -1053,7 +1053,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_pass and czm_passGlobe', function() {
@@ -1067,7 +1067,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_pass and czm_passGround', function() {
@@ -1081,7 +1081,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_pass and czm_passOpaque', function() {
@@ -1095,7 +1095,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_pass and czm_passTranslucent', function() {
@@ -1109,7 +1109,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_pass and czm_passOverlay', function() {
@@ -1123,7 +1123,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_sceneMode', function() {
@@ -1134,7 +1134,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_sceneMode2D', function() {
@@ -1145,7 +1145,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_sceneModeColumbusView', function() {
@@ -1156,7 +1156,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_sceneMode3D', function() {
@@ -1167,7 +1167,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_sceneModeMorphing', function() {
@@ -1178,7 +1178,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_eyeHeight2D == 0,0 in Scene3D', function() {
@@ -1189,7 +1189,7 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 
     it('has czm_eyeHeight2D in Scene2D', function() {
@@ -1214,6 +1214,6 @@ defineSuite([
         expect({
             context : context,
             fragmentShader : fs
-        }).toRenderFragmentShader();
+        }).contextToRender();
     });
 }, 'WebGL');
