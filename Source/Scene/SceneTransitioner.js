@@ -125,12 +125,14 @@ define([
         var up = scratchToCVUp;
 
         if (duration > 0.0) {
+            var maxRadii = ellipsoid.maximumRadius;
             position.x = 0.0;
-            position.y = 0.0;
-            position.z = 5.0 * ellipsoid.maximumRadius;
+            position.y = -1.0;
+            position.z = 1.0;
+            position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * maxRadii, position);
 
-            Cartesian3.negate(Cartesian3.UNIT_Z, direction);
-            Cartesian3.clone(Cartesian3.UNIT_Y, up);
+            Cartesian3.negate(Cartesian3.normalize(position, direction), direction);
+            Cartesian3.cross(Cartesian3.UNIT_X, direction, up);
         } else {
             var camera = scene.camera;
             if (this._previousMode === SceneMode.SCENE2D) {
@@ -694,6 +696,8 @@ define([
         var scene = transitioner._scene;
         var camera = scene.camera;
 
+        camera.position.z = camera.position.z * 3;
+
         var startPos = Cartesian3.clone(camera.position, scratch3DToCVStartPos);
         var startDir = Cartesian3.clone(camera.direction, scratch3DToCVStartDir);
         var startUp = Cartesian3.clone(camera.up, scratch3DToCVStartUp);
@@ -702,8 +706,7 @@ define([
         var endDir = Cartesian3.clone(cameraCV.direction, scratch3DToCVEndDir);
         var endUp = Cartesian3.clone(cameraCV.up, scratch3DToCVEndUp);
 
-        var startRight = camera.frustum.right;
-        var endRight = endPos.z * 0.5;
+        morphOrthographicToPerspective(transitioner, 0.0, cameraCV, complete);
 
         function update(value) {
             columbusViewMorph(startPos, endPos, value.time, camera.position);
@@ -711,14 +714,6 @@ define([
             columbusViewMorph(startUp, endUp, value.time, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.normalize(camera.right, camera.right);
-
-            var frustum = camera.frustum;
-            frustum.right = CesiumMath.lerp(startRight, endRight, value.time);
-            frustum.left = -frustum.right;
-            frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
-            frustum.bottom = -frustum.top;
-
-            camera.position.z = 2.0 * scene.mapProjection.ellipsoid.maximumRadius;
         }
         var tween = scene.tweens.add({
             duration : duration,
@@ -732,7 +727,7 @@ define([
             update : update,
             complete : function() {
                 scene._mode = SceneMode.MORPHING;
-                morphOrthographicToPerspective(transitioner, duration, cameraCV, complete);
+                morphOrthographicToPerspective(transitioner, 0.0, cameraCV, complete);
             }
         });
         transitioner._currentTweens.push(tween);
