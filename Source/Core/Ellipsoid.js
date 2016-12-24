@@ -56,7 +56,7 @@ define([
 
         ellipsoid._centerToleranceSquared = CesiumMath.EPSILON1;
 
-        if (ellipsoid._radiiSquared.z !== 0){
+        if (ellipsoid._radiiSquared.z !== 0) {
             ellipsoid._sqauredXOverSquaredZ = ellipsoid._radiiSquared.x / ellipsoid._radiiSquared.z;
         }
     }
@@ -646,7 +646,7 @@ define([
 
         var sqauredXOverSquaredZ = this._sqauredXOverSquaredZ;
 
-        if (!defined(result)){
+        if (!defined(result)) {
             result = new Cartesian3();
         }
 
@@ -654,7 +654,7 @@ define([
         result.y = 0.0;
         result.z = position.z * (1 - sqauredXOverSquaredZ);
 
-        if (Math.abs(result.z) >= this._radii.z - buffer){
+        if (Math.abs(result.z) >= this._radii.z - buffer) {
             return undefined;
         }
 
