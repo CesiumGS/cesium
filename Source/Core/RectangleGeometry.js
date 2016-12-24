@@ -170,10 +170,11 @@ define([
         var binormal = binormalScratch;
         var tangent = tangentScratch;
         var normal = normalScratch;
-        for (var i = 0; i < length; i += 6) {
-            var p = Cartesian3.fromArray(positions, i, positionScratch);
+        if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+            for (var i = 0; i < length; i += 6) {
+                var p = Cartesian3.fromArray(positions, i, positionScratch);
 
-            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                
                 var p1 = Cartesian3.fromArray(positions, (i + 6) % length, v1Scratch);
                 if (recomputeNormal) {
                     var p2 = Cartesian3.fromArray(positions, (i + 3) % length, v2Scratch);
