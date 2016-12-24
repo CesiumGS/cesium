@@ -438,7 +438,7 @@ define([
         var rayOrigin = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesian, 11500.0, ray.origin);
 
         // Theoretically, not with Earth datums, the intersection point can be outside the ellipsoid
-        if (!defined(rayOrigin)){
+        if (!defined(rayOrigin)) {
             // intersection point is outside the ellipsoid, try other value
             // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
             var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
