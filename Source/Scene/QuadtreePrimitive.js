@@ -776,7 +776,7 @@ define([
                         var rayOrigin = ellipsoid.getSurfaceNormalIntersectionWithZAxis(data.positionOnEllipsoidSurface, 11500.0, scratchRay.origin);
 
                         // Theoretically, not with Earth datums, the intersection point can be outside the ellipsoid
-                        if (!defined(rayOrigin)){
+                        if (!defined(rayOrigin)) {
                             // intersection point is outside the ellipsoid, try other value
                             // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
                             var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
@@ -785,7 +785,6 @@ define([
                             var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchPosition);
                             Cartesian3.subtract(data.positionOnEllipsoidSurface, vectorToMinimumPoint, scratchRay.origin);
                         }
-
                     } else {
                         Cartographic.clone(data.positionCartographic, scratchCartographic);
 
