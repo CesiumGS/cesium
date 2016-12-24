@@ -629,9 +629,7 @@ define([
      * @exception {DeveloperError} Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y).
      * @exception {DeveloperError} Ellipsoid.radii.z must be greater than 0.
      */
-
     Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function(position, buffer, result) {
-
         //>>includeStart('debug', pragmas.debug);
         if (!defined(position)) {
             throw new DeveloperError('position is required.');
@@ -652,13 +650,13 @@ define([
             result = new Cartesian3();
         }
 
-        result.x = 0;
-        result.y = 0;
+        result.x = 0.0;
+        result.y = 0.0;
         result.z = position.z * (1 - sqauredXOverSquaredZ);
+
         if (Math.abs(result.z) >= this._radii.z - buffer){
             return undefined;
         }
-
 
         return result;
     };
