@@ -440,7 +440,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('getSurfaceNormalIntersectionWithZAxis throws if the ellipsoid is no ellipsoid of revolution', function() {
+    it('getSurfaceNormalIntersectionWithZAxis throws if the ellipsoid is not an ellipsoid of revolution', function() {
         expect(function() {
             var ellipsoid = new Ellipsoid(1,2,3);
             var cartesian = new Cartesian3();
@@ -509,7 +509,7 @@ defineSuite([
 
     });
 
-    it('getSurfaceNormalIntersectionWithZAxis returns a result that when a it\'s used as origin for a vector with the surface normal direction it produces an accurate cartographic', function() {
+    it('getSurfaceNormalIntersectionWithZAxis returns a result that when it\'s used as an origin for a vector with the surface normal direction it produces an accurate cartographic', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var cartographic  = Cartographic.fromDegrees(35.23,33.23);
         var cartesianOnTheSurface = ellipsoid.cartographicToCartesian(cartographic);
