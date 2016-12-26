@@ -1,7 +1,5 @@
 Change Log
 ==========
-*  Fixed issue where billboards on terrain had some offset. [#4598](https://github.com/AnalyticalGraphicsInc/cesium/issues/4598)
-*  Fixed issue where `globe.getHeight` randomly returned 'undefined'. [#3411](https://github.com/AnalyticalGraphicsInc/cesium/issues/3411)
 
 ### 1.29 - 2017-01-02
 
@@ -14,6 +12,8 @@ Change Log
    * Added support for newlines (`\n`) in Cesium `Label`s and CZML. [#2402](https://github.com/AnalyticalGraphicsInc/cesium/issues/2402)
 * Fixed texture rotation for `RectangleGeometry` [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
 * Fixed translucency in Firefox 50. https://github.com/AnalyticalGraphicsInc/cesium/pull/4762
+* Fixed issue where billboards on terrain had some offset. [#4598](https://github.com/AnalyticalGraphicsInc/cesium/issues/4598)
+* Fixed issue where `globe.getHeight` randomly returned `undefined`. [#3411](https://github.com/AnalyticalGraphicsInc/cesium/issues/3411)
 * Fixed a bug that caused `GroundPrimitive` to render incorrectly on systems without the `WEBGL_depth_texture` extension. [#4747](https://github.com/AnalyticalGraphicsInc/cesium/pull/4747)
 * Fixed default Mapbox token and added a watermark to notify users that they need to sign up for their own token.
 * Fixed a bug that could cause a "readyImagery is not actually ready" exception with some configurations of imagery layers.
