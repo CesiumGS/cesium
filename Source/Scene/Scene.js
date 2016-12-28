@@ -1624,7 +1624,7 @@ define([
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
 
-    function executeCommands(scene, passState) {
+    function executeCommands(scene, passState, picking) {
         var camera = scene._camera;
         var context = scene.context;
         var us = context.uniformState;
@@ -1654,7 +1654,7 @@ define([
             executeCommand(skyBoxCommand, scene, context, passState);
         }
 
-        if (environmentState.isSkyAtmosphereVisible) {
+        if (environmentState.isSkyAtmosphereVisible && !picking) {
             executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState);
         }
 
@@ -1954,14 +1954,14 @@ define([
             Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
             camera.frustum.xOffset = offset;
 
-            executeCommands(scene, passState);
+            executeCommands(scene, passState, picking);
 
             viewport.x = passState.viewport.width;
 
             Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
             camera.frustum.xOffset = -offset;
 
-            executeCommands(scene, passState);
+            executeCommands(scene, passState, picking);
 
             Camera.clone(savedCamera, camera);
         } else {
@@ -2112,7 +2112,7 @@ define([
             executeShadowMapCastCommands(scene);
         }
 
-        executeCommands(scene, passState);
+        executeCommands(scene, passState, picking);
     }
 
     function updateEnvironment(scene) {
@@ -2341,7 +2341,7 @@ define([
         if (defined(this._deviceOrientationCameraController)) {
             this._deviceOrientationCameraController.update();
         }
-        
+
         this._camera.update(this._mode);
         this._camera._updateCameraChanged();
     };
