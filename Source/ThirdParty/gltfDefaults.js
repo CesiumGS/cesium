@@ -401,7 +401,7 @@ define([
         for (var name in skins) {
             if (skins.hasOwnProperty(name)) {
                 var skin = skins[name];
-                if (defined(skin.bindShapeMatrix)) {
+                if (!defined(skin.bindShapeMatrix)) {
                     skin.bindShapeMatrix = [
                         1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
