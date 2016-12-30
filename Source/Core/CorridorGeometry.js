@@ -679,8 +679,8 @@ define([
 
     function computeRectangle(positions, ellipsoid, width, cornerType) {
         var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
-        var length = cleanPositions.length - 1;
-        if (length === 0 || width === 0) {
+        var length = cleanPositions.length;
+        if (length < 2 || width <= 0) {
             return new Rectangle();
         }
         var halfWidth = width * 0.5;
@@ -709,14 +709,14 @@ define([
         }
 
         // Compute the rest
-        for (var i = 0; i < length; ++i) {
+        for (var i = 0; i < length-1; ++i) {
             computeOffsetPoints(cleanPositions[i], cleanPositions[i+1], ellipsoid, halfWidth,
                 scratchCartographicMin, scratchCartographicMax);
         }
 
         // Compute ending point
-        var last = cleanPositions[length];
-        Cartesian3.subtract(last, cleanPositions[length-1], scratchCartesianOffset);
+        var last = cleanPositions[length-1];
+        Cartesian3.subtract(last, cleanPositions[length-2], scratchCartesianOffset);
         Cartesian3.normalize(scratchCartesianOffset, scratchCartesianOffset);
         Cartesian3.multiplyByScalar(scratchCartesianOffset, halfWidth, scratchCartesianOffset);
         Cartesian3.add(last, scratchCartesianOffset, scratchCartesianEnds);

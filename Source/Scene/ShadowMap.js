@@ -22,14 +22,15 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/PixelFormat',
-        '../Core/PrimitiveType',
         '../Core/Quaternion',
         '../Core/SphereOutlineGeometry',
+        '../Core/WebGLConstants',
         '../Renderer/ClearCommand',
         '../Renderer/ContextLimits',
         '../Renderer/CubeMap',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/Renderbuffer',
@@ -37,18 +38,15 @@ define([
         '../Renderer/RenderState',
         '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        '../Renderer/WebGLConstants',
         './Camera',
         './CullFace',
         './CullingVolume',
         './DebugCameraPrimitive',
         './OrthographicFrustum',
-        './Pass',
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
         './Primitive',
@@ -76,14 +74,15 @@ define([
         CesiumMath,
         Matrix4,
         PixelFormat,
-        PrimitiveType,
         Quaternion,
         SphereOutlineGeometry,
+        WebGLConstants,
         ClearCommand,
         ContextLimits,
         CubeMap,
         DrawCommand,
         Framebuffer,
+        Pass,
         PassState,
         PixelDatatype,
         Renderbuffer,
@@ -91,18 +90,15 @@ define([
         RenderState,
         Sampler,
         ShaderProgram,
-        ShaderSource,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
-        WebGLConstants,
         Camera,
         CullFace,
         CullingVolume,
         DebugCameraPrimitive,
         OrthographicFrustum,
-        Pass,
         PerInstanceColorAppearance,
         PerspectiveFrustum,
         Primitive,
@@ -184,10 +180,11 @@ define([
         this._outOfViewPrevious = false;
         this._needsUpdate = true;
 
-        // In IE11 polygon offset is not functional.
-        // TODO : Also disabled for Chrome (ANGLE) temporarily. Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
+        // In IE11 and Edge polygon offset is not functional.
+        // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
+        // Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
         var polygonOffsetSupported = true;
-        if (FeatureDetection.isInternetExplorer() || (FeatureDetection.isChrome() && FeatureDetection.isWindows())) {
+        if (FeatureDetection.isInternetExplorer() || FeatureDetection.isEdge() || ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) && FeatureDetection.isWindows() && !context.depthTexture)) {
             polygonOffsetSupported = false;
         }
         this._polygonOffsetSupported = polygonOffsetSupported;
@@ -1471,10 +1468,10 @@ define([
             var isTerrain = command.pass === Pass.GLOBE;
             var isOpaque = command.pass !== Pass.TRANSLUCENT;
             var isPointLight = shadowMap._isPointLight;
-            var useDepthTexture = shadowMap._usesDepthTexture;
+            var usesDepthTexture= shadowMap._usesDepthTexture;
 
             var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight, isTerrain);
-            var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, useDepthTexture, isOpaque);
+            var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, usesDepthTexture, isOpaque);
 
             castShader = ShaderProgram.fromCache({
                 context : context,

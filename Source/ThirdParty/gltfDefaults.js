@@ -4,7 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/Quaternion',
-        '../Renderer/WebGLConstants'
+        '../Core/WebGLConstants'
     ], function(
         Cartesian3,
         defaultValue,

@@ -153,9 +153,9 @@ define([
          */
         this.bounceAnimationTime = 3.0;
         /**
-         * The minimum magnitude, in meters, of the camera position when zooming. Defaults to 20.0.
+         * The minimum magnitude, in meters, of the camera position when zooming. Defaults to 1.0.
          * @type {Number}
-         * @default 20.0
+         * @default 1.0
          */
         this.minimumZoomDistance = 1.0;
         /**

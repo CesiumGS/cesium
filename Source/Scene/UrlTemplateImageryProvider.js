@@ -10,7 +10,6 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
         '../Core/isArray',
         '../Core/loadJson',
@@ -19,7 +18,6 @@ define([
         '../Core/loadXML',
         '../Core/Math',
         '../Core/Rectangle',
-        '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './ImageryProvider'
@@ -34,7 +32,6 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        freezeObject,
         GeographicTilingScheme,
         isArray,
         loadJson,
@@ -43,7 +40,6 @@ define([
         loadXML,
         CesiumMath,
         Rectangle,
-        TileProviderError,
         WebMercatorTilingScheme,
         when,
         ImageryProvider) {
@@ -286,6 +282,7 @@ define([
          *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
          *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@link GetFeatureInfoFormat}.</li>
          * </ul>
+         * @memberof UrlTemplateImageryProvider.prototype
          * @type {String}
          * @readonly
          */

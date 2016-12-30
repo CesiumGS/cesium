@@ -13,7 +13,7 @@ defineSuite([
         'Scene/SceneTransforms',
         'Specs/createCanvas',
         'Specs/createGlobe',
-        'Specs/createScene',
+        'Specs/createScene'
     ], function(
         EntityCluster,
         Cartesian2,
@@ -44,7 +44,9 @@ defineSuite([
                 tileProvider : {
                     ready : true
                 },
-                _tileLoadQueue : {},
+                _tileLoadQueueHigh : [],
+                _tileLoadQueueMedium : [],
+                _tileLoadQueueLow : [],
                 _debug : {
                     tilesWaitingForChildren : 0
                 }

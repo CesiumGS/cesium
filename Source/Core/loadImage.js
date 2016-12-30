@@ -1,18 +1,18 @@
 /*global define*/
 define([
         '../ThirdParty/when',
-        './TrustedServers',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './isCrossOriginUrl'
+        './isCrossOriginUrl',
+        './TrustedServers'
     ], function(
         when,
-        TrustedServers,
         defaultValue,
         defined,
         DeveloperError,
-        isCrossOriginUrl) {
+        isCrossOriginUrl,
+        TrustedServers) {
     'use strict';
 
     var dataUriRegex = /^data:/;

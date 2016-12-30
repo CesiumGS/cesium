@@ -1,12 +1,39 @@
 Change Log
 ==========
 
+### 1.29 - 2017-01-02
+
+* Improved 3D Models
+   * Added the ability to blend a `Model` with a color/translucency. Added `color`, `colorBlendMode`, and `colorBlendAmount` properties to `Model`, `ModelGraphics`, and CZML. Also added `ColorBlendMode` enum. [#4547](https://github.com/AnalyticalGraphicsInc/cesium/pull/4547)
+   * Added the ability to render a `Model` with a silhouette. Added `silhouetteColor` and `silhouetteSize` properties to `Model`, `ModelGraphics`, and CZML. [#4314](https://github.com/AnalyticalGraphicsInc/cesium/pull/4314)
+* Improved Labels
+   * Added new `Label` properties `showBackground`, `backgroundColor`, and `backgroundPadding` to the primitive, Entity, and CZML layers.
+   * Added new enum `VerticalOrigin.BASELINE`.  Previously, `VerticalOrigin.BOTTOM` would sometimes align to the baseline depending on the contents of a label.
+   * Added support for newlines (`\n`) in Cesium `Label`s and CZML. [#2402](https://github.com/AnalyticalGraphicsInc/cesium/issues/2402)
+* Fixed texture rotation for `RectangleGeometry` [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
+* Fixed translucency in Firefox 50. https://github.com/AnalyticalGraphicsInc/cesium/pull/4762
+* Fixed issue where billboards on terrain had some offset. [#4598](https://github.com/AnalyticalGraphicsInc/cesium/issues/4598)
+* Fixed issue where `globe.getHeight` randomly returned `undefined`. [#3411](https://github.com/AnalyticalGraphicsInc/cesium/issues/3411)
+* Fixed a bug that caused `GroundPrimitive` to render incorrectly on systems without the `WEBGL_depth_texture` extension. [#4747](https://github.com/AnalyticalGraphicsInc/cesium/pull/4747)
+* Fixed default Mapbox token and added a watermark to notify users that they need to sign up for their own token.
+* Fixed a bug that could cause a "readyImagery is not actually ready" exception with some configurations of imagery layers.
+* Fixed `Rectangle.union` to correctly account for rectangles that cross the IDL [#4732](https://github.com/AnalyticalGraphicsInc/cesium/pull/4732).
+* Added `divideComponents` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`. [#4750](https://github.com/AnalyticalGraphicsInc/cesium/pull/4750)
+* Added `WebGLConstants` enum.  Previously, this was part of the private Renderer API. [#4731](https://github.com/AnalyticalGraphicsInc/cesium/pull/4731)
+* Fixed tooltips for gallery thumbnails in Sandcastle [#4702](https://github.com/AnalyticalGraphicsInc/cesium/pull/4702)
+* DataSourceClock.getValue now preserves the provided `result` properties when its properties are `undefined`. [#4029](https://github.com/AnalyticalGraphicsInc/cesium/issues/4029)
+
 ### 1.28 - 2016-12-01
-* Deprecated
-    *
-* Breaking changes
-    *
-* Added support for saving html and css in Github Gists [#4125](https://github.com/AnalyticalGraphicsInc/cesium/issues/4125)
+
+* Improved terrain/imagery load ordering, especially when the terrain is already fully loaded and a new imagery layer is loaded.  This results in a 25% reduction in load times in many cases. [#4616](https://github.com/AnalyticalGraphicsInc/cesium/pull/4616)
+* Improved `Billboard`, `Label`, and `PointPrimitive` visual quality. [#4675](https://github.com/AnalyticalGraphicsInc/cesium/pull/4675)
+   * Corrected odd-width and odd-height billboard sizes from being incorrectly rounded up.
+   * Changed depth testing from `LESS` to `LEQUAL`, allowing label glyphs of equal depths to overlap.
+   * Label glyph positions have been adjusted and corrected.
+   * `TextureAtlas.borderWidthInPixels` has always been applied to the upper and right edges of each internal texture, but is now also applied to the bottom and left edges of the entire TextureAtlas, guaranteeing borders on all sides regardless of position within the atlas.
+* Fall back to packing floats into an unsigned byte texture when floating point textures are unsupported. [#4563](https://github.com/AnalyticalGraphicsInc/cesium/issues/4563)
+* Added support for saving html and css in GitHub Gists. [#4125](https://github.com/AnalyticalGraphicsInc/cesium/issues/4125)
+* Fixed `Cartographic.fromCartesian` when the cartesian is not on the ellipsoid surface. [#4611](https://github.com/AnalyticalGraphicsInc/cesium/issues/4611)
 
 ### 1.27 - 2016-11-01
 * Deprecated

@@ -3,7 +3,6 @@ defineSuite([
         'Scene/WebMapServiceImageryProvider',
         'Core/Cartographic',
         'Core/DefaultProxy',
-        'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/loadImage',
@@ -19,13 +18,11 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'ThirdParty/Uri',
-        'ThirdParty/when'
+        'ThirdParty/Uri'
     ], function(
         WebMapServiceImageryProvider,
         Cartographic,
         DefaultProxy,
-        defined,
         Ellipsoid,
         GeographicTilingScheme,
         loadImage,
@@ -41,8 +38,7 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        Uri,
-        when) {
+        Uri) {
     'use strict';
 
     afterEach(function() {

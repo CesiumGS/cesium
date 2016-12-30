@@ -19,17 +19,15 @@ define([
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
-        '../Core/GeometryInstance',
-        '../Core/GeometryInstanceAttribute',
         '../Core/isArray',
         '../Core/Matrix4',
         '../Core/RuntimeError',
         '../Core/subdivideArray',
         '../Core/TaskProcessor',
-        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -37,7 +35,6 @@ define([
         '../ThirdParty/when',
         './BatchTable',
         './CullFace',
-        './Pass',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
@@ -62,17 +59,15 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        GeometryInstance,
-        GeometryInstanceAttribute,
         isArray,
         Matrix4,
         RuntimeError,
         subdivideArray,
         TaskProcessor,
-        Buffer,
         BufferUsage,
         ContextLimits,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -80,7 +75,6 @@ define([
         when,
         BatchTable,
         CullFace,
-        Pass,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
@@ -614,7 +608,7 @@ define([
         }
 
         var attributesLength = attributes.length;
-        var batchTable = new BatchTable(attributes, numberOfInstances);
+        var batchTable = new BatchTable(context, attributes, numberOfInstances);
 
         for (i = 0; i < numberOfInstances; ++i) {
             var instance = instances[i];

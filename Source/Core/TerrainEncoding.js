@@ -7,7 +7,6 @@ define([
         './defaultValue',
         './defined',
         './Math',
-        './Matrix3',
         './Matrix4',
         './TerrainQuantization'
     ], function(
@@ -18,7 +17,6 @@ define([
         defaultValue,
         defined,
         CesiumMath,
-        Matrix3,
         Matrix4,
         TerrainQuantization) {
     'use strict';

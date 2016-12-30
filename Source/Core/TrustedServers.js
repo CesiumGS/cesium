@@ -1,14 +1,12 @@
 /*global define*/
 define([
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    '../ThirdParty/Uri'
-], function(
-    defined,
-    defineProperties,
-    DeveloperError,
-    Uri) {
+        '../ThirdParty/Uri',
+        './defined',
+        './DeveloperError'
+    ], function(
+        Uri,
+        defined,
+        DeveloperError) {
     'use strict';
     
     /**
