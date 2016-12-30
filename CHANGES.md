@@ -16,6 +16,7 @@ Change Log
 * Fixed issue where `globe.getHeight` randomly returned `undefined`. [#3411](https://github.com/AnalyticalGraphicsInc/cesium/issues/3411)
 * Fixed a bug that caused `GroundPrimitive` to render incorrectly on systems without the `WEBGL_depth_texture` extension. [#4747](https://github.com/AnalyticalGraphicsInc/cesium/pull/4747)
 * Fixed default Mapbox token and added a watermark to notify users that they need to sign up for their own token.
+* Fixed glTF models with skinning that used `bindShapeMatrix`. [#4722](https://github.com/AnalyticalGraphicsInc/cesium/issues/4722)
 * Fixed a bug that could cause a "readyImagery is not actually ready" exception with some configurations of imagery layers.
 * Fixed `Rectangle.union` to correctly account for rectangles that cross the IDL [#4732](https://github.com/AnalyticalGraphicsInc/cesium/pull/4732).
 * Added `divideComponents` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`. [#4750](https://github.com/AnalyticalGraphicsInc/cesium/pull/4750)
