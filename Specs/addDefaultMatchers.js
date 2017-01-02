@@ -127,6 +127,20 @@ define([
                 return {
                     compare: function(actual, expected, epsilon) {
                         function equalityTester(a, b) {
+                            if (Array.isArray(a) && Array.isArray(b)) {
+                                if (a.length !== b.length) {
+                                    return false;
+                                }
+
+                                for (var i = 0; i < a.length; ++i) {
+                                    if (!equalityTester(a[i], b[i])) {
+                                        return false;
+                                    }
+                                }
+
+                                return true;
+                            }
+
                             var to_run;
                             if (defined(a)) {
                                 if (typeof a.equalsEpsilon === 'function') {

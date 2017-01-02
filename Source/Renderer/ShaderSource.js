@@ -124,6 +124,7 @@ define([
             }
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (badNodes.length !== 0) {
             var message = 'A circular dependency was found in the following built-in functions/structs/constants: \n';
             for (j = 0; j < badNodes.length; ++j) {
@@ -131,6 +132,7 @@ define([
             }
             throw new DeveloperError(message);
         }
+        //>>includeEnd('debug');
     }
 
     function getBuiltinsAndAutomaticUniforms(shaderSource) {
@@ -169,9 +171,12 @@ define([
         // Extract existing shader version from sources
         var version;
         combinedSources = combinedSources.replace(/#version\s+(.*?)\n/gm, function(match, group1) {
+            //>>includeStart('debug', pragmas.debug);
             if (defined(version) && version !== group1) {
                 throw new DeveloperError('inconsistent versions found: ' + version + ' and ' + group1);
             }
+            //>>includeEnd('debug');
+
             // Extract #version to put at the top
             version = group1;
 
@@ -275,6 +280,7 @@ define([
         this.pickColorQualifier = pickColorQualifier;
         this.includeBuiltIns = defaultValue(options.includeBuiltIns, true);
     }
+    
     ShaderSource.prototype.clone = function() {
         return new ShaderSource({
             sources : this.sources,
@@ -354,6 +360,36 @@ define([
             '}';
 
         return renamedFS + '\n' + pickMain;
+    };
+
+    ShaderSource.findVarying = function(shaderSource, names) {
+        var sources = shaderSource.sources;
+
+        var namesLength = names.length;
+        for (var i = 0; i < namesLength; ++i) {
+            var name = names[i];
+
+            var sourcesLength = sources.length;
+            for (var j = 0; j < sourcesLength; ++j) {
+                if (sources[j].indexOf(name) !== -1) {
+                    return name;
+                }
+            }
+        }
+
+        return undefined;
+    };
+
+    var normalVaryingNames = ['v_normalEC', 'v_normal'];
+
+    ShaderSource.findNormalVarying = function(shaderSource) {
+        return ShaderSource.findVarying(shaderSource, normalVaryingNames);
+    };
+
+    var positionVaryingNames = ['v_positionEC'];
+
+    ShaderSource.findPositionVarying = function(shaderSource) {
+        return ShaderSource.findVarying(shaderSource, positionVaryingNames);
     };
 
     return ShaderSource;

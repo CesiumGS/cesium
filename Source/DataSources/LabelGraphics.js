@@ -28,13 +28,16 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.text] A Property specifying the text.
+     * @param {Property} [options.text] A Property specifying the text. Explicit newlines '\n' are supported.
      * @param {Property} [options.font='10px sans-serif'] A Property specifying the CSS font.
      * @param {Property} [options.style=LabelStyle.FILL] A Property specifying the {@link LabelStyle}.
      * @param {Property} [options.fillColor=Color.WHITE] A Property specifying the fill {@link Color}.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the outline {@link Color}.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the outline width.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the label.
+     * @param {Property} [options.showBackground=false] A boolean Property specifying the visibility of the background behind the label.
+     * @param {Property} [options.backgroundColor=new Color(0.165, 0.165, 0.165, 0.8)] A Property specifying the background {@link Color}.
+     * @param {Property} [options.backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Property specifying the horizontal and vertical background padding in pixels.
      * @param {Property} [options.scale=1.0] A numeric Property specifying the scale to apply to the text.
      * @param {Property} [options.horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
      * @param {Property} [options.verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
@@ -42,6 +45,8 @@ define([
      * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      * @param {Property} [options.pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
@@ -64,16 +69,26 @@ define([
         this._verticalOriginSubscription = undefined;
         this._eyeOffset = undefined;
         this._eyeOffsetSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
         this._pixelOffset = undefined;
         this._pixelOffsetSubscription = undefined;
         this._scale = undefined;
         this._scaleSubscription = undefined;
         this._show = undefined;
         this._showSubscription = undefined;
+        this._showBackground = undefined;
+        this._showBackgroundSubscription = undefined;
+        this._backgroundColor = undefined;
+        this._backgroundColorSubscription = undefined;
+        this._backgroundPadding = undefined;
+        this._backgroundPaddingSubscription = undefined;
         this._translucencyByDistance = undefined;
         this._translucencyByDistanceSubscription = undefined;
         this._pixelOffsetScaleByDistance = undefined;
         this._pixelOffsetScaleByDistanceSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -95,6 +110,7 @@ define([
 
         /**
          * Gets or sets the string Property specifying the text of the label.
+         * Explicit newlines '\n' are supported.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
@@ -176,6 +192,14 @@ define([
         eyeOffset : createPropertyDescriptor('eyeOffset'),
 
         /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
          * Gets or sets the {@link Cartesian2} Property specifying the label's pixel offset in screen space
          * from the origin of this label.  This is commonly used to align multiple labels and labels at
          * the same position, e.g., an image and text.  The screen space origin is the top, left corner of the
@@ -219,6 +243,31 @@ define([
         show : createPropertyDescriptor('show'),
 
         /**
+         * Gets or sets the boolean Property specifying the visibility of the background behind the label.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        showBackground : createPropertyDescriptor('showBackground'),
+
+        /**
+         * Gets or sets the Property specifying the background {@link Color}.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         * @default new Color(0.165, 0.165, 0.165, 0.8)
+         */
+        backgroundColor : createPropertyDescriptor('backgroundColor'),
+
+        /**
+         * Gets or sets the {@link Cartesian2} Property specifying the label's horizontal and vertical
+         * background padding in pixels.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         * @default new Cartesian2(7, 5)
+         */
+        backgroundPadding : createPropertyDescriptor('backgroundPadding'),
+
+        /**
          * Gets or sets {@link NearFarScalar} Property specifying the translucency of the label based on the distance from the camera.
          * A label's translucency will interpolate between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
@@ -238,8 +287,14 @@ define([
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance')
+        pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance'),
 
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this label will be displayed.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -259,13 +314,18 @@ define([
         result.fillColor = this.fillColor;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
+        result.showBackground = this.showBackground;
+        result.backgroundColor = this.backgroundColor;
+        result.backgroundPadding = this.backgroundPadding;
         result.scale = this.scale;
         result.horizontalOrigin = this.horizontalOrigin;
         result.verticalOrigin = this.verticalOrigin;
         result.eyeOffset = this.eyeOffset;
+        result.heightReference = this.heightReference;
         result.pixelOffset = this.pixelOffset;
         result.translucencyByDistance = this.translucencyByDistance;
         result.pixelOffsetScaleByDistance = this.pixelOffsetScaleByDistance;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
 
@@ -289,13 +349,18 @@ define([
         this.fillColor = defaultValue(this.fillColor, source.fillColor);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+        this.showBackground = defaultValue(this.showBackground, source.showBackground);
+        this.backgroundColor = defaultValue(this.backgroundColor, source.backgroundColor);
+        this.backgroundPadding = defaultValue(this.backgroundPadding, source.backgroundPadding);
         this.scale = defaultValue(this.scale, source.scale);
         this.horizontalOrigin = defaultValue(this.horizontalOrigin, source.horizontalOrigin);
         this.verticalOrigin = defaultValue(this.verticalOrigin, source.verticalOrigin);
         this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
         this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return LabelGraphics;

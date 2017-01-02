@@ -28,9 +28,9 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    scene3DOnly: true,
     infoBox : false,
-    selectionIndicator : false
+    selectionIndicator : false,
+    shadows : true
 });
 
 function createModel(url, height) {
@@ -40,7 +40,8 @@ function createModel(url, height) {
     var heading = Cesium.Math.toRadians(135);
     var pitch = 0;
     var roll = 0;
-    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, heading, pitch, roll);
+    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
     var entity = viewer.entities.add({
         name : url,
@@ -64,6 +65,11 @@ var options = [{
     text : 'Ground vehicle',
     onselect : function() {
         createModel('../../SampleData/models/CesiumGround/Cesium_Ground.glb', 0);
+    }
+}, {
+    text : 'Hot Air Balloon',
+    onselect : function() {
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', 1000.0);
     }
 }, {
     text : 'Milk truck',

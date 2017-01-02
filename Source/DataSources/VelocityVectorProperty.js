@@ -1,22 +1,22 @@
 /*global define*/
 define([
-    '../Core/Cartesian3',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/Event',
-    '../Core/JulianDate',
-    './Property'
-], function(
-    Cartesian3,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Event,
-    JulianDate,
-    Property) {
+        '../Core/Cartesian3',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/JulianDate',
+        './Property'
+    ], function(
+        Cartesian3,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        JulianDate,
+        Property) {
     'use strict';
 
     /**
@@ -27,6 +27,7 @@ define([
      * @constructor
      *
      * @param {Property} [position] The position property used to compute the velocity.
+     * @param {Boolean} [normalize=true] Whether to normalize the computed velocity vector.
      *
      * @example
      * //Create an entity with a billboard rotated to match its velocity.
@@ -36,14 +37,15 @@ define([
      *   position : position,
      *   billboard : {
      *     image : 'image.png',
-     *     alignedAxis : new Cesium.VelocityVectorProperty(position)
+     *     alignedAxis : new Cesium.VelocityVectorProperty(position, true) // alignedAxis must be a unit vector
      *   }
      * }));
      */
-    function VelocityVectorProperty(position) {
+    function VelocityVectorProperty(position, normalize) {
         this._position = undefined;
         this._subscription = undefined;
         this._definitionChanged = new Event();
+        this._normalize = defaultValue(normalize, true);
 
         this.position = position;
     }
@@ -74,7 +76,7 @@ define([
             }
         },
         /**
-         * Gets or sets the position property used to compute orientation.
+         * Gets or sets the position property used to compute the velocity vector.
          * @memberof VelocityVectorProperty.prototype
          *
          * @type {Property}
@@ -101,12 +103,31 @@ define([
                     this._definitionChanged.raiseEvent(this);
                 }
             }
+        },
+        /**
+         * Gets or sets whether the vector produced by this property
+         * will be normalized or not.
+         * @memberof VelocityVectorProperty.prototype
+         *
+         * @type {Boolean}
+         */
+        normalize : {
+            get : function() {
+                return this._normalize;
+            },
+            set : function(value) {
+                if (this._normalize === value) {
+                    return;
+                }
+
+                this._normalize = value;
+                this._definitionChanged.raiseEvent(this);
+            }
         }
     });
 
     var position1Scratch = new Cartesian3();
     var position2Scratch = new Cartesian3();
-    var velocityScratch = new Cartesian3();
     var timeScratch = new JulianDate();
     var step = 1.0 / 60.0;
 
@@ -137,7 +158,7 @@ define([
 
         var property = this._position;
         if (Property.isConstant(property)) {
-            return undefined;
+            return this._normalize ? undefined : Cartesian3.clone(Cartesian3.ZERO, velocityResult);
         }
 
         var position1 = property.getValue(time, position1Scratch);
@@ -159,15 +180,19 @@ define([
         }
 
         if (Cartesian3.equals(position1, position2)) {
-            return undefined;
+            return this._normalize ? undefined : Cartesian3.clone(Cartesian3.ZERO, velocityResult);
         }
 
         if (defined(positionResult)) {
             position1.clone(positionResult);
         }
 
-        var velocity = Cartesian3.subtract(position2, position1, velocityScratch);
-        return Cartesian3.normalize(velocity, velocityResult);
+        var velocity = Cartesian3.subtract(position2, position1, velocityResult);
+        if (this._normalize) {
+            return Cartesian3.normalize(velocity, velocityResult);
+        } else {
+            return Cartesian3.divideByScalar(velocity, step, velocityResult);
+        }
     };
 
     /**

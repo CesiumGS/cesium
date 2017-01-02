@@ -51,7 +51,7 @@ define([
      * var halfAxes = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(1.0, 3.0, 2.0), new Cesium.Matrix3());
      *
      * var obb = new Cesium.OrientedBoundingBox(center, halfAxes);
-     * 
+     *
      * @see BoundingSphere
      * @see BoundingRectangle
      */
@@ -75,6 +75,7 @@ define([
     var scratchCartesian3 = new Cartesian3();
     var scratchCartesian4 = new Cartesian3();
     var scratchCartesian5 = new Cartesian3();
+    var scratchCartesian6 = new Cartesian3();
     var scratchCovarianceResult = new Matrix3();
     var scratchEigenResult = {
         unitary : new Matrix3(),
@@ -152,26 +153,41 @@ define([
         covarianceMatrix[8] = ezz;
 
         var eigenDecomposition = Matrix3.computeEigenDecomposition(covarianceMatrix, scratchEigenResult);
-        var rotation = Matrix3.transpose(eigenDecomposition.unitary, result.halfAxes);
+        var rotation = Matrix3.clone(eigenDecomposition.unitary, result.halfAxes);
 
-        p = Cartesian3.subtract(positions[0], meanPoint, scratchCartesian2);
-        var tempPoint = Matrix3.multiplyByVector(rotation, p, scratchCartesian3);
-        var maxPoint = Cartesian3.clone(tempPoint, scratchCartesian4);
-        var minPoint = Cartesian3.clone(tempPoint, scratchCartesian5);
+        var v1 = Matrix3.getColumn(rotation, 0, scratchCartesian4);
+        var v2 = Matrix3.getColumn(rotation, 1, scratchCartesian5);
+        var v3 = Matrix3.getColumn(rotation, 2, scratchCartesian6);
 
-        for (i = 1; i < length; i++) {
-            p = Cartesian3.subtract(positions[i], meanPoint, p);
-            Matrix3.multiplyByVector(rotation, p, tempPoint);
-            Cartesian3.minimumByComponent(minPoint, tempPoint, minPoint);
-            Cartesian3.maximumByComponent(maxPoint, tempPoint, maxPoint);
+        var u1 = -Number.MAX_VALUE;
+        var u2 = -Number.MAX_VALUE;
+        var u3 = -Number.MAX_VALUE;
+        var l1 = Number.MAX_VALUE;
+        var l2 = Number.MAX_VALUE;
+        var l3 = Number.MAX_VALUE;
+
+        for (i = 0; i < length; i++) {
+            p = positions[i];
+            u1 = Math.max(Cartesian3.dot(v1, p), u1);
+            u2 = Math.max(Cartesian3.dot(v2, p), u2);
+            u3 = Math.max(Cartesian3.dot(v3, p), u3);
+
+            l1 = Math.min(Cartesian3.dot(v1, p), l1);
+            l2 = Math.min(Cartesian3.dot(v2, p), l2);
+            l3 = Math.min(Cartesian3.dot(v3, p), l3);
         }
 
-        var center = Cartesian3.add(minPoint, maxPoint, scratchCartesian3);
-        Cartesian3.multiplyByScalar(center, 0.5, center);
-        Matrix3.multiplyByVector(rotation, center, center);
-        Cartesian3.add(meanPoint, center, result.center);
+        v1 = Cartesian3.multiplyByScalar(v1, 0.5 * (l1 + u1), v1);
+        v2 = Cartesian3.multiplyByScalar(v2, 0.5 * (l2 + u2), v2);
+        v3 = Cartesian3.multiplyByScalar(v3, 0.5 * (l3 + u3), v3);
 
-        var scale = Cartesian3.subtract(maxPoint, minPoint, scratchCartesian3);
+        var center = Cartesian3.add(v1, v2, result.center);
+        center = Cartesian3.add(center, v3, center);
+
+        var scale = scratchCartesian3;
+        scale.x = u1 - l1;
+        scale.y = u2 - l2;
+        scale.z = u3 - l3;
         Cartesian3.multiplyByScalar(scale, 0.5, scale);
         Matrix3.multiplyByScale(result.halfAxes, scale, result.halfAxes);
 

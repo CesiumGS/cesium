@@ -5,24 +5,24 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderSource',
         '../Shaders/ViewportQuadFS',
         './BlendingState',
-        './Material',
-        './Pass'
+        './Material'
     ], function(
         BoundingRectangle,
         Color,
         defined,
         destroyObject,
         DeveloperError,
+        Pass,
         RenderState,
         ShaderSource,
         ViewportQuadFS,
         BlendingState,
-        Material,
-        Pass) {
+        Material) {
     'use strict';
 
     /**

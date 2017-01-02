@@ -60,6 +60,7 @@ define([
      * @see Matrix4.computePerspectiveOffCenter
      * @see Matrix4.computeInfinitePerspectiveOffCenter
      * @see Matrix4.computeViewportTransformation
+     * @see Matrix4.computeView
      * @see Matrix2
      * @see Matrix3
      * @see Packable
@@ -98,6 +99,8 @@ define([
      * @param {Matrix4} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     Matrix4.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -128,6 +131,8 @@ define([
         array[startingIndex++] = value[13];
         array[startingIndex++] = value[14];
         array[startingIndex] = value[15];
+
+        return array;
     };
 
     /**
@@ -547,7 +552,7 @@ define([
     };
 
     var fromCameraF = new Cartesian3();
-    var fromCameraS = new Cartesian3();
+    var fromCameraR = new Cartesian3();
     var fromCameraU = new Cartesian3();
 
     /**
@@ -564,57 +569,57 @@ define([
         }
         //>>includeEnd('debug');
 
-        var eye = camera.eye;
-        var target = camera.target;
+        var position = camera.position;
+        var direction = camera.direction;
         var up = camera.up;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(eye)) {
-            throw new DeveloperError('camera.eye is required.');
+        if (!defined(position)) {
+            throw new DeveloperError('camera.position is required.');
         }
-        if (!defined(target)) {
-            throw new DeveloperError('camera.target is required.');
+        if (!defined(direction)) {
+            throw new DeveloperError('camera.direction is required.');
         }
         if (!defined(up)) {
             throw new DeveloperError('camera.up is required.');
         }
         //>>includeEnd('debug');
 
-        Cartesian3.normalize(Cartesian3.subtract(target, eye, fromCameraF), fromCameraF);
-        Cartesian3.normalize(Cartesian3.cross(fromCameraF, up, fromCameraS), fromCameraS);
-        Cartesian3.normalize(Cartesian3.cross(fromCameraS, fromCameraF, fromCameraU), fromCameraU);
+        Cartesian3.normalize(direction, fromCameraF);
+        Cartesian3.normalize(Cartesian3.cross(fromCameraF, up, fromCameraR), fromCameraR);
+        Cartesian3.normalize(Cartesian3.cross(fromCameraR, fromCameraF, fromCameraU), fromCameraU);
 
-        var sX = fromCameraS.x;
-        var sY = fromCameraS.y;
-        var sZ = fromCameraS.z;
+        var sX = fromCameraR.x;
+        var sY = fromCameraR.y;
+        var sZ = fromCameraR.z;
         var fX = fromCameraF.x;
         var fY = fromCameraF.y;
         var fZ = fromCameraF.z;
         var uX = fromCameraU.x;
         var uY = fromCameraU.y;
         var uZ = fromCameraU.z;
-        var eyeX = eye.x;
-        var eyeY = eye.y;
-        var eyeZ = eye.z;
-        var t0 = sX * -eyeX + sY * -eyeY+ sZ * -eyeZ;
-        var t1 = uX * -eyeX + uY * -eyeY+ uZ * -eyeZ;
-        var t2 = fX * eyeX + fY * eyeY + fZ * eyeZ;
+        var positionX = position.x;
+        var positionY = position.y;
+        var positionZ = position.z;
+        var t0 = sX * -positionX + sY * -positionY+ sZ * -positionZ;
+        var t1 = uX * -positionX + uY * -positionY+ uZ * -positionZ;
+        var t2 = fX * positionX + fY * positionY + fZ * positionZ;
 
-        //The code below this comment is an optimized
-        //version of the commented lines.
-        //Rather that create two matrices and then multiply,
-        //we just bake in the multiplcation as part of creation.
-        //var rotation = new Matrix4(
-        //                sX,  sY,  sZ, 0.0,
-        //                uX,  uY,  uZ, 0.0,
-        //               -fX, -fY, -fZ, 0.0,
-        //                0.0,  0.0,  0.0, 1.0);
-        //var translation = new Matrix4(
-        //                1.0, 0.0, 0.0, -eye.x,
-        //                0.0, 1.0, 0.0, -eye.y,
-        //                0.0, 0.0, 1.0, -eye.z,
-        //                0.0, 0.0, 0.0, 1.0);
-        //return rotation.multiply(translation);
+        // The code below this comment is an optimized
+        // version of the commented lines.
+        // Rather that create two matrices and then multiply,
+        // we just bake in the multiplcation as part of creation.
+        // var rotation = new Matrix4(
+        //                 sX,  sY,  sZ, 0.0,
+        //                 uX,  uY,  uZ, 0.0,
+        //                -fX, -fY, -fZ, 0.0,
+        //                 0.0,  0.0,  0.0, 1.0);
+        // var translation = new Matrix4(
+        //                 1.0, 0.0, 0.0, -position.x,
+        //                 0.0, 1.0, 0.0, -position.y,
+        //                 0.0, 0.0, 1.0, -position.z,
+        //                 0.0, 0.0, 0.0, 1.0);
+        // return rotation.multiply(translation);
         if (!defined(result)) {
             return new Matrix4(
                     sX,   sY,  sZ, t0,
@@ -639,7 +644,6 @@ define([
         result[14] = t2;
         result[15] = 1.0;
         return result;
-
     };
 
      /**
@@ -652,7 +656,7 @@ define([
       * @param {Matrix4} result The object in which the result will be stored.
       * @returns {Matrix4} The modified result parameter.
       *
-      * @exception {DeveloperError} fovY must be in [0, PI).
+      * @exception {DeveloperError} fovY must be in (0, PI].
       * @exception {DeveloperError} aspectRatio must be greater than zero.
       * @exception {DeveloperError} near must be greater than zero.
       * @exception {DeveloperError} far must be greater than zero.
@@ -660,7 +664,7 @@ define([
     Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
         if (fovY <= 0.0 || fovY > Math.PI) {
-            throw new DeveloperError('fovY must be in [0, PI).');
+            throw new DeveloperError('fovY must be in (0, PI].');
         }
         if (aspectRatio <= 0.0) {
             throw new DeveloperError('aspectRatio must be greater than zero.');
@@ -954,6 +958,54 @@ define([
         result[13] = column3Row1;
         result[14] = column3Row2;
         result[15] = column3Row3;
+        return result;
+    };
+
+    /**
+     * Computes a Matrix4 instance that transforms from world space to view space.
+     *
+     * @param {Cartesian3} position The position of the camera.
+     * @param {Cartesian3} direction The forward direction.
+     * @param {Cartesian3} up The up direction.
+     * @param {Cartesian3} right The right direction.
+     * @param {Matrix4} result The object in which the result will be stored.
+     * @returns {Matrix4} The modified result parameter.
+     */
+    Matrix4.computeView = function(position, direction, up, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(position)) {
+            throw new DeveloperError('position is required');
+        }
+        if (!defined(direction)) {
+            throw new DeveloperError('direction is required');
+        }
+        if (!defined(up)) {
+            throw new DeveloperError('up is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result[0] = right.x;
+        result[1] = up.x;
+        result[2] = -direction.x;
+        result[3] = 0.0;
+        result[4] = right.y;
+        result[5] = up.y;
+        result[6] = -direction.y;
+        result[7] = 0.0;
+        result[8] = right.z;
+        result[9] = up.z;
+        result[10] = -direction.z;
+        result[11] = 0.0;
+        result[12] = -Cartesian3.dot(right, position);
+        result[13] = -Cartesian3.dot(up, position);
+        result[14] = Cartesian3.dot(direction, position);
+        result[15] = 1.0;
         return result;
     };
 
@@ -1747,7 +1799,7 @@ define([
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromUniformScale(scale), m);
      * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
-     * 
+     *
      * @see Matrix4.fromUniformScale
      * @see Matrix4.multiplyByScale
      */
@@ -1786,7 +1838,7 @@ define([
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromScale(scale), m);
      * Cesium.Matrix4.multiplyByScale(m, scale, m);
-     * 
+     *
      * @see Matrix4.fromScale
      * @see Matrix4.multiplyByUniformScale
      */

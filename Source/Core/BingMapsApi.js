@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        './Credit',
         './defined'
     ], function(
+        Credit,
         defined) {
     'use strict';
 
@@ -27,6 +29,8 @@ define([
     BingMapsApi.defaultKey = undefined;
 
     var printedBingWarning = false;
+    var errorCredit;
+    var errorString = 'This application is using Cesium\'s default Bing Maps key.  Please create a new key for the application as soon as possible and prior to deployment by visiting https://www.bingmapsportal.com/, and provide your key to Cesium by setting the Cesium.BingMapsApi.defaultKey property before constructing the CesiumWidget or any other object that uses the Bing Maps API.';
 
     BingMapsApi.getKey = function(providedKey) {
         if (defined(providedKey)) {
@@ -35,13 +39,25 @@ define([
 
         if (!defined(BingMapsApi.defaultKey)) {
             if (!printedBingWarning) {
-                console.log('This application is using Cesium\'s default Bing Maps key.  Please create a new key for the application as soon as possible and prior to deployment by visiting https://www.bingmapsportal.com/, and provide your key to Cesium by setting the Cesium.BingMapsApi.defaultKey property before constructing the CesiumWidget or any other object that uses the Bing Maps API.');
+                console.log(errorString);
                 printedBingWarning = true;
             }
-            return 'Aj1ony_-Typ-KjG9SJWiKSHY23U1KmK7yAmZa9lDmuF2osXWkcZ22VPsqmCt0TCt';
+            return 'AhiQlDaPOwKbStA_3nJIdimUj4PRYkp0yHwcNpvxVlLNPRo5ZJWY5oX_h6B_dMbm';
         }
 
         return BingMapsApi.defaultKey;
+    };
+
+    BingMapsApi.getErrorCredit = function(providedKey) {
+        if (defined(providedKey) || defined(BingMapsApi.defaultKey)) {
+            return undefined;
+        }
+
+        if (!defined(errorCredit)) {
+            errorCredit = new Credit(errorString);
+        }
+
+        return errorCredit;
     };
 
     return BingMapsApi;

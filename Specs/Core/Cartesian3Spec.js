@@ -4,12 +4,14 @@ defineSuite([
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
+        'Specs/createPackableArraySpecs',
         'Specs/createPackableSpecs'
     ], function(
         Cartesian3,
         Cartographic,
         Ellipsoid,
         CesiumMath,
+        createPackableArraySpecs,
         createPackableSpecs) {
     'use strict';
 
@@ -57,6 +59,35 @@ defineSuite([
     it('fromArray throws without values', function() {
         expect(function() {
             Cartesian3.fromArray();
+        }).toThrowDeveloperError();
+    });
+
+    it('unpackArray works', function() {
+        var array = Cartesian3.unpackArray([0.0, 1.0, 2.0, 3.0, 0.0, 4.0]);
+        expect(array).toEqual([new Cartesian3(0.0, 1.0, 2.0), new Cartesian3(3.0, 0.0, 4.0)]);
+    });
+
+    it('unpackArray works with a result parameter', function() {
+        var array = [];
+        var result = Cartesian3.unpackArray([1.0, 2.0, 3.0], array);
+        expect(result).toBe(array);
+        expect(result).toEqual([new Cartesian3(1.0, 2.0, 3.0)]);
+
+        array = [new Cartesian3(), new Cartesian3(), new Cartesian3()];
+        result = Cartesian3.unpackArray([1.0, 2.0, 3.0], array);
+        expect(result).toBe(array);
+        expect(result).toEqual([new Cartesian3(1.0, 2.0, 3.0)]);
+    });
+
+    it('unpackArray throws with array less than 3 length', function() {
+        expect(function() {
+            Cartesian3.unpackArray([1.0]);
+        }).toThrowDeveloperError();
+    });
+
+    it('unpackArray throws with array not multiple of 3', function() {
+        expect(function() {
+            Cartesian3.unpackArray([1.0, 2.0, 3.0, 4.0]);
         }).toThrowDeveloperError();
     });
 
@@ -344,6 +375,12 @@ defineSuite([
         expect(cartesian).toEqual(expectedResult);
     });
 
+    it('normalize throws with zero vector', function() {
+        expect(function() {
+            Cartesian3.normalize(Cartesian3.ZERO, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
     it('multiplyComponents works with a result parameter', function() {
         var left = new Cartesian3(2.0, 3.0, 6.0);
         var right = new Cartesian3(4.0, 5.0, 7.0);
@@ -359,6 +396,25 @@ defineSuite([
         var right = new Cartesian3(4.0, 5.0, 7.0);
         var expectedResult = new Cartesian3(8.0, 15.0, 42.0);
         var returnedResult = Cartesian3.multiplyComponents(left, right, left);
+        expect(left).toBe(returnedResult);
+        expect(left).toEqual(expectedResult);
+    });
+
+    it('divideComponents works with a result parameter', function() {
+        var left = new Cartesian3(2.0, 3.0, 6.0);
+        var right = new Cartesian3(4.0, 5.0, 8.0);
+        var result = new Cartesian3();
+        var expectedResult = new Cartesian3(0.5, 0.6, 0.75);
+        var returnedResult = Cartesian3.divideComponents(left, right, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('divideComponents works with a result parameter that is an input parameter', function() {
+        var left = new Cartesian3(2.0, 3.0, 6.0);
+        var right = new Cartesian3(4.0, 5.0, 8.0);
+        var expectedResult = new Cartesian3(0.5, 0.6, 0.75);
+        var returnedResult = Cartesian3.divideComponents(left, right, left);
         expect(left).toBe(returnedResult);
         expect(left).toEqual(expectedResult);
     });
@@ -702,6 +758,20 @@ defineSuite([
         var left = new Cartesian3(4.0, 5.0, 6.0);
         expect(function() {
             Cartesian3.multiplyComponents(left, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideComponents throw with no left parameter', function() {
+        var right = new Cartesian3(4.0, 5.0, 6.0);
+        expect(function() {
+            Cartesian3.divideComponents(undefined, right);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideComponents throw with no right parameter', function() {
+        var left = new Cartesian3(4.0, 5.0, 6.0);
+        expect(function() {
+            Cartesian3.divideComponents(left, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -1112,6 +1182,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('divideComponents throws with no result', function() {
+        expect(function() {
+            Cartesian3.divideComponents(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
     it('add throws with no result', function() {
         expect(function() {
             Cartesian3.add(new Cartesian3(), new Cartesian3());
@@ -1167,4 +1243,5 @@ defineSuite([
     });
 
     createPackableSpecs(Cartesian3, new Cartesian3(1, 2, 3), [1, 2, 3]);
+    createPackableArraySpecs(Cartesian3, [new Cartesian3(1, 2, 3), new Cartesian3(4, 5, 6)], [1, 2, 3, 4, 5, 6]);
 });

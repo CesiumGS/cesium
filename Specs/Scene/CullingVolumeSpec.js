@@ -277,6 +277,12 @@ defineSuite([
         var boundingSphereCullingVolume = new BoundingSphere(new Cartesian3(1000.0, 2000.0, 3000.0), 100.0);
         var cullingVolume = CullingVolume.fromBoundingSphere(boundingSphereCullingVolume);
 
+        it('throws without a boundingSphere', function() {
+            expect(function() {
+                CullingVolume.fromBoundingSphere(undefined);
+            }).toThrowDeveloperError();
+        });
+
         it('can contain a volume', function() {
             var sphere1 = BoundingSphere.clone(boundingSphereCullingVolume);
             sphere1.radius *= 0.5;

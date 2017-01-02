@@ -2,21 +2,15 @@
 defineSuite([
         'Scene/Sun',
         'Core/BoundingSphere',
-        'Core/Cartesian3',
         'Core/Color',
-        'Core/Ellipsoid',
         'Core/Math',
-        'Core/Matrix4',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
         Sun,
         BoundingSphere,
-        Cartesian3,
         Color,
-        Ellipsoid,
         CesiumMath,
-        Matrix4,
         SceneMode,
         createScene) {
     'use strict';

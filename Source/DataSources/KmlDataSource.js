@@ -12,7 +12,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -32,6 +31,7 @@ define([
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
         '../Scene/SceneMode',
@@ -41,10 +41,11 @@ define([
         '../ThirdParty/zip',
         './BillboardGraphics',
         './CompositePositionProperty',
-        './ConstantPositionProperty',
+        './CorridorGraphics',
         './DataSource',
         './DataSourceClock',
         './Entity',
+        './EntityCluster',
         './EntityCollection',
         './LabelGraphics',
         './PathGraphics',
@@ -70,7 +71,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -90,6 +90,7 @@ define([
         RuntimeError,
         TimeInterval,
         TimeIntervalCollection,
+        HeightReference,
         HorizontalOrigin,
         LabelStyle,
         SceneMode,
@@ -99,10 +100,11 @@ define([
         zip,
         BillboardGraphics,
         CompositePositionProperty,
-        ConstantPositionProperty,
+        CorridorGraphics,
         DataSource,
         DataSourceClock,
         Entity,
+        EntityCluster,
         EntityCollection,
         LabelGraphics,
         PathGraphics,
@@ -279,10 +281,26 @@ define([
         return url;
     }
 
-    function getOrCreateEntity(node, entityCollection) {
+    // an optional context is passed to allow for some malformed kmls (those with multiple geometries with same ids) to still parse
+    // correctly, as they do in Google Earth.
+    function createEntity(node, entityCollection, context) {
         var id = queryStringAttribute(node, 'id');
-        id = defined(id) ? id : createGuid();
-        var entity = entityCollection.getOrCreateEntity(id);
+        id = defined(id) && id.length !== 0 ? id : createGuid();
+        if(defined(context)){
+            id = context + id;
+        }
+
+        // If we have a duplicate ID just generate one.
+        // This isn't valid KML but Google Earth handles this case.
+        var entity = entityCollection.getById(id);
+        if (defined(entity)) {
+            id = createGuid();
+            if(defined(context)){
+                id = context + id;
+            }
+        }
+
+        entity = entityCollection.add(new Entity({id : id}));
         if (!defined(entity.kml)) {
             entity.addProperty('kml');
             entity.kml = new KmlFeatureData();
@@ -449,6 +467,14 @@ define([
             if (defined(blob)) {
                 hrefResolved = true;
                 href = blob;
+            } else {
+                // Needed for multiple levels of KML files in a KMZ
+                var tmpHref = getAbsoluteUri(href, sourceUri);
+                blob = uriResolver[tmpHref];
+                if (defined(blob)) {
+                    hrefResolved = true;
+                    href = blob;
+                }
             }
         }
         if (!hrefResolved && defined(sourceUri)) {
@@ -642,7 +668,6 @@ define([
         var heading = queryNumericValue(node, 'heading', namespaces.kml);
         var color = queryColorValue(node, 'color', namespaces.kml);
 
-
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
         var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false);
         var x = queryNumericValue(iconNode, 'x', namespaces.gx);
@@ -691,19 +716,20 @@ define([
             } else if (hotSpotXUnit === 'insetPixels') {
                 xOffset = (hotSpotX - BILLBOARD_SIZE) * scale;
             } else if (hotSpotXUnit === 'fraction') {
-                xOffset = -BILLBOARD_SIZE * scale * hotSpotX;
+                xOffset = -hotSpotX * BILLBOARD_SIZE * scale;
             }
             xOffset += BILLBOARD_SIZE * 0.5 * scale;
         }
 
         if (defined(hotSpotY)) {
             if (hotSpotYUnit === 'pixels') {
-                yOffset = hotSpotY;
+                yOffset = hotSpotY * scale;
             } else if (hotSpotYUnit === 'insetPixels') {
-                yOffset = -hotSpotY;
+                yOffset = (-hotSpotY + BILLBOARD_SIZE) * scale;
             } else if (hotSpotYUnit === 'fraction') {
-                yOffset = hotSpotY * BILLBOARD_SIZE;
+                yOffset = hotSpotY * BILLBOARD_SIZE * scale;
             }
+
             yOffset -= BILLBOARD_SIZE * 0.5 * scale;
         }
 
@@ -850,7 +876,7 @@ define([
 
     //Asynchronously processes an external style file.
     function processExternalStyles(dataSource, uri, styleCollection) {
-        return when(loadXML(proxyUrl(uri, dataSource._proxy)), function(styleKml) {
+        return loadXML(proxyUrl(uri, dataSource._proxy)).then(function(styleKml) {
             return processStyles(dataSource, styleKml, styleCollection, uri, true);
         });
     }
@@ -967,9 +993,42 @@ define([
         entity.polyline.positions = new PositionPropertyArray([entityPosition, surfacePosition]);
     }
 
+    function heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode) {
+        if (!defined(altitudeMode) && !defined(gxAltitudeMode) || altitudeMode === 'clampToGround') {
+            return HeightReference.CLAMP_TO_GROUND;
+        }
+
+        if (altitudeMode === 'relativeToGround') {
+            return HeightReference.RELATIVE_TO_GROUND;
+        }
+
+        if (altitudeMode === 'absolute') {
+            return HeightReference.NONE;
+        }
+
+        if (gxAltitudeMode === 'clampToSeaFloor') {
+            console.log('KML - <gx:altitudeMode>:clampToSeaFloor is currently not supported, using <kml:altitudeMode>:clampToGround.');
+            return HeightReference.CLAMP_TO_GROUND;
+        }
+
+        if (gxAltitudeMode === 'relativeToSeaFloor') {
+            console.log('KML - <gx:altitudeMode>:relativeToSeaFloor is currently not supported, using <kml:altitudeMode>:relativeToGround.');
+            return HeightReference.RELATIVE_TO_GROUND;
+        }
+
+        if (defined(altitudeMode)) {
+            console.log('KML - Unknown <kml:altitudeMode>:' + altitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+        } else {
+            console.log('KML - Unknown <gx:altitudeMode>:' + gxAltitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+        }
+
+        // Clamp to ground is the default
+        return HeightReference.CLAMP_TO_GROUND;
+    }
+
     function createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode) {
         if (gxAltitudeMode === 'relativeToSeaFloor' || altitudeMode === 'absolute' || altitudeMode === 'relativeToGround') {
-            //Just return the ellipsoid referenced property until we support MSL and terrain
+            //Just return the ellipsoid referenced property until we support MSL
             return property;
         }
 
@@ -978,7 +1037,7 @@ define([
             console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
         }
 
-        //Clamp to ellipsoid until we support terrain
+        // Clamp to ground is the default
         return new ScaledPositionProperty(property);
     }
 
@@ -988,7 +1047,7 @@ define([
         }
 
         if (gxAltitudeMode === 'relativeToSeaFloor' || altitudeMode === 'absolute' || altitudeMode === 'relativeToGround') {
-            //Just return the ellipsoid referenced property until we support MSL and terrain
+            //Just return the ellipsoid referenced property until we support MSL
             return properties;
         }
 
@@ -997,7 +1056,7 @@ define([
             console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
         }
 
-        //Clamp to ellipsoid until we support terrain.
+        // Clamp to ground is the default
         var propertiesLength = properties.length;
         for (var i = 0; i < propertiesLength; i++) {
             var property = properties[i];
@@ -1006,7 +1065,7 @@ define([
         return properties;
     }
 
-    function processPositionGraphics(dataSource, entity, styleEntity) {
+    function processPositionGraphics(dataSource, entity, styleEntity, heightReference) {
         var label = entity.label;
         if (!defined(label)) {
             label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
@@ -1024,8 +1083,9 @@ define([
             billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
         }
 
+        var scale = 1.0;
         if (defined(billboard.scale)) {
-            var scale = billboard.scale.getValue();
+            scale = billboard.scale.getValue();
             if (scale !== 0) {
                 label.pixelOffset = new Cartesian2((scale * 16) + 1, 0);
             } else {
@@ -1033,6 +1093,11 @@ define([
                 label.pixelOffset = undefined;
                 label.horizontalOrigin = undefined;
             }
+        }
+
+        if (defined(heightReference) && dataSource._clampToGround) {
+            billboard.heightReference = heightReference;
+            label.heightReference = heightReference;
         }
     }
 
@@ -1059,8 +1124,8 @@ define([
 
         var position = readCoordinate(coordinatesString);
 
-        entity.position = createPositionPropertyFromAltitudeMode(new ConstantPositionProperty(position), altitudeMode, gxAltitudeMode);
-        processPositionGraphics(dataSource, entity, styleEntity);
+        entity.position = position;
+        processPositionGraphics(dataSource, entity, styleEntity, heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode));
 
         if (extrude && isExtrudable(altitudeMode, gxAltitudeMode)) {
             createDropLine(entityCollection, entity, styleEntity);
@@ -1100,11 +1165,24 @@ define([
                 wall.outlineWidth = polyline.width;
             }
         } else {
-            polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
-            entity.polyline = polyline;
-            polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
-            if (!tessellate || canExtrude) {
-                polyline.followSurface = false;
+            if (dataSource._clampToGround && !canExtrude && tessellate) {
+                var corridor = new CorridorGraphics();
+                entity.corridor = corridor;
+                corridor.positions = coordinates;
+                if (defined(polyline)) {
+                    corridor.material = defined(polyline.material) ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE) : Color.WHITE;
+                    corridor.width = defaultValue(polyline.width, 1.0);
+                } else {
+                    corridor.material = Color.WHITE;
+                    corridor.width = 1.0;
+                }
+            } else {
+                polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
+                entity.polyline = polyline;
+                polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
+                if (!tessellate || canExtrude) {
+                    polyline.followSurface = false;
+                }
             }
         }
 
@@ -1133,6 +1211,8 @@ define([
         if (canExtrude) {
             polygon.perPositionHeight = true;
             polygon.extrudedHeight = extrude ? 0 : undefined;
+        } else if (!dataSource._clampToGround) {
+            polygon.height = 0;
         }
 
         if (defined(coordinates)) {
@@ -1177,8 +1257,8 @@ define([
         }
         var property = new SampledPositionProperty();
         property.addSamples(times, coordinates);
-        entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
-        processPositionGraphics(dataSource, entity, styleEntity);
+        entity.position = property;
+        processPositionGraphics(dataSource, entity, styleEntity, heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode));
         processPathGraphics(dataSource, entity, styleEntity);
 
         entity.availability = new TimeIntervalCollection();
@@ -1288,14 +1368,14 @@ define([
         return true;
     }
 
-    function processMultiGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity) {
+    function processMultiGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity, context) {
         var childNodes = geometryNode.childNodes;
         var hasGeometry = false;
         for (var i = 0, len = childNodes.length; i < len; i++) {
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
             if (defined(geometryProcessor)) {
-                var childEntity = getOrCreateEntity(childNode, entityCollection);
+                var childEntity = createEntity(childNode, entityCollection, context);
                 childEntity.parent = entity;
                 childEntity.name = entity.name;
                 childEntity.availability = entity.availability;
@@ -1450,8 +1530,8 @@ define([
         entity.description = tmp;
     }
 
-    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var entity = getOrCreateEntity(featureNode, entityCollection);
+    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        var entity = createEntity(featureNode, entityCollection, context);
         var kmlData = entity.kml;
         var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver);
 
@@ -1465,8 +1545,18 @@ define([
         }
         entity.availability = availability;
 
+        mergeAvailabilityWithParent(entity);
+
+        // Per KML spec "A Feature is visible only if it and all its ancestors are visible."
+        function ancestryIsVisible(parentEntity) {
+            if (!parentEntity) {
+              return true;
+            }
+            return parentEntity.show && ancestryIsVisible(parentEntity.parent);
+        }
+
         var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.kml);
-        entity.show = defaultValue(visibility, true);
+        entity.show = ancestryIsVisible(parent) && defaultValue(visibility, true);
         //var open = queryBooleanValue(featureNode, 'open', namespaces.kml);
 
         var authorNode = queryFirstNode(featureNode, 'author', namespaces.atom);
@@ -1518,7 +1608,7 @@ define([
         Model : processUnsupportedGeometry
     };
 
-    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
         var featureTypeNames = Object.keys(featureTypes);
         var featureTypeNamesLength = featureTypeNames.length;
 
@@ -1532,19 +1622,19 @@ define([
                 var child = childNodes[q];
                 if (child.localName === featureName &&
                     ((namespaces.kml.indexOf(child.namespaceURI) !== -1) || (namespaces.gx.indexOf(child.namespaceURI) !== -1))) {
-                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver);
+                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
                 }
             }
         }
     }
 
-    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
-        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
     }
 
-    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         var entity = r.entity;
         var styleEntity = r.styleEntity;
 
@@ -1554,7 +1644,9 @@ define([
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
             if (defined(geometryProcessor)) {
-                geometryProcessor(dataSource, entityCollection, childNode, entity, styleEntity);
+                // pass the placemark entity id as a context for case of defining multiple child entities together to handle case
+                // where some malformed kmls reuse the same id across placemarks, which works in GE, but is not technically to spec.
+                geometryProcessor(dataSource, entityCollection, childNode, entity, styleEntity, entity.id);
                 hasGeometry = true;
             }
         }
@@ -1565,8 +1657,8 @@ define([
         }
     }
 
-    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         var entity = r.entity;
 
         var geometry;
@@ -1593,13 +1685,13 @@ define([
                     west = CesiumMath.negativePiToPi(CesiumMath.toRadians(west));
                 }
                 if (defined(south)) {
-                    south = CesiumMath.negativePiToPi(CesiumMath.toRadians(south));
+                    south = CesiumMath.clampToLatitudeRange(CesiumMath.toRadians(south));
                 }
                 if (defined(east)) {
                     east = CesiumMath.negativePiToPi(CesiumMath.toRadians(east));
                 }
                 if (defined(north)) {
-                    north = CesiumMath.negativePiToPi(CesiumMath.toRadians(north));
+                    north = CesiumMath.clampToLatitudeRange(CesiumMath.toRadians(north));
                 }
                 geometry.coordinates = new Rectangle(west, south, east, north);
 
@@ -1655,7 +1747,8 @@ define([
         }
     }
 
-    function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+    function processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -1822,8 +1915,8 @@ define([
         return queryString;
     }
 
-    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         var networkEntity = r.entity;
 
         var link = queryFirstNode(node, 'Link', namespaces.kml);
@@ -1834,19 +1927,40 @@ define([
         if (defined(link)) {
             var href = queryStringValue(link, 'href', namespaces.kml);
             if (defined(href)) {
+                var newSourceUri = href;
                 href = resolveHref(href, undefined, sourceUri, uriResolver);
-                var viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
-                var viewBoundScale = defaultValue(queryStringValue(link, 'viewBoundScale', namespaces.kml), 1.0);
-                var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
-                var viewFormat = defaultValue(queryStringValue(link, 'viewFormat', namespaces.kml), defaultViewFormat);
-                var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
-                var queryString = makeQueryString(viewFormat, httpQuery);
+                var linkUrl;
 
+                // We need to pass in the original path if resolveHref returns a data uri because the network link
+                //  references a document in a KMZ archive
+                if (/^data:/.test(href)) {
+                    // No need to build a query string for a data uri, just use as is
+                    linkUrl = href;
+
+                    // So if sourceUri isn't the kmz file, then its another kml in the archive, so resolve it
+                    if (!/\.kmz/i.test(sourceUri)) {
+                        newSourceUri = getAbsoluteUri(newSourceUri, sourceUri);
+                    }
+                } else {
+                    newSourceUri = href; // Not a data uri so use the fully qualified uri
+                    var viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
+                    var viewBoundScale = defaultValue(queryStringValue(link, 'viewBoundScale', namespaces.kml), 1.0);
+                    var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
+                    var viewFormat = defaultValue(queryStringValue(link, 'viewFormat', namespaces.kml), defaultViewFormat);
+                    var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
+                    var queryString = makeQueryString(viewFormat, httpQuery);
+
+                    linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, queryString, false),
+                        viewBoundScale, dataSource._lastCameraView.bbox);
+                }
+
+                var options = {
+                    sourceUri : newSourceUri,
+                    uriResolver : uriResolver,
+                    context : networkEntity.id
+                };
                 var networkLinkCollection = new EntityCollection();
-                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, queryString, false),
-                                                            viewBoundScale, dataSource._lastCameraView.bbox);
-
-                var promise = when(load(dataSource, networkLinkCollection, linkUrl), function(rootElement) {
+                var promise = load(dataSource, networkLinkCollection, linkUrl, options).then(function(rootElement) {
                     var entities = dataSource._entityCollection;
                     var newEntities = networkLinkCollection.values;
                     entities.suspendEvents();
@@ -1854,7 +1968,9 @@ define([
                         var newEntity = newEntities[i];
                         if (!defined(newEntity.parent)) {
                             newEntity.parent = networkEntity;
+                            mergeAvailabilityWithParent(newEntity);
                         }
+
                         entities.add(newEntity);
                     }
                     entities.resumeEvents();
@@ -1929,40 +2045,36 @@ define([
                     }
                 });
 
-                // _promises is only defined during the initial load to make sure we wait for all
-                //  NetworkLinks to finish loading.
-                if (defined(dataSource._promises)) {
-                    dataSource._promises.push(promise);
-                }
+                promises.push(promise);
             }
         }
     }
 
+    // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
     var featureTypes = {
         Document : processDocument,
         Folder : processFolder,
         Placemark : processPlacemark,
         NetworkLink : processNetworkLink,
         GroundOverlay : processGroundOverlay,
-        PhotoOverlay : processUnsupported,
-        ScreenOverlay : processUnsupported,
-        Tour : processUnsupported
+        PhotoOverlay : processUnsupportedFeature,
+        ScreenOverlay : processUnsupportedFeature,
+        Tour : processUnsupportedFeature
     };
 
-    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureProocessor = featureTypes[node.localName];
-        if (defined(featureProocessor)) {
-            featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        var featureProcessor = featureTypes[node.localName];
+        if (defined(featureProcessor)) {
+            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         } else {
-            console.log('KML - Unsupported feature node: ' + node.localName);
+            processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         }
     }
 
-    function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver) {
-        var deferred = when.defer();
-
+    function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context) {
         entityCollection.removeAll();
 
+        var promises = [];
         var documentElement = kml.documentElement;
         var document = documentElement.localName === 'Document' ? documentElement : queryFirstNode(documentElement, 'Document', namespaces.kml);
         var name = queryStringValue(document, 'name', namespaces.kml);
@@ -1976,7 +2088,7 @@ define([
         }
 
         var styleCollection = new EntityCollection(dataSource);
-        when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
+        return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver, context)).then(function() {
             var element = kml.documentElement;
             if (element.localName === 'kml') {
                 var childNodes = element.childNodes;
@@ -1989,13 +2101,13 @@ define([
                 }
             }
             entityCollection.suspendEvents();
-            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
+            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
             entityCollection.resumeEvents();
 
-            deferred.resolve(kml.documentElement);
+            return when.all(promises).then(function() {
+                return kml.documentElement;
+            });
         });
-
-        return deferred.promise;
     }
 
     function loadKmz(dataSource, entityCollection, blob, sourceUri) {
@@ -2003,22 +2115,38 @@ define([
         zip.createReader(new zip.BlobReader(blob), function(reader) {
             reader.getEntries(function(entries) {
                 var promises = [];
-                var foundKML = false;
                 var uriResolver = {};
+                var docEntry;
+                var docDefer;
                 for (var i = 0; i < entries.length; i++) {
                     var entry = entries[i];
                     if (!entry.directory) {
                         var innerDefer = when.defer();
                         promises.push(innerDefer.promise);
-                        if (!foundKML && /\.kml$/i.test(entry.filename)) {
-                            //Only the first KML file found in the zip is used.
-                            //https://developers.google.com/kml/documentation/kmzarchives
-                            foundKML = true;
-                            loadXmlFromZip(reader, entry, uriResolver, innerDefer);
+                        if (/\.kml$/i.test(entry.filename)) {
+                            // We use the first KML document we come across
+                            //  https://developers.google.com/kml/documentation/kmzarchives
+                            // Unless we come across a .kml file at the root of the archive because GE does this
+                            if (!defined(docEntry) || !/\//i.test(entry.filename)) {
+                                if (defined(docEntry)) {
+                                    // We found one at the root so load the initial kml as a data uri
+                                    loadDataUriFromZip(reader, docEntry, uriResolver, docDefer);
+                                }
+                                docEntry = entry;
+                                docDefer = innerDefer;
+                            } else {
+                                // Wasn't the first kml and wasn't at the root
+                                loadDataUriFromZip(reader, entry, uriResolver, innerDefer);
+                            }
                         } else {
                             loadDataUriFromZip(reader, entry, uriResolver, innerDefer);
                         }
                     }
+                }
+
+                // Now load the root KML document
+                if (defined(docEntry)) {
+                    loadXmlFromZip(reader, docEntry, uriResolver, docDefer);
                 }
                 when.all(promises).then(function() {
                     reader.close();
@@ -2040,6 +2168,8 @@ define([
     function load(dataSource, entityCollection, data, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var sourceUri = options.sourceUri;
+        var uriResolver = options.uriResolver;
+        var context = options.context;
 
         var promise = data;
         if (typeof data === 'string') {
@@ -2047,50 +2177,52 @@ define([
             sourceUri = defaultValue(sourceUri, data);
         }
 
-        return when(promise, function(dataToLoad) {
-            if (dataToLoad instanceof Blob) {
-                return isZipFile(dataToLoad).then(function(isZip) {
-                    if (isZip) {
-                        return loadKmz(dataSource, entityCollection, dataToLoad, sourceUri);
-                    }
-                    return when(readBlobAsText(dataToLoad)).then(function(text) {
-                        //There's no official way to validate if a parse was successful.
-                        //The following check detects the error on various browsers.
-
-                        //IE raises an exception
-                        var kml;
-                        var error;
-                        try {
-                            kml = parser.parseFromString(text, 'application/xml');
-                        } catch (e) {
-                            error = e.toString();
+        return when(promise)
+            .then(function(dataToLoad) {
+                if (dataToLoad instanceof Blob) {
+                    return isZipFile(dataToLoad).then(function(isZip) {
+                        if (isZip) {
+                            return loadKmz(dataSource, entityCollection, dataToLoad, sourceUri);
                         }
+                        return readBlobAsText(dataToLoad).then(function(text) {
+                            //There's no official way to validate if a parse was successful.
+                            //The following check detects the error on various browsers.
 
-                        //The parse succeeds on Chrome and Firefox, but the error
-                        //handling is different in each.
-                        if (defined(error) || kml.body || kml.documentElement.tagName === 'parsererror') {
-                            //Firefox has error information as the firstChild nodeValue.
-                            var msg = defined(error) ? error : kml.documentElement.firstChild.nodeValue;
-
-                            //Chrome has it in the body text.
-                            if (!msg) {
-                                msg = kml.body.innerText;
+                            //IE raises an exception
+                            var kml;
+                            var error;
+                            try {
+                                kml = parser.parseFromString(text, 'application/xml');
+                            } catch (e) {
+                                error = e.toString();
                             }
 
-                            //Return the error
-                            throw new RuntimeError(msg);
-                        }
-                        return loadKml(dataSource, entityCollection, kml, sourceUri, undefined);
+                            //The parse succeeds on Chrome and Firefox, but the error
+                            //handling is different in each.
+                            if (defined(error) || kml.body || kml.documentElement.tagName === 'parsererror') {
+                                //Firefox has error information as the firstChild nodeValue.
+                                var msg = defined(error) ? error : kml.documentElement.firstChild.nodeValue;
+
+                                //Chrome has it in the body text.
+                                if (!msg) {
+                                    msg = kml.body.innerText;
+                                }
+
+                                //Return the error
+                                throw new RuntimeError(msg);
+                            }
+                            return loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context);
+                        });
                     });
-                });
-            } else {
-                return when(loadKml(dataSource, entityCollection, dataToLoad, sourceUri, undefined));
-            }
-        }).otherwise(function(error) {
-            dataSource._error.raiseEvent(dataSource, error);
-            console.log(error);
-            return when.reject(error);
-        });
+                } else {
+                    return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context);
+                }
+            })
+            .otherwise(function(error) {
+                dataSource._error.raiseEvent(dataSource, error);
+                console.log(error);
+                return when.reject(error);
+            });
     }
 
     /**
@@ -2129,37 +2261,33 @@ define([
      *      });
      */
     function KmlDataSource(options) {
-        var showWarning = false;
         options = defaultValue(options, {});
-        if (defined(options.getURL)) {
-            showWarning = true;
-            var proxy = options;
-            options = {
-                proxy: proxy
-            };
-        } else if (!defined(options.camera) || !defined(options.canvas)) {
-            showWarning = true;
-        }
+        var camera = options.camera;
+        var canvas = options.canvas;
 
-        if (showWarning) {
-            deprecationWarning('KmlDataSource', 'KmlDataSource now longer takes a proxy object. It takes an options object with camera and canvas as required properties. This will throw in Cesium 1.22.');
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(camera)) {
+            throw new DeveloperError('options.camera is required.');
         }
+        if (!defined(canvas)) {
+            throw new DeveloperError('options.canvas is required.');
+        }
+        //>>includeEnd('debug');
 
         this._changed = new Event();
         this._error = new Event();
         this._loading = new Event();
         this._refresh = new Event();
+        this._unsupportedNode = new Event();
+
         this._clock = undefined;
         this._entityCollection = new EntityCollection(this);
         this._name = undefined;
         this._isLoading = false;
         this._proxy = options.proxy;
         this._pinBuilder = new PinBuilder();
-        this._promises = [];
         this._networkLinks = new AssociativeArray();
-
-        var camera = options.camera;
-        var canvas = options.canvas;
+        this._entityCluster = new EntityCluster();
 
         this._canvas = canvas;
         this._camera = camera;
@@ -2180,6 +2308,7 @@ define([
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
      * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+     * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
      *
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
@@ -2274,6 +2403,16 @@ define([
             }
         },
         /**
+         * Gets an event that will be raised when the data source finds an unsupported node type.
+         * @memberof KmlDataSource.prototype
+         * @type {Event}
+         */
+        unsupportedNodeEvent : {
+            get : function() {
+                return this._unsupportedNode;
+            }
+        },
+        /**
          * Gets whether or not this data source should be displayed.
          * @memberof KmlDataSource.prototype
          * @type {Boolean}
@@ -2285,6 +2424,26 @@ define([
             set : function(value) {
                 this._entityCollection.show = value;
             }
+        },
+
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof KmlDataSource.prototype
+         * @type {EntityCluster}
+         */
+        clustering : {
+            get : function() {
+                return this._entityCluster;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value must be defined.');
+                }
+                //>>includeEnd('debug');
+                this._entityCluster = value;
+            }
         }
     });
 
@@ -2295,6 +2454,7 @@ define([
      * @param {Object} [options] An object with the following properties:
      * @param {Number} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
+     * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
      */
     KmlDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);
@@ -2303,70 +2463,66 @@ define([
         }
         //>>includeEnd('debug');
 
+        options = defaultValue(options, {});
         DataSource.setLoading(this, true);
 
         var oldName = this._name;
         this._name = undefined;
-        this._promises = [];
+        this._clampToGround = defaultValue(options.clampToGround, false);
 
         var that = this;
         return load(this, this._entityCollection, data, options).then(function() {
-            return when.all(that._promises, function() {
-                var clock;
+            var clock;
 
-                var availability = that._entityCollection.computeAvailability();
+            var availability = that._entityCollection.computeAvailability();
 
-                var start = availability.start;
-                var stop = availability.stop;
-                var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
-                var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
-                if (!isMinStart || !isMaxStop) {
-                    var date;
+            var start = availability.start;
+            var stop = availability.stop;
+            var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
+            var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
+            if (!isMinStart || !isMaxStop) {
+                var date;
 
-                    //If start is min time just start at midnight this morning, local time
-                    if (isMinStart) {
-                        date = new Date();
-                        date.setHours(0, 0, 0, 0);
-                        start = JulianDate.fromDate(date);
-                    }
-
-                    //If stop is max value just stop at midnight tonight, local time
-                    if (isMaxStop) {
-                        date = new Date();
-                        date.setHours(24, 0, 0, 0);
-                        stop = JulianDate.fromDate(date);
-                    }
-
-                    clock = new DataSourceClock();
-                    clock.startTime = start;
-                    clock.stopTime = stop;
-                    clock.currentTime = JulianDate.clone(start);
-                    clock.clockRange = ClockRange.LOOP_STOP;
-                    clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-                    clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
+                //If start is min time just start at midnight this morning, local time
+                if (isMinStart) {
+                    date = new Date();
+                    date.setHours(0, 0, 0, 0);
+                    start = JulianDate.fromDate(date);
                 }
 
-                var changed = false;
-                if (clock !== that._clock) {
-                    that._clock = clock;
-                    changed = true;
+                //If stop is max value just stop at midnight tonight, local time
+                if (isMaxStop) {
+                    date = new Date();
+                    date.setHours(24, 0, 0, 0);
+                    stop = JulianDate.fromDate(date);
                 }
 
-                if (oldName !== that._name) {
-                    changed = true;
-                }
+                clock = new DataSourceClock();
+                clock.startTime = start;
+                clock.stopTime = stop;
+                clock.currentTime = JulianDate.clone(start);
+                clock.clockRange = ClockRange.LOOP_STOP;
+                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+                clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
+            }
 
-                if (changed) {
-                    that._changed.raiseEvent(that);
-                }
+            var changed = false;
+            if (clock !== that._clock) {
+                that._clock = clock;
+                changed = true;
+            }
 
-                DataSource.setLoading(that, false);
+            if (oldName !== that._name) {
+                changed = true;
+            }
 
-                // We don't need to add anymore
-                that._promises = undefined;
+            if (changed) {
+                that._changed.raiseEvent(that);
+            }
 
-                return that;
-            });
+            DataSource.setLoading(that, false);
+
+            return that;
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
@@ -2374,6 +2530,21 @@ define([
             return when.reject(error);
         });
     };
+
+    function mergeAvailabilityWithParent(child) {
+        var parent = child.parent;
+        if (defined(parent)) {
+            var parentAvailability = parent.availability;
+            if (defined(parentAvailability)) {
+                var childAvailability = child.availability;
+                if (defined(childAvailability)) {
+                    childAvailability.intersect(parentAvailability);
+                } else {
+                    child.availability = parentAvailability;
+                }
+            }
+        }
+    }
 
     function getNetworkLinkUpdateCallback(dataSource, networkLink, newEntityCollection, networkLinks, processedHref) {
         return function(rootElement) {
@@ -2458,6 +2629,7 @@ define([
                 var newEntity = newEntities[i];
                 if (!defined(newEntity.parent)) {
                     newEntity.parent = networkLinkEntity;
+                    mergeAvailabilityWithParent(newEntity);
                 }
                 entityCollection.add(newEntity);
             }
@@ -2574,7 +2746,7 @@ define([
                     var newEntityCollection = new EntityCollection();
                     var href = joinUrls(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString), false);
                     href = processNetworkLinkQueryString(that._camera, that._canvas, href, networkLink.viewBoundScale, lastCameraView.bbox);
-                    load(that, newEntityCollection, href)
+                    load(that, newEntityCollection, href, {context: entity.id})
                         .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks, href))
                         .otherwise(function(error) {
                             var msg = 'NetworkLink ' + networkLink.href + ' refresh failed: ' + error;

@@ -10,7 +10,6 @@ defineSuite([
         'Scene/ArcGisMapServerImageryProvider',
         'Scene/BingMapsImageryProvider',
         'Scene/createTileMapServiceImageryProvider',
-        'Scene/Globe',
         'Scene/GlobeSurfaceTile',
         'Scene/Imagery',
         'Scene/ImageryLayerCollection',
@@ -18,6 +17,7 @@ defineSuite([
         'Scene/NeverTileDiscardPolicy',
         'Scene/QuadtreeTile',
         'Scene/SingleTileImageryProvider',
+        'Scene/UrlTemplateImageryProvider',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -32,7 +32,6 @@ defineSuite([
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         createTileMapServiceImageryProvider,
-        Globe,
         GlobeSurfaceTile,
         Imagery,
         ImageryLayerCollection,
@@ -40,6 +39,7 @@ defineSuite([
         NeverTileDiscardPolicy,
         QuadtreeTile,
         SingleTileImageryProvider,
+        UrlTemplateImageryProvider,
         WebMapServiceImageryProvider,
         createScene,
         pollToPromise) {
@@ -156,7 +156,7 @@ defineSuite([
         });
     }
 
-    it('reprojects web mercator images', function() {
+    it('reprojects web mercator images when necessary', function() {
         var provider = createWebMercatorProvider();
         var layer = new ImageryLayer(provider);
 
@@ -175,15 +175,141 @@ defineSuite([
                 return pollToPromise(function() {
                     return imagery.state === ImageryState.TEXTURE_LOADED;
                 }).then(function() {
-                    var textureBeforeReprojection = imagery.texture;
-                    layer._reprojectTexture(scene.frameState, imagery);
+                    var textureBeforeReprojection = imagery.textureWebMercator;
+                    layer._reprojectTexture(scene.frameState, imagery, true);
                     layer.queueReprojectionCommands(scene.frameState);
                     scene.frameState.commandList[0].execute(computeEngine);
 
                     return pollToPromise(function() {
                         return imagery.state === ImageryState.READY;
                     }).then(function() {
+                        expect(imagery.texture).toBeDefined();
                         expect(textureBeforeReprojection).not.toEqual(imagery.texture);
+                        imagery.releaseReference();
+                    });
+                });
+            });
+        });
+    });
+
+    it('does not reproject web mercator images when not necessary', function() {
+        var provider = createWebMercatorProvider();
+        var layer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 1, 3);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+
+                return pollToPromise(function() {
+                    return imagery.state === ImageryState.TEXTURE_LOADED;
+                }).then(function() {
+                    expect(imagery.textureWebMercator).toBeDefined();
+                    layer._reprojectTexture(scene.frameState, imagery, false);
+                    layer.queueReprojectionCommands(scene.frameState);
+                    expect(scene.frameState.commandList.length).toBe(0);
+
+                    return pollToPromise(function() {
+                        return imagery.state === ImageryState.READY;
+                    }).then(function() {
+                        expect(imagery.texture).not.toBeDefined();
+                        imagery.releaseReference();
+                    });
+                });
+            });
+        });
+    });
+
+    it('reprojects web mercator images later if it becomes necessary later', function() {
+        var provider = createWebMercatorProvider();
+        var layer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 1, 3);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+
+                return pollToPromise(function() {
+                    return imagery.state === ImageryState.TEXTURE_LOADED;
+                }).then(function() {
+                    var textureBeforeReprojection = imagery.textureWebMercator;
+                    layer._reprojectTexture(scene.frameState, imagery, false);
+                    layer.queueReprojectionCommands(scene.frameState);
+                    expect(scene.frameState.commandList.length).toBe(0);
+
+                    return pollToPromise(function() {
+                        return imagery.state === ImageryState.READY;
+                    }).then(function() {
+                        expect(imagery.texture).not.toBeDefined();
+
+                        layer._reprojectTexture(scene.frameState, imagery, true);
+                        layer.queueReprojectionCommands(scene.frameState);
+                        scene.frameState.commandList[0].execute(computeEngine);
+
+                        return pollToPromise(function() {
+                            return imagery.state === ImageryState.READY;
+                        }).then(function() {
+                            expect(imagery.texture).toBeDefined();
+                            expect(textureBeforeReprojection).not.toEqual(imagery.texture);
+                            imagery.releaseReference();
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    it('assigns texture property when reprojection is skipped because the tile is very small', function() {
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            loadImage.defaultCreateImage('Data/Images/Red256x256.png', crossOrigin, deferred);
+        };
+
+        var provider = new UrlTemplateImageryProvider({
+            url : 'http://example.com/{z}/{x}/{y}.png',
+            minimumLevel : 13,
+            maximumLevel: 19,
+            rectangle : Rectangle.fromDegrees(13.39657249732205, 52.49127999816725, 13.42722986993895, 52.50998943590507)
+        });
+        var layer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 4400, 2686, 13);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+
+                return pollToPromise(function() {
+                    return imagery.state === ImageryState.TEXTURE_LOADED;
+                }).then(function() {
+                    layer._reprojectTexture(scene.frameState, imagery, true);
+                    layer.queueReprojectionCommands(scene.frameState);
+                    expect(scene.frameState.commandList.length).toBe(0);
+
+                    return pollToPromise(function() {
+                        return imagery.state === ImageryState.READY;
+                    }).then(function() {
+                        expect(imagery.texture).toBeDefined();
+                        expect(imagery.texture).toBe(imagery.textureWebMercator);
                         imagery.releaseReference();
                     });
                 });

@@ -181,18 +181,6 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         }));
 
         providerViewModels.push(new ProviderViewModel({
-            name : 'MapQuest Open\u00adStreet\u00adMap',
-            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/mapQuestOpenStreetMap.png'),
-            tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
-map of the world.\nhttp://www.openstreetmap.org',
-            creationFunction : function() {
-                return createOpenStreetMapImageryProvider({
-                    url : 'https://otile1-s.mqcdn.com/tiles/1.0.0/osm/'
-                });
-            }
-        }));
-
-        providerViewModels.push(new ProviderViewModel({
             name : 'The Black Marble',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/blackMarble.png'),
             tooltip : 'The lights of cities and villages trace the outlines of civilization in this global view of the \

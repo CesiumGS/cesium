@@ -3,18 +3,12 @@ defineSuite([
         'Core/EllipsoidTangentPlane',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/OrientedBoundingBox'
+        'Core/Ellipsoid'
     ], function(
         EllipsoidTangentPlane,
         Cartesian2,
         Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        Matrix3,
-        OrientedBoundingBox) {
+        Ellipsoid) {
     'use strict';
 
     it('constructor defaults to WGS84', function() {

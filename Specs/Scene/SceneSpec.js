@@ -12,23 +12,24 @@ defineSuite([
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/RuntimeError',
+        'Core/WebGLConstants',
         'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
         'Renderer/Framebuffer',
+        'Renderer/Pass',
         'Renderer/PixelDatatype',
         'Renderer/ShaderProgram',
         'Renderer/Texture',
-        'Renderer/WebGLConstants',
         'Scene/Camera',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/FrameState',
         'Scene/Globe',
-        'Scene/Pass',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
         'Scene/Scene',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
+        'Specs/createCanvas',
         'Specs/createScene',
         'Specs/equals',
         'Specs/pollToPromise',
@@ -46,23 +47,24 @@ defineSuite([
         Rectangle,
         RectangleGeometry,
         RuntimeError,
+        WebGLConstants,
         WebMercatorProjection,
         DrawCommand,
         Framebuffer,
+        Pass,
         PixelDatatype,
         ShaderProgram,
         Texture,
-        WebGLConstants,
         Camera,
         EllipsoidSurfaceAppearance,
         FrameState,
         Globe,
-        Pass,
         Primitive,
         PrimitiveCollection,
         Scene,
         ScreenSpaceCameraController,
         TweenCollection,
+        createCanvas,
         createScene,
         equals,
         pollToPromise,
@@ -115,7 +117,7 @@ defineSuite([
         var contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements
         expect(contextAttributes.alpha).toEqual(false);
-        expect(contextAttributes.stencil).toEqual(false);
+        expect(contextAttributes.stencil).toEqual(true);
         expect(contextAttributes.premultipliedAlpha).toEqual(true);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
     });
@@ -560,6 +562,33 @@ defineSuite([
         expect(pixels[2]).toEqual(0);
     });
 
+    it('renders map when the camera is on the IDL in 2D', function() {
+        var s = createScene({
+            canvas : createCanvas(5, 5)
+        });
+        s.morphTo2D(0.0);
+
+        var rectangle = Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0);
+
+        var rectanglePrimitive1 = createRectangle(rectangle, 0.0);
+        rectanglePrimitive1.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var primitives = s.primitives;
+        primitives.add(rectanglePrimitive1);
+
+        s.camera.setView({
+            destination : new Cartesian3(Ellipsoid.WGS84.maximumRadius * Math.PI, 0.0, 10.0),
+            convert : false
+        });
+
+        var pixels = s.renderForSpecs();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+
+        s.destroyForSpecs();
+    });
+
     it('copies the globe depth', function() {
         var scene = createScene();
         if (defined(scene._globeDepth)) {
@@ -756,6 +785,79 @@ defineSuite([
         s.render();
 
         expect(spyListener.calls.count()).toBe(1);
+
+        s.destroyForSpecs();
+    });
+
+    it('raises the camera changed event on direction changed', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.camera.changed.addEventListener(spyListener);
+
+        s.initializeFrame();
+        s.render();
+
+        s.camera.lookLeft(s.camera.frustum.fov * (s.camera.percentageChanged + 0.1));
+
+        s.initializeFrame();
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        var args = spyListener.calls.allArgs();
+        expect(args.length).toEqual(1);
+        expect(args[0].length).toEqual(1);
+        expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
+
+        s.destroyForSpecs();
+    });
+
+    it('raises the camera changed event on position changed', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.camera.changed.addEventListener(spyListener);
+
+        s.initializeFrame();
+        s.render();
+
+        s.camera.moveLeft(s.camera.positionCartographic.height * (s.camera.percentageChanged + 0.1));
+
+        s.initializeFrame();
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        var args = spyListener.calls.allArgs();
+        expect(args.length).toEqual(1);
+        expect(args[0].length).toEqual(1);
+        expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
+
+        s.destroyForSpecs();
+    });
+
+    it('raises the camera changed event in 2D', function() {
+        var s = createScene();
+        s.morphTo2D(0);
+
+        var spyListener = jasmine.createSpy('listener');
+        s.camera.changed.addEventListener(spyListener);
+
+        s.initializeFrame();
+        s.render();
+
+        s.camera.moveLeft(s.camera.positionCartographic.height * (s.camera.percentageChanged + 0.1));
+
+        s.initializeFrame();
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        var args = spyListener.calls.allArgs();
+        expect(args.length).toEqual(1);
+        expect(args[0].length).toEqual(1);
+        expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
 
         s.destroyForSpecs();
     });

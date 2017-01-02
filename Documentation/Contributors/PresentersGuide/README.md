@@ -39,7 +39,7 @@ Your topic is probably second nature to you; you work on it all day. Your audien
 
 Things that are obvious to you are often not obvious to them.
 
-Focus less on details, and instead **focus on providing context**, especially at the start of your talk.  Otherwise, you will loose the audience the moment they [can't see the forest for the trees](http://www.urbandictionary.com/define.php?term=can%27t+see+the+forest+for+the+trees).
+Focus less on details, and instead **focus on providing context**, especially at the start of your talk.  Otherwise, you will lose the audience the moment they [can't see the forest for the trees](http://www.urbandictionary.com/define.php?term=can%27t+see+the+forest+for+the+trees).
 
 ## Tell a Story
 

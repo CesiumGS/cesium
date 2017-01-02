@@ -8,9 +8,9 @@ defineSuite([
     it('logs a warning', function() {
         spyOn(console, 'log');
 
-        deprecationWarning('identifier', 'message');
-        deprecationWarning('identifier', 'message');
-        deprecationWarning('another identifier', 'another message');
+        deprecationWarning('deprecation-identifier', 'message');
+        deprecationWarning('deprecation-identifier', 'message');
+        deprecationWarning('another deprecation-identifier', 'another message');
 
         expect(console.log.calls.count()).toEqual(2);
         expect(console.log.calls.argsFor(0)[0]).toBe('message');

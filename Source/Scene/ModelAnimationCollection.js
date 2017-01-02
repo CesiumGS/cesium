@@ -370,13 +370,15 @@ define([
             var pastStartTime = (delta >= 0.0);
 
             // Play animation if
-            // * we are after the start time, and
+            // * we are after the start time or the animation is being repeated, and
             // * before the end of the animation's duration or the animation is being repeated, and
             // * we did not reach a user-provided stop time.
-            var play = pastStartTime &&
-                       ((delta <= 1.0) ||
-                        ((scheduledAnimation.loop === ModelAnimationLoop.REPEAT) ||
-                         (scheduledAnimation.loop === ModelAnimationLoop.MIRRORED_REPEAT))) &&
+
+            var repeat = ((scheduledAnimation.loop === ModelAnimationLoop.REPEAT) ||
+                          (scheduledAnimation.loop === ModelAnimationLoop.MIRRORED_REPEAT));
+
+            var play = (pastStartTime || (repeat && !defined(scheduledAnimation.startTime))) &&
+                       ((delta <= 1.0) || repeat) &&
                        (!defined(stopTime) || JulianDate.lessThanOrEquals(sceneTime, stopTime));
 
             if (play) {

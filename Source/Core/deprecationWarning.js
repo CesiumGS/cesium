@@ -1,14 +1,14 @@
 /*global define*/
 define([
         './defined',
-        './DeveloperError'
+        './DeveloperError',
+        './oneTimeWarning'
     ], function(
         defined,
-        DeveloperError) {
+        DeveloperError,
+        oneTimeWarning) {
     'use strict';
-
-    var warnings = {};
-
+    
     /**
      * Logs a deprecation message to the console.  Use this function instead of
      * <code>console.log</code> directly since this does not log duplicate messages
@@ -55,10 +55,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(warnings[identifier])) {
-            warnings[identifier] = true;
-            console.log(message);
-        }
+        oneTimeWarning(identifier, message);
     }
 
     return deprecationWarning;

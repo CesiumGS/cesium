@@ -174,7 +174,7 @@ define([
                 Cartesian3.clone(cameraPosition, camera.position);
                 camera.frustum = frustum.clone();
 
-                Cartesian2.clone(scratchWindowCoord0, result);
+                result = Cartesian2.clone(scratchWindowCoord0, result);
                 if (result.x < 0.0 || result.x > canvas.clientWidth) {
                     result.x = scratchWindowCoord1.x;
                 }

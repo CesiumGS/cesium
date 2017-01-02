@@ -113,6 +113,8 @@ define([
      * @param {Cartesian2} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     Cartesian2.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -128,6 +130,8 @@ define([
 
         array[startingIndex++] = value.x;
         array[startingIndex] = value.y;
+
+        return array;
     };
 
     /**
@@ -152,6 +156,61 @@ define([
         }
         result.x = array[startingIndex++];
         result.y = array[startingIndex];
+        return result;
+    };
+
+    /**
+     * Flattens an array of Cartesian2s into and array of components.
+     *
+     * @param {Cartesian2[]} array The array of cartesians to pack.
+     * @param {Number[]} result The array onto which to store the result.
+     * @returns {Number[]} The packed array.
+     */
+    Cartesian2.packArray = function(array, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        var length = array.length;
+        if (!defined(result)) {
+            result = new Array(length * 2);
+        } else {
+            result.length = length * 2;
+        }
+
+        for (var i = 0; i < length; ++i) {
+            Cartesian2.pack(array[i], result, i * 2);
+        }
+        return result;
+    };
+
+    /**
+     * Unpacks an array of cartesian components into and array of Cartesian2s.
+     *
+     * @param {Number[]} array The array of components to unpack.
+     * @param {Cartesian2[]} result The array onto which to store the result.
+     * @returns {Cartesian2[]} The unpacked array.
+     */
+    Cartesian2.unpackArray = function(array, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        var length = array.length;
+        if (!defined(result)) {
+            result = new Array(length / 2);
+        } else {
+            result.length = length / 2;
+        }
+
+        for (var i = 0; i < length; i += 2) {
+            var index = i / 2;
+            result[index] = Cartesian2.unpack(array, i, result[index]);
+        }
         return result;
     };
 
@@ -355,6 +414,13 @@ define([
 
         result.x = cartesian.x / magnitude;
         result.y = cartesian.y / magnitude;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (isNaN(result.x) || isNaN(result.y)) {
+            throw new DeveloperError('normalized result is not a number');
+        }
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -401,6 +467,32 @@ define([
 
         result.x = left.x * right.x;
         result.y = left.y * right.y;
+        return result;
+    };
+
+    /**
+     * Computes the componentwise quotient of two Cartesians.
+     *
+     * @param {Cartesian2} left The first Cartesian.
+     * @param {Cartesian2} right The second Cartesian.
+     * @param {Cartesian2} result The object onto which to store the result.
+     * @returns {Cartesian2} The modified result parameter.
+     */
+    Cartesian2.divideComponents = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result.x = left.x / right.x;
+        result.y = left.y / right.y;
         return result;
     };
 

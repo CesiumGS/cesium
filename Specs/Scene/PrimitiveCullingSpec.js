@@ -1,70 +1,44 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
-        'Core/Ellipsoid',
         'Core/GeometryInstance',
         'Core/loadImage',
-        'Core/Math',
-        'Core/Occluder',
-        'Core/PolygonGeometry',
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/Transforms',
-        'Renderer/Sampler',
-        'Renderer/TextureMagnificationFilter',
-        'Renderer/TextureMinificationFilter',
         'Scene/BillboardCollection',
-        'Scene/EllipsoidSurfaceAppearance',
         'Scene/Globe',
         'Scene/HorizontalOrigin',
         'Scene/LabelCollection',
         'Scene/Material',
-        'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
         'Scene/PolylineCollection',
         'Scene/Primitive',
-        'Scene/PrimitiveCollection',
         'Scene/SceneMode',
-        'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
         'Specs/createScene'
     ], 'Scene/PrimitiveCulling', function(
-        BoundingSphere,
-        Cartesian2,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
-        Ellipsoid,
         GeometryInstance,
         loadImage,
-        CesiumMath,
-        Occluder,
-        PolygonGeometry,
         Rectangle,
         RectangleGeometry,
         Transforms,
-        Sampler,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
         BillboardCollection,
-        EllipsoidSurfaceAppearance,
         Globe,
         HorizontalOrigin,
         LabelCollection,
         Material,
-        OrthographicFrustum,
         PerInstanceColorAppearance,
         PolylineCollection,
         Primitive,
-        PrimitiveCollection,
         SceneMode,
-        TextureAtlas,
         VerticalOrigin,
         createScene) {
     'use strict';
@@ -102,10 +76,11 @@ defineSuite([
 
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
-        // move the camera through the rectangle so that is behind the view frustum
-        scene.camera.moveForward(100000000.0);
-
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        if (scene.mode !== SceneMode.SCENE2D) {
+            // move the camera through the rectangle so that is behind the view frustum
+            scene.camera.moveForward(100000000.0);
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        }
     }
 
     function testCullIn3D(primitive) {

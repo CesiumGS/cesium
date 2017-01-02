@@ -4,7 +4,6 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/combine',
-        'Core/defined',
         'Core/Ellipsoid',
         'Core/FeatureDetection',
         'Core/GeographicProjection',
@@ -14,6 +13,7 @@ defineSuite([
         'Core/Ray',
         'Core/Transforms',
         'Scene/CameraEventType',
+        'Scene/MapMode2D',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
         'Specs/createCamera',
@@ -25,7 +25,6 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         combine,
-        defined,
         Ellipsoid,
         FeatureDetection,
         GeographicProjection,
@@ -35,6 +34,7 @@ defineSuite([
         Ray,
         Transforms,
         CameraEventType,
+        MapMode2D,
         OrthographicFrustum,
         SceneMode,
         createCamera,
@@ -55,12 +55,27 @@ defineSuite([
         this.globe = undefined;
         this.mapProjection = new GeographicProjection(ellipsoid);
         this.terrainExaggeration = 1.0;
+        this.screenSpaceCameraController = undefined;
     }
 
     function MockGlobe(ellipsoid) {
         this.ellipsoid = ellipsoid;
         this.getHeight = function(cartographic) {
             return 0.0;
+        };
+        this.pick = function() {
+            return new Cartesian3(0.0, 0.0, 1.0);
+        };
+        this._surface = {
+            tileProvider : {
+                ready : true
+            },
+            _tileLoadQueueHigh : [],
+            _tileLoadQueueMedium : [],
+            _tileLoadQueueLow : [],
+            _debug : {
+                tilesWaitingForChildren : 0
+            }
         };
     }
     beforeAll(function() {
@@ -84,9 +99,13 @@ defineSuite([
 
         scene = new MockScene(canvas, camera, Ellipsoid.WGS84);
         controller = new ScreenSpaceCameraController(scene);
+
+        scene.screenSpaceCameraController = controller;
+        camera._scene = scene;
     });
 
     afterEach(function() {
+        scene.mapMode2D = MapMode2D.INFINITE_SCROLL;
         controller = controller && !controller.isDestroyed() && controller.destroy();
     });
 
@@ -446,6 +465,63 @@ defineSuite([
         expect(camera.frustum.bottom).toEqual(-camera.frustum.top);
     });
 
+    it('rotate counter-clockwise in 2D', function() {
+        setUp2D();
+        scene.mapMode2D = MapMode2D.ROTATE;
+
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+
+        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        updateController();
+        expect(position.x).toEqual(camera.position.x);
+        expect(position.y).toEqual(camera.position.y);
+        expect(position.z).toEqual(camera.position.z);
+
+        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON15);
+        expect(camera.up).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON15);
+    });
+
+    it('rotate clockwise in 2D', function() {
+        setUp2D();
+        scene.mapMode2D = MapMode2D.ROTATE;
+
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        updateController();
+        expect(position.x).toEqual(camera.position.x);
+        expect(position.y).toEqual(camera.position.y);
+        expect(position.z).toEqual(camera.position.z);
+
+        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON15);
+        expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()), CesiumMath.EPSILON15);
+    });
+
+    it('rotates counter-clockwise with mouse position at bottom of the screen', function() {
+        setUp2D();
+        scene.mapMode2D = MapMode2D.ROTATE;
+
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(3 * canvas.clientWidth / 4, 3 * canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 4, 3 * canvas.clientHeight / 4);
+
+        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        updateController();
+        expect(position.x).toEqual(camera.position.x);
+        expect(position.y).toEqual(camera.position.y);
+        expect(position.z).toEqual(camera.position.z);
+
+        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON15);
+        expect(camera.up).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON15);
+    });
+
     it('translate right in Columbus view', function() {
         setUpCV();
         var position = Cartesian3.clone(camera.position);
@@ -710,6 +786,27 @@ defineSuite([
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController();
+        expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
+    });
+
+    it('zoom in 3D to point 0,0', function() {
+        setUp3D();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+        updateController();
+
+        camera.setView({
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+        });
+
+        updateController();
+
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(0, 0);
+        var endPosition = new Cartesian2(0, canvas.clientHeight / 2);
 
         moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
         updateController();
