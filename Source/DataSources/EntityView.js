@@ -1,8 +1,6 @@
 /*global define*/
 define([
-        '../Core/BoundingSphere',
         '../Core/Cartesian3',
-        '../Core/Cartesian4',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -16,9 +14,7 @@ define([
         '../Core/Transforms',
         '../Scene/SceneMode'
     ], function(
-        BoundingSphere,
         Cartesian3,
-        Cartesian4,
         defaultValue,
         defined,
         defineProperties,

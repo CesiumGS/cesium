@@ -35,6 +35,7 @@ define([
         '../Renderer/Context',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -51,7 +52,6 @@ define([
         './MapMode2D',
         './OIT',
         './OrthographicFrustum',
-        './Pass',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
@@ -102,6 +102,7 @@ define([
         Context,
         ContextLimits,
         DrawCommand,
+        Pass,
         PassState,
         ShaderProgram,
         ShaderSource,
@@ -118,7 +119,6 @@ define([
         MapMode2D,
         OIT,
         OrthographicFrustum,
-        Pass,
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PerspectiveFrustum,
@@ -220,7 +220,7 @@ define([
             creditContainer = document.createElement('div');
             creditContainer.style.position = 'absolute';
             creditContainer.style.bottom = '0';
-            creditContainer.style['text-shadow'] = '0px 0px 2px #000000';
+            creditContainer.style['text-shadow'] = '0 0 2px #000000';
             creditContainer.style.color = '#ffffff';
             creditContainer.style['font-size'] = '10px';
             creditContainer.style['padding-right'] = '5px';
@@ -284,6 +284,9 @@ define([
         this._depthClearCommand = new ClearCommand({
             depth : 1.0,
             owner : this
+        });
+        this._stencilClearCommand = new ClearCommand({
+            stencil : 0
         });
 
         this._pickDepths = [];
@@ -388,8 +391,6 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
-
-        this._transitioner = new SceneTransitioner(this, this._mapProjection.ellipsoid);
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -1757,6 +1758,11 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
+            // Clear the stencil after the ground pass
+            if (length > 0 && context.stencilBuffer) {
+                scene._stencilClearCommand.execute(context, passState);
+            }
+
             if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
                 if (useDepthPlane) {
@@ -2588,7 +2594,7 @@ define([
     };
 
     var scratchPackedDepth = new Cartesian4();
-    var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 160581375.0);
+    var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
 
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.

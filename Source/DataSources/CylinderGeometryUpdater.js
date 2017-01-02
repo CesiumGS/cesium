@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/CylinderGeometry',
@@ -26,7 +25,6 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
-        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         CylinderGeometry,

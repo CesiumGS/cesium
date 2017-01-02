@@ -4,7 +4,6 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
-        'Renderer/ClearCommand',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
@@ -12,7 +11,6 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         CesiumMath,
-        ClearCommand,
         SceneMode,
         createScene) {
     'use strict';

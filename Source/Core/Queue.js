@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        '../Core/defineProperties'
+        './defineProperties'
     ], function(
         defineProperties) {
     'use strict';

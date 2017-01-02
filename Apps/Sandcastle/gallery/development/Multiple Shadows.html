@@ -74,7 +74,7 @@
 
             var model = scene.primitives.add(Cesium.Model.fromGltf({
                 url : '../../SampleData/models/ShadowTester/Shadow_Tester_Point.gltf',
-                modelMatrix : Cesium.Transforms.headingPitchRollToFixedFrame(center, heading, 0.0, 0.0)
+                modelMatrix : Cesium.Transforms.headingPitchRollToFixedFrame(center, new Cesium.HeadingPitchRoll(heading, 0.0, 0.0))
             }));
 
             model.readyPromise.then(function(model) {

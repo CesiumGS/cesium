@@ -12,6 +12,7 @@ define([
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -21,7 +22,6 @@ define([
         './BlendingState',
         './CullFace',
         './Material',
-        './Pass',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -36,6 +36,7 @@ define([
         VertexFormat,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -45,7 +46,6 @@ define([
         BlendingState,
         CullFace,
         Material,
-        Pass,
         SceneMode) {
     'use strict';
 

@@ -33,9 +33,11 @@ define([
      * });
      */
     function viewerPerformanceWatchdogMixin(viewer, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
+        //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 

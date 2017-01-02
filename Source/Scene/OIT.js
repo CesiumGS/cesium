@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/PixelFormat',
+        '../Core/WebGLConstants',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
@@ -13,7 +14,6 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
-        '../Renderer/WebGLConstants',
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS',
         './BlendEquation',
@@ -24,6 +24,7 @@ define([
         defined,
         destroyObject,
         PixelFormat,
+        WebGLConstants,
         ClearCommand,
         DrawCommand,
         Framebuffer,
@@ -32,7 +33,6 @@ define([
         ShaderProgram,
         ShaderSource,
         Texture,
-        WebGLConstants,
         AdjustTranslucentFS,
         CompositeOITFS,
         BlendEquation,
@@ -113,19 +113,29 @@ define([
     function updateTextures(oit, context, width, height) {
         destroyTextures(oit);
 
+        // Use zeroed arraybuffer instead of null to initialize texture
+        // to workaround Firefox 50. https://github.com/AnalyticalGraphicsInc/cesium/pull/4762
+        var source = new Float32Array(width * height * 4);
+
         oit._accumulationTexture = new Texture({
             context : context,
-            width : width,
-            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT
+            pixelDatatype : PixelDatatype.FLOAT,
+            source : {
+                arrayBufferView : source,
+                width : width,
+                height : height
+            }
         });
         oit._revealageTexture = new Texture({
             context : context,
-            width : width,
-            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT
+            pixelDatatype : PixelDatatype.FLOAT,
+            source : {
+                arrayBufferView : source,
+                width : width,
+                height : height
+            }
         });
     }
 
