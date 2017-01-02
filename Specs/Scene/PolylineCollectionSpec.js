@@ -1227,10 +1227,6 @@ defineSuite([
     });
 
     it('renders with a distance display condition', function() {
-        if (!scene.context.floatingPointTexture) {
-            return;
-        }
-
         var near = 100.0;
         var far = 10000.0;
 

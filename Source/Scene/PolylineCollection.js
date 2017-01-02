@@ -23,6 +23,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -33,7 +34,6 @@ define([
         './BatchTable',
         './BlendingState',
         './Material',
-        './Pass',
         './Polyline',
         './SceneMode'
     ], function(
@@ -60,6 +60,7 @@ define([
         BufferUsage,
         ContextLimits,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -70,7 +71,6 @@ define([
         BatchTable,
         BlendingState,
         Material,
-        Pass,
         Polyline,
         SceneMode) {
     'use strict';
@@ -391,25 +391,21 @@ define([
             componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
             componentsPerAttribute : 4,
             normalize : true
+        }, {
+            functionName : 'batchTable_getCenterHigh',
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 3
+        }, {
+            functionName : 'batchTable_getCenterLowAndRadius',
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 4
+        }, {
+            functionName : 'batchTable_getDistanceDisplayCondition',
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 2
         }];
 
-        if (defined(context.floatingPointTexture)) {
-            attributes.push({
-                functionName : 'batchTable_getCenterHigh',
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3
-            }, {
-                functionName : 'batchTable_getCenterLowAndRadius',
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 4
-            }, {
-                functionName : 'batchTable_getDistanceDisplayCondition',
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 2
-            });
-        }
-
-        collection._batchTable = new BatchTable(attributes, collection._polylines.length);
+        collection._batchTable = new BatchTable(context, attributes, collection._polylines.length);
     }
 
     var scratchUpdatePolylineEncodedCartesian = new EncodedCartesian3();
@@ -1150,11 +1146,7 @@ define([
             return;
         }
 
-        var defines = [];
-        if (context.floatingPointTexture) {
-            defines.push('DISTANCE_DISPLAY_CONDITION');
-        }
-
+        var defines = ['DISTANCE_DISPLAY_CONDITION'];
         var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
         var vs = new ShaderSource({
             defines : defines,

@@ -115,4 +115,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Victor Malaret](https://github.com/malaretv)
 * [David Friedman](https://github.com/duvifn)
 * [Abhishek Potnis](https://github.com/abhishekvp)
-
+* [Brad Hover](https://github.com/tekhaus)
+* [Hüseyin Ateş](https://github.com/ateshuseyin)
