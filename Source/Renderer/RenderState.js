@@ -5,18 +5,18 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/WebGLConstants',
         '../Core/WindingOrder',
-        './ContextLimits',
-        './WebGLConstants'
+        './ContextLimits'
     ], function(
         BoundingRectangle,
         Color,
         defaultValue,
         defined,
         DeveloperError,
+        WebGLConstants,
         WindingOrder,
-        ContextLimits,
-        WebGLConstants) {
+        ContextLimits) {
     'use strict';
 
     function validateBlendEquation(blendEquation) {
@@ -393,7 +393,7 @@ define([
      *
      * @see DrawCommand
      * @see ClearCommand
-     * 
+     *
      * @private
      */
     RenderState.fromCache = function(renderState) {
@@ -589,7 +589,7 @@ define([
             // Section 6.8 of the WebGL spec requires the reference and masks to be the same for
             // front- and back-face tests.  This call prevents invalid operation errors when calling
             // stencilFuncSeparate on Firefox.  Perhaps they should delay validation to avoid requiring this.
-            gl.stencilFunc(stencilTest.frontFunction, stencilTest.reference, stencilTest.mask);
+            gl.stencilFunc(frontFunction, reference, mask);
             gl.stencilFuncSeparate(gl.BACK, backFunction, reference, mask);
             gl.stencilFuncSeparate(gl.FRONT, frontFunction, reference, mask);
 

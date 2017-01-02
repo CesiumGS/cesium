@@ -35,6 +35,7 @@ define([
         '../Renderer/Context',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -51,7 +52,6 @@ define([
         './MapMode2D',
         './OIT',
         './OrthographicFrustum',
-        './Pass',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
@@ -102,6 +102,7 @@ define([
         Context,
         ContextLimits,
         DrawCommand,
+        Pass,
         PassState,
         ShaderProgram,
         ShaderSource,
@@ -118,7 +119,6 @@ define([
         MapMode2D,
         OIT,
         OrthographicFrustum,
-        Pass,
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PerspectiveFrustum,
@@ -284,6 +284,9 @@ define([
         this._depthClearCommand = new ClearCommand({
             depth : 1.0,
             owner : this
+        });
+        this._stencilClearCommand = new ClearCommand({
+            stencil : 0
         });
 
         this._pickDepths = [];
@@ -1753,6 +1756,11 @@ define([
             length = frustumCommands.indices[Pass.GROUND];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
+            }
+
+            // Clear the stencil after the ground pass
+            if (length > 0 && context.stencilBuffer) {
+                scene._stencilClearCommand.execute(context, passState);
             }
 
             if (clearGlobeDepth) {
