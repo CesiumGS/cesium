@@ -398,17 +398,17 @@ Cartesian3.maximumComponent = function(cartesian) {
 
 * For more complicated parameter checks, manually check the parameter and then throw a `DeveloperError`. Example:
 ```javascript
-    Cartesian3.unpackArray = function(array, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined(array, 'array');
-        Check.numeric.minimum(array.length, 3);
-        if (array.length % 3 !== 0) {
-            throw new DeveloperError('array length must be a multiple of 3.');
-        }
-        //>>includeEnd('debug');
+Cartesian3.unpackArray = function(array, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined(array, 'array');
+    Check.numeric.minimum(array.length, 3);
+    if (array.length % 3 !== 0) {
+        throw new DeveloperError('array length must be a multiple of 3.');
+    }
+    //>>includeEnd('debug');
 
-        // ...
-    };
+    // ...
+};
 ```
 
 * To check for `DeveloperError`, surround code in `includeStart`/`includeEnd` comments, as shown above, so developer error checks can be optimized out of release builds.  Do not include required side effects inside `includeStart`/`includeEnd`, e.g.,
