@@ -2308,7 +2308,7 @@ define([
                                     vertexBuffer : rendererBuffers[a.bufferView],
                                     componentsPerAttribute : getBinaryAccessor(a).componentsPerAttribute,
                                     componentDatatype : a.componentType,
-                                    normalize : false,
+                                    normalize : defaultValue(a.normalized, false),
                                     offsetInBytes : a.byteOffset,
                                     strideInBytes : a.byteStride
                                 });
@@ -2353,7 +2353,6 @@ define([
         booleanStates[WebGLConstants.CULL_FACE] = false;
         booleanStates[WebGLConstants.DEPTH_TEST] = false;
         booleanStates[WebGLConstants.POLYGON_OFFSET_FILL] = false;
-        booleanStates[WebGLConstants.SCISSOR_TEST] = false;
 
         var enable = states.enable;
         var length = enable.length;
@@ -2399,7 +2398,6 @@ define([
         var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
         var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
         var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
-        var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
 
         // Change the render state to use traditional alpha blending instead of premultiplied alpha blending
         if (booleanStates[WebGLConstants.BLEND] && hasPremultipliedAlpha(model)) {
@@ -2422,15 +2420,6 @@ define([
                 enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
                 factor : polygonOffset[0],
                 units : polygonOffset[1]
-            },
-            scissorTest : {
-                enabled : booleanStates[WebGLConstants.SCISSOR_TEST],
-                rectangle : {
-                    x : scissor[0],
-                    y : scissor[1],
-                    width : scissor[2],
-                    height : scissor[3]
-                }
             },
             depthRange : {
                 near : depthRange[0],
@@ -3870,15 +3859,30 @@ define([
     }
 
     function checkSupportedExtensions(model) {
-        var extensionsUsed = model.gltf.extensionsUsed;
-        if (defined(extensionsUsed)) {
-            var extensionsUsedCount = extensionsUsed.length;
-            for (var index=0;index<extensionsUsedCount;++index) {
-                var extension = extensionsUsed[index];
+        var extensionsRequired = model.gltf.extensionsRequired;
+        if (defined(extensionsRequired)) {
+            var extensionsRequiredCount = extensionsRequired.length;
+            for (var index=0;index<extensionsRequiredCount;++index) {
+                var extension = extensionsRequired[index];
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
                     extension !== 'KHR_materials_common' && extension !== 'WEB3D_quantized_attributes') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
+                }
+            }
+        }
+    }
+
+    function checkSupportedGlExtensions(model, context) {
+        var glExtensionsUsed = model.gltf.glExtensionsUsed;
+        if (defined(glExtensionsUsed)) {
+            var glExtensionsUsedLength = glExtensionsUsed.length;
+            for (var i = 0; i < glExtensionsUsedLength; i++) {
+                var extension = glExtensionsUsed[i];
+                if (extension !== 'OES_element_index_uint') {
+                    throw new RuntimeError('Unsupported WebGL Extension: ' + extension);
+                } else if (!context.elementIndexUint) {
+                    throw new RuntimeError('The OES_element_index_uint WebGL extension is required for this glTF model, but it is not supported by this system.');
                 }
             }
         }
@@ -4041,6 +4045,8 @@ define([
      * </p>
      *
      * @exception {RuntimeError} Failed to load external reference.
+     * @exception {RuntimeError} The glTF model makes use of an unsupported glTF extension.
+     * @exception {RuntimeError} The glTF model makes use of an unsupported WebGL extension.
      */
     Model.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
@@ -4086,6 +4092,7 @@ define([
             this._initialRadius = this._boundingSphere.radius;
 
             checkSupportedExtensions(this);
+            checkSupportedGlExtensions(this, context);
             if (this._state !== ModelState.FAILED) {
                 var extensions = this.gltf.extensions;
                 if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
