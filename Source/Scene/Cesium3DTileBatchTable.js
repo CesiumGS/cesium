@@ -15,6 +15,7 @@ define([
         '../Core/PixelFormat',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
@@ -25,8 +26,7 @@ define([
         './BlendingState',
         './Cesium3DTileColorBlendMode',
         './CullFace',
-        './getBinaryAccessor',
-        './Pass'
+        './getBinaryAccessor'
     ], function(
         arrayFill,
         Cartesian2,
@@ -43,6 +43,7 @@ define([
         PixelFormat,
         ContextLimits,
         DrawCommand,
+        Pass,
         PixelDatatype,
         RenderState,
         Sampler,
@@ -53,8 +54,7 @@ define([
         BlendingState,
         Cesium3DTileColorBlendMode,
         CullFace,
-        getBinaryAccessor,
-        Pass) {
+        getBinaryAccessor) {
     'use strict';
 
     /**

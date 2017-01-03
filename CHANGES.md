@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.30 - 2017-02-01
+
+* Updated the morph so the default view in Columbus View is now angled. [#3878](https://github.com/AnalyticalGraphicsInc/cesium/issues/3878)
+
 ### TODO
 
 * Added support for [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md) for streaming massive heterogeneous 3D geospatial datasets.  The new Cesium APIs are:
@@ -17,17 +21,22 @@ Change Log
    * Added the ability to render a `Model` with a silhouette. Added `silhouetteColor` and `silhouetteSize` properties to `Model`, `ModelGraphics`, and CZML. [#4314](https://github.com/AnalyticalGraphicsInc/cesium/pull/4314)
 * Improved Labels
    * Added new `Label` properties `showBackground`, `backgroundColor`, and `backgroundPadding` to the primitive, Entity, and CZML layers.
+   * Added support for newlines (`\n`) in Cesium `Label`s and CZML. [#2402]
    * Added new enum `VerticalOrigin.BASELINE`.  Previously, `VerticalOrigin.BOTTOM` would sometimes align to the baseline depending on the contents of a label.
-   * Added support for newlines (`\n`) in Cesium `Label`s and CZML. [#2402](https://github.com/AnalyticalGraphicsInc/cesium/issues/2402)
-* Fixed texture rotation for `RectangleGeometry` [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
-* Fixed translucency in Firefox 50. https://github.com/AnalyticalGraphicsInc/cesium/pull/4762
+(https://github.com/AnalyticalGraphicsInc/cesium/issues/2402)
+* Fixed translucency in Firefox 50. [#4762](https://github.com/AnalyticalGraphicsInc/cesium/pull/4762)
+* Fixed texture rotation for `RectangleGeometry`. [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
+* Fixed issue where billboards on terrain had an incorrect offset. [#4598](https://github.com/AnalyticalGraphicsInc/cesium/issues/4598)
+* Fixed issue where `globe.getHeight` incorrectly returned `undefined`. [#3411](https://github.com/AnalyticalGraphicsInc/cesium/issues/3411)
 * Fixed a bug that caused `GroundPrimitive` to render incorrectly on systems without the `WEBGL_depth_texture` extension. [#4747](https://github.com/AnalyticalGraphicsInc/cesium/pull/4747)
 * Fixed default Mapbox token and added a watermark to notify users that they need to sign up for their own token.
+* Fixed glTF models with skinning that used `bindShapeMatrix`. [#4722](https://github.com/AnalyticalGraphicsInc/cesium/issues/4722)
 * Fixed a bug that could cause a "readyImagery is not actually ready" exception with some configurations of imagery layers.
-* Fixed `Rectangle.union` to correctly account for rectangles that cross the IDL [#4732](https://github.com/AnalyticalGraphicsInc/cesium/pull/4732).
+* Fixed `Rectangle.union` to correctly account for rectangles that cross the IDL. [#4732](https://github.com/AnalyticalGraphicsInc/cesium/pull/4732)
+* Fixed tooltips for gallery thumbnails in Sandcastle [#4702].(https://github.com/AnalyticalGraphicsInc/cesium/pull/4702)
+* DataSourceClock.getValue now preserves the provided `result` properties when its properties are `undefined`. [#4029](https://github.com/AnalyticalGraphicsInc/cesium/issues/4029)
 * Added `divideComponents` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`. [#4750](https://github.com/AnalyticalGraphicsInc/cesium/pull/4750)
 * Added `WebGLConstants` enum.  Previously, this was part of the private Renderer API. [#4731](https://github.com/AnalyticalGraphicsInc/cesium/pull/4731)
-* Fixed tooltips for gallery thumbnails in Sandcastle [#4702](https://github.com/AnalyticalGraphicsInc/cesium/pull/4702)
 
 ### 1.28 - 2016-12-01
 

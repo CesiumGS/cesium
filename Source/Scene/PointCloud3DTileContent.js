@@ -23,6 +23,7 @@ define([
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -33,8 +34,7 @@ define([
         './Cesium3DTileColorBlendMode',
         './Cesium3DTileContentState',
         './Cesium3DTileFeature',
-        './Cesium3DTileFeatureTable',
-        './Pass'
+        './Cesium3DTileFeatureTable'
     ], function(
         Cartesian3,
         Color,
@@ -59,6 +59,7 @@ define([
         Buffer,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -69,8 +70,7 @@ define([
         Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
         Cesium3DTileFeature,
-        Cesium3DTileFeatureTable,
-        Pass) {
+        Cesium3DTileFeatureTable) {
     'use strict';
 
     /**
