@@ -30,27 +30,27 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('Check.typeOf.function does not throw when passed a function', function () {
+        it('Check.typeOf.func does not throw when passed a function', function () {
             expect(function () {
-                Check.typeOf.function(function () {return true;}, 'mockName');
+                Check.typeOf.func(function () {return true;}, 'mockName');
             }).not.toThrowDeveloperError();
         });
 
-        it('Check.typeOf.function throws when passed a non-function', function () {
+        it('Check.typeOf.func throws when passed a non-function', function () {
             expect(function () {
-                Check.typeOf.function({}, 'mockName');
+                Check.typeOf.func({}, 'mockName');
             }).toThrowDeveloperError();
             expect(function () {
-                Check.typeOf.function([], 'mockName');
+                Check.typeOf.func([], 'mockName');
             }).toThrowDeveloperError();
             expect(function () {
-                Check.typeOf.function(1, 'mockName');
+                Check.typeOf.func(1, 'mockName');
             }).toThrowDeveloperError();
             expect(function () {
-                Check.typeOf.function('snth', 'mockName');
+                Check.typeOf.func('snth', 'mockName');
             }).toThrowDeveloperError();
             expect(function () {
-                Check.typeOf.function(true, 'mockName');
+                Check.typeOf.func(true, 'mockName');
             }).toThrowDeveloperError();
         });
 
