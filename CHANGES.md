@@ -4,6 +4,9 @@ Change Log
 ### 1.30 - 2017-02-01
 
 * Updated the morph so the default view in Columbus View is now angled. [#3878](https://github.com/AnalyticalGraphicsInc/cesium/issues/3878)
+* Added ability to draw an `ImageryLayer` with a splitter to allow layers to only display to the left or right of a splitter.
+   * `ImageryLayer.split` controls whether splitting is enabled for a layer. Negative values show to the left of the splitter, positive values show to the right of the splitter.  0 displays the imagery normally.
+   *  New `FrameState.splitPosition` property controls the splitter position.  Values are from 0 to 1 relative across the width of the viewport.
 
 ### 1.29 - 2017-01-02
 
