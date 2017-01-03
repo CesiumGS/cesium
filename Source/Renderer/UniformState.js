@@ -149,6 +149,8 @@ define([
         this._resolutionScale = 1.0;
 
         this._fogDensity = undefined;
+
+        this._splitPosition = 0.0;
     }
 
     defineProperties(UniformState.prototype, {
@@ -775,6 +777,16 @@ define([
             get : function() {
                 return this._pass;
             }
+        },
+
+        /**
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        splitPosition : {
+            get : function() {
+                return this._splitPosition;
+            }
         }
     });
 
@@ -935,6 +947,8 @@ define([
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
+
+        this._splitPosition = frameState.splitPosition;
     };
 
     function cleanViewport(uniformState) {

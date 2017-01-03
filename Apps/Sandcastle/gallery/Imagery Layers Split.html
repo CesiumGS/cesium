@@ -42,6 +42,9 @@ var blackMarble = layers.addImageryProvider(Cesium.createTileMapServiceImageryPr
 }));
 blackMarble.split = -1.0; // Only show to the left of the slider.
 
+// Position the slider in the middle of the viewer.
+viewer.scene.frameState.splitPosition = 0.5;
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
