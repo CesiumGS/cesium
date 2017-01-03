@@ -14,6 +14,7 @@ define([
         '../Core/Event',
         '../Core/IntersectionTests',
         '../Core/loadImage',
+        '../Core/Math',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Renderer/ShaderSource',
@@ -43,6 +44,7 @@ define([
         Event,
         IntersectionTests,
         loadImage,
+        CesiumMath,
         Ray,
         Rectangle,
         ShaderSource,
@@ -424,10 +426,27 @@ define([
         }
 
         var ellipsoid = this._surface._tileProvider.tilingScheme.ellipsoid;
-        var cartesian = ellipsoid.cartographicToCartesian(cartographic, scratchGetHeightCartesian);
+
+        //cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
+        var cartesian = Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0, ellipsoid, scratchGetHeightCartesian);
 
         var ray = scratchGetHeightRay;
-        Cartesian3.normalize(cartesian, ray.direction);
+        var surfaceNormal = ellipsoid.geodeticSurfaceNormal(cartesian, ray.direction);
+
+        // Try to find the intersection point between the surface normal and z-axis.
+        // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+        var rayOrigin = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesian, 11500.0, ray.origin);
+
+        // Theoretically, not with Earth datums, the intersection point can be outside the ellipsoid
+        if (!defined(rayOrigin)) {
+            // intersection point is outside the ellipsoid, try other value
+            // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+            var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
+
+            // multiply by the *positive* value of the magnitude
+            var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchGetHeightIntersection);
+            Cartesian3.subtract(cartesian, vectorToMinimumPoint, ray.origin);
+        }
 
         var intersection = tile.data.pick(ray, undefined, undefined, false, scratchGetHeightIntersection);
         if (!defined(intersection)) {
