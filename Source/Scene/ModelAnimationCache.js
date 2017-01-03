@@ -53,21 +53,22 @@ define([
 
         if (!defined(values)) {
             // Cache miss
-            var loadResources = model._loadResources;
             var gltf = model.gltf;
             var hasAxisAngle = (parseFloat(gltf.asset.version) < 1.0);
 
+            var buffers = gltf.buffers;
             var bufferViews = gltf.bufferViews;
 
             var bufferView = bufferViews[accessor.bufferView];
+            var bufferId = bufferView.buffer;
+            var buffer = buffers[bufferId];
 
             var componentType = accessor.componentType;
             var type = accessor.type;
             var count = accessor.count;
 
             // Convert typed array to Cesium types
-            var buffer = loadResources.getBuffer(bufferView);
-            var typedArray = getBinaryAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
+            var typedArray = getBinaryAccessor(accessor).createArrayBufferView(buffer.extras._pipeline.source, bufferViebuffer.byteOffset + accessor.byteOffset, count);
             var i;
 
             if ((componentType === WebGLConstants.FLOAT) && (type === 'SCALAR')) {

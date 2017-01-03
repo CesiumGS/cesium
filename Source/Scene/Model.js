@@ -46,7 +46,10 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Renderer/VertexArray',
-        '../ThirdParty/gltfDefaults',
+        '../ThirdParty/GltfPipeline/addDefaults',
+        '../ThirdParty/GltfPipeline/addPipelineExtras',
+        '../ThirdParty/GltfPipeline/parseBinaryGltf',
+        '../ThirdParty/GltfPipeline/updateVersion',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './BlendingState',
@@ -57,7 +60,6 @@ define([
         './ModelAnimationCache',
         './ModelAnimationCollection',
         './ModelMaterial',
-        './modelMaterialsCommon',
         './ModelMesh',
         './ModelNode',
         './SceneMode',
@@ -109,7 +111,10 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         VertexArray,
-        gltfDefaults,
+        addDefaults,
+        addPipelineExtras,
+        parseBinaryGltf,
+        updateVersion,
         Uri,
         when,
         BlendingState,
@@ -120,7 +125,6 @@ define([
         ModelAnimationCache,
         ModelAnimationCollection,
         ModelMaterial,
-        modelMaterialsCommon,
         ModelMesh,
         ModelNode,
         SceneMode,
@@ -146,145 +150,62 @@ define([
     // GLTF_SPEC: Figure out correct mime types (https://github.com/KhronosGroup/glTF/issues/412)
     var defaultModelAccept = 'model/vnd.gltf.binary,model/vnd.gltf+json,model/gltf.binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
 
-    function LoadResources() {
-        this.buffersToCreate = new Queue();
-        this.buffers = {};
-        this.pendingBufferLoads = 0;
+    // Global Resource Cache
+    var resourceCache = {};
 
-        this.programsToCreate = new Queue();
-        this.shaders = {};
-        this.pendingShaderLoads = 0;
-
-        this.texturesToCreate = new Queue();
-        this.pendingTextureLoads = 0;
-
-        this.texturesToCreateFromBufferView = new Queue();
-        this.pendingBufferViewToImage = 0;
-
-        this.createSamplers = true;
-        this.createSkins = true;
-        this.createRuntimeAnimations = true;
-        this.createVertexArrays = true;
-        this.createRenderStates = true;
-        this.createUniformMaps = true;
-        this.createRuntimeNodes = true;
-
-        this.skinnedNodesIds = [];
-    }
-
-    LoadResources.prototype.getBuffer = function(bufferView) {
-        return getSubarray(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-    };
-
-    LoadResources.prototype.finishedPendingBufferLoads = function() {
-        return (this.pendingBufferLoads === 0);
-    };
-
-    LoadResources.prototype.finishedBuffersCreation = function() {
-        return ((this.pendingBufferLoads === 0) && (this.buffersToCreate.length === 0));
-    };
-
-    LoadResources.prototype.finishedProgramCreation = function() {
-        return ((this.pendingShaderLoads === 0) && (this.programsToCreate.length === 0));
-    };
-
-    LoadResources.prototype.finishedTextureCreation = function() {
-        var finishedPendingLoads = (this.pendingTextureLoads === 0);
-        var finishedResourceCreation =
-            (this.texturesToCreate.length === 0) &&
-            (this.texturesToCreateFromBufferView.length === 0);
-
-        return finishedPendingLoads && finishedResourceCreation;
-    };
-
-    LoadResources.prototype.finishedEverythingButTextureCreation = function() {
-        var finishedPendingLoads =
-            (this.pendingBufferLoads === 0) &&
-            (this.pendingShaderLoads === 0);
-        var finishedResourceCreation =
-            (this.buffersToCreate.length === 0) &&
-            (this.programsToCreate.length === 0) &&
-            (this.pendingBufferViewToImage === 0);
-
-        return finishedPendingLoads && finishedResourceCreation;
-    };
-
-    LoadResources.prototype.finished = function() {
-        return this.finishedTextureCreation() && this.finishedEverythingButTextureCreation();
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    function setCachedGltf(model, cachedGltf) {
-        model._cachedGltf = cachedGltf;
-        model._animationIds = getAnimationIds(cachedGltf);
-    }
-
-    // glTF JSON can be big given embedded geometry, textures, and animations, so we
-    // cache it across all models using the same url/cache-key.  This also reduces the
-    // slight overhead in assigning defaults to missing values.
-    //
-    // Note that this is a global cache, compared to renderer resources, which
-    // are cached per context.
-    function CachedGltf(options) {
-        this._gltf = modelMaterialsCommon(gltfDefaults(options.gltf));
-        this._bgltf = options.bgltf;
-        this.ready = options.ready;
-        this.modelsToLoad = [];
-        this.count = 0;
-    }
-
-    defineProperties(CachedGltf.prototype, {
-        gltf : {
-            set : function(value) {
-                this._gltf = modelMaterialsCommon(gltfDefaults(value));
-            },
-
-            get : function() {
-                return this._gltf;
-            }
-        },
-
-        bgltf : {
-            get : function() {
-                return this._bgltf;
-            }
+    function loadGltfFromUrl(url) {
+        var cacheKey = getAbsoluteUri(url);
+        var cachedGltf = resourceCache[cacheKey];
+        if (defined(cachedGltf)) {
+            // We have this glTF in the cache already
+            return when.resolve(cachedGltf);
+        } else {
+            return loadArrayBuffer(url)
+                .then(function(arrayBuffer) {
+                    var typedArray = new Uint8Array(arrayBuffer);
+                    var magic = getMagic(typedArray);
+                    if (magic === 'glTF') {
+                        // Binary glTF
+                        resourceCache[cacheKey] = typedArray;
+                        return typedArray;
+                    } else {
+                        var gltf = JSON.parse(getStringFromTypedArray(typedArray));
+                        resourceCache[cacheKey] = gltf;
+                        return gltf;
+                    }
+                });
         }
-    });
+    }
 
-    CachedGltf.prototype.makeReady = function(gltfJson, bgltf) {
-        this.gltf = gltfJson;
-        this._bgltf = bgltf;
-
-        var models = this.modelsToLoad;
-        var length = models.length;
-        for (var i = 0; i < length; ++i) {
-            var m = models[i];
-            if (!m.isDestroyed()) {
-                setCachedGltf(m, this);
-            }
-        }
-        this.modelsToLoad = undefined;
-        this.ready = true;
-    };
-
-    function getAnimationIds(cachedGltf) {
-        var animationIds = [];
-        if (defined(cachedGltf) && defined(cachedGltf.gltf)) {
-            var animations = cachedGltf.gltf.animations;
-            for (var id in animations) {
-                if (animations.hasOwnProperty(id)) {
-                    animationIds.push(id);
+    function loadResources(rootObject, basePath, asString) {
+        return when.map(Object.keys(rootObject), function(id) {
+            var object = rootObject[id];
+            if (!defined(object.extras._pipeline.source)) {
+                // Not loaded
+                var uri = object.uri;
+                if (defined(uri)) {
+                    var cacheKey = uri;
+                    var cachedResource = resourceCache[cacheKey];
+                    var resolveCachedResource;
+                    if (defined(cachedResource)) {
+                        resolveCachedResource = when.resolve(cachedResource);
+                    } else if (asString) {
+                        resolveCachedResource = loadText(uri);
+                    } else {
+                        resolveCachedResource = loadArrayBuffer(uri)
+                            .then(function(data) {
+                                return new Uint8Array(data);
+                            });
+                    }
+                    return resolveCachedResource
+                        .then(function(data) {
+                            object.extras._pipeline.source = data;
+                            resourceCache[cacheKey] = data;
+                        });
                 }
             }
-        }
-
-        return animationIds;
+        });
     }
-
-    var gltfCache = {};
-
-    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * A 3D model based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
@@ -343,62 +264,9 @@ define([
     function Model(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var cacheKey = options.cacheKey;
-        this._cacheKey = cacheKey;
-        this._cachedGltf = undefined;
-        this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
-        this._animationIds = undefined;
-
-        var cachedGltf;
-        if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
-            // glTF JSON is in cache and ready
-            cachedGltf = gltfCache[cacheKey];
-            ++cachedGltf.count;
-        } else {
-            // glTF was explicitly provided, e.g., when a user uses the Model constructor directly
-            var gltf = options.gltf;
-
-            if (defined(gltf)) {
-                if (gltf instanceof ArrayBuffer) {
-                    gltf = new Uint8Array(gltf);
-                }
-
-                if (gltf instanceof Uint8Array) {
-                    // Binary glTF
-                    var result = parseBinaryGltfHeader(gltf);
-
-                    // KHR_binary_glTF is from the beginning of the binary section
-                    if (result.binaryOffset !== 0) {
-                        gltf = gltf.subarray(result.binaryOffset);
-                    }
-
-                    cachedGltf = new CachedGltf({
-                        gltf : result.glTF,
-                        bgltf : gltf,
-                        ready : true
-                    });
-                } else {
-                    // Normal glTF (JSON)
-                    cachedGltf = new CachedGltf({
-                        gltf : options.gltf,
-                        ready : true
-                    });
-                }
-
-                cachedGltf.count = 1;
-
-                if (defined(cacheKey)) {
-                    gltfCache[cacheKey] = cachedGltf;
-                }
-            }
-        }
-        setCachedGltf(this, cachedGltf);
-
-        this._basePath = defaultValue(options.basePath, '');
-
-        var docUri = new Uri(document.location.href);
-        var modelUri = new Uri(this._basePath);
-        this._baseUri = modelUri.resolve(docUri);
+        var gltf = options.gltf;
+        var url = options.url;
+        var basePath = defaultValue(options.basePath, '');
 
         /**
          * Determines if the model primitive will be shown.
@@ -522,9 +390,6 @@ define([
         this.pickPrimitive = options.pickPrimitive;
 
         this._allowPicking = defaultValue(options.allowPicking, true);
-
-        this._ready = false;
-        this._readyPromise = when.defer();
 
         /**
          * The currently playing glTF animations.
@@ -671,6 +536,58 @@ define([
         // CESIUM_RTC extension
         this._rtcCenter = undefined;    // in world coordinates
         this._rtcCenterEye = undefined; // in eye coordinates
+
+        this._initialized = false; // Indicates that the model was initialized by update() after loading
+        this._initializedTextures = false; // Indicates that the textures were initialized by update() once they finish streaming
+
+        var loadGltfPromise;
+        var model = this;
+        this._state = ModelState.LOADING;
+        if (defined(url)) {
+            loadGltfPromise = loadGltfFromUrl(url);
+            basePath = getBaseUri(url);
+        } else {
+            // glTF was explicitly provided, e.g., when a user uses the Model constructor directly
+            loadGltfPromise = when.resolve(gltf);
+        }
+        this._ready = false;
+        this._readyPromise = loadGltfPromise
+            .then(function(gltf) {
+                if (gltf instanceof ArrayBuffer) {
+                    gltf = new Uint8Array(gltf);
+                }
+                if (gltf instanceof Uint8Array) {
+                    // Binary glTF
+                    gltf = parseBinaryGltf(gltf);
+                } else {
+                    gltf = addPipelineExtras(gltf);
+                }
+                return when.all([
+                    loadResources(gltf.buffers, basePath, false),
+                    loadResources(gltf.shaders, basePath, true)
+                ]).then(function() {
+                    return gltf;
+                });
+            })
+            .then(function(gltf) {
+                updateVersion(gltf, {
+                    targetVersion: '1.0'
+                });
+                addDefaults(gltf);
+                model._cachedGltf = gltf;
+                //var loadTexturesPromise = loadTextures(model);
+                parse(model);
+                return model;
+                /*if (model._incrementallyLoadTextures) {
+                    // We can mark the model as loaded if textures are to be loaded incrementally
+                    loadTexturesPromise = when.resolve(model);
+                }
+                return loadTexturesPromise;*/
+            })
+            .then(function(model) {
+                // The model is loaded
+                model._state = ModelState.LOADED;
+            });
     }
 
     defineProperties(Model.prototype, {
@@ -687,7 +604,7 @@ define([
          */
         gltf : {
             get : function() {
-                return defined(this._cachedGltf) ? this._cachedGltf.gltf : undefined;
+                return defined(this._cachedGltf) ? this._cachedGltf : undefined;
             }
         },
 
@@ -845,7 +762,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return this._readyPromise.promise;
+                return this._readyPromise;
             }
         },
 
@@ -949,8 +866,6 @@ define([
         }
     });
 
-    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-
     function silhouetteSupported(context) {
         return context.stencilBuffer;
     }
@@ -964,54 +879,6 @@ define([
     Model.silhouetteSupported = function(scene) {
         return silhouetteSupported(scene.context);
     };
-
-    /**
-     * This function differs from the normal subarray function
-     * because it takes offset and length, rather than begin and end.
-     */
-    function getSubarray(array, offset, length) {
-        return array.subarray(offset, offset + length);
-    }
-
-    function containsGltfMagic(uint8Array) {
-        var magic = getMagic(uint8Array);
-        return magic === 'glTF';
-    }
-
-    function parseBinaryGltfHeader(uint8Array) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!containsGltfMagic(uint8Array)) {
-            throw new DeveloperError('bgltf is not a valid Binary glTF file.');
-        }
-        //>>includeEnd('debug');
-
-        var view = new DataView(uint8Array.buffer, uint8Array.byteOffset, uint8Array.byteLength);
-        var byteOffset = 0;
-
-        byteOffset += sizeOfUint32; // Skip magic number
-
-        //>>includeStart('debug', pragmas.debug);
-        var version = view.getUint32(byteOffset, true);
-        if (version !== 1) {
-            throw new DeveloperError('Only Binary glTF version 1 is supported.  Version ' + version + ' is not.');
-        }
-        //>>includeEnd('debug');
-        byteOffset += sizeOfUint32;
-
-        byteOffset += sizeOfUint32; // Skip length
-
-        var sceneLength = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUint32 + sizeOfUint32; // Skip sceneFormat
-
-        var sceneOffset = byteOffset;
-        var binOffset = sceneOffset + sceneLength;
-
-        var json = getStringFromTypedArray(uint8Array, sceneOffset, sceneLength);
-        return {
-            glTF: JSON.parse(json),
-            binaryOffset: binOffset
-        };
-    }
 
     /**
      * <p>
@@ -1084,56 +951,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = options.url;
-        // If no cache key is provided, use the absolute URL, since two URLs with
-        // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
-
-        options = clone(options);
-        options.basePath = getBaseUri(url);
-        options.cacheKey = cacheKey;
-        var model = new Model(options);
-
-        options.headers = defined(options.headers) ? clone(options.headers) : {};
-        if (!defined(options.headers.Accept)) {
-            options.headers.Accept = defaultModelAccept;
-        }
-
-        var cachedGltf = gltfCache[cacheKey];
-        if (!defined(cachedGltf)) {
-            cachedGltf = new CachedGltf({
-                ready : false
-            });
-            cachedGltf.count = 1;
-            cachedGltf.modelsToLoad.push(model);
-            setCachedGltf(model, cachedGltf);
-            gltfCache[cacheKey] = cachedGltf;
-
-            loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
-                var array = new Uint8Array(arrayBuffer);
-                if (containsGltfMagic(array)) {
-                    // Load binary glTF
-                    var result = parseBinaryGltfHeader(array);
-                    // KHR_binary_glTF is from the beginning of the binary section
-                    if (result.binaryOffset !== 0) {
-                        array = array.subarray(result.binaryOffset);
-                    }
-                    cachedGltf.makeReady(result.glTF, array);
-                } else {
-                    // Load text (JSON) glTF
-                    var json = getStringFromTypedArray(array);
-                    cachedGltf.makeReady(JSON.parse(json));
-                }
-            }).otherwise(getFailedLoadFunction(model, 'model', url));
-        } else if (!cachedGltf.ready) {
-            // Cache hit but the loadArrayBuffer() or loadText() request is still pending
-            ++cachedGltf.count;
-            cachedGltf.modelsToLoad.push(model);
-        }
-        // else if the cached glTF is defined and ready, the
-        // model constructor will pick it up using the cache key.
-
-        return model;
+        return new Model(options);
     };
 
     /**
@@ -1141,7 +959,7 @@ define([
      *
      * @private
      */
-    Model._gltfCache = gltfCache;
+    Model._resourceCache = resourceCache;
 
     function getRuntime(model, runtimeName, name) {
         //>>includeStart('debug', pragmas.debug);
@@ -1284,143 +1102,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function getFailedLoadFunction(model, type, path) {
-        return function() {
-            model._state = ModelState.FAILED;
-            model._readyPromise.reject(new RuntimeError('Failed to load ' + type + ': ' + path));
-        };
-    }
-
-    function bufferLoad(model, id) {
-        return function(arrayBuffer) {
-            var loadResources = model._loadResources;
-            loadResources.buffers[id] = new Uint8Array(arrayBuffer);
-            --loadResources.pendingBufferLoads;
-        };
-    }
-
-    function parseBuffers(model) {
-        var buffers = model.gltf.buffers;
-        for (var id in buffers) {
-            if (buffers.hasOwnProperty(id)) {
-                var buffer = buffers[id];
-
-                // The extension 'KHR_binary_glTF' uses a special buffer entitled just 'binary_glTF'.
-                // The 'KHR_binary_glTF' check is for backwards compatibility for the Cesium model converter
-                // circa Cesium 1.15-1.20 when the converter incorrectly used the buffer name 'KHR_binary_glTF'.
-                if ((id === 'binary_glTF') || (id === 'KHR_binary_glTF')) {
-                    // Buffer is the binary glTF file itself that is already loaded
-                    var loadResources = model._loadResources;
-                    loadResources.buffers[id] = model._cachedGltf.bgltf;
-                }
-                else if (buffer.type === 'arraybuffer') {
-                    ++model._loadResources.pendingBufferLoads;
-                    var uri = new Uri(buffer.uri);
-                    var bufferPath = uri.resolve(model._baseUri).toString();
-                    loadArrayBuffer(bufferPath).then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
-                }
-            }
-        }
-    }
-
-    function parseBufferViews(model) {
-        var bufferViews = model.gltf.bufferViews;
-        for (var id in bufferViews) {
-            if (bufferViews.hasOwnProperty(id)) {
-                if (bufferViews[id].target === WebGLConstants.ARRAY_BUFFER) {
-                    model._loadResources.buffersToCreate.enqueue(id);
-                }
-            }
-        }
-    }
-
-    function shaderLoad(model, id) {
-        return function(source) {
-            var loadResources = model._loadResources;
-            loadResources.shaders[id] = {
-                source : source,
-                bufferView : undefined
-            };
-            --loadResources.pendingShaderLoads;
-        };
-    }
-
-    function parseShaders(model) {
-        var shaders = model.gltf.shaders;
-        for (var id in shaders) {
-            if (shaders.hasOwnProperty(id)) {
-                var shader = shaders[id];
-
-                // Shader references either uri (external or base64-encoded) or bufferView
-                if (defined(shader.extras) && defined(shader.extras.source)) {
-                    model._loadResources.shaders[id] = {
-                        source : shader.extras.source,
-                        bufferView : undefined
-                    };
-                }
-                else if (defined(shader.extensions) && defined(shader.extensions.KHR_binary_glTF)) {
-                    var binary = shader.extensions.KHR_binary_glTF;
-                    model._loadResources.shaders[id] = {
-                        source : undefined,
-                        bufferView : binary.bufferView
-                    };
-                } else {
-                    ++model._loadResources.pendingShaderLoads;
-                    var uri = new Uri(shader.uri);
-                    var shaderPath = uri.resolve(model._baseUri).toString();
-                    loadText(shaderPath).then(shaderLoad(model, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
-                }
-            }
-        }
-    }
-
-    function parsePrograms(model) {
-        var programs = model.gltf.programs;
-        for (var id in programs) {
-            if (programs.hasOwnProperty(id)) {
-                model._loadResources.programsToCreate.enqueue(id);
-            }
-        }
-    }
-
-    function imageLoad(model, id) {
-        return function(image) {
-            var loadResources = model._loadResources;
-            --loadResources.pendingTextureLoads;
-            loadResources.texturesToCreate.enqueue({
-                id : id,
-                image : image,
-                bufferView : undefined
-            });
-        };
-    }
-
-    function parseTextures(model) {
-        var images = model.gltf.images;
-        var textures = model.gltf.textures;
-        for (var id in textures) {
-            if (textures.hasOwnProperty(id)) {
-                var gltfImage = images[textures[id].source];
-
-                // Image references either uri (external or base64-encoded) or bufferView
-                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.KHR_binary_glTF)) {
-                    var binary = gltfImage.extensions.KHR_binary_glTF;
-                    model._loadResources.texturesToCreateFromBufferView.enqueue({
-                        id : id,
-                        image : undefined,
-                        bufferView : binary.bufferView,
-                        mimeType : binary.mimeType
-                    });
-                } else {
-                    ++model._loadResources.pendingTextureLoads;
-                    var uri = new Uri(gltfImage.uri);
-                    var imagePath = uri.resolve(model._baseUri).toString();
-                    loadImage(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
-                }
-            }
-        }
-    }
-
     var nodeTranslationScratch = new Cartesian3();
     var nodeQuaternionScratch = new Quaternion();
     var nodeScaleScratch = new Cartesian3();
@@ -1441,7 +1122,6 @@ define([
         var runtimeNodesByName = {};
         var skinnedNodes = [];
 
-        var skinnedNodesIds = model._loadResources.skinnedNodesIds;
         var nodes = model.gltf.nodes;
 
         for (var id in nodes) {
@@ -1488,7 +1168,6 @@ define([
                 runtimeNodesByName[node.name] = runtimeNode;
 
                 if (defined(node.skin)) {
-                    skinnedNodesIds.push(id);
                     skinnedNodes.push(runtimeNode);
                 }
             }
@@ -1557,13 +1236,6 @@ define([
     }
 
     function parse(model) {
-        if (!model._loadRendererResourcesFromCache) {
-            parseBuffers(model);
-            parseBufferViews(model);
-            parseShaders(model);
-            parsePrograms(model);
-            parseTextures(model);
-        }
         parseMaterials(model);
         parseMeshes(model);
         parseNodes(model);
@@ -1585,51 +1257,43 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function createBuffers(model, context) {
-        var loadResources = model._loadResources;
-
-        if (loadResources.pendingBufferLoads !== 0) {
-            return;
-        }
-
-        var bufferView;
+        var accessors = model.gltf.accessors;
+        var buffers = model.gltf.buffers;
         var bufferViews = model.gltf.bufferViews;
         var rendererBuffers = model._rendererResources.buffers;
-
-        while (loadResources.buffersToCreate.length > 0) {
-            var bufferViewId = loadResources.buffersToCreate.dequeue();
-            bufferView = bufferViews[bufferViewId];
-
-            // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
-            var vertexBuffer = Buffer.createVertexBuffer({
-                context : context,
-                typedArray : loadResources.getBuffer(bufferView),
-                usage : BufferUsage.STATIC_DRAW
-            });
-            vertexBuffer.vertexArrayDestroyable = false;
-            rendererBuffers[bufferViewId] = vertexBuffer;
-        }
 
         // The Cesium Renderer requires knowing the datatype for an index buffer
         // at creation type, which is not part of the glTF bufferview so loop
         // through glTF accessors to create the bufferview's index buffer.
-        var accessors = model.gltf.accessors;
-        for (var id in accessors) {
-            if (accessors.hasOwnProperty(id)) {
-                var accessor = accessors[id];
-                bufferView = bufferViews[accessor.bufferView];
-
-                if ((bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[accessor.bufferView])) {
-                    var indexBuffer = Buffer.createIndexBuffer({
-                        context : context,
-                        typedArray : loadResources.getBuffer(bufferView),
-                        usage : BufferUsage.STATIC_DRAW,
-                        indexDatatype : accessor.componentType
-                    });
-                    indexBuffer.vertexArrayDestroyable = false;
-                    rendererBuffers[accessor.bufferView] = indexBuffer;
-                    // In theory, several glTF accessors with different componentTypes could
-                    // point to the same glTF bufferView, which would break this.
-                    // In practice, it is unlikely as it will be UNSIGNED_SHORT.
+        for (var accessorId in accessors) {
+            if (accessors.hasOwnProperty(accessorId)) {
+                var accessor = accessors[accessorId];
+                var bufferViewId = accessor.bufferView;
+                if (!defined(rendererBuffers[bufferViewId])) {
+                    var bufferView = bufferViews[bufferViewId];
+                    var bufferId = bufferView.buffer;
+                    var buffer = buffers[bufferId];
+                    if (bufferView.target === WebGLConstants.ARRAY_BUFFER) {
+                        var vertexBuffer = Buffer.createVertexBuffer({
+                            context : context,
+                            typedArray : buffer.extras._pipeline.source,
+                            usage : BufferUsage.STATIC_DRAW
+                        });
+                        vertexBuffer.vertexArrayDestroyable = false;
+                        rendererBuffers[bufferViewId] = vertexBuffer;
+                    } else if (bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) {
+                        var indexBuffer = Buffer.createIndexBuffer({
+                            context : context,
+                            typedArray : buffer.extras._pipeline.source,
+                            usage : BufferUsage.STATIC_DRAW,
+                            indexDatatype : accessor.componentType
+                        });
+                        indexBuffer.vertexArrayDestroyable = false;
+                        rendererBuffers[bufferViewId] = indexBuffer;
+                        // In theory, several glTF accessors with different componentTypes could
+                        // point to the same glTF bufferView, which would break this.
+                        // In practice, it is unlikely but possible with Uint32 indices.
+                    }
                 }
             }
         }
@@ -1658,18 +1322,6 @@ define([
         }
 
         return attributeLocations;
-    }
-
-    function getShaderSource(model, shader) {
-        if (defined(shader.source)) {
-            return shader.source;
-        }
-
-        var loadResources = model._loadResources;
-        var gltf = model.gltf;
-        var bufferView = gltf.bufferViews[shader.bufferView];
-
-        return getStringFromTypedArray(loadResources.getBuffer(bufferView));
     }
 
     function replaceAllButFirstInString(string, find, replace) {
@@ -1842,12 +1494,12 @@ define([
 
     function createProgram(id, model, context) {
         var programs = model.gltf.programs;
-        var shaders = model._loadResources.shaders;
+        var shaders = model.gltf.shaders;
         var program = programs[id];
 
         var attributeLocations = createAttributeLocations(model, program.attributes);
-        var vs = getShaderSource(model, shaders[program.vertexShader]);
-        var fs = getShaderSource(model, shaders[program.fragmentShader]);
+        var vs = shaders[program.vertexShader].extras._pipeline.source;
+        var fs = shaders[program.fragmentShader].extras._pipeline.source;
 
         // Add pre-created attributes to attributeLocations
         var attributesLength = program.attributes.length;
@@ -1896,80 +1548,24 @@ define([
     }
 
     function createPrograms(model, context) {
-        var loadResources = model._loadResources;
-        var id;
-
-        if (loadResources.pendingShaderLoads !== 0) {
-            return;
-        }
-
-        // PERFORMANCE_IDEA: this could be more fine-grained by looking
-        // at the shader's bufferView's to determine the buffer dependencies.
-        if (loadResources.pendingBufferLoads !== 0) {
-            return;
-        }
-
-        if (model.asynchronous) {
-            // Create one program per frame
-            if (loadResources.programsToCreate.length > 0) {
-                id = loadResources.programsToCreate.dequeue();
-                createProgram(id, model, context);
-            }
-        } else {
-            // Create all loaded programs this frame
-            while (loadResources.programsToCreate.length > 0) {
-                id = loadResources.programsToCreate.dequeue();
-                createProgram(id, model, context);
+        var programs = model.gltf.programs;
+        for (var programId in programs) {
+            if (programs.hasOwnProperty(programId)) {
+                createProgram(programId, model, context);
             }
         }
     }
 
-    function getOnImageCreatedFromTypedArray(loadResources, gltfTexture) {
-        return function(image) {
-            loadResources.texturesToCreate.enqueue({
-                id : gltfTexture.id,
-                image : image,
-                bufferView : undefined
-            });
-
-            --loadResources.pendingBufferViewToImage;
-        };
-    }
-
-    function loadTexturesFromBufferViews(model) {
-        var loadResources = model._loadResources;
-
-        if (loadResources.pendingBufferLoads !== 0) {
+    function createSamplers(model) {
+        if (model._state !== ModelState.LOADED) {
             return;
         }
-
-        while (loadResources.texturesToCreateFromBufferView.length > 0) {
-            var gltfTexture = loadResources.texturesToCreateFromBufferView.dequeue();
-
-            var gltf = model.gltf;
-            var bufferView = gltf.bufferViews[gltfTexture.bufferView];
-
-            var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
-            var onerror = getFailedLoadFunction(model, 'image', 'id: ' + gltfTexture.id + ', bufferView: ' + gltfTexture.bufferView);
-            loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType).
-                then(onload).otherwise(onerror);
-
-            ++loadResources.pendingBufferViewToImage;
-        }
-    }
-
-    function createSamplers(model, context) {
-        var loadResources = model._loadResources;
-
-        if (loadResources.createSamplers) {
-            loadResources.createSamplers = false;
-
-            var rendererSamplers = model._rendererResources.samplers;
-            var samplers = model.gltf.samplers;
-            for (var id in samplers) {
-                if (samplers.hasOwnProperty(id)) {
+        var rendererSamplers = model._rendererResources.samplers;
+        var samplers = model.gltf.samplers;
+        for (var id in samplers) {
+            if (samplers.hasOwnProperty(id)) {
+                if (!defined(rendererSamplers[id])) {
                     var sampler = samplers[id];
-
                     rendererSamplers[id] = new Sampler({
                         wrapS : sampler.wrapS,
                         wrapT : sampler.wrapT,
@@ -2195,16 +1791,13 @@ define([
     }
 
     function createRuntimeAnimations(model) {
-        var loadResources = model._loadResources;
-
-        if (!loadResources.finishedPendingBufferLoads()) {
+        if (model._state !== ModelState.LOADED) {
             return;
         }
 
-        if (!loadResources.createRuntimeAnimations) {
+        if (defined(model._runtime.animations)) {
             return;
         }
-        loadResources.createRuntimeAnimations = false;
 
         model._runtime.animations = {
         };
@@ -2259,16 +1852,9 @@ define([
     }
 
     function createVertexArrays(model, context) {
-        var loadResources = model._loadResources;
-
-        if (!loadResources.finishedBuffersCreation() || !loadResources.finishedProgramCreation()) {
+        if (model._state !== ModelState.LOADED) {
             return;
         }
-
-        if (!loadResources.createVertexArrays) {
-            return;
-        }
-        loadResources.createVertexArrays = false;
 
         var rendererBuffers = model._rendererResources.buffers;
         var rendererVertexArrays = model._rendererResources.vertexArrays;
@@ -2365,15 +1951,14 @@ define([
     }
 
     function createRenderStates(model, context) {
-        var loadResources = model._loadResources;
-        var techniques = model.gltf.techniques;
+        if (model._state !== ModelState.LOADED) {
+            return;
+        }
 
-        if (loadResources.createRenderStates) {
-            loadResources.createRenderStates = false;
-            for (var id in techniques) {
-                if (techniques.hasOwnProperty(id)) {
-                    createRenderStateForTechnique(model, id, context);
-                }
+        var techniques = model.gltf.techniques;
+        for (var id in techniques) {
+            if (techniques.hasOwnProperty(id)) {
+                createRenderStateForTechnique(model, id, context);
             }
         }
     }
@@ -2785,16 +2370,9 @@ define([
     }
 
     function createUniformMaps(model, context) {
-        var loadResources = model._loadResources;
-
-        if (!loadResources.finishedProgramCreation()) {
+        if (model._state !== ModelState.LOADED) {
             return;
         }
-
-        if (!loadResources.createUniformMaps) {
-            return;
-        }
-        loadResources.createUniformMaps = false;
 
         var gltf = model.gltf;
         var materials = gltf.materials;
@@ -3173,16 +2751,9 @@ define([
     }
 
     function createRuntimeNodes(model, context, scene3DOnly) {
-        var loadResources = model._loadResources;
-
-        if (!loadResources.finishedEverythingButTextureCreation()) {
+        if (model._state !== ModelState.LOADED) {
             return;
         }
-
-        if (!loadResources.createRuntimeNodes) {
-            return;
-        }
-        loadResources.createRuntimeNodes = false;
 
         var rootNodes = [];
         var runtimeNodes = model._runtime.nodes;
@@ -3274,11 +2845,10 @@ define([
             createBuffers(model, context); // using glTF bufferViews
             createPrograms(model, context);
             createSamplers(model, context);
-            loadTexturesFromBufferViews(model);
-            createTextures(model, context);
+            // createTextures(model, context);
         }
 
-        createSkins(model);
+        // createSkins(model);
         createRuntimeAnimations(model);
 
         if (!model._loadRendererResourcesFromCache) {
@@ -3314,7 +2884,7 @@ define([
     var scratchNodeStack = [];
     var scratchComputedMatrixIn2D = new Matrix4();
 
-    function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
+    function updateNodeHierarchyModelMatrix(model, modelTransformChanged, projection) {
         var maxDirtyNumber = model._maxDirtyNumber;
         var allowPicking = model.allowPicking;
 
@@ -3339,7 +2909,7 @@ define([
                 var transformToRoot = n.transformToRoot;
                 var commands = n.commands;
 
-                if ((n.dirtyNumber === maxDirtyNumber) || modelTransformChanged || justLoaded) {
+                if ((n.dirtyNumber === maxDirtyNumber) || modelTransformChanged) {
                     var nodeMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
                     var commandsLength = commands.length;
                     if (commandsLength > 0) {
@@ -3396,7 +2966,7 @@ define([
                     // won't see this in the wild often.
                     child.dirtyNumber = Math.max(child.dirtyNumber, n.dirtyNumber);
 
-                    if ((child.dirtyNumber === maxDirtyNumber) || justLoaded) {
+                    if ((child.dirtyNumber === maxDirtyNumber)) {
                         // Don't check for modelTransformChanged since if only the model's model matrix changed,
                         // we do not need to rebuild the local transform-to-root, only the final
                         // [model's-model-matrix][transform-to-root] above.
@@ -3852,10 +3422,10 @@ define([
     }
 
     function releaseCachedGltf(model) {
-        if (defined(model._cacheKey) && defined(model._cachedGltf) && (--model._cachedGltf.count === 0)) {
+        /*if (defined(model._cacheKey) && defined(model._cachedGltf) && (--model._cachedGltf.count === 0)) {
             delete gltfCache[model._cacheKey];
         }
-        model._cachedGltf = undefined;
+        model._cachedGltf = undefined;*/
     }
 
     function checkSupportedExtensions(model) {
@@ -4054,108 +3624,44 @@ define([
         }
 
         var context = frameState.context;
-        this._defaultTexture = context.defaultTexture;
-
-        if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
-            // Use renderer resources from cache instead of loading/creating them?
-            var cachedRendererResources;
-            var cacheKey = this.cacheKey;
-            if (defined(cacheKey)) {
-                context.cache.modelRendererResourceCache = defaultValue(context.cache.modelRendererResourceCache, {});
-                var modelCaches = context.cache.modelRendererResourceCache;
-
-                cachedRendererResources = modelCaches[this.cacheKey];
-                if (defined(cachedRendererResources)) {
-                    if (!cachedRendererResources.ready) {
-                        // Cached resources for the model are not loaded yet.  We'll
-                        // try again every frame until they are.
-                        return;
-                    }
-
-                    ++cachedRendererResources.count;
-                    this._loadRendererResourcesFromCache = true;
-                } else {
-                    cachedRendererResources = new CachedRendererResources(context, cacheKey);
-                    cachedRendererResources.count = 1;
-                    modelCaches[this.cacheKey] = cachedRendererResources;
-                }
-                this._cachedRendererResources = cachedRendererResources;
-            } else {
-                cachedRendererResources = new CachedRendererResources(context);
-                cachedRendererResources.count = 1;
-                this._cachedRendererResources = cachedRendererResources;
-            }
-
-            this._state = ModelState.LOADING;
+        if (this._state === ModelState.LOADED && !this._initialized) {
+            checkSupportedExtensions(this);
+            checkSupportedGlExtensions(this, context);
 
             this._boundingSphere = computeBoundingSphere(this.gltf);
             this._initialRadius = this._boundingSphere.radius;
-
-            checkSupportedExtensions(this);
-            checkSupportedGlExtensions(this, context);
-            if (this._state !== ModelState.FAILED) {
-                var extensions = this.gltf.extensions;
-                if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
-                    this._rtcCenter = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
-                    this._rtcCenterEye = new Cartesian3();
-                }
-
-                this._loadResources = new LoadResources();
-                parse(this);
+            var extensions = this.gltf.extensions;
+            if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
+                this._rtcCenter = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
+                this._rtcCenterEye = new Cartesian3();
             }
-        }
 
-        var loadResources = this._loadResources;
-        var incrementallyLoadTextures = this._incrementallyLoadTextures;
-        var justLoaded = false;
-
-        if (this._state === ModelState.LOADING) {
-            // Create WebGL resources as buffers/shaders/textures are downloaded
             createResources(this, frameState);
+            this._initialized = true;
 
-            // Transition from LOADING -> LOADED once resources are downloaded and created.
-            // Textures may continue to stream in while in the LOADED state.
-            if (loadResources.finished() ||
-                    (incrementallyLoadTextures && loadResources.finishedEverythingButTextureCreation())) {
-                this._state = ModelState.LOADED;
-                justLoaded = true;
+            var resources = this._rendererResources;
+            var cachedResources = this._cachedRendererResources;
+
+            cachedResources.buffers = resources.buffers;
+            cachedResources.vertexArrays = resources.vertexArrays;
+            cachedResources.programs = resources.programs;
+            cachedResources.pickPrograms = resources.pickPrograms;
+            cachedResources.silhouettePrograms = resources.silhouettePrograms;
+            cachedResources.textures = resources.textures;
+            cachedResources.samplers = resources.samplers;
+            cachedResources.renderStates = resources.renderStates;
+            cachedResources.ready = true;
+
+            // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
+            this._normalAttributeName = getAttributeOrUniformBySemantic(this.gltf, 'NORMAL');
+
+            // Vertex arrays are unique to this model, do not store in cache.
+            if (defined(this._precreatedAttributes)) {
+                cachedResources.vertexArrays = {};
             }
-        }
 
-        // Incrementally stream textures.
-        if (defined(loadResources) && (this._state === ModelState.LOADED)) {
-            // Also check justLoaded so we don't process twice during the transition frame
-            if (incrementallyLoadTextures && !justLoaded) {
-                createResources(this, frameState);
-            }
-
-            if (loadResources.finished()) {
-                this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
-
-                var resources = this._rendererResources;
-                var cachedResources = this._cachedRendererResources;
-
-                cachedResources.buffers = resources.buffers;
-                cachedResources.vertexArrays = resources.vertexArrays;
-                cachedResources.programs = resources.programs;
-                cachedResources.pickPrograms = resources.pickPrograms;
-                cachedResources.silhouettePrograms = resources.silhouettePrograms;
-                cachedResources.textures = resources.textures;
-                cachedResources.samplers = resources.samplers;
-                cachedResources.renderStates = resources.renderStates;
-                cachedResources.ready = true;
-
-                // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
-                this._normalAttributeName = getAttributeOrUniformBySemantic(this.gltf, 'NORMAL');
-
-                // Vertex arrays are unique to this model, do not store in cache.
-                if (defined(this._precreatedAttributes)) {
-                    cachedResources.vertexArrays = {};
-                }
-
-                if (this.releaseGltfJson) {
-                    releaseCachedGltf(this);
-                }
+            if (this.releaseGltfJson) {
+                releaseCachedGltf(this);
             }
         }
 
@@ -4165,7 +3671,7 @@ define([
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
         var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (!invisible || silhouette);
 
-        if ((show && this._state === ModelState.LOADED) || justLoaded) {
+        if ((show && this._state === ModelState.LOADED)) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
             this._cesiumAnimationsDirty = false;
             this._dirty = false;
@@ -4182,7 +3688,7 @@ define([
                 (this._heightReference !== this.heightReference) || this._heightChanged ||
                 modeChanged;
 
-            if (modelTransformChanged || justLoaded) {
+            if (modelTransformChanged) {
                 Matrix4.clone(modelMatrix, this._modelMatrix);
 
                 updateClamping(this);
@@ -4204,11 +3710,11 @@ define([
             }
 
             // Update modelMatrix throughout the graph as needed
-            if (animated || modelTransformChanged || justLoaded) {
-                updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
+            if (animated || modelTransformChanged) {
+                updateNodeHierarchyModelMatrix(this, modelTransformChanged, frameState.mapProjection);
                 this._dirty = true;
 
-                if (animated || justLoaded) {
+                if (animated) {
                     // Apply skins if animation changed any node transforms
                     applySkins(this);
                 }
@@ -4224,16 +3730,6 @@ define([
             updateShadows(this);
             updateColor(this, frameState);
             updateSilhouette(this, frameState);
-        }
-
-        if (justLoaded) {
-            // Called after modelMatrix update.
-            var model = this;
-            frameState.afterRender.push(function() {
-                model._ready = true;
-                model._readyPromise.resolve(model);
-            });
-            return;
         }
 
         // We don't check show at the top of the function since we
