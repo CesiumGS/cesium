@@ -42,7 +42,6 @@ define([
     var defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
     var defaultColorBlendAmount = 0.5;
 
-    var color = new Color();
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
 
@@ -151,7 +150,7 @@ define([
             model.distanceDisplayCondition = Property.getValueOrUndefined(modelGraphics._distanceDisplayCondition, time);
             model.silhouetteColor = Property.getValueOrDefault(modelGraphics.silhouetteColor, time, defaultSilhouetteColor);
             model.silhouetteSize = Property.getValueOrDefault(modelGraphics.silhouetteSize, time, defaultSilhouetteSize);
-            model.color = Property.getValueOrDefault(modelGraphics._color, time, defaultColor, color);
+            model.color = Property.getValueOrDefault(modelGraphics._color, time, defaultColor);
             model.colorBlendMode = Property.getValueOrDefault(modelGraphics._colorBlendMode, time, defaultColorBlendMode);
             model.colorBlendAmount = Property.getValueOrDefault(modelGraphics._colorBlendAmount, time, defaultColorBlendAmount);
 
