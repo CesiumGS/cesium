@@ -416,7 +416,7 @@ define([
          *
          * @default Color.RED
          */
-        this.silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
+        this.silhouetteColor = Color.clone(defaultValue(options.silhouetteColor, Color.RED));
         this._silhouetteColor = new Color();
         this._normalAttributeName = undefined;
 
@@ -554,7 +554,7 @@ define([
          *
          * @default Color.WHITE
          */
-        this.color = defaultValue(options.color, Color.WHITE);
+        this.color = Color.clone(defaultValue(options.color, Color.WHITE));
         this._color = new Color();
 
         /**

@@ -148,9 +148,9 @@ define([
             model.shadows = Property.getValueOrDefault(modelGraphics._shadows, time, defaultShadows);
             model.heightReference = Property.getValueOrDefault(modelGraphics._heightReference, time, defaultHeightReference);
             model.distanceDisplayCondition = Property.getValueOrUndefined(modelGraphics._distanceDisplayCondition, time);
-            model.silhouetteColor = Property.getValueOrDefault(modelGraphics.silhouetteColor, time, defaultSilhouetteColor);
+            model.silhouetteColor = Property.getValueOrClonedDefault(modelGraphics.silhouetteColor, time, defaultSilhouetteColor, model.silhouetteColor);
             model.silhouetteSize = Property.getValueOrDefault(modelGraphics.silhouetteSize, time, defaultSilhouetteSize);
-            model.color = Property.getValueOrDefault(modelGraphics._color, time, defaultColor);
+            model.color = Property.getValueOrClonedDefault(modelGraphics._color, time, defaultColor, model.color);
             model.colorBlendMode = Property.getValueOrDefault(modelGraphics._colorBlendMode, time, defaultColorBlendMode);
             model.colorBlendAmount = Property.getValueOrDefault(modelGraphics._colorBlendAmount, time, defaultColorBlendAmount);
 
