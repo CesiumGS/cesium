@@ -42,19 +42,19 @@ var czml = [{
     },
     "label" : {
         "fillColor" : {
-            "rgba" : [0, 255, 255, 255]
+            "rgba" : [255, 255, 255, 255]
         },
-        "font" : "11pt Lucida Console",
+        "font" : "12pt Lucida Console",
         "horizontalOrigin" : "LEFT",
-        "outlineColor" : {
-            "rgba":[0, 0, 0, 255]
-        },
-        "outlineWidth" : 2,
         "pixelOffset" : {
-            "cartesian2" : [12, 0]
+            "cartesian2" : [8, 0]
         },
-        "style" : "FILL_AND_OUTLINE",
-        "text" : "AGI"
+        "style" : "FILL",
+        "text" : "AGI",
+        "showBackground" : true,
+        "backgroundColor" : {
+            "rgba" : [112, 89, 57, 200]
+        }
     },
     "position" : {
         "cartesian":[
@@ -65,7 +65,7 @@ var czml = [{
 
 var viewer = new Cesium.Viewer('cesiumContainer');
 viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
-  //Sandcastle_End
+//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {

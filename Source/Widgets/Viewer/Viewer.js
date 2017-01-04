@@ -1205,6 +1205,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
         /**
          * Gets or sets the data source to track with the viewer's clock.
+         * @memberof Viewer.prototype
          * @type {DataSource}
          */
         clockTrackedDataSource : {

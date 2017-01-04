@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### 1.29 - 2017-01-02
+### 1.30 - 2017-02-01
 * Deprecated
     * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.30. These properties will be available on geocoder services that support them, like `BingMapsGeocoderService`.
 * Added support for custom geocoder services and autocomplete [#4723](https://github.com/AnalyticalGraphicsInc/cesium/pull/4723).
@@ -9,9 +9,31 @@ Change Log
 * Added `GeocoderService`, an interface for geocoders.
 * Added `BingMapsGeocoderService` implementing the `GeocoderService` interface.
 * Added `CartographicGeocoderService` implementing the `GeocoderService` interface.
-* Added the ability to blend a `Model` with a color/translucency. Added `color`, `colorBlendMode`, and `colorBlendAmount` properties to `Model`, `ModelGraphics`, and CZML. Added `ColorBlendMode` enum. [#4547](https://github.com/AnalyticalGraphicsInc/cesium/pull/4547)
-* Fixed tooltips for gallery thumbnails in Sandcastle [#4702](https://github.com/AnalyticalGraphicsInc/cesium/pull/4702)
-* Fixed texture rotation for `RectangleGeometry` [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
+* Updated the morph so the default view in Columbus View is now angled. [#3878](https://github.com/AnalyticalGraphicsInc/cesium/issues/3878)
+* Fixed sky atmosphere from causing incorrect picking and hanging drill picking. [#4783](https://github.com/AnalyticalGraphicsInc/cesium/issues/4783) and [#4784](https://github.com/AnalyticalGraphicsInc/cesium/issues/4784)
+
+### 1.29 - 2017-01-02
+* Improved 3D Models
+   * Added the ability to blend a `Model` with a color/translucency. Added `color`, `colorBlendMode`, and `colorBlendAmount` properties to `Model`, `ModelGraphics`, and CZML. Also added `ColorBlendMode` enum. [#4547](https://github.com/AnalyticalGraphicsInc/cesium/pull/4547)
+   * Added the ability to render a `Model` with a silhouette. Added `silhouetteColor` and `silhouetteSize` properties to `Model`, `ModelGraphics`, and CZML. [#4314](https://github.com/AnalyticalGraphicsInc/cesium/pull/4314)
+* Improved Labels
+   * Added new `Label` properties `showBackground`, `backgroundColor`, and `backgroundPadding` to the primitive, Entity, and CZML layers.
+   * Added support for newlines (`\n`) in Cesium `Label`s and CZML. [#2402]
+   * Added new enum `VerticalOrigin.BASELINE`.  Previously, `VerticalOrigin.BOTTOM` would sometimes align to the baseline depending on the contents of a label.
+(https://github.com/AnalyticalGraphicsInc/cesium/issues/2402)
+* Fixed translucency in Firefox 50. [#4762](https://github.com/AnalyticalGraphicsInc/cesium/pull/4762)
+* Fixed texture rotation for `RectangleGeometry`. [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
+* Fixed issue where billboards on terrain had an incorrect offset. [#4598](https://github.com/AnalyticalGraphicsInc/cesium/issues/4598)
+* Fixed issue where `globe.getHeight` incorrectly returned `undefined`. [#3411](https://github.com/AnalyticalGraphicsInc/cesium/issues/3411)
+* Fixed a bug that caused `GroundPrimitive` to render incorrectly on systems without the `WEBGL_depth_texture` extension. [#4747](https://github.com/AnalyticalGraphicsInc/cesium/pull/4747)
+* Fixed default Mapbox token and added a watermark to notify users that they need to sign up for their own token.
+* Fixed glTF models with skinning that used `bindShapeMatrix`. [#4722](https://github.com/AnalyticalGraphicsInc/cesium/issues/4722)
+* Fixed a bug that could cause a "readyImagery is not actually ready" exception with some configurations of imagery layers.
+* Fixed `Rectangle.union` to correctly account for rectangles that cross the IDL. [#4732](https://github.com/AnalyticalGraphicsInc/cesium/pull/4732)
+* Fixed tooltips for gallery thumbnails in Sandcastle [#4702].(https://github.com/AnalyticalGraphicsInc/cesium/pull/4702)
+* DataSourceClock.getValue now preserves the provided `result` properties when its properties are `undefined`. [#4029](https://github.com/AnalyticalGraphicsInc/cesium/issues/4029)
+* Added `divideComponents` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`. [#4750](https://github.com/AnalyticalGraphicsInc/cesium/pull/4750)
+* Added `WebGLConstants` enum.  Previously, this was part of the private Renderer API. [#4731](https://github.com/AnalyticalGraphicsInc/cesium/pull/4731)
 
 ### 1.28 - 2016-12-01
 

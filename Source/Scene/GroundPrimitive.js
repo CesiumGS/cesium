@@ -20,6 +20,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -28,7 +29,6 @@ define([
         '../ThirdParty/when',
         './BlendingState',
         './DepthFunction',
-        './Pass',
         './PerInstanceColorAppearance',
         './Primitive',
         './SceneMode',
@@ -55,6 +55,7 @@ define([
         OrientedBoundingBox,
         Rectangle,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -63,7 +64,6 @@ define([
         when,
         BlendingState,
         DepthFunction,
-        Pass,
         PerInstanceColorAppearance,
         Primitive,
         SceneMode,
@@ -396,7 +396,7 @@ define([
      * @returns {Boolean} <code>true</code> if GroundPrimitives are supported; otherwise, returns <code>false</code>
      */
     GroundPrimitive.isSupported = function(scene) {
-        return scene.context.fragmentDepth;
+        return scene.context.fragmentDepth && scene.context.stencilBuffer;
     };
 
     GroundPrimitive._defaultMaxTerrainHeight = 9000.0;
