@@ -1648,37 +1648,40 @@ define([
         us.updateFrustum(frustum);
         us.updatePass(Pass.ENVIRONMENT);
 
-        var environmentState = scene._environmentState;
-        var skyBoxCommand = environmentState.skyBoxCommand;
-        if (defined(skyBoxCommand)) {
-            executeCommand(skyBoxCommand, scene, context, passState);
-        }
-
-        if (environmentState.isSkyAtmosphereVisible && !picking) {
-            executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState);
-        }
-
         var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
+        var environmentState = scene._environmentState;
 
-        if (environmentState.isSunVisible) {
-            environmentState.sunDrawCommand.execute(context, passState);
-            if (scene.sunBloom && !useWebVR) {
-                var framebuffer;
-                if (environmentState.useGlobeDepthFramebuffer) {
-                    framebuffer = scene._globeDepth.framebuffer;
-                } else if (environmentState.useFXAA) {
-                    framebuffer = scene._fxaa.getColorFramebuffer();
-                } else {
-                    framebuffer = environmentState.originalFramebuffer;
-                }
-                scene._sunPostProcess.execute(context, framebuffer);
-                passState.framebuffer = framebuffer;
+        // Do not render environment primitives during a pick pass since they do not generate picking commands.
+        if (!picking) {
+            var skyBoxCommand = environmentState.skyBoxCommand;
+            if (defined(skyBoxCommand)) {
+                executeCommand(skyBoxCommand, scene, context, passState);
             }
-        }
 
-        // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
-        if (environmentState.isMoonVisible) {
-            environmentState.moonCommand.execute(context, passState);
+            if (environmentState.isSkyAtmosphereVisible) {
+                executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState);
+            }
+
+            if (environmentState.isSunVisible) {
+                environmentState.sunDrawCommand.execute(context, passState);
+                if (scene.sunBloom && !useWebVR) {
+                    var framebuffer;
+                    if (environmentState.useGlobeDepthFramebuffer) {
+                        framebuffer = scene._globeDepth.framebuffer;
+                    } else if (environmentState.useFXAA) {
+                        framebuffer = scene._fxaa.getColorFramebuffer();
+                    } else {
+                        framebuffer = environmentState.originalFramebuffer;
+                    }
+                    scene._sunPostProcess.execute(context, framebuffer);
+                    passState.framebuffer = framebuffer;
+                }
+            }
+
+            // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
+            if (environmentState.isMoonVisible) {
+                environmentState.moonCommand.execute(context, passState);
+            }
         }
 
         // Determine how translucent surfaces will be handled.
