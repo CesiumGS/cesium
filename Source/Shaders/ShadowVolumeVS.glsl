@@ -1,10 +1,10 @@
-uniform float u_globeMinimumAltitude;
-
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
 attribute vec3 extrudeDirection;
 attribute vec4 color;
 attribute float batchId;
+
+uniform float u_globeMinimumAltitude;
 
 // emulated noperspective
 varying float v_WindowZ;
