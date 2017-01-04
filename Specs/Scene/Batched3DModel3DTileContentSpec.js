@@ -103,11 +103,20 @@ defineSuite([
     });
 
     it('logs deprecation warning for use of BATCHID without prefixed underscore', function() {
-        var deprecationWarningSpy = jasmine.createSpy(deprecationWarning);
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            expect(deprecationWarningSpy).toHaveBeenCalled();
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        });
+        var called = false;
+        var originalDeprecationWarning = Batched3DModel3DTileContent._deprecationWarning;
+        Batched3DModel3DTileContent._deprecationWarning = function() {
+            called = true;
+        };
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
+            .then(function(tileset) {
+                expect(called).toEqual(true);
+                Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+                Batched3DModel3DTileContent._deprecationWarning = originalDeprecationWarning;
+            })
+            .otherwise(function() {
+                Batched3DModel3DTileContent._deprecationWarning = originalDeprecationWarning;
+            });
     });
 
     it('throws with empty gltf', function() {
