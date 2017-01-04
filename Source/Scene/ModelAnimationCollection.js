@@ -208,12 +208,10 @@ define([
 
         var scheduledAnimations = [];
         var animationIds = this._model._animationIds;
-        if (defined(animationIds)) {
-            var length = animationIds.length;
-            for (var i = 0; i < length; ++i) {
-                options.name = animationIds[i];
-                scheduledAnimations.push(this.add(options));
-            }
+        var length = animationIds.length;
+        for (var i = 0; i < length; ++i) {
+            options.name = animationIds[i];
+            scheduledAnimations.push(this.add(options));
         }
         return scheduledAnimations;
     };

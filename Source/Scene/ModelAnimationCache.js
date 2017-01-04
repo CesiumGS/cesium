@@ -9,6 +9,7 @@ define([
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
         '../Core/WebGLConstants',
+        '../ThirdParty/GltfPipeline/getAccessorByteStride',
         '../ThirdParty/GltfPipeline/numberOfComponentsForType',
         './getBinaryAccessor'
     ], function(
@@ -21,6 +22,7 @@ define([
         Quaternion,
         QuaternionSpline,
         WebGLConstants,
+        getAccessorByteStride,
         numberOfComponentsForType,
         getBinaryAccessor) {
     'use strict';
@@ -66,14 +68,15 @@ define([
             var source = buffer.extras._pipeline.source;
 
             var componentType = accessor.componentType;
-            var numberOfComponents = numberOfComponentsForType(componentType);
             var type = accessor.type;
+            var numberOfComponents = numberOfComponentsForType(type);
             var count = accessor.count;
+            var byteStride = getAccessorByteStride(accessor);
 
             values = new Array(count);
             var byteOffset = bufferView.byteOffset + accessor.byteOffset;
             for (var i = 0; i < count; i++) {
-                var typedArrayView = ComponentDatatype.createArrayBufferView(componentType, source, byteOffset, numberOfComponents);
+                var typedArrayView = ComponentDatatype.createArrayBufferView(componentType, source.buffer, byteOffset, numberOfComponents);
                 if (type === 'SCALAR') {
                     values[i] = typedArrayView[0];
                 } else if (type === 'VEC3') {
@@ -81,7 +84,7 @@ define([
                 } else if (type === 'VEC4') {
                     values[i] = Quaternion.unpack(typedArrayView);
                 }
-                byteOffset += accessor.byteStride;
+                byteOffset += byteStride;
             }
             // GLTF_SPEC: Support more parameter types when glTF supports targeting materials. https://github.com/KhronosGroup/glTF/issues/142
 
@@ -162,23 +165,30 @@ define([
 
         if (!defined(matrices)) {
             // Cache miss
-
-            var loadResources = model._loadResources;
             var gltf = model.gltf;
+            var buffers = gltf.buffers;
             var bufferViews = gltf.bufferViews;
 
-            var bufferView = bufferViews[accessor.bufferView];
-
+            var bufferViewId = accessor.bufferView;
+            var bufferView = bufferViews[bufferViewId];
+            var bufferId = bufferView.buffer;
+            var buffer = buffers[bufferId];
+            var source = buffer.extras._pipeline.source;
+            
             var componentType = accessor.componentType;
             var type = accessor.type;
             var count = accessor.count;
-            var buffer = loadResources.getBuffer(bufferView);
-            var typedArray = getBinaryAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
-            matrices =  new Array(count);
+            var byteStride = getAccessorByteStride(accessor);
+            var byteOffset = bufferView.byteOffset + accessor.byteOffset;
+            var numberOfComponents = numberOfComponentsForType(type);
+
+            matrices = new Array(count);
 
             if ((componentType === WebGLConstants.FLOAT) && (type === 'MAT4')) {
                 for (var i = 0; i < count; ++i) {
-                    matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
+                    var typedArrayView = ComponentDatatype.createArrayBufferView(componentType, source.buffer, byteOffset, numberOfComponents);
+                    matrices[i] = Matrix4.fromArray(typedArrayView);
+                    byteOffset += byteStride;
                 }
             }
 
