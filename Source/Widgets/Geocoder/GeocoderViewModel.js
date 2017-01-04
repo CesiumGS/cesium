@@ -423,6 +423,7 @@ define([
         var query = viewModel._searchText;
 
         if (hasOnlyWhitespace(query)) {
+            viewModel.showSuggestions();
             return;
         }
 
@@ -436,7 +437,7 @@ define([
         viewModel._geocodePromise = promise;
         promise
             .then(function (result) {
-                if (promise.cancel || promise !== viewModel._geocodePromise) {
+                if (promise.cancel) {
                     return;
                 }
                 viewModel._isSearchInProgress = false;
