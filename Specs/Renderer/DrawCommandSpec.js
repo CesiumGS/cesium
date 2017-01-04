@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-        'Renderer/DrawCommand',
         'Core/PrimitiveType',
-        'Scene/Pass'
+        'Renderer/DrawCommand',
+        'Renderer/Pass'
     ], function(
-        DrawCommand,
         PrimitiveType,
+        DrawCommand,
         Pass) {
     'use strict';
 

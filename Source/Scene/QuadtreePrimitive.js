@@ -240,7 +240,7 @@ define([
     QuadtreePrimitive.prototype.updateHeight = function(cartographic, callback) {
         var primitive = this;
         var object = {
-            position : undefined,
+            positionOnEllipsoidSurface : undefined,
             positionCartographic : cartographic,
             level : -1,
             callback : callback
@@ -455,7 +455,7 @@ define([
             customDataRemoved.length = 0;
         }
 
-        // Our goal with load ordering is to first load all of the tiles we need to 
+        // Our goal with load ordering is to first load all of the tiles we need to
         // render the current scene at full detail.  Loading any other tiles is just
         // a form of prefetching, and we need not do it at all (other concerns aside).  This
         // simple and obvious statement gets more complicated when we realize that, because
@@ -761,13 +761,30 @@ define([
                 var data = customData[i];
 
                 if (tile.level > data.level) {
-                    if (!defined(data.position)) {
-                        data.position = ellipsoid.cartographicToCartesian(data.positionCartographic);
+                    if (!defined(data.positionOnEllipsoidSurface)) {
+                        // cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
+                        data.positionOnEllipsoidSurface = Cartesian3.fromRadians(data.positionCartographic.longitude, data.positionCartographic.latitude, 0.0, ellipsoid);
                     }
 
                     if (mode === SceneMode.SCENE3D) {
-                        Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
-                        Cartesian3.normalize(data.position, scratchRay.direction);
+                        var surfaceNormal = ellipsoid.geodeticSurfaceNormal(data.positionOnEllipsoidSurface, scratchRay.direction);
+
+                        // compute origin point
+
+                        // Try to find the intersection point between the surface normal and z-axis.
+                        // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+                        var rayOrigin = ellipsoid.getSurfaceNormalIntersectionWithZAxis(data.positionOnEllipsoidSurface, 11500.0, scratchRay.origin);
+
+                        // Theoretically, not with Earth datums, the intersection point can be outside the ellipsoid
+                        if (!defined(rayOrigin)) {
+                            // intersection point is outside the ellipsoid, try other value
+                            // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+                            var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
+
+                            // multiply by the *positive* value of the magnitude
+                            var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchPosition);
+                            Cartesian3.subtract(data.positionOnEllipsoidSurface, vectorToMinimumPoint, scratchRay.origin);
+                        }
                     } else {
                         Cartographic.clone(data.positionCartographic, scratchCartographic);
 
