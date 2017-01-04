@@ -383,9 +383,9 @@ Some common sensible defaults are
 
 ### Throwing Exceptions
 
-Use the methods of Cesium's [Check](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of rangers of the wrong type or are out of range.
+Use the functions of Cesium's [Check](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of rangers of the wrong type or are out of range.
 
-* For example, to check that a parameter is an object:
+* For example, to check that a parameter is defined and is an object:
 ```javascript
 Cartesian3.maximumComponent = function(cartesian) {
     //>>includeStart('debug', pragmas.debug);
