@@ -150,31 +150,19 @@ define([
     // GLTF_SPEC: Figure out correct mime types (https://github.com/KhronosGroup/glTF/issues/412)
     var defaultModelAccept = 'model/vnd.gltf.binary,model/vnd.gltf+json,model/gltf.binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
 
-    // Global Resource Cache
-    var resourceCache = {};
-
     function loadGltfFromUrl(url) {
-        var cacheKey = getAbsoluteUri(url);
-        var cachedGltf = resourceCache[cacheKey];
-        if (defined(cachedGltf)) {
-            // We have this glTF in the cache already
-            return when.resolve(cachedGltf);
-        } else {
-            return loadArrayBuffer(url)
-                .then(function(arrayBuffer) {
-                    var typedArray = new Uint8Array(arrayBuffer);
-                    var magic = getMagic(typedArray);
-                    if (magic === 'glTF') {
-                        // Binary glTF
-                        resourceCache[cacheKey] = typedArray;
-                        return typedArray;
-                    } else {
-                        var gltf = JSON.parse(getStringFromTypedArray(typedArray));
-                        resourceCache[cacheKey] = gltf;
-                        return gltf;
-                    }
-                });
-        }
+        return loadArrayBuffer(url)
+            .then(function(arrayBuffer) {
+                var typedArray = new Uint8Array(arrayBuffer);
+                var magic = getMagic(typedArray);
+                if (magic === 'glTF') {
+                    // Binary glTF
+                    return typedArray;
+                } else {
+                    var gltf = JSON.parse(getStringFromTypedArray(typedArray));
+                    return gltf;
+                }
+            });
     }
 
     function loadResources(rootObject, basePath, asString) {
@@ -184,23 +172,18 @@ define([
                 // Not loaded
                 var uri = new Uri(object.uri).resolve(basePath).toString();
                 if (defined(uri)) {
-                    var cacheKey = uri;
-                    var cachedResource = resourceCache[cacheKey];
-                    var resolveCachedResource;
-                    if (defined(cachedResource)) {
-                        resolveCachedResource = when.resolve(cachedResource);
-                    } else if (asString) {
-                        resolveCachedResource = loadText(uri);
+                    var resolveResource;
+                    if (asString) {
+                        resolveResource = loadText(uri);
                     } else {
-                        resolveCachedResource = loadArrayBuffer(uri)
+                        resolveResource = loadArrayBuffer(uri)
                             .then(function(data) {
                                 return new Uint8Array(data);
                             });
                     }
-                    return resolveCachedResource
+                    return resolveResource
                         .then(function(data) {
                             object.extras._pipeline.source = data;
-                            resourceCache[cacheKey] = data;
                         });
                 }
             }
@@ -573,7 +556,7 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
-        this._loadGltfPromise = undefined; // Promises that resolves when gltf is loaded exceptions thrown are caught in update()
+        this._loadGltfPromise = undefined; // Promises that resolves when gltf is loaded, exceptions thrown are caught in update()
         this._texturesReady = false; // Textures are ready for the model to render (they may still be streaming in if incrementallyStreamTextures is enabled)
         this._loadTexturePromises = {}; // Promises that resolve as textures complete streaming, indexed by texture id
 
@@ -613,9 +596,7 @@ define([
                     });
             })
             .then(function(gltf) {
-                updateVersion(gltf, {
-                    targetVersion: '1.0'
-                });
+                updateVersion(gltf);
                 addDefaults(gltf);
                 model._cachedGltf = gltf;
                 loadTextures(model);
@@ -993,7 +974,6 @@ define([
      *
      * @private
      */
-    Model._resourceCache = resourceCache;
 
     function getRuntime(model, runtimeName, name) {
         //>>includeStart('debug', pragmas.debug);
@@ -1814,16 +1794,7 @@ define([
             if (animations.hasOwnProperty(animationId)) {
                 var animation = animations[animationId];
                 var channels = animation.channels;
-                var parameters = animation.parameters;
                 var samplers = animation.samplers;
-
-                var parameterValues = {};
-
-                for (var name in parameters) {
-                    if (parameters.hasOwnProperty(name)) {
-                        parameterValues[name] = ModelAnimationCache.getAnimationParameterValues(model, accessors[parameters[name]]);
-                    }
-                }
 
                 // Find start and stop time for the entire animation
                 var startTime = Number.MAX_VALUE;
@@ -1835,13 +1806,15 @@ define([
                 for (var i = 0; i < length; ++i) {
                     var channel = channels[i];
                     var target = channel.target;
+                    var path = target.path;
                     var sampler = samplers[channel.sampler];
-                    var times = parameterValues[sampler.input];
+                    var input = ModelAnimationCache.getAnimationParameterValues(model, accessors[sampler.input]);
+                    var output = ModelAnimationCache.getAnimationParameterValues(model, accessors[sampler.output]);
 
-                    startTime = Math.min(startTime, times[0]);
-                    stopTime = Math.max(stopTime, times[times.length - 1]);
+                    startTime = Math.min(startTime, input[0]);
+                    stopTime = Math.max(stopTime, input[input.length - 1]);
 
-                    var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, parameterValues);
+                    var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, input, path, output);
                     // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
                     channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.id], target.path, spline);
                 }

@@ -111,30 +111,26 @@ define([
     };
  // END GLTF_SPEC
 
-    ModelAnimationCache.getAnimationSpline = function(model, animationName, animation, samplerName, sampler, parameterValues) {
+    ModelAnimationCache.getAnimationSpline = function(model, animationName, animation, samplerName, sampler, input, path, output) {
         var key = getAnimationSplineKey(model, animationName, samplerName);
         var spline = cachedAnimationSplines[key];
 
         if (!defined(spline)) {
-            var times = parameterValues[sampler.input];
-            var accessor = model.gltf.accessors[animation.parameters[sampler.output]];
-            var controlPoints = parameterValues[sampler.output];
+            var times = input;
+            var controlPoints = output;
 
 // GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/185
             if ((times.length === 1) && (controlPoints.length === 1)) {
                 spline = new ConstantSpline(controlPoints[0]);
             } else {
 // END GLTF_SPEC
-                var componentType = accessor.componentType;
-                var type = accessor.type;
-
                 if (sampler.interpolation === 'LINEAR') {
-                    if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC3')) {
+                    if (path === 'translation' || path === 'scale') {
                         spline = new LinearSpline({
                             times : times,
                             points : controlPoints
                         });
-                    } else if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC4')) {
+                    } else if (path === 'rotation') {
                         spline = new QuaternionSpline({
                             times : times,
                             points : controlPoints
