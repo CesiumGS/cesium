@@ -551,6 +551,21 @@ define([
             loadGltfPromise = when.resolve(gltf);
         }
         this._ready = false;
+
+        // update() will post ready as true once WebGL resources are loaded
+        var waitForUpdate = function() {
+            return when(function(resolve) {
+                var timeoutFunction = function() {
+                    if (model.ready) {
+                        resolve();
+                    } else {
+                        setTimeout(timeoutFunction, 500);
+                    }
+                };
+                timeoutFunction();
+            });
+        };
+
         this._readyPromise = loadGltfPromise
             .then(function(gltf) {
                 if (gltf instanceof ArrayBuffer) {
@@ -587,6 +602,7 @@ define([
             .then(function(model) {
                 // The model is loaded
                 model._state = ModelState.LOADED;
+                return waitForUpdate();
             });
     }
 
@@ -1271,12 +1287,14 @@ define([
                 var bufferViewId = accessor.bufferView;
                 if (!defined(rendererBuffers[bufferViewId])) {
                     var bufferView = bufferViews[bufferViewId];
+                    var byteOffset = bufferView.byteOffset;
+                    var byteLength = bufferView.byteLength;
                     var bufferId = bufferView.buffer;
                     var buffer = buffers[bufferId];
                     if (bufferView.target === WebGLConstants.ARRAY_BUFFER) {
                         var vertexBuffer = Buffer.createVertexBuffer({
                             context : context,
-                            typedArray : buffer.extras._pipeline.source,
+                            typedArray : buffer.extras._pipeline.source.subarray(byteOffset, byteOffset + byteLength),
                             usage : BufferUsage.STATIC_DRAW
                         });
                         vertexBuffer.vertexArrayDestroyable = false;
@@ -1284,7 +1302,7 @@ define([
                     } else if (bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) {
                         var indexBuffer = Buffer.createIndexBuffer({
                             context : context,
-                            typedArray : buffer.extras._pipeline.source,
+                            typedArray : buffer.extras._pipeline.source.subarray(byteOffset, byteOffset + byteLength),
                             usage : BufferUsage.STATIC_DRAW,
                             indexDatatype : accessor.componentType
                         });
@@ -1292,7 +1310,7 @@ define([
                         rendererBuffers[bufferViewId] = indexBuffer;
                         // In theory, several glTF accessors with different componentTypes could
                         // point to the same glTF bufferView, which would break this.
-                        // In practice, it is unlikely but possible with Uint32 indices.
+                        // In practice, it is unlikely but possible with uint32 indices.
                     }
                 }
             }
@@ -2407,26 +2425,27 @@ define([
                         // targetable for material animations.  Is this too strict?
                         //
                         // https://github.com/KhronosGroup/glTF/issues/142
-
-                        if (defined(instanceParameters[parameterName])) {
-                            // Parameter overrides by the instance technique
-                            var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
-                            uniformMap[name] = uv.func;
-                            uniformValues[parameterName] = uv;
-                        } else if (defined(parameter.node)) {
-                            uniformMap[name] = getUniformFunctionFromSource(parameter.node, model, parameter.semantic, context.uniformState);
-                        } else if (defined(parameter.semantic)) {
-                            if (parameter.semantic !== 'JOINTMATRIX') {
-                                // Map glTF semantic to Cesium automatic uniform
-                                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
-                            } else {
-                                jointMatrixUniformName = name;
+                        if (defined(parameter)) {
+                            if (defined(instanceParameters[parameterName])) {
+                                // Parameter overrides by the instance technique
+                                var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
+                                uniformMap[name] = uv.func;
+                                uniformValues[parameterName] = uv;
+                            } else if (defined(parameter.node)) {
+                                uniformMap[name] = getUniformFunctionFromSource(parameter.node, model, parameter.semantic, context.uniformState);
+                            } else if (defined(parameter.semantic)) {
+                                if (parameter.semantic !== 'JOINTMATRIX') {
+                                    // Map glTF semantic to Cesium automatic uniform
+                                    uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
+                                } else {
+                                    jointMatrixUniformName = name;
+                                }
+                            } else if (defined(parameter.value)) {
+                                // Technique value that isn't overridden by a material
+                                var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
+                                uniformMap[name] = uv2.func;
+                                uniformValues[parameterName] = uv2;
                             }
-                        } else if (defined(parameter.value)) {
-                            // Technique value that isn't overridden by a material
-                            var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
-                            uniformMap[name] = uv2.func;
-                            uniformValues[parameterName] = uv2;
                         }
                     }
                 }
@@ -3642,27 +3661,29 @@ define([
             var resources = this._rendererResources;
             var cachedResources = this._cachedRendererResources;
 
-            cachedResources.buffers = resources.buffers;
-            cachedResources.vertexArrays = resources.vertexArrays;
-            cachedResources.programs = resources.programs;
-            cachedResources.pickPrograms = resources.pickPrograms;
-            cachedResources.silhouettePrograms = resources.silhouettePrograms;
-            cachedResources.textures = resources.textures;
-            cachedResources.samplers = resources.samplers;
-            cachedResources.renderStates = resources.renderStates;
-            cachedResources.ready = true;
+            if (defined(cachedResources)) {
+                cachedResources.buffers = resources.buffers;
+                cachedResources.vertexArrays = resources.vertexArrays;
+                cachedResources.programs = resources.programs;
+                cachedResources.pickPrograms = resources.pickPrograms;
+                cachedResources.silhouettePrograms = resources.silhouettePrograms;
+                cachedResources.textures = resources.textures;
+                cachedResources.samplers = resources.samplers;
+                cachedResources.renderStates = resources.renderStates;
+                cachedResources.ready = true;
+                // Vertex arrays are unique to this model, do not store in cache.
+                if (defined(this._precreatedAttributes)) {
+                    cachedResources.vertexArrays = {};
+                }
+            }
 
             // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
             this._normalAttributeName = getAttributeOrUniformBySemantic(this.gltf, 'NORMAL');
 
-            // Vertex arrays are unique to this model, do not store in cache.
-            if (defined(this._precreatedAttributes)) {
-                cachedResources.vertexArrays = {};
-            }
-
             if (this.releaseGltfJson) {
                 releaseCachedGltf(this);
             }
+            this._ready = true;
         }
 
         var silhouette = hasSilhouette(this, frameState);

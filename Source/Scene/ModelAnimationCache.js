@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/LinearSpline',
@@ -8,9 +9,11 @@ define([
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
         '../Core/WebGLConstants',
+        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
         './getBinaryAccessor'
     ], function(
         Cartesian3,
+        ComponentDatatype,
         defaultValue,
         defined,
         LinearSpline,
@@ -18,6 +21,7 @@ define([
         Quaternion,
         QuaternionSpline,
         WebGLConstants,
+        numberOfComponentsForType,
         getBinaryAccessor) {
     'use strict';
 
@@ -45,8 +49,6 @@ define([
     var cachedAnimationParameters = {
     };
 
-    var axisScratch = new Cartesian3();
-
     ModelAnimationCache.getAnimationParameterValues = function(model, accessor) {
         var key = getAccessorKey(model, accessor);
         var values = cachedAnimationParameters[key];
@@ -54,7 +56,6 @@ define([
         if (!defined(values)) {
             // Cache miss
             var gltf = model.gltf;
-            var hasAxisAngle = (parseFloat(gltf.asset.version) < 1.0);
 
             var buffers = gltf.buffers;
             var bufferViews = gltf.bufferViews;
@@ -62,34 +63,25 @@ define([
             var bufferView = bufferViews[accessor.bufferView];
             var bufferId = bufferView.buffer;
             var buffer = buffers[bufferId];
+            var source = buffer.extras._pipeline.source;
 
             var componentType = accessor.componentType;
+            var numberOfComponents = numberOfComponentsForType(componentType);
             var type = accessor.type;
             var count = accessor.count;
 
-            // Convert typed array to Cesium types
-            var typedArray = getBinaryAccessor(accessor).createArrayBufferView(buffer.extras._pipeline.source, bufferViebuffer.byteOffset + accessor.byteOffset, count);
-            var i;
-
-            if ((componentType === WebGLConstants.FLOAT) && (type === 'SCALAR')) {
-                values = typedArray;
-            }
-            else if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC3')) {
-                values = new Array(count);
-                for (i = 0; i < count; ++i) {
-                    values[i] = Cartesian3.fromArray(typedArray, 3 * i);
+            values = new Array(count);
+            var byteOffset = bufferView.byteOffset + accessor.byteOffset;
+            for (var i = 0; i < count; i++) {
+                var typedArrayView = ComponentDatatype.createArrayBufferView(componentType, source, byteOffset, numberOfComponents);
+                if (type === 'SCALAR') {
+                    values[i] = typedArrayView[0];
+                } else if (type === 'VEC3') {
+                    values[i] = Cartesian3.fromArray(typedArrayView);
+                } else if (type === 'VEC4') {
+                    values[i] = Quaternion.unpack(typedArrayView);
                 }
-            } else if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC4')) {
-                values = new Array(count);
-                for (i = 0; i < count; ++i) {
-                    var byteOffset = 4 * i;
-                    if (hasAxisAngle) {
-                        values[i] = Quaternion.fromAxisAngle(Cartesian3.fromArray(typedArray, byteOffset, axisScratch), typedArray[byteOffset + 3]);
-                    }
-                    else {
-                        values[i] = Quaternion.unpack(typedArray, byteOffset);
-                    }
-                }
+                byteOffset += accessor.byteStride;
             }
             // GLTF_SPEC: Support more parameter types when glTF supports targeting materials. https://github.com/KhronosGroup/glTF/issues/142
 
