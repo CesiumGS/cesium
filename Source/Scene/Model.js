@@ -537,8 +537,8 @@ define([
         this._rtcCenter = undefined;    // in world coordinates
         this._rtcCenterEye = undefined; // in eye coordinates
 
-        this._initialized = false; // Indicates that the model was initialized by update() after loading
-        this._initializedTextures = false; // Indicates that the textures were initialized by update() once they finish streaming
+        this._ready = false;
+        this._readyPromise = when.defer();
 
         var loadGltfPromise;
         var model = this;
@@ -550,23 +550,7 @@ define([
             // glTF was explicitly provided, e.g., when a user uses the Model constructor directly
             loadGltfPromise = when.resolve(gltf);
         }
-        this._ready = false;
-
-        // update() will post ready as true once WebGL resources are loaded
-        var waitForUpdate = function() {
-            return when(function(resolve) {
-                var timeoutFunction = function() {
-                    if (model.ready) {
-                        resolve();
-                    } else {
-                        setTimeout(timeoutFunction, 500);
-                    }
-                };
-                timeoutFunction();
-            });
-        };
-
-        this._readyPromise = loadGltfPromise
+        loadGltfPromise
             .then(function(gltf) {
                 if (gltf instanceof ArrayBuffer) {
                     gltf = new Uint8Array(gltf);
@@ -602,7 +586,6 @@ define([
             .then(function(model) {
                 // The model is loaded
                 model._state = ModelState.LOADED;
-                return waitForUpdate();
             });
     }
 
@@ -778,7 +761,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return this._readyPromise;
+                return this._readyPromise.promise;
             }
         },
 
@@ -3643,7 +3626,7 @@ define([
         }
 
         var context = frameState.context;
-        if (this._state === ModelState.LOADED && !this._initialized) {
+        if (this._state === ModelState.LOADED && !this.ready) {
             checkSupportedExtensions(this);
             checkSupportedGlExtensions(this, context);
 
@@ -3656,7 +3639,6 @@ define([
             }
 
             createResources(this, frameState);
-            this._initialized = true;
 
             var resources = this._rendererResources;
             var cachedResources = this._cachedRendererResources;
@@ -3684,6 +3666,7 @@ define([
                 releaseCachedGltf(this);
             }
             this._ready = true;
+            this._readyPromise.resolve();
         }
 
         var silhouette = hasSilhouette(this, frameState);
