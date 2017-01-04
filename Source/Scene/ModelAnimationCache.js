@@ -11,7 +11,6 @@ define([
         '../Core/WebGLConstants',
         '../ThirdParty/GltfPipeline/getAccessorByteStride',
         '../ThirdParty/GltfPipeline/numberOfComponentsForType',
-        './getBinaryAccessor'
     ], function(
         Cartesian3,
         ComponentDatatype,
@@ -23,8 +22,7 @@ define([
         QuaternionSpline,
         WebGLConstants,
         getAccessorByteStride,
-        numberOfComponentsForType,
-        getBinaryAccessor) {
+        numberOfComponentsForType) {
     'use strict';
 
     /**
@@ -42,7 +40,7 @@ define([
         var buffer = buffers[bufferView.buffer];
 
         var byteOffset = bufferView.byteOffset + accessor.byteOffset;
-        var byteLength = accessor.count * getBinaryAccessor(accessor).componentsPerAttribute;
+        var byteLength = accessor.count * numberOfComponentsForType(accessor.type);
 
         // buffer.path will be undefined when animations are embedded.
         return model.cacheKey + '//' + defaultValue(buffer.path, '') + '/' + byteOffset + '/' + byteLength;
@@ -174,7 +172,7 @@ define([
             var bufferId = bufferView.buffer;
             var buffer = buffers[bufferId];
             var source = buffer.extras._pipeline.source;
-            
+
             var componentType = accessor.componentType;
             var type = accessor.type;
             var count = accessor.count;
