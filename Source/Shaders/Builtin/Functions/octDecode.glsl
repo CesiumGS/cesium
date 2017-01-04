@@ -30,6 +30,9 @@
  */
  vec3 czm_octDecode(float encoded)
  {
+    if (encoded == 0.0) {
+        return vec3(0.0, 0.0, 0.0);
+    }
     float temp = encoded / 256.0;
     float x = floor(temp);
     float y = (temp - x) * 256.0;

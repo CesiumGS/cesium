@@ -1363,53 +1363,87 @@ define([
         }
         //>>includeEnd('debug');
 
+        var extrudeAttribute = geometry.attributes.extrudeDirection;
+        var i;
+        var index;
+        var numVertices;
+        if (defined(extrudeAttribute)) {
+            //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
+            var extrudeDirections = extrudeAttribute.values;
+            numVertices = extrudeDirections.length / 3.0;
+            var compressedDirections = new Float32Array(numVertices);
+
+            for (i = 0; i < numVertices; ++i) {
+                index = i * 3.0;
+                Cartesian3.fromArray(extrudeDirections, index, toEncode1);
+                if (Cartesian3.equals(toEncode1, Cartesian3.ZERO)) {
+                    continue;
+                }
+                compressedDirections[i] = AttributeCompression.octEncodeFloat(toEncode1);
+            }
+
+            geometry.attributes.compressedAttributes = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 1,
+                values : compressedDirections
+            });
+            delete geometry.attributes.extrudeDirection;
+            return geometry;
+        }
+
         var normalAttribute = geometry.attributes.normal;
         var stAttribute = geometry.attributes.st;
-        if (!defined(normalAttribute) && !defined(stAttribute)) {
+
+        var hasNormal = defined(normalAttribute);
+        var hasSt = defined(stAttribute);
+        if (!hasNormal && !hasSt) {
             return geometry;
         }
 
         var tangentAttribute = geometry.attributes.tangent;
         var binormalAttribute = geometry.attributes.binormal;
 
+        var hasTangent = defined(tangentAttribute);
+        var hasBinormal = defined(binormalAttribute);
+
         var normals;
         var st;
         var tangents;
         var binormals;
 
-        if (defined(normalAttribute)) {
+        if (hasNormal) {
             normals = normalAttribute.values;
         }
-        if (defined(stAttribute)) {
+        if (hasSt) {
             st = stAttribute.values;
         }
-        if (defined(tangentAttribute)) {
+        if (hasTangent) {
             tangents = tangentAttribute.values;
         }
-        if (binormalAttribute) {
+        if (hasBinormal) {
             binormals = binormalAttribute.values;
         }
 
-        var length = defined(normals) ? normals.length : st.length;
-        var numComponents = defined(normals) ? 3.0 : 2.0;
-        var numVertices = length / numComponents;
+        var length = hasNormal ? normals.length : st.length;
+        var numComponents = hasNormal ? 3.0 : 2.0;
+        numVertices = length / numComponents;
 
         var compressedLength = numVertices;
-        var numCompressedComponents = defined(st) && defined(normals) ? 2.0 : 1.0;
-        numCompressedComponents += defined(tangents) || defined(binormals) ? 1.0 : 0.0;
+        var numCompressedComponents = hasSt && hasNormal ? 2.0 : 1.0;
+        numCompressedComponents += hasTangent || hasBinormal ? 1.0 : 0.0;
         compressedLength *= numCompressedComponents;
 
         var compressedAttributes = new Float32Array(compressedLength);
 
         var normalIndex = 0;
-        for (var i = 0; i < numVertices; ++i) {
-            if (defined(st)) {
+        for (i = 0; i < numVertices; ++i) {
+            if (hasSt) {
                 Cartesian2.fromArray(st, i * 2.0, scratchCartesian2);
                 compressedAttributes[normalIndex++] = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
             }
 
-            var index = i * 3.0;
-            if (defined(normals) && defined(tangents) && defined(binormals)) {
+            index = i * 3.0;
+            if (hasNormal && defined(tangents) && defined(binormals)) {
                 Cartesian3.fromArray(normals, index, toEncode1);
                 Cartesian3.fromArray(tangents, index, toEncode2);
                 Cartesian3.fromArray(binormals, index, toEncode3);
@@ -1418,17 +1452,17 @@ define([
                 compressedAttributes[normalIndex++] = scratchCartesian2.x;
                 compressedAttributes[normalIndex++] = scratchCartesian2.y;
             } else {
-                if (defined(normals)) {
+                if (hasNormal) {
                     Cartesian3.fromArray(normals, index, toEncode1);
                     compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
 
-                if (defined(tangents)) {
+                if (hasTangent) {
                     Cartesian3.fromArray(tangents, index, toEncode1);
                     compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
 
-                if (defined(binormals)) {
+                if (hasBinormal) {
                     Cartesian3.fromArray(binormals, index, toEncode1);
                     compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
@@ -1441,16 +1475,16 @@ define([
             values : compressedAttributes
         });
 
-        if (defined(normals)) {
+        if (hasNormal) {
             delete geometry.attributes.normal;
         }
-        if (defined(st)) {
+        if (hasSt) {
             delete geometry.attributes.st;
         }
-        if (defined(tangents)) {
+        if (hasTangent) {
             delete geometry.attributes.tangent;
         }
-        if (defined(binormals)) {
+        if (hasBinormal) {
             delete geometry.attributes.binormal;
         }
 

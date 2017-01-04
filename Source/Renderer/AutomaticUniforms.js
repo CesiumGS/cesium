@@ -1488,7 +1488,7 @@ define([
             size: 1,
             datatype: WebGLConstants.FLOAT,
             getValue: function(uniformState) {
-                return uniformState.pixelSizePerMeter * uniformState.maximumScreenSpaceError;
+                return uniformState.geometricToleranceOverMeter;
             }
         })
     };

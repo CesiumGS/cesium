@@ -151,6 +151,7 @@ define([
         this._fogDensity = undefined;
 
         this._pixelSizePerMeter = undefined;
+        this._geometricToleranceOverMeter = undefined;
     }
 
     defineProperties(UniformState.prototype, {
@@ -770,26 +771,13 @@ define([
         },
 
         /**
-         * The maximum screen-space error used to drive level-of-detail refinement.  Higher
-         * values will provide better performance but lower visual quality.
-         *
-         * @type {Number}
-         * @default 2
-         */
-        maximumScreenSpaceError: {
-            get: function() {
-                return this._frameState.maximumScreenSpaceError;
-            }
-        },
-
-        /**
-         * The size of one pixel in meters
-         *
+         * A scalar that represents the geometric tolerance per meter
+         * @memberof UniformStat.prototype
          * @type {Number}
          */
-        pixelSizePerMeter: {
+        geometricToleranceOverMeter: {
             get: function() {
-                return this._pixelSizePerMeter;
+                return this._geometricToleranceOverMeter;
             }
         },
 
@@ -964,11 +952,14 @@ define([
 
         var fov = camera.frustum.fov;
         var viewport = this._viewport;
-        if (viewport.width > viewport.height * camera.frustum.aspectRatio) {
-            this._pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.width;
+        var pixelSizePerMeter;
+        if (viewport.height > viewport.width) {
+            pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.height;
         } else {
-            this._pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.height;
+            pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.width;
         }
+
+        this._geometricToleranceOverMeter = pixelSizePerMeter * frameState.maximumScreenSpaceError;
     };
 
     function cleanViewport(uniformState) {

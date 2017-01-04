@@ -734,19 +734,48 @@ define([
         groundPrimitive._rsPickPass = RenderState.fromCache(pickRenderState);
     }
 
+    function modifyForEncodedNormals(primitive, vertexShaderSource) {
+        if (!primitive.compressVertices) {
+            return vertexShaderSource;
+        }
+
+        if (vertexShaderSource.search(/attribute\s+vec3\s+extrudeDirection;/g) !== -1) {
+            var attributeName = 'compressedAttributes';
+
+            //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
+            var attributeDecl = 'attribute float ' + attributeName + ';';
+
+            var globalDecl = 'vec3 extrudeDirection;\n';
+            var decode = '    extrudeDirection = czm_octDecode(' + attributeName + ');\n';
+
+            var modifiedVS = vertexShaderSource;
+            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+extrudeDirection;/g, '');
+            modifiedVS = ShaderSource.replaceMain(modifiedVS, 'czm_non_compressed_main');
+            var compressedMain =
+                'void main() \n' +
+                '{ \n' +
+                decode +
+                '    czm_non_compressed_main(); \n' +
+                '}';
+
+            return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
+        }
+    }
+
     function createShaderProgram(groundPrimitive, frameState, appearance) {
         if (defined(groundPrimitive._sp)) {
             return;
         }
 
         var context = frameState.context;
-
+        var primitive = groundPrimitive._primitive;
         var vs = ShadowVolumeVS;
         vs = groundPrimitive._primitive._batchTable.getVertexShaderCallback()(vs);
-        vs = Primitive._appendShowToShader(groundPrimitive._primitive, vs);
-        vs = Primitive._appendDistanceDisplayConditionToShader(groundPrimitive._primitive, vs);
+        vs = Primitive._appendShowToShader(primitive, vs);
+        vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs);
         vs = Primitive._modifyShaderPosition(groundPrimitive, vs, frameState.scene3DOnly);
-        vs = Primitive._updateColorAttribute(groundPrimitive._primitive, vs);
+        vs = Primitive._updateColorAttribute(primitive, vs);
+        vs = modifyForEncodedNormals(primitive, vs);
 
         var fs = ShadowVolumeFS;
         var attributeLocations = groundPrimitive._primitive._attributeLocations;
