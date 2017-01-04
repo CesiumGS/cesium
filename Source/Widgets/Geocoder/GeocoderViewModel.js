@@ -10,7 +10,6 @@ define([
     '../../Core/DeveloperError',
     '../../Core/Event',
     '../../Core/CartographicGeocoderService',
-    '../../Core/loadJsonp',
     '../../Core/Matrix4',
     '../../Core/Rectangle',
     '../../ThirdParty/knockout',
@@ -28,7 +27,6 @@ define([
         DeveloperError,
         Event,
         CartographicGeocoderService,
-        loadJsonp,
         Matrix4,
         Rectangle,
         knockout,
@@ -44,7 +42,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Scene} options.scene The Scene instance to use.
-     * @param {GeocoderService[]} [geocoderServices] Geocoder services to use for geocoding queries.
+     * @param {GeocoderService[]} [options.geocoderServices] Geocoder services to use for geocoding queries.
      *        If more than one are supplied, suggestions will be gathered for the geocoders that support it,
      *        and if no suggestion is selected the result from the first geocoder service wil be used.
      * @param {String} [options.url='https://dev.virtualearth.net'] The base URL of the Bing Maps API.
@@ -357,6 +355,10 @@ define([
         }
     });
 
+    /**
+     * Destroys the widget.  Should be called if permanently
+     * removing the widget from layout.
+     */
     GeocoderViewModel.prototype.destroy = function() {
         this._suggestionSubscription.dispose();
     };
@@ -408,16 +410,11 @@ define([
                 var nextPromise = geocoderService.geocode(query)
                     .then(function (result) {
                         return {state: 'fulfilled', value: result};
-                    });
-                if (defined(nextPromise.otherwise)) {
-                    nextPromise.otherwise(function (err) {
+                    })
+                    .otherwise(function (err) {
                         return {state: 'rejected', reason: err};
                     });
-                } else if (defined(nextPromise.catch)) {
-                    nextPromise.catch(function (err) {
-                        return {state: 'rejected', reason: err};
-                    });
-                }
+
                 return nextPromise;
             });
     }
