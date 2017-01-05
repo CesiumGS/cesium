@@ -21,6 +21,7 @@ define([
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
         '../Core/loadArrayBuffer',
+        '../Core/loadCRN',
         '../Core/loadImage',
         '../Core/loadImageFromTypedArray',
         '../Core/loadKTX',
@@ -86,6 +87,7 @@ define([
         getStringFromTypedArray,
         IndexDatatype,
         loadArrayBuffer,
+        loadCRN,
         loadImage,
         loadImageFromTypedArray,
         loadKTX,
@@ -1403,6 +1405,7 @@ define([
     }
 
     var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
+    var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
 
     function parseTextures(model) {
         var images = model.gltf.images;
@@ -1427,6 +1430,8 @@ define([
 
                     if (ktxRegex.test(imagePath)) {
                         loadKTX(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                    } else if (crnRegex.test(imagePath)) {
+                        loadCRN(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
                     } else {
                         loadImage(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
                     }
