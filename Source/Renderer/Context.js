@@ -179,8 +179,8 @@ define([
         var stub = clone(WebGLConstants);
 
         stub.canvas = canvas;
-        stub.drawingBufferWidth = canvas.width;
-        stub.drawingBufferHeight = canvas.height;
+        stub.drawingBufferWidth = Math.max(canvas.width, 1);
+        stub.drawingBufferHeight = Math.max(canvas.height, 1);
 
         stub.activeTexture = noop;
         stub.attachShader = noop;
@@ -237,9 +237,9 @@ define([
         stub.frontFace = noop;
         stub.generateMipmap = noop;
         stub.getActiveAttrib = getStub;
-        stub.getActiveUniform = getStub; // TODO: needs name property
+        stub.getActiveUniform = getStub;
         stub.getAttachedShaders = getStubWarning;
-        stub.getAttribLocation = getStub; // TODO?
+        stub.getAttribLocation = getStub;
         stub.getBufferParameter = getStubWarning;
         stub.getContextAttributes = getContextAttributesStub(options);
         stub.getError = getErrorStub;
@@ -256,7 +256,7 @@ define([
         stub.getSupportedExtensions = getStubWarning;
         stub.getTexParameter = getStubWarning;
         stub.getUniform = getStub;
-        stub.getUniformLocation = getStub; // TODO?
+        stub.getUniformLocation = getStub;
         stub.getVertexAttrib = getStubWarning;
         stub.getVertexAttribOffset = getStubWarning;
         stub.hint = noop;
@@ -365,7 +365,7 @@ define([
     }
 
     function getExtensionStub(name) {
-// TODO: extensions
+        // No extensions are stubbed.
         return null;
     }
 
