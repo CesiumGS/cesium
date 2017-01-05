@@ -10,6 +10,3 @@ insert_final_newline = true
 
 [*.md]
 trim_trailing_whitespace = false
-
-[*.scss]
-indent_size = 2
