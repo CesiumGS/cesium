@@ -353,7 +353,7 @@ define([
         if (options.addBatchIdToGeneratedShaders) {
             techniqueAttributes.a_batchId = 'batchId';
             techniqueParameters.batchId = {
-                semantic: 'BATCHID',
+                semantic: '_BATCHID',
                 type: WebGLConstants.FLOAT
             };
             vertexShader += 'attribute float a_batchId;\n';
