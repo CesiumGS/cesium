@@ -48,7 +48,7 @@ defineSuite([
 			state: ImageryState.FAILED,
 			processStateMachine: function() {},
 			addReference: function() {}
-		}
+		};
 
 		// This TileImagery needs reprojected imagery, and:
 		// * thisImagery has failed
