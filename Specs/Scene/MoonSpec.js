@@ -2,24 +2,20 @@
 defineSuite([
         'Scene/Moon',
         'Core/BoundingSphere',
-        'Core/Cartesian3',
         'Core/Color',
         'Core/defined',
         'Core/Ellipsoid',
         'Core/Matrix3',
-        'Core/Matrix4',
         'Core/Simon1994PlanetaryPositions',
         'Core/Transforms',
         'Specs/createScene'
     ], function(
         Moon,
         BoundingSphere,
-        Cartesian3,
         Color,
         defined,
         Ellipsoid,
         Matrix3,
-        Matrix4,
         Simon1994PlanetaryPositions,
         Transforms,
         createScene) {

@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        'Core/defaultValue'
+        'Core/defaultValue',
+        'Core/FeatureDetection'
     ], function(
-        defaultValue) {
+        defaultValue,
+        FeatureDetection) {
     'use strict';
 
     function createMouseEvent(type, options) {
@@ -137,35 +139,70 @@ define([
 
     function createPointerEvent(type, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var canBubble = defaultValue(options.canBubble, true);
-        var cancelable = defaultValue(options.cancelable, true);
-        var view = defaultValue(options.view, window);
-        var detail = defaultValue(options.detail, 0);
-        var screenX = defaultValue(options.screenX, 0);
-        var screenY = defaultValue(options.screenY, 0);
-        var clientX = defaultValue(options.clientX, 0);
-        var clientY = defaultValue(options.clientY, 0);
-        var ctrlKey = defaultValue(options.ctrlKey, false);
-        var altKey = defaultValue(options.altKey, false);
-        var shiftKey = defaultValue(options.shiftKey, false);
-        var metaKey = defaultValue(options.metaKey, false);
-        var button = defaultValue(options.button, 0);
-        var relatedTarget = defaultValue(options.relatedTarget, null);
-        var offsetX = defaultValue(options.offsetX, 0);
-        var offsetY = defaultValue(options.offsetY, 0);
-        var width = defaultValue(options.width, 0);
-        var height = defaultValue(options.height, 0);
-        var pressure = defaultValue(options.pressure, 0);
-        var rotation = defaultValue(options.rotation, 0);
-        var tiltX = defaultValue(options.tiltX, 0);
-        var tiltY = defaultValue(options.tiltY, 0);
-        var pointerId = defaultValue(options.pointerId, 1);
-        var pointerType = defaultValue(options.pointerType, 0);
-        var hwTimestamp = defaultValue(options.hwTimestamp, 0);
-        var isPrimary = defaultValue(options.isPrimary, 0);
+        var event;
 
-        var event = document.createEvent('PointerEvent');
-        event.initPointerEvent(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget, offsetX, offsetY, width, height, pressure, rotation, tiltX, tiltY, pointerId, pointerType, hwTimestamp, isPrimary);
+        if (FeatureDetection.isInternetExplorer()) {
+            var canBubble = defaultValue(options.canBubble, true);
+            var cancelable = defaultValue(options.cancelable, true);
+            var view = defaultValue(options.view, window);
+            var detail = defaultValue(options.detail, 0);
+            var screenX = defaultValue(options.screenX, 0);
+            var screenY = defaultValue(options.screenY, 0);
+            var clientX = defaultValue(options.clientX, 0);
+            var clientY = defaultValue(options.clientY, 0);
+            var ctrlKey = defaultValue(options.ctrlKey, false);
+            var altKey = defaultValue(options.altKey, false);
+            var shiftKey = defaultValue(options.shiftKey, false);
+            var metaKey = defaultValue(options.metaKey, false);
+            var button = defaultValue(options.button, 0);
+            var relatedTarget = defaultValue(options.relatedTarget, null);
+            var offsetX = defaultValue(options.offsetX, 0);
+            var offsetY = defaultValue(options.offsetY, 0);
+            var width = defaultValue(options.width, 0);
+            var height = defaultValue(options.height, 0);
+            var pressure = defaultValue(options.pressure, 0);
+            var rotation = defaultValue(options.rotation, 0);
+            var tiltX = defaultValue(options.tiltX, 0);
+            var tiltY = defaultValue(options.tiltY, 0);
+            var pointerId = defaultValue(options.pointerId, 1);
+            var pointerType = defaultValue(options.pointerType, 0);
+            var hwTimestamp = defaultValue(options.hwTimestamp, 0);
+            var isPrimary = defaultValue(options.isPrimary, 0);
+
+            event = document.createEvent('PointerEvent');
+            event.initPointerEvent(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY,
+                    ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget, offsetX, offsetY, width, height,
+                    pressure, rotation, tiltX, tiltY, pointerId, pointerType, hwTimestamp, isPrimary);
+        } else {
+            event = new window.PointerEvent(type, {
+                canBubble : defaultValue(options.canBubble, true),
+                cancelable : defaultValue(options.cancelable, true),
+                view : defaultValue(options.view, window),
+                detail : defaultValue(options.detail, 0),
+                screenX : defaultValue(options.screenX, 0),
+                screenY : defaultValue(options.screenY, 0),
+                clientX : defaultValue(options.clientX, 0),
+                clientY : defaultValue(options.clientY, 0),
+                ctrlKey : defaultValue(options.ctrlKey, false),
+                altKey : defaultValue(options.altKey, false),
+                shiftKey : defaultValue(options.shiftKey, false),
+                metaKey : defaultValue(options.metaKey, false),
+                button : defaultValue(options.button, 0),
+                relatedTarget : defaultValue(options.relatedTarget, null),
+                offsetX : defaultValue(options.offsetX, 0),
+                offsetY : defaultValue(options.offsetY, 0),
+                width : defaultValue(options.width, 0),
+                height : defaultValue(options.height, 0),
+                pressure : defaultValue(options.pressure, 0),
+                rotation : defaultValue(options.rotation, 0),
+                tiltX : defaultValue(options.tiltX, 0),
+                tiltY : defaultValue(options.tiltY, 0),
+                pointerId : defaultValue(options.pointerId, 1),
+                pointerType : defaultValue(options.pointerType, 0),
+                hwTimestamp : defaultValue(options.hwTimestamp, 0),
+                isPrimary : defaultValue(options.isPrimary, 0)
+            });
+        }
         return event;
     }
 
@@ -214,6 +251,9 @@ define([
         fireTouchEnd : function(element, options) {
             element.dispatchEvent(createTouchEvent('touchend', options));
         },
+        fireTouchCancel : function(element, options) {
+            element.dispatchEvent(createTouchEvent('touchcancel', options));
+        },
         firePointerDown : function(element, options) {
             element.dispatchEvent(createPointerEvent('pointerdown', options));
         },
@@ -222,6 +262,9 @@ define([
         },
         firePointerMove : function(element, options) {
             element.dispatchEvent(createPointerEvent('pointermove', options));
+        },
+        firePointerCancel : function(element, options) {
+            element.dispatchEvent(createPointerEvent('pointercancel', options));
         },
         fireDeviceOrientation : function(element, options) {
             element.dispatchEvent(createDeviceOrientationEvent('deviceorientation', options));

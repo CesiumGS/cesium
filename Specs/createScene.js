@@ -4,7 +4,6 @@ define([
         'Core/clone',
         'Core/defaultValue',
         'Core/defined',
-        'Core/queryToObject',
         'Scene/Scene',
         'Specs/createCanvas',
         'Specs/destroyCanvas'
@@ -13,7 +12,6 @@ define([
         clone,
         defaultValue,
         defined,
-        queryToObject,
         Scene,
         createCanvas,
         destroyCanvas) {
@@ -34,6 +32,7 @@ define([
         var contextOptions = options.contextOptions;
         contextOptions.webgl = defaultValue(contextOptions.webgl, {});
         contextOptions.webgl.antialias = defaultValue(contextOptions.webgl.antialias, false);
+        contextOptions.webgl.stencil = defaultValue(contextOptions.webgl.stencil, true);
 
         var scene = new Scene(options);
 

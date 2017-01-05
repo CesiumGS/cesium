@@ -1,8 +1,16 @@
+/.externalToolBuilders
+/.gitattributes
+/.github
+/.idea
 /.metadata
 /Apps
 /Build
 /Documentation
 /Instrumented
+/launches
+/server.js
+/Source/copyrightHeader.js
+/Source/main.js
 /Specs
 /Tools
 /launches
