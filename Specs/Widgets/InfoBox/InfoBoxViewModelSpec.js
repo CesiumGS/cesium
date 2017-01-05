@@ -1,10 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-        'Widgets/InfoBox/InfoBoxViewModel',
-        'Specs/pollToPromise'
+        'Widgets/InfoBox/InfoBoxViewModel'
     ], function(
-        InfoBoxViewModel,
-        pollToPromise) {
+        InfoBoxViewModel) {
     'use strict';
 
     it('constructor sets expected values', function() {

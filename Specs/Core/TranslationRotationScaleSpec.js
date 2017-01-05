@@ -2,12 +2,10 @@
 defineSuite([
         'Core/TranslationRotationScale',
         'Core/Cartesian3',
-        'Core/Matrix4',
         'Core/Quaternion'
     ], function(
         TranslationRotationScale,
         Cartesian3,
-        Matrix4,
         Quaternion) {
     'use strict';
 

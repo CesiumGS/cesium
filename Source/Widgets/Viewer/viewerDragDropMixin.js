@@ -9,7 +9,6 @@ define([
         '../../DataSources/CzmlDataSource',
         '../../DataSources/GeoJsonDataSource',
         '../../DataSources/KmlDataSource',
-        '../../Scene/GroundPrimitive',
         '../getElement'
     ], function(
         defaultValue,
@@ -21,7 +20,6 @@ define([
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
-        GroundPrimitive,
         getElement) {
     'use strict';
 
@@ -79,7 +77,7 @@ define([
 
         //Local variables to be closed over by defineProperties.
         var dropEnabled = true;
-        var flyToOnDrop = true;
+        var flyToOnDrop = defaultValue(options.flyToOnDrop, true);
         var dropError = new Event();
         var clearOnDrop = defaultValue(options.clearOnDrop, true);
         var dropTarget = defaultValue(options.dropTarget, viewer.container);

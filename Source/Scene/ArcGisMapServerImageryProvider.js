@@ -10,7 +10,6 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
-        '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/loadJson',
         '../Core/loadJsonp',
@@ -35,7 +34,6 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
-        GeographicProjection,
         GeographicTilingScheme,
         loadJson,
         loadJsonp,
@@ -559,6 +557,8 @@ define([
 
         /**
          * Gets the comma-separated list of layer IDs to show.
+         * @memberof ArcGisMapServerImageryProvider.prototype
+         * 
          * @type {String}
          */
         layers : {

@@ -6,8 +6,8 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/IndexDatatype',
-        './BufferUsage',
-        './WebGLConstants'
+        '../Core/WebGLConstants',
+        './BufferUsage'
     ], function(
         defaultValue,
         defined,
@@ -15,8 +15,8 @@ define([
         destroyObject,
         DeveloperError,
         IndexDatatype,
-        BufferUsage,
-        WebGLConstants) {
+        WebGLConstants,
+        BufferUsage) {
     'use strict';
 
     /**
@@ -112,7 +112,7 @@ define([
      *     typedArray : new Float32Array([0, 0, 0]),
      *     usage : BufferUsage.STATIC_DRAW
      * });
-     * 
+     *
      * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
      * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ARRAY_BUFFER</code>
      * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ARRAY_BUFFER</code>
@@ -173,7 +173,7 @@ define([
      *     usage : BufferUsage.STATIC_DRAW,
      *     indexDatatype : IndexDatatype.UNSIGNED_SHORT
      * });
-     * 
+     *
      * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
      * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ELEMENT_ARRAY_BUFFER</code>
      * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ELEMENT_ARRAY_BUFFER</code>

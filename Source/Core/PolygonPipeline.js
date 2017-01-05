@@ -8,13 +8,10 @@ define([
         './defined',
         './DeveloperError',
         './Ellipsoid',
-        './EllipsoidTangentPlane',
         './Geometry',
         './GeometryAttribute',
         './Math',
-        './pointInsideTriangle',
         './PrimitiveType',
-        './Queue',
         './WindingOrder'
     ], function(
         earcut,
@@ -25,13 +22,10 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
-        EllipsoidTangentPlane,
         Geometry,
         GeometryAttribute,
         CesiumMath,
-        pointInsideTriangle,
         PrimitiveType,
-        Queue,
         WindingOrder) {
     'use strict';
 

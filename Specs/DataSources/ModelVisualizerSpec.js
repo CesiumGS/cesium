@@ -3,6 +3,7 @@ defineSuite([
         'DataSources/ModelVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Matrix4',
         'Core/Quaternion',
@@ -20,6 +21,7 @@ defineSuite([
         ModelVisualizer,
         BoundingSphere,
         Cartesian3,
+        DistanceDisplayCondition,
         JulianDate,
         Matrix4,
         Quaternion,
@@ -116,6 +118,7 @@ defineSuite([
         model.scale = new ConstantProperty(2);
         model.minimumPixelSize = new ConstantProperty(24.0);
         model.uri = new ConstantProperty(boxUrl);
+        model.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
 
         var translation = new Cartesian3(1.0, 2.0, 3.0);
         var rotation = new Quaternion(0.0, 0.707, 0.0, 0.707);
@@ -143,6 +146,7 @@ defineSuite([
         expect(primitive.scale).toEqual(2);
         expect(primitive.minimumPixelSize).toEqual(24.0);
         expect(primitive.modelMatrix).toEqual(Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(1, 2, 3), scene.globe.ellipsoid));
+        expect(primitive.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
 
         // wait till the model is loaded before we can check node transformations
         return pollToPromise(function() {

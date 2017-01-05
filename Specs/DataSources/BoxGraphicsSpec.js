@@ -3,6 +3,7 @@ defineSuite([
         'DataSources/BoxGraphics',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'Scene/ShadowMode',
@@ -12,6 +13,7 @@ defineSuite([
         BoxGraphics,
         Cartesian3,
         Color,
+        DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
         ShadowMode,
@@ -28,7 +30,8 @@ defineSuite([
             outlineColor : Color.RED,
             outlineWidth : 1,
             dimensions : new Cartesian3(2, 3, 4),
-            shadows : ShadowMode.DISABLED
+            shadows : ShadowMode.DISABLED,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
         };
 
         var box = new BoxGraphics(options);
@@ -40,6 +43,7 @@ defineSuite([
         expect(box.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(box.dimensions).toBeInstanceOf(ConstantProperty);
         expect(box.shadows).toBeInstanceOf(ConstantProperty);
+        expect(box.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
 
         expect(box.material.color.getValue()).toEqual(options.material);
         expect(box.show.getValue()).toEqual(options.show);
@@ -49,6 +53,7 @@ defineSuite([
         expect(box.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(box.dimensions.getValue()).toEqual(options.dimensions);
         expect(box.shadows.getValue()).toEqual(options.shadows);
+        expect(box.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -61,6 +66,7 @@ defineSuite([
         source.outlineWidth = new ConstantProperty();
         source.dimensions = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
 
         var target = new BoxGraphics();
         target.merge(source);
@@ -73,6 +79,7 @@ defineSuite([
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.dimensions).toBe(source.dimensions);
         expect(target.shadows).toBe(source.shadows);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -86,6 +93,7 @@ defineSuite([
         var outlineWidth = new ConstantProperty();
         var dimensions = new ConstantProperty();
         var shadows = new ConstantProperty();
+        var distanceDisplayCondition = new ConstantProperty();
 
         var target = new BoxGraphics();
         target.material = material;
@@ -96,6 +104,7 @@ defineSuite([
         target.outlineWidth = outlineWidth;
         target.dimensions = dimensions;
         target.shadows = shadows;
+        target.distanceDisplayCondition = distanceDisplayCondition;
 
         target.merge(source);
 
@@ -107,6 +116,7 @@ defineSuite([
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.dimensions).toBe(dimensions);
         expect(target.shadows).toBe(shadows);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
     });
 
     it('clone works', function() {
@@ -119,6 +129,7 @@ defineSuite([
         source.outlineWidth = new ConstantProperty();
         source.dimensions = new ConstantProperty();
         source.shadows = new ConstantProperty();
+        source.distanceDisplayCondition = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -129,6 +140,7 @@ defineSuite([
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.dimensions).toBe(source.dimensions);
         expect(result.shadows).toBe(source.shadows);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge throws if source undefined', function() {
@@ -148,5 +160,6 @@ defineSuite([
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'dimensions', new Cartesian3(0, 0, 0), new Cartesian3(1, 1, 1));
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
+        testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
 });

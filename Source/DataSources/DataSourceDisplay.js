@@ -115,9 +115,9 @@ define([
      * @member
      * @type {DataSourceDisplay~VisualizersCallback}
      */
-    DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
+    DataSourceDisplay.defaultVisualizersCallback = function(scene, entityCluster, dataSource) {
         var entities = dataSource.entities;
-        return [new BillboardVisualizer(scene, entities),
+        return [new BillboardVisualizer(entityCluster, entities),
                 new GeometryVisualizer(BoxGeometryUpdater, scene, entities),
                 new GeometryVisualizer(CylinderGeometryUpdater, scene, entities),
                 new GeometryVisualizer(CorridorGeometryUpdater, scene, entities),
@@ -128,9 +128,9 @@ define([
                 new GeometryVisualizer(PolylineVolumeGeometryUpdater, scene, entities),
                 new GeometryVisualizer(RectangleGeometryUpdater, scene, entities),
                 new GeometryVisualizer(WallGeometryUpdater, scene, entities),
-                new LabelVisualizer(scene, entities),
+                new LabelVisualizer(entityCluster, entities),
                 new ModelVisualizer(scene, entities),
-                new PointVisualizer(scene, entities),
+                new PointVisualizer(entityCluster, entities),
                 new PathVisualizer(scene, entities)];
     };
 
@@ -360,8 +360,19 @@ define([
         return BoundingSphereState.DONE;
     };
 
+    // terriajs version
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var visualizers = this._visualizersCallback(this._scene, dataSource);
+        var scene = this._scene;
+
+        var entityCluster;
+        if (defined(dataSource.clustering) && defined(scene.primitives)) {
+            entityCluster = dataSource.clustering;
+            entityCluster._initialize(scene);
+
+            scene.primitives.add(entityCluster);
+        }
+
+        var visualizers = this._visualizersCallback(this._scene, entityCluster, dataSource);
 
         dataSource._visualizersByDisplayID = dataSource._visualizersByDisplayID || {};
         dataSource._visualizersByDisplayID[this._displayID] = visualizers;
@@ -371,6 +382,12 @@ define([
     };
 
     DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
+        var scene = this._scene;
+        if (defined(dataSource.clustering) && defined(scene.primitives)) {
+            var entityCluster = dataSource.clustering;
+            scene.primitives.remove(entityCluster);
+        }
+
         var visualizers = dataSource._visualizersByDisplayID[this._displayID];
         if (!defined(visualizers)) {
             return;

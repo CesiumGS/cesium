@@ -35,6 +35,7 @@ define([
      * @param {Property} [options.stackPartitions=64] A Property specifying the number of stacks.
      * @param {Property} [options.slicePartitions=64] A Property specifying the number of radial slices.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipsoid casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipsoid will be displayed.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
      */
@@ -60,6 +61,9 @@ define([
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
         this._shadows = undefined;
+        this._shadowsSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -165,7 +169,14 @@ define([
          * @type {Property}
          * @default ShadowMode.DISABLED
          */
-        shadows : createPropertyDescriptor('shadows')
+        shadows : createPropertyDescriptor('shadows'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this ellipsoid will be displayed.
+         * @memberof EllipsoidGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -189,6 +200,7 @@ define([
         result.slicePartitions = this.slicePartitions;
         result.subdivisions = this.subdivisions;
         result.shadows = this.shadows;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
 
         return result;
     };
@@ -217,6 +229,7 @@ define([
         this.slicePartitions = defaultValue(this.slicePartitions, source.slicePartitions);
         this.subdivisions = defaultValue(this.subdivisions, source.subdivisions);
         this.shadows = defaultValue(this.shadows, source.shadows);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return EllipsoidGraphics;
