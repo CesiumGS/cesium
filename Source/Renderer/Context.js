@@ -9,13 +9,12 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/FeatureDetection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
-        '../Core/Math',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
+        '../Core/WebGLConstants',
         '../Shaders/ViewportQuadVS',
         './BufferUsage',
         './ClearCommand',
@@ -24,15 +23,12 @@ define([
         './DrawCommand',
         './PassState',
         './PickFramebuffer',
-        './PixelDatatype',
-        './RenderbufferFormat',
         './RenderState',
         './ShaderCache',
         './ShaderProgram',
         './Texture',
         './UniformState',
-        './VertexArray',
-        './WebGLConstants'
+        './VertexArray'
     ], function(
         clone,
         Color,
@@ -43,13 +39,12 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        FeatureDetection,
         Geometry,
         GeometryAttribute,
-        CesiumMath,
         Matrix4,
         PrimitiveType,
         RuntimeError,
+        WebGLConstants,
         ViewportQuadVS,
         BufferUsage,
         ClearCommand,
@@ -58,15 +53,12 @@ define([
         DrawCommand,
         PassState,
         PickFramebuffer,
-        PixelDatatype,
-        RenderbufferFormat,
         RenderState,
         ShaderCache,
         ShaderProgram,
         Texture,
         UniformState,
-        VertexArray,
-        WebGLConstants) {
+        VertexArray) {
     'use strict';
     /*global WebGLRenderingContext*/
     /*global WebGL2RenderingContext*/
@@ -201,6 +193,7 @@ define([
 
         // Override select WebGL defaults
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
+        webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
 
         var defaultToWebgl2 = false;
         var webgl2Supported = (typeof WebGL2RenderingContext !== 'undefined');
@@ -512,6 +505,18 @@ define([
         stencilBits : {
             get : function() {
                 return this._stencilBits;
+            }
+        },
+
+        /**
+         * <code>true</code> if the WebGL context supports stencil buffers.
+         * Stencil buffers are not supported by all systems.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         */
+        stencilBuffer : {
+            get : function() {
+                return this._stencilBits >= 8;
             }
         },
 
@@ -1108,7 +1113,7 @@ define([
      *
      * @example
      * var object = context.getObjectByPickColor(pickColor);
-     * 
+     *
      * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
@@ -1159,7 +1164,7 @@ define([
      *   primitive : this,
      *   id : this.id
      * });
-     * 
+     *
      * @see Context#getObjectByPickColor
      */
     Context.prototype.createPickId = function(object) {

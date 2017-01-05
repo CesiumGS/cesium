@@ -3,10 +3,8 @@ defineSuite([
         'Scene/Globe',
         'Core/CesiumTerrainProvider',
         'Core/defined',
-        'Core/Ellipsoid',
         'Core/loadWithXhr',
         'Core/Rectangle',
-        'Renderer/ClearCommand',
         'Scene/SingleTileImageryProvider',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -14,10 +12,8 @@ defineSuite([
         Globe,
         CesiumTerrainProvider,
         defined,
-        Ellipsoid,
         loadWithXhr,
         Rectangle,
-        ClearCommand,
         SingleTileImageryProvider,
         createScene,
         pollToPromise) {

@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/AssociativeArray',
         '../Core/BoundingSphere',
         '../Core/buildModuleUrl',
         '../Core/Cartesian2',
@@ -18,12 +17,10 @@ define([
         '../Core/isArray',
         '../Core/loadJson',
         '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
-        '../Core/PolygonGeometry',
         '../Core/Rectangle',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -32,14 +29,12 @@ define([
         '../ThirdParty/when',
         './BlendingState',
         './DepthFunction',
-        './Pass',
         './PerInstanceColorAppearance',
         './Primitive',
         './SceneMode',
         './StencilFunction',
         './StencilOperation'
     ], function(
-        AssociativeArray,
         BoundingSphere,
         buildModuleUrl,
         Cartesian2,
@@ -57,12 +52,10 @@ define([
         isArray,
         loadJson,
         CesiumMath,
-        Matrix3,
-        Matrix4,
         OrientedBoundingBox,
-        PolygonGeometry,
         Rectangle,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -71,7 +64,6 @@ define([
         when,
         BlendingState,
         DepthFunction,
-        Pass,
         PerInstanceColorAppearance,
         Primitive,
         SceneMode,
@@ -404,7 +396,7 @@ define([
      * @returns {Boolean} <code>true</code> if GroundPrimitives are supported; otherwise, returns <code>false</code>
      */
     GroundPrimitive.isSupported = function(scene) {
-        return scene.context.fragmentDepth;
+        return scene.context.fragmentDepth && scene.context.stencilBuffer;
     };
 
     GroundPrimitive._defaultMaxTerrainHeight = 9000.0;

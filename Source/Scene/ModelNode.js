@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/Matrix4'
     ], function(
-        defaultValue,
         defineProperties,
         Matrix4) {
     'use strict';

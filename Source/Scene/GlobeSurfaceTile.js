@@ -3,13 +3,11 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/IntersectionTests',
         '../Core/PixelFormat',
-        '../Core/Rectangle',
         '../Renderer/PixelDatatype',
         '../Renderer/Sampler',
         '../Renderer/Texture',
@@ -20,19 +18,16 @@ define([
         './QuadtreeTileLoadState',
         './SceneMode',
         './TerrainState',
-        './TileBoundingBox',
         './TileTerrain'
     ], function(
         BoundingSphere,
         Cartesian3,
         Cartesian4,
-        Cartographic,
         defaultValue,
         defined,
         defineProperties,
         IntersectionTests,
         PixelFormat,
-        Rectangle,
         PixelDatatype,
         Sampler,
         Texture,
@@ -43,7 +38,6 @@ define([
         QuadtreeTileLoadState,
         SceneMode,
         TerrainState,
-        TileBoundingBox,
         TileTerrain) {
     'use strict';
 

@@ -9,8 +9,8 @@ defineSuite([
         'Core/Visibility',
         'Scene/QuadtreeTile',
         'Scene/QuadtreeTileLoadState',
-        'Specs/pollToPromise',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Specs/pollToPromise'
     ], function(
         QuadtreePrimitive,
         Cartesian3,
@@ -21,8 +21,8 @@ defineSuite([
         Visibility,
         QuadtreeTile,
         QuadtreeTileLoadState,
-        pollToPromise,
-        createScene) {
+        createScene,
+        pollToPromise) {
     'use strict';
 
     var scene;
