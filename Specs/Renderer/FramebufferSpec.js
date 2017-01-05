@@ -648,8 +648,7 @@ defineSuite([
     });
 
     it('gets the status of a incomplete framebuffer', function() {
-        var webglStub = !!window.webglStub;
-        if (webglStub) {
+        if (!!window.webglStub) {
             return;
         }
 

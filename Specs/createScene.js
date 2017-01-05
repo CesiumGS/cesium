@@ -44,7 +44,7 @@ define([
 
         var scene = new Scene(options);
 
-        if (window.webglValidation) {
+        if (!!window.webglValidation) {
             var context = scene.context;
             context.validateShaderProgram = true;
             context.validateFramebuffer = true;

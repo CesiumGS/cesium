@@ -31,8 +31,6 @@ define([
         VertexArray) {
     'use strict';
 
-    var webglStub = !!window.webglStub;
-
     function createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype) {
         return function() {
             return 'Expected function \'' + item + '\' to exist on ' + actualPrototype.constructor.name + ' because it should implement interface ' + expectedInterfacePrototype.constructor.name + '.';
@@ -249,6 +247,7 @@ define([
                     compare: function(actual, expected) {
                         var actualRgba = renderAndReadPixels(actual);
 
+                        var webglStub = !!window.webglStub;
                         if (!webglStub) {
                             // The callback may have expectations that fail, which still makes the
                             // spec fail, as we desired, even though this matcher sets pass to true.
@@ -285,6 +284,7 @@ define([
                         var scene = actual;
                         var result = scene.pick(new Cartesian2(0, 0));
 
+                        var webglStub = !!window.webglStub;
                         if (!webglStub) {
                             // The callback may have expectations that fail, which still makes the
                             // spec fail, as we desired, even though this matcher sets pass to true.
@@ -305,6 +305,7 @@ define([
                         var scene = actual;
                         var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
 
+                        var webglStub = !!window.webglStub;
                         if (!webglStub) {
                             // The callback may have expectations that fail, which still makes the
                             // spec fail, as we desired, even though this matcher sets pass to true.
@@ -343,6 +344,7 @@ define([
                         var pass = true;
                         var message;
 
+                        var webglStub = !!window.webglStub;
                         if (!webglStub) {
                             if (!CesiumMath.equalsEpsilon(rgba[0], expected[0], 0, epsilon) ||
                                 !CesiumMath.equalsEpsilon(rgba[1], expected[1], 0, epsilon) ||
@@ -374,6 +376,7 @@ define([
                         var pass = true;
                         var message;
 
+                        var webglStub = !!window.webglStub;
                         if (!webglStub) {
                             if ((rgba[0] === expected[0]) &&
                                 (rgba[1] === expected[1]) &&
@@ -447,7 +450,7 @@ define([
         // the expectation is not verified.  This allows running all the WebGL
         // tests, to exercise as much Cesium code as possible, even if the system
         // doesn't have a WebGL implementation or a reliable one.
-        if (webglStub) {
+        if (!!window.webglStub) {
             return {
                 pass : true
             };
@@ -474,6 +477,7 @@ define([
         var pass = true;
         var message;
 
+        var webglStub = !!window.webglStub
         if (!webglStub) {
             if (defined(expected)) {
                 pass = (result.primitive === expected);
@@ -550,6 +554,8 @@ define([
             }]
         });
 
+        var webglStub = !!window.webglStub;
+
         if (clear) {
             ClearCommand.ALL.execute(context);
 
@@ -562,7 +568,7 @@ define([
                     (clearedRgba[3] !== expectedAlpha)) {
                     return {
                         pass : false,
-                        message : 'Expected context to render [0, 0, 0, ' + expectedAlpha + '], but rendered: ' + clearedRgba
+                        message : 'After clearing the framebuffer, expected context to render [0, 0, 0, ' + expectedAlpha + '], but rendered: ' + clearedRgba
                     };
                 }
             }

@@ -2,8 +2,6 @@
 define([
         'Core/clone',
         'Core/defaultValue',
-        'Core/defined',
-        'Core/queryToObject',
         'Renderer/Context',
         'Specs/createCanvas',
         'Specs/createFrameState',
@@ -11,8 +9,6 @@ define([
     ], function(
         clone,
         defaultValue,
-        defined,
-        queryToObject,
         Context,
         createCanvas,
         createFrameState,
@@ -29,8 +25,7 @@ define([
         var canvas = createCanvas(canvasWidth, canvasHeight);
         var context = new Context(canvas, options);
 
-        var parameters = queryToObject(window.location.search.substring(1));
-        if (defined(parameters.webglValidation)) {
+        if (!!window.webglValidation) {
             context.validateShaderProgram = true;
             context.validateFramebuffer = true;
             context.logShaderCompilation = true;
