@@ -14,6 +14,7 @@ defineSuite([
         'Core/Matrix4',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/Pass',
         'Renderer/RenderState',
         'Renderer/Sampler',
         'Renderer/ShaderProgram',
@@ -22,7 +23,6 @@ defineSuite([
         'Renderer/VertexArray',
         'Scene/BillboardCollection',
         'Scene/BlendingState',
-        'Scene/Pass',
         'Scene/TextureAtlas',
         'Specs/createScene',
         'ThirdParty/when'
@@ -41,6 +41,7 @@ defineSuite([
         Matrix4,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         Sampler,
         ShaderProgram,
@@ -49,7 +50,6 @@ defineSuite([
         VertexArray,
         BillboardCollection,
         BlendingState,
-        Pass,
         TextureAtlas,
         createScene,
         when) {

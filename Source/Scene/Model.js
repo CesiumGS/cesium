@@ -37,6 +37,7 @@ define([
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
@@ -59,7 +60,6 @@ define([
         './modelMaterialsCommon',
         './ModelMesh',
         './ModelNode',
-        './Pass',
         './SceneMode',
         './ShadowMode'
     ], function(
@@ -100,6 +100,7 @@ define([
         Buffer,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         Sampler,
         ShaderProgram,
@@ -122,7 +123,6 @@ define([
         modelMaterialsCommon,
         ModelMesh,
         ModelNode,
-        Pass,
         SceneMode,
         ShadowMode) {
     'use strict';
