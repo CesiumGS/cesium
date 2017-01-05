@@ -348,7 +348,7 @@ defineSuite([
         renderMaterial(material);
     });
 
-    it('creates a material with an compressed image uniform', function () {
+    it('creates a material with an ktx compressed image uniform', function () {
         var compressedUrl;
         var context = scene.context;
         if (context.s3tc) {
@@ -357,8 +357,29 @@ defineSuite([
             compressedUrl = './Data/Images/Green4x4ETC1.ktx';
         } else if (context.pvrtc) {
             compressedUrl = './Data/Images/Green4x4PVR.ktx';
+        } else {
+            return;
         }
 
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image :  compressedUrl
+                }
+            }
+        });
+        renderMaterial(material);
+    });
+
+    it('creates a material with an crn compressed image uniform', function () {
+        var context = scene.context;
+        if (!context.s3tc) {
+            return;
+        }
+
+        var compressedUrl = './Data/Images/Green4x4.crn';
         var material = new Material({
             strict : true,
             fabric : {

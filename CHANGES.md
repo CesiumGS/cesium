@@ -4,8 +4,9 @@ Change Log
 ### TODO
 
 * Added compressed texture support.
-   * glTF models and imagery layers can now reference [KTX](https://www.khronos.org/opengles/sdk/tools/KTX/) textures.
+   * glTF models and imagery layers can now reference [KTX](https://www.khronos.org/opengles/sdk/tools/KTX/) textures and textures compressed with [crunch](https://github.com/BinomialLLC/crunch).
    * Added `loadKTX` to load KTX textures.
+   * Added `loadCRN` to load crunch compressed textures.
    * Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_s3tc`, `WEBGL_compressed_texture_pvrtc`, and `WEBGL_compressed_texture_etc1`. [#4758](https://github.com/AnalyticalGraphicsInc/cesium/pull/4758)
 
 ### 1.30 - 2017-02-01
