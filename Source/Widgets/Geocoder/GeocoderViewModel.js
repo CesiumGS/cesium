@@ -275,7 +275,7 @@ define([
          */
         url : {
             get : function() {
-                deprecationWarning('url is deprecated', 'The url property was deprecated in Cesium 1.29 and will be removed in version 1.30.');
+                deprecationWarning('url is deprecated', 'The url property was deprecated in Cesium 1.30 and will be removed in version 1.31.');
                 return this._url;
             }
         },
@@ -289,7 +289,7 @@ define([
          */
         key : {
             get : function() {
-                deprecationWarning('key is deprecated', 'The key property was deprecated in Cesium 1.29 and will be removed in version 1.30.');
+                deprecationWarning('key is deprecated', 'The key property was deprecated in Cesium 1.30 and will be removed in version 1.31.');
                 return this._key;
             }
         },

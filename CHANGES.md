@@ -3,7 +3,7 @@ Change Log
 
 ### 1.30 - 2017-02-01
 * Deprecated
-    * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.30. These properties will be available on geocoder services that support them, like `BingMapsGeocoderService`.
+    * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.31. These properties will be available on geocoder services that support them, like `BingMapsGeocoderService`.
 * Added support for custom geocoder services and autocomplete [#4723](https://github.com/AnalyticalGraphicsInc/cesium/pull/4723).
     * Added [Custom Geocoder Sandcastle example](http://localhost:8080/Apps/Sandcastle/index.html?src=Custom%20Geocoder.html)
 * Added `GeocoderService`, an interface for geocoders.
