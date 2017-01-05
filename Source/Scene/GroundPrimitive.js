@@ -743,10 +743,10 @@ define([
             var attributeName = 'compressedAttributes';
 
             //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
-            var attributeDecl = 'attribute float ' + attributeName + ';';
+            var attributeDecl = 'attribute vec2 ' + attributeName + ';';
 
             var globalDecl = 'vec3 extrudeDirection;\n';
-            var decode = '    extrudeDirection = czm_octDecode(' + attributeName + ');\n';
+            var decode = '    extrudeDirection = czm_octDecode(' + attributeName + ', 65535.0);\n';
 
             var modifiedVS = vertexShaderSource;
             modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+extrudeDirection;/g, '');

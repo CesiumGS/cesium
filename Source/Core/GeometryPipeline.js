@@ -1346,7 +1346,7 @@ define([
     var toEncode1 = new Cartesian3();
     var toEncode2 = new Cartesian3();
     var toEncode3 = new Cartesian3();
-
+    var encodeResult2 = new Cartesian2();
     /**
      * Compresses and packs geometry normal attribute values to save memory.
      *
@@ -1365,26 +1365,28 @@ define([
 
         var extrudeAttribute = geometry.attributes.extrudeDirection;
         var i;
-        var index;
         var numVertices;
         if (defined(extrudeAttribute)) {
             //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
             var extrudeDirections = extrudeAttribute.values;
             numVertices = extrudeDirections.length / 3.0;
-            var compressedDirections = new Float32Array(numVertices);
+            var compressedDirections = new Float32Array(numVertices * 2);
 
+            var i2 = 0;
             for (i = 0; i < numVertices; ++i) {
-                index = i * 3.0;
-                Cartesian3.fromArray(extrudeDirections, index, toEncode1);
+                Cartesian3.fromArray(extrudeDirections, i * 3.0, toEncode1);
                 if (Cartesian3.equals(toEncode1, Cartesian3.ZERO)) {
+                    i2 += 2;
                     continue;
                 }
-                compressedDirections[i] = AttributeCompression.octEncodeFloat(toEncode1);
+                encodeResult2 = AttributeCompression.octEncodeInRange(toEncode1, 65535, encodeResult2);
+                compressedDirections[i2++] = encodeResult2.x;
+                compressedDirections[i2++] = encodeResult2.y;
             }
 
             geometry.attributes.compressedAttributes = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 1,
+                componentsPerAttribute : 2,
                 values : compressedDirections
             });
             delete geometry.attributes.extrudeDirection;
@@ -1442,7 +1444,7 @@ define([
                 compressedAttributes[normalIndex++] = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
             }
 
-            index = i * 3.0;
+            var index = i * 3.0;
             if (hasNormal && defined(tangents) && defined(binormals)) {
                 Cartesian3.fromArray(normals, index, toEncode1);
                 Cartesian3.fromArray(tangents, index, toEncode2);
