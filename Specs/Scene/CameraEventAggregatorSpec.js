@@ -6,8 +6,7 @@ defineSuite([
         'Core/FeatureDetection',
         'Core/KeyboardEventModifier',
         'Scene/CameraEventType',
-        'Specs/createCanvas',
-        'Specs/destroyCanvas',
+        'Specs/createCanvas'
         'Specs/DomEventSimulator'
     ], function(
         CameraEventAggregator,
@@ -16,8 +15,7 @@ defineSuite([
         FeatureDetection,
         KeyboardEventModifier,
         CameraEventType,
-        createCanvas,
-        destroyCanvas,
+        createCanvas
         DomEventSimulator) {
     'use strict';
 
@@ -31,7 +29,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyCanvas(canvas);
+        document.body.removeChild(canvas);
     });
 
     beforeEach(function() {

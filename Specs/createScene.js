@@ -5,16 +5,14 @@ define([
         'Core/defaultValue',
         'Core/defined',
         'Scene/Scene',
-        'Specs/createCanvas',
-        'Specs/destroyCanvas'
+        'Specs/createCanvas'
     ], function(
         Cartesian2,
         clone,
         defaultValue,
         defined,
         Scene,
-        createCanvas,
-        destroyCanvas) {
+        createCanvas) {
     'use strict';
 
 // TODO: Pass in stub context from Spec directory so it's not included in release builds
@@ -56,7 +54,7 @@ define([
         scene.destroyForSpecs = function() {
             var canvas = this.canvas;
             this.destroy();
-            destroyCanvas(canvas);
+            document.body.removeChild(canvas);
         };
 
         scene.renderForSpecs = function(time) {

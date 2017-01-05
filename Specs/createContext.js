@@ -4,15 +4,13 @@ define([
         'Core/defaultValue',
         'Renderer/Context',
         'Specs/createCanvas',
-        'Specs/createFrameState',
-        'Specs/destroyCanvas'
+        'Specs/createFrameState'
     ], function(
         clone,
         defaultValue,
         Context,
         createCanvas,
-        createFrameState,
-        destroyCanvas) {
+        createFrameState) {
     'use strict';
 
     function createContext(options, canvasWidth, canvasHeight) {
@@ -37,7 +35,7 @@ define([
 
         // Add function for test
         context.destroyForSpecs = function() {
-            destroyCanvas(context.canvas);
+            document.body.removeChild(context.canvas);
             return context.destroy();
         };
 
