@@ -33,6 +33,7 @@
     "email": "cesium-dev@googlegroups.com"
   },
   "dependencies": {
+    "deamdify": "^0.1.1",
     "requirejs": "^2.3.2"
   },
   "devDependencies": {
@@ -80,9 +81,6 @@
     "vinyl-source-stream": "^1.1.0",
     "vinyl-transform": "^1.0.0",
     "yargs": "^6.4.0"
-  },
-  "dependencies": {
-    "deamdify": "^0.1.1"
   },
   "scripts": {
     "start": "node server.js",
