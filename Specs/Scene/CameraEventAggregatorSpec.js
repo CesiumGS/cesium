@@ -6,7 +6,7 @@ defineSuite([
         'Core/FeatureDetection',
         'Core/KeyboardEventModifier',
         'Scene/CameraEventType',
-        'Specs/createCanvas'
+        'Specs/createCanvas',
         'Specs/DomEventSimulator'
     ], function(
         CameraEventAggregator,
@@ -15,7 +15,7 @@ defineSuite([
         FeatureDetection,
         KeyboardEventModifier,
         CameraEventType,
-        createCanvas
+        createCanvas,
         DomEventSimulator) {
     'use strict';
 

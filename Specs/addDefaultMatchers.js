@@ -477,7 +477,7 @@ define([
         var pass = true;
         var message;
 
-        var webglStub = !!window.webglStub
+        var webglStub = !!window.webglStub;
         if (!webglStub) {
             if (defined(expected)) {
                 pass = (result.primitive === expected);
