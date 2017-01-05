@@ -158,7 +158,12 @@ define([
         var imageSize = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var texture = new Uint8Array(data, byteOffset, imageSize);
+        var texture;
+        if (defined(data.buffer)) {
+            texture = new Uint8Array(data.buffer, byteOffset, imageSize);
+        } else {
+            texture = new Uint8Array(data, byteOffset, imageSize);
+        }
 
         // Some tools use a sized internal format.
         // See table 2: https://www.opengl.org/sdk/docs/man/html/glTexImage2D.xhtml
@@ -205,7 +210,7 @@ define([
         // Only use the level 0 mipmap
         if (PixelFormat.isCompressedFormat(glInternalFormat) && numberOfMipmapLevels > 1) {
             var levelSize = PixelFormat.compressedTextureSize(glInternalFormat, pixelWidth, pixelHeight);
-            texture = new Uint8Array(texture.buffer, 0, levelSize);
+            texture = texture.slice(0, levelSize);
         }
 
         return new CompressedTextureBuffer(glInternalFormat, pixelWidth, pixelHeight, texture);
