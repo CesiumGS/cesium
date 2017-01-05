@@ -15,13 +15,6 @@ define([
         createCanvas) {
     'use strict';
 
-// TODO: Pass in stub context from Spec directory so it's not included in release builds
-// TODO: merge into 3d-tiles branch
-// TODO: tech blog post?
-// TODO: Test with WebGL 2 now or later?
-// TODO: Update https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/TestingGuide with when/why to use these
-//    * index.html and command line:  npm run test-webgl-stub
-
     function createScene(options) {
         options = defaultValue(options, {});
 

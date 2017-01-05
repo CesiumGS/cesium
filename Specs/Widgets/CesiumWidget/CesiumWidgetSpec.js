@@ -54,6 +54,7 @@ defineSuite([
         options = defaultValue(options, {});
         options.contextOptions = defaultValue(options.contextOptions, {});
         options.contextOptions.webgl = defaultValue(options.contextOptions.webgl, {});
+        options.contextOptions.webglStub = !!window.webglStub;
 
         return new CesiumWidget(container, options);
     }
