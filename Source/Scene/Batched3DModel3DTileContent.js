@@ -72,6 +72,9 @@ define([
         this._features = undefined;
     }
 
+    // This can be overridden for testing purposes
+    Batched3DModel3DTileContent._deprecationWarning = deprecationWarning;
+
     defineProperties(Batched3DModel3DTileContent.prototype, {
         /**
          * Part of the {@link Cesium3DTileContent} interface.
@@ -178,11 +181,22 @@ define([
         return true;
     };
 
+    function getBatchIdAttributeName(gltf) {
+        var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, '_BATCHID');
+        if (!defined(batchIdAttributeName)) {
+            batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            if (defined(batchIdAttributeName)) {
+                Batched3DModel3DTileContent._deprecationWarning('b3dm-legacy-batchid', 'The glTF in this b3dm uses the semantic `BATCHID`. Application-specific semantics should be prefixed with an underscore: `_BATCHID`.');
+            }
+        }
+        return batchIdAttributeName;
+    }
+
     function getVertexShaderCallback(content) {
         return function(vs) {
             var batchTable = content.batchTable;
             var gltf = content._model.gltf;
-            var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            var batchIdAttributeName = getBatchIdAttributeName(gltf);
             var callback = batchTable.getVertexShaderCallback(true, batchIdAttributeName);
             return defined(callback) ? callback(vs) : vs;
         };
@@ -192,7 +206,7 @@ define([
         return function(vs) {
             var batchTable = content.batchTable;
             var gltf = content._model.gltf;
-            var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            var batchIdAttributeName = getBatchIdAttributeName(gltf);
             var callback = batchTable.getPickVertexShaderCallback(batchIdAttributeName);
             return defined(callback) ? callback(vs) : vs;
         };

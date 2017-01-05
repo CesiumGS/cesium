@@ -135,6 +135,11 @@ addStyle('Min and Max', {
 });
 
 // secondaryColor is originally a vec3 - so add vec4(0.0, 0.0, 0.0, 1.0) to make the point cloud opaque
+addStyle('Clamp and Mix', {
+    color : "color() * clamp(${temperature}, 0.1, 0.2)",
+    pointSize : "mix(${temperature}, 2.0, 0.5) * 0.2"
+});
+
 addStyle('Secondary Color', {
     color : {
         conditions : [

@@ -2,6 +2,7 @@
 defineSuite([
         'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
+        'Core/deprecationWarning',
         'Core/HeadingPitchRange',
         'Core/Transforms',
         'Specs/Cesium3DTilesTester',
@@ -9,6 +10,7 @@ defineSuite([
     ], function(
         Batched3DModel3DTileContent,
         Cartesian3,
+        deprecationWarning,
         HeadingPitchRange,
         Transforms,
         Cesium3DTilesTester,
@@ -98,6 +100,15 @@ defineSuite([
         expect(tile.batchTable.batchTableJson).toEqual(batchTableJson);
         expect(tile.batchTable.batchTableBinary).toBeUndefined();
         expect(tile.batchTable.featuresLength).toEqual(1);
+    });
+
+    it('logs deprecation warning for use of BATCHID without prefixed underscore', function() {
+        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
+            .then(function(tileset) {
+                expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
+                Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+            });
     });
 
     it('throws with empty gltf', function() {

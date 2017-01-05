@@ -36,6 +36,7 @@ define([
         '../Renderer/Context',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -53,7 +54,6 @@ define([
         './MapMode2D',
         './OIT',
         './OrthographicFrustum',
-        './Pass',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
@@ -105,6 +105,7 @@ define([
         Context,
         ContextLimits,
         DrawCommand,
+        Pass,
         PassState,
         ShaderProgram,
         ShaderSource,
@@ -122,7 +123,6 @@ define([
         MapMode2D,
         OIT,
         OrthographicFrustum,
-        Pass,
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PerspectiveFrustum,
@@ -1628,7 +1628,7 @@ define([
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
 
-    function executeCommands(scene, passState) {
+    function executeCommands(scene, passState, picking) {
         var camera = scene._camera;
         var context = scene.context;
         var us = context.uniformState;
@@ -1652,37 +1652,40 @@ define([
         us.updateFrustum(frustum);
         us.updatePass(Pass.ENVIRONMENT);
 
-        var environmentState = scene._environmentState;
-        var skyBoxCommand = environmentState.skyBoxCommand;
-        if (defined(skyBoxCommand)) {
-            executeCommand(skyBoxCommand, scene, context, passState);
-        }
-
-        if (environmentState.isSkyAtmosphereVisible) {
-            executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState);
-        }
-
         var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
+        var environmentState = scene._environmentState;
 
-        if (environmentState.isSunVisible) {
-            environmentState.sunDrawCommand.execute(context, passState);
-            if (scene.sunBloom && !useWebVR) {
-                var framebuffer;
-                if (environmentState.useGlobeDepthFramebuffer) {
-                    framebuffer = scene._globeDepth.framebuffer;
-                } else if (environmentState.useFXAA) {
-                    framebuffer = scene._fxaa.getColorFramebuffer();
-                } else {
-                    framebuffer = environmentState.originalFramebuffer;
-                }
-                scene._sunPostProcess.execute(context, framebuffer);
-                passState.framebuffer = framebuffer;
+        // Do not render environment primitives during a pick pass since they do not generate picking commands.
+        if (!picking) {
+            var skyBoxCommand = environmentState.skyBoxCommand;
+            if (defined(skyBoxCommand)) {
+                executeCommand(skyBoxCommand, scene, context, passState);
             }
-        }
 
-        // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
-        if (environmentState.isMoonVisible) {
-            environmentState.moonCommand.execute(context, passState);
+            if (environmentState.isSkyAtmosphereVisible) {
+                executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState);
+            }
+
+            if (environmentState.isSunVisible) {
+                environmentState.sunDrawCommand.execute(context, passState);
+                if (scene.sunBloom && !useWebVR) {
+                    var framebuffer;
+                    if (environmentState.useGlobeDepthFramebuffer) {
+                        framebuffer = scene._globeDepth.framebuffer;
+                    } else if (environmentState.useFXAA) {
+                        framebuffer = scene._fxaa.getColorFramebuffer();
+                    } else {
+                        framebuffer = environmentState.originalFramebuffer;
+                    }
+                    scene._sunPostProcess.execute(context, framebuffer);
+                    passState.framebuffer = framebuffer;
+                }
+            }
+
+            // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
+            if (environmentState.isMoonVisible) {
+                environmentState.moonCommand.execute(context, passState);
+            }
         }
 
         // Determine how translucent surfaces will be handled.
@@ -1958,14 +1961,14 @@ define([
             Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
             camera.frustum.xOffset = offset;
 
-            executeCommands(scene, passState);
+            executeCommands(scene, passState, picking);
 
             viewport.x = passState.viewport.width;
 
             Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
             camera.frustum.xOffset = -offset;
 
-            executeCommands(scene, passState);
+            executeCommands(scene, passState, picking);
 
             Camera.clone(savedCamera, camera);
         } else {
@@ -2116,7 +2119,7 @@ define([
             executeShadowMapCastCommands(scene);
         }
 
-        executeCommands(scene, passState);
+        executeCommands(scene, passState, picking);
     }
 
     function updateEnvironment(scene) {
@@ -2345,7 +2348,7 @@ define([
         if (defined(this._deviceOrientationCameraController)) {
             this._deviceOrientationCameraController.update();
         }
-        
+
         this._camera.update(this._mode);
         this._camera._updateCameraChanged();
     };

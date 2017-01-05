@@ -16,6 +16,7 @@ defineSuite([
         'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
         'Renderer/Framebuffer',
+        'Renderer/Pass',
         'Renderer/PixelDatatype',
         'Renderer/ShaderProgram',
         'Renderer/Texture',
@@ -23,7 +24,6 @@ defineSuite([
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/FrameState',
         'Scene/Globe',
-        'Scene/Pass',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
         'Scene/Scene',
@@ -51,6 +51,7 @@ defineSuite([
         WebMercatorProjection,
         DrawCommand,
         Framebuffer,
+        Pass,
         PixelDatatype,
         ShaderProgram,
         Texture,
@@ -58,7 +59,6 @@ defineSuite([
         EllipsoidSurfaceAppearance,
         FrameState,
         Globe,
-        Pass,
         Primitive,
         PrimitiveCollection,
         Scene,
@@ -117,7 +117,7 @@ defineSuite([
         var contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements
         expect(contextAttributes.alpha).toEqual(false);
-        expect(contextAttributes.stencil).toEqual(false);
+        expect(contextAttributes.stencil).toEqual(true);
         expect(contextAttributes.premultipliedAlpha).toEqual(true);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
     });
