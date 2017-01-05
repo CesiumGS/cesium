@@ -13,6 +13,7 @@ defineSuite([
         'Scene/SkyBox',
         'Scene/TileCoordinatesImageryProvider',
         'Specs/DomEventSimulator',
+        'Specs/getWebGLStub',
         'Specs/pollToPromise'
     ], function(
         CesiumWidget,
@@ -28,6 +29,7 @@ defineSuite([
         SkyBox,
         TileCoordinatesImageryProvider,
         DomEventSimulator,
+        getWebGLStub,
         pollToPromise) {
     'use strict';
 
@@ -54,7 +56,9 @@ defineSuite([
         options = defaultValue(options, {});
         options.contextOptions = defaultValue(options.contextOptions, {});
         options.contextOptions.webgl = defaultValue(options.contextOptions.webgl, {});
-        options.contextOptions.webglStub = !!window.webglStub;
+        if (!!window.webglStub) {
+            options.contextOptions.getWebGLStub = getWebGLStub;
+        }
 
         return new CesiumWidget(container, options);
     }

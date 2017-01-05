@@ -4,13 +4,15 @@ define([
         'Core/defaultValue',
         'Renderer/Context',
         'Specs/createCanvas',
-        'Specs/createFrameState'
+        'Specs/createFrameState',
+        'Specs/getWebGLStub'
     ], function(
         clone,
         defaultValue,
         Context,
         createCanvas,
-        createFrameState) {
+        createFrameState,
+        getWebGLStub) {
     'use strict';
 
     function createContext(options, canvasWidth, canvasHeight) {
@@ -18,7 +20,9 @@ define([
         options = clone(defaultValue(options, {}));
         options.webgl = clone(defaultValue(options.webgl, {}));
         options.webgl.antialias = defaultValue(options.webgl.antialias, false);
-        options.webglStub = !!window.webglStub;
+        if (!!window.webglStub) {
+            options.getWebGLStub = getWebGLStub;
+        }
 
         var canvas = createCanvas(canvasWidth, canvasHeight);
         var context = new Context(canvas, options);

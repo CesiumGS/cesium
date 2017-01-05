@@ -5,14 +5,16 @@ define([
         'Core/defaultValue',
         'Core/defined',
         'Scene/Scene',
-        'Specs/createCanvas'
+        'Specs/createCanvas',
+        'Specs/getWebGLStub'
     ], function(
         Cartesian2,
         clone,
         defaultValue,
         defined,
         Scene,
-        createCanvas) {
+        createCanvas,
+        getWebGLStub) {
     'use strict';
 
     function createScene(options) {
@@ -31,7 +33,9 @@ define([
         contextOptions.webgl = defaultValue(contextOptions.webgl, {});
         contextOptions.webgl.antialias = defaultValue(contextOptions.webgl.antialias, false);
         contextOptions.webgl.stencil = defaultValue(contextOptions.webgl.stencil, true);
-        contextOptions.webglStub = !!window.webglStub;
+        if (!!window.webglStub) {
+            contextOptions.getWebGLStub = getWebGLStub;
+        }
 
         var scene = new Scene(options);
 
