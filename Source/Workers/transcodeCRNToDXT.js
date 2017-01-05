@@ -90,7 +90,7 @@ define([
         var crnFormat = crunch._crn_get_dxt_format(src, srcSize);
         var format = DXT_FORMAT_MAP[crnFormat];
         if (!defined(format)) {
-            throw new RuntimeError("Unsupported DXT format");
+            throw new RuntimeError('Unsupported compressed format.');
         }
 
         // Gather basic metrics about the DXT data.

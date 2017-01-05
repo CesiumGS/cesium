@@ -1973,6 +1973,9 @@ define([
             if (gltfTexture.mimeType === 'image/ktx') {
                 loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id)).otherwise(onerror);
                 ++model._loadResources.pendingTextureLoads;
+            } else if (gltfTexture.mimeType === 'image/crn') {
+                loadCRN(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id)).otherwise(onerror);
+                ++model._loadResources.pendingTextureLoads;
             } else {
                 var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
                 loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType)
