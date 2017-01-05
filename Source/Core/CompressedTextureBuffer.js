@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        './defined',
         './defineProperties'
     ], function(
+        defined,
         defineProperties
     ) {
     'use strict';
@@ -63,6 +65,20 @@ define([
             }
         }
     });
+
+    /**
+     * Creates a shallow clone of a compressed texture buffer.
+     *
+     * @param {CompressedTextureBuffer} object The compressed texture buffer to be cloned.
+     * @return {CompressedTextureBuffer} A shallow clone of the compressed texture buffer.
+     */
+    CompressedTextureBuffer.clone = function(object) {
+        if (!defined(object)) {
+            return undefined;
+        }
+
+        return new CompressedTextureBuffer(object._format, object._width, object._height, object._buffer);
+    };
 
     return CompressedTextureBuffer;
 });
