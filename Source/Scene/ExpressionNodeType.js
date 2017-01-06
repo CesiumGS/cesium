@@ -24,9 +24,10 @@ define([
         LITERAL_NUMBER : 12,
         LITERAL_STRING : 13,
         LITERAL_COLOR : 14,
-        LITERAL_REGEX : 15,
-        LITERAL_UNDEFINED : 16,
-        LITERAL_GLOBAL : 17
+        LITERAL_VECTOR : 15,
+        LITERAL_REGEX : 16,
+        LITERAL_UNDEFINED : 17,
+        LITERAL_GLOBAL : 18
     };
 
     return freezeObject(ExpressionNodeType);
