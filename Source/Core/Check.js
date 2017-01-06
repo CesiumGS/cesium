@@ -88,7 +88,7 @@ define([
      * @param {String} name The name of the variable being tested
      * @exception {DeveloperError} test must be typeof 'function'
      */
-    Check.typeOf.function = function (test, name) {
+    Check.typeOf.func = function (test, name) {
         if (typeof test !== 'function') {
             throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'function', name));
         }
