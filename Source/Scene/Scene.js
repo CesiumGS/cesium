@@ -1176,6 +1176,11 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
+        if (defined(scene.globe)) {
+            frameState.maximumScreenSpaceError = scene.globe.maximumScreenSpaceError;
+        } else {
+            frameState.maximumScreenSpaceError = 2;
+        }
 
         clearPasses(frameState.passes);
     }
