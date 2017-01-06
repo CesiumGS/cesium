@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+        'Scene/GroundPrimitive',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/destroyObject',
@@ -13,12 +14,12 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
         'Renderer/Pass',
-        'Scene/GroundPrimitive',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
+        GroundPrimitive,
         Color,
         ColorGeometryInstanceAttribute,
         destroyObject,
@@ -32,7 +33,6 @@ defineSuite([
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
         Pass,
-        GroundPrimitive,
         PerInstanceColorAppearance,
         Primitive,
         createScene,

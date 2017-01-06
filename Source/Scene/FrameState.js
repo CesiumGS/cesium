@@ -95,6 +95,15 @@ define([
          */
         this.occluder = undefined;
 
+        /**
+         * The maximum screen-space error used to drive level-of-detail refinement.  Higher
+         * values will provide better performance but lower visual quality.
+         *
+         * @type {Number}
+         * @default 2
+         */
+        this.maximumScreenSpaceError = undefined;
+
         this.passes = {
             /**
              * <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.

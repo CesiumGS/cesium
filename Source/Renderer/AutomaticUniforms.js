@@ -1476,6 +1476,20 @@ define([
             getValue : function(uniformState) {
                 return uniformState.fogDensity;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform scalar representing the geometric tolerance per meter
+         *
+         * @alias czm_geometricToleranceOverMeter
+         * @glslUniform
+         */
+        czm_geometricToleranceOverMeter : new AutomaticUniform({
+            size: 1,
+            datatype: WebGLConstants.FLOAT,
+            getValue: function(uniformState) {
+                return uniformState.geometricToleranceOverMeter;
+            }
         })
     };
 

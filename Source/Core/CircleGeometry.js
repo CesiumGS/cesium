@@ -68,7 +68,8 @@ define([
             extrudedHeight : options.extrudedHeight,
             granularity : options.granularity,
             vertexFormat : options.vertexFormat,
-            stRotation : options.stRotation
+            stRotation : options.stRotation,
+            shadowVolume: options.shadowVolume
         };
         this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
         this._workerName = 'createCircleGeometry';
@@ -113,7 +114,8 @@ define([
         vertexFormat : new VertexFormat(),
         stRotation : undefined,
         semiMajorAxis : undefined,
-        semiMinorAxis : undefined
+        semiMinorAxis : undefined,
+        shadowVolume: undefined
     };
 
     /**
@@ -133,6 +135,7 @@ define([
         scratchOptions.granularity = ellipseGeometry._granularity;
         scratchOptions.vertexFormat = VertexFormat.clone(ellipseGeometry._vertexFormat, scratchOptions.vertexFormat);
         scratchOptions.stRotation = ellipseGeometry._stRotation;
+        scratchOptions.shadowVolume = ellipseGeometry._shadowVolume;
 
         if (!defined(result)) {
             scratchOptions.radius = ellipseGeometry._semiMajorAxis;
@@ -173,7 +176,8 @@ define([
             granularity : granularity,
             extrudedHeight : minHeight,
             height : maxHeight,
-            vertexFormat : VertexFormat.POSITION_ONLY
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            shadowVolume: true
         });
     };
 
