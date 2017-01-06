@@ -1,13 +1,11 @@
 /*global define*/
 define([
         './arrayRemoveDuplicates',
-        './Cartesian2',
         './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
         './defined',
         './Ellipsoid',
-        './EllipsoidTangentPlane',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
@@ -20,13 +18,11 @@ define([
         './WindingOrder'
     ], function(
         arrayRemoveDuplicates,
-        Cartesian2,
         Cartesian3,
         ComponentDatatype,
         defaultValue,
         defined,
         Ellipsoid,
-        EllipsoidTangentPlane,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,

@@ -35,6 +35,7 @@ define([
     function DiscardMissingTileImagePolicy(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.missingImageUrl)) {
             throw new DeveloperError('options.missingImageUrl is required.');
         }
@@ -42,6 +43,7 @@ define([
         if (!defined(options.pixelsToCheck)) {
             throw new DeveloperError('options.pixelsToCheck is required.');
         }
+        //>>includeEnd('debug');
 
         this._pixelsToCheck = options.pixelsToCheck;
         this._missingImagePixels = undefined;
@@ -108,9 +110,11 @@ define([
      * @exception {DeveloperError} <code>shouldDiscardImage</code> must not be called before the discard policy is ready.
      */
     DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function(image) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._isReady) {
             throw new DeveloperError('shouldDiscardImage must not be called before the discard policy is ready.');
         }
+        //>>includeEnd('debug');
 
         var pixelsToCheck = this._pixelsToCheck;
         var missingImagePixels = this._missingImagePixels;

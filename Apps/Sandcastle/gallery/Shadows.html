@@ -226,13 +226,12 @@ for (i = 0; i < entitiesLength; ++i) {
 
 Sandcastle.addToolbarMenu(entityToolbarOptions);
 
-Sandcastle.addToolbarButton('Toggle Shadows', function() {
-    viewer.shadows = !viewer.shadows;
+Sandcastle.addToggleButton('Shadows', viewer.shadows, function(checked) {
+    viewer.shadows = checked;
 });
 
-var entityShadows = Cesium.ShadowMode.ENABLED;
-Sandcastle.addToolbarButton('Toggle Entity Shadows', function() {
-    entityShadows = (entityShadows === Cesium.ShadowMode.ENABLED) ? Cesium.ShadowMode.DISABLED : Cesium.ShadowMode.ENABLED;
+Sandcastle.addToggleButton('Entity Shadows', true, function(checked) {
+    var entityShadows = checked ? Cesium.ShadowMode.ENABLED : Cesium.ShadowMode.DISABLED;
     for (i = 0; i < entitiesLength; ++i) {
         var entity = entities[i];
         var visual = entity.model || entity.box || entity.ellipsoid;
@@ -240,12 +239,12 @@ Sandcastle.addToolbarButton('Toggle Entity Shadows', function() {
     }
 });
 
-Sandcastle.addToolbarButton('Toggle Terrain Shadows', function() {
-    viewer.terrainShadows = (viewer.terrainShadows === Cesium.ShadowMode.ENABLED) ? Cesium.ShadowMode.DISABLED : Cesium.ShadowMode.ENABLED;
+Sandcastle.addToggleButton('Terrain Shadows', viewer.terrainShadows === Cesium.ShadowMode.ENABLED, function(checked) {
+    viewer.terrainShadows = checked ? Cesium.ShadowMode.ENABLED : Cesium.ShadowMode.DISABLED;
 });
 
-Sandcastle.addToolbarButton('Soft Shadows', function() {
-    shadowMap.softShadows = !shadowMap.softShadows;
+Sandcastle.addToggleButton('Soft Shadows', shadowMap.softShadows, function(checked) {
+    shadowMap.softShadows = checked;
 });
 
 Sandcastle.addToolbarMenu([{

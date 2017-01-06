@@ -128,10 +128,11 @@ define([
      * Determines if the tile's batch table has a property.  If it does, each feature in
      * the tile will have the property.
      *
+     * @param {Number} batchId The batchId for the feature.
      * @param {String} name The case-sensitive name of the property.
      * @returns {Boolean} <code>true</code> if the property exists; otherwise, <code>false</code>.
      */
-    Cesium3DTileContent.prototype.hasProperty = function(name) {
+    Cesium3DTileContent.prototype.hasProperty = function(batchId, name) {
         DeveloperError.throwInstantiationError();
     };
 
@@ -195,6 +196,25 @@ define([
      * @private
      */
     Cesium3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
+        DeveloperError.throwInstantiationError();
+    };
+
+    /**
+     * Apply a style to the content using a shader instead of a batch table. Currently this is only
+     * applicable for {@link PointCloud3DTileContent}.
+     * <p>
+     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+     * not part of the public Cesium API.
+     * </p>
+     *
+     * @param {FrameSate} frameState The frame state.
+     * @param {Cesium3DTileStyle} style The style.
+     *
+     * @returns {Boolean} <code>true</code> if this content is styled with a shader; otherwise, <code>false</code>.
+     *
+     * @private
+     */
+    Cesium3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
         DeveloperError.throwInstantiationError();
     };
 

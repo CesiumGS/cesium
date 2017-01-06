@@ -158,6 +158,7 @@ define([
         timeBarEle.addEventListener('touchstart', this._onTouchStart, false);
         timeBarEle.addEventListener('touchmove', this._onTouchMove, false);
         timeBarEle.addEventListener('touchend', this._onTouchEnd, false);
+        timeBarEle.addEventListener('touchcancel', this._onTouchEnd, false);
 
         this._topDiv.oncontextmenu = function() {
             return false;
@@ -205,6 +206,7 @@ define([
         timeBarEle.removeEventListener('touchstart', this._onTouchStart, false);
         timeBarEle.removeEventListener('touchmove', this._onTouchMove, false);
         timeBarEle.removeEventListener('touchend', this._onTouchEnd, false);
+        timeBarEle.removeEventListener('touchcancel', this._onTouchEnd, false);
         this.container.removeChild(this._topDiv);
         destroyObject(this);
     };
@@ -376,15 +378,17 @@ define([
 
         // epochJulian: a nearby time to be considered "zero seconds", should be a round-ish number by human standards.
         var epochJulian;
+        var gregorianDate = JulianDate.toGregorianDate(startJulian);
         if (duration > 315360000) { // 3650+ days visible, epoch is start of the first visible century.
-            epochJulian = JulianDate.fromIso8601(JulianDate.toDate(startJulian).toISOString().substring(0, 2) + '00-01-01T00:00:00Z');
+            epochJulian = JulianDate.fromDate(new Date(Date.UTC(Math.floor(gregorianDate.year / 100) * 100, 0)));
         } else if (duration > 31536000) { // 365+ days visible, epoch is start of the first visible decade.
-            epochJulian = JulianDate.fromIso8601(JulianDate.toDate(startJulian).toISOString().substring(0, 3) + '0-01-01T00:00:00Z');
+            epochJulian = JulianDate.fromDate(new Date(Date.UTC(Math.floor(gregorianDate.year / 10) * 10, 0)));
         } else if (duration > 86400) { // 1+ day(s) visible, epoch is start of the year.
-            epochJulian = JulianDate.fromIso8601(JulianDate.toDate(startJulian).toISOString().substring(0, 4) + '-01-01T00:00:00Z');
+            epochJulian = JulianDate.fromDate(new Date(Date.UTC(gregorianDate.year, 0)));
         } else { // Less than a day on timeline, epoch is midnight of the visible day.
-            epochJulian = JulianDate.fromIso8601(JulianDate.toDate(startJulian).toISOString().substring(0, 10) + 'T00:00:00Z');
+            epochJulian = JulianDate.fromDate(new Date(Date.UTC(gregorianDate.year, gregorianDate.month, gregorianDate.day)));
         }
+
         // startTime: Seconds offset of the left side of the timeline from epochJulian.
         var startTime = JulianDate.secondsDifference(this._startJulian, JulianDate.addSeconds(epochJulian, epsilonTime, new JulianDate()));
         // endTime: Seconds offset of the right side of the timeline from epochJulian.
@@ -535,7 +539,7 @@ define([
             this._mainTicSpan = -1;
         }
 
-        tics += '<span class="cesium-timeline-icon16" style="left:' + scrubX + 'px;bottom:0;background-position: 0px 0px;"></span>';
+        tics += '<span class="cesium-timeline-icon16" style="left:' + scrubX + 'px;bottom:0;background-position: 0 0;"></span>';
         timeBar.innerHTML = tics;
         this._scrubElement = timeBar.lastChild;
 
@@ -619,7 +623,7 @@ define([
         return function(e) {
             timeline._mouseMode = timelineMouseMode.none;
             if (timeline._scrubElement) {
-                timeline._scrubElement.style.backgroundPosition = '0px 0px';
+                timeline._scrubElement.style.backgroundPosition = '0 0';
             }
             timeline._timelineDrag = 0;
             timeline._timelineDragLocation = undefined;

@@ -5,7 +5,6 @@ defineSuite([
         'Core/AxisAlignedBoundingBox',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Math',
         'Core/Matrix4',
         'Core/TerrainQuantization',
         'Core/Transforms'
@@ -15,7 +14,6 @@ defineSuite([
         AxisAlignedBoundingBox,
         Cartesian2,
         Cartesian3,
-        CesiumMath,
         Matrix4,
         TerrainQuantization,
         Transforms) {
@@ -183,7 +181,7 @@ defineSuite([
         expect(encoding.getStride()).toEqual(3);
         expect(buffer.length).toEqual(encoding.getStride());
 
-        expect(encoding.decodeTextureCoordinates(buffer, 0)).toEqualEpsilon(texCoords, CesiumMath.EPSILON14);
+        expect(encoding.decodeTextureCoordinates(buffer, 0)).toEqualEpsilon(texCoords, 1.0 / 4095.0);
     });
 
     it('encodes textureCoordinates with quantization and normals', function() {
@@ -198,7 +196,7 @@ defineSuite([
         expect(encoding.getStride()).toEqual(4);
         expect(buffer.length).toEqual(encoding.getStride());
 
-        expect(encoding.decodeTextureCoordinates(buffer, 0)).toEqualEpsilon(texCoords, CesiumMath.EPSILON14);
+        expect(encoding.decodeTextureCoordinates(buffer, 0)).toEqualEpsilon(texCoords, 1.0 / 4095.0);
     });
 
     it('encodes height with quantization and without normals', function() {
@@ -214,7 +212,7 @@ defineSuite([
         expect(encoding.getStride()).toEqual(3);
         expect(buffer.length).toEqual(encoding.getStride());
 
-        expect(encoding.decodeHeight(buffer, 0)).toEqualEpsilon(height, CesiumMath.EPSILON14);
+        expect(encoding.decodeHeight(buffer, 0)).toEqualEpsilon(height, 200.0 / 4095.0);
     });
 
     it('encodes height with quantization and normals', function() {
@@ -230,7 +228,7 @@ defineSuite([
         expect(encoding.getStride()).toEqual(4);
         expect(buffer.length).toEqual(encoding.getStride());
 
-        expect(encoding.decodeHeight(buffer, 0)).toEqualEpsilon(height, CesiumMath.EPSILON14);
+        expect(encoding.decodeHeight(buffer, 0)).toEqualEpsilon(height, 200.0 / 4095.0);
     });
 
     it('gets oct-encoded normal', function() {

@@ -45,6 +45,8 @@ var tilesets = [{
 }, {
     name : 'Translucent/Opaque', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/'
 }, {
+    name : 'Multi-color', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedColors/'
+}, {
     name : 'Request Volume', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/'
 }, {
     name : 'Batched', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/'
@@ -89,17 +91,17 @@ function loadTileset(url) {
 //              "color" : "rgb(100, 255, 190)",
 //              "color" : "hsla(0.9, 0.6, 0.7, 0.75)",
                 "color" : {
-                    "conditions" : {
-                        "${Height} >= 83" : "color('purple', 0.5)",
-                        "${Height} >= 80" : "color('red')",
-                        "${Height} >= 70" : "color('orange')",
-                        "${Height} >= 12" : "color('yellow')",
-                        "${Height} >= 7" : "color('lime')",
-                        "${Height} >= 1" : "color('cyan')",
-                        "true" : "color('blue')"
-                    }
+                    "conditions" : [
+                        ["${Height} >= 83", "color('purple', 0.5)"],
+                        ["${Height} >= 80", "color('red')"],
+                        ["${Height} >= 70", "color('orange')"],
+                        ["${Height} >= 12", "color('yellow')"],
+                        ["${Height} >= 7", "color('lime')"],
+                        ["${Height} >= 1", "color('cyan')"],
+                        ["true", "color('blue')"]
+                    ]
                 },
-//              "show": false
+//              "show": false,
 //              "show" : "${Height} >= 0",
                 "meta" : {
                     "description" : "'Building id ${id} has height ${Height}.'"
@@ -240,7 +242,7 @@ handler.setInputAction(function(movement) {
 
             // evaluate feature description
             if (Cesium.defined(tileset.style.meta.description)) {
-                console.log("Description : " + tileset.style.meta.description.evaluate(feature));
+                console.log("Description : " + tileset.style.meta.description.evaluate(scene.frameState, feature));
             }
 
             feature.setProperty('clicked', true);
@@ -399,6 +401,30 @@ Sandcastle.addToolbarButton('SSE--', function() {
     console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
 });
 
+Sandcastle.addToolbarButton('Dynamic SSE on/off', function() {
+    tileset.dynamicScreenSpaceError = !tileset.dynamicScreenSpaceError;
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE density++', function() {
+    tileset.dynamicScreenSpaceErrorDensity = Math.min(tileset.dynamicScreenSpaceErrorDensity + 0.005, 1.0);
+    console.log('New dynamic SSE density: ' + tileset.dynamicScreenSpaceErrorDensity);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE density--', function() {
+    tileset.dynamicScreenSpaceErrorDensity = Math.max(tileset.dynamicScreenSpaceErrorDensity - 0.005, 0);
+    console.log('New dynamic SSE density: ' + tileset.dynamicScreenSpaceErrorDensity);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE factor++', function() {
+    tileset.dynamicScreenSpaceErrorFactor = tileset.dynamicScreenSpaceErrorFactor + 1.0;
+    console.log('New dynamic SSE factor: ' + tileset.dynamicScreenSpaceErrorFactor);
+});
+
+Sandcastle.addToolbarButton('Dynamic SSE factor--', function() {
+    tileset.dynamicScreenSpaceErrorFactor = Math.max(tileset.dynamicScreenSpaceErrorFactor - 1.0, 0);
+    console.log('New dynamic SSE factor: ' + tileset.dynamicScreenSpaceErrorFactor);
+});
+
 Sandcastle.addToolbarButton('Trim tiles (cache)', function() {
     tileset.trimLoadedTiles();
 });
@@ -420,13 +446,13 @@ function getRandomColor() {
 }
 
 function styleFunction(name) {
-    var conditions = {};
+    var conditions = [];
     var intervalSize = Math.floor(100/numberofColors);
     for (var i = numberofColors; i >= 0; --i) {
         var cond = '${' + name + '} > ' + (i * intervalSize);
-        conditions[cond] = getRandomColor();
+        conditions.push([cond, getRandomColor()]);
     }
-    conditions['true'] = getRandomColor();
+    conditions.push(['true', getRandomColor()]);
 
     tileset.style = new Cesium.Cesium3DTileStyle({
         color : {
@@ -461,13 +487,13 @@ function addStyleUI() {
     button = Sandcastle.addToolbarButton('Custom style', function() {
         var style = new Cesium.Cesium3DTileStyle();
         style.show = {
-            evaluate : function(feature) {
+            evaluate : function(frameState, feature) {
                 tileset.makeStyleDirty(); // Force the style to be constantly evaluated
                 return Cesium.Math.nextRandomNumber() > 0.5;
             }
         };
         style.color = {
-            evaluateColor : function(feature, result) {
+            evaluateColor : function(frameState, feature, result) {
                 tileset.makeStyleDirty(); // Force the style to be constantly evaluated
                 return Cesium.Color.fromRandom(undefined, result);
             }
@@ -480,6 +506,26 @@ function addStyleUI() {
         tileset.style = undefined;
     });
     styleElements.push(button);
+
+    function setColorBlendMode(colorBlendMode) {
+        return function() {
+            tileset.colorBlendMode = colorBlendMode;
+        };
+    }
+
+    var menu = Sandcastle.addToolbarMenu([{
+        text : 'Color Blend Mode'
+    }, {
+        text : 'Highlight',
+        onselect : setColorBlendMode(Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT)
+    }, {
+        text : 'Replace',
+        onselect : setColorBlendMode(Cesium.Cesium3DTileColorBlendMode.REPLACE)
+    }, {
+        text : 'Mix',
+        onselect : setColorBlendMode(Cesium.Cesium3DTileColorBlendMode.MIX)
+    }]);
+    styleElements.push(menu);
 
     button = Sandcastle.addToolbarButton('colors++', function() {
         ++numberofColors;
@@ -495,7 +541,7 @@ function addStyleUI() {
 
     var leftOperand = 0;
     var rightOperand = 0;
-    var op = '===';
+    var op = '==';
 
     // Left operand (properties and literals)
 
@@ -509,7 +555,7 @@ function addStyleUI() {
 
     // Operator
 
-    var ops = ['<', '<=', '>', '>=', '===', '!=='];
+    var ops = ['<', '<=', '>', '>=', '==', '!='];
     var operators = [{
         text : 'Operator',
         onselect : function() {
@@ -530,7 +576,7 @@ function addStyleUI() {
        });
     }
 
-    var menu = Sandcastle.addToolbarMenu(operators);
+    menu = Sandcastle.addToolbarMenu(operators);
     styleElements.push(menu);
 
     // Right operand

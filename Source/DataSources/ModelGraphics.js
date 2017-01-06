@@ -49,6 +49,12 @@ define([
      * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
+     * @param {Property} [options.silhouetteColor=Color.RED] A Property specifying the {@link Color} of the silhouette.
+     * @param {Property} [options.silhouetteSize=0.0] A numeric Property specifying the size of the silhouette in pixels.
+     * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} that blends with the model's rendered color.
+     * @param {Property} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
+     * @param {Property} [options.colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -74,6 +80,18 @@ define([
         this._nodeTransformationsSubscription = undefined;
         this._heightReference = undefined;
         this._heightReferenceSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
+        this._silhouetteColor = undefined;
+        this._silhouetteColorSubscription = undefined;
+        this._silhouetteSize = undefined;
+        this._silhouetteSizeSubscription = undefined;
+        this._color = undefined;
+        this._colorSubscription = undefined;
+        this._colorBlendMode = undefined;
+        this._colorBlendModeSubscription = undefined;
+        this._colorBlendAmount = undefined;
+        this._colorBlendAmountSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -176,7 +194,56 @@ define([
          * @type {Property}
          * @default HeightReference.NONE
          */
-        heightReference : createPropertyDescriptor('heightReference')
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this model will be displayed.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the Property specifying the {@link Color} of the silhouette.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default Color.RED
+         */
+        silhouetteColor: createPropertyDescriptor('silhouetteColor'),
+
+        /**
+         * Gets or sets the numeric Property specifying the size of the silhouette in pixels.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default 0.0
+         */
+        silhouetteSize : createPropertyDescriptor('silhouetteSize'),
+
+        /**
+         * Gets or sets the Property specifying the {@link Color} that blends with the model's rendered color.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default Color.WHITE
+         */
+        color : createPropertyDescriptor('color'),
+
+        /**
+         * Gets or sets the enum Property specifying how the color blends with the model.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default ColorBlendMode.HIGHLIGHT
+         */
+        colorBlendMode : createPropertyDescriptor('colorBlendMode'),
+
+        /**
+         * A numeric Property specifying the color strength when the <code>colorBlendMode</code> is MIX.
+         * A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with
+         * any value in-between resulting in a mix of the two.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default 0.5
+         */
+        colorBlendAmount : createPropertyDescriptor('colorBlendAmount')
     });
 
     /**
@@ -199,6 +266,12 @@ define([
         result.runAnimations = this.runAnimations;
         result.nodeTransformations = this.nodeTransformations;
         result.heightReference = this._heightReference;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.silhouetteColor = this.silhouetteColor;
+        result.silhouetteSize = this.silhouetteSize;
+        result.color = this.color;
+        result.colorBlendMode = this.colorBlendMode;
+        result.colorBlendAmount = this.colorBlendAmount;
 
         return result;
     };
@@ -225,6 +298,12 @@ define([
         this.uri = defaultValue(this.uri, source.uri);
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.silhouetteColor = defaultValue(this.silhouetteColor, source.silhouetteColor);
+        this.silhouetteSize = defaultValue(this.silhouetteSize, source.silhouetteSize);
+        this.color = defaultValue(this.color, source.color);
+        this.colorBlendMode = defaultValue(this.colorBlendMode, source.colorBlendMode);
+        this.colorBlendAmount = defaultValue(this.colorBlendAmount, source.colorBlendAmount);
 
         var sourceNodeTransformations = source.nodeTransformations;
         if (defined(sourceNodeTransformations)) {

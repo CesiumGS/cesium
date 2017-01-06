@@ -1,8 +1,6 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTile',
-        'Scene/TileBoundingRegion',
-        'Scene/TileOrientedBoundingBox',
         'Core/Cartesian3',
         'Core/clone',
         'Core/defined',
@@ -12,11 +10,11 @@ defineSuite([
         'Core/Rectangle',
         'Core/SphereOutlineGeometry',
         'Core/Transforms',
+        'Scene/TileBoundingRegion',
+        'Scene/TileOrientedBoundingBox',
         'Specs/createScene'
     ], function(
         Cesium3DTile,
-        TileBoundingRegion,
-        TileOrientedBoundingBox,
         Cartesian3,
         clone,
         defined,
@@ -26,6 +24,8 @@ defineSuite([
         Rectangle,
         SphereOutlineGeometry,
         Transforms,
+        TileBoundingRegion,
+        TileOrientedBoundingBox,
         createScene) {
     'use strict';
 

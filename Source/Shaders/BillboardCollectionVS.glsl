@@ -9,6 +9,7 @@ attribute vec4 compressedAttribute2;        // image height, color, pick color, 
 attribute vec4 eyeOffset;                   // eye offset in meters, 4 bytes free (texture range)
 attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
+attribute vec2 distanceDisplayCondition;    // near, far
 
 varying vec2 v_textureCoordinates;
 
@@ -37,7 +38,9 @@ const float SHIFT_RIGHT1 = 1.0 / 2.0;
 
 vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, bool validAlignedAxis, float rotation, bool sizeInMeters)
 {
-    vec2 halfSize = imageSize * scale * czm_resolutionScale;
+    // Note the halfSize cannot be computed in JavaScript because it is sent via
+    // compressed vertex attributes that coerce it to an integer.
+    vec2 halfSize = imageSize * scale * czm_resolutionScale * 0.5;
     halfSize *= ((direction * 2.0) - 1.0);
 
     vec2 originTranslate = origin * abs(halfSize);
@@ -202,7 +205,7 @@ void main()
     
     ///////////////////////////////////////////////////////////////////////////     
 
-#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(EYE_DISTANCE_PIXEL_OFFSET)
+#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(EYE_DISTANCE_PIXEL_OFFSET) || defined(DISTANCE_DISPLAY_CONDITION)
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -238,6 +241,15 @@ void main()
 #ifdef EYE_DISTANCE_PIXEL_OFFSET
     float pixelOffsetScale = czm_nearFarScalar(pixelOffsetScaleByDistance, lengthSq);
     pixelOffset *= pixelOffsetScale;
+#endif
+
+#ifdef DISTANCE_DISPLAY_CONDITION
+    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x;
+    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y;
+    if (lengthSq < nearSq || lengthSq > farSq)
+    {
+        positionEC.xyz = vec3(0.0);
+    }
 #endif
 
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);

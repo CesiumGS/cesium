@@ -65,14 +65,18 @@ define([
         this._url = url;
         this._mapId = mapId;
         this._accessToken = MapboxApi.getAccessToken(options.accessToken);
+        this._accessTokenErrorCredit = MapboxApi.getErrorCredit(options.key);
         var format = defaultValue(options.format, 'png');
-        this._format = format.replace('.', '');
+        if (!/\./.test(format)) {
+            format = '.' + format;
+        }
+        this._format = format;
 
         var templateUrl = url;
         if (!trailingSlashRegex.test(url)) {
             templateUrl += '/';
         }
-        templateUrl += mapId + '/{z}/{x}/{y}.' + this._format;
+        templateUrl += mapId + '/{z}/{x}/{y}' + this._format;
         if (defined(this._accessToken)) {
             templateUrl += '?access_token=' + this._accessToken;
         }
@@ -299,7 +303,11 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     MapboxImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        return defaultCredit2;
+        var credits = defaultCredit2.slice();
+        if (defined(this._accessTokenErrorCredit)) {
+            credits.push(this._accessTokenErrorCredit);
+        }
+        return credits;
     };
 
     /**

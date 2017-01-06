@@ -73,9 +73,11 @@ define([
      */
     function VRTheWorldTerrainProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.url)) {
             throw new DeveloperError('options.url is required.');
         }
+        //>>includeEnd('debug');
 
         this._url = options.url;
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
@@ -190,9 +192,11 @@ define([
          */
         tilingScheme : {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
                 if (!this.ready) {
                     throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
                 }
+                //>>includeEnd('debug');
 
                 return this._tilingScheme;
             }
@@ -262,9 +266,11 @@ define([
      *          pending and the request will be retried later.
      */
     VRTheWorldTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this.ready) {
             throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
         }
+        //>>includeEnd('debug');
 
         var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
         var url = this._url + level + '/' + x + '/' + (yTiles - y - 1) + '.tif?cesium=true';
@@ -309,9 +315,11 @@ define([
      * @returns {Number} The maximum geometric error.
      */
     VRTheWorldTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this.ready) {
             throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
         }
+        //>>includeEnd('debug');
         return this._levelZeroMaximumGeometricError / (1 << level);
     };
 

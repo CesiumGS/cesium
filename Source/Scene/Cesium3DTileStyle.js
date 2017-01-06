@@ -1,16 +1,16 @@
 /*global define*/
 define([
         '../Core/clone',
-       '../Core/defaultValue',
-       '../Core/defined',
-       '../Core/defineProperties',
-       '../Core/DeveloperError',
-       '../Core/isArray',
-       '../Core/loadJson',
-       '../Core/RequestScheduler',
-       '../ThirdParty/when',
-       './ConditionsExpression',
-       './Expression'
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/isArray',
+        '../Core/loadJson',
+        '../Core/RequestScheduler',
+        '../ThirdParty/when',
+        './ConditionsExpression',
+        './Expression'
     ], function(
         clone,
         defaultValue,
@@ -27,6 +27,7 @@ define([
 
     var DEFAULT_JSON_COLOR_EXPRESSION = 'color("#ffffff")';
     var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
+    var DEFAULT_JSON_NUMBER_EXPRESSION = 1.0;
 
     /**
      * Evaluates an expression defined using the
@@ -40,11 +41,11 @@ define([
      * @example
      * tileset.style = new Cesium.Cesium3DTileStyle({
      *     color : {
-     *         conditions : {
-     *             '${Height} >= 100' : 'color("purple", 0.5)',
-     *             '${Height} >= 50' : 'color("red")',
-     *             'true' : 'color("blue")'
-     *         }
+     *         conditions : [
+     *             ['${Height} >= 100', 'color("purple", 0.5)'],
+     *             ['${Height} >= 50', 'color("red")'],
+     *             ['true', 'color("blue")']
+     *         ]
      *     },
      *     show : '${Height} > 0',
      *     meta : {
@@ -60,7 +61,15 @@ define([
         this._readyPromise = when.defer();
         this._color = undefined;
         this._show = undefined;
+        this._pointSize = undefined;
         this._meta = undefined;
+
+        this._colorShaderFunction = undefined;
+        this._showShaderFunction = undefined;
+        this._pointSizeShaderFunction = undefined;
+        this._colorShaderFunctionReady = false;
+        this._showShaderFunctionReady = false;
+        this._pointSizeShaderFunctionReady = false;
 
         var style = this;
         if (typeof data === 'string') {
@@ -80,8 +89,24 @@ define([
         that._style = clone(styleJson, true);
 
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
+
+        if (!defined(styleJson.color)) {
+            // If there is no color style do not create a shader function. Otherwise a function would be created by the default style (white).
+            that._colorShaderFunctionReady = true;
+        }
+
+        if (!defined(styleJson.show)) {
+            // If there is no show style do not create a shader function.
+            that._showShaderFunctionReady = true;
+        }
+
+        if (!defined(styleJson.pointSize)) {
+            that._pointSizeShaderFunctionReady = true;
+        }
+
         var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
+        var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_JSON_NUMBER_EXPRESSION);
 
         var color;
         if (typeof(colorExpression) === 'string') {
@@ -97,9 +122,22 @@ define([
             show = new Expression(String(showExpression));
         } else if (typeof(showExpression) === 'string') {
             show = new Expression(showExpression);
+        } else if (defined(showExpression.conditions)) {
+            show = new ConditionsExpression(showExpression);
         }
 
         that._show = show;
+
+        var pointSize;
+        if (typeof(pointSizeExpression) === 'number') {
+            pointSize = new Expression(String(pointSizeExpression));
+        } else if (typeof(pointSizeExpression) === 'string') {
+            pointSize = new Expression(pointSizeExpression);
+        } else if (defined(pointSizeExpression.conditions)) {
+            pointSize = new ConditionsExpression(pointSizeExpression);
+        }
+
+        that._pointSize = pointSize;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -189,13 +227,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     show : '(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)'
          * });
-         * style.show.evaluate(feature); // returns true or false depending on the feature's properties
+         * style.show.evaluate(frameState, feature); // returns true or false depending on the feature's properties
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override show expression with a custom function
          * style.show = {
-         *     evaluate : function(feature) {
+         *     evaluate : function(frameState, feature) {
          *         return true;
          *     }
          * };
@@ -213,6 +251,7 @@ define([
                 return this._show;
             },
             set : function(value) {
+                this._showShaderFunctionReady = false;
                 this._show = value;
             }
         },
@@ -233,13 +272,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     color : '(${Temperature} > 90) ? color("red") : color("white")'
          * });
-         * style.color.evaluateColor(feature, result); // returns a Cesium.Color object
+         * style.color.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override color expression with a custom function
          * style.color = {
-         *     evaluateColor : function(feature, result) {
+         *     evaluateColor : function(frameState, feature, result) {
          *         return Cesium.Color.clone(Cesium.Color.WHITE, result);
          *     }
          * };
@@ -257,7 +296,53 @@ define([
                 return this._color;
             },
             set : function(value) {
+                this._colorShaderFunctionReady = false;
                 this._color = value;
+            }
+        },
+
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointSize</code> property.
+         * <p>
+         * The expression must return or convert to a <code>Number</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     pointSize : '(${Temperature} > 90) ? 2.0 : 1.0'
+         * });
+         * style.pointSize.evaluate(frameState, feature); // returns a Number
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointSize expression with a custom function
+         * style.pointSize = {
+         *     evaluate : function(frameState, feature) {
+         *         return 1.0;
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        pointSize : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._pointSize;
+            },
+            set : function(value) {
+                this._pointSizeShaderFunctionReady = false;
+                this._pointSize = value;
             }
         },
 
@@ -277,7 +362,7 @@ define([
          *         description : '"Building id ${id} has height ${Height}."'
          *     }
          * });
-         * style.meta.description.evaluate(feature); // returns a String with the substituted variables
+         * style.meta.description.evaluate(frameState, feature); // returns a String with the substituted variables
          *
          * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
@@ -294,9 +379,74 @@ define([
             set : function(value) {
                 this._meta = value;
             }
-        },
-
+        }
     });
+
+    /**
+     * Gets the color shader function for this style.
+     *
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+     *
+     * @returns {String} The shader function.
+     *
+     * @private
+     */
+    Cesium3DTileStyle.prototype.getColorShaderFunction = function(functionName, attributePrefix, shaderState) {
+        if (this._colorShaderFunctionReady) {
+            // Return the cached result, may be undefined
+            return this._colorShaderFunction;
+        }
+
+        this._colorShaderFunctionReady = true;
+        this._colorShaderFunction = this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4');
+        return this._colorShaderFunction;
+    };
+
+    /**
+     * Gets the show shader function for this style.
+     *
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+     *
+     * @returns {String} The shader function.
+     *
+     * @private
+     */
+    Cesium3DTileStyle.prototype.getShowShaderFunction = function(functionName, attributePrefix, shaderState) {
+        if (this._showShaderFunctionReady) {
+            // Return the cached result, may be undefined
+            return this._showShaderFunction;
+        }
+
+        this._showShaderFunctionReady = true;
+        this._showShaderFunction = this.show.getShaderFunction(functionName, attributePrefix, shaderState, 'bool');
+        return this._showShaderFunction;
+    };
+
+    /**
+     * Gets the pointSize shader function for this style.
+     *
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+     *
+     * @returns {String} The shader function.
+     *
+     * @private
+     */
+    Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function(functionName, attributePrefix, shaderState) {
+        if (this._pointSizeShaderFunctionReady) {
+            // Return the cached result, may be undefined
+            return this._pointSizeShaderFunction;
+        }
+
+        this._pointSizeShaderFunctionReady = true;
+        this._pointSizeShaderFunction = this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float');
+        return this._pointSizeShaderFunction;
+    };
 
     return Cesium3DTileStyle;
 });

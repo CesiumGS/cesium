@@ -2,7 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Renderer/WebGLConstants'
+        '../Core/WebGLConstants'
     ], function(
         defaultValue,
         defined,
@@ -167,7 +167,7 @@ define([
     var vertexShaderCount = 0;
     var fragmentShaderCount = 0;
     var programCount = 0;
-    function generateTechnique(gltf, khrMaterialsCommon, lightParameters) {
+    function generateTechnique(gltf, khrMaterialsCommon, lightParameters, options) {
         var techniques = gltf.techniques;
         var shaders = gltf.shaders;
         var programs = gltf.programs;
@@ -195,7 +195,7 @@ define([
         var techniqueParameters = {
             // Add matrices
             modelViewMatrix: {
-                semantic: 'MODELVIEW',
+                semantic: options.useCesiumRTCMatrixInShaders ? 'CESIUM_RTC_MODELVIEW' : 'MODELVIEW',
                 type: WebGLConstants.FLOAT_MAT4
             },
             projectionMatrix: {
@@ -235,6 +235,11 @@ define([
                     type: valType
                 };
             }
+        }
+
+        // Give the diffuse uniform a semantic to support color replacement in 3D Tiles
+        if (defined(techniqueParameters.diffuse)) {
+            techniqueParameters.diffuse.semantic = '_3DTILESDIFFUSE';
         }
 
         // Copy light parameters into technique parameters
@@ -343,6 +348,15 @@ define([
 
             vertexShader += 'attribute vec4 a_joint;\n';
             vertexShader += 'attribute vec4 a_weight;\n';
+        }
+        
+        if (options.addBatchIdToGeneratedShaders) {
+            techniqueAttributes.a_batchId = 'batchId';
+            techniqueParameters.batchId = {
+                semantic: '_BATCHID',
+                type: WebGLConstants.FLOAT
+            };
+            vertexShader += 'attribute float a_batchId;\n';
         }
 
         var hasSpecular = hasNormals && ((lightingModel === 'BLINN') || (lightingModel === 'PHONG')) &&
@@ -622,7 +636,7 @@ define([
         } else {
             value = paramValue;
         }
-     
+
         switch (paramName)  {
             case 'ambient':
                 return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
@@ -636,13 +650,13 @@ define([
                 return WebGLConstants.FLOAT;
             case 'transparency':
                 return WebGLConstants.FLOAT;
-                
+
             // these two are usually not used directly within shaders,
             // they are just added here for completeness
             case 'transparent':
-                return WebGLConstants.BOOL;                
+                return WebGLConstants.BOOL;
             case 'doubleSided':
-                return WebGLConstants.BOOL;                
+                return WebGLConstants.BOOL;
         }
     }
 
@@ -678,10 +692,12 @@ define([
      *
      * @private
      */
-    function modelMaterialsCommon(gltf) {
+    function modelMaterialsCommon(gltf, options) {
         if (!defined(gltf)) {
             return undefined;
         }
+        
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var hasExtension = false;
         var extensionsUsed = gltf.extensionsUsed;
@@ -708,6 +724,9 @@ define([
             }
 
             var lightParameters = generateLightParameters(gltf);
+            
+            var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
+            var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
 
             var techniques = {};
             var materials = gltf.materials;
@@ -719,7 +738,10 @@ define([
                         var techniqueKey = getTechniqueKey(khrMaterialsCommon);
                         var technique = techniques[techniqueKey];
                         if (!defined(technique)) {
-                            technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters);
+                            technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters, {
+                                addBatchIdToGeneratedShaders : addBatchIdToGeneratedShaders,
+                                useCesiumRTCMatrixInShaders : hasCesiumRTCExtension
+                            });
                             techniques[techniqueKey] = technique;
                         }
 

@@ -3,6 +3,7 @@ defineSuite([
         'DataSources/PathVisualizer',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Matrix4',
         'Core/ReferenceFrame',
@@ -24,6 +25,7 @@ defineSuite([
         PathVisualizer,
         Cartesian3,
         Color,
+        DistanceDisplayCondition,
         JulianDate,
         Matrix4,
         ReferenceFrame,
@@ -152,6 +154,7 @@ defineSuite([
         path.material.outlineColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
         path.material.outlineWidth = new ConstantProperty(2.5);
         path.width = new ConstantProperty(12.5);
+        path.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 20.0));
         path.leadTime = new ConstantProperty(25);
         path.trailTime = new ConstantProperty(10);
 
@@ -166,6 +169,7 @@ defineSuite([
         expect(primitive.positions[2]).toEqual(testObject.position.getValue(JulianDate.addSeconds(updateTime, path.leadTime.getValue(), new JulianDate())));
         expect(primitive.show).toEqual(testObject.path.show.getValue(updateTime));
         expect(primitive.width).toEqual(testObject.path.width.getValue(updateTime));
+        expect(primitive.distanceDisplayCondition).toEqual(testObject.path.distanceDisplayCondition.getValue(updateTime));
 
         var material = primitive.material;
         expect(material.uniforms.color).toEqual(testObject.path.material.color.getValue(updateTime));

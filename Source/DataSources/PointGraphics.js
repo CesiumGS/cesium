@@ -30,6 +30,7 @@ define([
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this point will be displayed.
      */
     function PointGraphics(options) {
         this._color = undefined;
@@ -48,6 +49,8 @@ define([
         this._translucencyByDistanceSubscription = undefined;
         this._heightReference = undefined;
         this._heightReferenceSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -132,7 +135,14 @@ define([
          * @type {Property}
          * @default HeightReference.NONE
          */
-        heightReference : createPropertyDescriptor('heightReference')
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this point will be displayed.
+         * @memberof PointGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -153,6 +163,7 @@ define([
         result.scaleByDistance = this.scaleByDistance;
         result.translucencyByDistance = this._translucencyByDistance;
         result.heightReference = this.heightReference;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
 
@@ -177,6 +188,7 @@ define([
         this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return PointGraphics;

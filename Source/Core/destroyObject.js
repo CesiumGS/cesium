@@ -42,7 +42,9 @@ define([
         message = defaultValue(message, 'This object was destroyed, i.e., destroy() was called.');
 
         function throwOnDestroyed() {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(message);
+            //>>includeEnd('debug');
         }
 
         for ( var key in object) {

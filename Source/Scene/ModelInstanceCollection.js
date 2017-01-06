@@ -17,6 +17,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
+        './getAttributeOrUniformBySemantic',
         './Model',
         './SceneMode',
         './ShadowMode'
@@ -38,6 +39,7 @@ define([
         DrawCommand,
         ShaderSource,
         when,
+        getAttributeOrUniformBySemantic,
         Model,
         SceneMode,
         ShadowMode) {
@@ -193,8 +195,9 @@ define([
         var instancedUniformsByProgram = {};
         collection._instancedUniformsByProgram = instancedUniformsByProgram;
 
-        var modelSemantics = ['MODEL', 'MODELVIEW', 'MODELVIEWPROJECTION', 'MODELINVERSE', 'MODELVIEWINVERSE', 'MODELVIEWPROJECTIONINVERSE', 'MODELINVERSETRANSPOSE', 'MODELVIEWINVERSETRANSPOSE'];
-        var supportedSemantics = ['MODELVIEW', 'MODELVIEWPROJECTION', 'MODELVIEWINVERSETRANSPOSE'];
+        // When using CESIUM_RTC_MODELVIEW the CESIUM_RTC center is ignored. Instances are always rendered relative-to-center.
+        var modelSemantics = ['MODEL', 'MODELVIEW', 'CESIUM_RTC_MODELVIEW', 'MODELVIEWPROJECTION', 'MODELINVERSE', 'MODELVIEWINVERSE', 'MODELVIEWPROJECTIONINVERSE', 'MODELINVERSETRANSPOSE', 'MODELVIEWINVERSETRANSPOSE'];
+        var supportedSemantics = ['MODELVIEW', 'CESIUM_RTC_MODELVIEW', 'MODELVIEWPROJECTION', 'MODELVIEWINVERSETRANSPOSE'];
 
         var gltf = collection._model.gltf;
         var techniques = gltf.techniques;
@@ -251,7 +254,7 @@ define([
                 if (instancedUniforms.hasOwnProperty(uniform)) {
                     var semantic = instancedUniforms[uniform];
                     var varName;
-                    if (semantic === 'MODELVIEW') {
+                    if (semantic === 'MODELVIEW' || semantic === 'CESIUM_RTC_MODELVIEW') {
                         varName = 'czm_instanced_modelView';
                     } else if (semantic === 'MODELVIEWPROJECTION') {
                         varName = 'czm_instanced_modelViewProjection';
@@ -302,7 +305,7 @@ define([
             vertexShaderCached = instancedSource;
 
             if (usesBatchTable) {
-                instancedSource = collection._batchTable.getVertexShaderCallback()(instancedSource);
+                instancedSource = collection._batchTable.getVertexShaderCallback(true, 'a_batchId')(instancedSource);
             }
 
             return instancedSource;
@@ -311,8 +314,12 @@ define([
 
     function getFragmentShaderCallback(collection) {
         return function(fs) {
-            if (defined(collection._batchTable)) {
-                fs = collection._batchTable.getFragmentShaderCallback()(fs);
+            var batchTable = collection._batchTable;
+            if (defined(batchTable)) {
+                var gltf = collection._model.gltf;
+                var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
+                var colorBlendMode = batchTable._content._tileset.colorBlendMode;
+                fs = batchTable.getFragmentShaderCallback(true, colorBlendMode, diffuseUniformName)(fs);
             }
             return fs;
         };
@@ -323,7 +330,7 @@ define([
             // Use the vertex shader that was generated earlier
             vs = vertexShaderCached;
             if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getPickVertexShaderCallback()(vs);
+                vs = collection._batchTable.getPickVertexShaderCallback('a_batchId')(vs);
             }
             return vs;
         };
@@ -386,7 +393,7 @@ define([
     function getVertexShaderNonInstancedCallback(collection) {
         return function(vs) {
             if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getVertexShaderCallback()(vs);
+                vs = collection._batchTable.getVertexShaderCallback(true, 'a_batchId')(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;
             }
@@ -397,7 +404,7 @@ define([
     function getPickVertexShaderNonInstancedCallback(collection) {
         return function(vs) {
             if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getPickVertexShaderCallback()(vs);
+                vs = collection._batchTable.getPickVertexShaderCallback('a_batchId')(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;
             }
@@ -580,6 +587,7 @@ define([
                 modelOptions.cacheKey = collection._url + '#instanced';
             }
         } else {
+            // TODO : does non-instancing path need to set the cache key?
             modelOptions.vertexShaderLoaded = getVertexShaderNonInstancedCallback(collection);
             modelOptions.fragmentShaderLoaded = getFragmentShaderCallback(collection);
             modelOptions.uniformMapLoaded = getUniformMapNonInstancedCallback(collection, context);

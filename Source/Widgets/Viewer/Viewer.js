@@ -8,7 +8,6 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
-        '../../Core/Fullscreen',
         '../../Core/isArray',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
@@ -22,7 +21,6 @@ define([
         '../../DataSources/Property',
         '../../Scene/ImageryLayer',
         '../../Scene/SceneMode',
-        '../../Scene/ShadowMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../Animation/Animation',
@@ -52,7 +50,6 @@ define([
         destroyObject,
         DeveloperError,
         EventHelper,
-        Fullscreen,
         isArray,
         Matrix4,
         Rectangle,
@@ -66,7 +63,6 @@ define([
         Property,
         ImageryLayer,
         SceneMode,
-        ShadowMode,
         knockout,
         when,
         Animation,
@@ -473,6 +469,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             toolbar.appendChild(geocoderContainer);
             geocoder = new Geocoder({
                 container : geocoderContainer,
+                geocoderServices: defined(options.geocoder) ? (isArray(options.geocoder) ? options.geocoder : [options.geocoder]) : undefined,
                 scene : cesiumWidget.scene
             });
             // Subscribe to search so that we can clear the trackedEntity when it is clicked.
@@ -499,9 +496,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         // SceneModePicker
         // By default, we silently disable the scene mode picker if scene3DOnly is true,
         // but if sceneModePicker is explicitly set to true, throw an error.
+        //>>includeStart('debug', pragmas.debug);
         if ((options.sceneModePicker === true) && scene3DOnly) {
             throw new DeveloperError('options.sceneModePicker is not available when options.scene3DOnly is set to true.');
         }
+        //>>includeEnd('debug');
 
         var sceneModePicker;
         if (!scene3DOnly && (!defined(options.sceneModePicker) || options.sceneModePicker !== false)) {
@@ -1206,6 +1205,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
         /**
          * Gets or sets the data source to track with the viewer's clock.
+         * @memberof Viewer.prototype
          * @type {DataSource}
          */
         clockTrackedDataSource : {
@@ -1265,6 +1265,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (defined(baseLayerPickerDropDown)) {
             baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
+        }
+
+        if (defined(this._geocoder)) {
+            var geocoderSuggestions = this._geocoder.searchSuggestionsContainer;
+            geocoderSuggestions.style.maxHeight = panelMaxHeight + 'px';
         }
 
         if (defined(this._infoBox)) {

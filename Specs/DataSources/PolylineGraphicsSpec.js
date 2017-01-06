@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/PolylineGraphics',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'Scene/ShadowMode',
@@ -10,6 +11,7 @@ defineSuite([
     ], function(
         PolylineGraphics,
         Color,
+        DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
         ShadowMode,
@@ -25,7 +27,8 @@ defineSuite([
             width : 1,
             followSurface : false,
             granularity : 2,
-            shadows : ShadowMode.DISABLED
+            shadows : ShadowMode.DISABLED,
+            distanceDisplayCondition : new DistanceDisplayCondition()
         };
 
         var polyline = new PolylineGraphics(options);
@@ -36,6 +39,7 @@ defineSuite([
         expect(polyline.followSurface).toBeInstanceOf(ConstantProperty);
         expect(polyline.granularity).toBeInstanceOf(ConstantProperty);
         expect(polyline.shadows).toBeInstanceOf(ConstantProperty);
+        expect(polyline.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
 
         expect(polyline.material.color.getValue()).toEqual(options.material);
         expect(polyline.positions.getValue()).toEqual(options.positions);
@@ -44,6 +48,7 @@ defineSuite([
         expect(polyline.followSurface.getValue()).toEqual(options.followSurface);
         expect(polyline.granularity.getValue()).toEqual(options.granularity);
         expect(polyline.shadows.getValue()).toEqual(options.shadows);
+        expect(polyline.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -55,6 +60,7 @@ defineSuite([
         source.followSurface = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
         var target = new PolylineGraphics();
         target.merge(source);
@@ -65,6 +71,7 @@ defineSuite([
         expect(target.followSurface).toBe(source.followSurface);
         expect(target.granularity).toBe(source.granularity);
         expect(target.shadows).toBe(source.shadows);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -76,6 +83,7 @@ defineSuite([
         source.followSurface = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.shadows = new ConstantProperty();
+        source.distanceDisplayCondition = new ConstantProperty();
 
         var color = new ColorMaterialProperty();
         var positions = new ConstantProperty();
@@ -84,6 +92,7 @@ defineSuite([
         var followSurface = new ConstantProperty();
         var granularity = new ConstantProperty();
         var shadows = new ConstantProperty();
+        var distanceDisplayCondition = new ConstantProperty();
 
         var target = new PolylineGraphics();
         target.material = color;
@@ -93,6 +102,7 @@ defineSuite([
         target.followSurface = followSurface;
         target.granularity = granularity;
         target.shadows = shadows;
+        target.distanceDisplayCondition = distanceDisplayCondition;
 
         target.merge(source);
         expect(target.material).toBe(color);
@@ -102,6 +112,7 @@ defineSuite([
         expect(target.followSurface).toBe(followSurface);
         expect(target.granularity).toBe(granularity);
         expect(target.shadows).toBe(shadows);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
     });
 
     it('clone works', function() {
@@ -113,6 +124,7 @@ defineSuite([
         source.followSurface = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.shadows = new ConstantProperty();
+        source.distanceDisplayCondition = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -122,6 +134,7 @@ defineSuite([
         expect(result.followSurface).toBe(source.followSurface);
         expect(result.granularity).toBe(source.granularity);
         expect(result.shadows).toBe(source.shadows);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge throws if source undefined', function() {
@@ -140,5 +153,6 @@ defineSuite([
         testDefinitionChanged(property, 'followSurface', false, true);
         testDefinitionChanged(property, 'granularity', 2, 1);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
+        testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 20.0));
     });
 });

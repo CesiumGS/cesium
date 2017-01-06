@@ -10,8 +10,8 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
+        '../Core/isArray',
         '../Core/loadJson',
         '../Core/loadText',
         '../Core/loadWithXhr',
@@ -19,7 +19,6 @@ define([
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/RequestScheduler',
-        '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './ImageryProvider'
@@ -34,8 +33,8 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        freezeObject,
         GeographicTilingScheme,
+        isArray,
         loadJson,
         loadText,
         loadWithXhr,
@@ -43,7 +42,6 @@ define([
         CesiumMath,
         Rectangle,
         RequestScheduler,
-        TileProviderError,
         WebMercatorTilingScheme,
         when,
         ImageryProvider) {
@@ -286,6 +284,7 @@ define([
          *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
          *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@link GetFeatureInfoFormat}.</li>
          * </ul>
+         * @memberof UrlTemplateImageryProvider.prototype
          * @type {String}
          * @readonly
          */
@@ -550,7 +549,7 @@ define([
             that._getFeatureInfoFormats = properties.getFeatureInfoFormats;
 
             that._subdomains = properties.subdomains;
-            if (Array.isArray(that._subdomains)) {
+            if (isArray(that._subdomains)) {
                 that._subdomains = that._subdomains.slice();
             } else if (defined(that._subdomains) && that._subdomains.length > 0) {
                 that._subdomains = that._subdomains.split('');

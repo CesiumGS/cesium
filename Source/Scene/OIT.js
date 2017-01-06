@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/PixelFormat',
+        '../Core/WebGLConstants',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
@@ -13,7 +14,6 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
-        '../Renderer/WebGLConstants',
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS',
         './BlendEquation',
@@ -24,6 +24,7 @@ define([
         defined,
         destroyObject,
         PixelFormat,
+        WebGLConstants,
         ClearCommand,
         DrawCommand,
         Framebuffer,
@@ -32,7 +33,6 @@ define([
         ShaderProgram,
         ShaderSource,
         Texture,
-        WebGLConstants,
         AdjustTranslucentFS,
         CompositeOITFS,
         BlendEquation,
@@ -113,19 +113,29 @@ define([
     function updateTextures(oit, context, width, height) {
         destroyTextures(oit);
 
+        // Use zeroed arraybuffer instead of null to initialize texture
+        // to workaround Firefox 50. https://github.com/AnalyticalGraphicsInc/cesium/pull/4762
+        var source = new Float32Array(width * height * 4);
+
         oit._accumulationTexture = new Texture({
             context : context,
-            width : width,
-            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT
+            pixelDatatype : PixelDatatype.FLOAT,
+            source : {
+                arrayBufferView : source,
+                width : width,
+                height : height
+            }
         });
         oit._revealageTexture = new Texture({
             context : context,
-            width : width,
-            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT
+            pixelDatatype : PixelDatatype.FLOAT,
+            source : {
+                arrayBufferView : source,
+                width : width,
+                height : height
+            }
         });
     }
 
@@ -525,6 +535,8 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+
         passState.framebuffer = oit._adjustTranslucentFBO;
         oit._adjustTranslucentCommand.execute(context, passState);
         passState.framebuffer = oit._adjustAlphaFBO;
@@ -535,7 +547,7 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            derivedCommand = command.derivedCommands.oit.translucentCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
@@ -543,7 +555,7 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            derivedCommand = command.derivedCommands.oit.alphaCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
@@ -555,6 +567,8 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+
         passState.framebuffer = oit._adjustTranslucentFBO;
         oit._adjustTranslucentCommand.execute(context, passState);
 
@@ -563,7 +577,7 @@ define([
 
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
-            var derivedCommand = command.derivedCommands.oit.translucentCommand;
+            var derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 

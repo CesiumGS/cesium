@@ -62,6 +62,32 @@ void main()
                 czm_translateRelativeToEye(nextPosition3DHigh.xyz, nextPosition3DLow.xyz),
                 czm_morphTime);
     }
+
+    #ifdef DISTANCE_DISPLAY_CONDITION
+        vec3 centerHigh = batchTable_getCenterHigh(batchTableIndex);
+        vec4 centerLowAndRadius = batchTable_getCenterLowAndRadius(batchTableIndex);
+        vec3 centerLow = centerLowAndRadius.xyz;
+        float radius = centerLowAndRadius.w;
+        vec2 distanceDisplayCondition = batchTable_getDistanceDisplayCondition(batchTableIndex);
+
+        float lengthSq;
+        if (czm_sceneMode == czm_sceneMode2D)
+        {
+            lengthSq = czm_eyeHeight2D.y;
+        }
+        else
+        {
+            vec4 center = czm_translateRelativeToEye(centerHigh.xyz, centerLow.xyz);
+            lengthSq = max(0.0, dot(center.xyz, center.xyz) - radius * radius);
+        }
+
+        float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x;
+        float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y;
+        if (lengthSq < nearSq || lengthSq > farSq)
+        {
+            show = 0.0;
+        }
+    #endif
     
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev);
     gl_Position = czm_viewportOrthographic * positionWC * show;

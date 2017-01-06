@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/EllipseGraphics',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'Scene/ShadowMode',
@@ -10,6 +11,7 @@ defineSuite([
     ], function(
         EllipseGraphics,
         Color,
+        DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
         ShadowMode,
@@ -33,7 +35,8 @@ defineSuite([
             outline : false,
             outlineColor : Color.RED,
             outlineWidth : 9,
-            shadows : ShadowMode.DISABLED
+            shadows : ShadowMode.DISABLED,
+            distanceDisplayCondition : new DistanceDisplayCondition()
         };
 
         var ellipse = new EllipseGraphics(options);
@@ -52,6 +55,7 @@ defineSuite([
         expect(ellipse.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(ellipse.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(ellipse.shadows).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
 
         expect(ellipse.material.color.getValue()).toEqual(options.material);
         expect(ellipse.show.getValue()).toEqual(options.show);
@@ -68,6 +72,7 @@ defineSuite([
         expect(ellipse.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(ellipse.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(ellipse.shadows.getValue()).toEqual(options.shadows);
+        expect(ellipse.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -87,6 +92,7 @@ defineSuite([
         source.outlineWidth = new ConstantProperty();
         source.numberOfVerticalLines = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
 
         var target = new EllipseGraphics();
         target.merge(source);
@@ -106,6 +112,7 @@ defineSuite([
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.numberOfVerticalLines).toBe(source.numberOfVerticalLines);
         expect(target.shadows).toBe(source.shadows);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -126,6 +133,7 @@ defineSuite([
         var outlineWidth = new ConstantProperty();
         var numberOfVerticalLines = new ConstantProperty();
         var shadows = new ConstantProperty();
+        var distanceDisplayCondition = new ConstantProperty();
 
         var target = new EllipseGraphics();
         target.material = material;
@@ -143,6 +151,7 @@ defineSuite([
         target.outlineWidth = outlineWidth;
         target.numberOfVerticalLines = numberOfVerticalLines;
         target.shadows = shadows;
+        target.distanceDisplayCondition = distanceDisplayCondition;
 
         target.merge(source);
 
@@ -161,6 +170,7 @@ defineSuite([
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.numberOfVerticalLines).toBe(numberOfVerticalLines);
         expect(target.shadows).toBe(shadows);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
     });
 
     it('clone works', function() {
@@ -180,6 +190,7 @@ defineSuite([
         source.outlineWidth = new ConstantProperty();
         source.numberOfVerticalLines = new ConstantProperty();
         source.shadows = new ConstantProperty();
+        source.distanceDisplayCondition = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -197,6 +208,7 @@ defineSuite([
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.numberOfVerticalLines).toBe(source.numberOfVerticalLines);
         expect(result.shadows).toBe(source.shadows);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
 
     it('merge throws if source undefined', function() {
@@ -223,5 +235,6 @@ defineSuite([
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'numberOfVerticalLines', 16, 32);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
+        testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
 });

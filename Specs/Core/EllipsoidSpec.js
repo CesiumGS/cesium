@@ -434,5 +434,114 @@ defineSuite([
         expect(cloned).toEqual(myEllipsoid);
     });
 
+    it('getSurfaceNormalIntersectionWithZAxis throws with no position', function() {
+        expect(function() {
+            Ellipsoid.WGS84.getSurfaceNormalIntersectionWithZAxis(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('getSurfaceNormalIntersectionWithZAxis throws if the ellipsoid is not an ellipsoid of revolution', function() {
+        expect(function() {
+            var ellipsoid = new Ellipsoid(1,2,3);
+            var cartesian = new Cartesian3();
+            ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesian);
+        }).toThrowDeveloperError();
+    });
+
+    it('getSurfaceNormalIntersectionWithZAxis throws if the ellipsoid has radii.z === 0', function() {
+        expect(function() {
+            var ellipsoid = new Ellipsoid(1,2,0);
+            var cartesian = new Cartesian3();
+            ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesian);
+        }).toThrowDeveloperError();
+    });
+
+    it('getSurfaceNormalIntersectionWithZAxis works without a result parameter', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var cartographic  = Cartographic.fromDegrees(35.23,33.23);
+        var cartesianOnTheSurface = ellipsoid.cartographicToCartesian(cartographic);
+        var returnedResult = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesianOnTheSurface);
+        expect(returnedResult instanceof Cartesian3).toBe(true);
+    });
+
+    it('getSurfaceNormalIntersectionWithZAxis works with a result parameter', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var cartographic  = Cartographic.fromDegrees(35.23,33.23);
+        var cartesianOnTheSurface = ellipsoid.cartographicToCartesian(cartographic);
+        var returnedResult = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesianOnTheSurface, undefined , cartesianOnTheSurface);
+        expect(returnedResult).toBe(cartesianOnTheSurface);
+    });
+
+    it('getSurfaceNormalIntersectionWithZAxis returns undefined if the result is outside the ellipsoid with buffer parameter', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var cartographic  = Cartographic.fromDegrees(35.23,33.23);
+        var cartesianOnTheSurface = ellipsoid.cartographicToCartesian(cartographic);
+        var returnedResult = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesianOnTheSurface, ellipsoid.radii.z);
+        expect(returnedResult).toBe(undefined);
+    });
+
+    it('getSurfaceNormalIntersectionWithZAxis returns undefined if the result is outside the ellipsoid without buffer parameter', function() {
+        var majorAxis = 10;
+        var minorAxis = 1;
+        var ellipsoid = new Ellipsoid(majorAxis,majorAxis,minorAxis);
+        var cartographic  = Cartographic.fromDegrees(45.0,90.0);
+        var cartesianOnTheSurface = ellipsoid.cartographicToCartesian(cartographic);
+        var returnedResult = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesianOnTheSurface, undefined);
+        expect(returnedResult).toBe(undefined);
+    });
+
+    it('getSurfaceNormalIntersectionWithZAxis returns a result that is equal to a value that computed in a different way', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var cartographic  = Cartographic.fromDegrees(35.23,33.23);
+        var cartesianOnTheSurface = ellipsoid.cartographicToCartesian(cartographic);
+        var surfaceNormal = ellipsoid.geodeticSurfaceNormal(cartesianOnTheSurface);
+        var  magnitude = cartesianOnTheSurface.x  / surfaceNormal.x;
+
+        var expected = new Cartesian3();
+        expected.z = cartesianOnTheSurface.z  - surfaceNormal.z * magnitude;
+        var result = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesianOnTheSurface, undefined);
+        expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON8);
+
+        // at the equator
+        cartesianOnTheSurface = new Cartesian3(ellipsoid.radii.x, 0 , 0);
+        result = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesianOnTheSurface, undefined);
+        expect(result).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON8);
+
+    });
+
+    it('getSurfaceNormalIntersectionWithZAxis returns a result that when it\'s used as an origin for a vector with the surface normal direction it produces an accurate cartographic', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var cartographic  = Cartographic.fromDegrees(35.23,33.23);
+        var cartesianOnTheSurface = ellipsoid.cartographicToCartesian(cartographic);
+        var surfaceNormal = ellipsoid.geodeticSurfaceNormal(cartesianOnTheSurface);
+
+        var result = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesianOnTheSurface, undefined);
+
+        var surfaceNormalWithLength = Cartesian3.multiplyByScalar(surfaceNormal, ellipsoid.maximumRadius, new Cartesian3());
+        var position = Cartesian3.add(result,surfaceNormalWithLength,new Cartesian3());
+        var resultCartographic = ellipsoid.cartesianToCartographic(position);
+        resultCartographic.height = 0.0;
+        expect(resultCartographic).toEqualEpsilon(cartographic, CesiumMath.EPSILON8);
+
+        // at the north pole
+        cartographic  = Cartographic.fromDegrees(0,90);
+        cartesianOnTheSurface = new Cartesian3(0, 0 ,ellipsoid.radii.z);
+        surfaceNormal = ellipsoid.geodeticSurfaceNormal(cartesianOnTheSurface);
+        surfaceNormalWithLength = Cartesian3.multiplyByScalar(surfaceNormal, ellipsoid.maximumRadius, new Cartesian3());
+        result = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesianOnTheSurface, undefined);
+        position = Cartesian3.add(result,surfaceNormalWithLength,new Cartesian3());
+        resultCartographic = ellipsoid.cartesianToCartographic(position);
+        resultCartographic.height = 0.0;
+        expect(resultCartographic).toEqualEpsilon(cartographic, CesiumMath.EPSILON8);
+
+    });
+
+    it('ellipsoid is initialized with _sqauredXOverSquaredZ property', function() {
+       var ellipsoid = new Ellipsoid(4 , 4 , 3);
+
+       var sqauredXOverSquaredZ = ellipsoid.radiiSquared.x / ellipsoid.radiiSquared.z;
+       expect(ellipsoid._sqauredXOverSquaredZ).toEqual(sqauredXOverSquaredZ);
+    });
+
     createPackableSpecs(Ellipsoid, Ellipsoid.WGS84, [Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z]);
 });

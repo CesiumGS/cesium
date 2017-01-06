@@ -501,9 +501,11 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
 
         var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
         var result = getRectangleAttribution(this._attributionList, level, rectangle);

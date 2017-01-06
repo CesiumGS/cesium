@@ -1,8 +1,8 @@
 /*global define*/
 define([
-       '../Core/Color',
-       '../Core/defined',
-       '../Core/defineProperties'
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/defineProperties'
     ], function(
         Color,
         defined,
@@ -74,34 +74,39 @@ define([
                 //   2) this tile is now visible, but it wasn't visible when the style was first assigned
                 if (tile.lastStyleTime !== lastStyleTime) {
                     tile.lastStyleTime = lastStyleTime;
-                    styleCompositeContent(this, tile.content, stats);
-
+                    styleCompositeContent(this, frameState, tile.content, stats);
                     ++stats.numberOfTilesStyled;
                 }
             }
         }
     };
 
-    function styleCompositeContent(styleEngine, content, stats) {
+    function styleCompositeContent(styleEngine, frameState, content, stats) {
         var innerContents = content.innerContents;
         if (defined(innerContents)) {
             var length = innerContents.length;
             for (var i = 0; i < length; ++i) {
                 // Recurse for composites of composites
-                styleCompositeContent(styleEngine, innerContents[i], stats);
+                styleCompositeContent(styleEngine, frameState, innerContents[i], stats);
             }
         } else {
             // Not a composite tile
-            styleContent(styleEngine, content, stats);
+            styleContent(styleEngine, frameState, content, stats);
         }
     }
 
     var scratchColor = new Color();
 
-    function styleContent(styleEngine, content, stats) {
-        var length = content.featuresLength;
+    function styleContent(styleEngine, frameState, content, stats) {
         var style = styleEngine._style;
 
+        if (!content.applyStyleWithShader(frameState, style)) {
+            applyStyleWithBatchTable(frameState, content, stats, style);
+        }
+    }
+
+    function applyStyleWithBatchTable(frameState, content, stats, style) {
+        var length = content.featuresLength;
         stats.numberOfFeaturesStyled += length;
 
         if (!defined(style)) {
@@ -114,8 +119,8 @@ define([
         // by using reusing a batchValues array across tiles.
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
-            feature.color = style.color.evaluateColor(feature, scratchColor);
-            feature.show = style.show.evaluate(feature);
+            feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
+            feature.show = style.show.evaluate(frameState, feature);
         }
     }
 

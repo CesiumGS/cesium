@@ -44,6 +44,7 @@ define([
      * 
      * @see ColorGeometryInstanceAttribute
      * @see ShowGeometryInstanceAttribute
+     * @see DistanceDisplayConditionGeometryInstanceAttribute
      */
     function GeometryInstanceAttribute(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

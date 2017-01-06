@@ -83,7 +83,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.  <code>Empty3DTileContent</code>
      * always returns <code>false</code> since a tile of this type does not have any features.
      */
-    Empty3DTileContent.prototype.hasProperty = function(name) {
+    Empty3DTileContent.prototype.hasProperty = function(batchId, name) {
         return false;
     };
 
@@ -111,6 +111,13 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Empty3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    Empty3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
+        return false;
     };
 
     /**

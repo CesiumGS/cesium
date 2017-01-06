@@ -32,21 +32,23 @@ define([
      * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
      * object will be returned. If the result is a <code>Color</code>, a {@link Color} object will be returned.
      *
+     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature who's properties may be used as variables in the expression.
      * @returns {Boolean|Number|String|Color|RegExp} The result of evaluating the expression.
      */
-    StyleExpression.prototype.evaluate = function(feature) {
+    StyleExpression.prototype.evaluate = function(frameState, feature) {
         DeveloperError.throwInstantiationError();
     };
 
     /**
      * Evaluates the result of a Color expression, using the values defined by a feature.
      *
+     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature who's properties may be used as variables in the expression.
      * @param {Color} [result] The object in which to store the result
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      */
-    StyleExpression.prototype.evaluateColor = function(feature, result) {
+    StyleExpression.prototype.evaluateColor = function(frameState, feature, result) {
         DeveloperError.throwInstantiationError();
     };
 

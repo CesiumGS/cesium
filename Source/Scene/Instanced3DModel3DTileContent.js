@@ -16,9 +16,9 @@ define([
         '../Core/getStringFromTypedArray',
         '../Core/joinUrls',
         '../Core/loadArrayBuffer',
+        '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/Math',
         '../Core/Quaternion',
         '../Core/Request',
         '../Core/RequestScheduler',
@@ -27,9 +27,9 @@ define([
         '../Core/TranslationRotationScale',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './Cesium3DTileFeature',
         './Cesium3DTileBatchTable',
         './Cesium3DTileContentState',
+        './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
         './ModelInstanceCollection'
     ], function(
@@ -49,9 +49,9 @@ define([
         getStringFromTypedArray,
         joinUrls,
         loadArrayBuffer,
+        CesiumMath,
         Matrix3,
         Matrix4,
-        CesiumMath,
         Quaternion,
         Request,
         RequestScheduler,
@@ -60,9 +60,9 @@ define([
         TranslationRotationScale,
         Uri,
         when,
-        Cesium3DTileFeature,
         Cesium3DTileBatchTable,
         Cesium3DTileContentState,
+        Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
         ModelInstanceCollection) {
     'use strict';
@@ -148,8 +148,8 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTable.hasProperty(name);
+    Instanced3DModel3DTileContent.prototype.hasProperty = function(batchId, name) {
+        return this.batchTable.hasProperty(batchId, name);
     };
 
     /**
@@ -425,11 +425,15 @@ define([
             instanceTranslationRotationScale.scale = instanceScale;
 
             // Get the batchId
-            var batchId = featureTable.getProperty('BATCH_ID', i , ComponentDatatype.UNSIGNED_SHORT);
-            if (!defined(batchId)) {
+            var batchId;
+            if (defined(featureTable.BATCH_ID)) {
+                var componentType = defaultValue(featureTable.BATCH_ID.componentType, ComponentDatatype.UNSIGNED_SHORT);
+                batchId = featureTable.getProperty('BATCH_ID', i, componentType);
+            } else {
                 // If BATCH_ID semantic is undefined, batchId is just the instance number
                 batchId = i;
             }
+
             // Create the model matrix and the instance
             Matrix4.fromTranslationRotationScale(instanceTranslationRotationScale, instanceTransform);
             var modelMatrix = instanceTransform.clone();
@@ -464,6 +468,13 @@ define([
     Instanced3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
         this.batchTable.setAllColor(color);
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    Instanced3DModel3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
+        return false;
     };
 
     /**
