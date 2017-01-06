@@ -55,9 +55,6 @@ defineSuite([
 // TODO: does anyone have a real fix for this workaround?
 // When running all the tests from the command line (not just this spec or suite),
 // container.firstChild is not defined when testing the pointerDown event just below.
-//
-// Run with:
-//
             if (defined(container.firstChild)) {
                 func(container.firstChild);
                 expect(widget.viewModel.dropDownVisible).toEqual(true);

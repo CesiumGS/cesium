@@ -1,5 +1,5 @@
 /*global defineSuite*/
-defineSuite([
+fdefineSuite([
         'Scene/Primitive',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
