@@ -68,10 +68,10 @@ define([
         ceil : Math.ceil,
         round : Math.round,
         exp : Math.exp,
-        exp2 : CesiumMath.exp2,
+        exp2 : Expression.exp2,
         log : Math.log,
         log2 : Math.log2,
-        fract : CesiumMath.fract
+        fract : Expression.fract
     };
 
     /**
@@ -1126,6 +1126,14 @@ define([
             expressions[i] = shader;
         }
         return expressions;
+    }
+
+    function fract(number) {
+        return number - Math.floor(number);
+    }
+
+    function exp2(exponent) {
+        return Math.pow(2.0,exponent);
     }
 
     Node.prototype.getShaderExpression = function(attributePrefix, shaderState) {
