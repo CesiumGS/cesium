@@ -1760,8 +1760,6 @@ define([
             unloadTiles(this, frameState);
         }
 
-
-
         // Events are raised (added to the afterRender queue) here since promises
         // may resolve outside of the update loop that then raise events, e.g.,
         // model's readyPromise.
