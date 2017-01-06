@@ -418,7 +418,7 @@ define([
          */
         this.silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
         this._silhouetteColor = new Color();
-        this._silhouetteColorPrevAlpha = 1.0;
+        this._silhouetteColorPreviousAlpha = 1.0;
         this._normalAttributeName = undefined;
 
         /**
@@ -557,7 +557,7 @@ define([
          */
         this.color = defaultValue(options.color, Color.WHITE);
         this._color = new Color();
-        this._colorPrevAlpha = 1.0;
+        this._colorPreviousAlpha = 1.0;
 
         /**
          * Defines how the color blends with the model.
@@ -3802,12 +3802,12 @@ define([
         }
 
         var nodeCommands = model._nodeCommands;
-        var dirty = alphaDirty(model.color.alpha, model._colorPrevAlpha) ||
-                    alphaDirty(model.silhouetteColor.alpha, model._silhouetteColorPrevAlpha) ||
+        var dirty = alphaDirty(model.color.alpha, model._colorPreviousAlpha) ||
+                    alphaDirty(model.silhouetteColor.alpha, model._silhouetteColorPreviousAlpha) ||
                     !defined(nodeCommands[0].silhouetteModelCommand);
 
-        model._colorPrevAlpha = model.color.alpha;
-        model._silhouetteColorPrevAlpha = model.silhouetteColor.alpha;
+        model._colorPreviousAlpha = model.color.alpha;
+        model._silhouetteColorPreviousAlpha = model.silhouetteColor.alpha;
 
         if (dirty) {
             createSilhouetteCommands(model, frameState);
