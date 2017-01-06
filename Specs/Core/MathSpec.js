@@ -420,28 +420,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fract', function() {
-        expect(CesiumMath.fract(1.25)).toEqual(0.25);
-    });
-
-    it('fract throws without number', function() {
-        expect(function() {
-            CesiumMath.fract(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('exp2', function() {
-        expect(CesiumMath.exp2(0.0)).toEqual(1.0);
-
-        expect(CesiumMath.exp2(2.0)).toEqual(4.0);
-    });
-
-    it('exp2 throws without number', function() {
-        expect(function() {
-            CesiumMath.exp2(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('logBase', function() {
         expect(CesiumMath.logBase(64, 4)).toEqual(3);
     });
