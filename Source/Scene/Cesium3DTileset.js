@@ -296,6 +296,8 @@ define([
             lastPick : new Cesium3DTilesetStatistics()
         };
 
+        this._tilesLoaded = false;
+
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
@@ -604,8 +606,7 @@ define([
          */
         tilesLoaded : {
             get : function() {
-                var stats = this._statistics;
-                return this.ready && (stats.numberOfPendingRequests === 0) && (stats.numberProcessing === 0) && (stats.numberOfAttemptedRequests === 0);
+                return this._tilesLoaded;
             }
         },
 
@@ -1678,7 +1679,9 @@ define([
             });
         }
 
-        if (progressChanged && tileset.tilesLoaded) {
+        tileset._tilesLoaded = (stats.numberOfPendingRequests === 0) && (stats.numberProcessing === 0) && (stats.numberOfAttemptedRequests === 0);
+
+        if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });
@@ -1756,6 +1759,8 @@ define([
         if (outOfCore) {
             unloadTiles(this, frameState);
         }
+
+
 
         // Events are raised (added to the afterRender queue) here since promises
         // may resolve outside of the update loop that then raise events, e.g.,

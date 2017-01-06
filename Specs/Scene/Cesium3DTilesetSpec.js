@@ -1056,7 +1056,7 @@ defineSuite([
             url : tilesetUrl
         }));
         expect(tileset.tilesLoaded).toBe(false);
-        return Cesium3DTilesTester.waitForReady(scene, tileset).then(function() {
+        tileset.readyPromise.then(function() {
             expect(tileset.tilesLoaded).toBe(false);
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 expect(tileset.tilesLoaded).toBe(true);
@@ -1069,15 +1069,14 @@ defineSuite([
         // the rest of the tileset is visible and all tiles are loaded.
         var spyUpdate = jasmine.createSpy('listener');
         viewRootOnly();
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            tileset.allTilesLoaded.addEventListener(spyUpdate);
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : tilesetUrl
+        }));
+        tileset.allTilesLoaded.addEventListener(spyUpdate);
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+            viewAllTiles();
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                scene.renderForSpecs();
-                viewAllTiles();
-                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                    scene.renderForSpecs();
-                    expect(spyUpdate.calls.count()).toEqual(2);
-                });
+                expect(spyUpdate.calls.count()).toEqual(2);
             });
         });
     });
