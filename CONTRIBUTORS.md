@@ -117,3 +117,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Abhishek Potnis](https://github.com/abhishekvp)
 * [Brad Hover](https://github.com/tekhaus)
 * [Hüseyin Ateş](https://github.com/ateshuseyin)
+* [Peter Lu](https://github.com/pasu)

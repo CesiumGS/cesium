@@ -108,12 +108,13 @@ define([
         var binormal = binormalScratch;
         var tangent = tangentScratch;
         var normal = normalScratch;
-        for (var i = 0; i < length; i += 3) {
-            var p = Cartesian3.fromArray(positions, i, positionScratch);
-            var attrIndex1 = attrIndex + 1;
-            var attrIndex2 = attrIndex + 2;
 
-            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+        if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+            for (var i = 0; i < length; i += 3) {
+                var p = Cartesian3.fromArray(positions, i, positionScratch);
+                var attrIndex1 = attrIndex + 1;
+                var attrIndex2 = attrIndex + 2;
+                
                 normal = ellipsoid.geodeticSurfaceNormal(p, normal);
                 if (vertexFormat.tangent || vertexFormat.binormal) {
                     Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
@@ -140,8 +141,9 @@ define([
                     binormals[attrIndex1] = binormal.y;
                     binormals[attrIndex2] = binormal.z;
                 }
+                
+                attrIndex += 3;
             }
-            attrIndex += 3;
         }
         return createAttributes(vertexFormat, {
             positions : positions,
@@ -168,10 +170,11 @@ define([
         var binormal = binormalScratch;
         var tangent = tangentScratch;
         var normal = normalScratch;
-        for (var i = 0; i < length; i += 6) {
-            var p = Cartesian3.fromArray(positions, i, positionScratch);
+        if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+            for (var i = 0; i < length; i += 6) {
+                var p = Cartesian3.fromArray(positions, i, positionScratch);
 
-            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                
                 var p1 = Cartesian3.fromArray(positions, (i + 6) % length, v1Scratch);
                 if (recomputeNormal) {
                     var p2 = Cartesian3.fromArray(positions, (i + 3) % length, v2Scratch);
