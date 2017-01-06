@@ -411,10 +411,6 @@ define([
                 };
             },
 
-            toThrow : function(expectedConstructor) {
-                throw new Error('Do not use toThrow.  Use toThrowDeveloperError or toThrowRuntimeError instead.');
-            },
-
             toThrowDeveloperError : makeThrowFunction(debug, DeveloperError, 'DeveloperError'),
 
             toThrowRuntimeError : makeThrowFunction(true, RuntimeError, 'RuntimeError')
