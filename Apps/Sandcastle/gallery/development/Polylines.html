@@ -102,13 +102,15 @@ function createPrimitives(scene) {
     
     //Polyline using the fade material
     var fadingPolyline = polylines.add({
-        positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 43, 500000,
-                                                               -125, 43, 500000]),
+        positions : Cesium.PolylinePipeline.generateCartesianArc({
+            positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 43, 500000,
+                                                                   -125, 43, 500000])
+        }),
         width : 5,
         material : Cesium.Material.fromType(Cesium.Material.FadeType, {
             repeat: false,
-            fadeInColor: Cesium.Color.BLUE,
-            fadeOutColor: Cesium.Color.TRANSPARENT,
+            fadeInColor: Cesium.Color.CYAN,
+            fadeOutColor: Cesium.Color.CYAN.withAlpha(0),
             time: new Cesium.Cartesian2(1.0, 0.0),
             fadeDirection: {
                 x: true,
