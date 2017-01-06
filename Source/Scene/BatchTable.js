@@ -273,7 +273,7 @@ define([
         return Cartesian4.fromElements(x, y, z, w, result);
     }
 
-    var scratchFloatArray = new Float32Array(1);
+    var scratchFloatArray = typeof Float32Array !== 'undefined' ? new Float32Array(1) : [0.0];
 
     function packFloat(value, result) {
         scratchFloatArray[0] = value;
