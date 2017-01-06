@@ -4,6 +4,7 @@ Change Log
 ### 1.30 - 2017-02-01
 
 * Updated the morph so the default view in Columbus View is now angled. [#3878](https://github.com/AnalyticalGraphicsInc/cesium/issues/3878)
+* Fixed a bug that caused all models to use the same highlight color. [#4798] (https://github.com/AnalyticalGraphicsInc/cesium/pull/4798)
 
 ### 1.29 - 2017-01-02
 
