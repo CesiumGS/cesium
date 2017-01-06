@@ -134,7 +134,6 @@ addStyle('Min and Max', {
     pointSize : "5"
 });
 
-// secondaryColor is originally a vec3 - so add vec4(0.0, 0.0, 0.0, 1.0) to make the point cloud opaque
 addStyle('Clamp and Mix', {
     color : "color() * clamp(${temperature}, 0.1, 0.2)",
     pointSize : "mix(${temperature}, 2.0, 0.5) * 0.2"
@@ -143,9 +142,9 @@ addStyle('Clamp and Mix', {
 addStyle('Secondary Color', {
     color : {
         conditions : [
-            ["${id} < 250", "${secondaryColor} + vec4(0.0, 0.0, 0.0, 1.0)"],
-            ["${id} < 500", "${secondaryColor} * ${secondaryColor} + vec4(0.0, 0.0, 0.0, 1.0)"],
-            ["${id} < 750", "${secondaryColor} / 5.0 + vec4(0.0, 0.0, 0.0, 1.0)"],
+            ["${id} < 250", "vec4(${secondaryColor}, 1.0)"],
+            ["${id} < 500", "vec4(${secondaryColor} * ${secondaryColor}, 1.0)"],
+            ["${id} < 750", "vec4(${secondaryColor} / 5.0, 1.0)"],
             ["${id} < 1000", "rgb(0, 0, Number(${secondaryColor}.x < 0.5) * 255)"]
         ]
     }
@@ -161,7 +160,7 @@ addStyle('Use point positions', {
 
 // POSITION contains 0 as its last component, so add 1.0 to make the point cloud opaque
 addStyle('Color based on position', {
-    color : "${POSITION} + vec4(0.0, 0.0, 0.0, 1.0)"
+    color : "vec4(${POSITION}, 1.0)"
 });
 
 addStyle('Style point size', {

@@ -1,12 +1,16 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Expression',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Color',
         'Core/Math',
         'Scene/ExpressionNodeType'
     ], function(
         Expression,
+        Cartesian2,
+        Cartesian3,
         Cartesian4,
         Color,
         CesiumMath,
@@ -557,24 +561,138 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(0.5);
     });
 
-    it('evaluates vector', function() {
+    it('evaluates vec2', function() {
+        var expression = new Expression('vec2(2.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(2.0, 2.0));
+
+        expression = new Expression('vec2(3.0, 4.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(3.0, 4.0));
+
+        expression = new Expression('vec2(vec2(3.0, 4.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(3.0, 4.0));
+
+        expression = new Expression('vec2(vec3(3.0, 4.0, 5.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(3.0, 4.0));
+
+        expression = new Expression('vec2(vec4(3.0, 4.0, 5.0, 6.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(3.0, 4.0));
+    });
+
+    it('throws if vec2 has invalid number of arguments', function() {
         var expression = new Expression('vec2()');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0.0, 0.0, 0.0, 0.0));
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
 
-        expression = new Expression('vec3()');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0.0, 0.0, 0.0, 0.0));
+        expression = new Expression('vec2(3.0, 4.0, 5.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
 
-        expression = new Expression('vec4()');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0.0, 0.0, 0.0, 0.0));
+        expression = new Expression('vec2(vec2(3.0, 4.0), 5.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
 
-        expression = new Expression('vec2(1.0, 2.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(1.0, 2.0, 0.0, 0.0));
+    it('evaluates vec3', function() {
+        var expression = new Expression('vec3(2.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(2.0, 2.0, 2.0));
 
-        expression = new Expression('vec3(1.0, 2.0, 3.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(1.0, 2.0, 3.0, 0.0));
+        expression = new Expression('vec3(3.0, 4.0, 5.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
 
-        expression = new Expression('vec4(1.0, 2.0, 3.0, 4.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(1.0, 2.0, 3.0, 4.0));
+        expression = new Expression('vec3(vec2(3.0, 4.0), 5.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
+
+        expression = new Expression('vec3(3.0, vec2(4.0, 5.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
+
+        expression = new Expression('vec3(vec3(3.0, 4.0, 5.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
+
+        expression = new Expression('vec3(vec4(3.0, 4.0, 5.0, 6.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
+    });
+
+    it ('throws if vec3 has invalid number of arguments', function() {
+        var expression = new Expression('vec3()');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('vec3(3.0, 4.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('vec3(3.0, 4.0, 5.0, 6.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('vec3(vec2(3.0, 4.0), vec2(5.0, 6.0))');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('vec3(vec4(3.0, 4.0, 5.0, 6.0), 1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates vec4', function() {
+        var expression = new Expression('vec4(2.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(2.0, 2.0, 2.0, 2.0));
+
+        expression = new Expression('vec4(3.0, 4.0, 5.0, 6.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(3.0, 4.0, 5.0, 6.0));
+
+        expression = new Expression('vec4(vec2(3.0, 4.0), 5.0, 6.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(3.0, 4.0, 5.0, 6.0));
+
+        expression = new Expression('vec4(3.0, vec2(4.0, 5.0), 6.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(3.0, 4.0, 5.0, 6.0));
+
+        expression = new Expression('vec4(3.0, 4.0, vec2(5.0, 6.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(3.0, 4.0, 5.0, 6.0));
+
+        expression = new Expression('vec4(vec3(3.0, 4.0, 5.0), 6.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(3.0, 4.0, 5.0, 6.0));
+
+        expression = new Expression('vec4(3.0, vec3(4.0, 5.0, 6.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(3.0, 4.0, 5.0, 6.0));
+
+        expression = new Expression('vec4(vec4(3.0, 4.0, 5.0, 6.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(3.0, 4.0, 5.0, 6.0));
+    });
+
+    it ('throws if vec4 has invalid number of arguments', function() {
+        var expression = new Expression('vec4()');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('vec4(3.0, 4.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('vec4(3.0, 4.0, 5.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('vec4(3.0, 4.0, 5.0, 6.0, 7.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('vec4(vec3(3.0, 4.0, 5.0))');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates vector with expressions as arguments', function() {
@@ -589,8 +707,8 @@ defineSuite([
     });
 
     it('evaluates expression with multiple nested vectors', function() {
-        var expression = new Expression('vec4(vec2(1, 2)[vec3(6, 1, 5).y], 2, vec4().w, 5)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(2.0, 2.0, 0.0, 5.0));
+        var expression = new Expression('vec4(vec2(1, 2)[vec3(6, 1, 5).y], 2, vec4(1.0).w, 5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(2.0, 2.0, 1.0, 5.0));
     });
 
     it('evaluates vector properties (x, y, z, w)', function() {
@@ -607,7 +725,7 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(4.0);
     });
 
-    it('evaluates vector properties ([0], [1], [2]. [3])', function() {
+    it('evaluates vector properties ([0], [1], [2], [3])', function() {
         var expression = new Expression('vec4(1.0, 2.0, 3.0, 4.0)[0]');
         expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
 
@@ -928,49 +1046,133 @@ defineSuite([
     });
 
     it('evaluates vector operations', function() {
-        var expression = new Expression('+vec3(1, 2, 3)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(1, 2, 3, 0));
+        var expression = new Expression('+vec2(1, 2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(1, 2));
+
+        expression = new Expression('+vec3(1, 2, 3)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(1, 2, 3));
+
+        expression = new Expression('+vec4(1, 2, 3, 4)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(1, 2, 3, 4));
+
+        expression = new Expression('-vec2(1, 2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(-1, -2));
 
         expression = new Expression('-vec3(1, 2, 3)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(-1, -2, -3, 0));
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(-1, -2, -3));
 
-        expression = new Expression('vec2(1, 2) + vec4(3, 4, 5, 6)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(4, 6, 5, 6));
+        expression = new Expression('-vec4(1, 2, 3, 4)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(-1, -2, -3, -4));
 
-        expression = new Expression('vec2(1, 2) - vec4(3, 4, 5, 6)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(-2, -2, -5, -6));
+        expression = new Expression('vec2(1, 2) + vec2(3, 4)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(4, 6));
+
+        expression = new Expression('vec3(1, 2, 3) + vec3(3, 4, 5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(4, 6, 8));
+
+        expression = new Expression('vec4(1, 2, 3, 4) + vec4(3, 4, 5, 6)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(4, 6, 8, 10));
+
+        expression = new Expression('vec2(1, 2) - vec2(3, 4)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(-2, -2));
+
+        expression = new Expression('vec3(1, 2, 3) - vec3(3, 4, 5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(-2, -2, -2));
+
+        expression = new Expression('vec4(1, 2, 3, 4) - vec4(3, 4, 5, 6)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(-2, -2, -2, -2));
+
+        expression = new Expression('vec2(1, 2) * vec2(3, 4)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(3, 8));
+
+        expression = new Expression('vec2(1, 2) * 3.0');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(3, 6));
+
+        expression = new Expression('3.0 * vec2(1, 2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(3, 6));
+
+        expression = new Expression('vec3(1, 2, 3) * vec3(3, 4, 5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(3, 8, 15));
+
+        expression = new Expression('vec3(1, 2, 3) * 3.0');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(3, 6, 9));
+
+        expression = new Expression('3.0 * vec3(1, 2, 3)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(3, 6, 9));
 
         expression = new Expression('vec4(1, 2, 3, 4) * vec4(3, 4, 5, 6)');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(3, 8, 15, 24));
 
-        expression = new Expression('vec3(1, 2, 3) * 3.0');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(3, 6, 9, 0));
+        expression = new Expression('vec4(1, 2, 3, 4) * 3.0');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(3, 6, 9, 12));
 
-        expression = new Expression('3.0 * vec3(1, 2, 3)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(3, 6, 9, 0));
+        expression = new Expression('3.0 * vec4(1, 2, 3, 4)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(3, 6, 9, 12));
 
-        expression = new Expression('vec3(1, 2, 3) / vec4(2, 5, 3, 1)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0.5, 0.4, 1.0, 0.0));
+        expression = new Expression('vec2(1, 2) / vec2(2, 5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(0.5, 0.4));
+
+        expression = new Expression('vec2(1, 2) / 2.0');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(0.5, 1.0));
+
+        expression = new Expression('vec3(1, 2, 3) / vec3(2, 5, 3)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(0.5, 0.4, 1.0));
 
         expression = new Expression('vec3(1, 2, 3) / 2.0');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0.5, 1.0, 1.5, 0.0));
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(0.5, 1.0, 1.5));
 
-        expression = new Expression('vec4(2, 3, 4, 5) % vec3(3, 3, 3, 2)');
+        expression = new Expression('vec4(1, 2, 3, 4) / vec4(2, 5, 3, 2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0.5, 0.4, 1.0, 2.0));
+
+        expression = new Expression('vec4(1, 2, 3, 4) / 2.0');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0.5, 1.0, 1.5, 2.0));
+
+        expression = new Expression('vec2(2, 3) % vec2(3, 3)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(2, 0));
+
+        expression = new Expression('vec3(2, 3, 4) % vec3(3, 3, 3)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(2, 0, 1));
+
+        expression = new Expression('vec4(2, 3, 4, 5) % vec4(3, 3, 3, 2)');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(2, 0, 1, 1));
 
-        expression = new Expression('vec2(1, 3) == vec4(1, 3, 0, 0)');
+        expression = new Expression('vec2(1, 3) == vec2(1, 3)');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
 
-        expression = new Expression('vec2(1, 3) === vec4(1, 3, 0, 0)');
+        expression = new Expression('vec3(1, 3, 4) == vec3(1, 3, 4)');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
 
-        expression = new Expression('!!vec4() == true');
+        expression = new Expression('vec4(1, 3, 4, 6) == vec4(1, 3, 4, 6)');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
+
+        expression = new Expression('vec2(1, 2) === vec2(1, 2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(true);
+
+        expression = new Expression('vec3(1, 2, 3) === vec3(1, 2, 3)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(true);
+
+        expression = new Expression('vec4(1, 2, 3, 4) === vec4(1, 2, 3, 4)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(true);
+
+        expression = new Expression('!!vec4(1.0) == true');
+        expect(expression.evaluate(frameState, undefined)).toEqual(true);
+
+        expression = new Expression('vec2(1, 2) != vec2(1, 2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(false);
 
         expression = new Expression('vec3(1, 2, 3) != vec3(1, 2, 3)');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
 
+        expression = new Expression('vec4(1, 2, 3, 4) != vec4(1, 2, 3, 4)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(false);
+
+        expression = new Expression('vec2(1, 2) !== vec2(1, 2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(false);
+
         expression = new Expression('vec3(1, 2, 3) !== vec3(1, 2, 3)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(false);
+
+        expression = new Expression('vec4(1, 2, 3, 4) !== vec4(1, 2, 3, 4)');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
     });
 
@@ -992,7 +1194,13 @@ defineSuite([
         var feature = new MockFeature();
         feature.addProperty('property', new Cartesian4(1, 2, 3, 4));
 
-        var expression = new Expression('vec4(1, 2, 3, 4).toString()');
+        var expression = new Expression('vec2(1, 2).toString()');
+        expect(expression.evaluate(frameState, undefined)).toEqual('(1, 2)');
+
+        expression = new Expression('vec3(1, 2, 3).toString()');
+        expect(expression.evaluate(frameState, undefined)).toEqual('(1, 2, 3)');
+
+        expression = new Expression('vec4(1, 2, 3, 4).toString()');
         expect(expression.evaluate(frameState, undefined)).toEqual('(1, 2, 3, 4)');
 
         expression = new Expression('${property}.toString()');
@@ -2160,16 +2368,6 @@ defineSuite([
         expression = new Expression('color()[0] + color()[1] + color()[2] + color()[3]');
         shaderExpression = expression.getShaderExpression('', {});
         expect(shaderExpression).toEqual(expected);
-
-        // ['red'], ['green'], ['blue'], ['alpha']
-        expression = new Expression('color()["red"] + color()["green"] + color()["blue"] + color()["alpha"]');
-        shaderExpression = expression.getShaderExpression('', {});
-        expect(shaderExpression).toEqual(expected);
-
-        // ['x'], ['y'], ['z'], ['w']
-        expression = new Expression('color()["x"] + color()["y"] + color()["z"] + color()["w"]');
-        shaderExpression = expression.getShaderExpression('', {});
-        expect(shaderExpression).toEqual(expected);
     });
 
     it('gets shader expression for vector', function() {
@@ -2177,29 +2375,28 @@ defineSuite([
         var shaderExpression = expression.getShaderExpression('', {});
         expect(shaderExpression).toEqual('vec4(1.0, 2.0, 3.0, 4.0)');
 
-        expression = new Expression('vec2() + vec3() + vec4()');
+        expression = new Expression('vec4(1) + vec4(2)');
         shaderExpression = expression.getShaderExpression('', {});
-        expect(shaderExpression).toEqual('((vec4(0.0, 0.0, 0.0, 0.0) + vec4(0.0, 0.0, 0.0, 0.0)) + vec4(0.0, 0.0, 0.0, 0.0))');
+        expect(shaderExpression).toEqual('(vec4(1.0) + vec4(2.0))');
 
-        expression = new Expression('vec4(1, ${property}, vec2(1, 2).x)');
+        expression = new Expression('vec4(1, ${property}, vec2(1, 2).x, 0)');
         shaderExpression = expression.getShaderExpression('', {});
-        expect(shaderExpression).toEqual('vec4(1.0, property, vec4(1.0, 2.0, 0.0, 0.0)[0], 0.0)');
+        expect(shaderExpression).toEqual('vec4(1.0, property, vec2(1.0, 2.0)[0], 0.0)');
+
+        expression = new Expression('vec4(vec3(2), 1.0)');
+        shaderExpression = expression.getShaderExpression('', {});
+        expect(shaderExpression).toEqual('vec4(vec3(2.0), 1.0)');
     });
 
     it('gets shader expression for vector components', function() {
         // .x, .y, .z, .w
-        var expression = new Expression('vec4().x + vec4().y + vec4().z + vec4().w');
+        var expression = new Expression('vec4(1).x + vec4(1).y + vec4(1).z + vec4(1).w');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = '(((vec4(0.0, 0.0, 0.0, 0.0)[0] + vec4(0.0, 0.0, 0.0, 0.0)[1]) + vec4(0.0, 0.0, 0.0, 0.0)[2]) + vec4(0.0, 0.0, 0.0, 0.0)[3])';
+        var expected = '(((vec4(1.0)[0] + vec4(1.0)[1]) + vec4(1.0)[2]) + vec4(1.0)[3])';
         expect(shaderExpression).toEqual(expected);
 
         // [0], [1], [2], [3]
-        expression = new Expression('vec4()[0] + vec4()[1] + vec4()[2] + vec4()[3]');
-        shaderExpression = expression.getShaderExpression('', {});
-        expect(shaderExpression).toEqual(expected);
-
-        // ['x'], ['y'], ['z'], ['w']
-        expression = new Expression('vec4()["x"] + vec4()["y"] + vec4()["z"] + vec4()["w"]');
+        expression = new Expression('vec4(1)[0] + vec4(1)[1] + vec4(1)[2] + vec4(1)[3]');
         shaderExpression = expression.getShaderExpression('', {});
         expect(shaderExpression).toEqual(expected);
     });
