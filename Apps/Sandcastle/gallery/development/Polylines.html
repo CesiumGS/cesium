@@ -99,7 +99,7 @@ function createPrimitives(scene) {
         material : Cesium.Material.fromType(Cesium.Material.PolylineArrowType)
     });
     Sandcastle.declare(localPolyline); // For highlighting on mouseover in Sandcastle.
-    
+
     //Polyline using the fade material
     var fadingPolyline = polylines.add({
         positions : Cesium.PolylinePipeline.generateCartesianArc({
@@ -111,7 +111,7 @@ function createPrimitives(scene) {
             repeat: false,
             fadeInColor: Cesium.Color.CYAN,
             fadeOutColor: Cesium.Color.CYAN.withAlpha(0),
-            time: new Cesium.Cartesian2(1.0, 0.0),
+            time: new Cesium.Cartesian2(0.0, 0.0),
             fadeDirection: {
                 x: true,
                 y: false
