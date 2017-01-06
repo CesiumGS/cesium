@@ -355,7 +355,6 @@ define([
          */
         this.tileVisible = new Event();
 
-        this._ready = false;
         this._readyPromise = when.defer();
 
         var that = this;
@@ -365,6 +364,7 @@ define([
             that._properties = tilesetJson.properties;
             that._geometricError = tilesetJson.geometricError;
             that._root = data.root;
+            that._readyPromise.resolve(that);
         }).otherwise(function(error) {
             that._readyPromise.reject(error);
         });
@@ -459,7 +459,7 @@ define([
          */
         ready : {
             get : function() {
-                return this._ready;
+                return defined(this._root);
             }
         },
 
@@ -1523,16 +1523,8 @@ define([
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status
      */
     Cesium3DTileset.prototype.update = function(frameState) {
-        if (!this._ready && defined(this._root)) {
-            this._ready = true;
-            var that = this;
-            frameState.afterRender.push(function() {
-                that._readyPromise.resolve(that);
-            });
-        }
-
         // TODO: Support 2D and CV
-        if (!this.show || !this._ready || (frameState.mode !== SceneMode.SCENE3D)) {
+        if (!this.show || !this.ready || (frameState.mode !== SceneMode.SCENE3D)) {
             return;
         }
 

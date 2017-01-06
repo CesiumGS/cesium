@@ -1006,7 +1006,7 @@ defineSuite([
     });
 
     it('all tiles loaded event is raised', function() {
-        // Called first when the only the root is visible and it becomes loaded, and then again when
+        // Called first when only the root is visible and it becomes loaded, and then again when
         // the rest of the tileset is visible and all tiles are loaded.
         var spyUpdate = jasmine.createSpy('listener');
         viewRootOnly();
