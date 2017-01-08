@@ -21,7 +21,9 @@ define([
      * @see GeographicTilingScheme
      */
     function TilingScheme(options) {
+        //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.');
+        //>>includeEnd('debug');
     }
 
     defineProperties(TilingScheme.prototype, {

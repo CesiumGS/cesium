@@ -35,6 +35,7 @@ define([
         '../Renderer/Context',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -51,7 +52,6 @@ define([
         './MapMode2D',
         './OIT',
         './OrthographicFrustum',
-        './Pass',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
@@ -102,6 +102,7 @@ define([
         Context,
         ContextLimits,
         DrawCommand,
+        Pass,
         PassState,
         ShaderProgram,
         ShaderSource,
@@ -118,7 +119,6 @@ define([
         MapMode2D,
         OIT,
         OrthographicFrustum,
-        Pass,
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PerspectiveFrustum,
@@ -220,7 +220,7 @@ define([
             creditContainer = document.createElement('div');
             creditContainer.style.position = 'absolute';
             creditContainer.style.bottom = '0';
-            creditContainer.style['text-shadow'] = '0px 0px 2px #000000';
+            creditContainer.style['text-shadow'] = '0 0 2px #000000';
             creditContainer.style.color = '#ffffff';
             creditContainer.style['font-size'] = '10px';
             creditContainer.style['padding-right'] = '5px';
@@ -284,6 +284,9 @@ define([
         this._depthClearCommand = new ClearCommand({
             depth : 1.0,
             owner : this
+        });
+        this._stencilClearCommand = new ClearCommand({
+            stencil : 0
         });
 
         this._pickDepths = [];
@@ -388,8 +391,6 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
-
-        this._transitioner = new SceneTransitioner(this, this._mapProjection.ellipsoid);
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -1102,19 +1103,19 @@ define([
 
     function updateDerivedCommands(scene, command) {
         var frameState = scene.frameState;
-        var shadowMaps = frameState.shadowMaps;
         var context = scene._context;
         var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
+        var shadowMaps = frameState.shadowHints.shadowMaps;
+        var lightShadowMaps = frameState.shadowHints.lightShadowMaps;
+        var lightShadowsEnabled = shadowsEnabled && (lightShadowMaps.length > 0);
 
+        // Update derived commands when any shadow maps become dirty
         var shadowsDirty = false;
-        if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
-            // Update derived commands when any shadow maps become dirty
-            var lastDirtyTime = frameState.shadowHints.lastDirtyTime;
-            if (command.lastDirtyTime !== lastDirtyTime) {
-                command.lastDirtyTime = lastDirtyTime;
-                command.dirty = true;
-                shadowsDirty = true;
-            }
+        var lastDirtyTime = frameState.shadowHints.lastDirtyTime;
+        if (command.lastDirtyTime !== lastDirtyTime) {
+            command.lastDirtyTime = lastDirtyTime;
+            command.dirty = true;
+            shadowsDirty = true;
         }
 
         if (command.dirty) {
@@ -1123,13 +1124,14 @@ define([
             var derivedCommands = command.derivedCommands;
 
             if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
-                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
+                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
             }
 
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-                if (shadowsEnabled && command.receiveShadows) {
-                    derivedCommands.oit = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit);
+                if (lightShadowsEnabled && command.receiveShadows) {
+                    derivedCommands.oit = defined(derivedCommands.oit) ? derivedCommands.oit : {};
+                    derivedCommands.oit.shadows = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
                 }
@@ -1174,6 +1176,11 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
+        if (defined(scene.globe)) {
+            frameState.maximumScreenSpaceError = scene.globe.maximumScreenSpaceError;
+        } else {
+            frameState.maximumScreenSpaceError = 2;
+        }
 
         clearPasses(frameState.passes);
     }
@@ -1485,9 +1492,12 @@ define([
             return;
         }
 
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
+
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-        } else if (scene.frameState.shadowHints.shadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
+        } else if (lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
             // If the command receives shadows, execute the derived shadows command.
             // Some commands, such as OIT derived commands, do not have derived shadow commands themselves
             // and instead shadowing is built-in. In this case execute the command regularly below.
@@ -1619,7 +1629,7 @@ define([
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
 
-    function executeCommands(scene, passState) {
+    function executeCommands(scene, passState, picking) {
         var camera = scene._camera;
         var context = scene.context;
         var us = context.uniformState;
@@ -1643,37 +1653,40 @@ define([
         us.updateFrustum(frustum);
         us.updatePass(Pass.ENVIRONMENT);
 
-        var environmentState = scene._environmentState;
-        var skyBoxCommand = environmentState.skyBoxCommand;
-        if (defined(skyBoxCommand)) {
-            executeCommand(skyBoxCommand, scene, context, passState);
-        }
-
-        if (environmentState.isSkyAtmosphereVisible) {
-            executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState);
-        }
-
         var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
+        var environmentState = scene._environmentState;
 
-        if (environmentState.isSunVisible) {
-            environmentState.sunDrawCommand.execute(context, passState);
-            if (scene.sunBloom && !useWebVR) {
-                var framebuffer;
-                if (environmentState.useGlobeDepthFramebuffer) {
-                    framebuffer = scene._globeDepth.framebuffer;
-                } else if (environmentState.useFXAA) {
-                    framebuffer = scene._fxaa.getColorFramebuffer();
-                } else {
-                    framebuffer = environmentState.originalFramebuffer;
-                }
-                scene._sunPostProcess.execute(context, framebuffer);
-                passState.framebuffer = framebuffer;
+        // Do not render environment primitives during a pick pass since they do not generate picking commands.
+        if (!picking) {
+            var skyBoxCommand = environmentState.skyBoxCommand;
+            if (defined(skyBoxCommand)) {
+                executeCommand(skyBoxCommand, scene, context, passState);
             }
-        }
 
-        // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
-        if (environmentState.isMoonVisible) {
-            environmentState.moonCommand.execute(context, passState);
+            if (environmentState.isSkyAtmosphereVisible) {
+                executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState);
+            }
+
+            if (environmentState.isSunVisible) {
+                environmentState.sunDrawCommand.execute(context, passState);
+                if (scene.sunBloom && !useWebVR) {
+                    var framebuffer;
+                    if (environmentState.useGlobeDepthFramebuffer) {
+                        framebuffer = scene._globeDepth.framebuffer;
+                    } else if (environmentState.useFXAA) {
+                        framebuffer = scene._fxaa.getColorFramebuffer();
+                    } else {
+                        framebuffer = environmentState.originalFramebuffer;
+                    }
+                    scene._sunPostProcess.execute(context, framebuffer);
+                    passState.framebuffer = framebuffer;
+                }
+            }
+
+            // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
+            if (environmentState.isMoonVisible) {
+                environmentState.moonCommand.execute(context, passState);
+            }
         }
 
         // Determine how translucent surfaces will be handled.
@@ -1751,6 +1764,11 @@ define([
             length = frustumCommands.indices[Pass.GROUND];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
+            }
+
+            // Clear the stencil after the ground pass
+            if (length > 0 && context.stencilBuffer) {
+                scene._stencilClearCommand.execute(context, passState);
             }
 
             if (clearGlobeDepth) {
@@ -1832,14 +1850,13 @@ define([
             var command = commandList[i];
             updateDerivedCommands(scene, command);
 
-            // Don't insert globe commands with the rest of the scene commands since they are handled separately
             if (command.castShadows && (command.pass === Pass.GLOBE || command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT)) {
                 if (isVisible(command, shadowVolume)) {
                     if (isPointLight) {
                         for (var k = 0; k < numberOfPasses; ++k) {
                             passes[k].commandList.push(command);
                         }
-                    } else if (numberOfPasses <= 1) {
+                    } else if (numberOfPasses === 1) {
                         passes[0].commandList.push(command);
                     } else {
                         var wasVisible = false;
@@ -1863,7 +1880,7 @@ define([
 
     function executeShadowMapCastCommands(scene) {
         var frameState = scene.frameState;
-        var shadowMaps = frameState.shadowMaps;
+        var shadowMaps = frameState.shadowHints.shadowMaps;
         var shadowMapLength = shadowMaps.length;
 
         if (!frameState.shadowHints.shadowsEnabled) {
@@ -1945,14 +1962,14 @@ define([
             Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
             camera.frustum.xOffset = offset;
 
-            executeCommands(scene, passState);
+            executeCommands(scene, passState, picking);
 
             viewport.x = passState.viewport.width;
 
             Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
             camera.frustum.xOffset = -offset;
 
-            executeCommands(scene, passState);
+            executeCommands(scene, passState, picking);
 
             Camera.clone(savedCamera, camera);
         } else {
@@ -2103,7 +2120,7 @@ define([
             executeShadowMapCastCommands(scene);
         }
 
-        executeCommands(scene, passState);
+        executeCommands(scene, passState, picking);
     }
 
     function updateEnvironment(scene) {
@@ -2140,14 +2157,38 @@ define([
         var shadowMaps = frameState.shadowMaps;
         var length = shadowMaps.length;
 
-        frameState.shadowHints.shadowsEnabled = (length > 0) && !frameState.passes.pick && (scene.mode === SceneMode.SCENE3D);
-        if (!frameState.shadowHints.shadowsEnabled) {
+        var shadowsEnabled = (length > 0) && !frameState.passes.pick && (scene.mode === SceneMode.SCENE3D);
+        if (shadowsEnabled !== frameState.shadowHints.shadowsEnabled) {
+            // Update derived commands when shadowsEnabled changes
+            ++frameState.shadowHints.lastDirtyTime;
+            frameState.shadowHints.shadowsEnabled = shadowsEnabled;
+        }
+
+        if (!shadowsEnabled) {
             return;
         }
+
+        // Check if the shadow maps are different than the shadow maps last frame.
+        // If so, the derived commands need to be updated.
+        for (var j = 0; j < length; ++j) {
+            if (shadowMaps[j] !== frameState.shadowHints.shadowMaps[j]) {
+                ++frameState.shadowHints.lastDirtyTime;
+                break;
+            }
+        }
+
+        frameState.shadowHints.shadowMaps.length = 0;
+        frameState.shadowHints.lightShadowMaps.length = 0;
 
         for (var i = 0; i < length; ++i) {
             var shadowMap = shadowMaps[i];
             shadowMap.update(frameState);
+
+            frameState.shadowHints.shadowMaps.push(shadowMap);
+
+            if (shadowMap.fromLightSource) {
+                frameState.shadowHints.lightShadowMaps.push(shadowMap);
+            }
 
             if (shadowMap.dirty) {
                 ++frameState.shadowHints.lastDirtyTime;
@@ -2303,13 +2344,14 @@ define([
         }
 
         this._tweens.update();
-        this._camera.update(this._mode);
-        this._camera._updateCameraChanged();
 
         this._screenSpaceCameraController.update();
         if (defined(this._deviceOrientationCameraController)) {
             this._deviceOrientationCameraController.update();
         }
+
+        this._camera.update(this._mode);
+        this._camera._updateCameraChanged();
     };
 
     var scratchEyeTranslation = new Cartesian3();
@@ -2560,7 +2602,7 @@ define([
     };
 
     var scratchPackedDepth = new Cartesian4();
-    var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 160581375.0);
+    var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
 
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.

@@ -7,6 +7,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
+        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
@@ -18,6 +20,7 @@ define([
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
+        '../Scene/ShadowMode',
         './ColorMaterialProperty',
         './ConstantProperty',
         './dynamicGeometryGetBoundingSphere',
@@ -31,6 +34,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         Event,
         GeometryInstance,
         Iso8601,
@@ -42,6 +47,7 @@ define([
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowMode,
         ColorMaterialProperty,
         ConstantProperty,
         dynamicGeometryGetBoundingSphere,
@@ -54,6 +60,8 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
+    var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
     var scratchColor = new Color();
 
     function GeometryOptions(entity) {
@@ -102,6 +110,8 @@ define([
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
+        this._shadowsProperty = undefined;
+        this._distanceDisplayConditionProperty = undefined;
         this._onTerrain = false;
         this._options = new GeometryOptions(entity);
 
@@ -232,6 +242,31 @@ define([
             }
         },
         /**
+         * Gets the property specifying whether the geometry
+         * casts or receives shadows from each light source.
+         * @memberof RectangleGeometryUpdater.prototype
+         * 
+         * @type {Property}
+         * @readonly
+         */
+        shadowsProperty : {
+            get : function() {
+                return this._shadowsProperty;
+            }
+        },
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
+         * @memberof RectangleGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        distanceDisplayConditionProperty : {
+            get : function() {
+                return this._distanceDisplayConditionProperty;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
@@ -333,6 +368,8 @@ define([
 
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
+        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -341,11 +378,13 @@ define([
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
                 show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute,
                 color : color
             };
         } else {
             attributes = {
-                show : show
+                show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute
             };
         }
 
@@ -378,13 +417,15 @@ define([
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
         return new GeometryInstance({
             id : entity,
             geometry : new RectangleOutlineGeometry(this._options),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
             }
         });
     };
@@ -462,6 +503,8 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(rectangle.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(rectangle.outlineColor, defaultOutlineColor) : undefined;
+        this._shadowsProperty = defaultValue(rectangle.shadows, defaultShadows);
+        this._distanceDisplayConditionProperty = defaultValue(rectangle.distanceDisplayCondition, defaultDistanceDisplayCondition);
 
         var height = rectangle.height;
         var extrudedHeight = rectangle.extrudedHeight;
@@ -491,7 +534,8 @@ define([
             !Property.isConstant(rotation) || //
             !Property.isConstant(outlineWidth) || //
             !Property.isConstant(closeBottom) || //
-            !Property.isConstant(closeTop)) {
+            !Property.isConstant(closeTop) || //
+            (onTerrain && !Property.isConstant(material))) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -518,7 +562,7 @@ define([
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
      *
      * @param {PrimitiveCollection} primitives The primitive collection to use.
-     * @param {PrimitiveCollection} primitives The primitive collection to use for GroundPrimitives.
+     * @param {PrimitiveCollection} groundPrimitives The primitive collection to use for GroundPrimitives.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
@@ -590,6 +634,8 @@ define([
         options.closeBottom = Property.getValueOrUndefined(rectangle.closeBottom, time);
         options.closeTop = Property.getValueOrUndefined(rectangle.closeTop, time);
 
+        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
+
         if (Property.getValueOrDefault(rectangle.fill, time, true)) {
             var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
             var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
@@ -602,14 +648,15 @@ define([
                 }
 
                 this._primitive = groundPrimitives.add(new GroundPrimitive({
-                    geometryInstance : new GeometryInstance({
+                    geometryInstances : new GeometryInstance({
                         id : entity,
                         geometry : new RectangleGeometry(options),
                         attributes: {
                             color: ColorGeometryInstanceAttribute.fromColor(currentColor)
                         }
                     }),
-                    asynchronous : false
+                    asynchronous : false,
+                    shadows : shadows
                 }));
             } else {
                 var appearance = new MaterialAppearance({
@@ -626,10 +673,10 @@ define([
                         geometry : new RectangleGeometry(options)
                     }),
                     appearance : appearance,
-                    asynchronous : false
+                    asynchronous : false,
+                    shadows : shadows
                 }));
             }
-
         }
 
         if (!onTerrain && Property.getValueOrDefault(rectangle.outline, time, false)) {
@@ -654,7 +701,8 @@ define([
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
-                asynchronous : false
+                asynchronous : false,
+                shadows : shadows
             }));
         }
     };

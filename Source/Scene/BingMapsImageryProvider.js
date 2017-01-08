@@ -117,17 +117,13 @@ define([
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
-         * By default, this is set to 1.3 for the "aerial" and "aerial with labels" map styles and 1.0 for
-         * all others.  Changing this value after creating an {@link ImageryLayer} for this provider will have
+         * Changing this value after creating an {@link ImageryLayer} for this provider will have
          * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
          *
          * @type {Number}
          * @default 1.0
          */
         this.defaultGamma = 1.0;
-        if (this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) {
-            this.defaultGamma = 1.3;
-        }
 
         this._tilingScheme = new WebMercatorTilingScheme({
             numberOfLevelZeroTilesX : 2,
@@ -503,9 +499,11 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
 
         var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
         var result = getRectangleAttribution(this._attributionList, level, rectangle);

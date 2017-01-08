@@ -1,58 +1,40 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/GroundPrimitive',
-        'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
-        'Core/ComponentDatatype',
         'Core/destroyObject',
+        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/Ellipsoid',
-        'Core/Geometry',
-        'Core/GeometryAttribute',
         'Core/GeometryInstance',
-        'Core/GeometryInstanceAttribute',
+        'Core/HeadingPitchRange',
+        'Core/Math',
         'Core/PolygonGeometry',
-        'Core/PrimitiveType',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Core/RuntimeError',
         'Core/ShowGeometryInstanceAttribute',
-        'Core/Transforms',
-        'Scene/MaterialAppearance',
-        'Scene/OrthographicFrustum',
-        'Scene/Pass',
+        'Renderer/Pass',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
-        'Scene/SceneMode',
-        'Specs/BadGeometry',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
         GroundPrimitive,
-        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
-        ComponentDatatype,
         destroyObject,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         Ellipsoid,
-        Geometry,
-        GeometryAttribute,
         GeometryInstance,
-        GeometryInstanceAttribute,
+        HeadingPitchRange,
+        CesiumMath,
         PolygonGeometry,
-        PrimitiveType,
         Rectangle,
         RectangleGeometry,
-        RuntimeError,
         ShowGeometryInstanceAttribute,
-        Transforms,
-        MaterialAppearance,
-        OrthographicFrustum,
         Pass,
         PerInstanceColorAppearance,
         Primitive,
-        SceneMode,
-        BadGeometry,
         createScene,
         pollToPromise) {
     'use strict';
@@ -70,20 +52,23 @@ defineSuite([
     var primitive;
     var depthPrimitive;
 
-    beforeAll(function(done) {
+    beforeAll(function() {
         scene = createScene();
         scene.fxaa = false;
 
         context = scene.context;
 
         ellipsoid = Ellipsoid.WGS84;
-        GroundPrimitive.initializeTerrainHeights().then(function() {
-           done();
-        });
+        return GroundPrimitive.initializeTerrainHeights();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        // Leave ground primitive uninitialized
+        GroundPrimitive._initialized = false;
+        GroundPrimitive._initPromise = undefined;
+        GroundPrimitive._terrainHeights = undefined;
     });
 
     function MockGlobePrimitive(primitive) {
@@ -128,7 +113,8 @@ defineSuite([
                 }
             }),
             appearance : new PerInstanceColorAppearance({
-                translucent : false
+                translucent : false,
+                flat : true
             }),
             asynchronous : false
         });
@@ -504,6 +490,70 @@ defineSuite([
         verifyGroundPrimitiveRender(primitive, depthColor);
     });
 
+    it('renders with distance display condition per instance attribute', function() {
+        var near = 10000.0;
+        var far = 1000000.0;
+        var rect = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+        var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
+        depthColor = depthColorAttribute.value;
+        var primitive = new Primitive({
+            geometryInstances : new GeometryInstance({
+                geometry : new RectangleGeometry({
+                    ellipsoid : ellipsoid,
+                    rectangle : rectangle
+                }),
+                id : 'depth rectangle',
+                attributes : {
+                    color : depthColorAttribute
+                }
+            }),
+            appearance : new PerInstanceColorAppearance({
+                translucent : false,
+                flat : true
+            }),
+            asynchronous : false
+        });
+
+        // wrap rectangle primitive so it gets executed during the globe pass to lay down depth
+        depthPrimitive = new MockGlobePrimitive(primitive);
+
+        var rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0));
+        var rectInstance = new GeometryInstance({
+            geometry : new RectangleGeometry({
+                ellipsoid : ellipsoid,
+                rectangle : rectangle
+            }),
+            id : 'rect',
+            attributes : {
+                color : rectColorAttribute,
+                distanceDisplayCondition : new DistanceDisplayConditionGeometryInstanceAttribute(near, far)
+            }
+        });
+
+        primitive = new GroundPrimitive({
+            geometryInstances : rectInstance,
+            asynchronous : false
+        });
+
+        scene.groundPrimitives.add(depthPrimitive);
+        scene.groundPrimitives.add(primitive);
+        scene.camera.setView({ destination : rect });
+        scene.renderForSpecs();
+
+        var boundingSphere = primitive.getGeometryInstanceAttributes('rect').boundingSphere;
+        var center = boundingSphere.center;
+        var radius = boundingSphere.radius;
+
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius));
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near + 1.0));
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 255, 255]);
+
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 1.0));
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+    });
+
     it('get bounding sphere from per instance attribute', function() {
         if (!GroundPrimitive.isSupported(scene)) {
             return;
@@ -851,10 +901,12 @@ defineSuite([
             geometryInstances : rectangleInstance,
             asynchronous : false
         });
-        
-        expect(function() {
-            primitive.update(scene.frameState);
-        }).toThrowDeveloperError();
+
+        if (GroundPrimitive.isSupported(scene)) {
+            expect(function() {
+                primitive.update(scene.frameState);
+            }).toThrowDeveloperError();
+        }
 
         // Set back to initialized state
         GroundPrimitive._initPromise = initPromise;

@@ -36,6 +36,8 @@ define([
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
      * @param {Property} [options.slices=128] The number of edges around the perimeter of the cylinder.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the cylinder casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this cylinder will be displayed.
      */
     function CylinderGraphics(options) {
         this._length = undefined;
@@ -60,6 +62,10 @@ define([
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
+        this._shadows = undefined;
+        this._shadowsSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -162,7 +168,23 @@ define([
          * @type {Property}
          * @default 1.0
          */
-        outlineWidth : createPropertyDescriptor('outlineWidth')
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
+
+        /**
+         * Get or sets the enum Property specifying whether the cylinder
+         * casts or receives shadows from each light source.
+         * @memberof CylinderGraphics.prototype
+         * @type {Property}
+         * @default ShadowMode.DISABLED
+         */
+        shadows : createPropertyDescriptor('shadows'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this cylinder will be displayed.
+         * @memberof CylinderGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -186,6 +208,8 @@ define([
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
+        result.shadows = this.shadows;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
 
@@ -213,6 +237,8 @@ define([
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+        this.shadows = defaultValue(this.shadows, source.shadows);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return CylinderGraphics;

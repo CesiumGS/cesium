@@ -95,6 +95,15 @@ define([
          */
         this.occluder = undefined;
 
+        /**
+         * The maximum screen-space error used to drive level-of-detail refinement.  Higher
+         * values will provide better performance but lower visual quality.
+         *
+         * @type {Number}
+         * @default 2
+         */
+        this.maximumScreenSpaceError = undefined;
+
         this.passes = {
             /**
              * <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.
@@ -170,6 +179,23 @@ define([
         this.terrainExaggeration = 1.0;
 
         this.shadowHints = {
+            /**
+             * Whether there are any active shadow maps this frame.
+             * @type {Boolean}
+             */
+            shadowsEnabled : true,
+
+            /**
+             * All shadow maps that are enabled this frame.
+             */
+             shadowMaps : [],
+
+            /**
+             * Shadow maps that originate from light sources. Does not include shadow maps that are used for
+             * analytical purposes. Only these shadow maps will be used to generate receive shadows shaders.
+             */
+            lightShadowMaps : [],
+
             /**
              * The near plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
              * @type {Number}

@@ -11,22 +11,24 @@ defineSuite([
         'Core/EllipsoidTerrainProvider',
         'Core/GeometryInstance',
         'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
         'Core/HeightmapTerrainData',
         'Core/JulianDate',
         'Core/Math',
         'Core/PixelFormat',
         'Core/Transforms',
+        'Core/WebGLConstants',
         'Renderer/Context',
         'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
         'Renderer/Texture',
-        'Renderer/WebGLConstants',
         'Scene/Camera',
         'Scene/Globe',
         'Scene/Model',
         'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
+        'Scene/ShadowMode',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -42,22 +44,24 @@ defineSuite([
         EllipsoidTerrainProvider,
         GeometryInstance,
         HeadingPitchRange,
+        HeadingPitchRoll,
         HeightmapTerrainData,
         JulianDate,
         CesiumMath,
         PixelFormat,
         Transforms,
+        WebGLConstants,
         Context,
         Framebuffer,
         PixelDatatype,
         Texture,
-        WebGLConstants,
         Camera,
         Globe,
         Model,
         OrthographicFrustum,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowMode,
         createScene,
         pollToPromise,
         when) {
@@ -99,13 +103,13 @@ defineSuite([
         sunShadowMap = scene.shadowMap;
 
         var boxOrigin = new Cartesian3.fromRadians(longitude, latitude, boxHeight);
-        var boxTransform = Transforms.headingPitchRollToFixedFrame(boxOrigin, 0.0, 0.0, 0.0);
+        var boxTransform = Transforms.headingPitchRollToFixedFrame(boxOrigin, new HeadingPitchRoll());
 
         var floorOrigin = new Cartesian3.fromRadians(longitude, latitude, floorHeight);
-        var floorTransform = Transforms.headingPitchRollToFixedFrame(floorOrigin, 0.0, 0.0, 0.0);
+        var floorTransform = Transforms.headingPitchRollToFixedFrame(floorOrigin, new HeadingPitchRoll());
 
         var roomOrigin = new Cartesian3.fromRadians(longitude, latitude, height);
-        var roomTransform = Transforms.headingPitchRollToFixedFrame(roomOrigin, 0.0, 0.0, 0.0);
+        var roomTransform = Transforms.headingPitchRollToFixedFrame(roomOrigin, new HeadingPitchRoll());
 
         var modelPromises = [];
         modelPromises.push(loadModel({
@@ -185,8 +189,7 @@ defineSuite([
             }),
             asynchronous : false,
             show : false,
-            castShadows : true,
-            receiveShadows : true
+            shadows : ShadowMode.ENABLED
         }));
     }
 
@@ -222,8 +225,7 @@ defineSuite([
             asynchronous : false,
             rtcCenter : boxGeometry.boundingSphere.center,
             show : false,
-            castShadows : true,
-            receiveShadows : true
+            shadows : ShadowMode.ENABLED
         }));
     }
 
@@ -245,7 +247,8 @@ defineSuite([
     function loadGlobe() {
         return pollToPromise(function() {
             scene.render();
-            return scene.globe._surface.tileProvider.ready && !defined(scene.globe._surface._tileLoadQueue.head) && scene.globe._surface._debug.tilesWaitingForChildren === 0;
+            var globe = scene.globe;
+            return globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
         });
     }
 
@@ -354,8 +357,8 @@ defineSuite([
     }
 
     function verifyShadows(caster, receiver) {
-        caster.castShadows = true;
-        receiver.receiveShadows = true;
+        caster.shadows = ShadowMode.ENABLED;
+        receiver.shadows = ShadowMode.ENABLED;
 
         // Render without shadows
         scene.shadowMap.enabled = false;
@@ -369,15 +372,15 @@ defineSuite([
         expect(shadowedColor).not.toEqual(unshadowedColor);
 
         // Turn shadow casting off/on
-        caster.castShadows = false;
+        caster.shadows = ShadowMode.DISABLED;
         expect(render()).toEqual(unshadowedColor);
-        caster.castShadows = true;
+        caster.shadows = ShadowMode.ENABLED;
         expect(render()).toEqual(shadowedColor);
 
         // Turn shadow receiving off/on
-        receiver.receiveShadows = false;
+        receiver.shadows = ShadowMode.DISABLED;
         expect(render()).toEqual(unshadowedColor);
-        receiver.receiveShadows = true;
+        receiver.shadows = ShadowMode.ENABLED;
         expect(render()).toEqual(shadowedColor);
 
         // Move the camera away from the shadow
@@ -538,11 +541,11 @@ defineSuite([
 
             // Render with globe casting off
             scene.shadowMap.enabled = true;
-            scene.globe.castShadows = false;
+            scene.globe.shadows = ShadowMode.DISABLED;
             expect(render()).toEqual(unshadowedColor);
 
             // Render with globe casting on
-            scene.globe.castShadows = true;
+            scene.globe.shadows = ShadowMode.ENABLED;
             var shadowedColor = render();
             expect(shadowedColor).not.toEqual(backgroundColor);
             expect(shadowedColor).not.toEqual(unshadowedColor);
@@ -661,7 +664,7 @@ defineSuite([
         for (var i = 0; i < 6; ++i) {
             var box = scene.primitives.add(Model.fromGltf({
                 url : boxUrl,
-                modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], 0.0, 0.0, 0.0),
+                modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], new HeadingPitchRoll()),
                 scale : 0.2
             }));
             scene.render(); // Model is pre-loaded, render one frame to make it ready
@@ -861,11 +864,11 @@ defineSuite([
     it('enable debugShow for cascaded shadow map', function() {
         createCascadedShadowMap();
 
-        // Shadow overlay command, shadow volume outline, camera outline, and four cascade outlines
+        // Shadow overlay command, shadow volume outline, camera outline, four cascade outlines, four cascade planes
         scene.shadowMap.debugShow = true;
         scene.shadowMap.debugFreezeFrame = true;
         render();
-        expect(scene.frameState.commandList.length).toBe(7);
+        expect(scene.frameState.commandList.length).toBe(13);
 
         scene.shadowMap.debugShow = false;
         render();
@@ -875,10 +878,10 @@ defineSuite([
     it('enable debugShow for fixed shadow map', function() {
         createShadowMapForDirectionalLight();
 
-        // Overlay command and shadow volume outline
+        // Overlay command, shadow volume outline, shadow volume planes
         scene.shadowMap.debugShow = true;
         render();
-        expect(scene.frameState.commandList.length).toBe(2);
+        expect(scene.frameState.commandList.length).toBe(3);
 
         scene.shadowMap.debugShow = false;
         render();
@@ -897,7 +900,7 @@ defineSuite([
         render();
         expect(scene.frameState.commandList.length).toBe(0);
     });
-    
+
     it('enable fitNearFar', function() {
         box.show = true;
         floor.show = true;

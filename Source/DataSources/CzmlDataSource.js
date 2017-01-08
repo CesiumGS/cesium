@@ -34,9 +34,11 @@ define([
         '../Core/Spherical',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Scene/ColorBlendMode',
         '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
+        '../Scene/ShadowMode',
         '../Scene/VerticalOrigin',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -54,6 +56,7 @@ define([
         './DataSourceClock',
         './EllipseGraphics',
         './EllipsoidGraphics',
+        './EntityCluster',
         './EntityCollection',
         './GridMaterialProperty',
         './ImageMaterialProperty',
@@ -116,9 +119,11 @@ define([
         Spherical,
         TimeInterval,
         TimeIntervalCollection,
+        ColorBlendMode,
         HeightReference,
         HorizontalOrigin,
         LabelStyle,
+        ShadowMode,
         VerticalOrigin,
         Uri,
         when,
@@ -136,6 +141,7 @@ define([
         DataSourceClock,
         EllipseGraphics,
         EllipsoidGraphics,
+        EntityCluster,
         EntityCollection,
         GridMaterialProperty,
         ImageMaterialProperty,
@@ -426,6 +432,8 @@ define([
                 return unwrapCartesianInterval(czmlInterval);
             case Color:
                 return unwrapColorInterval(czmlInterval);
+            case ColorBlendMode:
+                return ColorBlendMode[defaultValue(czmlInterval.colorBlendMode, czmlInterval)];
             case CornerType:
                 return CornerType[defaultValue(czmlInterval.cornerType, czmlInterval)];
             case HeightReference:
@@ -446,6 +454,8 @@ define([
                 return unwrapQuaternionInterval(czmlInterval);
             case Rotation:
                 return defaultValue(czmlInterval.number, czmlInterval);
+            case ShadowMode:
+                return ShadowMode[defaultValue(czmlInterval.shadows, czmlInterval)];
             case String:
                 return defaultValue(czmlInterval.string, czmlInterval);
             case StripeOrientation:
@@ -1166,6 +1176,7 @@ define([
         processPacketData(Boolean, box, 'outline', boxData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, box, 'outlineColor', boxData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, box, 'outlineWidth', boxData.outlineWidth, interval, sourceUri, entityCollection);
+        processPacketData(ShadowMode, box, 'shadows', boxData.shadows, interval, sourceUri, entityCollection);
     }
 
     function processCorridor(entity, packet, entityCollection, sourceUri) {
@@ -1198,6 +1209,7 @@ define([
         processPacketData(Boolean, corridor, 'outline', corridorData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, corridor, 'outlineColor', corridorData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, corridor, 'outlineWidth', corridorData.outlineWidth, interval, sourceUri, entityCollection);
+        processPacketData(ShadowMode, corridor, 'shadows', corridorData.shadows, interval, sourceUri, entityCollection);
     }
 
     function processCylinder(entity, packet, entityCollection, sourceUri) {
@@ -1229,6 +1241,7 @@ define([
         processPacketData(Number, cylinder, 'outlineWidth', cylinderData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(Number, cylinder, 'numberOfVerticalLines', cylinderData.numberOfVerticalLines, interval, sourceUri, entityCollection);
         processPacketData(Number, cylinder, 'slices', cylinderData.slices, interval, sourceUri, entityCollection);
+        processPacketData(ShadowMode, cylinder, 'shadows', cylinderData.shadows, interval, sourceUri, entityCollection);
     }
 
     function processDocument(packet, dataSource) {
@@ -1308,6 +1321,7 @@ define([
         processPacketData(Color, ellipse, 'outlineColor', ellipseData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'outlineWidth', ellipseData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'numberOfVerticalLines', ellipseData.numberOfVerticalLines, interval, sourceUri, entityCollection);
+        processPacketData(ShadowMode, ellipse, 'shadows', ellipseData.shadows, interval, sourceUri, entityCollection);
     }
 
     function processEllipsoid(entity, packet, entityCollection, sourceUri) {
@@ -1338,6 +1352,7 @@ define([
         processPacketData(Number, ellipsoid, 'stackPartitions', ellipsoidData.stackPartitions, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipsoid, 'slicePartitions', ellipsoidData.slicePartitions, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipsoid, 'subdivisions', ellipsoidData.subdivisions, interval, sourceUri, entityCollection);
+        processPacketData(ShadowMode, ellipsoid, 'shadows', ellipsoidData.shadows, interval, sourceUri, entityCollection);
     }
 
     function processLabel(entity, packet, entityCollection, sourceUri) {
@@ -1363,6 +1378,9 @@ define([
         processPacketData(String, label, 'font', labelData.font, interval, sourceUri, entityCollection);
         processPacketData(LabelStyle, label, 'style', labelData.style, interval, sourceUri, entityCollection);
         processPacketData(Number, label, 'scale', labelData.scale, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, label, 'showBackground', labelData.showBackground, interval, sourceUri, entityCollection);
+        processPacketData(Color, label, 'backgroundColor', labelData.backgroundColor, interval, sourceUri, entityCollection);
+        processPacketData(Cartesian2, label, 'backgroundPadding', labelData.backgroundPadding, interval, sourceUri, entityCollection);
         processPacketData(Cartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri, entityCollection);
         processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri, entityCollection);
         processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri, entityCollection);
@@ -1399,10 +1417,14 @@ define([
         processPacketData(Number, model, 'minimumPixelSize', modelData.minimumPixelSize, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'maximumScale', modelData.maximumScale, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'incrementallyLoadTextures', modelData.incrementallyLoadTextures, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, model, 'castShadows', modelData.castShadows, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, model, 'receiveShadows', modelData.receiveShadows, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection);
+        processPacketData(ShadowMode, model, 'shadows', modelData.shadows, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, model, 'heightReference', modelData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(Color, model, 'silhouetteColor', modelData.silhouetteColor, interval, sourceUri, entityCollection);
+        processPacketData(Number, model, 'silhouetteSize', modelData.silhouetteSize, interval, sourceUri, entityCollection);
+        processPacketData(Color, model, 'color', modelData.color, interval, sourceUri, entityCollection);
+        processPacketData(ColorBlendMode, model, 'colorBlendMode', modelData.colorBlendMode, interval, sourceUri, entityCollection);
+        processPacketData(Number, model, 'colorBlendAmount', modelData.colorBlendAmount, interval, sourceUri, entityCollection);
 
         var nodeTransformationsData = modelData.nodeTransformations;
         if (defined(nodeTransformationsData)) {
@@ -1549,6 +1571,7 @@ define([
         processPacketData(Boolean, polygon, 'perPositionHeight', polygonData.perPositionHeight, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'closeTop', polygonData.closeTop, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'closeBottom', polygonData.closeBottom, interval, sourceUri, entityCollection);
+        processPacketData(ShadowMode, polygon, 'shadows', polygonData.shadows, interval, sourceUri, entityCollection);
     }
 
     function processPolyline(entity, packet, entityCollection, sourceUri) {
@@ -1575,6 +1598,7 @@ define([
         processPacketData(Number, polyline, 'granularity', polylineData.granularity, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
+        processPacketData(ShadowMode, polyline, 'shadows', polylineData.shadows, interval, sourceUri, entityCollection);
     }
 
     function processRectangle(entity, packet, entityCollection, sourceUri) {
@@ -1609,6 +1633,7 @@ define([
         processPacketData(Number, rectangle, 'outlineWidth', rectangleData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(Boolean, rectangle, 'closeTop', rectangleData.closeTop, interval, sourceUri, entityCollection);
         processPacketData(Boolean, rectangle, 'closeBottom', rectangleData.closeBottom, interval, sourceUri, entityCollection);
+        processPacketData(ShadowMode, rectangle, 'shadows', rectangleData.shadows, interval, sourceUri, entityCollection);
     }
 
     function processWall(entity, packet, entityCollection, sourceUri) {
@@ -1639,6 +1664,7 @@ define([
         processPacketData(Boolean, wall, 'outline', wallData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, wall, 'outlineColor', wallData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, wall, 'outlineWidth', wallData.outlineWidth, interval, sourceUri, entityCollection);
+        processPacketData(ShadowMode, wall, 'shadows', wallData.shadows, interval, sourceUri, entityCollection);
     }
 
     function processCzmlPacket(packet, entityCollection, updaterFunctions, sourceUri, dataSource) {
@@ -1820,6 +1846,7 @@ define([
         this._documentPacket = new DocumentPacket();
         this._version = undefined;
         this._entityCollection = new EntityCollection(this);
+        this._entityCluster = new EntityCluster();
     }
 
     /**
@@ -1918,6 +1945,26 @@ define([
             },
             set : function(value) {
                 this._entityCollection.show = value;
+            }
+        },
+
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof CzmlDataSource.prototype
+         * @type {EntityCluster}
+         */
+        clustering : {
+            get : function() {
+                return this._entityCluster;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value must be defined.');
+                }
+                //>>includeEnd('debug');
+                this._entityCluster = value;
             }
         }
     });

@@ -7,7 +7,6 @@ define([
         './DeveloperError',
         './EllipseGeometry',
         './Ellipsoid',
-        './Math',
         './VertexFormat'
     ], function(
         Cartesian3,
@@ -17,7 +16,6 @@ define([
         DeveloperError,
         EllipseGeometry,
         Ellipsoid,
-        CesiumMath,
         VertexFormat) {
     'use strict';
 
@@ -70,7 +68,8 @@ define([
             extrudedHeight : options.extrudedHeight,
             granularity : options.granularity,
             vertexFormat : options.vertexFormat,
-            stRotation : options.stRotation
+            stRotation : options.stRotation,
+            shadowVolume: options.shadowVolume
         };
         this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
         this._workerName = 'createCircleGeometry';
@@ -88,6 +87,8 @@ define([
      * @param {CircleGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     CircleGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -95,7 +96,7 @@ define([
             throw new DeveloperError('value is required');
         }
         //>>includeEnd('debug');
-        EllipseGeometry.pack(value._ellipseGeometry, array, startingIndex);
+        return EllipseGeometry.pack(value._ellipseGeometry, array, startingIndex);
     };
 
     var scratchEllipseGeometry = new EllipseGeometry({
@@ -113,7 +114,8 @@ define([
         vertexFormat : new VertexFormat(),
         stRotation : undefined,
         semiMajorAxis : undefined,
-        semiMinorAxis : undefined
+        semiMinorAxis : undefined,
+        shadowVolume: undefined
     };
 
     /**
@@ -133,6 +135,7 @@ define([
         scratchOptions.granularity = ellipseGeometry._granularity;
         scratchOptions.vertexFormat = VertexFormat.clone(ellipseGeometry._vertexFormat, scratchOptions.vertexFormat);
         scratchOptions.stRotation = ellipseGeometry._stRotation;
+        scratchOptions.shadowVolume = ellipseGeometry._shadowVolume;
 
         if (!defined(result)) {
             scratchOptions.radius = ellipseGeometry._semiMajorAxis;
@@ -173,10 +176,11 @@ define([
             granularity : granularity,
             extrudedHeight : minHeight,
             height : maxHeight,
-            vertexFormat : VertexFormat.POSITION_ONLY
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            shadowVolume: true
         });
     };
-    
+
     defineProperties(CircleGeometry.prototype, {
         /**
          * @private

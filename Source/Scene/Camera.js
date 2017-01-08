@@ -219,6 +219,7 @@ define([
         this._projection = projection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         this._max2Dfrustum = undefined;
+        this._suspendTerrainAdjustment = false;
 
         // set default view
         rectangleCameraPosition3D(this, Camera.DEFAULT_VIEW_RECTANGLE, this.position, true);
@@ -335,6 +336,76 @@ define([
             camera._changed.raiseEvent(Math.max(dirPercentage, heightPercentage));
             camera._changedPosition = Cartesian3.clone(camera.positionWC, camera._changedPosition);
             camera._changedDirection = Cartesian3.clone(camera.directionWC, camera._changedDirection);
+        }
+    };
+
+    var scratchAdjustHeightTransform = new Matrix4();
+    var scratchAdjustHeightCartographic = new Cartographic();
+
+    Camera.prototype._adjustHeightForTerrain = function() {
+        var scene = this._scene;
+
+        var screenSpaceCameraController = scene.screenSpaceCameraController;
+        var enableCollisionDetection = screenSpaceCameraController.enableCollisionDetection;
+        var minimumCollisionTerrainHeight = screenSpaceCameraController.minimumCollisionTerrainHeight;
+        var minimumZoomDistance = screenSpaceCameraController.minimumZoomDistance;
+
+        if (this._suspendTerrainAdjustment || !enableCollisionDetection) {
+            return;
+        }
+
+        var mode = this._mode;
+        var globe = scene.globe;
+
+        if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
+            return;
+        }
+
+        var ellipsoid = globe.ellipsoid;
+        var projection = scene.mapProjection;
+
+        var transform;
+        var mag;
+        if (!Matrix4.equals(this.transform, Matrix4.IDENTITY)) {
+            transform = Matrix4.clone(this.transform, scratchAdjustHeightTransform);
+            mag = Cartesian3.magnitude(this.position);
+            this._setTransform(Matrix4.IDENTITY);
+        }
+
+        var cartographic = scratchAdjustHeightCartographic;
+        if (mode === SceneMode.SCENE3D) {
+            ellipsoid.cartesianToCartographic(this.position, cartographic);
+        } else {
+            projection.unproject(this.position, cartographic);
+        }
+
+        var heightUpdated = false;
+        if (cartographic.height < minimumCollisionTerrainHeight) {
+            var height = globe.getHeight(cartographic);
+            if (defined(height)) {
+                height += minimumZoomDistance;
+                if (cartographic.height < height) {
+                    cartographic.height = height;
+                    if (mode === SceneMode.SCENE3D) {
+                        ellipsoid.cartographicToCartesian(cartographic, this.position);
+                    } else {
+                        projection.project(cartographic, this.position);
+                    }
+                    heightUpdated = true;
+                }
+            }
+        }
+
+        if (defined(transform)) {
+            this._setTransform(transform);
+            if (heightUpdated) {
+                Cartesian3.normalize(this.position, this.position);
+                Cartesian3.negate(this.position, this.direction);
+                Cartesian3.multiplyByScalar(this.position, Math.max(mag, minimumZoomDistance), this.position);
+                Cartesian3.normalize(this.direction, this.direction);
+                Cartesian3.cross(this.direction, this.up, this.right);
+                Cartesian3.cross(this.right, this.direction, this.up);
+            }
         }
     };
 
@@ -854,6 +925,13 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, this.position);
         }
+
+        var globe = this._scene.globe;
+        var globeFinishedUpdating = !defined(globe) || (globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0);
+        if (this._suspendTerrainAdjustment) {
+            this._suspendTerrainAdjustment = !globeFinishedUpdating;
+        }
+        this._adjustHeightForTerrain();
     };
 
     var setTransformPosition = new Cartesian3();
@@ -1081,6 +1159,8 @@ define([
         var heading = defaultValue(orientation.heading, 0.0);
         var pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
         var roll = defaultValue(orientation.roll, 0.0);
+
+        this._suspendTerrainAdjustment = true;
 
         if (mode === SceneMode.SCENE3D) {
             setView3D(this, destination, heading, pitch, roll);
@@ -2442,7 +2522,6 @@ define([
     };
 
     var scratchFlyToDestination = new Cartesian3();
-    var scratchFlyToCarto = new Cartographic();
     var newOptions = {
         destination : undefined,
         heading : undefined,
@@ -2454,6 +2533,17 @@ define([
         endTransform : undefined,
         maximumHeight : undefined,
         easingFunction : undefined
+    };
+
+    /**
+     * Cancels the current camera flight if one is in progress.
+     * The camera is left at it's current location.
+     */
+    Camera.prototype.cancelFlight = function () {
+        if (defined(this._currentFlight)) {
+            this._currentFlight.cancelTween();
+            this._currentFlight = undefined;
+        }
     };
 
     /**
@@ -2517,6 +2607,8 @@ define([
             return;
         }
 
+        this.cancelFlight();
+
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
         if (defined(orientation.direction)) {
             orientation = directionUpToHeadingPitchRoll(this, destination, orientation, scratchSetViewOptions.orientation);
@@ -2542,45 +2634,22 @@ define([
             destination = this.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
         }
 
-        var sscc = this._scene.screenSpaceCameraController;
-
-        if (defined(sscc) || mode === SceneMode.SCENE2D) {
-            var ellipsoid = this._scene.mapProjection.ellipsoid;
-            var destinationCartographic = ellipsoid.cartesianToCartographic(destination, scratchFlyToCarto);
-            var height = destinationCartographic.height;
-
-            // Make sure camera doesn't zoom outside set limits
-            if (defined(sscc)) {
-                //The computed height for rectangle in 2D/CV is stored in the 'z' component of Cartesian3
-                if (mode !== SceneMode.SCENE3D && isRectangle) {
-                    destination.z = CesiumMath.clamp(destination.z, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
-                } else {
-                    destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
-                }
-            }
-
-            // The max height in 2D might be lower than the max height for sscc.
-            if (mode === SceneMode.SCENE2D) {
-                var maxHeight = ellipsoid.maximumRadius * Math.PI * 2.0;
-                if (isRectangle) {
-                    destination.z = Math.min(destination.z, maxHeight);
-                } else {
-                    destinationCartographic.height = Math.min(destinationCartographic.height, maxHeight);
-                }
-            }
-
-            //Only change if we clamped the height
-            if (destinationCartographic.height !== height) {
-                destination = ellipsoid.cartographicToCartesian(destinationCartographic, scratchFlyToDestination);
-            }
-        }
+        var that = this;
+        var flightTween;
 
         newOptions.destination = destination;
         newOptions.heading = orientation.heading;
         newOptions.pitch = orientation.pitch;
         newOptions.roll = orientation.roll;
         newOptions.duration = options.duration;
-        newOptions.complete = options.complete;
+        newOptions.complete = function () {
+            if(flightTween === that._currentFlight){
+                that._currentFlight = undefined;
+            }
+            if (defined(options.complete)) {
+                options.complete();
+            }
+        };
         newOptions.cancel = options.cancel;
         newOptions.endTransform = options.endTransform;
         newOptions.convert = isRectangle ? false : options.convert;
@@ -2588,7 +2657,8 @@ define([
         newOptions.easingFunction = options.easingFunction;
 
         var scene = this._scene;
-        scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
+        flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
+        this._currentFlight = flightTween;
     };
 
     function distanceToBoundingSphere3D(camera, radius) {
@@ -2659,11 +2729,11 @@ define([
         if (!defined(boundingSphere)) {
             throw new DeveloperError('boundingSphere is required.');
         }
-        //>>includeEnd('debug');
 
         if (this._mode === SceneMode.MORPHING) {
             throw new DeveloperError('viewBoundingSphere is not supported while morphing.');
         }
+        //>>includeEnd('debug');
 
         offset = adjustBoundingSphereOffset(this, boundingSphere, offset);
         this.lookAt(boundingSphere.center, offset);
@@ -2776,8 +2846,15 @@ define([
         var qUnit = Cartesian3.normalize(q, scratchCartesian3_2);
 
         // Determine the east and north directions at q.
-        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3_3), scratchCartesian3_3);
-        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit, scratchCartesian3_4), scratchCartesian3_4);
+        var eUnit;
+        var nUnit;
+        if (Cartesian3.equalsEpsilon(qUnit, Cartesian3.UNIT_Z, CesiumMath.EPSILON10)) {
+            eUnit = new Cartesian3(0, 1, 0);
+            nUnit = new Cartesian3(0, 0, 1);
+        } else {
+            eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, qUnit, scratchCartesian3_3), scratchCartesian3_3);
+            nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit, scratchCartesian3_4), scratchCartesian3_4);
+        }
 
         // Determine the radius of the 'limb' of the ellipsoid.
         var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);

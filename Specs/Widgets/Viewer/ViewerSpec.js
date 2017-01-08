@@ -1,6 +1,5 @@
 /*global defineSuite*/
 defineSuite([
-        'Widgets/Viewer/Viewer',
         'Core/Cartesian3',
         'Core/ClockRange',
         'Core/ClockStep',
@@ -18,6 +17,7 @@ defineSuite([
         'Scene/CameraFlightPath',
         'Scene/ImageryLayerCollection',
         'Scene/SceneMode',
+        'Scene/ShadowMode',
         'Specs/createViewer',
         'Specs/DomEventSimulator',
         'Specs/MockDataSource',
@@ -34,7 +34,6 @@ defineSuite([
         'Widgets/SelectionIndicator/SelectionIndicator',
         'Widgets/Timeline/Timeline'
     ], function(
-        Viewer,
         Cartesian3,
         ClockRange,
         ClockStep,
@@ -52,6 +51,7 @@ defineSuite([
         CameraFlightPath,
         ImageryLayerCollection,
         SceneMode,
+        ShadowMode,
         createViewer,
         DomEventSimulator,
         MockDataSource,
@@ -363,9 +363,9 @@ defineSuite([
 
     it('can set terrain shadows', function() {
         viewer = createViewer(container, {
-            terrainShadows : true
+            terrainShadows : ShadowMode.ENABLED
         });
-        expect(viewer.terrainShadows).toBe(true);
+        expect(viewer.terrainShadows).toBe(ShadowMode.ENABLED);
     });
 
     it('can set terrainProvider', function() {

@@ -8,7 +8,6 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
-        '../../Core/Fullscreen',
         '../../Core/isArray',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
@@ -51,7 +50,6 @@ define([
         destroyObject,
         DeveloperError,
         EventHelper,
-        Fullscreen,
         isArray,
         Matrix4,
         Rectangle,
@@ -277,7 +275,7 @@ define([
      *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
-     * @param {Boolean} [options.terrainShadows=false] Determines if the terrain casts shadows from the sun.
+     * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -471,6 +469,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             toolbar.appendChild(geocoderContainer);
             geocoder = new Geocoder({
                 container : geocoderContainer,
+                geocoderServices: defined(options.geocoder) ? (isArray(options.geocoder) ? options.geocoder : [options.geocoder]) : undefined,
                 scene : cesiumWidget.scene
             });
             // Subscribe to search so that we can clear the trackedEntity when it is clicked.
@@ -497,9 +496,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         // SceneModePicker
         // By default, we silently disable the scene mode picker if scene3DOnly is true,
         // but if sceneModePicker is explicitly set to true, throw an error.
+        //>>includeStart('debug', pragmas.debug);
         if ((options.sceneModePicker === true) && scene3DOnly) {
             throw new DeveloperError('options.sceneModePicker is not available when options.scene3DOnly is set to true.');
         }
+        //>>includeEnd('debug');
 
         var sceneModePicker;
         if (!scene3DOnly && (!defined(options.sceneModePicker) || options.sceneModePicker !== false)) {
@@ -963,16 +964,16 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
-         * Determines if the terrain casts shadows from the sun.
+         * Determines if the terrain casts or shadows from the sun.
          * @memberof Viewer.prototype
-         * @type {Boolean}
+         * @type {ShadowMode}
          */
         terrainShadows : {
             get : function() {
-                return this.scene.globe.castShadows;
+                return this.scene.globe.shadows;
             },
             set : function(value) {
-                this.scene.globe.castShadows = value;
+                this.scene.globe.shadows = value;
             }
         },
 
@@ -1204,6 +1205,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
         /**
          * Gets or sets the data source to track with the viewer's clock.
+         * @memberof Viewer.prototype
          * @type {DataSource}
          */
         clockTrackedDataSource : {
@@ -1263,6 +1265,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (defined(baseLayerPickerDropDown)) {
             baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
+        }
+
+        if (defined(this._geocoder)) {
+            var geocoderSuggestions = this._geocoder.searchSuggestionsContainer;
+            geocoderSuggestions.style.maxHeight = panelMaxHeight + 'px';
         }
 
         if (defined(this._infoBox)) {

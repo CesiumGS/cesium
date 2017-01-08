@@ -52,6 +52,8 @@ define([
      * @param {Matrix2} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     Matrix2.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -70,6 +72,8 @@ define([
         array[startingIndex++] = value[1];
         array[startingIndex++] = value[2];
         array[startingIndex++] = value[3];
+
+        return array;
     };
 
     /**
@@ -686,7 +690,7 @@ define([
      * @example
      * // Instead of Cesium.Matrix2.multiply(m, Cesium.Matrix2.fromScale(scale), m);
      * Cesium.Matrix2.multiplyByScale(m, scale, m);
-     * 
+     *
      * @see Matrix2.fromScale
      * @see Matrix2.multiplyByUniformScale
      */
