@@ -80,5 +80,14 @@ define([
         return new CompressedTextureBuffer(object._format, object._width, object._height, object._buffer);
     };
 
+    /**
+     * Creates a shallow clone of this compressed texture buffer.
+     *
+     * @return {CompressedTextureBuffer} A shallow clone of the compressed texture buffer.
+     */
+    CompressedTextureBuffer.prototype.clone = function() {
+        return CompressedTextureBuffer.clone(this);
+    };
+
     return CompressedTextureBuffer;
 });

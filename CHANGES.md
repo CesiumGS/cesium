@@ -8,6 +8,7 @@ Change Log
    * Added `loadKTX` to load KTX textures.
    * Added `loadCRN` to load crunch compressed textures.
    * Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_s3tc`, `WEBGL_compressed_texture_pvrtc`, and `WEBGL_compressed_texture_etc1`. [#4758](https://github.com/AnalyticalGraphicsInc/cesium/pull/4758)
+   * Added `CompressedTextureBuffer`.
 
 ### 1.30 - 2017-02-01
 
