@@ -35,6 +35,7 @@ define([
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
         '../Scene/SceneMode',
+        '../Scene/VerticalOrigin',
         '../ThirdParty/Autolinker',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -95,6 +96,7 @@ define([
         HorizontalOrigin,
         LabelStyle,
         SceneMode,
+        VerticalOrigin,
         Autolinker,
         Uri,
         when,
@@ -491,7 +493,7 @@ define([
     var colorOptions = {};
 
     function parseColorString(value, isRandom) {
-        if (!defined(value)) {
+        if (!defined(value) || value === '') {
             return undefined;
         }
 
@@ -740,6 +742,8 @@ define([
         if (defined(xOffset) || defined(yOffset)) {
             billboard.pixelOffset = new Cartesian2(xOffset, yOffset);
         }
+
+        billboard.verticalOrigin = VerticalOrigin.BOTTOM;
     }
 
     function applyStyle(dataSource, styleNode, targetEntity, sourceUri, uriResolver) {
@@ -2140,7 +2144,7 @@ define([
             ft['duration'] = duration;
         }
 
-        var flyToMode = queryColorValue(entryNode, 'flyToMode', namespaces.gx);
+        var flyToMode = queryStringValue(entryNode, 'flyToMode', namespaces.gx);
         if(flyToMode !== null) {
             ft['flyToMode'] = flyToMode;
         }

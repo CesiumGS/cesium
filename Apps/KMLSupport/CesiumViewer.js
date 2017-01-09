@@ -1,6 +1,7 @@
 /*global define*/
 define([
         'Cesium/Core/Cartesian3',
+        'Cesium/Core/Cartesian2',
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
         'Cesium/Core/getFilenameFromUri',
@@ -17,9 +18,12 @@ define([
         'Cesium/Core/Color',
         'Cesium/Core/Event',
         'Cesium/Core/HeadingPitchRange',
+        'Cesium/Scene/Billboard',
+        'Cesium/Core/NearFarScalar',
         'domReady!'
     ], function(
         Cartesian3,
+        Cartesian2,
         defined,
         formatError,
         getFilenameFromUri,
@@ -35,7 +39,9 @@ define([
         viewerDragDropMixin,
         CesiumColor,
         CesiumEvent,
-        HeadingPitchRange) {
+        HeadingPitchRange,
+        Billboard,
+        NearFarScalar) {
     'use strict';
 
     // Expose some Cesium internals
@@ -81,11 +87,63 @@ define([
         }
         return;
     }
-    /*
-    viewer.extend(viewerDragDropMixin);
+
+    window.viewer = viewer;
+
+    //viewer.extend(viewerDragDropMixin);
     if (endUserOptions.inspector) {
         viewer.extend(viewerCesiumInspectorMixin);
-    }*/
+    }
+
+    if (endUserOptions.billboard) {
+      //viewer.selectedEntity.billboard = viewer.entities.values[0].billboard.clone();
+      viewer.entities.add({
+        position : Cartesian3.fromDegrees(-75.59777, 40.03883),
+        billboard : {
+            image : 'Images/marker.png',
+            show : true
+        }
+      });
+    }
+
+    if (endUserOptions.vbillboard) {
+      //viewer.selectedEntity.billboard = viewer.entities.values[0].billboard.clone();
+
+      var canvas = document.getElementById('canvas');
+      var video = document.getElementById('video');
+      var ctx = canvas.getContext('2d');
+
+      ctx.beginPath();
+      ctx.arc(150, 75, 30, 0, 2 * Math.PI, false);
+      ctx.fillStyle = 'green';
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#003300';
+      ctx.stroke();
+
+      video.addEventListener('play', function() {
+        var $this = this; //cache
+        //ctx = viewer.entities.values[0].billboard.image._value.getContext('2d');
+        (function loop() {
+          if (!$this.paused && !$this.ended) {
+            ctx.drawImage($this, 0, 0);
+            var img = viewer.entities.values[0].billboard.image._value;
+            viewer.entities.values[0].billboard.image = img;
+            setTimeout(loop, 1000 / 30); // drawing at 30fps
+          }
+        })();
+      }, 0);
+
+      viewer.entities.add({
+        position : Cartesian3.fromDegrees(-75.59777, 40.03883),
+        billboard : {
+            image : canvas,
+            show : true,
+            width: 300,
+            height: 150
+        }
+      });
+    }
 
     var showLoadError = function(name, error) {
         var title = 'An error occurred while loading the file: ' + name;
@@ -126,6 +184,9 @@ define([
 
         if (defined(loadPromise)) {
             viewer.dataSources.add(loadPromise).then(function(dataSource) {
+
+                window.loadedDatasource = dataSource;
+
                 var player = new TourPlayer(viewer, dataSource);
 
                 player.sceneStart.addEventListener(function(type, duration) {
