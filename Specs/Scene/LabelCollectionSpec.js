@@ -1739,7 +1739,7 @@ defineSuite([
         var expected = BoundingSphere.fromPoints(projectedPositions);
         expected.center = new Cartesian3(0.0, expected.center.x, expected.center.y);
         expect(actual.center).toEqualEpsilon(expected.center, CesiumMath.EPSILON8);
-        expect(actual.radius).toBeGreaterThan(expected.radius);
+        expect(actual.radius).not.toBeLessThan(expected.radius);
     });
 
     it('computes bounding sphere in 2D', function() {
