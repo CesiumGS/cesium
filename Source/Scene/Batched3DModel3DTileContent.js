@@ -72,6 +72,9 @@ define([
         this._features = undefined;
     }
 
+    // This can be overridden for testing purposes
+    Batched3DModel3DTileContent._deprecationWarning = deprecationWarning;
+
     defineProperties(Batched3DModel3DTileContent.prototype, {
         /**
          * Part of the {@link Cesium3DTileContent} interface.
@@ -183,7 +186,7 @@ define([
         if (!defined(batchIdAttributeName)) {
             batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
             if (defined(batchIdAttributeName)) {
-                deprecationWarning('b3dm-legacy-batchid', 'The glTF in this b3dm uses the semantic `BATCHID`. Application-specific semantics should be prefixed with an underscore: `_BATCHID`.');
+                Batched3DModel3DTileContent._deprecationWarning('b3dm-legacy-batchid', 'The glTF in this b3dm uses the semantic `BATCHID`. Application-specific semantics should be prefixed with an underscore: `_BATCHID`.');
             }
         }
         return batchIdAttributeName;

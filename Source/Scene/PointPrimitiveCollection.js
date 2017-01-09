@@ -16,6 +16,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -23,7 +24,6 @@ define([
         '../Shaders/PointPrimitiveCollectionFS',
         '../Shaders/PointPrimitiveCollectionVS',
         './BlendingState',
-        './Pass',
         './PointPrimitive',
         './SceneMode'
     ], function(
@@ -43,6 +43,7 @@ define([
         BufferUsage,
         ContextLimits,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -50,7 +51,6 @@ define([
         PointPrimitiveCollectionFS,
         PointPrimitiveCollectionVS,
         BlendingState,
-        Pass,
         PointPrimitive,
         SceneMode) {
     'use strict';

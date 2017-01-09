@@ -23,6 +23,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -33,7 +34,6 @@ define([
         './BatchTable',
         './BlendingState',
         './Material',
-        './Pass',
         './Polyline',
         './SceneMode'
     ], function(
@@ -60,6 +60,7 @@ define([
         BufferUsage,
         ContextLimits,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -70,7 +71,6 @@ define([
         BatchTable,
         BlendingState,
         Material,
-        Pass,
         Polyline,
         SceneMode) {
     'use strict';
