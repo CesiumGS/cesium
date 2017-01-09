@@ -679,10 +679,10 @@ define([
     Matrix3.setColumn = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object(matrix, 'matrix');
-        Check.typeOf.object(cartesian, 'cartesian');
         Check.typeOf.number(index, 'index');
         Check.numeric.minimum(index, 0);
         Check.numeric.maximum(index, 2);
+        Check.typeOf.object(cartesian, 'cartesian');
         Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
