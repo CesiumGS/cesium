@@ -1105,9 +1105,7 @@ defineSuite([
         });
     });
 
-// TODO: why does this fail when &webglStub= ?
-// Should the last expectation just not be checked in this case?
-    xit('model updates derived commands when the shadow map is dirty', function() {
+    it('model updates derived commands when the shadow map is dirty', function() {
         var spy = spyOn(ShadowMap, 'createDerivedCommands').and.callThrough();
 
         box.show = true;
