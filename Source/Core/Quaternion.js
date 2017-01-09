@@ -962,7 +962,7 @@ define([
      */
     Quaternion.equalsEpsilon = function(left, right, epsilon) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number(epsilon, 'epsilon')
+        Check.typeOf.number(epsilon, 'epsilon');
         //>>includeEnd('debug');
 
         return (left === right) ||
