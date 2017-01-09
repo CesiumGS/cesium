@@ -136,7 +136,7 @@ define([
      * @param {String} name The name of the variable being tested
      * @exception {DeveloperError} test must be typeof 'boolean'
      */
-    Check.typeOf.boolean = function (test, name) {
+    Check.typeOf.bool = function (test, name) {
         if (typeof test !== 'boolean') {
             throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'boolean', name));
         }
