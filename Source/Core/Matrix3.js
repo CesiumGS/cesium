@@ -75,7 +75,7 @@ define([
     Matrix3.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object(value, 'value');
-        Check.typeOf.object(array, 'array');
+        Check.defined(array, 'array');
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -103,7 +103,7 @@ define([
      */
     Matrix3.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(array, 'array');
+        Check.defined(array, 'array');
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -175,7 +175,7 @@ define([
      */
     Matrix3.fromArray = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(array, 'array');
+        Check.defined(array, 'array');
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -205,7 +205,7 @@ define([
      */
     Matrix3.fromColumnMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(values, 'values');
+        Check.defined(values, 'values');
         //>>includeEnd('debug');
 
         return Matrix3.clone(values, result);
@@ -221,7 +221,7 @@ define([
      */
     Matrix3.fromRowMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(values, 'values');
+        Check.defined(values, 'values');
         //>>includeEnd('debug');
 
         if (!defined(result)) {
