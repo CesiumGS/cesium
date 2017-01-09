@@ -11,6 +11,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/isArray',
+        '../Core/loadCRN',
         '../Core/loadImage',
         '../Core/loadKTX',
         '../Core/Matrix2',
@@ -43,6 +44,7 @@ define([
         destroyObject,
         DeveloperError,
         isArray,
+        loadCRN,
         loadImage,
         loadKTX,
         Matrix2,
@@ -679,6 +681,7 @@ define([
     };
 
     var ktxRegex = /\.ktx$/i;
+    var crnRegex = /\.crn$/i;
 
     function createTexture2DUpdateFunction(uniformId) {
         var oldUniformValue;
@@ -758,21 +761,20 @@ define([
 
             if (uniformValue !== material._texturePaths[uniformId]) {
                 if (typeof uniformValue === 'string') {
+                    var promise;
                     if (ktxRegex.test(uniformValue)) {
-                        when(loadKTX(uniformValue), function(image) {
-                            material._loadedImages.push({
-                                id : uniformId,
-                                image : image
-                            });
-                        });
+                        promise = loadKTX(uniformValue);
+                    } else if (crnRegex.test(uniformValue)) {
+                        promise = loadCRN(uniformValue);
                     } else {
-                        when(loadImage(uniformValue), function(image) {
-                            material._loadedImages.push({
-                                id : uniformId,
-                                image : image
-                            });
-                        });
+                        promise = loadImage(uniformValue);
                     }
+                    when(promise, function(image) {
+                        material._loadedImages.push({
+                            id : uniformId,
+                            image : image
+                        });
+                    });
                 } else if (uniformValue instanceof HTMLCanvasElement) {
                     material._loadedImages.push({
                         id : uniformId,

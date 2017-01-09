@@ -3,6 +3,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/loadCRN',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
         '../Core/loadKTX',
@@ -13,6 +14,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        loadCRN,
         loadImage,
         loadImageViaBlob,
         loadKTX,
@@ -301,7 +303,8 @@ define([
      */
     ImageryProvider.prototype.pickFeatures = DeveloperError.throwInstantiationError;
 
-    var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
+    var ktxRegex = /\.ktx$/i;
+    var crnRegex = /\.crn$/i;
 
     /**
      * Loads an image from a given URL.  If the server referenced by the URL already has
@@ -320,6 +323,8 @@ define([
         var requestFunction;
         if (ktxRegex.test(url)) {
             requestFunction = loadKTX;
+        } else if (crnRegex.test(url)) {
+            requestFunction = loadCRN;
         } else if (defined(imageryProvider.tileDiscardPolicy)) {
             requestFunction = loadImageViaBlob;
         } else {

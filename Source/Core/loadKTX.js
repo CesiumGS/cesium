@@ -1,16 +1,16 @@
 /*global define*/
 define([
         '../ThirdParty/when',
+        './CompressedTextureBuffer',
         './defined',
-        './defineProperties',
         './DeveloperError',
         './loadArrayBuffer',
         './PixelFormat',
         './RuntimeError'
     ], function(
         when,
+        CompressedTextureBuffer,
         defined,
-        defineProperties,
         DeveloperError,
         loadArrayBuffer,
         PixelFormat,
@@ -88,64 +88,6 @@ define([
         });
     }
 
-    /**
-     * Describes a compressed texture and contains a compressed texture buffer.
-     *
-     * @param {PixelFormat} internalFormat The pixel format of the compressed texture.
-     * @param {Number} width The width of the texture.
-     * @param {Number} height The height of the texture.
-     * @param {Uint8Array} buffer The compressed texture buffer.
-     */
-    function CompressedTextureBuffer(internalFormat, width, height, buffer) {
-        this._format = internalFormat;
-        this._width = width;
-        this._height = height;
-        this._buffer =  buffer;
-    }
-
-    defineProperties(CompressedTextureBuffer.prototype, {
-        /**
-         * The format of the compressed texture.
-         * @type PixelFormat
-         * @readonly
-         */
-        internalFormat : {
-            get : function() {
-                return this._format;
-            }
-        },
-        /**
-         * The width of the texture.
-         * @type Number
-         * @readonly
-         */
-        width : {
-            get : function() {
-                return this._width;
-            }
-        },
-        /**
-         * The height of the texture.
-         * @type Number
-         * @readonly
-         */
-        height : {
-            get : function() {
-                return this._height;
-            }
-        },
-        /**
-         * The compressed texture buffer.
-         * @type Uint8Array
-         * @readonly
-         */
-        bufferView : {
-            get : function() {
-                return this._buffer;
-            }
-        }
-    });
-
     var fileIdentifier = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
     var endiannessTest = 0x04030201;
 
@@ -216,7 +158,12 @@ define([
         var imageSize = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var texture = new Uint8Array(data, byteOffset, imageSize);
+        var texture;
+        if (defined(data.buffer)) {
+            texture = new Uint8Array(data.buffer, byteOffset, imageSize);
+        } else {
+            texture = new Uint8Array(data, byteOffset, imageSize);
+        }
 
         // Some tools use a sized internal format.
         // See table 2: https://www.opengl.org/sdk/docs/man/html/glTexImage2D.xhtml
@@ -263,7 +210,7 @@ define([
         // Only use the level 0 mipmap
         if (PixelFormat.isCompressedFormat(glInternalFormat) && numberOfMipmapLevels > 1) {
             var levelSize = PixelFormat.compressedTextureSize(glInternalFormat, pixelWidth, pixelHeight);
-            texture = new Uint8Array(texture.buffer, 0, levelSize);
+            texture = texture.slice(0, levelSize);
         }
 
         return new CompressedTextureBuffer(glInternalFormat, pixelWidth, pixelHeight, texture);
