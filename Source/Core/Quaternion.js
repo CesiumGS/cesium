@@ -776,9 +776,9 @@ define([
      */
     Quaternion.computeInnerQuadrangle = function(q0, q1, q2, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(q0) || !defined(q1) || !defined(q2)) {
-            throw new DeveloperError('q0, q1, and q2 are required.');
-        }
+        Check.typeOf.object(q0, 'q0');
+        Check.typeOf.object(q1, 'q1');
+        Check.typeOf.object(q2, 'q2');
         Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
@@ -823,9 +823,10 @@ define([
      */
     Quaternion.squad = function(q0, q1, s0, s1, t, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(q0) || !defined(q1) || !defined(s0) || !defined(s1)) {
-            throw new DeveloperError('q0, q1, s0, and s1 are required.');
-        }
+        Check.typeOf.object(q0, 'q0');
+        Check.typeOf.object(q1, 'q1');
+        Check.typeOf.object(s0, 's0');
+        Check.typeOf.object(s1, 's1');
         Check.typeOf.number(t, 't');
         Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
@@ -920,9 +921,10 @@ define([
      */
     Quaternion.fastSquad = function(q0, q1, s0, s1, t, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(q0) || !defined(q1) || !defined(s0) || !defined(s1)) {
-            throw new DeveloperError('q0, q1, s0, and s1 are required.');
-        }
+        Check.typeOf.object(q0, 'q0');
+        Check.typeOf.object(q1, 'q1');
+        Check.typeOf.object(s0, 's0');
+        Check.typeOf.object(s1, 's1');
         Check.typeOf.number(t, 't');
         Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
