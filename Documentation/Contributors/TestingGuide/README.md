@@ -347,7 +347,7 @@ As shown above, these tests use Cesium test utility functions: `createViewer`, `
 
 > Most Cesium apps do not render the scene directly; instead, the `Viewer` object's default render loop renders the scene implicit to the user.  The tests are an exception; most tests explicitly render the scene.
 
-Cesium adds several custom Jasmine matchers to make rendering tests more concise and to support running tests with the WebGL stub.  When using the WebGL stub, the WebGL implementation is a noop, and test expectations that rely on reading back from WebGL are ignored.  The rendering custom matchers are:
+Cesium adds several custom Jasmine matchers to make the rendering tests more concise and to support running tests with the WebGL stub.  When using the WebGL stub, the WebGL implementation is a noop, and test expectations that rely on reading back from WebGL are ignored.  The rendering custom matchers are:
 
 * `toRender`
 * `notToRender`
@@ -361,7 +361,7 @@ Cesium adds several custom Jasmine matchers to make rendering tests more concise
 * `contextToRender`
 * `notContextToRender`
 
-`toRender` and `notToRender` clears a 1x1 viewport to black, renders the scene into it, and verifies the RGBA value of the pixel, e.g.:
+`toRender` and `notToRender` clear a 1x1 viewport to black, renders the scene into it, and verifies the RGBA value of the pixel, e.g.:
 
 ```javascript
 it('renders', function() {
@@ -379,7 +379,7 @@ it('does not render when show is false', function() {
 
 Like most rendering tests, the first example uses a coarse-grained expectation to check that the pixel is not the default value of black.  Although an expectation this coarse-grained may not catch all subtle errors, it is reliable across platforms, and we rarely have bugs a more fine-grained test would have caught, especially with some manual testing (see below).
 
-In the second test verifies that the pixel value is the same as the default background color since the primitive's `show` property is `false`.
+The second test verifies that the pixel value is the same as the default background color since the primitive's `show` property is `false`.
 
 `toRender` and `notToRender` can also render the scene at a given Cesium simulation time, e.g.,:
 
@@ -401,19 +401,19 @@ expect(scene).toRenderAndCall(function(rgba) {
 });
 ```
 
-For reliability across WebGL implementations, use `toRenderAndCall` sparingly.
+For reliability across WebGL implementations, use complex expectations in `toRenderAndCall` sparingly.
 
 Similar custom matchers are used for picking tests:
 
 ```javascript
 var b = billboards.add(/* ... */);
-expect(scene).toPickPrimitive(b);  // Can also use toPickAndCall and toDrillPickAndCall
+expect(scene).toPickPrimitive(b);  // Can also use toPickAndCall() and toDrillPickAndCall()
 
 b.show = false;
 expect(scene).notToPick();
 ```
 
-For tests that explicitly render the scene, `toReadPixels` and `notToReadPixels` are used to verify the RGBA value.  In the simplest case, pass an RGBA array, e.g.:
+For tests that render the scene themselves, `toReadPixels` and `notToReadPixels` are used to verify the RGBA value.  In the simplest case, pass an RGBA array, e.g.:
 
 ```javascript
 expect(context).toReadPixels([0, 0, 0, 255]);
@@ -431,7 +431,7 @@ expect({
 }).toReadPixels([0, 0, 0, 255]);
 ```
 
-Low-level Cesium renderer tests use just a `Context` without a Cesium `Scene`, and use the `contextToRender` and `notContextToRender` custom matchers to render a WebGL point primitive using the context to a 1x1 viewport and verify the RGBA value, e.g.:
+Low-level Cesium renderer tests use just a `Context` without a Cesium `Scene`, and use the `contextToRender` and `notContextToRender` custom matchers to render a WebGL point primitive to the context's 1x1 viewport and verify the RGBA value, e.g.:
 
 ```javascript
 expect({
