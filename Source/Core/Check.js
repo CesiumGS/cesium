@@ -1,14 +1,10 @@
 /*global define*/
 define([
-    './defaultValue',
     './defined',
-    './DeveloperError',
-    './isArray'
+    './DeveloperError'
     ], function(
-        defaultValue,
         defined,
-        DeveloperError,
-        isArray) {
+        DeveloperError) {
     'use strict';
 
     /**
