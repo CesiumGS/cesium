@@ -341,7 +341,6 @@ define([
         Check.typeOf.number(column, 'column');
         Check.numeric.minimum(column, 0);
         Check.numeric.maximum(column, 1);
-
         //>>includeEnd('debug');
 
         return column * 2 + row;
@@ -392,9 +391,11 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object(matrix, 'matrix');
         Check.typeOf.object(cartesian, 'cartesian');
-        if (typeof index !== 'number' || index < 0 || index > 1) {
-            throw new DeveloperError('index must be 0 or 1.');
-        }
+
+        Check.typeOf.number(index, 'index');
+        Check.numeric.minimum(index, 0);
+        Check.numeric.maximum(index, 1);
+
         Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
@@ -418,9 +419,11 @@ define([
     Matrix2.getRow = function(matrix, index, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object(matrix, 'matrix');
-        if (typeof index !== 'number' || index < 0 || index > 1) {
-            throw new DeveloperError('index must be 0 or 1.');
-        }
+
+        Check.typeOf.number(index, 'index');
+        Check.numeric.minimum(index, 0);
+        Check.numeric.maximum(index, 1);
+
         Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
@@ -447,9 +450,11 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object(matrix, 'matrix');
         Check.typeOf.object(cartesian, 'cartesian');
-        if (typeof index !== 'number' || index < 0 || index > 1) {
-            throw new DeveloperError('index must be 0 or 1.');
-        }
+
+        Check.typeOf.number(index, 'index');
+        Check.numeric.minimum(index, 0);
+        Check.numeric.maximum(index, 1);
+
         Check.typeOf.object(result, 'result');
         //>>includeEnd('debug');
 
