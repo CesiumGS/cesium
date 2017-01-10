@@ -923,7 +923,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('headingPitchRollToFixedFrame throws without an headingPitchRoll', function() {
+    it('headingPitchRollToFixedFrame throws without a headingPitchRoll', function() {
         expect(function() {
             Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, undefined);
         }).toThrowDeveloperError();
