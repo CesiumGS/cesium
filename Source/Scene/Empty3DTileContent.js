@@ -116,6 +116,12 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
+    Empty3DTileContent.prototype.applyWireframe = function(enabled) {
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
     Empty3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
         return false;
     };

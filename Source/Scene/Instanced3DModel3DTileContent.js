@@ -473,6 +473,13 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
+    Instanced3DModel3DTileContent.prototype.applyWireframe = function(enabled) {
+        this._modelInstanceCollection.debugWireframe = enabled;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
     Instanced3DModel3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
         return false;
     };

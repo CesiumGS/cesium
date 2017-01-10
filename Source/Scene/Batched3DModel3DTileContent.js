@@ -343,6 +343,11 @@ define([
         this.batchTable.setAllColor(color);
     };
 
+    Batched3DModel3DTileContent.prototype.applyWireframe = function(enabled) {
+        this._model.debugWireframe = enabled;
+
+    };
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */

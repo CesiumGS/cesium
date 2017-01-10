@@ -325,6 +325,7 @@ define([
         this._debugViewerRequestVolume = undefined;
         this._debugColor = new Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
+        this._debugWireframe = false;
     }
 
     defineProperties(Cesium3DTile.prototype, {
@@ -700,6 +701,14 @@ define([
         } else if (!tileset.debugColorizeTiles && tile._debugColorizeTiles) {
             tile._debugColorizeTiles = false;
             tile._content.applyDebugSettings(false, tile._debugColor);
+        }
+
+        if (tileset.debugWireframe && !tile._debugWireframe) {
+            tile._debugWireframe = true;
+            tile._content.applyWireframe(true);
+        } else if (!tileset.debugWireframe && tile._debugWireframe) {
+            tile._debugWireframe = false;
+            tile._content.applyWireframe(false);
         }
     }
 

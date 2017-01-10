@@ -94,6 +94,7 @@ define([
      * @param {Boolean} [options.debugShowPickStatistics=false] For debugging only. Determines if rendering statistics for picking are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
+     * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
      * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
@@ -322,6 +323,17 @@ define([
          * @default false
          */
         this.debugColorizeTiles = defaultValue(options.debugColorizeTiles, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, renders each tile's content as a wireframe
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugWireframe = defaultValue(options.debugWireframe, false);
 
         /**
          * This property is for debugging only; it is not optimized for production use.

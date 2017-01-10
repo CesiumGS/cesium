@@ -1202,6 +1202,15 @@ define([
         }
     }
 
+    function updateDerivedCommandsWireframe(derivedCommands, command) {
+        for (var name in derivedCommands) {
+            if (derivedCommands.hasOwnProperty(name)) {
+                var derivedCommand = derivedCommands[name];
+                derivedCommand.primitiveType = command.primitiveType;
+            }
+        }
+    }
+
     Cesium3DTileBatchTable.prototype.getAddCommand = function() {
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
@@ -1220,6 +1229,7 @@ define([
             }
 
             updateDerivedCommandsShadows(derivedCommands, command);
+            updateDerivedCommandsWireframe(derivedCommands, command);
 
             // If the command was originally opaque:
             //    * If the styling applied to the tile is all opaque, use the original command

@@ -248,6 +248,17 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
+    Composite3DTileContent.prototype.applyWireframe = function(enabled) {
+        var contents = this._contents;
+        var length = contents.length;
+        for (var i = 0; i < length; ++i) {
+            contents[i].applyWireframe(enabled);
+        }
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
     Composite3DTileContent.prototype.update = function(tileset, context, frameState, commandList) {
         var contents = this._contents;
         var length = contents.length;
