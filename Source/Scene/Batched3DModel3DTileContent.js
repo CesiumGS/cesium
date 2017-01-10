@@ -345,7 +345,6 @@ define([
 
     Batched3DModel3DTileContent.prototype.applyWireframe = function(enabled) {
         this._model.debugWireframe = enabled;
-
     };
 
     /**
