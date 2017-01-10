@@ -6,27 +6,27 @@ defineSuite([
     'use strict';
 
     describe('type checks', function () {
-        it('Check.typeOf.boolean does not throw when passed a boolean', function () {
+        it('Check.typeOf.bool does not throw when passed a boolean', function () {
             expect(function () {
-                Check.typeOf.boolean(true);
+                Check.typeOf.bool(true);
             }).not.toThrowDeveloperError();
         });
 
         it('Check.typeOf.boolean throws when passed a non-boolean', function () {
             expect(function () {
-                Check.typeOf.boolean({}, 'mockName');
+                Check.typeOf.bool({}, 'mockName');
             }).toThrowDeveloperError();
             expect(function () {
-                Check.typeOf.boolean([], 'mockName');
+                Check.typeOf.bool([], 'mockName');
             }).toThrowDeveloperError();
             expect(function () {
-                Check.typeOf.boolean(1, 'mockName');
+                Check.typeOf.bool(1, 'mockName');
             }).toThrowDeveloperError();
             expect(function () {
-                Check.typeOf.boolean('snth', 'mockName');
+                Check.typeOf.bool('snth', 'mockName');
             }).toThrowDeveloperError();
             expect(function () {
-                Check.typeOf.boolean(function () {return true;}, 'mockName');
+                Check.typeOf.bool(function () {return true;}, 'mockName');
             }).toThrowDeveloperError();
         });
 
