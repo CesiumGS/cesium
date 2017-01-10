@@ -273,6 +273,10 @@ define([
         this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
+        this._s3tc = !!getExtension(gl, ['WEBGL_compressed_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
+        this._pvrtc = !!getExtension(gl, ['WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc']);
+        this._etc1 = !!getExtension(gl, ['WEBGL_compressed_texture_etc1']);
+
         var textureFilterAnisotropic = options.allowTextureFilterAnisotropic ? getExtension(gl, ['EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic']) : undefined;
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         ContextLimits._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
@@ -590,6 +594,45 @@ define([
         textureFilterAnisotropic : {
             get : function() {
                 return !!this._textureFilterAnisotropic;
+            }
+        },
+
+        /**
+         * <code>true</code> if WEBGL_texture_compression_s3tc is supported.  This extension provides
+         * access to DXT compressed textures.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_s3tc/}
+         */
+        s3tc : {
+            get : function() {
+                return this._s3tc;
+            }
+        },
+
+        /**
+         * <code>true</code> if WEBGL_texture_compression_pvrtc is supported.  This extension provides
+         * access to PVR compressed textures.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_pvrtc/}
+         */
+        pvrtc : {
+            get : function() {
+                return this._pvrtc;
+            }
+        },
+
+        /**
+         * <code>true</code> if WEBGL_texture_compression_etc1 is supported.  This extension provides
+         * access to ETC1 compressed textures.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc1/}
+         */
+        etc1 : {
+            get : function() {
+                return this._etc1;
             }
         },
 

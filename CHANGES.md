@@ -2,6 +2,7 @@ Change Log
 ==========
 
 ### 1.30 - 2017-02-01
+
 * Deprecated
     * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.31. These properties will be available on geocoder services that support them, like `BingMapsGeocoderService`.
 * Added support for custom geocoder services and autocomplete [#4723](https://github.com/AnalyticalGraphicsInc/cesium/pull/4723).
@@ -14,6 +15,12 @@ Change Log
 
 ### TODO
 
+* Added compressed texture support.
+   * glTF models and imagery layers can now reference [KTX](https://www.khronos.org/opengles/sdk/tools/KTX/) textures and textures compressed with [crunch](https://github.com/BinomialLLC/crunch).
+   * Added `loadKTX` to load KTX textures.
+   * Added `loadCRN` to load crunch compressed textures.
+   * Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_s3tc`, `WEBGL_compressed_texture_pvrtc`, and `WEBGL_compressed_texture_etc1`. [#4758](https://github.com/AnalyticalGraphicsInc/cesium/pull/4758)
+   * Added `CompressedTextureBuffer`.
 * Added support for [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md) for streaming massive heterogeneous 3D geospatial datasets.  The new Cesium APIs are:
    * `Cesium3DTileset`
    * `Cesium3DTileStyle`, `StyleExpression`, `Expression`, and `ConditionsExpression`
@@ -21,7 +28,9 @@ Change Log
    * `Cesium3DTileContent`
    * `Cesium3DTileFeature`
 
+
 ### 1.29 - 2017-01-02
+
 * Improved 3D Models
    * Added the ability to blend a `Model` with a color/translucency. Added `color`, `colorBlendMode`, and `colorBlendAmount` properties to `Model`, `ModelGraphics`, and CZML. Also added `ColorBlendMode` enum. [#4547](https://github.com/AnalyticalGraphicsInc/cesium/pull/4547)
    * Added the ability to render a `Model` with a silhouette. Added `silhouetteColor` and `silhouetteSize` properties to `Model`, `ModelGraphics`, and CZML. [#4314](https://github.com/AnalyticalGraphicsInc/cesium/pull/4314)
