@@ -218,7 +218,7 @@ define([
      */
     Rectangle.fromCartographicArray = function(cartographics, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartographics, 'cartographics');
+        Check.defined(cartographics, 'cartographics');
         //>>includeEnd('debug');
 
         var west = Number.MAX_VALUE;
@@ -273,7 +273,7 @@ define([
      */
     Rectangle.fromCartesianArray = function(cartesians, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesians, 'cartesians');
+        Check.defined(cartesians, 'cartesians');
         //>>includeEnd('debug');
 
         var west = Number.MAX_VALUE;
@@ -419,7 +419,6 @@ define([
         Check.typeOf.number(north, 'north');
         Check.numeric.minimum(north, -CesiumMath.PI_OVER_TWO);
         Check.numeric.maximum(north, CesiumMath.PI_OVER_TWO);
-
 
         var south = rectangle.south;
         Check.typeOf.number(south, 'south');
