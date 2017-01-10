@@ -69,7 +69,7 @@ defineSuite([
         feature.addProperty('width', 5);
         feature.addProperty('string', 'hello');
         feature.addProperty('boolean', true);
-        feature.addProperty('color', Color.RED);
+        feature.addProperty('vector', Cartesian3.UNIT_X);
         feature.addProperty('null', null);
         feature.addProperty('undefined', undefined);
 
@@ -103,11 +103,11 @@ defineSuite([
         expression = new Expression('\'${boolean}\'');
         expect(expression.evaluate(frameState, feature)).toEqual('true');
 
-        expression = new Expression('${color}');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.RED);
+        expression = new Expression('${vector}');
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian3.UNIT_X);
 
-        expression = new Expression('\'${color}\'');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.RED.toString());
+        expression = new Expression('\'${vector}\'');
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian3.UNIT_X.toString());
 
         expression = new Expression('${null}');
         expect(expression.evaluate(frameState, feature)).toEqual(null);
@@ -294,52 +294,52 @@ defineSuite([
 
     it('evaluates literal color', function() {
         var expression = new Expression('color(\'#ffffff\')');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.WHITE));
 
         expression = new Expression('color(\'#00FFFF\')');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.CYAN);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.CYAN));
 
         expression = new Expression('color(\'#fff\')');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.WHITE));
 
         expression = new Expression('color(\'#0FF\')');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.CYAN);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.CYAN));
 
         expression = new Expression('color(\'white\')');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.WHITE));
 
         expression = new Expression('color(\'cyan\')');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.CYAN);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.CYAN));
 
         expression = new Expression('color(\'white\', 0.5)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.fromAlpha(Color.WHITE, 0.5)));
 
         expression = new Expression('rgb(255, 255, 255)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.WHITE));
 
         expression = new Expression('rgb(100, 255, 190)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.fromBytes(100, 255, 190));
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.fromBytes(100, 255, 190)));
 
         expression = new Expression('hsl(0, 0, 1)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.WHITE));
 
         expression = new Expression('hsl(1.0, 0.6, 0.7)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.fromHsl(1.0, 0.6, 0.7));
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.fromHsl(1.0, 0.6, 0.7)));
 
         expression = new Expression('rgba(255, 255, 255, 0.5)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.fromAlpha(Color.WHITE, 0.5)));
 
         expression = new Expression('rgba(100, 255, 190, 0.25)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.fromBytes(100, 255, 190, 0.25 * 255));
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.fromBytes(100, 255, 190, 0.25 * 255)));
 
         expression = new Expression('hsla(0, 0, 1, 0.5)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(new Color(1.0, 1.0, 1.0, 0.5)));
 
         expression = new Expression('hsla(1.0, 0.6, 0.7, 0.75)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.fromHsl(1.0, 0.6, 0.7, 0.75));
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.fromHsl(1.0, 0.6, 0.7, 0.75)));
 
         expression = new Expression('color()');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.WHITE));
     });
 
     it('evaluates literal color with result parameter', function() {
@@ -390,19 +390,19 @@ defineSuite([
         feature.addProperty('alpha', 0.2);
 
         var expression = new Expression('color(${hex6})');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.WHITE));
 
         expression = new Expression('color(${hex3})');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.WHITE));
 
         expression = new Expression('color(${keyword})');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.WHITE));
 
         expression = new Expression('color(${keyword}, ${alpha} + 0.6)');
-        expect(expression.evaluate(frameState, feature).red).toEqual(1.0);
-        expect(expression.evaluate(frameState, feature).green).toEqual(1.0);
-        expect(expression.evaluate(frameState, feature).blue).toEqual(1.0);
-        expect(expression.evaluate(frameState, feature).alpha).toEqual(0.8);
+        expect(expression.evaluate(frameState, feature).x).toEqual(1.0);
+        expect(expression.evaluate(frameState, feature).y).toEqual(1.0);
+        expect(expression.evaluate(frameState, feature).z).toEqual(1.0);
+        expect(expression.evaluate(frameState, feature).w).toEqual(0.8);
     });
 
     it('evaluates rgb with expressions as arguments', function() {
@@ -412,10 +412,10 @@ defineSuite([
         feature.addProperty('blue', 255);
 
         var expression = new Expression('rgb(${red}, ${green}, ${blue})');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.fromBytes(100, 200, 255));
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.fromBytes(100, 200, 255)));
 
         expression = new Expression('rgb(${red}/2, ${green}/2, ${blue})');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.fromBytes(50, 100, 255));
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.fromBytes(50, 100, 255)));
     });
 
     it('evaluates hsl with expressions as arguments', function() {
@@ -425,10 +425,10 @@ defineSuite([
         feature.addProperty('l', 1.0);
 
         var expression = new Expression('hsl(${h}, ${s}, ${l})');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.WHITE));
 
         expression = new Expression('hsl(${h} + 0.2, ${s} + 1.0, ${l} - 0.5)');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.fromHsl(0.2, 1.0, 0.5));
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.fromHsl(0.2, 1.0, 0.5)));
     });
 
     it('evaluates rgba with expressions as arguments', function() {
@@ -439,10 +439,10 @@ defineSuite([
         feature.addProperty('a', 0.3);
 
         var expression = new Expression('rgba(${red}, ${green}, ${blue}, ${a})');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.fromBytes(100, 200, 255, 0.3*255));
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.fromBytes(100, 200, 255, 0.3*255)));
 
         expression = new Expression('rgba(${red}/2, ${green}/2, ${blue}, ${a} * 2)');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.fromBytes(50, 100, 255, 0.6*255));
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.fromBytes(50, 100, 255, 0.6*255)));
     });
 
     it('evaluates hsla with expressions as arguments', function() {
@@ -453,10 +453,10 @@ defineSuite([
         feature.addProperty('a', 1.0);
 
         var expression = new Expression('hsla(${h}, ${s}, ${l}, ${a})');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.WHITE));
 
         expression = new Expression('hsla(${h} + 0.2, ${s} + 1.0, ${l} - 0.5, ${a} / 4)');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.fromHsl(0.2, 1.0, 0.5, 0.25));
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.fromHsl(0.2, 1.0, 0.5, 0.25)));
     });
 
     it('evaluates rgba with expressions as arguments', function() {
@@ -467,10 +467,10 @@ defineSuite([
         feature.addProperty('alpha', 0.5);
 
         var expression = new Expression('rgba(${red}, ${green}, ${blue}, ${alpha})');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.fromBytes(100, 200, 255, 0.5 * 255));
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.fromBytes(100, 200, 255, 0.5 * 255)));
 
         expression = new Expression('rgba(${red}/2, ${green}/2, ${blue}, ${alpha} + 0.1)');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.fromBytes(50, 100, 255, 0.6 * 255));
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.fromColor(Color.fromBytes(50, 100, 255, 0.6 * 255)));
     });
 
     it('color constructors throw with wrong number of arguments', function() {
@@ -1003,31 +1003,31 @@ defineSuite([
 
     it('evaluates color operations', function() {
         var expression = new Expression('+rgba(255, 0, 0, 1.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.RED);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.RED));
 
         expression = new Expression('rgba(255, 0, 0, 0.5) + rgba(0, 0, 255, 0.5)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.MAGENTA);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.MAGENTA));
 
         expression = new Expression('rgba(0, 255, 255, 1.0) - rgba(0, 255, 0, 0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.BLUE);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.BLUE));
 
         expression = new Expression('rgba(255, 255, 255, 1.0) * rgba(255, 0, 0, 1.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.RED);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.RED));
 
         expression = new Expression('rgba(255, 255, 0, 1.0) * 1.0');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.YELLOW);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.YELLOW));
 
         expression = new Expression('1 * rgba(255, 255, 0, 1.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.YELLOW);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.YELLOW));
 
         expression = new Expression('rgba(255, 255, 255, 1.0) / rgba(255, 255, 255, 1.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(Color.WHITE));
 
         expression = new Expression('rgba(255, 255, 255, 1.0) / 2');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(new Color(0.5, 0.5, 0.5, 0.5)));
 
         expression = new Expression('rgba(255, 255, 255, 1.0) % rgba(255, 255, 255, 1.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Color(0, 0, 0, 0));
+        expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(new Color(0, 0, 0, 0)));
 
         expression = new Expression('color(\'green\') == color(\'green\')');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
@@ -1177,17 +1177,11 @@ defineSuite([
     });
 
     it('evaluates color toString function', function() {
-        var feature = new MockFeature();
-        feature.addProperty('property', Color.BLUE);
-
         var expression = new Expression('color("red").toString()');
         expect(expression.evaluate(frameState, undefined)).toEqual('(1, 0, 0, 1)');
 
         expression = new Expression('rgba(0, 0, 255, 0.5).toString()');
         expect(expression.evaluate(frameState, undefined)).toEqual('(0, 0, 1, 0.5)');
-
-        expression = new Expression('${property}.toString()');
-        expect(expression.evaluate(frameState, feature)).toEqual('(0, 0, 1, 1)');
     });
 
     it('evaluates vector toString function', function() {
@@ -1613,11 +1607,11 @@ defineSuite([
         feature.addProperty('width', 5);
         feature.addProperty('string', 'hello');
         feature.addProperty('boolean', true);
-        feature.addProperty('color', Color.RED);
-        feature.addProperty('color.red', 'something else');
-        feature.addProperty('feature.color', Color.GREEN);
+        feature.addProperty('vector', Cartesian4.UNIT_X);
+        feature.addProperty('vector.x', 'something else');
+        feature.addProperty('feature.vector', Cartesian4.UNIT_Y);
         feature.addProperty('feature', {
-            color : Color.BLUE
+            vector : Cartesian4.UNIT_Z
         });
         feature.addProperty('null', null);
         feature.addProperty('undefined', undefined);
@@ -1626,30 +1620,30 @@ defineSuite([
             "city" : "Example City"
         });
 
-        var expression = new Expression('${color.red}');
+        var expression = new Expression('${vector.x}');
         expect(expression.evaluate(frameState, feature)).toEqual(1.0);
 
-        expression = new Expression('${color.blue}');
+        expression = new Expression('${vector.z}');
         expect(expression.evaluate(frameState, feature)).toEqual(0.0);
 
-        expression = new Expression('${height.blue}');
+        expression = new Expression('${height.z}');
         expect(expression.evaluate(frameState, feature)).toEqual(undefined);
 
-        expression = new Expression('${undefined.blue}');
+        expression = new Expression('${undefined.z}');
         expect(expression.evaluate(frameState, feature)).toEqual(undefined);
 
         expression = new Expression('${feature}');
         expect(expression.evaluate(frameState, feature)).toEqual({
-            color : Color.BLUE
+            vector : Cartesian4.UNIT_Z
         });
 
-        expression = new Expression('${feature.color}');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.RED);
+        expression = new Expression('${feature.vector}');
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.UNIT_X);
 
-        expression = new Expression('${feature.feature.color}');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.BLUE);
+        expression = new Expression('${feature.feature.vector}');
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.UNIT_Z);
 
-        expression = new Expression('${feature.color.red}');
+        expression = new Expression('${feature.vector.x}');
         expect(expression.evaluate(frameState, feature)).toEqual(1.0);
 
         expression = new Expression('${address.street}');
@@ -1665,11 +1659,11 @@ defineSuite([
         feature.addProperty('width', 5);
         feature.addProperty('string', 'hello');
         feature.addProperty('boolean', true);
-        feature.addProperty('color', Color.RED);
-        feature.addProperty('color.red', 'something else');
-        feature.addProperty('feature.color', Color.GREEN);
+        feature.addProperty('vector', Cartesian4.UNIT_X);
+        feature.addProperty('vector.x', 'something else');
+        feature.addProperty('feature.vector', Cartesian4.UNIT_Y);
         feature.addProperty('feature', {
-            color : Color.BLUE
+            vector : Cartesian4.UNIT_Z
         });
         feature.addProperty('null', null);
         feature.addProperty('undefined', undefined);
@@ -1679,35 +1673,35 @@ defineSuite([
             "city" : "Example City"
         });
 
-        var expression = new Expression('${color["red"]}');
+        var expression = new Expression('${vector["x"]}');
         expect(expression.evaluate(frameState, feature)).toEqual(1.0);
 
-        expression = new Expression('${color["blue"]}');
+        expression = new Expression('${vector["z"]}');
         expect(expression.evaluate(frameState, feature)).toEqual(0.0);
 
-        expression = new Expression('${height["blue"]}');
+        expression = new Expression('${height["z"]}');
         expect(expression.evaluate(frameState, feature)).toEqual(undefined);
 
-        expression = new Expression('${undefined["blue"]}');
+        expression = new Expression('${undefined["z"]}');
         expect(expression.evaluate(frameState, feature)).toEqual(undefined);
 
-        expression = new Expression('${feature["color"]}');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.RED);
+        expression = new Expression('${feature["vector"]}');
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.UNIT_X);
 
-        expression = new Expression('${feature.color["red"]}');
+        expression = new Expression('${feature.vector["x"]}');
         expect(expression.evaluate(frameState, feature)).toEqual(1.0);
 
-        expression = new Expression('${feature["color"].red}');
+        expression = new Expression('${feature["vector"].x}');
         expect(expression.evaluate(frameState, feature)).toEqual(1.0);
 
-        expression = new Expression('${feature["color.red"]}');
+        expression = new Expression('${feature["vector.x"]}');
         expect(expression.evaluate(frameState, feature)).toEqual('something else');
 
-        expression = new Expression('${feature.feature["color"]}');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.BLUE);
+        expression = new Expression('${feature.feature["vector"]}');
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.UNIT_Z);
 
-        expression = new Expression('${feature["feature.color"]}');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.GREEN);
+        expression = new Expression('${feature["feature.vector"]}');
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.UNIT_Y);
 
         expression = new Expression('${address.street}');
         expect(expression.evaluate(frameState, feature)).toEqual("Example Street");
@@ -1740,23 +1734,23 @@ defineSuite([
 
     it('member expression throws with variable property', function() {
         var feature = new MockFeature();
-        feature.addProperty('color', Color.RED);
-        feature.addProperty('colorName', 'red');
+        feature.addProperty('vector', Cartesian4.UNIT_X);
+        feature.addProperty('vectorName', 'UNIT_X');
 
         expect(function() {
-            return new Expression('${color[${colorName}]}');
+            return new Expression('${vector[${vectorName}]}');
         }).toThrowDeveloperError();
     });
 
     it('evaluates feature property', function() {
         var feature = new MockFeature();
         feature.addProperty('feature', {
-            color : Color.BLUE
+            vector : Cartesian4.UNIT_X
         });
 
         var expression = new Expression('${feature}');
         expect(expression.evaluate(frameState, feature)).toEqual({
-            color : Color.BLUE
+            vector : Cartesian4.UNIT_X
         });
 
         expression = new Expression('${feature} == ${feature.feature}');
@@ -1969,13 +1963,13 @@ defineSuite([
     it('evaluates array expression', function() {
         var feature = new MockFeature();
         feature.addProperty('property', 'value');
-        feature.addProperty('array', [Color.GREEN, Color.PURPLE, Color.YELLOW]);
+        feature.addProperty('array', [Cartesian4.UNIT_X, Cartesian4.UNIT_Y, Cartesian4.UNIT_Z]);
         feature.addProperty('complicatedArray', [{
-            'subproperty' : Color.ORANGE,
-            'anotherproperty' : Color.RED
+            'subproperty' : Cartesian4.UNIT_X,
+            'anotherproperty' : Cartesian4.UNIT_Y
          }, {
-            'subproperty' : Color.BLUE,
-            'anotherproperty' : Color.WHITE
+            'subproperty' : Cartesian4.UNIT_Z,
+            'anotherproperty' : Cartesian4.UNIT_W
         }]);
         feature.addProperty('temperatures', {
             "scale" : "fahrenheit",
@@ -1986,7 +1980,7 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual([1, 2, 3]);
 
         expression = new Expression('[1+2, "hello", 2 < 3, color("blue"), ${property}]');
-        expect(expression.evaluate(frameState, feature)).toEqual([3, 'hello', true, Color.BLUE, 'value']);
+        expect(expression.evaluate(frameState, feature)).toEqual([3, 'hello', true, Cartesian4.fromColor(Color.BLUE), 'value']);
 
         expression = new Expression('[1, 2, 3] * 4');
         expect(expression.evaluate(frameState, undefined)).toEqual(NaN);
@@ -1995,13 +1989,13 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(NaN);
 
         expression = new Expression('${array[1]}');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.PURPLE);
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.UNIT_Y);
 
         expression = new Expression('${complicatedArray[1].subproperty}');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.BLUE);
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.UNIT_Z);
 
         expression = new Expression('${complicatedArray[0]["anotherproperty"]}');
-        expect(expression.evaluate(frameState, feature)).toEqual(Color.RED);
+        expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.UNIT_Y);
 
         expression = new Expression('${temperatures["scale"]}');
         expect(expression.evaluate(frameState, feature)).toEqual('fahrenheit');
