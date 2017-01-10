@@ -486,7 +486,6 @@ define([
         return Matrix4.multiply(result, hprMatrix, result);
     };
 
-    var scratchHPR = new HeadingPitchRoll();
     var scratchENUMatrix4 = new Matrix4();
     var scratchHPRMatrix3 = new Matrix3();
 
