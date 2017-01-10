@@ -1745,6 +1745,12 @@ defineSuite([
     });
 
     it('computes bounding sphere in Columbus view', function() {
+
+        // Disable collision detection to allow controlled camera position,
+        // hence predictable bounding sphere size
+        var originalEnableCollisionDetection = scene.screenSpaceCameraController.enableCollisionDetection;
+        scene.screenSpaceCameraController.enableCollisionDetection = false;
+
         var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
@@ -1769,7 +1775,8 @@ defineSuite([
         var expected = BoundingSphere.fromPoints(projectedPositions);
         expected.center = new Cartesian3(0.0, expected.center.x, expected.center.y);
         expect(actual.center).toEqualEpsilon(expected.center, CesiumMath.EPSILON8);
-        expect(actual.radius).not.toBeLessThan(expected.radius);
+        expect(actual.radius).toBeGreaterThan(expected.radius);
+        scene.screenSpaceCameraController.enableCollisionDetection = originalEnableCollisionDetection;
     });
 
     it('computes bounding sphere in 2D', function() {
