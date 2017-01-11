@@ -325,7 +325,6 @@ define([
         this._debugViewerRequestVolume = undefined;
         this._debugColor = new Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
-        this._debugWireframe = false;
     }
 
     defineProperties(Cesium3DTile.prototype, {

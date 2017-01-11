@@ -123,7 +123,6 @@ define([
      */
     Tileset3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
     };
-    
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.

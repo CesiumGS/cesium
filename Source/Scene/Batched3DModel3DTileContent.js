@@ -343,7 +343,7 @@ define([
         color = enabled ? color : Color.WHITE;
         this.batchTable.setAllColor(color);
     };
-    
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
