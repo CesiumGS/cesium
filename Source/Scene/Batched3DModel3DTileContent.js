@@ -310,6 +310,7 @@ define([
             basePath : getBaseUri(this._url),
             modelMatrix : this._tile.computedTransform,
             shadows: this._tileset.shadows,
+            debugWireframe: this._tileset.debugWireframe,
             incrementallyLoadTextures : false,
             vertexShaderLoaded : getVertexShaderCallback(this),
             fragmentShaderLoaded : getFragmentShaderCallback(this),
@@ -365,6 +366,7 @@ define([
         this.batchTable.update(tileset, frameState);
         this._model.modelMatrix = this._tile.computedTransform;
         this._model.shadows = this._tileset.shadows;
+        this._model.debugWireframe = this._tileset.debugWireframe;
         this._model.update(frameState);
 
         frameState.addCommand = oldAddCommand;

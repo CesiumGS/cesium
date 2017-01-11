@@ -492,6 +492,7 @@ define([
         this.batchTable.update(tileset, frameState);
         this._modelInstanceCollection.transform = this._tile.computedTransform;
         this._modelInstanceCollection.shadows = this._tileset.shadows;
+        this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
         this._modelInstanceCollection.update(frameState);
 
         frameState.addCommand = oldAddCommand;

@@ -1192,12 +1192,13 @@ define([
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
-    function updateDerivedCommandsShadows(derivedCommands, command) {
+    function updateDerivedCommands(derivedCommands, command) {
         for (var name in derivedCommands) {
             if (derivedCommands.hasOwnProperty(name)) {
                 var derivedCommand = derivedCommands[name];
                 derivedCommand.castShadows = command.castShadows;
                 derivedCommand.receiveShadows = command.receiveShadows;
+                derivedCommand.primitiveType = command.primitiveType;
             }
         }
     }
@@ -1219,7 +1220,7 @@ define([
                 derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
             }
 
-            updateDerivedCommandsShadows(derivedCommands, command);
+            updateDerivedCommands(derivedCommands, command);
 
             // If the command was originally opaque:
             //    * If the styling applied to the tile is all opaque, use the original command

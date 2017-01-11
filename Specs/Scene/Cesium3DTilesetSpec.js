@@ -7,6 +7,7 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Core/loadWithXhr',
         'Core/Matrix4',
+        'Core/PrimitiveType',
         'Core/RequestScheduler',
         'Renderer/ContextLimits',
         'Scene/Cesium3DTile',
@@ -27,6 +28,7 @@ defineSuite([
         HeadingPitchRange,
         loadWithXhr,
         Matrix4,
+        PrimitiveType,
         RequestScheduler,
         ContextLimits,
         Cesium3DTile,
@@ -934,6 +936,27 @@ defineSuite([
             var stats = tileset._statistics;
             expect(stats.visited).toEqual(1);
             expect(stats.numberOfCommands).toEqual(1);
+        });
+    });
+
+    it('debugWireframe', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            viewRootOnly();
+            tileset.debugWireframe = true;
+            scene.renderForSpecs();
+            var commands = scene.frameState.commandList;
+            var length = commands.length;
+            var i;
+            for (i = 0; i < length; ++i) {
+                expect(commands[i].primitiveType).toEqual(PrimitiveType.LINES);
+            }
+
+            tileset.debugWireframe = false;
+            scene.renderForSpecs();
+            commands = scene.frameState.commandList;
+            for (i = 0; i < length; ++i) {
+                expect(commands[i].primitiveType).toEqual(PrimitiveType.TRIANGLES);
+            }
         });
     });
 
