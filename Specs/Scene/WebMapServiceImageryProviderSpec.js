@@ -260,6 +260,32 @@ defineSuite([
                 deferred.resolve(true);
             });
 
+            provider.requestImage(0, 0, 0);
+
+            expect(loadImage.createImage).toHaveBeenCalled();
+        });
+    });
+
+    it('defaults WMS version to 1.1.1', function() {
+
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server?foo=bar',
+            layers : 'someLayer'
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+
+                var uri = new Uri(url);
+                var params = queryToObject(uri.query);
+                expect(params.version).toEqual('1.1.1');
+
+                // Don't need to actually load image, but satisfy the request.
+                deferred.resolve(true);
+            });
+
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(loadImage.createImage).toHaveBeenCalled();
             });
@@ -491,6 +517,49 @@ defineSuite([
 
                 expect(params.crs).toEqual('CRS:84');
                 expect(params.version).toEqual('1.3.0');
+
+                var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+                expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
+
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('requestImage requests tiles with CRS CRS:84 when tiling scheme is GeographicTilingScheme, WMS 1.3.1', function() {
+        var tilingScheme = new GeographicTilingScheme();
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            tilingScheme : tilingScheme,
+            parameters: {
+              version: '1.3.1'
+            }
+        });
+
+        expect(provider.url).toEqual('made/up/wms/server');
+        expect(provider.layers).toEqual('someLayer');
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toBeUndefined();
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
+
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                var uri = new Uri(url);
+                var params = queryToObject(uri.query);
+
+                expect(params.crs).toEqual('CRS:84');
+                expect(params.version).toEqual('1.3.1');
 
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);

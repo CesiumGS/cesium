@@ -1,6 +1,21 @@
 Change Log
 ==========
 
+### TODO
+
+* Added compressed texture support.
+   * glTF models and imagery layers can now reference [KTX](https://www.khronos.org/opengles/sdk/tools/KTX/) textures and textures compressed with [crunch](https://github.com/BinomialLLC/crunch).
+   * Added `loadKTX` to load KTX textures.
+   * Added `loadCRN` to load crunch compressed textures.
+   * Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_s3tc`, `WEBGL_compressed_texture_pvrtc`, and `WEBGL_compressed_texture_etc1`. [#4758](https://github.com/AnalyticalGraphicsInc/cesium/pull/4758)
+   * Added `CompressedTextureBuffer`.
+* Added support for [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md) for streaming massive heterogeneous 3D geospatial datasets.  The new Cesium APIs are:
+   * `Cesium3DTileset`
+   * `Cesium3DTileStyle`, `StyleExpression`, `Expression`, and `ConditionsExpression`
+   * `Cesium3DTile`
+   * `Cesium3DTileContent`
+   * `Cesium3DTileFeature`
+
 ### 1.30 - 2017-02-01
 
 * Deprecated
@@ -19,22 +34,6 @@ Change Log
 * Fixed a bug that caused all models to use the same highlight color. [#4798] (https://github.com/AnalyticalGraphicsInc/cesium/pull/4798)
 * Fixed KML for when color is an empty string [#4826](https://github.com/AnalyticalGraphicsInc/cesium/pull/4826)
 * Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
-
-### TODO
-
-* Added compressed texture support.
-   * glTF models and imagery layers can now reference [KTX](https://www.khronos.org/opengles/sdk/tools/KTX/) textures and textures compressed with [crunch](https://github.com/BinomialLLC/crunch).
-   * Added `loadKTX` to load KTX textures.
-   * Added `loadCRN` to load crunch compressed textures.
-   * Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_s3tc`, `WEBGL_compressed_texture_pvrtc`, and `WEBGL_compressed_texture_etc1`. [#4758](https://github.com/AnalyticalGraphicsInc/cesium/pull/4758)
-   * Added `CompressedTextureBuffer`.
-* Added support for [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md) for streaming massive heterogeneous 3D geospatial datasets.  The new Cesium APIs are:
-   * `Cesium3DTileset`
-   * `Cesium3DTileStyle`, `StyleExpression`, `Expression`, and `ConditionsExpression`
-   * `Cesium3DTile`
-   * `Cesium3DTileContent`
-   * `Cesium3DTileFeature`
-
 
 ### 1.29 - 2017-01-02
 

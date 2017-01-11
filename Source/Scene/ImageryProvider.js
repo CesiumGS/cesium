@@ -311,7 +311,7 @@ define([
      * too many requests pending, this function will instead return undefined, indicating
      * that the request should be retried later.
      *
-     * @param {ImageryProvider} imageryProvider The imagery provider
+     * @param {ImageryProvider} imageryProvider The imagery provider for the URL
      * @param {String} url The URL of the image.
      * @param {Number} [distance] The distance of the tile from the camera, used to prioritize requests.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
