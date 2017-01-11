@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/deprecationWarning',
         'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
         'Core/Transforms',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
@@ -12,6 +13,7 @@ defineSuite([
         Cartesian3,
         deprecationWarning,
         HeadingPitchRange,
+        HeadingPitchRoll,
         Transforms,
         Cesium3DTilesTester,
         createScene) {
@@ -169,7 +171,8 @@ defineSuite([
             var newLongitude = -1.31962;
             var newLatitude = 0.698874;
             var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 0.0);
-            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, 0.0, 0.0, 0.0);
+            var newHPR = new HeadingPitchRoll();
+            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, newHPR);
 
             // Update tile transform
             tileset._root.transform = newTransform;

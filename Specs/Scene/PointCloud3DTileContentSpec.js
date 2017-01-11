@@ -6,6 +6,7 @@ defineSuite([
         'Core/ComponentDatatype',
         'Core/defined',
         'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
         'Core/Transforms',
         'Scene/Cesium3DTileStyle',
         'Scene/Expression',
@@ -18,6 +19,7 @@ defineSuite([
         ComponentDatatype,
         defined,
         HeadingPitchRange,
+        HeadingPitchRoll,
         Transforms,
         Cesium3DTileStyle,
         Expression,
@@ -233,7 +235,8 @@ defineSuite([
             var newLongitude = -1.31962;
             var newLatitude = 0.698874;
             var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 5.0);
-            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, 0.0, 0.0, 0.0);
+            var newHPR = new HeadingPitchRoll();
+            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, newHPR);
 
             // Update tile transform
             tileset._root.transform = newTransform;

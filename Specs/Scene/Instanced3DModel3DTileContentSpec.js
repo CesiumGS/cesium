@@ -3,6 +3,7 @@ defineSuite([
         'Scene/Instanced3DModel3DTileContent',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
         'Core/Transforms',
         'Scene/Cesium3DTileContentState',
         'Scene/TileBoundingSphere',
@@ -12,6 +13,7 @@ defineSuite([
         Instanced3DModel3DTileContent,
         Cartesian3,
         HeadingPitchRange,
+        HeadingPitchRoll,
         Transforms,
         Cesium3DTileContentState,
         TileBoundingSphere,
@@ -198,7 +200,8 @@ defineSuite([
             var newLongitude = -1.31962;
             var newLatitude = 0.698874;
             var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 15.0);
-            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, 0.0, 0.0, 0.0);
+            var newHPR = new HeadingPitchRoll();
+            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, newHPR);
 
             // Update tile transform
             tileset._root.transform = newTransform;
