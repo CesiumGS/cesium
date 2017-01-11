@@ -9,6 +9,7 @@ define([
      * State information about the current frame.  An instance of this class
      * is provided to update functions.
      *
+     * @param {Context} context The rendering context.
      * @param {CreditDisplay} creditDisplay Handles adding and removing credits from an HTML element
      *
      * @alias FrameState
