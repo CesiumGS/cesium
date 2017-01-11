@@ -473,13 +473,6 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContent.prototype.applyWireframe = function(enabled) {
-        this._modelInstanceCollection.debugWireframe = enabled;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
     Instanced3DModel3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
         return false;
     };
@@ -499,6 +492,7 @@ define([
         this.batchTable.update(tileset, frameState);
         this._modelInstanceCollection.transform = this._tile.computedTransform;
         this._modelInstanceCollection.shadows = this._tileset.shadows;
+        this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
         this._modelInstanceCollection.update(frameState);
 
         frameState.addCommand = oldAddCommand;

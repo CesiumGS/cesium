@@ -200,19 +200,6 @@ define([
     };
 
     /**
-     * Called when {@link Cesium3DTileset#debugWireframe} changes.
-     * <p>
-     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-     * not part of the public Cesium API.
-     * </p>
-     *
-     * @private
-     */
-    Cesium3DTileContent.prototype.applyWireframe = function(enabled) {
-        DeveloperError.throwInstantiationError();
-    };
-
-    /**
      * Apply a style to the content using a shader instead of a batch table. Currently this is only
      * applicable for {@link PointCloud3DTileContent}.
      * <p>

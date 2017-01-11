@@ -702,14 +702,6 @@ define([
             tile._debugColorizeTiles = false;
             tile._content.applyDebugSettings(false, tile._debugColor);
         }
-
-        if (tileset.debugWireframe && !tile._debugWireframe) {
-            tile._debugWireframe = true;
-            tile._content.applyWireframe(true);
-        } else if (!tileset.debugWireframe && tile._debugWireframe) {
-            tile._debugWireframe = false;
-            tile._content.applyWireframe(false);
-        }
     }
 
     /**

@@ -942,21 +942,21 @@ defineSuite([
     });
 
     it('debugWireframe', function() {
-        // More precise test is in Cesium3DTileBatchTableSpec
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             viewRootOnly();
             tileset.debugWireframe = true;
             scene.renderForSpecs();
             var commands = scene.frameState.commandList;
+            var length = commands.length;
             var i;
-            for (i = 0; i < commands.length; ++i) {
+            for (i = 0; i < length; ++i) {
                 expect(commands[i].primitiveType).toEqual(PrimitiveType.LINES);
             }
 
             tileset.debugWireframe = false;
             scene.renderForSpecs();
             commands = scene.frameState.commandList;
-            for (i = 0; i < commands.length; ++i) {
+            for (i = 0; i < length; ++i) {
                 expect(commands[i].primitiveType).toEqual(PrimitiveType.TRIANGLES);
             }
         });

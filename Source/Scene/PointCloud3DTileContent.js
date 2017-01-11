@@ -1120,12 +1120,6 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    PointCloud3DTileContent.prototype.applyWireframe = function(enabled) {
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
     PointCloud3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
         if (!defined(this.batchTable)) {
             createShaders(this, frameState, style);
