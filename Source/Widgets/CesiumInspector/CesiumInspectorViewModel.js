@@ -70,6 +70,7 @@ define([
      * @constructor
      *
      * @param {Scene} scene The scene instance to use.
+     * @param {PerformanceContainer} performanceContainer The instance to use for performance container.
      *
      * @exception {DeveloperError} scene is required.
      */

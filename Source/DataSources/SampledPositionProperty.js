@@ -274,8 +274,8 @@ define([
      * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
      */
-    SampledPositionProperty.prototype.addSamplesPackedArray = function(data, epoch) {
-        this._property.addSamplesPackedArray(data, epoch);
+    SampledPositionProperty.prototype.addSamplesPackedArray = function(packedSamples, epoch) {
+        this._property.addSamplesPackedArray(packedSamples, epoch);
     };
 
     /**

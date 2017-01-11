@@ -147,7 +147,7 @@ define([
     /**
      * Returns true if the credits are equal
      *
-     * @param {Credit} credits The credit to compare to.
+     * @param {Credit} credit The credit to compare to.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Credit.prototype.equals = function(credit) {

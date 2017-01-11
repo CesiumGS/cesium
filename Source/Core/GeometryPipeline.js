@@ -282,6 +282,9 @@ define([
             'binormal',
             'tangent',
 
+            // For shadow volumes
+            'extrudeDirection',
+
             // From compressing texture coordinates and normals
             'compressedAttributes'
         ];
@@ -1343,7 +1346,7 @@ define([
     var toEncode1 = new Cartesian3();
     var toEncode2 = new Cartesian3();
     var toEncode3 = new Cartesian3();
-
+    var encodeResult2 = new Cartesian2();
     /**
      * Compresses and packs geometry normal attribute values to save memory.
      *
@@ -1360,53 +1363,89 @@ define([
         }
         //>>includeEnd('debug');
 
+        var extrudeAttribute = geometry.attributes.extrudeDirection;
+        var i;
+        var numVertices;
+        if (defined(extrudeAttribute)) {
+            //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
+            var extrudeDirections = extrudeAttribute.values;
+            numVertices = extrudeDirections.length / 3.0;
+            var compressedDirections = new Float32Array(numVertices * 2);
+
+            var i2 = 0;
+            for (i = 0; i < numVertices; ++i) {
+                Cartesian3.fromArray(extrudeDirections, i * 3.0, toEncode1);
+                if (Cartesian3.equals(toEncode1, Cartesian3.ZERO)) {
+                    i2 += 2;
+                    continue;
+                }
+                encodeResult2 = AttributeCompression.octEncodeInRange(toEncode1, 65535, encodeResult2);
+                compressedDirections[i2++] = encodeResult2.x;
+                compressedDirections[i2++] = encodeResult2.y;
+            }
+
+            geometry.attributes.compressedAttributes = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : compressedDirections
+            });
+            delete geometry.attributes.extrudeDirection;
+            return geometry;
+        }
+
         var normalAttribute = geometry.attributes.normal;
         var stAttribute = geometry.attributes.st;
-        if (!defined(normalAttribute) && !defined(stAttribute)) {
+
+        var hasNormal = defined(normalAttribute);
+        var hasSt = defined(stAttribute);
+        if (!hasNormal && !hasSt) {
             return geometry;
         }
 
         var tangentAttribute = geometry.attributes.tangent;
         var binormalAttribute = geometry.attributes.binormal;
 
+        var hasTangent = defined(tangentAttribute);
+        var hasBinormal = defined(binormalAttribute);
+
         var normals;
         var st;
         var tangents;
         var binormals;
 
-        if (defined(normalAttribute)) {
+        if (hasNormal) {
             normals = normalAttribute.values;
         }
-        if (defined(stAttribute)) {
+        if (hasSt) {
             st = stAttribute.values;
         }
-        if (defined(tangentAttribute)) {
+        if (hasTangent) {
             tangents = tangentAttribute.values;
         }
-        if (binormalAttribute) {
+        if (hasBinormal) {
             binormals = binormalAttribute.values;
         }
 
-        var length = defined(normals) ? normals.length : st.length;
-        var numComponents = defined(normals) ? 3.0 : 2.0;
-        var numVertices = length / numComponents;
+        var length = hasNormal ? normals.length : st.length;
+        var numComponents = hasNormal ? 3.0 : 2.0;
+        numVertices = length / numComponents;
 
         var compressedLength = numVertices;
-        var numCompressedComponents = defined(st) && defined(normals) ? 2.0 : 1.0;
-        numCompressedComponents += defined(tangents) || defined(binormals) ? 1.0 : 0.0;
+        var numCompressedComponents = hasSt && hasNormal ? 2.0 : 1.0;
+        numCompressedComponents += hasTangent || hasBinormal ? 1.0 : 0.0;
         compressedLength *= numCompressedComponents;
 
         var compressedAttributes = new Float32Array(compressedLength);
 
         var normalIndex = 0;
-        for (var i = 0; i < numVertices; ++i) {
-            if (defined(st)) {
+        for (i = 0; i < numVertices; ++i) {
+            if (hasSt) {
                 Cartesian2.fromArray(st, i * 2.0, scratchCartesian2);
                 compressedAttributes[normalIndex++] = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
             }
 
             var index = i * 3.0;
-            if (defined(normals) && defined(tangents) && defined(binormals)) {
+            if (hasNormal && defined(tangents) && defined(binormals)) {
                 Cartesian3.fromArray(normals, index, toEncode1);
                 Cartesian3.fromArray(tangents, index, toEncode2);
                 Cartesian3.fromArray(binormals, index, toEncode3);
@@ -1415,17 +1454,17 @@ define([
                 compressedAttributes[normalIndex++] = scratchCartesian2.x;
                 compressedAttributes[normalIndex++] = scratchCartesian2.y;
             } else {
-                if (defined(normals)) {
+                if (hasNormal) {
                     Cartesian3.fromArray(normals, index, toEncode1);
                     compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
 
-                if (defined(tangents)) {
+                if (hasTangent) {
                     Cartesian3.fromArray(tangents, index, toEncode1);
                     compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
 
-                if (defined(binormals)) {
+                if (hasBinormal) {
                     Cartesian3.fromArray(binormals, index, toEncode1);
                     compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
@@ -1438,16 +1477,16 @@ define([
             values : compressedAttributes
         });
 
-        if (defined(normals)) {
+        if (hasNormal) {
             delete geometry.attributes.normal;
         }
-        if (defined(st)) {
+        if (hasSt) {
             delete geometry.attributes.st;
         }
-        if (defined(tangents)) {
+        if (hasTangent) {
             delete geometry.attributes.tangent;
         }
-        if (defined(binormals)) {
+        if (hasBinormal) {
             delete geometry.attributes.binormal;
         }
 
@@ -1877,8 +1916,8 @@ define([
     var s1Scratch = new Cartesian2();
     var s2Scratch = new Cartesian2();
 
-    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex) {
-        if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords)) {
+    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex) {
+        if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords) && !defined(extrudeDirections)) {
             return;
         }
 
@@ -1901,6 +1940,29 @@ define([
             Cartesian3.normalize(normal, normal);
 
             Cartesian3.pack(normal, currentAttributes.normal.values, insertedIndex * 3);
+        }
+
+        if (defined(extrudeDirections)) {
+            var d0 = Cartesian3.fromArray(extrudeDirections, i0 * 3, p0Scratch);
+            var d1 = Cartesian3.fromArray(extrudeDirections, i1 * 3, p1Scratch);
+            var d2 = Cartesian3.fromArray(extrudeDirections, i2 * 3, p2Scratch);
+
+            Cartesian3.multiplyByScalar(d0, coords.x, d0);
+            Cartesian3.multiplyByScalar(d1, coords.y, d1);
+            Cartesian3.multiplyByScalar(d2, coords.z, d2);
+
+            var direction;
+            if (!Cartesian3.equals(d0, Cartesian3.ZERO) || !Cartesian3.equals(d1, Cartesian3.ZERO) || !Cartesian3.equals(d2, Cartesian3.ZERO)) {
+                direction = Cartesian3.add(d0, d1, d0);
+                Cartesian3.add(direction, d2, direction);
+                Cartesian3.normalize(direction, direction);
+            } else {
+                direction = p0Scratch;
+                direction.x = 0;
+                direction.y = 0;
+                direction.z = 0;
+            }
+            Cartesian3.pack(direction, currentAttributes.extrudeDirection.values, insertedIndex * 3);
         }
 
         if (defined(binormals)) {
@@ -1982,6 +2044,7 @@ define([
         var binormals = (defined(attributes.binormal)) ? attributes.binormal.values : undefined;
         var tangents = (defined(attributes.tangent)) ? attributes.tangent.values : undefined;
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
+        var extrudeDirections = (defined(attributes.extrudeDirection)) ? attributes.extrudeDirection.values : undefined;
         var indices = geometry.indices;
 
         var eastGeometry = copyGeometryForSplit(geometry);
@@ -2035,7 +2098,7 @@ define([
                     }
 
                     insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, resultIndex < 3 ? i + resultIndex : -1, point);
-                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
+                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
                 }
             } else {
                 if (defined(result)) {
@@ -2055,13 +2118,13 @@ define([
                 }
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i, p0);
-                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 1, p1);
-                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 2, p2);
-                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
             }
         }
 
