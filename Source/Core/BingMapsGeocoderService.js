@@ -25,8 +25,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} [key] A key to use with the Bing Maps geocoding service
-     * @param {Boolean} autoComplete Indicates whether this service shall be used to fetch auto-complete suggestions
+     * @param {String} [options.key] A key to use with the Bing Maps geocoding service
      */
     function BingMapsGeocoderService(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
