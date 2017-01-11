@@ -238,7 +238,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.pickPimitiveActive = false;
+        this.pickPrimitiveActive = false;
 
         /**
          * Gets if the picking tile command is active.  This property is observable.
@@ -296,10 +296,35 @@ define([
          */
         this.terrainSwitchText = '+';
 
-        knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'shaderCacheText', 'frustums',
-                              'frustumStatisticText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
-                              'hasPickedTile', 'tileText', 'generalVisible', 'generalSwitchText',
-                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText', 'depthFrustumText']);
+        knockout.track(this, [
+           'frustums',
+           'shaderCacheText',
+           'primitiveBoundingSphere',
+           'primitiveReferenceFrame',
+           'filterPrimitive',
+           'tileBoundingSphere',
+           'filterTile',
+           'wireframe',
+           'globeDepth',
+           'pickDepth',
+           'depthFrustum',
+           'depthFrustumText',
+           'suspendUpdates',
+           'tileCoordinates',
+           'frustumStatisticText',
+           'tileText',
+           'hasPickedPrimitive',
+           'hasPickedTile',
+           'pickPrimitiveActive',
+           'pickTileActive',
+           'dropDownVisible',
+           'generalVisible',
+           'primitivesVisible',
+           'terrainVisible',
+           'generalSwitchText',
+           'primitivesSwitchText',
+           'terrainSwitchText'
+        ]);
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
