@@ -106,18 +106,18 @@ define([
      * @param {Matrix2} [result] The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided. (Returns undefined if matrix is undefined)
      */
-    Matrix2.clone = function(values, result) {
-        if (!defined(values)) {
+    Matrix2.clone = function(matrix, result) {
+        if (!defined(matrix)) {
             return undefined;
         }
         if (!defined(result)) {
-            return new Matrix2(values[0], values[2],
-                               values[1], values[3]);
+            return new Matrix2(matrix[0], matrix[2],
+                               matrix[1], matrix[3]);
         }
-        result[0] = values[0];
-        result[1] = values[1];
-        result[2] = values[2];
-        result[3] = values[3];
+        result[0] = matrix[0];
+        result[1] = matrix[1];
+        result[2] = matrix[2];
+        result[3] = matrix[3];
         return result;
     };
 
