@@ -218,7 +218,6 @@ define([
      * Checks if there are available slots to make a request, considering the total
      * number of available slots across all servers.
      *
-     * @param {String} [url] The url to check.
      * @returns {Boolean} Returns true if there are available slots, otherwise false.
      */
     RequestScheduler.hasAvailableRequests = function() {

@@ -637,6 +637,7 @@ define([
      * @private
      *
      * @param {Imagery} imagery The imagery to request.
+     * @param {Number} [distance] The distance of the tile from the camera.
      */
     ImageryLayer.prototype._requestImagery = function(imagery, distance) {
         var imageryProvider = this._imageryProvider;
