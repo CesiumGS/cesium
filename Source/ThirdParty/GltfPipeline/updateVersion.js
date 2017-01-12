@@ -6,6 +6,7 @@ define([
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/Math',
+        '../../Core/Matrix3',
         '../../Core/Matrix4',
         '../../Core/Quaternion',
         '../../Core/WebGLConstants'
@@ -16,6 +17,7 @@ define([
         defaultValue,
         defined,
         CesiumMath,
+        Matrix3,
         Matrix4,
         Quaternion,
         WebGLConstants) {
@@ -518,38 +520,31 @@ define([
         }
     }
 
-    function createJointMapping(gltf, skeletonNodeIds) {
-        var nodes = gltf.nodes;
-        var jointMapping = {};
-
-        var searchNodes = skeletonNodeIds;
-        while (searchNodes.length > 0) {
-            var nodeId = searchNodes.pop();
-            var node = nodes[nodeId];
-            var jointName = node.jointName;
-            if (defined(jointName)) {
-                jointMapping[jointName] = node;
-            }
-            var children = node.children;
-            if (defined(children)) {
-                var childrenLength = children.length;
-                for (var i = 0; i < childrenLength; i++) {
-                    var childNodeId = children[i];
-                    searchNodes.push(childNodeId);
-                }
-            }
-        }
-        return jointMapping;
-    }
-
+    var scratchTranslation = new Cartesian3();
+    var scratchRotation = new Quaternion();
+    var scratchScale = new Cartesian3();
+    var defaultScale = new Cartesian3(1.0, 1.0, 1.0);
+    var scratchMatrix3 = new Matrix3();
+    var scratchMatrix4 = new Matrix4();
+    var scratchPreApplyTransform = new Matrix4();
     function getNodeTransform(node) {
         if (defined(node.matrix)) {
             return Matrix4.fromArray(node.matrix);
         } else if (defined(node.translation) || defined(node.rotation) || defined(node.scale)) {
-            var translation = defaultValue(node.translation, Cartesian3.ZERO);
-            var rotation = defaultValue(node.rotation, Quaternion.IDENTITY);
-            var scale = defaultValue(node.scale, new Cartesian3(1.0, 1.0, 1.0));
-            return Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale);
+            Cartesian3.ZERO.clone(scratchTranslation);
+            if (defined(node.translation)) {
+                Cartesian3.unpack(node.translation, scratchTranslation);
+            }
+            Quaternion.IDENTITY.clone(scratchRotation);
+            if (defined(node.rotation)) {
+                Quaternion.unpack(node.rotation, scratchRotation);
+            }
+            defaultScale.clone(scratchScale);
+            if (defined(node.scale)) {
+                Cartesian3.unpack(node.scale, scratchScale);
+            }
+            Matrix4.fromTranslationQuaternionRotationScale(scratchTranslation, scratchRotation, scratchScale, scratchMatrix4);
+            return scratchMatrix4;
         } else {
             return Matrix4.IDENTITY;
         }
@@ -557,9 +552,9 @@ define([
 
     function separateSkeletonHierarchy(gltf) {
         var nodes = gltf.nodes;
-        var skins = gltf.skins;
+        var scenes = gltf.scenes;
 
-        var skinnedNodes = {};
+        var skinnedNodes = [];
         var parentNodes = {};
 
         var i;
@@ -579,123 +574,48 @@ define([
                 var skinId = node.skin;
                 skeletonIds = node.skeletons;
                 if (defined(skinId) && defined(skeletonIds)) {
-                    skinnedNodes[nodeId] = createJointMapping(gltf, skeletonIds);
+                    skinnedNodes.push(nodeId);
                 }
             }
         }
 
-        for (var skinnedNodeId in skinnedNodes) {
-            if (skinnedNodes.hasOwnProperty(skinnedNodeId)) {
-                var skinnedNode = nodes[skinnedNodeId];
-                skeletonIds = skinnedNode.skeletons;
-                var skeletonIdsLength = skeletonIds.length;
-                for (i = 0; i < skeletonIdsLength; i++) {
-                    var skeletonId = skeletonIds[i];
-                    var skeletonNode = nodes[skeletonId];
-                    var parentNodeId = parentNodes[skeletonId];
-                    var transform = getNodeTransform();
-                    if (defined(parentNodeId)) {
-                        var parentNode = nodes[parentNodeId];
+        var sceneId = gltf.scene;
+        var scene = scenes[sceneId];
+
+        var skinnedNodesLength = skinnedNodes.length;
+        for (i = 0; i < skinnedNodesLength; i++) {
+            var skinnedNodeId = skinnedNodes[i];
+            var skinnedNode = nodes[skinnedNodeId];
+            skeletonIds = skinnedNode.skeletons;
+            var skeletonIdsLength = skeletonIds.length;
+            for (var j = 0; j < skeletonIdsLength; j++) {
+                var skeletonId = skeletonIds[j];
+                var parentNodeId = parentNodes[skeletonId];
+                if (defined(parentNodeId)) {
+                    var parentNode = nodes[parentNodeId];
+                    var parentChildren = parentNode.children;
+                    var index = parentChildren.indexOf(skeletonId);
+                    parentChildren.splice(index, 1);
+                    parentNode.children = parentChildren;
+                    Matrix4.IDENTITY.clone(scratchPreApplyTransform);
+                    while(defined(parentNode)) {
                         var parentTransform = getNodeTransform(parentNode);
-                        Matrix4.multiply(parentTransform, transform, transform);
-                        var parentChildren = parent.children;
-                        parent.children = parentChildren.splice(parentChildren.)
+                        Matrix4.multiply(parentTransform, scratchPreApplyTransform, scratchPreApplyTransform);
+                        parentNodeId = parentNodes[parentNodeId];
+                        parentNode = nodes[parentNodeId];
                     }
-                }
-            }
-        }
-
-
-        var i;
-        var nodes = gltf.nodes;
-        var node;
-        var nodeId;
-        var nodeStack = [];
-        var mappedSkeletonNodes = {};
-        var parentNodes = {};
-        for (nodeId in nodes) {
-            if (nodes.hasOwnProperty(nodeId)) {
-                nodeStack.push(nodeId);
-                node = nodes[nodeId];
-                var children = node.children;
-                if (defined(children)) {
-                    var childrenLength = children.length;
-                    for (i = 0; i < childrenLength; i++) {
-                        var childNodeId = children[i];
-                        parentNodes[childNodeId] = nodeId;
-                    }
-                }
-            }
-        }
-        while (nodeStack.length > 0) {
-            nodeId = nodeStack.pop();
-            node = nodes[nodeId];
-            var jointName = node.jointName;
-            if (defined(jointName)) {
-                // this node is a joint; clone the hierarchy
-                if (!defined(node.camera) && !defined(node.skeletons) && !defined(node.skins) && !defined(node.meshes) && !defined(node.children)) {
-                    // the original node can be removed since it is only a skeleton node
-                    var parentId = parentNodes[nodeId];
-                    if (defined(parentId)) {
-                        var parentChildren = nodes[parentId].children;
-                        parentChildren.splice(parentChildren.indexOf(nodeId), 1);
-                    }
-                    delete nodes[nodeId];
-                }
-                var lastNodeId;
-                var skeletonNode;
-                var end = false;
-                while (defined(nodeId)) {
-                    var skeletonNodeId = mappedSkeletonNodes[nodeId];
-                    if (!defined(skeletonNodeId)) {
-                        skeletonNode = {
-                            children: []
+                    if (!Matrix4.equals(scratchPreApplyTransform, Matrix4.IDENTITY)) {
+                        var newRootNodeId = getUniqueId(gltf, 'root-' + skeletonId);
+                        var newRootNode = {
+                            children: [],
+                            matrix: Matrix4.pack(scratchPreApplyTransform, [], 0)
                         };
-                        if (defined(node.jointName)) {
-                            skeletonNode.jointName = node.jointName;
-                        }
-                        skeletonNodeId = getUniqueId(gltf, nodeId + '-skeleton');
-                        if (defined(node.translation) || defined(node.rotation) || defined(node.scale)) {
-                            skeletonNode.translation = defaultValue(node.translation, [0.0, 0.0, 0.0]);
-                            skeletonNode.rotation = defaultValue(node.rotation, [0.0, 0.0, 0.0, 1.0]);
-                            skeletonNode.scale = defaultValue(node.scale, [1.0, 1.0, 1.0]);
-                        } else {
-                            skeletonNode.matrix = defaultValue(node.matrix, [
-                                1.0, 0.0, 0.0, 0.0,
-                                0.0, 1.0, 0.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 0.0, 1.0]);
-                        }
-                        delete node.jointName;
-                        nodes[skeletonNodeId] = skeletonNode;
-                        mappedSkeletonNodes[nodeId] = skeletonNodeId;
-                    } else {
-                        end = true;
+                        newRootNode.children.push(skeletonId);
+                        nodes[newRootNodeId] = newRootNode;
+                        skeletonId = newRootNodeId;
+                        skeletonIds[j] = newRootNodeId;
                     }
-                    if (defined(lastNodeId)) {
-                        skeletonNode = nodes[skeletonNodeId];
-                        skeletonNode.children.push(lastNodeId);
-                    }
-                    if (end) {
-                        break;
-                    }
-                    lastNodeId = skeletonNodeId;
-                    nodeId = parentNodes[nodeId];
-                    node = nodes[nodeId];
-                }
-                lastNodeId = undefined;
-            }
-        }
-        for (nodeId in nodes) {
-            if (nodes.hasOwnProperty(nodeId)) {
-                node = nodes[nodeId];
-                if (defined(node.skeletons)) {
-                    var skeletons = node.skeletons;
-                    var skeletonsLength = skeletons.length;
-                    for (i = 0; i < skeletonsLength; i++) {
-                        var skeleton = skeletons[i];
-                        skeletons[i] = mappedSkeletonNodes[skeleton];
-                    }
+                    scene.nodes.push(skeletonId);
                 }
             }
         }
@@ -734,7 +654,7 @@ define([
         clampTechniqueFunctionStates(gltf);
         // clamp camera parameters
         clampCameraParameters(gltf);
-        // skeleton hierarchy must be separate from the node hierarchy (a node with jointName cannot contain camera, skeletons, skins, or meshes)
+        // skeleton nodes must be root nodes
         separateSkeletonHierarchy(gltf);
     }
 
