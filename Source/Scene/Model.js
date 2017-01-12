@@ -245,7 +245,9 @@ define([
     // Note that this is a global cache, compared to renderer resources, which
     // are cached per context.
     function CachedGltf(options) {
-        this._gltf = modelMaterialsCommon(gltfDefaults(options.gltf));
+        this._gltf = modelMaterialsCommon(gltfDefaults(options.gltf), {
+            addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
+        });
         this._bgltf = options.bgltf;
         this.ready = options.ready;
         this.modelsToLoad = [];
@@ -394,13 +396,15 @@ define([
                     cachedGltf = new CachedGltf({
                         gltf : result.glTF,
                         bgltf : gltf,
-                        ready : true
+                        ready : true,
+                        addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
                     });
                 } else {
                     // Normal glTF (JSON)
                     cachedGltf = new CachedGltf({
                         gltf : options.gltf,
-                        ready : true
+                        ready : true,
+                        addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
                     });
                 }
 
