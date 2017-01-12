@@ -491,17 +491,17 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('evaluates color properties (reg, green, blue, alpha)', function() {
-        var expression = new Expression('color(\'#ffffff\').red');
+    it('evaluates color properties (r, g, b, a)', function() {
+        var expression = new Expression('color(\'#ffffff\').r');
         expect(expression.evaluate(frameState, undefined)).toEqual(1);
 
-        expression = new Expression('rgb(255, 255, 0).green');
+        expression = new Expression('rgb(255, 255, 0).g');
         expect(expression.evaluate(frameState, undefined)).toEqual(1);
 
-        expression = new Expression('color("cyan").blue');
+        expression = new Expression('color("cyan").b');
         expect(expression.evaluate(frameState, undefined)).toEqual(1);
 
-        expression = new Expression('rgba(255, 255, 0, 0.5).alpha');
+        expression = new Expression('rgba(255, 255, 0, 0.5).a');
         expect(expression.evaluate(frameState, undefined)).toEqual(0.5);
     });
 
@@ -533,17 +533,17 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(0.5);
     });
 
-    it('evaluates color properties (["red"], ["green"], ["blue"], ["alpha"])', function() {
-        var expression = new Expression('color(\'#ffffff\')["red"]');
+    it('evaluates color properties (["r"], ["g"], ["b"], ["a"])', function() {
+        var expression = new Expression('color(\'#ffffff\')["r"]');
         expect(expression.evaluate(frameState, undefined)).toEqual(1);
 
-        expression = new Expression('rgb(255, 255, 0)["green"]');
+        expression = new Expression('rgb(255, 255, 0)["g"]');
         expect(expression.evaluate(frameState, undefined)).toEqual(1);
 
-        expression = new Expression('color("cyan")["blue"]');
+        expression = new Expression('color("cyan")["b"]');
         expect(expression.evaluate(frameState, undefined)).toEqual(1);
 
-        expression = new Expression('rgba(255, 255, 0, 0.5)["alpha"]');
+        expression = new Expression('rgba(255, 255, 0, 0.5)["a"]');
         expect(expression.evaluate(frameState, undefined)).toEqual(0.5);
     });
 
@@ -1724,11 +1724,11 @@ defineSuite([
 
     it('member expressions throw without variable notation', function() {
         expect(function() {
-            return new Expression('color.red');
+            return new Expression('color.r');
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('color["red"]');
+            return new Expression('color["r"]');
         }).toThrowDeveloperError();
     });
 
@@ -2347,8 +2347,8 @@ defineSuite([
     });
 
     it('gets shader expression for color components', function() {
-        // .red, .green, .blue, .alpha
-        var expression = new Expression('color().red + color().green + color().blue + color().alpha');
+        // .r, .g, .b, .a
+        var expression = new Expression('color().r + color().g + color().b + color().a');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = '(((vec4(1.0)[0] + vec4(1.0)[1]) + vec4(1.0)[2]) + vec4(1.0)[3])';
         expect(shaderExpression).toEqual(expected);

@@ -908,14 +908,14 @@ define([
 
         var member = this._right.evaluate(frameState, feature);
         if ((property instanceof Cartesian2) || (property instanceof Cartesian3) || (property instanceof Cartesian4)) {
-            // Vector components may be accessed with .red, .green, .blue, .alpha and implicitly with .x, .y, .z, .w
-            if (member === 'red') {
+            // Vector components may be accessed with .r, .g, .b, .a and implicitly with .x, .y, .z, .w
+            if (member === 'r') {
                 return property.x;
-            } else if (member === 'green') {
+            } else if (member === 'g') {
                 return property.y;
-            } else if (member === 'blue') {
+            } else if (member === 'b') {
                 return property.z;
-            } else if (member === 'alpha') {
+            } else if (member === 'a') {
                 return property.w;
             }
         }
@@ -933,15 +933,15 @@ define([
 
         var member = this._right.evaluate(frameState, feature);
         if ((property instanceof Cartesian2) || (property instanceof Cartesian3) || (property instanceof Cartesian4)) {
-            // Vector components may be accessed with [0][1][2][3], ['red']['green']['blue']['alpha'] and implicitly with ['x']['y']['z']['w']
+            // Vector components may be accessed with [0][1][2][3], ['r']['g']['b']['a'] and implicitly with ['x']['y']['z']['w']
             // For Cartesian2 and Cartesian3 out-of-range components will just return undefined
-            if (member === 0 || member === 'red') {
+            if (member === 0 || member === 'r') {
                 return property.x;
-            } else if (member === 1 || member === 'green') {
+            } else if (member === 1 || member === 'g') {
                 return property.y;
-            } else if (member === 2 || member === 'blue') {
+            } else if (member === 2 || member === 'b') {
                 return property.z;
-            } else if (member === 3 || member === 'alpha') {
+            } else if (member === 3 || member === 'a') {
                 return property.w;
             }
         }
@@ -1458,14 +1458,13 @@ define([
             case ExpressionNodeType.MEMBER:
                 // This is intended for accessing the components of vector properties. String members aren't supported.
                 // Check for 0.0 rather than 0 because all numbers are previously converted to decimals.
-                // In this shader there is not much distinction between colors and vectors so allow .red to access the 0th component for both.
-                if (right === 'red' || right === 'x' || right === '0.0') {
+                if (right === 'r' || right === 'x' || right === '0.0') {
                     return left + '[0]';
-                } else if (right === 'green' || right === 'y' || right === '1.0') {
+                } else if (right === 'g' || right === 'y' || right === '1.0') {
                     return left + '[1]';
-                } else if (right === 'blue' || right === 'z' || right === '2.0') {
+                } else if (right === 'b' || right === 'z' || right === '2.0') {
                     return left + '[2]';
-                } else if (right === 'alpha' || right === 'w' || right === '3.0') {
+                } else if (right === 'a' || right === 'w' || right === '3.0') {
                     return left + '[3]';
                 }
                 return left + '[int(' + right + ')]';
@@ -1504,10 +1503,8 @@ define([
             case ExpressionNodeType.LITERAL_NUMBER:
                 return numberToString(value);
             case ExpressionNodeType.LITERAL_STRING:
-                // Check if parent is of type MEMBER. Otherwise it is not possible to know whether 'red', 'green', and 'blue'
-                // refer to CSS strings or component accessors.
                 if (defined(parent) && (parent._type === ExpressionNodeType.MEMBER)) {
-                    if (value === 'red' || value === 'green' || value === 'blue' || value === 'alpha' ||
+                    if (value === 'r' || value === 'g' || value === 'b' || value === 'a' ||
                         value === 'x' || value === 'y' || value === 'z' || value === 'w') {
                         return value;
                     }
