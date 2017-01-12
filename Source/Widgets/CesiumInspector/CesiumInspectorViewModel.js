@@ -104,84 +104,84 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.frustums = knockout.observable(false);
+        this.frustums = false;
 
         /**
          * Gets or sets the show performance display state.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.performance = knockout.observable(false);
+        this.performance = false;
 
         /**
          * Gets or sets the shader cache text.  This property is observable.
          * @type {String}
          * @default ''
          */
-        this.shaderCacheText = knockout.observable('');
+        this.shaderCacheText = '';
 
         /**
          * Gets or sets the show primitive bounding sphere state.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.primitiveBoundingSphere = knockout.observable(false);
+        this.primitiveBoundingSphere = false;
 
         /**
          * Gets or sets the show primitive reference frame state.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.primitiveReferenceFrame = knockout.observable(false);
+        this.primitiveReferenceFrame = false;
 
         /**
          * Gets or sets the filter primitive state.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.filterPrimitive = knockout.observable(false);
+        this.filterPrimitive = false;
 
         /**
          * Gets or sets the show tile bounding sphere state.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.tileBoundingSphere = knockout.observable(false);
+        this.tileBoundingSphere = false;
 
         /**
          * Gets or sets the filter tile state.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.filterTile = knockout.observable(false);
+        this.filterTile = false;
 
         /**
          * Gets or sets the show wireframe state.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.wireframe = knockout.observable(false);
+        this.wireframe = false;
 
         /**
          * Gets or sets the show globe depth state.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.globeDepth = knockout.observable(false);
+        this.globeDepth = false;
 
         /**
          * Gets or sets the show pick depth state.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.pickDepth = knockout.observable(false);
+        this.pickDepth = false;
 
         /**
          * Gets or sets the index of the depth frustum to display.  This property is observable.
          * @type {Number}
          * @default 1
          */
-        this.depthFrustum = knockout.observable(1);
+        this.depthFrustum = 1;
         this._numberOfFrustums = 1;
 
         /**
@@ -189,91 +189,91 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.suspendUpdates = knockout.observable(false);
+        this.suspendUpdates = false;
 
         /**
          * Gets or sets the show tile coordinates state.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.tileCoordinates = knockout.observable(false);
+        this.tileCoordinates = false;
 
         /**
          * Gets or sets the frustum statistic text.  This property is observable.
          * @type {String}
          * @default ''
          */
-        this.frustumStatisticText = knockout.observable('');
+        this.frustumStatisticText = false;
 
         /**
          * Gets or sets the selected tile information text.  This property is observable.
          * @type {String}
          * @default ''
          */
-        this.tileText = knockout.observable('');
+        this.tileText = '';
 
         /**
          * Gets if a primitive has been selected.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.hasPickedPrimitive = knockout.observable(false);
+        this.hasPickedPrimitive = false;
 
         /**
          * Gets if a tile has been selected.  This property is observable
          * @type {Boolean}
          * @default false
          */
-        this.hasPickedTile = knockout.observable(false);
+        this.hasPickedTile = false;
 
         /**
          * Gets if the picking primitive command is active.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.pickPrimitiveActive = knockout.observable(false);
+        this.pickPrimitiveActive = false;
 
         /**
          * Gets if the picking tile command is active.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.pickTileActive = knockout.observable(false);
+        this.pickTileActive = false;
 
         /**
          * Gets or sets if the cesium inspector drop down is visible.  This property is observable.
          * @type {Boolean}
          * @default true
          */
-        this.dropDownVisible = knockout.observable(true);
+        this.dropDownVisible = true;
 
         /**
          * Gets or sets if the general section is visible.  This property is observable.
          * @type {Boolean}
          * @default true
          */
-        this.generalVisible = knockout.observable(true);
+        this.generalVisible = true;
 
         /**
          * Gets or sets if the primitive section is visible.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.primitivesVisible = knockout.observable(false);
+        this.primitivesVisible = false;
 
         /**
          * Gets or sets if the terrain section is visible.  This property is observable.
          * @type {Boolean}
          * @default false
          */
-        this.terrainVisible = knockout.observable(false);
+        this.terrainVisible = false;
 
         /**
          * Gets or sets the index of the depth frustum text.  This property is observable.
          * @type {String}
-         * @default '1 of 1'
+         * @default ''
          */
-        this.depthFrustumText = knockout.observable('1 of 1');
+        this.depthFrustumText = '';
 
         /**
          * Gets the text on the general section expand button.  This property is computed.
@@ -302,6 +302,34 @@ define([
             return that.terrainVisible ? '-' : '+';
         });
 
+        knockout.track(this, [
+            'frustums',
+            'performance',
+            'shaderCacheText',
+            'primitiveBoundingSphere',
+            'primitiveReferenceFrame',
+            'filterPrimitive',
+            'tileBoundingSphere',
+            'filterTile',
+            'wireframe',
+            'globeDepth',
+            'pickDepth',
+            'depthFrustum',
+            'suspendUpdates',
+            'tileCoordinates',
+            'frustumStatisticText',
+            'tileText',
+            'hasPickedPrimitive',
+            'hasPickedTile',
+            'pickPrimitiveActive',
+            'pickTileActive',
+            'dropDownVisible',
+            'generalVisible',
+            'primitivesVisible',
+            'terrainVisible',
+            'depthFrustumText'
+        ]);
+
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
         });
@@ -318,11 +346,11 @@ define([
             that.terrainVisible = !that.terrainVisible;
         });
 
-        this.frustums.subscribe(function(val) {
+        this._frustumsSubscription = knockout.getObservable(this, 'frustums').subscribe(function(val) {
             that._scene.debugShowFrustums = val;
         });
 
-        this.performance.subscribe(function(val) {
+        this._performanceSubscription = knockout.getObservable(this, 'performance').subscribe(function(val) {
             if (val) {
                 that._performanceDisplay = new PerformanceDisplay({
                     container : that._performanceContainer
@@ -337,7 +365,7 @@ define([
             return true;
         });
 
-        this.primitiveBoundingSphere.subscribe(function() {
+        this._primitiveBoundingSphereSubscription = knockout.getObservable(this, 'primitiveBoundingSphere').subscribe(function() {
             that._showPrimitiveBoundingSphere();
         });
 
@@ -355,7 +383,7 @@ define([
             return true;
         });
 
-        this.primitiveReferenceFrame.subscribe(function() {
+        this._primitiveReferenceFrameSubscription = knockout.getObservable(this, 'primitiveReferenceFrame').subscribe(function() {
             that._showPrimitiveReferenceFrame();
         });
 
@@ -375,23 +403,23 @@ define([
             return true;
         });
 
-        this.filterPrimitive.subscribe(function() {
+        this._filterPrimitiveSubscription = knockout.getObservable(this, 'filterPrimitive').subscribe(function() {
             that._doFilterPrimitive();
         });
 
-        this.wireframe.subscribe(function(val) {
+        this._wireframeSubscription = knockout.getObservable(this, 'wireframe').subscribe(function(val) {
             globe._surface.tileProvider._debug.wireframe = val;
         });
 
-        this.globeDepth.subscribe(function(val) {
+        this._globeDepthSubscription = knockout.getObservable(this, 'globeDepth').subscribe(function(val) {
             that._scene.debugShowGlobeDepth = val;
         });
 
-        this.pickDepth.subscribe(function(val) {
+        this._pickDepthSubscription = knockout.getObservable(this, 'pickDepth').subscribe(function(val) {
             that._scene.debugShowPickDepth = val;
         });
 
-        this.depthFrustum.subscribe(function(val) {
+        this._depthFrustumSubscription = knockout.getObservable(this, 'depthFrustum').subscribe(function(val) {
             that.scene.debugShowDepthFrustum = val;
         });
 
@@ -407,7 +435,7 @@ define([
             return true;
         });
 
-        this.suspendUpdates.subscribe(function(val) {
+        this._suspendUpdatesSubscription = knockout.getObservable(this, 'suspendUpdates').subscribe(function(val) {
             globe._surface._debug.suspendLodUpdate = val;
             if (!val) {
                 that.filterTile = false;
@@ -427,11 +455,11 @@ define([
             return true;
         });
 
-        this.tileCoordinates.subscribe(function() {
+        this._tileCoordinatesSubscription = knockout.getObservable(this, 'tileCoordinates').subscribe(function() {
             that._showTileCoordinates();
         });
 
-        this.tileBoundingSphere.subscribe(function() {
+        this._tileBoundingSphereSubscription = knockout.getObservable(this, 'tileBoundingSphere').subscribe(function() {
             that._showTileBoundingSphere();
         });
 
@@ -443,7 +471,6 @@ define([
             }
             return true;
         });
-
 
         this._doFilterTile = createCommand(function() {
             if (!that.filterTile) {
@@ -460,7 +487,7 @@ define([
             return true;
         });
 
-        this.filterTile.subscribe(function() {
+        this._filterTileSubscription = knockout.getObservable(this, 'filterTile').subscribe(function() {
             that.doFilterTile();
         });
 
@@ -480,7 +507,7 @@ define([
             that.pickPrimitiveActive = !that.pickPrimitiveActive;
         });
 
-        this.pickPrimitiveActive.subscribe(function(val) {
+        this._pickPrimitiveActiveSubscription = knockout.getObservable(this, 'pickPrimitiveActive').subscribe(function(val) {
             if (val) {
                 eventHandler.setInputAction(pickPrimitive, ScreenSpaceEventType.LEFT_CLICK);
             } else {
@@ -523,15 +550,13 @@ define([
             that.pickTileActive = !that.pickTileActive;
         });
 
-        this.pickTileActive.subscribe(function(val) {
+        this._pickTileActiveSubscription = knockout.getObservable(this, 'pickTileActive').subscribe(function(val) {
             if (val) {
                 eventHandler.setInputAction(selectTile, ScreenSpaceEventType.LEFT_CLICK);
             } else {
                 eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             }
         });
-
-        knockout.track(this);
     }
 
     defineProperties(CesiumInspectorViewModel.prototype, {
@@ -913,6 +938,21 @@ define([
      */
     CesiumInspectorViewModel.prototype.destroy = function() {
         this._eventHandler.destroy();
+        this._frustumsSubscription.dispose();
+        this._performanceSubscription.dispose();
+        this._primitiveBoundingSphereSubscription.dispose();
+        this._primitiveReferenceFrameSubscription.dispose();
+        this._filterPrimitiveSubscription.dispose();
+        this._wireframeSubscription.dispose();
+        this._globeDepthSubscription.dispose();
+        this._pickDepthSubscription.dispose();
+        this._depthFrustumSubscription.dispose();
+        this._suspendUpdatesSubscription.dispose();
+        this._tileCoordinatesSubscription.dispose();
+        this._tileBoundingSphereSubscription.dispose();
+        this._filterTileSubscription.dispose();
+        this._pickPrimitiveActiveSubscription.dispose();
+        this._pickTileActiveSubscription.dispose();
         return destroyObject(this);
     };
 
