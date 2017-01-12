@@ -17,7 +17,7 @@ define([
      * Visualizes a vertex attribute by displaying it as a color for debugging.
      * <p>
      * Components for well-known unit-length vectors, i.e., <code>normal</code>,
-     * <code>binormal</code>, and <code>tangent</code>, are scaled and biased
+     * <code>tangent</code>, and <code>bitangent</code>, are scaled and biased
      * from [-1.0, 1.0] to (-1.0, 1.0).
      * </p>
      *
@@ -61,7 +61,7 @@ define([
         var getColor;
 
         // Well-known normalized vector attributes in VertexFormat
-        if ((attributeName === 'normal') || (attributeName === 'binormal') || (attributeName === 'tangent')) {
+        if ((attributeName === 'normal') || (attributeName === 'tangent') || (attributeName === 'bitangent')) {
             getColor = 'vec4 getColor() { return vec4((' + varyingName + ' + vec3(1.0)) * 0.5, 1.0); }\n';
         } else {
             // All other attributes, both well-known and custom
