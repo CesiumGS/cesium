@@ -1632,7 +1632,7 @@ defineSuite([
                                                         -0.4082482904638631, -0.8164965809277261, 0.4082482904638631], CesiumMath.EPSILON7);
     });
 
-    it ('computeTangentAndBitangent computes tangent and bitangent for an BoxGeometry', function() {
+    it ('computeTangentAndBitangent computes tangent and bitangent for BoxGeometry', function() {
         var geometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat : new VertexFormat({
                 position : true,
@@ -1668,7 +1668,7 @@ defineSuite([
         }
     });
 
-    it ('computeBinormalAndTangent computes tangent and binormal for an BoxGeometry', function() {
+    it ('computeBinormalAndTangent computes tangent and binormal for BoxGeometry', function() {
         // This test is for the deprecated computeBinormalAndTangent API
         // It tests to assert that the binormal attribute is set correctly and
         // is a copy of the bitangent attribute

@@ -303,17 +303,17 @@ define([
 
                     if (vertexFormat.bitangent) {
                         if (bottom) {
-                            bitangents[attrIndex  + bottomOffset] = bitangent.x;
+                            bitangents[attrIndex + bottomOffset] = bitangent.x;
                             bitangents[attrIndex1 + bottomOffset] = bitangent.y;
                             bitangents[attrIndex2 + bottomOffset] = bitangent.z;
                         }
                         if (top) {
                             if (perPositionHeight) {
-                                bitangents[attrIndex ] = scratchPerPosBitangent.x;
+                                bitangents[attrIndex] = scratchPerPosBitangent.x;
                                 bitangents[attrIndex1] = scratchPerPosBitangent.y;
                                 bitangents[attrIndex2] = scratchPerPosBitangent.z;
                             } else {
-                                bitangents[attrIndex ] = bitangent.x;
+                                bitangents[attrIndex] = bitangent.x;
                                 bitangents[attrIndex1] = bitangent.y;
                                 bitangents[attrIndex2] = bitangent.z;
                             }

@@ -181,7 +181,7 @@ define([
                         bitangents[i1] = bitangent.y;
                         bitangents[i2] = bitangent.z;
                         if (extrude) {
-                            bitangents[i  + bottomOffset] = bitangent.x;
+                            bitangents[i + bottomOffset] = bitangent.x;
                             bitangents[i1 + bottomOffset] = bitangent.y;
                             bitangents[i2 + bottomOffset] = bitangent.z;
                         }
@@ -501,7 +501,7 @@ define([
                     bitangents[i1] = bitangent.y;
                     bitangents[i2] = bitangent.z;
 
-                    bitangents[i  + length] = bitangent.x;
+                    bitangents[i + length] = bitangent.x;
                     bitangents[i1 + length] = bitangent.y;
                     bitangents[i2 + length] = bitangent.z;
                 }

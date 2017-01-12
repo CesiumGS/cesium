@@ -126,17 +126,17 @@ define([
                 }
 
                 if (vertexFormat.normal) {
-                    normals[attrIndex ] = normal.x;
+                    normals[attrIndex] = normal.x;
                     normals[attrIndex1] = normal.y;
                     normals[attrIndex2] = normal.z;
                 }
                 if (vertexFormat.tangent) {
-                    tangents[attrIndex ] = tangent.x;
+                    tangents[attrIndex] = tangent.x;
                     tangents[attrIndex1] = tangent.y;
                     tangents[attrIndex2] = tangent.z;
                 }
                 if (vertexFormat.bitangent) {
-                    bitangents[attrIndex ] = bitangent.x;
+                    bitangents[attrIndex] = bitangent.x;
                     bitangents[attrIndex1] = bitangent.y;
                     bitangents[attrIndex2] = bitangent.z;
                 }
