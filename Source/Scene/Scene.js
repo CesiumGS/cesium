@@ -1433,10 +1433,19 @@ define([
         var sp = defaultValue(shaderProgram, command.shaderProgram);
         var fs = sp.fragmentShaderSource.clone();
 
+        var colorTargets = [];
         fs.sources = fs.sources.map(function(source) {
             source = ShaderSource.replaceMain(source, 'czm_Debug_main');
+            var re = /gl_FragData\[(\d+)\]/g;
+            var match;
+            while ((match = re.exec(source)) !== null) {
+                if (colorTargets.indexOf(match[1]) === -1) {
+                    colorTargets.push(match[1]);
+                }
+            }
             return source;
         });
+        var length = colorTargets.length;
 
         var newMain =
             'void main() \n' +
@@ -1448,7 +1457,13 @@ define([
                 command._debugColor = Color.fromRandom();
             }
             var c = command._debugColor;
-            newMain += '    gl_FragColor.rgb *= vec3(' + c.red + ', ' + c.green + ', ' + c.blue + '); \n';
+            if (length) {
+                for (var i = 0; i < length; ++i) {
+                    newMain += '    gl_FragData[' + colorTargets[i] + '].rgb *= vec3(' + c.red + ', ' + c.green + ', ' + c.blue + '); \n';
+                }
+            } else {
+                newMain += '    ' + 'gl_FragColor' + '.rgb *= vec3(' + c.red + ', ' + c.green + ', ' + c.blue + '); \n';
+            }
         }
 
         if (scene.debugShowFrustums) {
@@ -1457,7 +1472,13 @@ define([
             var r = (command.debugOverlappingFrustums & (1 << 0)) ? '1.0' : '0.0';
             var g = (command.debugOverlappingFrustums & (1 << 1)) ? '1.0' : '0.0';
             var b = (command.debugOverlappingFrustums & (1 << 2)) ? '1.0' : '0.0';
-            newMain += '    gl_FragColor.rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n';
+            if (length) {
+                for (var i = 0; i < length; ++i) {
+                    newMain += '    gl_FragData[' + colorTargets[i] + '].rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n';
+                }
+            } else {
+                newMain += '    ' + 'gl_FragColor' + '.rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n';
+            }
         }
 
         newMain += '}';
