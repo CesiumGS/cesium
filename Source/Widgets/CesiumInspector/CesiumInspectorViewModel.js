@@ -294,7 +294,7 @@ define([
         });
 
         /**
-         * Gets the text on the primitives section expand button.  This property is computed.
+         * Gets the text on the terrain section expand button.  This property is computed.
          * @type {String}
          * @default '+'
          */
