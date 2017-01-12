@@ -48,6 +48,8 @@ define([
         '../Renderer/VertexArray',
         '../ThirdParty/GltfPipeline/addDefaults',
         '../ThirdParty/GltfPipeline/addPipelineExtras',
+        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
+        '../ThirdParty/GltfPipeline/parseBinaryGltf',
         '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
         '../ThirdParty/GltfPipeline/updateVersion',
         '../ThirdParty/Uri',
@@ -55,7 +57,6 @@ define([
         './BlendingState',
         './ColorBlendMode',
         './getAttributeOrUniformBySemantic',
-        './getBinaryAccessor',
         './HeightReference',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -113,6 +114,8 @@ define([
         VertexArray,
         addDefaults,
         addPipelineExtras,
+        numberOfComponentsForType,
+        parseBinaryGltf,
         processModelMaterialsCommon,
         updateVersion,
         Uri,
@@ -120,7 +123,6 @@ define([
         BlendingState,
         ColorBlendMode,
         getAttributeOrUniformBySemantic,
-        getBinaryAccessor,
         HeightReference,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -232,7 +234,6 @@ define([
     // are cached per context.
     function CachedGltf(options) {
         this._gltf = options.gltf;
-        this._bgltf = options.bgltf;
         this.ready = options.ready;
         this.modelsToLoad = [];
         this.count = 0;
@@ -247,18 +248,11 @@ define([
             get : function() {
                 return this._gltf;
             }
-        },
-
-        bgltf : {
-            get : function() {
-                return this._bgltf;
-            }
         }
     });
 
-    CachedGltf.prototype.makeReady = function(gltfJson, bgltf) {
+    CachedGltf.prototype.makeReady = function(gltfJson) {
         this.gltf = gltfJson;
-        this._bgltf = bgltf;
 
         var models = this.modelsToLoad;
         var length = models.length;
@@ -369,16 +363,10 @@ define([
 
                 if (gltf instanceof Uint8Array) {
                     // Binary glTF
-                    var result = parseBinaryGltfHeader(gltf);
-
-                    // KHR_binary_glTF is from the beginning of the binary section
-                    if (result.binaryOffset !== 0) {
-                        gltf = gltf.subarray(result.binaryOffset);
-                    }
+                    var parsedGltf = parseBinaryGltf(gltf);
 
                     cachedGltf = new CachedGltf({
-                        gltf : result.glTF,
-                        bgltf : gltf,
+                        gltf : parsedGltf,
                         ready : true
                     });
                 } else {
@@ -670,6 +658,7 @@ define([
         };
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
+        this._updatedGltfVersion = false;
 
         this._nodeCommands = [];
         this._pickIds = [];
@@ -955,8 +944,6 @@ define([
         }
     });
 
-    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-
     function silhouetteSupported(context) {
         return context.stencilBuffer;
     }
@@ -982,41 +969,6 @@ define([
     function containsGltfMagic(uint8Array) {
         var magic = getMagic(uint8Array);
         return magic === 'glTF';
-    }
-
-    function parseBinaryGltfHeader(uint8Array) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!containsGltfMagic(uint8Array)) {
-            throw new DeveloperError('bgltf is not a valid Binary glTF file.');
-        }
-        //>>includeEnd('debug');
-
-        var view = new DataView(uint8Array.buffer, uint8Array.byteOffset, uint8Array.byteLength);
-        var byteOffset = 0;
-
-        byteOffset += sizeOfUint32; // Skip magic number
-
-        //>>includeStart('debug', pragmas.debug);
-        var version = view.getUint32(byteOffset, true);
-        if (version !== 1) {
-            throw new DeveloperError('Only Binary glTF version 1 is supported.  Version ' + version + ' is not.');
-        }
-        //>>includeEnd('debug');
-        byteOffset += sizeOfUint32;
-
-        byteOffset += sizeOfUint32; // Skip length
-
-        var sceneLength = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUint32 + sizeOfUint32; // Skip sceneFormat
-
-        var sceneOffset = byteOffset;
-        var binOffset = sceneOffset + sceneLength;
-
-        var json = getStringFromTypedArray(uint8Array, sceneOffset, sceneLength);
-        return {
-            glTF: JSON.parse(json),
-            binaryOffset: binOffset
-        };
     }
 
     /**
@@ -1119,12 +1071,9 @@ define([
                 var array = new Uint8Array(arrayBuffer);
                 if (containsGltfMagic(array)) {
                     // Load binary glTF
-                    var result = parseBinaryGltfHeader(array);
+                    var parsedGltf = parseBinaryGltf(array);
                     // KHR_binary_glTF is from the beginning of the binary section
-                    if (result.binaryOffset !== 0) {
-                        array = array.subarray(result.binaryOffset);
-                    }
-                    cachedGltf.makeReady(result.glTF, array);
+                    cachedGltf.makeReady(parsedGltf, array);
                 } else {
                     // Load text (JSON) glTF
                     var json = getStringFromTypedArray(array);
@@ -1308,21 +1257,14 @@ define([
     }
 
     function parseBuffers(model) {
+        var loadResources = model._loadResources;
         var buffers = model.gltf.buffers;
         for (var id in buffers) {
             if (buffers.hasOwnProperty(id)) {
                 var buffer = buffers[id];
-
-                // The extension 'KHR_binary_glTF' uses a special buffer entitled just 'binary_glTF'.
-                // The 'KHR_binary_glTF' check is for backwards compatibility for the Cesium model converter
-                // circa Cesium 1.15-1.20 when the converter incorrectly used the buffer name 'KHR_binary_glTF'.
-                if ((id === 'binary_glTF') || (id === 'KHR_binary_glTF')) {
-                    // Buffer is the binary glTF file itself that is already loaded
-                    var loadResources = model._loadResources;
-                    loadResources.buffers[id] = model._cachedGltf.bgltf;
-                }
-                else if (buffer.type === 'arraybuffer') {
-                    ++model._loadResources.pendingBufferLoads;
+                if (defined(buffer.extras._pipeline.source)) {
+                    loadResources.buffers[id] = buffer.extras._pipeline.source;
+                } else {
                     var uri = new Uri(buffer.uri);
                     var bufferPath = uri.resolve(model._baseUri).toString();
                     loadArrayBuffer(bufferPath).then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
@@ -1361,17 +1303,10 @@ define([
                 var shader = shaders[id];
 
                 // Shader references either uri (external or base64-encoded) or bufferView
-                if (defined(shader.extras) && defined(shader.extras.source)) {
+                if (defined(shader.extras._pipeline.source)) {
                     model._loadResources.shaders[id] = {
-                        source : shader.extras.source,
+                        source : shader.extras._pipeline.source,
                         bufferView : undefined
-                    };
-                }
-                else if (defined(shader.extensions) && defined(shader.extensions.KHR_binary_glTF)) {
-                    var binary = shader.extensions.KHR_binary_glTF;
-                    model._loadResources.shaders[id] = {
-                        source : undefined,
-                        bufferView : binary.bufferView
                     };
                 } else {
                     ++model._loadResources.pendingShaderLoads;
@@ -1394,6 +1329,7 @@ define([
 
     function imageLoad(model, id) {
         return function(image) {
+            var gltf = model.gltf;
             var loadResources = model._loadResources;
             --loadResources.pendingTextureLoads;
             loadResources.texturesToCreate.enqueue({
@@ -1401,6 +1337,7 @@ define([
                 image : image,
                 bufferView : undefined
             });
+            gltf.images[id].extras._pipeline.source = image;
         };
     }
 
@@ -1412,13 +1349,12 @@ define([
                 var gltfImage = images[textures[id].source];
 
                 // Image references either uri (external or base64-encoded) or bufferView
-                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.KHR_binary_glTF)) {
-                    var binary = gltfImage.extensions.KHR_binary_glTF;
+                if (defined(gltfImage.extras._pipeline.source)) {
                     model._loadResources.texturesToCreateFromBufferView.enqueue({
                         id : id,
                         image : undefined,
-                        bufferView : binary.bufferView,
-                        mimeType : binary.mimeType
+                        bufferView : gltfImage.extras._pipeline.source,
+                        mimeType : gltfImage.extras._pipeline.extension
                     });
                 } else {
                     ++model._loadResources.pendingTextureLoads;
@@ -1575,7 +1511,6 @@ define([
         }
         parseMaterials(model);
         parseMeshes(model);
-        parseNodes(model);
     }
 
     function usesExtension(model, extension) {
@@ -1638,7 +1573,7 @@ define([
                     rendererBuffers[accessor.bufferView] = indexBuffer;
                     // In theory, several glTF accessors with different componentTypes could
                     // point to the same glTF bufferView, which would break this.
-                    // In practice, it is unlikely as it will be UNSIGNED_SHORT.
+                    // In practice, it is unlikely, but possible with uint32 indices in glTF 1.1.
                 }
             }
         }
@@ -1667,18 +1602,6 @@ define([
         }
 
         return attributeLocations;
-    }
-
-    function getShaderSource(model, shader) {
-        if (defined(shader.source)) {
-            return shader.source;
-        }
-
-        var loadResources = model._loadResources;
-        var gltf = model.gltf;
-        var bufferView = gltf.bufferViews[shader.bufferView];
-
-        return getStringFromTypedArray(loadResources.getBuffer(bufferView));
     }
 
     function replaceAllButFirstInString(string, find, replace) {
@@ -1851,12 +1774,12 @@ define([
 
     function createProgram(id, model, context) {
         var programs = model.gltf.programs;
-        var shaders = model._loadResources.shaders;
+        var shaders = model.gltf.shaders;
         var program = programs[id];
 
         var attributeLocations = createAttributeLocations(model, program.attributes);
-        var vs = getShaderSource(model, shaders[program.vertexShader]);
-        var fs = getShaderSource(model, shaders[program.fragmentShader]);
+        var vs = shaders[program.vertexShader].extras._pipeline.source;
+        var fs = shaders[program.fragmentShader].extras._pipeline.source;
 
         // Add pre-created attributes to attributeLocations
         var attributesLength = program.attributes.length;
@@ -1942,6 +1865,7 @@ define([
             });
 
             --loadResources.pendingBufferViewToImage;
+
         };
     }
 
@@ -1955,12 +1879,9 @@ define([
         while (loadResources.texturesToCreateFromBufferView.length > 0) {
             var gltfTexture = loadResources.texturesToCreateFromBufferView.dequeue();
 
-            var gltf = model.gltf;
-            var bufferView = gltf.bufferViews[gltfTexture.bufferView];
-
             var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
             var onerror = getFailedLoadFunction(model, 'image', 'id: ' + gltfTexture.id + ', bufferView: ' + gltfTexture.bufferView);
-            loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType).
+            loadImageFromTypedArray(gltfTexture.bufferView, gltfTexture.mimeType).
                 then(onload).otherwise(onerror);
 
             ++loadResources.pendingBufferViewToImage;
@@ -2092,8 +2013,9 @@ define([
         return attributeLocations;
     }
 
-    function searchForest(forest, jointName, nodes) {
+    function mapJointNames(forest, nodes) {
         var length = forest.length;
+        var jointNodes = {};
         for (var i = 0; i < length; ++i) {
             var stack = [forest[i]]; // Push root node of tree
 
@@ -2101,8 +2023,8 @@ define([
                 var id = stack.pop();
                 var n = nodes[id];
 
-                if (n.jointName === jointName) {
-                    return id;
+                if (defined(n.jointName)) {
+                    jointNodes[n.jointName] = id;
                 }
 
                 var children = n.children;
@@ -2112,9 +2034,7 @@ define([
                 }
             }
         }
-
-        // This should never happen; the skeleton should have a node for all joints in the skin.
-        return undefined;
+        return jointNodes;
     }
 
     function createJoints(model, runtimeSkins) {
@@ -2144,11 +2064,13 @@ define([
                 forest.push(gltfSkeletons[k]);
             }
 
+            var mappedJointNames = mapJointNames(forest, nodes);
             var gltfJointNames = skins[node.skin].jointNames;
             var jointNamesLength = gltfJointNames.length;
             for (var i = 0; i < jointNamesLength; ++i) {
                 var jointName = gltfJointNames[i];
-                var jointNode = runtimeNodes[searchForest(forest, jointName, nodes)];
+                var nodeId = mappedJointNames[jointName];
+                var jointNode = runtimeNodes[nodeId];
                 skinnedNode.joints.push(jointNode);
             }
         }
@@ -2226,16 +2148,7 @@ define([
             if (animations.hasOwnProperty(animationId)) {
                 var animation = animations[animationId];
                 var channels = animation.channels;
-                var parameters = animation.parameters;
                 var samplers = animation.samplers;
-
-                var parameterValues = {};
-
-                for (var name in parameters) {
-                    if (parameters.hasOwnProperty(name)) {
-                        parameterValues[name] = ModelAnimationCache.getAnimationParameterValues(model, accessors[parameters[name]]);
-                    }
-                }
 
                 // Find start and stop time for the entire animation
                 var startTime = Number.MAX_VALUE;
@@ -2247,13 +2160,15 @@ define([
                 for (var i = 0; i < length; ++i) {
                     var channel = channels[i];
                     var target = channel.target;
+                    var path = target.path;
                     var sampler = samplers[channel.sampler];
-                    var times = parameterValues[sampler.input];
+                    var input = ModelAnimationCache.getAnimationParameterValues(model, accessors[sampler.input]);
+                    var output = ModelAnimationCache.getAnimationParameterValues(model, accessors[sampler.output]);
 
-                    startTime = Math.min(startTime, times[0]);
-                    stopTime = Math.max(stopTime, times[times.length - 1]);
+                    startTime = Math.min(startTime, input[0]);
+                    stopTime = Math.max(stopTime, input[input.length - 1]);
 
-                    var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, parameterValues);
+                    var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, input, path, output);
                     // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
                     channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.id], target.path, spline);
                 }
@@ -2315,7 +2230,7 @@ define([
                                 attributes.push({
                                     index : attributeLocation,
                                     vertexBuffer : rendererBuffers[a.bufferView],
-                                    componentsPerAttribute : getBinaryAccessor(a).componentsPerAttribute,
+                                    componentsPerAttribute : numberOfComponentsForType(a.type),
                                     componentDatatype : a.componentType,
                                     normalize : false,
                                     offsetInBytes : a.byteOffset,
@@ -2835,7 +2750,7 @@ define([
 
                 // Uniform parameters
                 for (var name in uniforms) {
-                    if (uniforms.hasOwnProperty(name)) {
+                    if (uniforms.hasOwnProperty(name) && name !== 'extras') {
                         var parameterName = uniforms[name];
                         var parameter = parameters[parameterName];
 
@@ -4061,8 +3976,8 @@ define([
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             // Use renderer resources from cache instead of loading/creating them?
-            addDefaults(this.gltf);
             addPipelineExtras(this.gltf);
+            addDefaults(this.gltf);
             processModelMaterialsCommon(this.gltf);
             var cachedRendererResources;
             var cacheKey = this.cacheKey;
@@ -4094,9 +4009,6 @@ define([
 
             this._state = ModelState.LOADING;
 
-            this._boundingSphere = computeBoundingSphere(this.gltf);
-            this._initialRadius = this._boundingSphere.radius;
-
             checkSupportedExtensions(this);
             if (this._state !== ModelState.FAILED) {
                 var extensions = this.gltf.extensions;
@@ -4107,6 +4019,7 @@ define([
 
                 this._loadResources = new LoadResources();
             }
+            parse(this);
         }
 
         var loadResources = this._loadResources;
@@ -4114,11 +4027,23 @@ define([
         var justLoaded = false;
 
         if (this._state === ModelState.LOADING) {
-            // Create WebGL resources as buffers/shaders/textures are downloaded
-            createResources(this, frameState);
-
             // Transition from LOADING -> LOADED once resources are downloaded and created.
             // Textures may continue to stream in while in the LOADED state.
+            if (loadResources.pendingBufferLoads === 0 && loadResources.pendingShaderLoads === 0) {
+                if (!this._updatedGltfVersion) {
+                    updateVersion(this.gltf);
+
+                    // parseNodes runs after updateVersion because the node hierarchy may be modified
+                    parseNodes(this);
+
+                    this._boundingSphere = computeBoundingSphere(this.gltf);
+                    this._initialRadius = this._boundingSphere.radius;
+                    this._updatedGltfVersion = true;
+                }
+                if (this._updatedGltfVersion) {
+                    createResources(this, frameState);
+                }
+            }
             if (loadResources.finished() ||
                     (incrementallyLoadTextures && loadResources.finishedEverythingButTextureCreation())) {
                 this._state = ModelState.LOADED;
@@ -4128,9 +4053,6 @@ define([
 
         // Incrementally stream textures.
         if (defined(loadResources) && (this._state === ModelState.LOADED)) {
-            // Also check justLoaded so we don't process twice during the transition frame
-            updateVersion(this._cachedGtf);
-            parse(this);
             if (incrementallyLoadTextures && !justLoaded) {
                 createResources(this, frameState);
             }

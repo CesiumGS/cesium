@@ -248,7 +248,7 @@ define([
         // Generate uniforms object before attributes are added
         var techniqueUniforms = {};
         for (var paramName in techniqueParameters) {
-            if (techniqueParameters.hasOwnProperty(paramName)) {
+            if (techniqueParameters.hasOwnProperty(paramName) && paramName !== 'extras') {
                 var param = techniqueParameters[paramName];
                 techniqueUniforms['u_' + paramName] = paramName;
                 var arraySize = defined(param.count) ? '[' + param.count + ']' : '';
@@ -760,7 +760,7 @@ define([
 
         for (var semantic in attributes) {
             if (attributes.hasOwnProperty(semantic)) {
-                if (!defined(techniqueParameterForSemantic(technique, semantic))) {
+                if (!defined(techniqueParameterForSemantic(technique, semantic)) && semantic !== 'extras') {
                     var accessorId = attributes[semantic];
                     var accessor = accessors[accessorId];
                     var lowerCase = semantic.toLowerCase();

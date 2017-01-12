@@ -6,6 +6,7 @@ define([
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/Math',
+        '../../Core/Matrix4',
         '../../Core/Quaternion',
         '../../Core/WebGLConstants'
     ], function(
@@ -15,6 +16,7 @@ define([
         defaultValue,
         defined,
         CesiumMath,
+        Matrix4,
         Quaternion,
         WebGLConstants) {
     'use strict';
@@ -516,7 +518,95 @@ define([
         }
     }
 
+    function createJointMapping(gltf, skeletonNodeIds) {
+        var nodes = gltf.nodes;
+        var jointMapping = {};
+
+        var searchNodes = skeletonNodeIds;
+        while (searchNodes.length > 0) {
+            var nodeId = searchNodes.pop();
+            var node = nodes[nodeId];
+            var jointName = node.jointName;
+            if (defined(jointName)) {
+                jointMapping[jointName] = node;
+            }
+            var children = node.children;
+            if (defined(children)) {
+                var childrenLength = children.length;
+                for (var i = 0; i < childrenLength; i++) {
+                    var childNodeId = children[i];
+                    searchNodes.push(childNodeId);
+                }
+            }
+        }
+        return jointMapping;
+    }
+
+    function getNodeTransform(node) {
+        if (defined(node.matrix)) {
+            return Matrix4.fromArray(node.matrix);
+        } else if (defined(node.translation) || defined(node.rotation) || defined(node.scale)) {
+            var translation = defaultValue(node.translation, Cartesian3.ZERO);
+            var rotation = defaultValue(node.rotation, Quaternion.IDENTITY);
+            var scale = defaultValue(node.scale, new Cartesian3(1.0, 1.0, 1.0));
+            return Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale);
+        } else {
+            return Matrix4.IDENTITY;
+        }
+    }
+
     function separateSkeletonHierarchy(gltf) {
+        var nodes = gltf.nodes;
+        var skins = gltf.skins;
+
+        var skinnedNodes = {};
+        var parentNodes = {};
+
+        var i;
+        var skeletonIds;
+
+        for (var nodeId in nodes) {
+            if (nodes.hasOwnProperty(nodeId)) {
+                var node = nodes[nodeId];
+                var children = node.children;
+                if (defined(children)) {
+                    var childrenLength = children.length;
+                    for (i = 0; i < childrenLength; i++) {
+                        var childNodeId = children[i];
+                        parentNodes[childNodeId] = nodeId;
+                    }
+                }
+                var skinId = node.skin;
+                skeletonIds = node.skeletons;
+                if (defined(skinId) && defined(skeletonIds)) {
+                    skinnedNodes[nodeId] = createJointMapping(gltf, skeletonIds);
+                }
+            }
+        }
+
+        for (var skinnedNodeId in skinnedNodes) {
+            if (skinnedNodes.hasOwnProperty(skinnedNodeId)) {
+                var skinnedNode = nodes[skinnedNodeId];
+                skeletonIds = skinnedNode.skeletons;
+                var skeletonIdsLength = skeletonIds.length;
+                for (i = 0; i < skeletonIdsLength; i++) {
+                    var skeletonId = skeletonIds[i];
+                    var skeletonNode = nodes[skeletonId];
+                    var parentNodeId = parentNodes[skeletonId];
+                    var transform = getNodeTransform();
+                    if (defined(parentNodeId)) {
+                        var parentNode = nodes[parentNodeId];
+                        var parentTransform = getNodeTransform(parentNode);
+                        Matrix4.multiply(parentTransform, transform, transform);
+                        var parentChildren = parent.children;
+                        parent.children = parentChildren.splice(parentChildren.)
+                    }
+                }
+            }
+        }
+
+
+        var i;
         var nodes = gltf.nodes;
         var node;
         var nodeId;
@@ -530,7 +620,7 @@ define([
                 var children = node.children;
                 if (defined(children)) {
                     var childrenLength = children.length;
-                    for (var i = 0; i < childrenLength; i++) {
+                    for (i = 0; i < childrenLength; i++) {
                         var childNodeId = children[i];
                         parentNodes[childNodeId] = nodeId;
                     }
@@ -558,10 +648,13 @@ define([
                 while (defined(nodeId)) {
                     var skeletonNodeId = mappedSkeletonNodes[nodeId];
                     if (!defined(skeletonNodeId)) {
-                        skeletonNodeId = getUniqueId(gltf, nodeId + '-skeleton');
                         skeletonNode = {
-                            jointName : jointName
+                            children: []
                         };
+                        if (defined(node.jointName)) {
+                            skeletonNode.jointName = node.jointName;
+                        }
+                        skeletonNodeId = getUniqueId(gltf, nodeId + '-skeleton');
                         if (defined(node.translation) || defined(node.rotation) || defined(node.scale)) {
                             skeletonNode.translation = defaultValue(node.translation, [0.0, 0.0, 0.0]);
                             skeletonNode.rotation = defaultValue(node.rotation, [0.0, 0.0, 0.0, 1.0]);
@@ -581,12 +674,7 @@ define([
                     }
                     if (defined(lastNodeId)) {
                         skeletonNode = nodes[skeletonNodeId];
-                        var skeletonChildren = skeletonNode.children;
-                        if (!defined(skeletonChildren)) {
-                            skeletonNode.children = [lastNodeId];
-                        } else {
-                            skeletonChildren.push(lastNodeId);
-                        }
+                        skeletonNode.children.push(lastNodeId);
                     }
                     if (end) {
                         break;
@@ -594,6 +682,20 @@ define([
                     lastNodeId = skeletonNodeId;
                     nodeId = parentNodes[nodeId];
                     node = nodes[nodeId];
+                }
+                lastNodeId = undefined;
+            }
+        }
+        for (nodeId in nodes) {
+            if (nodes.hasOwnProperty(nodeId)) {
+                node = nodes[nodeId];
+                if (defined(node.skeletons)) {
+                    var skeletons = node.skeletons;
+                    var skeletonsLength = skeletons.length;
+                    for (i = 0; i < skeletonsLength; i++) {
+                        var skeleton = skeletons[i];
+                        skeletons[i] = mappedSkeletonNodes[skeleton];
+                    }
                 }
             }
         }

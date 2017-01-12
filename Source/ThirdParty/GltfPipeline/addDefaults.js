@@ -1,7 +1,6 @@
 /*global define*/
 define([
         './addExtensionsUsed',
-        './processModelMaterialsCommon',
         '../../Core/Cartesian3',
         '../../Core/Quaternion',
         '../../Core/WebGLConstants',
@@ -9,7 +8,6 @@ define([
         '../../Core/defined'
     ], function(
         addExtensionsUsed,
-        processModelMaterialsCommon,
         Cartesian3,
         Quaternion,
         WebGLConstants,
@@ -483,7 +481,6 @@ define([
         skinDefaults(gltf);
         textureDefaults(gltf);
 
-        processModelMaterialsCommon(gltf, options);
         return gltf;
     }
 

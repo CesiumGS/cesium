@@ -23,7 +23,7 @@ define([
     /**
      * Parses a binary glTF buffer into glTF JSON.
      *
-     * @param {Buffer} data The binary glTF buffer to parse.
+     * @param {Uint8Array} data The binary glTF buffer to parse.
      * @returns {Object} The parsed binary glTF.
      */
     function parseBinaryGltf(data) {
@@ -67,7 +67,10 @@ define([
         // Create a new buffer for each bufferView, and delete the original body buffer
         var buffers = gltf.buffers;
         var bufferViews = gltf.bufferViews;
-        if (defined(buffers) && defined(buffers.binary_glTF)) {
+        // The extension 'KHR_binary_glTF' uses a special buffer entitled just 'binary_glTF'.
+        // The 'KHR_binary_glTF' check is for backwards compatibility for the Cesium model converter
+        // circa Cesium 1.15-1.20 when the converter incorrectly used the buffer name 'KHR_binary_glTF'.
+        if (defined(buffers) && (defined(buffers.binary_glTF) || defined(buffers.KHR_binary_glTF))) {
             if (defined(bufferViews)) {
                 //Add id to each bufferView object
                 for (bufferViewId in bufferViews) {
@@ -85,7 +88,7 @@ define([
                     }
                 }
                 sortedBufferViews = sortedBufferViews.filter(function(bufferView) {
-                    return bufferView.buffer === 'binary_glTF';
+                    return bufferView.buffer === 'binary_glTF' || bufferView.buffer === 'KHR_binary_glTF';
                 });
                 //Sort bufferViews by increasing byteOffset
                 sortedBufferViews.sort(function(a, b) {
