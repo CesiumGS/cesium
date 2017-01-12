@@ -6,8 +6,10 @@ defineSuite([
         'Core/defaultValue',
         'Core/Ellipsoid',
         'Core/GeometryInstance',
+        'Core/loadImage',
         'Core/Rectangle',
         'Core/RectangleGeometry',
+        'Renderer/Texture',
         'Scene/MaterialAppearance',
         'Scene/PolylineCollection',
         'Scene/Primitive',
@@ -20,8 +22,10 @@ defineSuite([
         defaultValue,
         Ellipsoid,
         GeometryInstance,
+        loadImage,
         Rectangle,
         RectangleGeometry,
+        Texture,
         MaterialAppearance,
         PolylineCollection,
         Primitive,
@@ -341,6 +345,50 @@ defineSuite([
             }
         });
 
+        renderMaterial(material);
+    });
+
+    it('creates a material with an ktx compressed image uniform', function () {
+        var compressedUrl;
+        var context = scene.context;
+        if (context.s3tc) {
+            compressedUrl = './Data/Images/Green4x4DXT1.ktx';
+        } else if (context.etc1) {
+            compressedUrl = './Data/Images/Green4x4ETC1.ktx';
+        } else if (context.pvrtc) {
+            compressedUrl = './Data/Images/Green4x4PVR.ktx';
+        } else {
+            return;
+        }
+
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image :  compressedUrl
+                }
+            }
+        });
+        renderMaterial(material);
+    });
+
+    it('creates a material with an crn compressed image uniform', function () {
+        var context = scene.context;
+        if (!context.s3tc) {
+            return;
+        }
+
+        var compressedUrl = './Data/Images/Green4x4.crn';
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image :  compressedUrl
+                }
+            }
+        });
         renderMaterial(material);
     });
 

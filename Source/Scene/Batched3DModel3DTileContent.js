@@ -72,6 +72,9 @@ define([
         this._features = undefined;
     }
 
+    // This can be overridden for testing purposes
+    Batched3DModel3DTileContent._deprecationWarning = deprecationWarning;
+
     defineProperties(Batched3DModel3DTileContent.prototype, {
         /**
          * Part of the {@link Cesium3DTileContent} interface.
@@ -122,11 +125,11 @@ define([
         }
     }
 
-     /**
+    /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Batched3DModel3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTable.hasProperty(name);
+    Batched3DModel3DTileContent.prototype.hasProperty = function(batchId, name) {
+        return this.batchTable.hasProperty(batchId, name);
     };
 
     /**
@@ -178,11 +181,22 @@ define([
         return true;
     };
 
+    function getBatchIdAttributeName(gltf) {
+        var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, '_BATCHID');
+        if (!defined(batchIdAttributeName)) {
+            batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            if (defined(batchIdAttributeName)) {
+                Batched3DModel3DTileContent._deprecationWarning('b3dm-legacy-batchid', 'The glTF in this b3dm uses the semantic `BATCHID`. Application-specific semantics should be prefixed with an underscore: `_BATCHID`.');
+            }
+        }
+        return batchIdAttributeName;
+    }
+
     function getVertexShaderCallback(content) {
         return function(vs) {
             var batchTable = content.batchTable;
             var gltf = content._model.gltf;
-            var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            var batchIdAttributeName = getBatchIdAttributeName(gltf);
             var callback = batchTable.getVertexShaderCallback(true, batchIdAttributeName);
             return defined(callback) ? callback(vs) : vs;
         };
@@ -192,7 +206,7 @@ define([
         return function(vs) {
             var batchTable = content.batchTable;
             var gltf = content._model.gltf;
-            var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            var batchIdAttributeName = getBatchIdAttributeName(gltf);
             var callback = batchTable.getPickVertexShaderCallback(batchIdAttributeName);
             return defined(callback) ? callback(vs) : vs;
         };
@@ -296,6 +310,7 @@ define([
             basePath : getBaseUri(this._url),
             modelMatrix : this._tile.computedTransform,
             shadows: this._tileset.shadows,
+            debugWireframe: this._tileset.debugWireframe,
             incrementallyLoadTextures : false,
             vertexShaderLoaded : getVertexShaderCallback(this),
             fragmentShaderLoaded : getFragmentShaderCallback(this),
@@ -350,6 +365,7 @@ define([
         this.batchTable.update(tileset, frameState);
         this._model.modelMatrix = this._tile.computedTransform;
         this._model.shadows = this._tileset.shadows;
+        this._model.debugWireframe = this._tileset.debugWireframe;
         this._model.update(frameState);
 
         frameState.addCommand = oldAddCommand;

@@ -19,22 +19,22 @@ define([
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
+        '../Core/WebGLConstants',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
-        '../Renderer/WebGLConstants',
         '../ThirdParty/when',
         './BlendingState',
         './Cesium3DTileBatchTable',
         './Cesium3DTileColorBlendMode',
         './Cesium3DTileContentState',
         './Cesium3DTileFeature',
-        './Cesium3DTileFeatureTable',
-        './Pass'
+        './Cesium3DTileFeatureTable'
     ], function(
         Cartesian3,
         Color,
@@ -55,22 +55,22 @@ define([
         Request,
         RequestScheduler,
         RequestType,
+        WebGLConstants,
         Buffer,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
         VertexArray,
-        WebGLConstants,
         when,
         BlendingState,
         Cesium3DTileBatchTable,
         Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
         Cesium3DTileFeature,
-        Cesium3DTileFeatureTable,
-        Pass) {
+        Cesium3DTileFeatureTable) {
     'use strict';
 
     /**
@@ -189,9 +189,9 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    PointCloud3DTileContent.prototype.hasProperty = function(name) {
+    PointCloud3DTileContent.prototype.hasProperty = function(batchId, name) {
         if (defined(this.batchTable)) {
-            return this.batchTable.hasProperty(name);
+            return this.batchTable.hasProperty(batchId, name);
         }
         return false;
     };
@@ -908,12 +908,7 @@ define([
             attributeLocations.a_batchId = batchIdLocation;
         }
 
-        var vs = 'attribute vec3 a_position; \n' +
-                 'varying vec4 v_color; \n' +
-                 'uniform float u_pointSize; \n' +
-                 'uniform vec4 u_constantColor; \n' +
-                 'uniform vec4 u_highlightColor; \n' +
-                 'uniform float u_tilesetTime; \n';
+        var attributeDeclarations = '';
 
         var length = styleableProperties.length;
         for (i = 0; i < length; ++i) {
@@ -934,9 +929,18 @@ define([
                 attributeType = 'vec' + componentCount;
             }
 
-            vs += 'attribute ' + attributeType + ' ' + attributeName + '; \n';
+            attributeDeclarations += 'attribute ' + attributeType + ' ' + attributeName + '; \n';
             attributeLocations[attributeName] = attribute.location;
         }
+
+        var vs = 'attribute vec3 a_position; \n' +
+                 'varying vec4 v_color; \n' +
+                 'uniform float u_pointSize; \n' +
+                 'uniform vec4 u_constantColor; \n' +
+                 'uniform vec4 u_highlightColor; \n' +
+                 'uniform float u_tilesetTime; \n';
+
+        vs += attributeDeclarations;
 
         if (usesColors) {
             if (isTranslucent) {

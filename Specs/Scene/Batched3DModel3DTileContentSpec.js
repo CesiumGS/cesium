@@ -2,14 +2,18 @@
 defineSuite([
         'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
+        'Core/deprecationWarning',
         'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
         'Core/Transforms',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Batched3DModel3DTileContent,
         Cartesian3,
+        deprecationWarning,
         HeadingPitchRange,
+        HeadingPitchRoll,
         Transforms,
         Cesium3DTilesTester,
         createScene) {
@@ -29,7 +33,7 @@ defineSuite([
     var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
 
     function setCamera(longitude, latitude) {
-        // One instance is located at the center, point the camera there
+        // One feature is located at the center, point the camera there
         var center = Cartesian3.fromRadians(longitude, latitude);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
     }
@@ -99,6 +103,15 @@ defineSuite([
         expect(tile.batchTable.featuresLength).toEqual(1);
     });
 
+    it('logs deprecation warning for use of BATCHID without prefixed underscore', function() {
+        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
+            .then(function(tileset) {
+                expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
+                Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+            });
+    });
+
     it('throws with empty gltf', function() {
         // Expect to throw DeveloperError in Model due to invalid gltf magic
         var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
@@ -150,7 +163,8 @@ defineSuite([
             var newLongitude = -1.31962;
             var newLatitude = 0.698874;
             var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 0.0);
-            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, 0.0, 0.0, 0.0);
+            var newHPR = new HeadingPitchRoll();
+            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, newHPR);
 
             // Update tile transform
             tileset._root.transform = newTransform;
@@ -181,7 +195,7 @@ defineSuite([
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(10);
             expect(content.innerContents).toBeUndefined();
-            expect(content.hasProperty('id')).toBe(true);
+            expect(content.hasProperty(0, 'id')).toBe(true);
             expect(content.getFeature(0)).toBeDefined();
         });
     });

@@ -1117,8 +1117,10 @@ function createGalleryList() {
         fileList.push('!Apps/Sandcastle/gallery/development/**/*.html');
     }
 
+    var helloWorld;
     globby.sync(fileList).forEach(function(file) {
         var demo = filePathToModuleId(path.relative('Apps/Sandcastle/gallery', file));
+
         var demoObject = {
             name : demo,
             date : fs.statSync(file).mtime.getTime()
@@ -1129,6 +1131,10 @@ function createGalleryList() {
         }
 
         demoObjects.push(demoObject);
+
+        if (demo === 'Hello World') {
+            helloWorld = demoObject;
+        }
     });
 
     demoObjects.sort(function(a, b) {
@@ -1141,6 +1147,8 @@ function createGalleryList() {
       }
     });
 
+    var helloWorldIndex = Math.max(demoObjects.indexOf(helloWorld), 0);
+
     var i;
     for (i = 0; i < demoObjects.length; ++i) {
       demoJSONs[i] = JSON.stringify(demoObjects[i], null, 2);
@@ -1148,6 +1156,7 @@ function createGalleryList() {
 
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
+var hello_world_index = ' + helloWorldIndex + ';\n\
 var gallery_demos = [' + demoJSONs.join(', ') + '];';
 
     fs.writeFileSync(output, contents);

@@ -132,7 +132,19 @@ define([
         }
 
         setParameter('layers', options.layers);
-        setParameter('srs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
+
+        // Use SRS or CRS based on the WMS version.
+        if (parseFloat(parameters.version) >= 1.3) {
+          // Use CRS with 1.3.0 and going forward.
+          // For GeographicTilingScheme, use CRS:84 vice EPSG:4326 to specify lon, lat (x, y) ordering for
+          // bbox requests.
+          setParameter('crs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'CRS:84');
+        }
+        else {
+          // SRS for WMS 1.1.0 or 1.1.1.
+          setParameter('srs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
+        }
+
         setParameter('bbox', '{westProjected},{southProjected},{eastProjected},{northProjected}');
         setParameter('width', '{width}');
         setParameter('height', '{height}');
@@ -386,6 +398,7 @@ define([
          * {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
          * features) without communicating with the server.  Set this property to false if you know your data
          * source does not support picking features or if you don't want this provider's features to be pickable.
+         * @memberof WebMapServiceImageryProvider.prototype
          * @type {Boolean}
          * @default true
          */

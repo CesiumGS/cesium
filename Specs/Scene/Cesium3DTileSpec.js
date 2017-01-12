@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/clone',
         'Core/defined',
+        'Core/HeadingPitchRoll',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
@@ -18,6 +19,7 @@ defineSuite([
         Cartesian3,
         clone,
         defined,
+        HeadingPitchRoll,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -136,7 +138,8 @@ defineSuite([
 
     function getTileTransform(longitude, latitude) {
         var transformCenter = Cartesian3.fromRadians(longitude, latitude, 0.0);
-        var transformMatrix = Transforms.headingPitchRollToFixedFrame(transformCenter, 0.0, 0.0, 0.0);
+        var hpr = new HeadingPitchRoll();
+        var transformMatrix = Transforms.headingPitchRollToFixedFrame(transformCenter, hpr);
         return Matrix4.pack(transformMatrix, new Array(16));
     }
 

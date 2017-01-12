@@ -14,6 +14,7 @@ define([
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
+        '../Core/WebGLConstants',
         '../Shaders/ViewportQuadVS',
         './BufferUsage',
         './ClearCommand',
@@ -27,8 +28,7 @@ define([
         './ShaderProgram',
         './Texture',
         './UniformState',
-        './VertexArray',
-        './WebGLConstants'
+        './VertexArray'
     ], function(
         clone,
         Color,
@@ -44,6 +44,7 @@ define([
         Matrix4,
         PrimitiveType,
         RuntimeError,
+        WebGLConstants,
         ViewportQuadVS,
         BufferUsage,
         ClearCommand,
@@ -57,8 +58,7 @@ define([
         ShaderProgram,
         Texture,
         UniformState,
-        VertexArray,
-        WebGLConstants) {
+        VertexArray) {
     'use strict';
     /*global WebGLRenderingContext*/
     /*global WebGL2RenderingContext*/
@@ -193,6 +193,7 @@ define([
 
         // Override select WebGL defaults
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
+        webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
 
         var defaultToWebgl2 = false;
         var webgl2Supported = (typeof WebGL2RenderingContext !== 'undefined');
@@ -271,6 +272,10 @@ define([
         this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
         this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
+
+        this._s3tc = !!getExtension(gl, ['WEBGL_compressed_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
+        this._pvrtc = !!getExtension(gl, ['WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc']);
+        this._etc1 = !!getExtension(gl, ['WEBGL_compressed_texture_etc1']);
 
         var textureFilterAnisotropic = options.allowTextureFilterAnisotropic ? getExtension(gl, ['EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic']) : undefined;
         this._textureFilterAnisotropic = textureFilterAnisotropic;
@@ -508,6 +513,18 @@ define([
         },
 
         /**
+         * <code>true</code> if the WebGL context supports stencil buffers.
+         * Stencil buffers are not supported by all systems.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         */
+        stencilBuffer : {
+            get : function() {
+                return this._stencilBits >= 8;
+            }
+        },
+
+        /**
          * <code>true</code> if the WebGL context supports antialiasing.  By default
          * antialiasing is requested, but it is not supported by all systems.
          * @memberof Context.prototype
@@ -577,6 +594,45 @@ define([
         textureFilterAnisotropic : {
             get : function() {
                 return !!this._textureFilterAnisotropic;
+            }
+        },
+
+        /**
+         * <code>true</code> if WEBGL_texture_compression_s3tc is supported.  This extension provides
+         * access to DXT compressed textures.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_s3tc/}
+         */
+        s3tc : {
+            get : function() {
+                return this._s3tc;
+            }
+        },
+
+        /**
+         * <code>true</code> if WEBGL_texture_compression_pvrtc is supported.  This extension provides
+         * access to PVR compressed textures.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_pvrtc/}
+         */
+        pvrtc : {
+            get : function() {
+                return this._pvrtc;
+            }
+        },
+
+        /**
+         * <code>true</code> if WEBGL_texture_compression_etc1 is supported.  This extension provides
+         * access to ETC1 compressed textures.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc1/}
+         */
+        etc1 : {
+            get : function() {
+                return this._etc1;
             }
         },
 
@@ -1100,7 +1156,7 @@ define([
      *
      * @example
      * var object = context.getObjectByPickColor(pickColor);
-     * 
+     *
      * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
@@ -1151,7 +1207,7 @@ define([
      *   primitive : this,
      *   id : this.id
      * });
-     * 
+     *
      * @see Context#getObjectByPickColor
      */
     Context.prototype.createPickId = function(object) {

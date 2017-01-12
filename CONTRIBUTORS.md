@@ -35,6 +35,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Josh Becker](https://github.com/JoshuaStorm)
    * [Kangning Li](https://github.com/likangning93)
    * [Erik Andersson](https://github.com/erikmaarten)
+   * [Austin Eng](https://github.com/austinEng)
+   * [Shehzan Mohammed](https://github.com/shehzan10)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -115,4 +117,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Victor Malaret](https://github.com/malaretv)
 * [David Friedman](https://github.com/duvifn)
 * [Abhishek Potnis](https://github.com/abhishekvp)
-
+* [Brad Hover](https://github.com/tekhaus)
+* [Hüseyin Ateş](https://github.com/ateshuseyin)
+* [Zsolt Simon](https://github.com/szsolt)
+* [Chris Grant](https://github.com/cwgrant)

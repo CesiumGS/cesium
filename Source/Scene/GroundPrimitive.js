@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/clone',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -20,6 +21,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -28,7 +30,6 @@ define([
         '../ThirdParty/when',
         './BlendingState',
         './DepthFunction',
-        './Pass',
         './PerInstanceColorAppearance',
         './Primitive',
         './SceneMode',
@@ -40,6 +41,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
+        clone,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
@@ -55,6 +57,7 @@ define([
         OrientedBoundingBox,
         Rectangle,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -63,7 +66,6 @@ define([
         when,
         BlendingState,
         DepthFunction,
-        Pass,
         PerInstanceColorAppearance,
         Primitive,
         SceneMode,
@@ -196,9 +198,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the shadow volume for each geometry in the primitive. Must be <code>true</code> on
-         * creation for the volumes to be created before the geometry is released or releaseGeometryInstances
-         * must be <code>false</code>
+         * Draws the shadow volume for each geometry in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -206,6 +206,7 @@ define([
          * @default false
          */
         this.debugShowShadowVolume = defaultValue(options.debugShowShadowVolume, false);
+        this._debugShowShadowVolume = false;
 
         this._sp = undefined;
         this._spPick = undefined;
@@ -215,7 +216,11 @@ define([
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
 
-        this._uniformMap = {};
+        this._uniformMap = {
+            u_globeMinimumAltitude: function() {
+                return 55000.0;
+            }
+        };
 
         this._boundingVolumes = [];
         this._boundingVolumes2D = [];
@@ -224,7 +229,6 @@ define([
         this._readyPromise = when.defer();
 
         this._primitive = undefined;
-        this._debugPrimitive = undefined;
 
         this._maxHeight = undefined;
         this._minHeight = undefined;
@@ -396,7 +400,7 @@ define([
      * @returns {Boolean} <code>true</code> if GroundPrimitives are supported; otherwise, returns <code>false</code>
      */
     GroundPrimitive.isSupported = function(scene) {
-        return scene.context.fragmentDepth;
+        return scene.context.fragmentDepth && scene.context.stencilBuffer;
     };
 
     GroundPrimitive._defaultMaxTerrainHeight = 9000.0;
@@ -419,91 +423,98 @@ define([
         };
     }
 
-    var stencilPreloadRenderState = {
-        colorMask : {
-            red : false,
-            green : false,
-            blue : false,
-            alpha : false
-        },
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.ALWAYS,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.DECREMENT_WRAP,
-                zPass : StencilOperation.DECREMENT_WRAP
+    function getStencilPreloadRenderState(enableStencil) {
+        return {
+            colorMask : {
+                red : false,
+                green : false,
+                blue : false,
+                alpha : false
             },
-            backFunction : StencilFunction.ALWAYS,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.INCREMENT_WRAP,
-                zPass : StencilOperation.INCREMENT_WRAP
+            stencilTest : {
+                enabled : enableStencil,
+                frontFunction : StencilFunction.ALWAYS,
+                frontOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.DECREMENT_WRAP,
+                    zPass : StencilOperation.DECREMENT_WRAP
+                },
+                backFunction : StencilFunction.ALWAYS,
+                backOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.INCREMENT_WRAP,
+                    zPass : StencilOperation.INCREMENT_WRAP
+                },
+                reference : 0,
+                mask : ~0
             },
-            reference : 0,
-            mask : ~0
-        },
-        depthTest : {
-            enabled : false
-        },
-        depthMask : false
-    };
+            depthTest : {
+                enabled : false
+            },
+            depthMask : false
+        };
+    }
 
-    var stencilDepthRenderState = {
-        colorMask : {
-            red : false,
-            green : false,
-            blue : false,
-            alpha : false
-        },
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.ALWAYS,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.INCREMENT_WRAP
+    function getStencilDepthRenderState(enableStencil) {
+        return {
+            colorMask : {
+                red : false,
+                green : false,
+                blue : false,
+                alpha : false
             },
-            backFunction : StencilFunction.ALWAYS,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
+            stencilTest : {
+                enabled : enableStencil,
+                frontFunction : StencilFunction.ALWAYS,
+                frontOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.INCREMENT_WRAP
+                },
+                backFunction : StencilFunction.ALWAYS,
+                backOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.DECREMENT_WRAP
+                },
+                reference : 0,
+                mask : ~0
             },
-            reference : 0,
-            mask : ~0
-        },
-        depthTest : {
-            enabled : true,
-            func : DepthFunction.LESS_OR_EQUAL
-        },
-        depthMask : false
-    };
+            depthTest : {
+                enabled : true,
+                func : DepthFunction.LESS_OR_EQUAL
+            },
+            depthMask : false
+        };
+    }
 
-    var colorRenderState = {
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.NOT_EQUAL,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
+
+    function getColorRenderState(enableStencil) {
+        return {
+            stencilTest : {
+                enabled : enableStencil,
+                frontFunction : StencilFunction.NOT_EQUAL,
+                frontOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.DECREMENT_WRAP
+                },
+                backFunction : StencilFunction.NOT_EQUAL,
+                backOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.DECREMENT_WRAP
+                },
+                reference : 0,
+                mask : ~0
             },
-            backFunction : StencilFunction.NOT_EQUAL,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
+            depthTest : {
+                enabled : false
             },
-            reference : 0,
-            mask : ~0
-        },
-        depthTest : {
-            enabled : false
-        },
-        depthMask : false,
-        blending : BlendingState.ALPHA_BLEND
-    };
+            depthMask : false,
+            blending : BlendingState.ALPHA_BLEND
+        };
+    }
 
     var pickRenderState = {
         stencilTest : {
@@ -688,66 +699,96 @@ define([
         return BoundingSphere.union(result, scratchBoundingSphere, result);
     }
 
-    function createBoundingVolume(primitive, frameState, geometry) {
+    function createBoundingVolume(groundPrimitive, frameState, geometry) {
         var ellipsoid = frameState.mapProjection.ellipsoid;
         var rectangle = getRectangle(frameState, geometry);
 
         // Use an oriented bounding box by default, but switch to a bounding sphere if bounding box creation would fail.
         if (rectangle.width < CesiumMath.PI) {
-            var obb = OrientedBoundingBox.fromRectangle(rectangle, primitive._maxHeight, primitive._minHeight, ellipsoid);
-            primitive._boundingVolumes.push(obb);
+            var obb = OrientedBoundingBox.fromRectangle(rectangle, groundPrimitive._maxHeight, groundPrimitive._minHeight, ellipsoid);
+            groundPrimitive._boundingVolumes.push(obb);
         } else {
             var highPositions = geometry.attributes.position3DHigh.values;
             var lowPositions = geometry.attributes.position3DLow.values;
-            primitive._boundingVolumes.push(BoundingSphere.fromEncodedCartesianVertices(highPositions, lowPositions));
+            groundPrimitive._boundingVolumes.push(BoundingSphere.fromEncodedCartesianVertices(highPositions, lowPositions));
         }
 
         if (!frameState.scene3DOnly) {
             var projection = frameState.mapProjection;
-            var boundingVolume = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, primitive._maxHeight, primitive._minHeight);
+            var boundingVolume = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, groundPrimitive._maxHeight, groundPrimitive._minHeight);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
-            primitive._boundingVolumes2D.push(boundingVolume);
+            groundPrimitive._boundingVolumes2D.push(boundingVolume);
         }
     }
 
-    function createRenderStates(primitive, context, appearance, twoPasses) {
-        if (defined(primitive._rsStencilPreloadPass)) {
+    function createRenderStates(groundPrimitive, context, appearance, twoPasses) {
+        if (defined(groundPrimitive._rsStencilPreloadPass)) {
             return;
         }
+        var stencilEnabled = !groundPrimitive.debugShowShadowVolume;
 
-        primitive._rsStencilPreloadPass = RenderState.fromCache(stencilPreloadRenderState);
-        primitive._rsStencilDepthPass = RenderState.fromCache(stencilDepthRenderState);
-        primitive._rsColorPass = RenderState.fromCache(colorRenderState);
-        primitive._rsPickPass = RenderState.fromCache(pickRenderState);
+        groundPrimitive._rsStencilPreloadPass = RenderState.fromCache(getStencilPreloadRenderState(stencilEnabled));
+        groundPrimitive._rsStencilDepthPass = RenderState.fromCache(getStencilDepthRenderState(stencilEnabled));
+        groundPrimitive._rsColorPass = RenderState.fromCache(getColorRenderState(stencilEnabled));
+        groundPrimitive._rsPickPass = RenderState.fromCache(pickRenderState);
     }
 
-    function createShaderProgram(primitive, frameState, appearance) {
-        if (defined(primitive._sp)) {
+    function modifyForEncodedNormals(primitive, vertexShaderSource) {
+        if (!primitive.compressVertices) {
+            return vertexShaderSource;
+        }
+
+        if (vertexShaderSource.search(/attribute\s+vec3\s+extrudeDirection;/g) !== -1) {
+            var attributeName = 'compressedAttributes';
+
+            //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
+            var attributeDecl = 'attribute vec2 ' + attributeName + ';';
+
+            var globalDecl = 'vec3 extrudeDirection;\n';
+            var decode = '    extrudeDirection = czm_octDecode(' + attributeName + ', 65535.0);\n';
+
+            var modifiedVS = vertexShaderSource;
+            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+extrudeDirection;/g, '');
+            modifiedVS = ShaderSource.replaceMain(modifiedVS, 'czm_non_compressed_main');
+            var compressedMain =
+                'void main() \n' +
+                '{ \n' +
+                decode +
+                '    czm_non_compressed_main(); \n' +
+                '}';
+
+            return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
+        }
+    }
+
+    function createShaderProgram(groundPrimitive, frameState, appearance) {
+        if (defined(groundPrimitive._sp)) {
             return;
         }
 
         var context = frameState.context;
-
+        var primitive = groundPrimitive._primitive;
         var vs = ShadowVolumeVS;
-        vs = primitive._primitive._batchTable.getVertexShaderCallback()(vs);
-        vs = Primitive._appendShowToShader(primitive._primitive, vs);
-        vs = Primitive._appendDistanceDisplayConditionToShader(primitive._primitive, vs);
-        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
-        vs = Primitive._updateColorAttribute(primitive._primitive, vs);
+        vs = groundPrimitive._primitive._batchTable.getVertexShaderCallback()(vs);
+        vs = Primitive._appendShowToShader(primitive, vs);
+        vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs);
+        vs = Primitive._modifyShaderPosition(groundPrimitive, vs, frameState.scene3DOnly);
+        vs = Primitive._updateColorAttribute(primitive, vs);
+        vs = modifyForEncodedNormals(primitive, vs);
 
         var fs = ShadowVolumeFS;
-        var attributeLocations = primitive._primitive._attributeLocations;
+        var attributeLocations = groundPrimitive._primitive._attributeLocations;
 
-        primitive._sp = ShaderProgram.replaceCache({
+        groundPrimitive._sp = ShaderProgram.replaceCache({
             context : context,
-            shaderProgram : primitive._sp,
+            shaderProgram : groundPrimitive._sp,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
             attributeLocations : attributeLocations
         });
 
-        if (primitive._primitive.allowPicking) {
+        if (groundPrimitive._primitive.allowPicking) {
             var vsPick = ShaderSource.createPickVertexShaderSource(vs);
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
@@ -755,15 +796,15 @@ define([
                 sources : [fs],
                 pickColorQualifier : 'varying'
             });
-            primitive._spPick = ShaderProgram.replaceCache({
+            groundPrimitive._spPick = ShaderProgram.replaceCache({
                 context : context,
-                shaderProgram : primitive._spPick,
+                shaderProgram : groundPrimitive._spPick,
                 vertexShaderSource : vsPick,
                 fragmentShaderSource : pickFS,
                 attributeLocations : attributeLocations
             });
         } else {
-            primitive._spPick = ShaderProgram.fromCache({
+            groundPrimitive._spPick = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : vs,
                 fragmentShaderSource : fs,
@@ -1007,8 +1048,10 @@ define([
             return;
         }
 
+        var that = this;
+        var primitiveOptions = this._primitiveOptions;
+
         if (!defined(this._primitive)) {
-            var primitiveOptions = this._primitiveOptions;
             var ellipsoid = frameState.mapProjection.ellipsoid;
 
             var instance;
@@ -1082,7 +1125,6 @@ define([
 
             primitiveOptions.geometryInstances = groundInstances;
 
-            var that = this;
             primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
                 createBoundingVolume(that, frameState, geometry);
             };
@@ -1116,52 +1158,20 @@ define([
             });
         }
 
+        if (this.debugShowShadowVolume && !this._debugShowShadowVolume && this._ready) {
+            this._debugShowShadowVolume = true;
+            this._rsStencilPreloadPass = RenderState.fromCache(getStencilPreloadRenderState(false));
+            this._rsStencilDepthPass = RenderState.fromCache(getStencilDepthRenderState(false));
+            this._rsColorPass = RenderState.fromCache(getColorRenderState(false));
+        } else if (!this.debugShowShadowVolume && this._debugShowShadowVolume) {
+            this._debugShowShadowVolume = false;
+            this._rsStencilPreloadPass = RenderState.fromCache(getStencilPreloadRenderState(true));
+            this._rsStencilDepthPass = RenderState.fromCache(getStencilDepthRenderState(true));
+            this._rsColorPass = RenderState.fromCache(getColorRenderState(true));
+        }
+
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);
-
-        if (this.debugShowShadowVolume && !defined(this._debugPrimitive) && defined(this.geometryInstances)) {
-            var debugInstances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
-            var debugLength = debugInstances.length;
-            var debugVolumeInstances = new Array(debugLength);
-
-            for (var j = 0 ; j < debugLength; ++j) {
-                var debugInstance = debugInstances[j];
-                var debugGeometry = debugInstance.geometry;
-                var debugInstanceType = debugGeometry.constructor;
-                if (defined(debugInstanceType) && defined(debugInstanceType.createShadowVolume)) {
-                    var debugColorArray = debugInstance.attributes.color.value;
-                    var debugColor = Color.fromBytes(debugColorArray[0], debugColorArray[1], debugColorArray[2], debugColorArray[3]);
-                    Color.subtract(new Color(1.0, 1.0, 1.0, 0.0), debugColor, debugColor);
-                    debugVolumeInstances[j] = new GeometryInstance({
-                        geometry : debugInstanceType.createShadowVolume(debugGeometry, getComputeMinimumHeightFunction(this), getComputeMaximumHeightFunction(this)),
-                        attributes : {
-                            color : ColorGeometryInstanceAttribute.fromColor(debugColor)
-                        },
-                        id : debugInstance.id,
-                        pickPrimitive : this
-                    });
-                }
-            }
-
-            this._debugPrimitive = new Primitive({
-                geometryInstances : debugVolumeInstances,
-                releaseGeometryInstances : true,
-                allowPicking : false,
-                asynchronous : false,
-                appearance : new PerInstanceColorAppearance({
-                    flat : true
-                })
-            });
-        }
-
-        if (defined(this._debugPrimitive)) {
-            if (this.debugShowShadowVolume) {
-                this._debugPrimitive.update(frameState);
-            } else {
-                this._debugPrimitive.destroy();
-                this._debugPrimitive = undefined;
-            }
-        }
     };
 
     /**
@@ -1233,7 +1243,6 @@ define([
      */
     GroundPrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
-        this._debugPrimitive = this._debugPrimitive && this._debugPrimitive.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         return destroyObject(this);

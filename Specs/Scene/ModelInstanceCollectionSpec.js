@@ -6,6 +6,7 @@ defineSuite([
         'Core/defaultValue',
         'Core/defined',
         'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
         'Core/JulianDate',
         'Core/Math',
         'Core/Matrix4',
@@ -25,6 +26,7 @@ defineSuite([
         defaultValue,
         defined,
         HeadingPitchRange,
+        HeadingPitchRoll,
         JulianDate,
         CesiumMath,
         Matrix4,
@@ -127,7 +129,8 @@ defineSuite([
             var heading = Math.PI/2.0;
             var pitch = 0.0;
             var roll = 0.0;
-            var modelMatrix = Transforms.headingPitchRollToFixedFrame(position, heading, pitch, roll);
+            var hpr = new HeadingPitchRoll(heading, pitch, roll);
+            var modelMatrix = Transforms.headingPitchRollToFixedFrame(position, hpr);
             instances.push({
                 modelMatrix : modelMatrix
             });

@@ -330,7 +330,9 @@ define([
         return wallTextures;
     }
 
+    var scratchVertexFormat = new VertexFormat();
     function constructExtrudedRectangle(options) {
+        var shadowVolume = options.shadowVolume;
         var vertexFormat = options.vertexFormat;
         var surfaceHeight = options.surfaceHeight;
         var extrudedHeight = options.extrudedHeight;
@@ -342,10 +344,15 @@ define([
         var ellipsoid = options.ellipsoid;
         var i;
 
+        if (shadowVolume) {
+            options.vertexFormat = VertexFormat.clone(vertexFormat, scratchVertexFormat);
+            options.vertexFormat.normal = true;
+        }
         var topBottomGeo = constructRectangle(options);
         if (CesiumMath.equalsEpsilon(minHeight, maxHeight, CesiumMath.EPSILON10)) {
             return topBottomGeo;
         }
+
         var topPositions = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo.attributes.position.values, maxHeight, ellipsoid, false);
         topPositions = new Float64Array(topPositions);
         var length = topPositions.length;
@@ -361,8 +368,9 @@ define([
         var binormals = (vertexFormat.binormal) ? new Float32Array(newLength) : undefined;
         var textures = (vertexFormat.st) ? new Float32Array(newLength/3*2) : undefined;
         var topSt;
+        var topNormals;
         if (vertexFormat.normal) {
-            var topNormals = topBottomGeo.attributes.normal.values;
+            topNormals = topBottomGeo.attributes.normal.values;
             normals.set(topNormals);
             for (i = 0; i < length; i ++) {
                 topNormals[i] = -topNormals[i];
@@ -370,6 +378,23 @@ define([
             normals.set(topNormals, length);
             topBottomGeo.attributes.normal.values = normals;
         }
+        if (shadowVolume) {
+            topNormals = topBottomGeo.attributes.normal.values;
+            if (!vertexFormat.normal) {
+                topBottomGeo.attributes.normal = undefined;
+            }
+            var extrudeNormals = new Float32Array(newLength);
+            for (i = 0; i < length; i ++) {
+                topNormals[i] = -topNormals[i];
+            }
+            extrudeNormals.set(topNormals, length); //only get normals for bottom layer that's going to be pushed down
+            topBottomGeo.attributes.extrudeDirection = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : extrudeNormals
+            });
+        }
+
         if (vertexFormat.tangent) {
             var topTangents = topBottomGeo.attributes.tangent.values;
             tangents.set(topTangents);
@@ -408,44 +433,75 @@ define([
         var wallCount = (perimeterPositions + 4) * 2;
 
         var wallPositions = new Float64Array(wallCount * 3);
+        var wallExtrudeNormals = shadowVolume ? new Float32Array(wallCount * 3) : undefined;
         var wallTextures = (vertexFormat.st) ? new Float32Array(wallCount * 2) : undefined;
 
         var posIndex = 0;
         var stIndex = 0;
+        var extrudeNormalIndex = 0;
         var area = width * height;
+        var threeI;
         for (i = 0; i < area; i+=width) {
-            wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
+            threeI = i * 3;
+            wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
                 wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
+            }
+            if (shadowVolume) {
+                extrudeNormalIndex += 3;
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
             }
         }
 
         for (i = area-width; i < area; i++) {
-            wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
+            threeI = i * 3;
+            wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
                 wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
+            }
+            if (shadowVolume) {
+                extrudeNormalIndex += 3;
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
             }
         }
 
         for (i = area-1; i > 0; i-=width) {
-            wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
+            threeI = i * 3;
+            wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
                 wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
             }
+            if (shadowVolume) {
+                extrudeNormalIndex += 3;
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
+            }
         }
 
         for (i = width-1; i >= 0; i--) {
-            wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
+            threeI = i * 3;
+            wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
                 wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
+            }
+            if (shadowVolume) {
+                extrudeNormalIndex += 3;
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
+                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
             }
         }
 
@@ -456,6 +512,13 @@ define([
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
                 values : wallTextures
+            });
+        }
+        if (shadowVolume) {
+            geo.attributes.extrudeDirection = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : wallExtrudeNormals
             });
         }
 
@@ -582,16 +645,6 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var rectangle = options.rectangle;
-        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var surfaceHeight = defaultValue(options.height, 0.0);
-        var rotation = defaultValue(options.rotation, 0.0);
-        var stRotation = defaultValue(options.stRotation, 0.0);
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        var extrudedHeight = options.extrudedHeight;
-        var extrude = defined(extrudedHeight);
-        var closeTop = defaultValue(options.closeTop, true);
-        var closeBottom = defaultValue(options.closeBottom, true);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
@@ -603,17 +656,19 @@ define([
         }
         //>>includeEnd('debug');
 
+        var rotation = defaultValue(options.rotation, 0.0);
         this._rectangle = rectangle;
-        this._granularity = granularity;
-        this._ellipsoid = Ellipsoid.clone(ellipsoid);
-        this._surfaceHeight = surfaceHeight;
+        this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
+        this._surfaceHeight = defaultValue(options.height, 0.0);
         this._rotation = rotation;
-        this._stRotation = stRotation;
-        this._vertexFormat = VertexFormat.clone(vertexFormat);
-        this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
-        this._extrude = extrude;
-        this._closeTop = closeTop;
-        this._closeBottom = closeBottom;
+        this._stRotation = defaultValue(options.stRotation, 0.0);
+        this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
+        this._extrudedHeight = defaultValue(options.extrudedHeight, 0.0);
+        this._extrude = defined(options.extrudedHeight);
+        this._closeTop = defaultValue(options.closeTop, true);
+        this._closeBottom = defaultValue(options.closeBottom, true);
+        this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createRectangleGeometry';
         this._rotatedRectangle = computeRectangle(this._rectangle, this._ellipsoid, rotation);
     }
@@ -622,7 +677,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 8;
+    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 9;
 
     /**
      * Stores the provided instance into the provided array.
@@ -665,7 +720,8 @@ define([
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
-        array[startingIndex]   = value._closeBottom ? 1.0 : 0.0;
+        array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
+        array[startingIndex] = value._shadowVolume ? 1.0 : 0.0;
 
         return array;
     };
@@ -673,7 +729,6 @@ define([
     var scratchRectangle = new Rectangle();
     var scratchRotatedRectangle = new Rectangle();
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
-    var scratchVertexFormat = new VertexFormat();
     var scratchOptions = {
         rectangle : scratchRectangle,
         ellipsoid : scratchEllipsoid,
@@ -684,7 +739,8 @@ define([
         stRotation : undefined,
         extrudedHeight : undefined,
         closeTop : undefined,
-        closeBottom : undefined
+        closeBottom : undefined,
+        shadowVolume: undefined
     };
 
     /**
@@ -723,7 +779,8 @@ define([
         var extrudedHeight = array[startingIndex++];
         var extrude = array[startingIndex++] === 1.0;
         var closeTop = array[startingIndex++] === 1.0;
-        var closeBottom = array[startingIndex] === 1.0;
+        var closeBottom = array[startingIndex++] === 1.0;
+        var shadowVolume = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
             scratchOptions.granularity = granularity;
@@ -733,6 +790,7 @@ define([
             scratchOptions.extrudedHeight = extrude ? extrudedHeight : undefined;
             scratchOptions.closeTop = closeTop;
             scratchOptions.closeBottom = closeBottom;
+            scratchOptions.shadowVolume = shadowVolume;
             return new RectangleGeometry(scratchOptions);
         }
 
@@ -748,13 +806,14 @@ define([
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;
         result._rotatedRectangle = rotatedRectangle;
+        result._shadowVolume = shadowVolume;
 
         return result;
     };
 
-    var textureMatrixScratch = new Matrix2();
     var tangentRotationMatrixScratch = new Matrix3();
     var nwScratch = new Cartographic();
+    var stNwScratch = new Cartographic();
     var quaternionScratch = new Quaternion();
     var centerScratch = new Cartographic();
     /**
@@ -776,30 +835,27 @@ define([
         var surfaceHeight = rectangleGeometry._surfaceHeight;
         var extrude = rectangleGeometry._extrude;
         var extrudedHeight = rectangleGeometry._extrudedHeight;
+        var rotation = rectangleGeometry._rotation;
         var stRotation = rectangleGeometry._stRotation;
         var vertexFormat = rectangleGeometry._vertexFormat;
 
-        var options = RectangleGeometryLibrary.computeOptions(rectangleGeometry, rectangle, nwScratch);
+        var options = RectangleGeometryLibrary.computeOptions(rectangleGeometry, rectangle, nwScratch, stNwScratch);
 
-        var textureMatrix = textureMatrixScratch;
         var tangentRotationMatrix = tangentRotationMatrixScratch;
-        if (defined(stRotation)) {
-            // negate angle for a counter-clockwise rotation
-            Matrix2.fromRotation(-stRotation, textureMatrix);
+        if (stRotation !== 0 || rotation !== 0) {
             var center = Rectangle.center(rectangle, centerScratch);
-            var axis = ellipsoid.cartographicToCartesian(center, v1Scratch);
-            Cartesian3.normalize(axis, axis);
+            var axis = ellipsoid.geodeticSurfaceNormalCartographic(center, v1Scratch);
             Quaternion.fromAxisAngle(axis, -stRotation, quaternionScratch);
             Matrix3.fromQuaternion(quaternionScratch, tangentRotationMatrix);
         } else {
-            Matrix2.clone(Matrix2.IDENTITY, textureMatrix);
             Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
         }
 
-        options.lonScalar = 1.0 / rectangle.width;
-        options.latScalar = 1.0 / rectangle.height;
+        options.lonScalar = 1.0 / rectangleGeometry._rectangle.width;
+        options.latScalar = 1.0 / rectangleGeometry._rectangle.height;
         options.vertexFormat = vertexFormat;
-        options.textureMatrix = textureMatrix;
+        options.rotation = rotation;
+        options.stRotation = stRotation;
         options.tangentRotationMatrix = tangentRotationMatrix;
         options.size = options.width * options.height;
 
@@ -807,6 +863,7 @@ define([
         var boundingSphere;
         rectangle = rectangleGeometry._rectangle;
         if (extrude) {
+            options.shadowVolume = rectangleGeometry._shadowVolume;
             geometry = constructExtrudedRectangle(options);
             var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
             var bottomBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, extrudedHeight, bottomBoundingSphere);
@@ -822,7 +879,7 @@ define([
         }
 
         return new Geometry({
-            attributes : new GeometryAttributes(geometry.attributes),
+            attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : geometry.primitiveType,
             boundingSphere : boundingSphere
@@ -850,7 +907,8 @@ define([
             height : minHeight,
             closeTop : true,
             closeBottom : true,
-            vertexFormat : VertexFormat.POSITION_ONLY
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            shadowVolume: true
         });
     };
 

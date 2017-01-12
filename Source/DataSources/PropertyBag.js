@@ -102,7 +102,7 @@ define([
      * Adds a property to this object.
      *
      * @param {String} propertyName The name of the property to add.
-     * @param {Any} [value] The value of the new property, if provided.
+     * @param {*} [value] The value of the new property, if provided.
      * @param {Function} [createPropertyCallback] A function that will be called when the value of this new property is set to a value that is not a Property.
      *
      * @exception {DeveloperError} "propertyName" is already a registered property.
