@@ -5,9 +5,9 @@ define([
         './Cartesian3',
         './Cartesian4',
         './Cartographic',
+        './Check',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './EarthOrientationParameters',
         './EarthOrientationParametersSample',
@@ -27,9 +27,9 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Check,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         EarthOrientationParameters,
         EarthOrientationParametersSample,
@@ -473,19 +473,12 @@ define([
      * var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
      * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
      */
-    Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, pitch, roll, ellipsoid, result) {
-        var heading;
-        if (typeof headingPitchRoll === 'object') {
-            // Shift arguments using assignments to encourage JIT optimization.
-            ellipsoid = pitch;
-            result = roll;
-            heading = headingPitchRoll.heading;
-            pitch = headingPitchRoll.pitch;
-            roll = headingPitchRoll.roll;
-        } else {
-            deprecationWarning('headingPitchRollToFixedFrame', 'headingPitchRollToFixedFrame with separate heading, pitch, and roll arguments was deprecated in 1.27.  It will be removed in 1.30.  Use a HeadingPitchRoll object.');
-            heading = headingPitchRoll;
-        }
+    Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, result) {
+        Check.typeOf.object(headingPitchRoll, 'headingPitchRoll');
+        var heading = headingPitchRoll.heading;
+        var pitch = headingPitchRoll.pitch;
+        var roll = headingPitchRoll.roll;
+
         // checks for required parameters happen in the called functions
         var hprQuaternion = Quaternion.fromHeadingPitchRoll(heading, pitch, roll, scratchHPRQuaternion);
         var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
@@ -493,7 +486,6 @@ define([
         return Matrix4.multiply(result, hprMatrix, result);
     };
 
-    var scratchHPR = new HeadingPitchRoll();
     var scratchENUMatrix4 = new Matrix4();
     var scratchHPRMatrix3 = new Matrix3();
 
@@ -518,22 +510,10 @@ define([
      * var hpr = new HeadingPitchRoll(heading, pitch, roll);
      * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, hpr);
      */
-    Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, pitch, roll, ellipsoid, result) {
-        var hpr;
-        if (typeof headingPitchRoll === 'object') {
-            // Shift arguments using assignment to encourage JIT optimization.
-            hpr = headingPitchRoll;
-            ellipsoid = pitch;
-            result = roll;
-        } else {
-            deprecationWarning('headingPitchRollQuaternion', 'headingPitchRollQuaternion with separate heading, pitch, and roll arguments was deprecated in 1.27.  It will be removed in 1.30.  Use a HeadingPitchRoll object.');
-            scratchHPR.heading = headingPitchRoll;
-            scratchHPR.pitch = pitch;
-            scratchHPR.roll = roll;
-            hpr = scratchHPR;
-        }
+    Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, result) {
         // checks for required parameters happen in the called functions
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, ellipsoid, scratchENUMatrix4);
+        Check.typeOf.object(headingPitchRoll, 'headingPitchRoll');
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
     };

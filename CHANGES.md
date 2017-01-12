@@ -2,14 +2,27 @@ Change Log
 ==========
 
 ### 1.30 - 2017-02-01
-
+* Deprecated
+    * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.31. These properties will be available on geocoder services that support them, like `BingMapsGeocoderService`.
+* Breaking changes
+    * Removed separate `heading`, `pitch`, `roll` parameters from `Transform.headingPitchRollToFixedFrame` and `Transform.headingPitchRollQuaternion`. Pass a `headingPitchRoll` object instead. [#4843](https://github.com/AnalyticalGraphicsInc/cesium/pull/4843)
+* Added support for custom geocoder services and autocomplete [#4723](https://github.com/AnalyticalGraphicsInc/cesium/pull/4723).
+    * Added [Custom Geocoder Sandcastle example](http://localhost:8080/Apps/Sandcastle/index.html?src=Custom%20Geocoder.html)
+* Added `GeocoderService`, an interface for geocoders.
+* Added `BingMapsGeocoderService` implementing the `GeocoderService` interface.
+* Added `CartographicGeocoderService` implementing the `GeocoderService` interface.
 * Updated the morph so the default view in Columbus View is now angled. [#3878](https://github.com/AnalyticalGraphicsInc/cesium/issues/3878)
+* Fixed bug where `GroundPrimitives` where rendering incorrectly or disappearing at different zoom levels. [#4161](https://github.com/AnalyticalGraphicsInc/cesium/issues/4161) [#4326](https://github.com/AnalyticalGraphicsInc/cesium/issues/4326)
+* Fixed sky atmosphere from causing incorrect picking and hanging drill picking. [#4783](https://github.com/AnalyticalGraphicsInc/cesium/issues/4783) and [#4784](https://github.com/AnalyticalGraphicsInc/cesium/issues/4784)
+* Fixed a bug that could cause a "readyImagery is not actually ready" exception when quickly zooming past the maximum available imagery level of an imagery layer near the poles.
+* Fixed a bug that caused all models to use the same highlight color. [#4798] (https://github.com/AnalyticalGraphicsInc/cesium/pull/4798)
+* Fixed KML for when color is an empty string [#4826](https://github.com/AnalyticalGraphicsInc/cesium/pull/4826)
+* Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
 * Added ability to draw an `ImageryLayer` with a splitter to allow layers to only display to the left or right of a splitter.
    * `ImageryLayer.split` controls whether splitting is enabled for a layer. Negative values show to the left of the splitter, positive values show to the right of the splitter.  0 displays the imagery normally.
    *  New `FrameState.splitPosition` property controls the splitter position.  Values are from 0 to 1 relative across the width of the viewport.
 
 ### 1.29 - 2017-01-02
-
 * Improved 3D Models
    * Added the ability to blend a `Model` with a color/translucency. Added `color`, `colorBlendMode`, and `colorBlendAmount` properties to `Model`, `ModelGraphics`, and CZML. Also added `ColorBlendMode` enum. [#4547](https://github.com/AnalyticalGraphicsInc/cesium/pull/4547)
    * Added the ability to render a `Model` with a silhouette. Added `silhouetteColor` and `silhouetteSize` properties to `Model`, `ModelGraphics`, and CZML. [#4314](https://github.com/AnalyticalGraphicsInc/cesium/pull/4314)

@@ -37,6 +37,33 @@
     width: 250px;
 }
 
+.cesium-viewer-geocoderContainer .search-results {
+    position: absolute;
+    background-color: #000;
+    color: #eee;
+    overflow-y: auto;
+    opacity: 0.8;
+    width: 100%;
+}
+
+.cesium-viewer-geocoderContainer .search-results ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.cesium-viewer-geocoderContainer .search-results ul li {
+    font-size: 14px;
+    padding: 3px 10px;
+}
+.cesium-viewer-geocoderContainer .search-results ul li:hover {
+    cursor: pointer;
+}
+
+.cesium-viewer-geocoderContainer .search-results ul li.active {
+    background: #48b;
+}
+
 .cesium-geocoder-searchButton {
     background-color: #303336;
     display: inline-block;

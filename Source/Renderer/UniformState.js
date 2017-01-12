@@ -151,6 +151,8 @@ define([
         this._fogDensity = undefined;
 
         this._splitPosition = 0.0;
+        this._pixelSizePerMeter = undefined;
+        this._geometricToleranceOverMeter = undefined;
     }
 
     defineProperties(UniformState.prototype, {
@@ -770,6 +772,17 @@ define([
         },
 
         /**
+         * A scalar that represents the geometric tolerance per meter
+         * @memberof UniformStat.prototype
+         * @type {Number}
+         */
+        geometricToleranceOverMeter: {
+            get: function() {
+                return this._geometricToleranceOverMeter;
+            }
+        },
+
+        /**
          * @memberof UniformState.prototype
          * @type {Pass}
          */
@@ -949,6 +962,16 @@ define([
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
 
         this._splitPosition = frameState.splitPosition;
+        var fov = camera.frustum.fov;
+        var viewport = this._viewport;
+        var pixelSizePerMeter;
+        if (viewport.height > viewport.width) {
+            pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.height;
+        } else {
+            pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.width;
+        }
+
+        this._geometricToleranceOverMeter = pixelSizePerMeter * frameState.maximumScreenSpaceError;
     };
 
     function cleanViewport(uniformState) {

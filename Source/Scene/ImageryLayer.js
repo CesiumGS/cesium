@@ -1076,6 +1076,7 @@ define([
     /**
      * Gets the level with the specified world coordinate spacing between texels, or less.
      *
+     * @param {ImageryLayer} layer The imagery layer to use.
      * @param {Number} texelSpacing The texel spacing for which to find a corresponding level.
      * @param {Number} latitudeClosestToEquator The latitude closest to the equator that we're concerned with.
      * @returns {Number} The level with the specified texel spacing or less.

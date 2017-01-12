@@ -357,7 +357,7 @@ defineSuite([
         var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
-        var quaternion = Transforms.headingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var actual = Matrix3.fromQuaternion(quaternion);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
     });
@@ -388,7 +388,7 @@ defineSuite([
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
         var result = new Quaternion();
-        var quaternion = Transforms.headingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
+        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, result);
         var actual = Matrix3.fromQuaternion(quaternion);
         expect(quaternion).toBe(result);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
@@ -923,21 +923,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('headingPitchRollToFixedFrame throws without an heading', function() {
+    it('headingPitchRollToFixedFrame throws without a headingPitchRoll', function() {
         expect(function() {
-            Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, undefined, 0.0, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('headingPitchRollToFixedFrame throws without an pitch', function() {
-        expect(function() {
-            Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, 0.0, undefined, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('headingPitchRollToFixedFrame throws without an roll', function() {
-        expect(function() {
-            Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, 0.0, 0.0, undefined);
+            Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, undefined);
         }).toThrowDeveloperError();
     });
 

@@ -108,7 +108,7 @@ define([
     /**
      * Executes the compute command.
      *
-     * @param {Context} context The context that processes the compute command.
+     * @param {Context} computeEngine The context that processes the compute command.
      */
     ComputeCommand.prototype.execute = function(computeEngine) {
         computeEngine.execute(this);

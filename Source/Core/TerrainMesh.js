@@ -27,6 +27,7 @@ define([
       * @param {Number} [vertexStride=6] The number of components in each vertex.
       * @param {OrientedBoundingBox} [orientedBoundingBox] A bounding box that completely contains the tile.
       * @param {TerrainEncoding} encoding Information used to decode the mesh.
+      * @param {Number} exaggeration The amount that this mesh was exaggerated.
       *
       * @private
       */
