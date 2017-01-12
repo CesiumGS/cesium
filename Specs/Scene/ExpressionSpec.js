@@ -2125,6 +2125,18 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
+    it('gets shader expression for clamp', function() {
+        var expression = new Expression('clamp(50.0, 0.0, 100.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'clamp(50.0, 0.0, 100.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for mix', function() {
+        var expression = new Expression('mix(0.0, 2.0, 0.5)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'mix(0.0, 2.0, 0.5)';
+
     it('gets shader expression for atan2', function() {
         var expression = new Expression('atan2(0.0,1.0)');
         var shaderExpression = expression.getShaderExpression('', {});

@@ -378,6 +378,21 @@ define([
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'isExactClass' || call === 'isClass') {
+            //>>includeStart('debug', pragmas.debug);
+            if (argsLength < 1 || argsLength > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'getExactClassName') {
+            //>>includeStart('debug', pragmas.debug);
+            if (argsLength > 0) {
+                throw new DeveloperError('Error: ' + call + ' does not take any argument.');
+            }
+            //>>includeEnd('debug');
+            return new Node(ExpressionNodeType.UNARY, call);
         } else if (defined(unaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 1 || args.length > 1) {
@@ -1143,7 +1158,7 @@ define([
         return Math.pow(2.0,exponent);
     }
 
-    Node.prototype.getShaderExpression = function(attributePrefix, shaderState) {
+    Node.prototype.getShaderExpression = function(attributePrefix, shaderState, parent) {
         var color;
         var left;
         var right;
