@@ -105,14 +105,14 @@ define([
         atan : Math.atan,
         radians : CesiumMath.toRadians,
         degrees : CesiumMath.toDegrees,
-        sign : Math.sign,
+        sign : CesiumMath.sign,
         floor : Math.floor,
         ceil : Math.ceil,
         round : Math.round,
         exp : Math.exp,
         exp2 : exp2,
         log : Math.log,
-        log2 : Math.log2,
+        log2 : log2,
         fract : fract
     };
 
@@ -120,6 +120,18 @@ define([
         clamp : CesiumMath.clamp,
         mix : CesiumMath.lerp
     };
+
+    function fract(number) {
+        return number - Math.floor(number);
+    }
+
+    function exp2(exponent) {
+        return Math.pow(2.0,exponent);
+    }
+
+    function log2(number) {
+    	return CesiumMath.logBase(number, 2.0);
+    }
 
     /**
      * Evaluates an expression defined using the
@@ -1411,14 +1423,6 @@ define([
             expressions[i] = shader;
         }
         return expressions;
-    }
-
-    function fract(number) {
-        return number - Math.floor(number);
-    }
-
-    function exp2(exponent) {
-        return Math.pow(2.0,exponent);
     }
 
     Node.prototype.getShaderExpression = function(attributePrefix, shaderState, parent) {

@@ -125,7 +125,7 @@ addStyle('Sqrt', {
 });
 
 addStyle('Sign', {
-    color : "color() * sign(${temperature})",
+    color : "rgb(sign(${POSITION}[0]) * 255, sign(${POSITION}[1]) * 255, sign(${POSITION}[2]) * 255)",
     pointSize : "5"
 });
 
@@ -140,7 +140,7 @@ addStyle('Exp and Log Functions', {
 });
 
 addStyle('Fractional Part', {
-    color : "color() * fract(${temperature})",
+    color : "rgb(fract(${POSITION}[0]) * 255, fract(${POSITION}[1]) * 255, fract(${POSITION}[2]) * 255)",
     pointSize : "5"
 });
 
