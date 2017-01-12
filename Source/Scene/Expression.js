@@ -66,7 +66,6 @@ define([
         sign : Math.sign,
         floor : Math.floor,
         ceil : Math.ceil,
-        round : Math.round,
         exp : Math.exp,
         exp2 : Expression.exp2,
         log : Math.log,
@@ -369,6 +368,14 @@ define([
                     return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
                 }
             }
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'round') {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length < 1 || args.length > 1) {
+                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+            }
+            //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (defined(unaryFunctions[call])) {
@@ -1201,6 +1208,8 @@ define([
                     return 'bool(' + left + ')';
                 } else if (value === 'Number') {
                     return 'float(' + left + ')';
+                } else if (value === 'round') {
+                	return 'floor(' + left + '0.5)';
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
                 } else if (value === 'abs') {
