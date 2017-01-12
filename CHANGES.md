@@ -20,6 +20,7 @@ Change Log
 * Fixed a bug that caused all models to use the same highlight color. [#4798] (https://github.com/AnalyticalGraphicsInc/cesium/pull/4798)
 * Fixed KML for when color is an empty string [#4826](https://github.com/AnalyticalGraphicsInc/cesium/pull/4826)
 * Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
+* The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.
 
 ### 1.29 - 2017-01-02
 * Improved 3D Models

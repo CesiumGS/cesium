@@ -26,7 +26,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.attributeName The name of the attribute to visualize.
-     * @param {Boolean} options.perInstanceAttribute Boolean that determines whether this attribute is a per-instance geometry attribute.
+     * @param {Boolean} [options.perInstanceAttribute=false] Boolean that determines whether this attribute is a per-instance geometry attribute.
      * @param {String} [options.glslDatatype='vec3'] The GLSL datatype of the attribute.  Supported datatypes are <code>float</code>, <code>vec2</code>, <code>vec3</code>, and <code>vec4</code>.
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
@@ -51,10 +51,11 @@ define([
         if (!defined(attributeName)) {
             throw new DeveloperError('options.attributeName is required.');
         }
-        if (!defined(perInstanceAttribute)) {
-            throw new DeveloperError('options.perInstanceAttribute is required.');
-        }
         //>>includeEnd('debug');
+
+        if (!defined(perInstanceAttribute)) {
+            perInstanceAttribute = false;
+        }
 
         var glslDatatype = defaultValue(options.glslDatatype, 'vec3');
         var varyingName = 'v_' + attributeName;
