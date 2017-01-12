@@ -960,7 +960,13 @@ define([
     // that we can assign if we know the types before runtime
 
     Node.prototype._evaluateNot = function(frameState, feature) {
-        return !(this._left.evaluate(frameState, feature));
+        var left = this._left.evaluate(frameState, feature);
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'boolean') {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+        return !left;
     };
 
     Node.prototype._evaluateNegative = function(frameState, feature) {
@@ -971,39 +977,77 @@ define([
             return Cartesian3.negate(left, ScratchStorage.getCartesian3());
         } else if (left instanceof Cartesian4) {
             return Cartesian4.negate(left, ScratchStorage.getCartesian4());
+        } else if (typeof(left) === 'number') {
+            return -left;
         }
-        return -left;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Error: Operation is undefined.');
+        //>>includeEnd('debug');
+        return -left; // jshint ignore:line
     };
 
     Node.prototype._evaluatePositive = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
-        if ((left instanceof Cartesian2) || (left instanceof Cartesian3) || (left instanceof Cartesian4)) {
-            return left;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!((left instanceof Cartesian2) || (left instanceof Cartesian3) || (left instanceof Cartesian4) || (typeof(left) === 'number'))) {
+            throw new DeveloperError('Error: Operation is undefined.');
         }
-        return +left;
+        //>>includeEnd('debug');
+
+        return left;
     };
 
     Node.prototype._evaluateLessThan = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((typeof(left) !== 'number') || (typeof(right) !== 'number')) {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left < right;
     };
 
     Node.prototype._evaluateLessThanOrEquals = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((typeof(left) !== 'number') || (typeof(right) !== 'number')) {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left <= right;
     };
 
     Node.prototype._evaluateGreaterThan = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((typeof(left) !== 'number') || (typeof(right) !== 'number')) {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left > right;
     };
 
     Node.prototype._evaluateGreaterThanOrEquals = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((typeof(left) !== 'number') || (typeof(right) !== 'number')) {
+            throw new DeveloperError('Error: Operation is undefined.');
+        }
+        //>>includeEnd('debug');
+
         return left >= right;
     };
 
@@ -1060,8 +1104,17 @@ define([
             return Cartesian3.add(left, right, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.add(left, right, ScratchStorage.getCartesian4());
+        } else if ((typeof(left) === 'string') || (typeof(right) === 'string')) {
+            return left + right;
+        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+            return left + right;
         }
-        return left + right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Error: Operation is undefined.');
+        //>>includeEnd('debug');
+
+        return left + right; // jshint ignore:line
     };
 
     Node.prototype._evaluateMinus = function(frameState, feature) {
@@ -1073,8 +1126,15 @@ define([
             return Cartesian3.subtract(left, right, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.subtract(left, right, ScratchStorage.getCartesian4());
+        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+            return left - right;
         }
-        return left - right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Error: Operation is undefined.');
+        //>>includeEnd('debug');
+
+        return left - right; // jshint ignore:line
     };
 
     Node.prototype._evaluateTimes = function(frameState, feature) {
@@ -1098,8 +1158,15 @@ define([
             return Cartesian4.multiplyByScalar(right, left, ScratchStorage.getCartesian4());
         } else if ((left instanceof Cartesian4) && (typeof(right) === 'number')) {
             return Cartesian4.multiplyByScalar(left, right, ScratchStorage.getCartesian4());
+        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+            return left * right;
         }
-        return left * right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Error: Operation is undefined.');
+        //>>includeEnd('debug');
+
+        return left * right; // jshint ignore:line
     };
 
     Node.prototype._evaluateDivide = function(frameState, feature) {
@@ -1117,8 +1184,15 @@ define([
             return Cartesian4.divideComponents(left, right, ScratchStorage.getCartesian4());
         } else if ((left instanceof Cartesian4) && (typeof(right) === 'number')) {
             return Cartesian4.divideByScalar(left, right, ScratchStorage.getCartesian4());
+        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+            return left / right;
         }
-        return left / right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Error: Operation is undefined.');
+        //>>includeEnd('debug');
+
+        return left / right; // jshint ignore:line
     };
 
     Node.prototype._evaluateMod = function(frameState, feature) {
@@ -1130,8 +1204,15 @@ define([
             return Cartesian3.fromElements(left.x % right.x, left.y % right.y, left.z % right.z, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.fromElements(left.x % right.x, left.y % right.y, left.z % right.z, left.w % right.w, ScratchStorage.getCartesian4());
+        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+            return left % right;
         }
-        return left % right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Error: Operation is undefined.');
+        //>>includeEnd('debug');
+
+        return left % right; // jshint ignore:line
     };
 
     Node.prototype._evaluateEqualsStrict = function(frameState, feature) {
