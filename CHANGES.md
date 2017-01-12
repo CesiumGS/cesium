@@ -4,8 +4,10 @@ Change Log
 ### 1.30 - 2017-02-01
 * Deprecated
     * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.31. These properties will be available on geocoder services that support them, like `BingMapsGeocoderService`.
+    * The function `createBinormalAndBitangent` of `GeometryPipeline` will be removed in 1.31. Use the function `createTangentAndBitangent` instead. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
 * Breaking changes
     * Removed separate `heading`, `pitch`, `roll` parameters from `Transform.headingPitchRollToFixedFrame` and `Transform.headingPitchRollQuaternion`. Pass a `headingPitchRoll` object instead. [#4843](https://github.com/AnalyticalGraphicsInc/cesium/pull/4843)
+    * The property `binornmal` has been renamed to `bitangent` for `Geometry` and `VertexFormat`. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
 * Added support for custom geocoder services and autocomplete [#4723](https://github.com/AnalyticalGraphicsInc/cesium/pull/4723).
     * Added [Custom Geocoder Sandcastle example](http://localhost:8080/Apps/Sandcastle/index.html?src=Custom%20Geocoder.html)
 * Added `GeocoderService`, an interface for geocoders.
@@ -18,6 +20,7 @@ Change Log
 * Fixed a bug that caused all models to use the same highlight color. [#4798] (https://github.com/AnalyticalGraphicsInc/cesium/pull/4798)
 * Fixed KML for when color is an empty string [#4826](https://github.com/AnalyticalGraphicsInc/cesium/pull/4826)
 * Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
+* The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.
 
 ### 1.29 - 2017-01-02
 * Improved 3D Models

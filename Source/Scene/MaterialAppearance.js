@@ -311,7 +311,7 @@ define([
         /**
          * All materials, including those that work in tangent space, are supported.
          * This requires <code>position</code>, <code>normal</code>, <code>st</code>,
-         * <code>binormal</code>, and <code>tangent</code> vertex attributes.
+         * <code>tangent</code>, and <code>bitangent</code> vertex attributes.
          *
          * @constant
          */
