@@ -8,6 +8,7 @@ Change Log
 * Breaking changes
     * Removed separate `heading`, `pitch`, `roll` parameters from `Transform.headingPitchRollToFixedFrame` and `Transform.headingPitchRollQuaternion`. Pass a `headingPitchRoll` object instead. [#4843](https://github.com/AnalyticalGraphicsInc/cesium/pull/4843)
     * The property `binornmal` has been renamed to `bitangent` for `Geometry` and `VertexFormat`. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
+    * A handful of `CesiumInspectorViewModel` properties were removed or changed from variables to functions.  See [#4857](https://github.com/AnalyticalGraphicsInc/cesium/pull/4857)
 * Added support for custom geocoder services and autocomplete [#4723](https://github.com/AnalyticalGraphicsInc/cesium/pull/4723).
     * Added [Custom Geocoder Sandcastle example](http://localhost:8080/Apps/Sandcastle/index.html?src=Custom%20Geocoder.html)
 * Added `GeocoderService`, an interface for geocoders.
