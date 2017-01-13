@@ -1599,7 +1599,7 @@ defineSuite([
         var expression = new Expression('log(1.0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
 
-        expression = new Expression('log(10.0)');
+        expression = new Expression('log(Math.E)');
         expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
     });
 
