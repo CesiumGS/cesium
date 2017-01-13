@@ -1501,18 +1501,6 @@ define([
         model._runtime.meshesByName = runtimeMeshesByName;
     }
 
-    function parse(model) {
-        if (!model._loadRendererResourcesFromCache) {
-            parseBuffers(model);
-            parseBufferViews(model);
-            parseShaders(model);
-            parsePrograms(model);
-            parseTextures(model);
-        }
-        parseMaterials(model);
-        parseMeshes(model);
-    }
-
     function usesExtension(model, extension) {
         var cachedExtensionsUsed = model._extensionsUsed;
         if (!defined(cachedExtensionsUsed)) {
@@ -3977,8 +3965,6 @@ define([
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             // Use renderer resources from cache instead of loading/creating them?
             addPipelineExtras(this.gltf);
-            addDefaults(this.gltf);
-            processModelMaterialsCommon(this.gltf);
             var cachedRendererResources;
             var cacheKey = this.cacheKey;
             if (defined(cacheKey)) {
@@ -4018,8 +4004,12 @@ define([
                 }
 
                 this._loadResources = new LoadResources();
+
+                if (!this._loadRendererResourcesFromCache) {
+                    // Buffers are required to updateVersion
+                    parseBuffers(this);
+                }
             }
-            parse(this);
         }
 
         var loadResources = this._loadResources;
@@ -4029,18 +4019,27 @@ define([
         if (this._state === ModelState.LOADING) {
             // Transition from LOADING -> LOADED once resources are downloaded and created.
             // Textures may continue to stream in while in the LOADED state.
-            if (loadResources.pendingBufferLoads === 0 && loadResources.pendingShaderLoads === 0) {
+            if (loadResources.pendingBufferLoads === 0) {
                 if (!this._updatedGltfVersion) {
                     updateVersion(this.gltf);
+                    processModelMaterialsCommon(this.gltf);
+                    addDefaults(this.gltf);
 
-                    // parseNodes runs after updateVersion because the node hierarchy may be modified
+                    if (!this._loadRendererResourcesFromCache) {
+                        parseBufferViews(this);
+                        parseShaders(this);
+                        parsePrograms(this);
+                        parseTextures(this);
+                    }
+                    parseMaterials(this);
+                    parseMeshes(this);
                     parseNodes(this);
 
                     this._boundingSphere = computeBoundingSphere(this.gltf);
                     this._initialRadius = this._boundingSphere.radius;
                     this._updatedGltfVersion = true;
                 }
-                if (this._updatedGltfVersion) {
+                if (this._updatedGltfVersion && loadResources.pendingShaderLoads === 0) {
                     createResources(this, frameState);
                 }
             }

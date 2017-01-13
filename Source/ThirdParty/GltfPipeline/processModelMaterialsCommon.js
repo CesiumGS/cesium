@@ -760,7 +760,7 @@ define([
 
         for (var semantic in attributes) {
             if (attributes.hasOwnProperty(semantic)) {
-                if (!defined(techniqueParameterForSemantic(technique, semantic)) && semantic !== 'extras') {
+                if (!defined(techniqueParameterForSemantic(technique, semantic))) {
                     var accessorId = attributes[semantic];
                     var accessor = accessors[accessorId];
                     var lowerCase = semantic.toLowerCase();
@@ -799,6 +799,7 @@ define([
      */
     function modelMaterialsCommon(gltf, options) {
         options = defaultValue(options, {});
+        var i;
 
         if (!defined(gltf)) {
             return undefined;
@@ -808,7 +809,7 @@ define([
         var extensionsUsed = gltf.extensionsUsed;
         if (defined(extensionsUsed)) {
             var extensionsUsedCount = extensionsUsed.length;
-            for (var i = 0; i < extensionsUsedCount; ++i) {
+            for (i = 0; i < extensionsUsedCount; ++i) {
                 if (extensionsUsed[i] === 'KHR_materials_common') {
                     hasExtension = true;
                     extensionsUsed.splice(i, 1);
@@ -817,7 +818,20 @@ define([
             }
         }
 
-        if (hasExtension) {
+        var requiresExtension = false;
+        var extensionsRequired = gltf.extensionsRequired;
+        if (defined(extensionsRequired)) {
+            var extensionsRequiredLength = extensionsRequired.length;
+            for (i = 0; i < extensionsRequiredLength; i++) {
+                if (extensionsRequired[i] === 'KHR_materials_common') {
+                    requiresExtension = true;
+                    extensionsRequired.splice(i, 1);
+                    break;
+                }
+            }
+        }
+
+        if (hasExtension || requiresExtension) {
             if (!defined(gltf.programs)) {
                 gltf.programs = {};
             }
