@@ -1599,8 +1599,8 @@ defineSuite([
         var expression = new Expression('log(1.0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
 
-        expression = new Expression('log(Math.E)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+        expression = new Expression('log(10.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(2.302585092994046);
     });
 
     it('throws if log function takes an invalid number of arguments', function() {
