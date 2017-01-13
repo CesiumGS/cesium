@@ -60,7 +60,7 @@ define([
 
             for (var i = 0; i < positions.length; ++i) {
                 var position = positions[i];
-                var maxLevel = availability.findMaximumLevelAtPosition(position);
+                var maxLevel = availability.computeMaximumLevelAtPosition(position);
 
                 var atLevel = byLevel[maxLevel];
                 if (!defined(atLevel)) {

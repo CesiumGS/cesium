@@ -15,6 +15,15 @@ define([
     Rectangle) {
     "use strict";
 
+    /**
+     * Reports the availability of tiles in a {@link TilingScheme}.
+     *
+     * @alias TileAvailability
+     * @constructor
+     *
+     * @param {TilingScheme} tilingScheme The tiling scheme in which to report availability.
+     * @param {Number} maximumLevel The maximum tile level that is potentially available.
+     */
     function TileAvailability(tilingScheme, maximumLevel) {
         this._tilingScheme = tilingScheme;
         this._maximumLevel = maximumLevel;
@@ -29,6 +38,15 @@ define([
 
     var rectangleScratch = new Rectangle();
 
+    /**
+     * Marks a rectangular range of tiles in a particular level as being available.
+     *
+     * @param {Number} level The level.
+     * @param {Number} startX The X coordinate of the first available tiles at the level.
+     * @param {Number} startY The Y coordinate of the first available tiles at the level.
+     * @param {Number} endX The X coordinate of the last available tiles at the level.
+     * @param {Number} endY The Y coordinate of the last available tiles at the level.
+     */
     TileAvailability.prototype.addAvailableTileRange = function(level, startX, startY, endX, endY) {
         var tilingScheme = this._tilingScheme;
 
@@ -50,7 +68,15 @@ define([
         }
     };
 
-    TileAvailability.prototype.findMaximumLevelAtPosition = function(position) {
+    /**
+     * Determines the level of the most detailed tile covering the position.  The worst-case performance
+     * of this function is linear in the number of tile ranges added with {@link TileAvailability#addAvailableTileRange}.
+     * It uses a quadtree for lookup so in most cases it will complete in logarithmic time.
+     * 
+     * @param {Cartographic} position The position for which to determine the maximum available level.  The height component is ignored.
+     * @return {Number} The level of the most detailed tile covering the position.
+     */
+    TileAvailability.prototype.computeMaximumLevelAtPosition = function(position) {
         // Find the root node that contains this position.
         var node;
         for (var nodeIndex = 0; nodeIndex < this._rootNodes.length; ++nodeIndex) {
@@ -104,7 +130,15 @@ define([
 
     var rectanglesScratch = [];
 
-    TileAvailability.prototype.findMinimumAvailableLevelOverRectangles = function(rectangle) {
+    /**
+     * Finds the most detailed level that is available _everywhere_ within a given rectangle.  More detailed
+     * tiles may be available in parts of the rectangle, but not the whole thing.  The return value of this
+     * function may be safely passed to {@link sampleTerrain} for any position within the rectangle.
+     *
+     * @param {Rectangle} rectangle The rectangle.
+     * @return {Number} The best available level for the entire rectangle.
+     */
+    TileAvailability.prototype.computeBestAvailableLevelOverRectangle = function(rectangle) {
         var rectangles = rectanglesScratch;
         rectangles.length = 0;
 
@@ -135,6 +169,13 @@ define([
 
     var cartographicScratch = new Cartographic();
 
+    /**
+     * Determines if a particular tile is available.
+     * @param {Number} level The tile level to check.
+     * @param {Number} x The X coordinate of the tile to check.
+     * @param {Number} y The Y coordinate of the tile to check.
+     * @return {Boolean} True if the tile is available; otherwise, false.
+     */
     TileAvailability.prototype.isTileAvailable = function(level, x, y) {
         // Get the center of the tile and find the maximum level at that position.
         // Because availability is by tile, if the level is available at that point, it
@@ -143,10 +184,27 @@ define([
         // anywhere, but Cesium would never load a tile for which this is not true.
         var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
         Rectangle.center(rectangle, cartographicScratch);
-        return this.findMaximumLevelAtPosition(cartographicScratch) >= level;
+        return this.computeMaximumLevelAtPosition(cartographicScratch) >= level;
     };
 
-    TileAvailability.prototype.getChildMaskForTile = function(level, x, y) {
+    /**
+     * Computes a bit mask indicating which of a tile's four children exist.
+     * If a child's bit is set, a tile is available for that child.  If it is cleared,
+     * the tile is not available.  The bit values are as follows:
+     * <table>
+     *     <tr><th>Bit Position</th><th>Bit Value</th><th>Child Tile</th></tr>
+     *     <tr><td>0</td><td>1</td><td>Southwest</td></tr>
+     *     <tr><td>1</td><td>2</td><td>Southeast</td></tr>
+     *     <tr><td>2</td><td>4</td><td>Northwest</td></tr>
+     *     <tr><td>3</td><td>8</td><td>Northeast</td></tr>
+     * </table>
+     *
+     * @param {Number} level The level of the parent tile.
+     * @param {Number} x The X coordinate of the parent tile.
+     * @param {Number} y The Y coordinate of the parent tile.
+     * @return {Number} The bit mask indicating child availability.
+     */
+    TileAvailability.prototype.computeChildMaskForTile = function(level, x, y) {
         var childLevel = level + 1;
         if (childLevel >= this._maximumLevel) {
             return 0;
@@ -303,9 +361,7 @@ define([
         var result = [];
         for (var i = 0; i < rectangleList.length; ++i) {
             var rectangle = rectangleList[i];
-            var intersection = Rectangle.simpleIntersection(rectangle, rectangleToSubtract, intersectionScratch);
-            
-            if (!intersection) {
+            if (!rectanglesOverlap(rectangle, rectangleToSubtract)) {
                 // Disjoint rectangles.  Original rectangle is unmodified.
                 result.push(rectangle);
             } else {

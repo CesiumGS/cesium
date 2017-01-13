@@ -480,7 +480,7 @@ define([
             southSkirtHeight : skirtHeight,
             eastSkirtHeight : skirtHeight,
             northSkirtHeight : skirtHeight,
-            childTileMask: provider.availability.getChildMaskForTile(level, x, y),
+            childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
             waterMask: waterMaskBuffer
         });
     }
@@ -737,6 +737,9 @@ define([
      * @returns {Boolean} Undefined if not supported, otherwise true or false.
      */
     CesiumTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
+        if (!defined(this.availability)) {
+            return undefined;
+        }
         return this.availability.isTileAvailable(level, x, y);
     };
 
