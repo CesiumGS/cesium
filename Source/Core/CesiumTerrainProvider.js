@@ -23,6 +23,7 @@ define([
         './RuntimeError',
         './TerrainProvider',
         './throttleRequestByServer',
+        './TileAvailability',
         './TileProviderError'
     ], function(
         Uri,
@@ -48,6 +49,7 @@ define([
         RuntimeError,
         TerrainProvider,
         throttleRequestByServer,
+        TileAvailability,
         TileProviderError) {
     'use strict';
 
@@ -140,6 +142,7 @@ define([
         this._requestWaterMask = defaultValue(options.requestWaterMask, false);
 
         this._errorEvent = new Event();
+        this._availability = undefined;
 
         var credit = options.credit;
         if (typeof credit === 'string') {
@@ -204,6 +207,20 @@ define([
             }
 
             that._availableTiles = data.available;
+
+            if (defined(that._availableTiles)) {
+                that._availability = new TileAvailability(that._tilingScheme, that._availableTiles.length);
+
+                for (var level = 0; level < that._availableTiles.length; ++level) {
+                    var rangesAtLevel = that._availableTiles[level];
+                    var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
+
+                    for (var rangeIndex = 0; rangeIndex < rangesAtLevel.length; ++rangeIndex) {
+                        var range = rangesAtLevel[rangeIndex];
+                        that._availability.addAvailableTileRange(level, range.startX, yTiles - range.endY - 1, range.endX, yTiles - range.startY - 1);
+                    }
+                }
+            }
 
             if (!defined(that._credit) && defined(data.attribution) && data.attribution !== null) {
                 that._credit = new Credit(data.attribution);
@@ -463,7 +480,7 @@ define([
             southSkirtHeight : skirtHeight,
             eastSkirtHeight : skirtHeight,
             northSkirtHeight : skirtHeight,
-            childTileMask: getChildMaskForTile(provider, level, x, tmsY),
+            childTileMask: provider.availability.getChildMaskForTile(level, x, y),
             waterMask: waterMaskBuffer
         });
     }
@@ -680,6 +697,24 @@ define([
             get : function() {
                 return this._requestWaterMask;
             }
+        },
+
+        /**
+         * Gets an object that can be used to determine availability of terrain from this provider, such as
+         * at points and in rectangles.  This function should not be called before
+         * {@link CesiumTerrainProvider#ready} returns true.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {TileAvailability}
+         */
+        availability : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug)
+                if (!this._ready) {
+                    throw new DeveloperError('availability must not be called before the terrain provider is ready.');
+                }
+                //>>includeEnd('debug');
+                return this._availability;
+            }
         }
     });
 
@@ -693,40 +728,6 @@ define([
         return this._levelZeroMaximumGeometricError / (1 << level);
     };
 
-    function getChildMaskForTile(terrainProvider, level, x, y) {
-        var available = terrainProvider._availableTiles;
-        if (!available || available.length === 0) {
-            return 15;
-        }
-
-        var childLevel = level + 1;
-        if (childLevel >= available.length) {
-            return 0;
-        }
-
-        var levelAvailable = available[childLevel];
-
-        var mask = 0;
-
-        mask |= isTileInRange(levelAvailable, 2 * x, 2 * y) ? 1 : 0;
-        mask |= isTileInRange(levelAvailable, 2 * x + 1, 2 * y) ? 2 : 0;
-        mask |= isTileInRange(levelAvailable, 2 * x, 2 * y + 1) ? 4 : 0;
-        mask |= isTileInRange(levelAvailable, 2 * x + 1, 2 * y + 1) ? 8 : 0;
-
-        return mask;
-    }
-
-    function isTileInRange(levelAvailable, x, y) {
-        for (var i = 0, len = levelAvailable.length; i < len; ++i) {
-            var range = levelAvailable[i];
-            if (x >= range.startX && x <= range.endX && y >= range.startY && y <= range.endY) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     /**
      * Determines whether data for a tile is available to be loaded.
      *
@@ -736,90 +737,8 @@ define([
      * @returns {Boolean} Undefined if not supported, otherwise true or false.
      */
     CesiumTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
-        var available = this._availableTiles;
-
-        if (!available || available.length === 0) {
-            return undefined;
-        } else {
-            if (level >= available.length) {
-                return false;
-            }
-            var levelAvailable = available[level];
-            var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
-            var tmsY = (yTiles - y - 1);
-            return isTileInRange(levelAvailable, x, tmsY);
-        }
+        return this.availability.isTileAvailable(level, x, y);
     };
-
-    CesiumTerrainProvider.prototype.getTileDataAvailableForRange = function(ll, ur, level) {
-        for (var y = ll.y; y <= ur.y; ++y) {
-            for (var x = ll.x; x <= ur.x; ++x) {
-                if (!this.getTileDataAvailable(x, y, level)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    };
-
-    /**
-     * Determines the maximum tile level where each tile within the query rectangle is defined.
-     *
-     * @param {Rectangle} rectangle The query region to test against.
-     * @returns {Number} The maximum tile level available for this terrain dataset.
-     */
-    CesiumTerrainProvider.prototype.getMaximumTileLevel = function(rectangle) {
-        var available = this._availableTiles;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getMaximumTileLevel must not be called before the terrain provider is ready.');
-        }
-        if (!available || available.length === 0) {
-            throw new DeveloperError('getMaximumTileLevel must only be called on terrain datasets that can calculate availability.');
-        }
-        //>>includeEnd('debug');
-
-        var southeast = Rectangle.southeast(rectangle);
-        var northwest = Rectangle.northwest(rectangle);
-
-        // if (0) {
-
-        //     var maxLevel = 0;
-
-        //     // Top down
-        //     for (var level = 0; level < available.length; ++level) {
-        //         var ll = this._tilingScheme.positionToTileXY(northwest, level);
-        //         var ur = this._tilingScheme.positionToTileXY(southeast, level);
-
-        //         if (this.getTileDataAvailableForRange(ll, ur, level)) {
-        //             maxLevel = level;
-        //         } else {
-        //             return maxLevel;
-        //         }
-        //     }
-
-        //     return maxLevel;
-
-        // } else {
-
-            // Bottom up
-            for (var level = available.length - 1; level >= 0; level--) {
-                var ll = this._tilingScheme.positionToTileXY(northwest, level);
-                var ur = this._tilingScheme.positionToTileXY(southeast, level);
-                if (this.getTileDataAvailableForRange(ll, ur, level)) {
-                    return level;
-                }
-            }
-
-            return 0;
-        // }
-
-    };
-
-
-
-
 
     return CesiumTerrainProvider;
 });

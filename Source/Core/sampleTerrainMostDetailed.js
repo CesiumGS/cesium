@@ -45,15 +45,37 @@ define([
         if (!defined(positions)) {
             throw new DeveloperError('positions is required.');
         }
-        if (!defined(terrainProvider.getMaximumTileLevel)) {
-            throw new DeveloperError('getMaximumTileLevel() must be supported by the terrain provider.');
-        }
         //>>includeEnd('debug');
 
         return terrainProvider.readyPromise.then(function() {
-            var rectangle = Rectangle.fromCartographicArray(positions);
-            var tileLevel = terrainProvider.getMaximumTileLevel(rectangle);
-            return sampleTerrain(terrainProvider, tileLevel, positions);
+            var byLevel = [];
+
+            var availability = terrainProvider.availability;
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(availability)) {
+                throw new DeveloperError('sampleTerrainMostDetailed requires a terrain provider that has tile availability.');
+            }
+            //>>includeEnd('debug');
+
+            for (var i = 0; i < positions.length; ++i) {
+                var position = positions[i];
+                var maxLevel = availability.findMaximumLevelAtPosition(position);
+
+                var atLevel = byLevel[maxLevel];
+                if (!defined(atLevel)) {
+                    byLevel[maxLevel] = atLevel = [];
+                }
+                atLevel.push(position);
+            }
+
+            return when.all(byLevel.map(function(positionsAtLevel, index) {
+                if (defined(positionsAtLevel)) {
+                    return sampleTerrain(terrainProvider, index, positionsAtLevel);
+                }
+            })).then(function() {
+                return positions;
+            });
         });
     }
 
