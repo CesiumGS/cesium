@@ -10,6 +10,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './EncodedCartesian3',
         './GeographicProjection',
@@ -36,6 +37,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         EncodedCartesian3,
         GeographicProjection,
@@ -173,7 +175,7 @@ define([
     /**
      * Creates a new {@link Geometry} with <code>LINES</code> representing the provided
      * attribute (<code>attributeName</code>) for the provided geometry.  This is used to
-     * visualize vector attributes like normals, binormals, and tangents.
+     * visualize vector attributes like normals, tangents, and bitangents.
      *
      * @param {Geometry} geometry The <code>Geometry</code> instance with the attribute.
      * @param {String} [attributeName='normal'] The name of the attribute.
@@ -183,7 +185,7 @@ define([
      * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
      *
      * @example
-     * var geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'binormal', 100000.0);
+     * var geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'bitangent', 100000.0);
      */
     GeometryPipeline.createLineSegmentsForVectors = function(geometry, attributeName, length) {
         attributeName = defaultValue(attributeName, 'normal');
@@ -279,8 +281,8 @@ define([
             // From VertexFormat
             'normal',
             'st',
-            'binormal',
             'tangent',
+            'bitangent',
 
             // For shadow volumes
             'extrudeDirection',
@@ -325,7 +327,7 @@ define([
      *
      * @example
      * geometry = Cesium.GeometryPipeline.reorderForPreVertexCache(geometry);
-     * 
+     *
      * @see GeometryPipeline.reorderForPostVertexCache
      */
     GeometryPipeline.reorderForPreVertexCache = function(geometry) {
@@ -412,7 +414,7 @@ define([
      *
      * @example
      * geometry = Cesium.GeometryPipeline.reorderForPostVertexCache(geometry);
-     * 
+     *
      * @see GeometryPipeline.reorderForPreVertexCache
      * @see {@link http://gfx.cs.princ0eton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf|Fast Triangle Reordering for Vertex Locality and Reduced Overdraw}
      * by Sander, Nehab, and Barczak
@@ -774,7 +776,7 @@ define([
      * Transforms a geometry instance to world coordinates.  This changes
      * the instance's <code>modelMatrix</code> to {@link Matrix4.IDENTITY} and transforms the
      * following attributes if they are present: <code>position</code>, <code>normal</code>,
-     * <code>binormal</code>, and <code>tangent</code>.
+     * <code>tangent</code>, and <code>bitangent</code>.
      *
      * @param {GeometryInstance} instance The geometry instance to modify.
      * @returns {GeometryInstance} The modified <code>instance</code> argument, with its attributes transforms to world coordinates.
@@ -804,16 +806,16 @@ define([
         transformPoint(modelMatrix, attributes.nextPosition);
 
         if ((defined(attributes.normal)) ||
-            (defined(attributes.binormal)) ||
-            (defined(attributes.tangent))) {
+            (defined(attributes.tangent)) ||
+            (defined(attributes.bitangent))) {
 
             Matrix4.inverse(modelMatrix, inverseTranspose);
             Matrix4.transpose(inverseTranspose, inverseTranspose);
             Matrix4.getRotation(inverseTranspose, normalMatrix);
 
             transformVector(normalMatrix, attributes.normal);
-            transformVector(normalMatrix, attributes.binormal);
             transformVector(normalMatrix, attributes.tangent);
+            transformVector(normalMatrix, attributes.bitangent);
         }
 
         var boundingSphere = instance.geometry.boundingSphere;
@@ -1005,7 +1007,7 @@ define([
      * <p>
      * This is used by {@link Primitive} to efficiently render a large amount of static data.
      * </p>
-     * 
+     *
      * @private
      *
      * @param {GeometryInstance[]} [instances] The array of {@link GeometryInstance} objects whose geometry will be combined.
@@ -1021,7 +1023,7 @@ define([
      *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
      * }
      * var geometries = Cesium.GeometryPipeline.combineInstances(instances);
-     * 
+     *
      * @see GeometryPipeline.transformToWorldCoordinates
      */
     GeometryPipeline.combineInstances = function(instances) {
@@ -1201,8 +1203,8 @@ define([
     var tScratch = new Cartesian3();
 
     /**
-     * Computes per-vertex binormals and tangents for a geometry containing <code>TRIANGLES</code>.
-     * The result is new <code>binormal</code> and <code>tangent</code> attributes added to the geometry.
+     * Computes per-vertex tangents and bitangents for a geometry containing <code>TRIANGLES</code>.
+     * The result is new <code>tangent</code> and <code>bitangent</code> attributes added to the geometry.
      * This assumes a counter-clockwise winding order.
      * <p>
      * Based on <a href="http://www.terathon.com/code/tangent.html">Computing Tangent Space Basis Vectors
@@ -1210,15 +1212,15 @@ define([
      * </p>
      *
      * @param {Geometry} geometry The geometry to modify.
-     * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>binormal</code> and <code>tangent</code> attributes.
+     * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>tangent</code> and <code>bitangent</code> attributes.
      *
      * @exception {DeveloperError} geometry.indices length must be greater than 0 and be a multiple of 3.
      * @exception {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
      *
      * @example
-     * Cesium.GeometryPipeline.computeBinormalAndTangent(geometry);
+     * Cesium.GeometryPipeline.computeTangentAndBiTangent(geometry);
      */
-    GeometryPipeline.computeBinormalAndTangent = function(geometry) {
+    GeometryPipeline.computeTangentAndBitangent = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(geometry)) {
             throw new DeveloperError('geometry is required.');
@@ -1302,8 +1304,8 @@ define([
             tan1[i23 + 2] += sdirz;
         }
 
-        var binormalValues = new Float32Array(numVertices * 3);
         var tangentValues = new Float32Array(numVertices * 3);
+        var bitangentValues = new Float32Array(numVertices * 3);
 
         for (i = 0; i < numVertices; i++) {
             i03 = i * 3;
@@ -1322,9 +1324,9 @@ define([
 
             Cartesian3.normalize(Cartesian3.cross(n, t, t), t);
 
-            binormalValues[i03] = t.x;
-            binormalValues[i13] = t.y;
-            binormalValues[i23] = t.z;
+            bitangentValues[i03] = t.x;
+            bitangentValues[i13] = t.y;
+            bitangentValues[i23] = t.z;
         }
 
         geometry.attributes.tangent = new GeometryAttribute({
@@ -1333,11 +1335,39 @@ define([
             values : tangentValues
         });
 
-        geometry.attributes.binormal = new GeometryAttribute({
+        geometry.attributes.bitangent = new GeometryAttribute({
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3,
-            values : binormalValues
+            values : bitangentValues
         });
+
+        return geometry;
+    };
+
+    /**
+     * Computes per-vertex binormal and tangents for a geometry containing <code>TRIANGLES</code>.
+     * The result is new <code>binormal</code> and <code>tangent</code> attributes added to the geometry.
+     * This assumes a counter-clockwise winding order.
+     * <p>
+     * Based on <a href="http://www.terathon.com/code/tangent.html">Computing Tangent Space Basis Vectors
+     * for an Arbitrary Mesh</a> by Eric Lengyel.
+     * </p>
+     *
+     * @param {Geometry} geometry The geometry to modify.
+     * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>binormal</code> and <code>tangent</code> attributes.
+     *
+     * @exception {DeveloperError} geometry.indices length must be greater than 0 and be a multiple of 3.
+     * @exception {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
+     *
+     * @example
+     * Cesium.GeometryPipeline.computeBinormalAndTangent(geometry);
+     *
+     * @see GeometryPipeline.computeTangentAndBitangent
+     */
+    GeometryPipeline.computeBinormalAndTangent = function(geometry) {
+        deprecationWarning('computeBinormalAndTangent', 'computeBinormalAndTangent was deprecated in 1.30.  It will be removed in 1.31.  Use a computeTangentAndBitangent.');
+        GeometryPipeline.computeTangentAndBitangent(geometry);
+        geometry.attributes.binormal = geometry.attributes.bitangent;
 
         return geometry;
     };
@@ -1403,15 +1433,15 @@ define([
         }
 
         var tangentAttribute = geometry.attributes.tangent;
-        var binormalAttribute = geometry.attributes.binormal;
+        var bitangentAttribute = geometry.attributes.bitangent;
 
         var hasTangent = defined(tangentAttribute);
-        var hasBinormal = defined(binormalAttribute);
+        var hasBitangent = defined(bitangentAttribute);
 
         var normals;
         var st;
         var tangents;
-        var binormals;
+        var bitangents;
 
         if (hasNormal) {
             normals = normalAttribute.values;
@@ -1422,8 +1452,8 @@ define([
         if (hasTangent) {
             tangents = tangentAttribute.values;
         }
-        if (hasBinormal) {
-            binormals = binormalAttribute.values;
+        if (hasBitangent) {
+            bitangents = bitangentAttribute.values;
         }
 
         var length = hasNormal ? normals.length : st.length;
@@ -1432,7 +1462,7 @@ define([
 
         var compressedLength = numVertices;
         var numCompressedComponents = hasSt && hasNormal ? 2.0 : 1.0;
-        numCompressedComponents += hasTangent || hasBinormal ? 1.0 : 0.0;
+        numCompressedComponents += hasTangent || hasBitangent ? 1.0 : 0.0;
         compressedLength *= numCompressedComponents;
 
         var compressedAttributes = new Float32Array(compressedLength);
@@ -1445,10 +1475,10 @@ define([
             }
 
             var index = i * 3.0;
-            if (hasNormal && defined(tangents) && defined(binormals)) {
+            if (hasNormal && defined(tangents) && defined(bitangents)) {
                 Cartesian3.fromArray(normals, index, toEncode1);
                 Cartesian3.fromArray(tangents, index, toEncode2);
-                Cartesian3.fromArray(binormals, index, toEncode3);
+                Cartesian3.fromArray(bitangents, index, toEncode3);
 
                 AttributeCompression.octPack(toEncode1, toEncode2, toEncode3, scratchCartesian2);
                 compressedAttributes[normalIndex++] = scratchCartesian2.x;
@@ -1464,8 +1494,8 @@ define([
                     compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
 
-                if (hasBinormal) {
-                    Cartesian3.fromArray(binormals, index, toEncode1);
+                if (hasBitangent) {
+                    Cartesian3.fromArray(bitangents, index, toEncode1);
                     compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
             }
@@ -1483,11 +1513,11 @@ define([
         if (hasSt) {
             delete geometry.attributes.st;
         }
+        if (hasBitangent) {
+            delete geometry.attributes.bitangent;
+        }
         if (hasTangent) {
             delete geometry.attributes.tangent;
-        }
-        if (hasBinormal) {
-            delete geometry.attributes.binormal;
         }
 
         return geometry;
@@ -1916,8 +1946,8 @@ define([
     var s1Scratch = new Cartesian2();
     var s2Scratch = new Cartesian2();
 
-    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex) {
-        if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords) && !defined(extrudeDirections)) {
+    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex) {
+        if (!defined(normals) && !defined(tangents) && !defined(bitangents) && !defined(texCoords) && !defined(extrudeDirections)) {
             return;
         }
 
@@ -1965,22 +1995,6 @@ define([
             Cartesian3.pack(direction, currentAttributes.extrudeDirection.values, insertedIndex * 3);
         }
 
-        if (defined(binormals)) {
-            var b0 = Cartesian3.fromArray(binormals, i0 * 3, p0Scratch);
-            var b1 = Cartesian3.fromArray(binormals, i1 * 3, p1Scratch);
-            var b2 = Cartesian3.fromArray(binormals, i2 * 3, p2Scratch);
-
-            Cartesian3.multiplyByScalar(b0, coords.x, b0);
-            Cartesian3.multiplyByScalar(b1, coords.y, b1);
-            Cartesian3.multiplyByScalar(b2, coords.z, b2);
-
-            var binormal = Cartesian3.add(b0, b1, b0);
-            Cartesian3.add(binormal, b2, binormal);
-            Cartesian3.normalize(binormal, binormal);
-
-            Cartesian3.pack(binormal, currentAttributes.binormal.values, insertedIndex * 3);
-        }
-
         if (defined(tangents)) {
             var t0 = Cartesian3.fromArray(tangents, i0 * 3, p0Scratch);
             var t1 = Cartesian3.fromArray(tangents, i1 * 3, p1Scratch);
@@ -1995,6 +2009,22 @@ define([
             Cartesian3.normalize(tangent, tangent);
 
             Cartesian3.pack(tangent, currentAttributes.tangent.values, insertedIndex * 3);
+        }
+
+        if (defined(bitangents)) {
+            var b0 = Cartesian3.fromArray(bitangents, i0 * 3, p0Scratch);
+            var b1 = Cartesian3.fromArray(bitangents, i1 * 3, p1Scratch);
+            var b2 = Cartesian3.fromArray(bitangents, i2 * 3, p2Scratch);
+
+            Cartesian3.multiplyByScalar(b0, coords.x, b0);
+            Cartesian3.multiplyByScalar(b1, coords.y, b1);
+            Cartesian3.multiplyByScalar(b2, coords.z, b2);
+
+            var bitangent = Cartesian3.add(b0, b1, b0);
+            Cartesian3.add(bitangent, b2, bitangent);
+            Cartesian3.normalize(bitangent, bitangent);
+
+            Cartesian3.pack(bitangent, currentAttributes.bitangent.values, insertedIndex * 3);
         }
 
         if (defined(texCoords)) {
@@ -2041,7 +2071,7 @@ define([
         var attributes = geometry.attributes;
         var positions = attributes.position.values;
         var normals = (defined(attributes.normal)) ? attributes.normal.values : undefined;
-        var binormals = (defined(attributes.binormal)) ? attributes.binormal.values : undefined;
+        var bitangents = (defined(attributes.bitangent)) ? attributes.bitangent.values : undefined;
         var tangents = (defined(attributes.tangent)) ? attributes.tangent.values : undefined;
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
         var extrudeDirections = (defined(attributes.extrudeDirection)) ? attributes.extrudeDirection.values : undefined;
@@ -2098,7 +2128,7 @@ define([
                     }
 
                     insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, resultIndex < 3 ? i + resultIndex : -1, point);
-                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
+                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
                 }
             } else {
                 if (defined(result)) {
@@ -2118,13 +2148,13 @@ define([
                 }
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i, p0);
-                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 1, p1);
-                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 2, p2);
-                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, binormals, tangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
             }
         }
 
