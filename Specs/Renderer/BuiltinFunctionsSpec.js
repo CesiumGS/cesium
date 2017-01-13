@@ -129,10 +129,10 @@ defineSuite([
         var fs =
             'void main() { ' +
             '  vec3 tangent = vec3(1.0, 0.0, 0.0); ' +
-            '  vec3 binormal = vec3(0.0, 1.0, 0.0); ' +
+            '  vec3 bitangent = vec3(0.0, 1.0, 0.0); ' +
             '  vec3 normal = vec3(0.0, 0.0, 1.0); ' +
             '  mat3 expected = mat3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0); ' +
-            '  mat3 actual = czm_tangentToEyeSpaceMatrix(normal, tangent, binormal); ' +
+            '  mat3 actual = czm_tangentToEyeSpaceMatrix(normal, tangent, bitangent); ' +
             '  gl_FragColor = vec4(actual == expected); ' +
             '}';
         expect({

@@ -96,7 +96,7 @@ defineSuite([
         expect(m.attributes.st.values.length).toEqual(numVertices * 2);
         expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
-        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
@@ -159,7 +159,7 @@ defineSuite([
         expect(m.attributes.st.values.length).toEqual(numVertices * 2);
         expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
-        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
@@ -230,7 +230,7 @@ defineSuite([
         expect(sv._extrudedHeight).toBe(minHeightFunc());
         expect(sv._height).toBe(maxHeightFunc());
 
-        expect(sv._vertexFormat.binormal).toBe(VertexFormat.POSITION_ONLY.binormal);
+        expect(sv._vertexFormat.bitangent).toBe(VertexFormat.POSITION_ONLY.bitangent);
         expect(sv._vertexFormat.color).toBe(VertexFormat.POSITION_ONLY.color);
         expect(sv._vertexFormat.normal).toBe(VertexFormat.POSITION_ONLY.normal);
         expect(sv._vertexFormat.position).toBe(VertexFormat.POSITION_ONLY.position);
