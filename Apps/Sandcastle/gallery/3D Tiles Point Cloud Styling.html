@@ -124,6 +124,26 @@ addStyle('Sqrt', {
     pointSize : "5"
 });
 
+addStyle('Sign', {
+    color : "rgb(sign(${POSITION}[0]) * 255, sign(${POSITION}[1]) * 255, sign(${POSITION}[2]) * 255)",
+    pointSize : "5"
+});
+
+addStyle('Rounding Functions', {
+    color : "rgb(floor(${POSITION}[0]) * 255, ceil(${POSITION}[1]) * 255, round(${POSITION}[2]) * 255)",
+    pointSize : "5"
+});
+
+addStyle('Exp and Log Functions', {
+    color : "rgb(log(${POSITION}[0]) * 255, log2(${POSITION}[1]) * 255 + exp2(${POSITION}[1]) * 255, exp(${POSITION}[2]) * 255)",
+    pointSize : "5"
+});
+
+addStyle('Fractional Part', {
+    color : "rgb(fract(${POSITION}[0]) * 255, fract(${POSITION}[1]) * 255, fract(${POSITION}[2]) * 255)",
+    pointSize : "5"
+});
+
 addStyle('Pow', {
     color : "color() * pow(${temperature}, 3)",
     pointSize : "5"
