@@ -248,7 +248,7 @@ define([
          * Gets the property specifying whether the geometry
          * casts or receives shadows from each light source.
          * @memberof PolygonGeometryUpdater.prototype
-         * 
+         *
          * @type {Property}
          * @readonly
          */
@@ -582,6 +582,7 @@ define([
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
      *
      * @param {PrimitiveCollection} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} groundPrimitives The ground primitive collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
@@ -663,7 +664,7 @@ define([
         options.closeBottom = closeBottomValue;
 
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
-        
+
         if (Property.getValueOrDefault(polygon.fill, time, true)) {
             var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
             var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
