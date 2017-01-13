@@ -764,7 +764,17 @@ define([
     function getEvaluateUnaryFunction(call) {
         var evaluate = unaryFunctions[call];
         return function(feature) {
-            return evaluate(this._left.evaluate(feature));
+            var left = this._left.evaluate(feature);
+            if (typeof(left) === 'number') {
+                return evaluate(left);
+            } else if (left instanceof Cartesian2) {
+                return Cartesian2.fromElements(evaluate(left.x), evaluate(left.y), ScratchStorage.getCartesian2());
+            } else if (left instanceof Cartesian3) {
+                return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
+            } else if (left instanceof Cartesian4) {
+                return Cartesian4.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), evaluate(left.w), ScratchStorage.getCartesian4());
+            }
+            return evaluate(left);
         };
     }
 
