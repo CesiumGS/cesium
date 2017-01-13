@@ -1599,7 +1599,7 @@ defineSuite([
         var expression = new Expression('log(1.0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
 
-        expression = new Expression('log(Math.E)');
+        expression = new Expression('log(10.0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
     });
 
@@ -2671,7 +2671,7 @@ defineSuite([
     it('gets shader expression for round', function() {
         var expression = new Expression('round(1.2)');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'round(1.2)';
+        var expected = 'floor(1.2 + 0.5)';
         expect(shaderExpression).toEqual(expected);
     });
 
