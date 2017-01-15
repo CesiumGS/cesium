@@ -702,7 +702,8 @@ define([
         /**
          * Gets an object that can be used to determine availability of terrain from this provider, such as
          * at points and in rectangles.  This function should not be called before
-         * {@link CesiumTerrainProvider#ready} returns true.
+         * {@link CesiumTerrainProvider#ready} returns true.  This property may be undefined if availability
+         * information is not available.
          * @memberof CesiumTerrainProvider.prototype
          * @type {TileAvailability}
          */

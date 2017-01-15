@@ -23,6 +23,18 @@ defineSuite([
                 availability.computeMaximumLevelAtPosition(Cartographic.fromDegrees(25.0, 88.0));
             }).toThrowDeveloperError();
         });
+
+        it('returns 0 if there are no rectangles', function() {
+            var availability = new TileAvailability(geographic, 15);
+            expect(availability.computeMaximumLevelAtPosition(Cartographic.fromDegrees(25.0, 88.0))).toBe(0);
+        });
+
+        it('returns the higher level when on a boundary', function() {
+            var availability = new TileAvailability(geographic, 15);
+            availability.addAvailableTileRange(0, 0, 0, 0, 0);
+            availability.addAvailableTileRange(1, 1, 0, 1, 0);
+            expect(availability.computeMaximumLevelAtPosition(Cartographic.fromRadians(0.0, 0.0))).toBe(1);
+        });
     });
 
     describe('computeBestAvailableLevelOverRectangle', function() {
