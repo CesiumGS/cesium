@@ -206,13 +206,13 @@ define([
                 that._tileUrlTemplates[i] = joinUrls(baseUri, template).toString().replace('{version}', data.version);
             }
 
-            that._availableTiles = data.available;
+            var availableTiles = data.available;
 
-            if (defined(that._availableTiles)) {
-                that._availability = new TileAvailability(that._tilingScheme, that._availableTiles.length);
+            if (defined(availableTiles)) {
+                that._availability = new TileAvailability(that._tilingScheme, availableTiles.length);
 
-                for (var level = 0; level < that._availableTiles.length; ++level) {
-                    var rangesAtLevel = that._availableTiles[level];
+                for (var level = 0; level < availableTiles.length; ++level) {
+                    var rangesAtLevel = availableTiles[level];
                     var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
 
                     for (var rangeIndex = 0; rangeIndex < rangesAtLevel.length; ++rangeIndex) {
