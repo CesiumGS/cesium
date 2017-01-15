@@ -359,8 +359,6 @@ define([
         updateCoverageWithNode(remainingToCoverByLevel, node._se, rectanglesToCover);
     }
 
-    var intersectionScratch = new Rectangle();
-
     function subtractRectangle(rectangleList, rectangleToSubtract) {
         var result = [];
         for (var i = 0; i < rectangleList.length; ++i) {

@@ -66,7 +66,7 @@ defineSuite([
             var rectangle = Rectangle.fromDegrees(179.0, 45.0, -179.0, 50.0);
             expect(availability.computeBestAvailableLevelOverRectangle(rectangle)).toBe(6);
 
-            var rectangle = Rectangle.fromDegrees(45.0, 45.0, -45.0, 50.0);
+            rectangle = Rectangle.fromDegrees(45.0, 45.0, -45.0, 50.0);
             expect(availability.computeBestAvailableLevelOverRectangle(rectangle)).toBe(5);
         });
 
