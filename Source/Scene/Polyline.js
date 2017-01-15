@@ -41,6 +41,7 @@ define([
      * @param {Cartesian3[]} [options.positions] The positions.
      * @param {Object} [options.id] The user-defined object to be returned when this polyline is picked.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this polyline will be displayed.
+     * @param {PolylineCollection} polylineCollection The renderable polyline collection.
      *
      * @see PolylineCollection
      *

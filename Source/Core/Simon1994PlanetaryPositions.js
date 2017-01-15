@@ -509,9 +509,9 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} Calculated sun position
      */
-    Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame= function(date, result){
-        if (!defined(date)) {
-            date = JulianDate.now();
+    Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame= function(julianDate, result){
+        if (!defined(julianDate)) {
+            julianDate = JulianDate.now();
         }
 
         if (!defined(result)) {
@@ -519,11 +519,11 @@ define([
         }
 
         //first forward transformation
-        translation = computeSimonEarthMoonBarycenter(date, translation);
+        translation = computeSimonEarthMoonBarycenter(julianDate, translation);
         result = Cartesian3.negate(translation, result);
 
         //second forward transformation
-        computeSimonEarth(date, translation);
+        computeSimonEarth(julianDate, translation);
 
         Cartesian3.subtract(result, translation, result);
         Matrix3.multiplyByVector(axesTransformation, result, result);
@@ -538,12 +538,12 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} Calculated moon position
      */
-    Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame = function(date, result){
-        if (!defined(date)) {
-            date = JulianDate.now();
+    Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame = function(julianDate, result){
+        if (!defined(julianDate)) {
+            julianDate = JulianDate.now();
         }
 
-        result = computeSimonMoon(date, result);
+        result = computeSimonMoon(julianDate, result);
         Matrix3.multiplyByVector(axesTransformation, result, result);
 
         return result;

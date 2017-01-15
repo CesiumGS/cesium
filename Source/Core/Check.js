@@ -1,14 +1,10 @@
 /*global define*/
 define([
-    './defaultValue',
     './defined',
-    './DeveloperError',
-    './isArray'
+    './DeveloperError'
     ], function(
-        defaultValue,
         defined,
-        DeveloperError,
-        isArray) {
+        DeveloperError) {
     'use strict';
 
     /**
@@ -88,7 +84,7 @@ define([
      * @param {String} name The name of the variable being tested
      * @exception {DeveloperError} test must be typeof 'function'
      */
-    Check.typeOf.function = function (test, name) {
+    Check.typeOf.func = function (test, name) {
         if (typeof test !== 'function') {
             throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'function', name));
         }
@@ -140,7 +136,7 @@ define([
      * @param {String} name The name of the variable being tested
      * @exception {DeveloperError} test must be typeof 'boolean'
      */
-    Check.typeOf.boolean = function (test, name) {
+    Check.typeOf.bool = function (test, name) {
         if (typeof test !== 'boolean') {
             throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'boolean', name));
         }

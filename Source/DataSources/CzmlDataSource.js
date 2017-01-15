@@ -1852,7 +1852,7 @@ define([
     /**
      * Creates a Promise to a new instance loaded with the provided CZML data.
      *
-     * @param {String|Object} data A url or CZML object to be processed.
+     * @param {String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
