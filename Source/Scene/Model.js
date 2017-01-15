@@ -1486,8 +1486,9 @@ define([
                 };
                 runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, id, getTransform(node));
 
+                var name = defaultValue(node.name, id);
                 runtimeNodes[id] = runtimeNode;
-                runtimeNodesByName[node.name] = runtimeNode;
+                runtimeNodesByName[name] = runtimeNode;
 
                 if (defined(node.skin)) {
                     skinnedNodesIds.push(id);
@@ -1517,8 +1518,9 @@ define([
                 };
 
                 var material = materials[id];
+                var name = defaultValue(material.name, id);
                 var modelMaterial = new ModelMaterial(model, material, id);
-                runtimeMaterialsByName[material.name] = modelMaterial;
+                runtimeMaterialsByName[name] = modelMaterial;
                 runtimeMaterialsById[id] = modelMaterial;
             }
         }
@@ -1536,7 +1538,8 @@ define([
         for (var id in meshes) {
             if (meshes.hasOwnProperty(id)) {
                 var mesh = meshes[id];
-                runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
+                var name = defaultValue(mesh.name, id);
+                runtimeMeshesByName[name] = new ModelMesh(mesh, runtimeMaterialsById, id);
                 if (usesQuantizedAttributes) {
                     // Cache primitives according to their program
                     var primitives = mesh.primitives;
@@ -3019,6 +3022,7 @@ define([
         for (var j = 0; j < meshesLength; ++j) {
             var id = meshes[j];
             var mesh = gltfMeshes[id];
+            var name = defaultValue(mesh.name, id);
             var primitives = mesh.primitives;
             var length = primitives.length;
 
@@ -3086,7 +3090,7 @@ define([
                     primitive : defaultValue(model.pickPrimitive, model),
                     id : model.id,
                     node : runtimeNode.publicNode,
-                    mesh : runtimeMeshesByName[mesh.name]
+                    mesh : runtimeMeshesByName[name]
                 };
 
                 var castShadows = ShadowMode.castShadows(model._shadows);
