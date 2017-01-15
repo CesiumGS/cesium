@@ -83,6 +83,34 @@ defineSuite([
         expect(rectangle.north).toEqual(CesiumMath.toRadians(north));
     });
 
+    it('fromRadians produces expected values.', function() {
+        var west = -1.0;
+        var south = -2.0;
+        var east = 1.0;
+        var north = 2.0;
+
+        var rectangle = Rectangle.fromRadians(west, south, east, north);
+        expect(rectangle.west).toEqual(west);
+        expect(rectangle.south).toEqual(south);
+        expect(rectangle.east).toEqual(east);
+        expect(rectangle.north).toEqual(north);
+    });
+
+    it('fromRadians works with a result parameter.', function() {
+        var west = -1.0;
+        var south = -2.0;
+        var east = 1.0;
+        var north = 2.0;
+
+        var result = new Rectangle();
+        var rectangle = Rectangle.fromRadians(west, south, east, north, result);
+        expect(result).toBe(rectangle);
+        expect(rectangle.west).toEqual(west);
+        expect(rectangle.south).toEqual(south);
+        expect(rectangle.east).toEqual(east);
+        expect(rectangle.north).toEqual(north);
+    });
+
     it('fromCartographicArray produces expected values.', function() {
         var minLon = new Cartographic(-0.1, 0.3, 0.0);
         var minLat = new Cartographic(0.0, -0.2, 0.0);

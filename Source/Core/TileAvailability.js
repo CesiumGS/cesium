@@ -75,6 +75,7 @@ define([
      * 
      * @param {Cartographic} position The position for which to determine the maximum available level.  The height component is ignored.
      * @return {Number} The level of the most detailed tile covering the position.
+     * @throws {DeveloperError} If position is outside any tile according to the tiling scheme.
      */
     TileAvailability.prototype.computeMaximumLevelAtPosition = function(position) {
         // Find the root node that contains this position.
@@ -129,6 +130,9 @@ define([
     };
 
     var rectanglesScratch = [];
+    var remainingToCoverByLevelScratch = [];
+    var westScratch = new Rectangle();
+    var eastScratch = new Rectangle();
 
     /**
      * Finds the most detailed level that is available _everywhere_ within a given rectangle.  More detailed
@@ -144,14 +148,14 @@ define([
 
         if (rectangle.east < rectangle.west) {
             // Rectangle crosses the IDL, make it two rectangles.
-            rectangles.push(new Rectangle(-Math.PI, rectangle.south, rectangle.east, rectangle.north));
-            rectangles.push(new Rectangle(rectangle.west, rectangle.south, Math.PI, rectangle.north));
+            rectangles.push(Rectangle.fromRadians(-Math.PI, rectangle.south, rectangle.east, rectangle.north, westScratch));
+            rectangles.push(Rectangle.fromRadians(rectangle.west, rectangle.south, Math.PI, rectangle.north, eastScratch));
         } else {
             rectangles.push(rectangle);
         }
 
-        // TODO: split rectangle at IDL
-        var remainingToCoverByLevel = [];
+        var remainingToCoverByLevel = remainingToCoverByLevelScratch;
+        remainingToCoverByLevel.length = 0;
 
         var i;
         for (i = 0; i < this._rootNodes.length; ++i) {
