@@ -63,7 +63,7 @@ The tips below will use the following keywords:
 * **mybranch** will refer to your local branch name.
 * **target** will refer to the target branch the PR is to be merged into (and also the source for `mybranch`).
 
-If you are new to git, it may be useful to create a back up of your branch in case something goes wrong.
+If you are new to git, it may be useful to create a backup of your branch in case something goes wrong.
 To do that, use:
 ```
 git branch # This should show that you are currently on "mybranch", otherwise use "git checkout mybranch"
