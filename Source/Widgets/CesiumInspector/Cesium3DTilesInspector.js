@@ -1,13 +1,17 @@
 /*global define*/
 define([
     '../../Core/Check',
+    '../../Core/defined',
     '../../Core/defineProperties',
+    '../../Core/destroyObject',
     '../../ThirdParty/knockout',
     '../getElement',
     '../CesiumInspector/Cesium3DTilesInspectorViewModel'
     ], function(
         Check,
+        defined,
         defineProperties,
+        destroyObject,
         knockout,
         getElement,
         Cesium3DTilesInspectorViewModel) {
@@ -33,37 +37,123 @@ define([
         container = getElement(container);
 
         var that = this;
-        var viewModel = new Cesium3DTilesInspectorViewModel(scene, function(tileset) {
-            that._onLoad(tileset);
-        });
+
+        function onLoad(tileset) {
+            if (that._onLoad) {
+                that._onLoad(tileset);
+            }
+        }
+
+        function onUnload(tileset) {
+            if (that._onUnload) {
+                that._onUnload(tileset);
+            }
+        }
+
+        function onSelect(feature) {
+            if (that._onSelect) {
+                that._onSelect(feature);
+            }
+        }
+
+        var viewModel = new Cesium3DTilesInspectorViewModel(scene, onLoad, onUnload, onSelect);
 
         this._viewModel = viewModel;
         this._container = container;
 
+        this._inspectorModel = {
+            inspectorVisible: true,
+            tilesetVisible: true,
+            displayVisible: true,
+            updateVisible: true,
+            loggingVisible: true,
+            toggleInspector: function() {
+                that._inspectorModel.inspectorVisible = !that._inspectorModel.inspectorVisible;
+            },
+            toggleTileset: function() {
+                that._inspectorModel.tilesetVisible = !that._inspectorModel.tilesetVisible;
+            },
+            toggleDisplay: function() {
+                that._inspectorModel.displayVisible = !that._inspectorModel.displayVisible;
+            },
+            toggleUpdate: function() {
+                that._inspectorModel.updateVisible = !that._inspectorModel.updateVisible;
+            },
+            toggleLogging: function() {
+                that._inspectorModel.loggingVisible = !that._inspectorModel.loggingVisible;
+            }
+        };
+
+        knockout.track(this._inspectorModel, ['inspectorVisible', 'tilesetVisible', 'displayVisible', 'updateVisible']);
+
         var element = document.createElement('div');
         this._element = element;
         var text = document.createElement('div');
-        text.textContent = 'Cesium 3D Tiles Inspector';
+        text.textContent = 'Cesium Inspector';
         text.className = 'cesium-cesiumInspector-button';
+        text.setAttribute('data-bind', 'click: toggleInspector');
         element.appendChild(text);
-        // text.setAttribute('data-bind', 'click: toggleDropDown');
         element.className = 'cesium-cesiumInspector';
-        // element.setAttribute('data-bind', 'css: { "cesium-cesiumInspector-visible" : dropDownVisible, "cesium-cesiumInspector-hidden" : !dropDownVisible }');
+        element.setAttribute('data-bind', 'css: { "cesium-cesiumInspector-visible" : inspectorVisible, "cesium-cesiumInspector-hidden" : !inspectorVisible }');
         container.appendChild(this._element);
+
+        var tilesetPanel = makeSection('Tileset', 'tilesetVisible', 'toggleTileset');
+        var displayPanel = makeSection('Display', 'displayVisible', 'toggleDisplay');
+        var updatePanel = makeSection('Update', 'updateVisible', 'toggleUpdate');
+        var loggingPanel = makeSection('Logging', 'loggingVisible', 'toggleLogging');
+
+        element.appendChild(tilesetPanel);
+        element.appendChild(displayPanel);
+        element.appendChild(updatePanel);
+        element.appendChild(loggingPanel);
+        knockout.applyBindings(this._inspectorModel, element);
 
         var tilesets = document.createElement('select');
         tilesets.setAttribute('data-bind', 'options: _tilesetOptions, ' +
                                            'optionsText: "name", ' +
                                            'value: _selectedTileset, ' +
                                            'optionsCaption: "Choose a Tileset..."');
-        element.appendChild(tilesets);
+        tilesets.className = 'cesium-cesiumInspector-select';
+        tilesetPanel.contents.appendChild(tilesets);
+        tilesetPanel.contents.appendChild(makeButton('trimTilesCache', 'Trim Tiles Cache'));
+        tilesetPanel.contents.appendChild(makeCheckbox('picking', 'Enable Picking'));
+        var pickPanel = makeSection('Picking', 'picking');
+        pickPanel.contents.appendChild(makeCheckbox('annotatePicked', 'Annotate Features', 'picking'));
+        pickPanel.contents.appendChild(makeCheckbox('zoomPicked', 'Fly to Features', 'picking'));
+        pickPanel.contents.appendChild(makeCheckbox('hidePicked', 'Hide Features', 'picking'));
+        tilesetPanel.contents.appendChild(pickPanel);
+        knockout.applyBindings(viewModel, tilesetPanel.contents);
 
-        knockout.applyBindings(viewModel, this._element);
+
+        displayPanel.contents.appendChild(makeCheckbox('colorize', 'Colorize'));
+        displayPanel.contents.appendChild(makeCheckbox('wireframe', 'Wireframe'));
+        displayPanel.contents.appendChild(makeCheckbox('showBoundingVolumes', 'Bounding Volumes'));
+        displayPanel.contents.appendChild(makeCheckbox('showContentBoundingVolumes', 'Content Volumes'));
+        displayPanel.contents.appendChild(makeCheckbox('showRequestVolumes', 'Request Volumes'));
+        knockout.applyBindings(viewModel, displayPanel.contents);
+
+
+        updatePanel.contents.appendChild(makeCheckbox('suspendUpdates', 'Suspend Updates'));
+        updatePanel.contents.appendChild(makeCheckbox('dynamicSSE', 'Dynamic SSE'));
+        var sseContainer = document.createElement('div');
+        sseContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : !dynamicSSE, "cesium-cesiumInspector-hide" : dynamicSSE}');
+        sseContainer.appendChild(makeRangeInput('SSE', 0, 50, 'Maximum SSE'));
+        updatePanel.contents.appendChild(sseContainer);
+
+        var dynamicSSEContainer = document.createElement('div');
+        dynamicSSEContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : dynamicSSE, "cesium-cesiumInspector-hide" : !dynamicSSE}');
+        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEDensity', 0, 2, 'SSE Density'));
+        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEFactor', 0, 50, 'SSE Factor'));
+        updatePanel.contents.appendChild(dynamicSSEContainer);
+        knockout.applyBindings(viewModel, updatePanel.contents);
+
+        loggingPanel.contents.appendChild(makeCheckbox('performance', 'Performance'));
+        loggingPanel.contents.appendChild(this._viewModel._performanceDisplay._container);
+        this._viewModel._performanceDisplay._container.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : performance, "cesium-cesiumInspector-hide" : !performance}');
+        loggingPanel.contents.appendChild(makeCheckbox('showStats', 'Stats'));
+        loggingPanel.contents.appendChild(makeCheckbox('showPickStats', 'Pick Stats'));
+        knockout.applyBindings(viewModel, loggingPanel.contents);
     }
-
-    Cesium3DTilesInspector.prototype.onLoad = function(callback) {
-        this._onLoad = callback;
-    };
 
     defineProperties(Cesium3DTilesInspector.prototype, {
         /**
@@ -90,6 +180,133 @@ define([
             }
         }
     });
+
+    /**
+     * Sets the callback function to call on tileset load
+     *
+     * @param {Function} callback the callback
+     */
+    Cesium3DTilesInspector.prototype.onLoad = function(callback) {
+        this._onLoad = callback;
+    };
+
+    /**
+     * Sets the callback function to call on tileset unload
+     *
+     * @param {Function} callback the callback
+     */
+    Cesium3DTilesInspector.prototype.onUnload = function(callback) {
+        this._onUnload = callback;
+    };
+
+    /**
+     * Sets the callback function to call on feature selection
+     *
+     * @param {Function} callback the callback
+     */
+    Cesium3DTilesInspector.prototype.onSelect = function(callback) {
+        this._onSelect = callback;
+    };
+
+    /**
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    Cesium3DTilesInspector.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the widget.  Should be called if permanently
+     * removing the widget from layout.
+     */
+    Cesium3DTilesInspector.prototype.destroy = function() {
+        knockout.cleanNode(this._element);
+        this._container.removeChild(this._element);
+        this.viewModel.destroy();
+
+        return destroyObject(this);
+    };
+
+    function makeSection(name, visibleProp, toggleProp) {
+        var panel = document.createElement('div');
+        panel.className = 'cesium-cesiumInspector-dropDown';
+
+        var header = document.createElement('div');
+        header.className = 'cesium-cesiumInspector-sectionHeader';
+        var toggle = document.createElement('span');
+        toggle.className = 'cesium-cesiumInspector-toggleSwitch';
+
+        var bindings = [];
+        if (defined(toggleProp)) {
+            if (defined(visibleProp)) {
+                bindings.push('text: ' + visibleProp + ' ? "-" : "+"');
+            }
+            bindings.push('click: ' + toggleProp);
+        }
+
+        toggle.setAttribute('data-bind', bindings.join(', '));
+        header.appendChild(toggle);
+        header.appendChild(document.createTextNode(name));
+
+        var section = document.createElement('div');
+        section.className = 'cesium-cesiumInspector-section';
+        if (defined(visibleProp)) {
+            section.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : ' + visibleProp + ', "cesium-cesiumInspector-hide" : !' + visibleProp + '}');
+        }
+
+        panel.appendChild(header);
+        panel.appendChild(section);
+
+        var contents = document.createElement('div');
+        section.appendChild(contents);
+        panel.contents = contents;
+        return panel;
+    }
+
+    function makeCheckbox(property, text, enable) {
+        var container = document.createElement('div');
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        var binding = 'checked: ' + property;
+        if (defined(enable)) {
+            binding += ', enable: ' + enable;
+        }
+        checkbox.setAttribute('data-bind', binding);
+        container.appendChild(checkbox);
+        container.appendChild(document.createTextNode(text));
+        return container;
+    }
+
+    function makeRangeInput(property, min, max, text) {
+        var container = document.createElement('div');
+        container.className = 'cesium-cesiumInspector-slider';
+        var input = document.createElement('input');
+        input.setAttribute('data-bind', 'value: ' + property);
+        input.type = 'number';
+
+        var slider = document.createElement('input');
+        slider.type = 'range';
+        slider.min = min;
+        slider.max = max;
+        slider.step = (max - min) / 20;
+        slider.setAttribute('data-bind', 'value: ' + property);
+
+        container.appendChild(document.createTextNode(text));
+        container.appendChild(document.createElement('br'));
+        container.appendChild(slider);
+        container.appendChild(document.createElement('br'));
+        container.appendChild(input);
+        return container;
+    }
+
+    function makeButton(action, text) {
+        var button = document.createElement('input');
+        button.type = 'button';
+        button.value = text;
+        button.className = 'cesium-cesiumInspector-pickButton';
+        button.setAttribute('data-bind', 'click: ' + action);
+        return button;
+    }
 
     return Cesium3DTilesInspector;
 });
