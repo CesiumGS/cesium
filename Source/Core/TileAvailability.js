@@ -69,9 +69,9 @@ define([
     };
 
     /**
-     * Determines the level of the most detailed tile covering the position.  The worst-case performance
-     * of this function is linear in the number of tile ranges added with {@link TileAvailability#addAvailableTileRange}.
-     * It uses a quadtree for lookup so in most cases it will complete in logarithmic time.
+     * Determines the level of the most detailed tile covering the position.  This function
+     * usually completes in time logarithmic to the number of rectangles added with
+     * {@link TileAvailability#addAvailableTileRange}.
      * 
      * @param {Cartographic} position The position for which to determine the maximum available level.  The height component is ignored.
      * @return {Number} The level of the most detailed tile covering the position.
@@ -105,7 +105,9 @@ define([
     /**
      * Finds the most detailed level that is available _everywhere_ within a given rectangle.  More detailed
      * tiles may be available in parts of the rectangle, but not the whole thing.  The return value of this
-     * function may be safely passed to {@link sampleTerrain} for any position within the rectangle.
+     * function may be safely passed to {@link sampleTerrain} for any position within the rectangle.  This function
+     * usually completes in time logarithmic to the number of rectangles added with
+     * {@link TileAvailability#addAvailableTileRange}.
      *
      * @param {Rectangle} rectangle The rectangle.
      * @return {Number} The best available level for the entire rectangle.
