@@ -186,6 +186,70 @@ define([
                     label.style = value;
                 }
             }
+        },
+
+        backgroundColor : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.backgroundColor;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.backgroundColor = value;
+                }
+            }
+        },
+
+        backgroundXPadding : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.backgroundPadding.x;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.backgroundPadding.x = value;
+                }
+            }
+        },
+
+        backgroundYPadding : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.backgroundPadding.y;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.backgroundPadding.y = value;
+                }
+            }
+        },
+
+        backgroundEnabled : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.showBackground;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.showBackground = value;
+                }
+            }
         }
     });
 

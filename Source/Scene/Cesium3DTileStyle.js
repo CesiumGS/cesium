@@ -33,6 +33,10 @@ define([
     var DEFAULT_JSON_NUMBER_EXPRESSION = 1.0;
     var DEFAULT_LABEL_STYLE_EXPRESSION = LabelStyle.FILL;
     var DEFAULT_FONT_EXPRESSION = '"30px sans-serif"';
+    var DEFAULT_BACKGROUND_COLOR_EXPRESSION = 'rgba(42, 42, 42, 0.8)';
+    var DEFAULT_BACKGROUND_X_PADDING_EXPRESSION = 7.0;
+    var DEFAULT_BACKGROUND_Y_PADDING_EXPRESSION = 5.0;
+    var DEFAULT_BACKGROUND_ENABLED = false;
 
     /**
      * Evaluates an expression defined using the
@@ -71,6 +75,10 @@ define([
         this._outlineWidth = undefined;
         this._labelStyle = undefined;
         this._font = undefined;
+        this._backgroundColor = undefined;
+        this._backgroundXPadding = undefined;
+        this._backgroundYPadding = undefined;
+        this._backgroundEnabled = undefined;
         this._meta = undefined;
 
         this._colorShaderFunction = undefined;
@@ -120,6 +128,10 @@ define([
         var outlineWidthExpression = defaultValue(styleJson.outlineWidth, DEFAULT_JSON_NUMBER_EXPRESSION);
         var labelStyleExpression = defaultValue(styleJson.labelStyle, DEFAULT_LABEL_STYLE_EXPRESSION);
         var fontExpression = defaultValue(styleJson.font, DEFAULT_FONT_EXPRESSION);
+        var backgroundColorExpression = defaultValue(styleJson.backgroundColor, DEFAULT_BACKGROUND_COLOR_EXPRESSION);
+        var backgroundXPaddingExpression = defaultValue(styleJson.backgroundXPadding, DEFAULT_BACKGROUND_X_PADDING_EXPRESSION);
+        var backgroundYPaddingExpression = defaultValue(styleJson.backgroundYPadding, DEFAULT_BACKGROUND_Y_PADDING_EXPRESSION);
+        var backgroundEnabledExpression = defaultValue(styleJson.backgroundEnabled, DEFAULT_BACKGROUND_ENABLED);
 
         var color;
         if (typeof(colorExpression) === 'string') {
@@ -155,7 +167,7 @@ define([
         var outlineColor;
         if (typeof(outlineColorExpression) === 'string') {
             outlineColor = new Expression(outlineColorExpression);
-        } else if (defined(outlineColorExpression)) {
+        } else if (defined(outlineColorExpression.conditions)) {
             outlineColor = new ConditionsExpression(outlineColorExpression);
         }
 
@@ -166,7 +178,7 @@ define([
             outlineWidth = new Expression(String(outlineWidthExpression));
         } else if (typeof(outlineWidthExpression) === 'string') {
             outlineWidth = new Expression(outlineWidthExpression);
-        } else if (defined(outlineWidthExpression)) {
+        } else if (defined(outlineWidthExpression.conditions)) {
             outlineWidth = new ConditionsExpression(outlineWidthExpression);
         }
 
@@ -177,7 +189,7 @@ define([
             labelStyle = new Expression(String(labelStyleExpression));
         } else if (typeof(labelStyleExpression) === 'string') {
             labelStyle = new Expression(labelStyleExpression);
-        } else if (defined(labelStyleExpression)) {
+        } else if (defined(labelStyleExpression.conditions)) {
             labelStyle = new ConditionsExpression(labelStyleExpression);
         }
 
@@ -186,11 +198,53 @@ define([
         var font;
         if (typeof(fontExpression) === 'string') {
             font = new Expression(fontExpression);
-        } else if (defined(fontExpression)) {
+        } else if (defined(fontExpression.conditions)) {
             font = new ConditionsExpression(fontExpression);
         }
 
         that._font = font;
+
+        var backgroundColor;
+        if (typeof(backgroundColorExpression) === 'string') {
+            backgroundColor = new Expression(backgroundColorExpression);
+        } else if (defined(backgroundColorExpression.conditions)) {
+            backgroundColor = new ConditionsExpression(backgroundColorExpression);
+        }
+
+        that._backgroundColor = backgroundColor;
+
+        var backgroundXPadding;
+        if (typeof(backgroundXPaddingExpression) === 'number') {
+            backgroundXPadding = new Expression(String(backgroundXPaddingExpression));
+        } else if (typeof(backgroundXPaddingExpression) === 'string') {
+            backgroundXPadding = new Expression(backgroundXPaddingExpression);
+        } else if (defined(backgroundXPaddingExpression.conditions)) {
+            backgroundXPadding = new ConditionsExpression(backgroundXPaddingExpression);
+        }
+
+        that._backgroundXPadding = backgroundXPadding;
+
+        var backgroundYPadding;
+        if (typeof(backgroundYPaddingExpression) === 'number') {
+            backgroundYPadding = new Expression(String(backgroundYPaddingExpression));
+        } else if (typeof(backgroundYPaddingExpression) === 'string') {
+            backgroundYPadding = new Expression(backgroundYPaddingExpression);
+        } else if (defined(backgroundYPaddingExpression.conditions)) {
+            backgroundYPadding = new ConditionsExpression(backgroundYPaddingExpression);
+        }
+
+        that._backgroundYPadding = backgroundYPadding;
+
+        var backgroundEnabled;
+        if (typeof(backgroundEnabledExpression) === 'boolean') {
+            backgroundEnabled = new Expression(String(backgroundEnabledExpression));
+        } else if (typeof(backgroundEnabledExpression) === 'string') {
+            backgroundEnabled = new Expression(backgroundEnabledExpression);
+        } else if (defined(backgroundEnabledExpression.conditions)) {
+            backgroundEnabled = new ConditionsExpression(backgroundEnabledExpression);
+        }
+
+        that._backgroundEnabled = backgroundEnabled;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -456,6 +510,66 @@ define([
             },
             set : function(value) {
                 this._font = value;
+            }
+        },
+
+        backgroundColor : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._backgroundColor;
+            },
+            set : function(value) {
+                this._backgroundColor = value;
+            }
+        },
+
+        backgroundXPadding : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._backgroundXPadding;
+            },
+            set : function(value) {
+                this._backgroundXPadding = value;
+            }
+        },
+
+        backgroundYPadding : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._backgroundYPadding;
+            },
+            set : function(value) {
+                this._backgroundYPadding = value;
+            }
+        },
+
+        backgroundEnabled : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._backgroundEnabled;
+            },
+            set : function(value) {
+                this._backgroundEnabled = value;
             }
         },
 

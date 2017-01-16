@@ -123,10 +123,14 @@ define([
             var feature = content.getFeature(i);
             feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
             feature.show = style.show.evaluate(frameState, feature);
-            feature.outlineColor = style.outlineColor.evaluate(frameState, feature);
+            feature.outlineColor = style.outlineColor.evaluateColor(frameState, feature);
             feature.outlineWidth = style.outlineWidth.evaluate(frameState, feature);
             feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
             feature.font = style.font.evaluate(frameState, feature);
+            feature.backgroundColor = style.backgroundColor.evaluateColor(frameState, feature);
+            feature.backgroundXPadding = style.backgroundXPadding.evaluate(frameState, feature);
+            feature.backgroundYPadding = style.backgroundYPadding.evaluate(frameState, feature);
+            feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
         }
     }
 
@@ -140,6 +144,10 @@ define([
             feature.outlineWidth = 1.0;
             feature.labelStyle = LabelStyle.FILL;
             feature.font = '30px sans-serif';
+            feature.backgroundColor = 'rgba(42, 42, 42, 0.8)';
+            feature.backgroundXPadding = 7.0;
+            feature.backgroundYPadding = 5.0;
+            feature.backgroundEnabled = false;
         }
     }
 
