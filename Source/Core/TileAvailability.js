@@ -1,6 +1,7 @@
 /*global define*/
 define([
     '../ThirdParty/when',
+    './binarySearch',
     './Cartographic',
     './defined',
     './sampleTerrain',
@@ -8,6 +9,7 @@ define([
     './Rectangle'
 ], function(
     when,
+    binarySearch,
     Cartographic,
     defined,
     sampleTerrain,
@@ -39,7 +41,8 @@ define([
     var rectangleScratch = new Rectangle();
 
     /**
-     * Marks a rectangular range of tiles in a particular level as being available.
+     * Marks a rectangular range of tiles in a particular level as being available.  For best performance,
+     * add your ranges in order of increasing level.
      *
      * @param {Number} level The level.
      * @param {Number} startX The X coordinate of the first available tiles at the level.
@@ -278,7 +281,20 @@ define([
             }
         }
 
-        node.rectangles.push(rectangle);
+        if (node.rectangles.length === 0 || node.rectangles[node.rectangles.length - 1].level <= rectangle.level) {
+            node.rectangles.push(rectangle);
+        } else {
+            // Maintain ordering by level when inserting.
+            var index = binarySearch(node.rectangles, rectangle.level, rectangleLevelComparator);
+            if (index <= 0) {
+                index = ~index;
+            }
+            node.rectangles.splice(index, 0, rectangle);
+        }
+    }
+
+    function rectangleLevelComparator(a, b) {
+        return a.level - b;
     }
 
     function rectangleFullyContainsRectangle(potentialContainer, rectangleToTest) {

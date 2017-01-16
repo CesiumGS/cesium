@@ -2,12 +2,14 @@
 defineSuite([
         'Core/TileAvailability',
         'Core/Cartographic',
+        'Core/CesiumTerrainProvider',
         'Core/GeographicTilingScheme',
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme'
     ], function(
         TileAvailability,
         Cartographic,
+        CesiumTerrainProvider,
         GeographicTilingScheme,
         Rectangle,
         WebMercatorTilingScheme) {
@@ -104,6 +106,21 @@ defineSuite([
             availability.addAvailableTileRange(6, 2, 2, 3, 3);
             var rectangle = geographic.tileXYToRectangle(0, 0, 4);
             expect(availability.computeBestAvailableLevelOverRectangle(rectangle)).toBe(6);
+        });
+    });
+
+    describe('addAvailableTileRange', function() {
+        it('keeps availability ranges sorted by rectangle', function() {
+            var availability = new TileAvailability(geographic, 15);
+            availability.addAvailableTileRange(0, 0, 0, 1, 0);
+            availability.addAvailableTileRange(1, 0, 0, 3, 1);
+            expect(availability.computeMaximumLevelAtPosition(new Cartographic(-Math.PI / 2.0, 0.0))).toBe(1);
+
+            // We should get the same result adding them in the opposite order.
+            availability = new TileAvailability(geographic, 15);
+            availability.addAvailableTileRange(1, 0, 0, 3, 1);
+            availability.addAvailableTileRange(0, 0, 0, 1, 0);
+            expect(availability.computeMaximumLevelAtPosition(new Cartographic(-Math.PI / 2.0, 0.0))).toBe(1);
         });
     });
 });
