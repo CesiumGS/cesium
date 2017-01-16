@@ -88,8 +88,16 @@ git push -f origin mybranch # Requires force push as it is changing existing his
 
 There are 2 ways to do this, **merge** (recommended) and **rebase** (pretty).
 
+The rule of thumb here is if you are working on a longer term feature branch that may have conflicts with the target branch, then it is best to **merge**.
+
+If you are working on a a shorter pull request (like a bug fix) with a few commits that probably will not result in a conflict, then it is best to **rebase**.
+
+When in doubt, merge.
+
+Futher Reading: [Merge vs Rebase](https://www.derekgourlay.com/blog/git-when-to-merge-vs-when-to-rebase/).
+
 #### Merge
-With merge, your commits will become interleaved with other target branch commits based on timestamp.
+With merge, your commits will become interleaved with other target branch commits based on timestamp. 
 ```
 git fetch --all # Fetch updates from all remotes
 git merge upstream/target
@@ -98,7 +106,6 @@ git push origin mybranch # Does not require force push as it does not change his
 
 #### Rebase
 With rebase, your commits will be added on top of the target branch and will look sequential.
-However, this could lead to many bad things happening if you do not handle it well.
 ```
 git fetch --all # Fetch updates from all remotes
 git rebase -i upstream/target
