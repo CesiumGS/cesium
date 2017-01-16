@@ -29,11 +29,24 @@ defineSuite([
             expect(availability.computeMaximumLevelAtPosition(Cartographic.fromDegrees(25.0, 88.0))).toBe(0);
         });
 
-        it('returns the higher level when on a boundary', function() {
+        it('returns the higher level when on a boundary at level 0', function() {
             var availability = new TileAvailability(geographic, 15);
             availability.addAvailableTileRange(0, 0, 0, 0, 0);
             availability.addAvailableTileRange(1, 1, 0, 1, 0);
             expect(availability.computeMaximumLevelAtPosition(Cartographic.fromRadians(0.0, 0.0))).toBe(1);
+
+            // Make sure it isn't dependent on the order we add the rectangles.
+            availability = new TileAvailability(geographic, 15);
+            availability.addAvailableTileRange(1, 1, 0, 1, 0);
+            availability.addAvailableTileRange(0, 0, 0, 0, 0);
+            expect(availability.computeMaximumLevelAtPosition(Cartographic.fromRadians(0.0, 0.0))).toBe(1);
+        });
+
+        it('returns the higher level when on a boundary at level 1', function() {
+            var availability = new TileAvailability(geographic, 15);
+            availability.addAvailableTileRange(0, 0, 0, 1, 0);
+            availability.addAvailableTileRange(1, 1, 1, 1, 1);
+            expect(availability.computeMaximumLevelAtPosition(Cartographic.fromRadians(-Math.PI / 2.0, 0.0))).toBe(1);
         });
     });
 

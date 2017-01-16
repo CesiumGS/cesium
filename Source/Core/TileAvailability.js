@@ -94,15 +94,43 @@ define([
         }
         //>>includeEnd('debug');
 
+        return findMaxLevelFromNode(undefined, node, position);
+    };
+
+    function findMaxLevelFromNode(stopNode, node, position) {
+        var maxLevel = 0;
+
         // Find the deepest quadtree node containing this point.
         while (true) {
-            if (node._nw && rectangleContainsPosition(node._nw.extent, position)) {
+            var nw = node._nw && rectangleContainsPosition(node._nw.extent, position);
+            var ne = node._nw && rectangleContainsPosition(node._ne.extent, position);
+            var sw = node._nw && rectangleContainsPosition(node._sw.extent, position);
+            var se = node._nw && rectangleContainsPosition(node._se.extent, position);
+
+            // The common scenario is that the point is in only one quadrant and we can simply
+            // iterate down the tree.  But if the point is on a boundary between tiles, it is
+            // in multiple tiles and we need to check all of them, so use recursion.
+            if (nw + ne + sw + se > 1) {
+                if (nw) {
+                    maxLevel = Math.max(maxLevel, findMaxLevelFromNode(node, node._nw, position));
+                }
+                if (ne) {
+                    maxLevel = Math.max(maxLevel, findMaxLevelFromNode(node, node._ne, position));
+                }
+                if (sw) {
+                    maxLevel = Math.max(maxLevel, findMaxLevelFromNode(node, node._sw, position));
+                }
+                if (se) {
+                    maxLevel = Math.max(maxLevel, findMaxLevelFromNode(node, node._se, position));
+                }
+                break;
+            } else if (nw) {
                 node = node._nw;
-            } else if (node._ne && rectangleContainsPosition(node._ne.extent, position)) {
+            } else if (ne) {
                 node = node._ne;
-            } else if (node._sw && rectangleContainsPosition(node._sw.extent, position)) {
+            } else if (sw) {
                 node = node._sw;
-            } else if (node._se && rectangleContainsPosition(node._se.extent, position)) {
+            } else if (se) {
                 node = node._se;
             } else {
                 break;
@@ -110,9 +138,7 @@ define([
         }
 
         // Work up the tree until we find a rectangle that contains this point.
-        var maxLevel = 0;
-
-        while (node) {
+        while (node !== stopNode) {
             var rectangles = node.rectangles;
 
             // Rectangles are sorted by level, lowest first.
@@ -127,7 +153,7 @@ define([
         }
 
         return maxLevel;
-    };
+    }
 
     var rectanglesScratch = [];
     var remainingToCoverByLevelScratch = [];
