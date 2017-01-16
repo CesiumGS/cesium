@@ -1458,7 +1458,7 @@ define([
                 command._debugColor = Color.fromRandom();
             }
             var c = command._debugColor;
-            if (length) {
+            if (length > 0) {
                 for (i = 0; i < length; ++i) {
                     newMain += '    gl_FragData[' + targets[i] + '].rgb *= vec3(' + c.red + ', ' + c.green + ', ' + c.blue + '); \n';
                 }
@@ -1473,7 +1473,7 @@ define([
             var r = (command.debugOverlappingFrustums & (1 << 0)) ? '1.0' : '0.0';
             var g = (command.debugOverlappingFrustums & (1 << 1)) ? '1.0' : '0.0';
             var b = (command.debugOverlappingFrustums & (1 << 2)) ? '1.0' : '0.0';
-            if (length) {
+            if (length > 0) {
                 for (i = 0; i < length; ++i) {
                     newMain += '    gl_FragData[' + targets[i] + '].rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n';
                 }
