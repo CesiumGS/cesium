@@ -1313,6 +1313,15 @@ defineSuite([
 
         expression = new Expression('abs(1)');
         expect(expression.evaluate(frameState, undefined)).toEqual(1);
+
+        expression = new Expression('abs(vec2(-1.0, 1.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(1.0, 1.0));
+
+        expression = new Expression('abs(vec3(-1.0, 1.0, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(1.0, 1.0, 0.0));
+
+        expression = new Expression('abs(vec4(-1.0, 1.0, 0.0, -1.2))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(1.0, 1.0, 0.0, 1.2));
     });
 
     it('throws if abs function takes an invalid number of arguments', function() {
@@ -1327,7 +1336,16 @@ defineSuite([
 
     it('evaluates cos function', function() {
         var expression = new Expression('cos(0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(1);
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('cos(vec2(0, PI))');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(1.0, -1.0), CesiumMath.EPSILON7);
+
+        expression = new Expression('cos(vec3(0, PI, -PI)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(1.0, -1.0, -1.0), CesiumMath.EPSILON7);
+
+        expression = new Expression('cos(vec4(0, PI, -PI, 0)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(1.0, -1.0, -1.0, 1.0), CesiumMath.EPSILON7);
     });
 
     it('throws if cos function takes an invalid number of arguments', function() {
@@ -1342,7 +1360,16 @@ defineSuite([
 
     it('evaluates sin function', function() {
         var expression = new Expression('sin(0)');
-        expect(expression.evaluate(undefined)).toEqual(0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(0);
+
+        expression = new Expression('sin(vec2(0, PI/2))');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, 1.0), CesiumMath.EPSILON7);
+
+        expression = new Expression('sin(vec3(0, PI/2, -PI/2)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, 1.0, -1.0), CesiumMath.EPSILON7);
+
+        expression = new Expression('sin(vec4(0, PI/2, -PI/2, 0)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, 1.0, -1.0, 0.0), CesiumMath.EPSILON7);
     });
 
     it('throws if sin function takes an invalid number of arguments', function() {
@@ -1357,7 +1384,16 @@ defineSuite([
 
     it('evaluates tan function', function() {
         var expression = new Expression('tan(0)');
-        expect(expression.evaluate(undefined)).toEqual(0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(0);
+
+        expression = new Expression('tan(vec2(0, PI/4))');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, 1.0), CesiumMath.EPSILON7);
+
+        expression = new Expression('tan(vec3(0, PI/4, PI)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON7);
+
+        expression = new Expression('tan(vec4(0, PI/4, PI, -PI/4)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, 1.0, 0.0, -1.0), CesiumMath.EPSILON7);
     });
 
     it('throws if tan function takes an invalid number of arguments', function() {
@@ -1372,7 +1408,16 @@ defineSuite([
 
     it('evaluates acos function', function() {
         var expression = new Expression('acos(1)');
-        expect(expression.evaluate(undefined)).toEqual(0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(0);
+
+        expression = new Expression('acos(vec2(1, 0))');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
+
+        expression = new Expression('acos(vec3(1, 0, 1)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, CesiumMath.PI_OVER_TWO, 0.0, CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
+
+        expression = new Expression('acos(vec4(1, 0, 1, 0)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, CesiumMath.PI_OVER_TWO, 0.0, CesiumMath.PI_OVER_TWO, 0.0), CesiumMath.EPSILON7);
     });
 
     it('throws if acos function takes an invalid number of arguments', function() {
@@ -1387,7 +1432,16 @@ defineSuite([
 
     it('evaluates asin function', function() {
         var expression = new Expression('asin(0)');
-        expect(expression.evaluate(undefined)).toEqual(0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(0);
+
+        expression = new Expression('asin(vec2(0, 1))');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
+
+        expression = new Expression('asin(vec3(0, 1, 0)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, CesiumMath.PI_OVER_TWO, 0.0, CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
+
+        expression = new Expression('asin(vec4(0, 1, 0, 1)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, CesiumMath.PI_OVER_TWO, 0.0, CesiumMath.PI_OVER_TWO, 0.0), CesiumMath.EPSILON7);
     });
 
     it('throws if asin function takes an invalid number of arguments', function() {
@@ -1402,7 +1456,16 @@ defineSuite([
 
     it('evaluates atan function', function() {
         var expression = new Expression('atan(0)');
-        expect(expression.evaluate(undefined)).toEqual(0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(0);
+
+        expression = new Expression('atan(vec2(0, 1))');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, CesiumMath.PI_OVER_FOUR), CesiumMath.EPSILON7);
+
+        expression = new Expression('atan(vec3(0, 1, 0)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, CesiumMath.PI_OVER_FOUR, 0.0, CesiumMath.PI_OVER_FOUR), CesiumMath.EPSILON7);
+
+        expression = new Expression('atan(vec4(0, 1, 0, 1)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, CesiumMath.PI_OVER_FOUR, 0.0, CesiumMath.PI_OVER_FOUR, 0.0), CesiumMath.EPSILON7);
     });
 
     it('throws if atan function takes an invalid number of arguments', function() {
@@ -1417,7 +1480,16 @@ defineSuite([
 
     it('evaluates radians function', function() {
         var expression = new Expression('radians(180)');
-        expect(expression.evaluate(undefined)).toEqualEpsilon(Math.PI, CesiumMath.EPSILON10);
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(Math.PI, CesiumMath.EPSILON10);
+
+        expression = new Expression('radians(vec2(180, 90))');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(Math.PI, CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
+
+        expression = new Expression('radians(vec3(180, 90, 180))');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(Math.PI, CesiumMath.PI_OVER_TWO, Math.PI), CesiumMath.EPSILON7);
+
+        expression = new Expression('radians(vec4(180, 90, 180, 90)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(Math.PI, CesiumMath.PI_OVER_TWO, Math.PI, CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
     });
 
     it('throws if radians function takes an invalid number of arguments', function() {
@@ -1432,7 +1504,16 @@ defineSuite([
 
     it('evaluates degrees function', function() {
         var expression = new Expression('degrees(2 * PI)');
-        expect(expression.evaluate(undefined)).toEqualEpsilon(360, CesiumMath.EPSILON10);
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(360, CesiumMath.EPSILON10);
+
+        expression = new Expression('degrees(vec2(2 * PI, PI))');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(360, 180), CesiumMath.EPSILON7);
+
+        expression = new Expression('degrees(vec3(2 * PI, PI, 2 * PI))');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(360, 180, 360), CesiumMath.EPSILON7);
+
+        expression = new Expression('degrees(vec4(2 * PI, PI, 2 * PI, PI)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(360, 180, 360, 180), CesiumMath.EPSILON7);
     });
 
     it('throws if degrees function takes an invalid number of arguments', function() {
@@ -1454,6 +1535,15 @@ defineSuite([
 
         expression = new Expression('sqrt(-1.0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(NaN);
+
+        expression = new Expression('sqrt(vec2(1.0, 4.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(1.0, 2.0));
+
+        expression = new Expression('sqrt(vec3(1.0, 4.0, 9.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+
+        expression = new Expression('sqrt(vec4(1.0, 4.0, 9.0, 16.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(1.0, 2.0, 3.0, 4.0));
     });
 
     it('throws if sqrt function takes an invalid number of arguments', function() {
@@ -1463,6 +1553,270 @@ defineSuite([
 
         expect(function() {
             return new Expression('sqrt(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates sign function', function() {
+        var expression = new Expression('sign(5.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('sign(0.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('sign(-5.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(-1.0);
+
+        expression = new Expression('sign(vec2(5.0, -5.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(1.0, -1.0));
+
+        expression = new Expression('sign(vec3(5.0, -5.0, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(1.0, -1.0, 0.0));
+
+        expression = new Expression('sign(vec4(5.0, -5.0, 0.0, 1.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(1.0, -1.0, 0.0, 1.0));
+    });
+
+    it('throws if sign function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('sign()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('sign(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates floor function', function() {
+        var expression = new Expression('floor(5.5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(5.0);
+
+        expression = new Expression('floor(0.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('floor(-1.2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(-2.0);
+
+        expression = new Expression('floor(vec2(5.5, -1.2))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(5.0, -2.0));
+
+        expression = new Expression('floor(vec3(5.5, -1.2, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(5.0, -2.0, 0.0));
+
+        expression = new Expression('floor(vec4(5.5, -1.2, 0.0, -2.9))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(5.0, -2.0, 0.0, -3.0));
+    });
+
+    it('throws if floor function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('floor()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('floor(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates ceil function', function() {
+        var expression = new Expression('ceil(5.5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(6.0);
+
+        expression = new Expression('ceil(0.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('ceil(-1.2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(-1.0);
+
+        expression = new Expression('ceil(vec2(5.5, -1.2))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(6.0, -1.0));
+
+        expression = new Expression('ceil(vec3(5.5, -1.2, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(6.0, -1.0, 0.0));
+
+        expression = new Expression('ceil(vec4(5.5, -1.2, 0.0, -2.9))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(6.0, -1.0, 0.0, -2.0));
+    });
+
+    it('throws if ceil function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('ceil()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('ceil(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates round function', function() {
+        var expression = new Expression('round(5.5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(6);
+
+        expression = new Expression('round(0.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0);
+
+        expression = new Expression('round(1.2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1);
+
+        expression = new Expression('round(vec2(5.5, -1.2))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(6.0, -1.0));
+
+        expression = new Expression('round(vec3(5.5, -1.2, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(6.0, -1.0, 0.0));
+
+        expression = new Expression('round(vec4(5.5, -1.2, 0.0, -2.9))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(6.0, -1.0, 0.0, -3.0));
+    });
+
+    it('throws if round function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('round()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('round(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates exp function', function() {
+        var expression = new Expression('exp(1.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(Math.E);
+
+        expression = new Expression('exp(0.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('exp(vec2(1.0, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(Math.E, 1.0));
+
+        expression = new Expression('exp(vec3(1.0, 0.0, 1.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(Math.E, 1.0, Math.E));
+
+        expression = new Expression('exp(vec4(1.0, 0.0, 1.0, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(Math.E, 1.0, Math.E, 1.0));
+    });
+
+    it('throws if exp function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('exp()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('exp(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates exp2 function', function() {
+        var expression = new Expression('exp2(1.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(2.0);
+
+        expression = new Expression('exp2(0.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('exp2(2.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(4.0);
+
+        expression = new Expression('exp2(vec2(1.0, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(2.0, 1.0));
+
+        expression = new Expression('exp2(vec3(1.0, 0.0, 2.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(2.0, 1.0, 4.0));
+
+        expression = new Expression('exp2(vec4(1.0, 0.0, 2.0, 3.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(2.0, 1.0, 4.0, 8.0));
+    });
+
+    it('throws if exp2 function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('exp2()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('exp2(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates log function', function() {
+        var expression = new Expression('log(1.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('log(10.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(2.302585092994046, CesiumMath.EPSILON7);
+
+        expression = new Expression('log(vec2(1.0, E))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(0.0, 1.0));
+
+        expression = new Expression('log(vec3(1.0, E, 1.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(0.0, 1.0, 0.0));
+
+        expression = new Expression('log(vec4(1.0, E, 1.0, E))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0.0, 1.0, 0.0, 1.0));
+    });
+
+    it('throws if log function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('log()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('log(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates log2 function', function() {
+        var expression = new Expression('log2(1.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('log2(2.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('log2(4.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(2.0);
+
+        expression = new Expression('log2(vec2(1.0, 2.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(0.0, 1.0));
+
+        expression = new Expression('log2(vec3(1.0, 2.0, 4.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(0.0, 1.0, 2.0));
+
+        expression = new Expression('log2(vec4(1.0, 2.0, 4.0, 8.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0.0, 1.0, 2.0, 3.0));
+    });
+
+    it('throws if log2 function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('log2()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('log2(1, 2)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates fract function', function() {
+        var expression = new Expression('fract(1.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.0);
+
+        expression = new Expression('fract(2.25)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.25);
+
+        expression = new Expression('fract(-2.25)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(0.75);
+
+        expression = new Expression('fract(vec2(1.0, 2.25))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(0.0, 0.25));
+
+        expression = new Expression('fract(vec3(1.0, 2.25, -2.25))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(0.0, 0.25, 0.75));
+
+        expression = new Expression('fract(vec4(1.0, 2.25, -2.25, 1.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0.0, 0.25, 0.75, 0.0));
+    });
+
+    it('throws if fract function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('log2()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('log2(1, 2)');
         }).toThrowDeveloperError();
     });
 
@@ -2455,6 +2809,69 @@ defineSuite([
         var expression = new Expression('sqrt(1.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'sqrt(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for sign', function() {
+        var expression = new Expression('sign(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'sign(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for floor', function() {
+        var expression = new Expression('floor(1.5)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'floor(1.5)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for ceil', function() {
+        var expression = new Expression('ceil(1.2)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'ceil(1.2)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for round', function() {
+        var expression = new Expression('round(1.2)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'floor(1.2 + 0.5)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for exp', function() {
+        var expression = new Expression('exp(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'exp(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for exp2', function() {
+        var expression = new Expression('exp2(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'exp2(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for log', function() {
+        var expression = new Expression('log(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'log(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for log2', function() {
+        var expression = new Expression('log2(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'log2(1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for fract', function() {
+        var expression = new Expression('fract(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'fract(1.0)';
         expect(shaderExpression).toEqual(expected);
     });
 

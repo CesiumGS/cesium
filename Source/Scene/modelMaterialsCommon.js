@@ -349,7 +349,7 @@ define([
             vertexShader += 'attribute vec4 a_joint;\n';
             vertexShader += 'attribute vec4 a_weight;\n';
         }
-        
+
         if (options.addBatchIdToGeneratedShaders) {
             techniqueAttributes.a_batchId = 'batchId';
             techniqueParameters.batchId = {
@@ -696,7 +696,7 @@ define([
         if (!defined(gltf)) {
             return undefined;
         }
-        
+
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var hasExtension = false;
@@ -724,7 +724,7 @@ define([
             }
 
             var lightParameters = generateLightParameters(gltf);
-            
+
             var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
             var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
 

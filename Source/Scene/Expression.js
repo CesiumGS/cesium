@@ -95,13 +95,34 @@ define([
         asin : Math.asin,
         atan : Math.atan,
         radians : CesiumMath.toRadians,
-        degrees : CesiumMath.toDegrees
+        degrees : CesiumMath.toDegrees,
+        sign : CesiumMath.sign,
+        floor : Math.floor,
+        ceil : Math.ceil,
+        round : Math.round,
+        exp : Math.exp,
+        exp2 : exp2,
+        log : Math.log,
+        log2 : log2,
+        fract : fract
     };
 
     var ternaryFunctions = {
         clamp : CesiumMath.clamp,
         mix : CesiumMath.lerp
     };
+
+    function fract(number) {
+        return number - Math.floor(number);
+    }
+
+    function exp2(exponent) {
+        return Math.pow(2.0,exponent);
+    }
+
+    function log2(number) {
+    	return CesiumMath.logBase(number, 2.0);
+    }
 
     /**
      * Evaluates an expression defined using the
@@ -743,7 +764,17 @@ define([
     function getEvaluateUnaryFunction(call) {
         var evaluate = unaryFunctions[call];
         return function(feature) {
-            return evaluate(this._left.evaluate(feature));
+            var left = this._left.evaluate(feature);
+            if (typeof(left) === 'number') {
+                return evaluate(left);
+            } else if (left instanceof Cartesian2) {
+                return Cartesian2.fromElements(evaluate(left.x), evaluate(left.y), ScratchStorage.getCartesian2());
+            } else if (left instanceof Cartesian3) {
+                return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
+            } else if (left instanceof Cartesian4) {
+                return Cartesian4.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), evaluate(left.w), ScratchStorage.getCartesian4());
+            }
+            return evaluate(left);
         };
     }
 
@@ -1499,12 +1530,10 @@ define([
                     return 'bool(' + left + ')';
                 } else if (value === 'Number') {
                     return 'float(' + left + ')';
-                } else if (value === 'abs') {
-                    return 'abs(' + left + ')';
-                } else if (value === 'cos') {
-                    return 'cos(' + left + ')';
-                } else if (value === 'sqrt') {
-                    return 'sqrt(' + left + ')';
+                } else if (value === 'round') {
+                	return 'floor(' + left + ' + 0.5)';
+                } else if (defined(unaryFunctions[value])) {
+                    return value + '(' + left + ')';
                 } else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {
                     //>>includeStart('debug', pragmas.debug);
                     throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
