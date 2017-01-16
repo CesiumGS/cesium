@@ -299,9 +299,9 @@ define([
         // Find the deepest quadtree node containing this point.
         while (true) {
             var nw = node._nw && rectangleContainsPosition(node._nw.extent, position);
-            var ne = node._nw && rectangleContainsPosition(node._ne.extent, position);
-            var sw = node._nw && rectangleContainsPosition(node._sw.extent, position);
-            var se = node._nw && rectangleContainsPosition(node._se.extent, position);
+            var ne = node._ne && rectangleContainsPosition(node._ne.extent, position);
+            var sw = node._sw && rectangleContainsPosition(node._sw.extent, position);
+            var se = node._se && rectangleContainsPosition(node._se.extent, position);
 
             // The common scenario is that the point is in only one quadrant and we can simply
             // iterate down the tree.  But if the point is on a boundary between tiles, it is
