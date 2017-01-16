@@ -1,10 +1,7 @@
 /*global define*/
 define([
-        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian4',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -14,7 +11,6 @@ define([
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/PixelFormat',
-        '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/TerrainProvider',
         '../Core/TileProviderError',
@@ -22,13 +18,9 @@ define([
         '../Core/WebMercatorTilingScheme',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
-        '../Renderer/ClearCommand',
         '../Renderer/ComputeCommand',
         '../Renderer/ContextLimits',
-        '../Renderer/DrawCommand',
-        '../Renderer/Framebuffer',
         '../Renderer/MipmapHint',
-        '../Renderer/RenderState',
         '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -44,11 +36,8 @@ define([
         './ImageryState',
         './TileImagery'
     ], function(
-        BoundingRectangle,
         Cartesian2,
         Cartesian4,
-        Color,
-        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
@@ -58,7 +47,6 @@ define([
         IndexDatatype,
         CesiumMath,
         PixelFormat,
-        PrimitiveType,
         Rectangle,
         TerrainProvider,
         TileProviderError,
@@ -66,13 +54,9 @@ define([
         WebMercatorTilingScheme,
         Buffer,
         BufferUsage,
-        ClearCommand,
         ComputeCommand,
         ContextLimits,
-        DrawCommand,
-        Framebuffer,
         MipmapHint,
-        RenderState,
         Sampler,
         ShaderProgram,
         ShaderSource,
@@ -592,7 +576,7 @@ define([
                 if (!defined(clippedImageryRectangle)) {
                     continue;
                 }
-                
+
                 minV = Math.max(0.0, (clippedImageryRectangle.south - terrainRectangle.south) / terrainRectangle.height);
 
                 // If this is the southern-most imagery tile mapped to this terrain tile,
@@ -653,6 +637,7 @@ define([
      * @private
      *
      * @param {Imagery} imagery The imagery to request.
+     * @param {Number} [distance] The distance of the tile from the camera.
      */
     ImageryLayer.prototype._requestImagery = function(imagery, distance) {
         var imageryProvider = this._imageryProvider;
@@ -716,6 +701,7 @@ define([
      */
     ImageryLayer.prototype._createTexture = function(context, imagery) {
         var imageryProvider = this._imageryProvider;
+        var image = imagery.image;
 
         // If this imagery provider has a discard policy, use it to check if this
         // image should be discarded.
@@ -730,7 +716,7 @@ define([
                 }
 
                 // Mark discarded imagery tiles invalid.  Parent imagery will be used instead.
-                if (discardPolicy.shouldDiscardImage(imagery.image)) {
+                if (discardPolicy.shouldDiscardImage(image)) {
                     imagery.state = ImageryState.INVALID;
                     return;
                 }
@@ -738,11 +724,24 @@ define([
         }
 
         // Imagery does not need to be discarded, so upload it to WebGL.
-        var texture = new Texture({
-            context : context,
-            source : imagery.image,
-            pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
-        });
+        var texture;
+        if (defined(image.internalFormat)) {
+            texture = new Texture({
+                context : context,
+                pixelFormat : image.internalFormat,
+                width : image.width,
+                height : image.height,
+                source : {
+                    arrayBufferView : image.bufferView
+                }
+            });
+        } else {
+            texture = new Texture({
+                context : context,
+                source : image,
+                pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
+            });
+        }
 
         if (imageryProvider.tilingScheme instanceof WebMercatorTilingScheme) {
             imagery.textureWebMercator = texture;
@@ -755,7 +754,7 @@ define([
 
     function finalizeReprojectTexture(imageryLayer, context, imagery, texture) {
         // Use mipmaps if this texture has power-of-two dimensions.
-        if (CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
+        if (!PixelFormat.isCompressedFormat(texture.pixelFormat) && CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
             if (!defined(mipmapSampler)) {
                 var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
@@ -827,6 +826,9 @@ define([
                 });
                 this._reprojectComputeCommands.push(computeCommand);
         } else {
+            if (needGeographicProjection) {
+                imagery.texture = texture;
+            }
             finalizeReprojectTexture(this, context, imagery, texture);
         }
     };
@@ -1072,6 +1074,7 @@ define([
     /**
      * Gets the level with the specified world coordinate spacing between texels, or less.
      *
+     * @param {ImageryLayer} layer The imagery layer to use.
      * @param {Number} texelSpacing The texel spacing for which to find a corresponding level.
      * @param {Number} latitudeClosestToEquator The latitude closest to the equator that we're concerned with.
      * @returns {Number} The level with the specified texel spacing or less.

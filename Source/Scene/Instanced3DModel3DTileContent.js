@@ -16,9 +16,9 @@ define([
         '../Core/getStringFromTypedArray',
         '../Core/joinUrls',
         '../Core/loadArrayBuffer',
+        '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/Math',
         '../Core/Quaternion',
         '../Core/Request',
         '../Core/RequestScheduler',
@@ -27,9 +27,9 @@ define([
         '../Core/TranslationRotationScale',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './Cesium3DTileFeature',
         './Cesium3DTileBatchTable',
         './Cesium3DTileContentState',
+        './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
         './ModelInstanceCollection'
     ], function(
@@ -49,9 +49,9 @@ define([
         getStringFromTypedArray,
         joinUrls,
         loadArrayBuffer,
+        CesiumMath,
         Matrix3,
         Matrix4,
-        CesiumMath,
         Quaternion,
         Request,
         RequestScheduler,
@@ -60,9 +60,9 @@ define([
         TranslationRotationScale,
         Uri,
         when,
-        Cesium3DTileFeature,
         Cesium3DTileBatchTable,
         Cesium3DTileContentState,
+        Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
         ModelInstanceCollection) {
     'use strict';
@@ -148,8 +148,8 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTable.hasProperty(name);
+    Instanced3DModel3DTileContent.prototype.hasProperty = function(batchId, name) {
+        return this.batchTable.hasProperty(batchId, name);
     };
 
     /**
@@ -492,6 +492,7 @@ define([
         this.batchTable.update(tileset, frameState);
         this._modelInstanceCollection.transform = this._tile.computedTransform;
         this._modelInstanceCollection.shadows = this._tileset.shadows;
+        this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
         this._modelInstanceCollection.update(frameState);
 
         frameState.addCommand = oldAddCommand;

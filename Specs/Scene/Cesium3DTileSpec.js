@@ -1,31 +1,33 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTile',
-        'Scene/TileBoundingRegion',
-        'Scene/TileOrientedBoundingBox',
         'Core/Cartesian3',
         'Core/clone',
         'Core/defined',
+        'Core/HeadingPitchRoll',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/Rectangle',
         'Core/SphereOutlineGeometry',
         'Core/Transforms',
+        'Scene/TileBoundingRegion',
+        'Scene/TileOrientedBoundingBox',
         'Specs/createScene'
     ], function(
         Cesium3DTile,
-        TileBoundingRegion,
-        TileOrientedBoundingBox,
         Cartesian3,
         clone,
         defined,
+        HeadingPitchRoll,
         CesiumMath,
         Matrix3,
         Matrix4,
         Rectangle,
         SphereOutlineGeometry,
         Transforms,
+        TileBoundingRegion,
+        TileOrientedBoundingBox,
         createScene) {
     'use strict';
 
@@ -136,7 +138,8 @@ defineSuite([
 
     function getTileTransform(longitude, latitude) {
         var transformCenter = Cartesian3.fromRadians(longitude, latitude, 0.0);
-        var transformMatrix = Transforms.headingPitchRollToFixedFrame(transformCenter, 0.0, 0.0, 0.0);
+        var hpr = new HeadingPitchRoll();
+        var transformMatrix = Transforms.headingPitchRollToFixedFrame(transformCenter, hpr);
         return Matrix4.pack(transformMatrix, new Array(16));
     }
 

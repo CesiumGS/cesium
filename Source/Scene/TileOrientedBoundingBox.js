@@ -121,9 +121,9 @@ define([
         //>>includeEnd('debug');
 
         var geometry = new BoxOutlineGeometry({
-            // Make a cube of unit size -- all sides of length 1.0
-            minimum: new Cartesian3(-0.5, -0.5, -0.5),
-            maximum: new Cartesian3(0.5, 0.5, 0.5)
+            // Make a 2x2x2 cube
+            minimum: new Cartesian3(-1.0, -1.0, -1.0),
+            maximum: new Cartesian3(1.0, 1.0, 1.0)
         });
         var modelMatrix = Matrix4.fromRotationTranslation(this.boundingVolume.halfAxes, this.boundingVolume.center);
         var instance = new GeometryInstance({

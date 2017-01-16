@@ -1,20 +1,20 @@
 /*global define*/
 define([
         '../ThirdParty/when',
-        './TrustedServers',
         './defaultValue',
         './defined',
         './DeveloperError',
         './RequestErrorEvent',
-        './RuntimeError'
+        './RuntimeError',
+        './TrustedServers'
     ], function(
         when,
-        TrustedServers,
         defaultValue,
         defined,
         DeveloperError,
         RequestErrorEvent,
-        RuntimeError) {
+        RuntimeError,
+        TrustedServers) {
     'use strict';
 
     /**

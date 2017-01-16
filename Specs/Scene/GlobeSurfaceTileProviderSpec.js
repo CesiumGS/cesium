@@ -9,7 +9,6 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/EllipsoidTerrainProvider',
         'Core/GeographicProjection',
-        'Core/Math',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
         'Renderer/ContextLimits',
@@ -19,7 +18,6 @@ defineSuite([
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
         'Scene/ImageryLayerCollection',
-        'Scene/OrthographicFrustum',
         'Scene/QuadtreeTile',
         'Scene/QuadtreeTileProvider',
         'Scene/SceneMode',
@@ -37,7 +35,6 @@ defineSuite([
         Ellipsoid,
         EllipsoidTerrainProvider,
         GeographicProjection,
-        CesiumMath,
         Rectangle,
         WebMercatorProjection,
         ContextLimits,
@@ -47,7 +44,6 @@ defineSuite([
         Globe,
         GlobeSurfaceShaderSet,
         ImageryLayerCollection,
-        OrthographicFrustum,
         QuadtreeTile,
         QuadtreeTileProvider,
         SceneMode,
@@ -83,7 +79,7 @@ defineSuite([
         // update until the load queue is empty.
         return pollToPromise(function() {
             scene.renderForSpecs();
-            return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
+            return globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
         });
     }
 

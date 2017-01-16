@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
@@ -14,7 +13,6 @@ define([
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
-        Color,
         defined,
         defineProperties,
         destroyObject,
@@ -72,6 +70,7 @@ define([
      * @constructor
      *
      * @param {Scene} scene The scene instance to use.
+     * @param {PerformanceContainer} performanceContainer The instance to use for performance container.
      *
      * @exception {DeveloperError} scene is required.
      */
@@ -805,7 +804,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.children[0];
+                    that.tile = that.tile.northwestChild;
                 });
             }
         },
@@ -820,7 +819,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.children[1];
+                    that.tile = that.tile.northeastChild;
                 });
             }
         },
@@ -835,7 +834,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.children[2];
+                    that.tile = that.tile.southwestChild;
                 });
             }
         },
@@ -850,7 +849,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.children[3];
+                    that.tile = that.tile.southeastChild;
                 });
             }
         },

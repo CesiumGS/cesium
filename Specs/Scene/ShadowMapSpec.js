@@ -17,11 +17,11 @@ defineSuite([
         'Core/Math',
         'Core/PixelFormat',
         'Core/Transforms',
+        'Core/WebGLConstants',
         'Renderer/Context',
         'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
         'Renderer/Texture',
-        'Renderer/WebGLConstants',
         'Scene/Camera',
         'Scene/Globe',
         'Scene/Model',
@@ -50,11 +50,11 @@ defineSuite([
         CesiumMath,
         PixelFormat,
         Transforms,
+        WebGLConstants,
         Context,
         Framebuffer,
         PixelDatatype,
         Texture,
-        WebGLConstants,
         Camera,
         Globe,
         Model,
@@ -247,7 +247,8 @@ defineSuite([
     function loadGlobe() {
         return pollToPromise(function() {
             scene.render();
-            return scene.globe._surface.tileProvider.ready && !defined(scene.globe._surface._tileLoadQueue.head) && scene.globe._surface._debug.tilesWaitingForChildren === 0;
+            var globe = scene.globe;
+            return globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
         });
     }
 
@@ -899,7 +900,7 @@ defineSuite([
         render();
         expect(scene.frameState.commandList.length).toBe(0);
     });
-    
+
     it('enable fitNearFar', function() {
         box.show = true;
         floor.show = true;

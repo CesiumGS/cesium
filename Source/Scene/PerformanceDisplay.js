@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
@@ -8,7 +7,6 @@ define([
         '../Core/getTimestamp',
         '../Widgets/getElement'
     ], function(
-        Color,
         defaultValue,
         defined,
         destroyObject,

@@ -4,6 +4,7 @@ defineSuite([
         'Core/Color',
         'Core/PixelFormat',
         'Core/PrimitiveType',
+        'Core/WebGLConstants',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
@@ -17,13 +18,13 @@ defineSuite([
         'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/VertexArray',
-        'Renderer/WebGLConstants',
         'Specs/createContext'
     ], function(
         Framebuffer,
         Color,
         PixelFormat,
         PrimitiveType,
+        WebGLConstants,
         Buffer,
         BufferUsage,
         ClearCommand,
@@ -37,7 +38,6 @@ defineSuite([
         ShaderProgram,
         Texture,
         VertexArray,
-        WebGLConstants,
         createContext) {
     'use strict';
 

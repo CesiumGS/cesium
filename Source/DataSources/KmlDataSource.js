@@ -42,7 +42,6 @@ define([
         '../ThirdParty/zip',
         './BillboardGraphics',
         './CompositePositionProperty',
-        './ConstantPositionProperty',
         './CorridorGraphics',
         './DataSource',
         './DataSourceClock',
@@ -103,7 +102,6 @@ define([
         zip,
         BillboardGraphics,
         CompositePositionProperty,
-        ConstantPositionProperty,
         CorridorGraphics,
         DataSource,
         DataSourceClock,
@@ -491,7 +489,7 @@ define([
     var colorOptions = {};
 
     function parseColorString(value, isRandom) {
-        if (!defined(value)) {
+        if (!defined(value) || /^\s*$/gm.test(value)) {
             return undefined;
         }
 

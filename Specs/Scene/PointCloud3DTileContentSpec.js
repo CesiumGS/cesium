@@ -6,8 +6,10 @@ defineSuite([
         'Core/ComponentDatatype',
         'Core/defined',
         'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
         'Core/Transforms',
         'Scene/Cesium3DTileStyle',
+        'Scene/Expression',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
@@ -17,8 +19,10 @@ defineSuite([
         ComponentDatatype,
         defined,
         HeadingPitchRange,
+        HeadingPitchRoll,
         Transforms,
         Cesium3DTileStyle,
+        Expression,
         Cesium3DTilesTester,
         createScene) {
     'use strict';
@@ -231,7 +235,8 @@ defineSuite([
             var newLongitude = -1.31962;
             var newLatitude = 0.698874;
             var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 5.0);
-            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, 0.0, 0.0, 0.0);
+            var newHPR = new HeadingPitchRoll();
+            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, newHPR);
 
             // Update tile transform
             tileset._root.transform = newTransform;
@@ -292,7 +297,7 @@ defineSuite([
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(0);
             expect(content.innerContents).toBeUndefined();
-            expect(content.hasProperty('name')).toBe(false);
+            expect(content.hasProperty(0, 'name')).toBe(false);
             expect(content.getFeature(0)).toBeUndefined();
         });
     });
@@ -302,7 +307,7 @@ defineSuite([
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(8);
             expect(content.innerContents).toBeUndefined();
-            expect(content.hasProperty('name')).toBe(true);
+            expect(content.hasProperty(0, 'name')).toBe(true);
             expect(content.getFeature(0)).toBeDefined();
         });
     });
@@ -315,7 +320,7 @@ defineSuite([
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(0);
             expect(content.innerContents).toBeUndefined();
-            expect(content.hasProperty('name')).toBe(false);
+            expect(content.hasProperty(0, 'name')).toBe(false);
             expect(content.getFeature(0)).toBeUndefined();
         });
     });
@@ -464,6 +469,20 @@ defineSuite([
                 pointSize : 5.0
             });
             expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        });
+    });
+
+    it('rebuilds shader style when expression changes', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
+            // Solid red color
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color("red")'
+            });
+            expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+
+            tileset.style.color = new Expression('color("lime")');
+            tileset.makeStyleDirty();
+            expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
         });
     });
 

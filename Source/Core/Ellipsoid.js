@@ -55,6 +55,10 @@ define([
         ellipsoid._maximumRadius = Math.max(x, y, z);
 
         ellipsoid._centerToleranceSquared = CesiumMath.EPSILON1;
+
+        if (ellipsoid._radiiSquared.z !== 0) {
+            ellipsoid._sqauredXOverSquaredZ = ellipsoid._radiiSquared.x / ellipsoid._radiiSquared.z;
+        }
     }
 
     /**
@@ -86,6 +90,7 @@ define([
         this._minimumRadius = undefined;
         this._maximumRadius = undefined;
         this._centerToleranceSquared = undefined;
+        this._sqauredXOverSquaredZ = undefined;
 
         initialize(this, x, y, z);
     }
@@ -203,7 +208,9 @@ define([
     /**
      * Computes an Ellipsoid from a Cartesian specifying the radii in x, y, and z directions.
      *
-     * @param {Cartesian3} [radii=Cartesian3.ZERO] The ellipsoid's radius in the x, y, and z directions.
+     * @param {Cartesian3} [cartesian=Cartesian3.ZERO] The ellipsoid's radius in the x, y, and z directions.
+     * @param {Ellipsoid} [result] The object onto which to store the result, or undefined if a new
+     *                    instance should be created.
      * @returns {Ellipsoid} A new Ellipsoid instance.
      *
      * @exception {DeveloperError} All radii components must be greater than or equal to zero.
@@ -606,6 +613,54 @@ define([
      */
     Ellipsoid.prototype.toString = function() {
         return this._radii.toString();
+    };
+
+    /**
+     * Computes a point which is the intersection of the surface normal with the z-axis.
+     *
+     * @param {Cartesian3} position the position. must be on the surface of the ellipsoid.
+     * @param {Number} [buffer = 0.0] A buffer to subtract from the ellipsoid size when checking if the point is inside the ellipsoid.
+     *                                In earth case, with common earth datums, there is no need for this buffer since the intersection point is always (relatively) very close to the center.
+     *                                In WGS84 datum, intersection point is at max z = +-42841.31151331382 (0.673% of z-axis).
+     *                                Intersection point could be outside the ellipsoid if the ratio of MajorAxis / AxisOfRotation is bigger than the square root of 2
+     * @param {Cartesian} [result] The cartesian to which to copy the result, or undefined to create and
+     *        return a new instance.
+     * @returns {Cartesian | undefined} the intersection point if it's inside the ellipsoid, undefined otherwise
+     *
+     * @exception {DeveloperError} position is required.
+     * @exception {DeveloperError} Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y).
+     * @exception {DeveloperError} Ellipsoid.radii.z must be greater than 0.
+     */
+    Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function(position, buffer, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(position)) {
+            throw new DeveloperError('position is required.');
+        }
+        if (!CesiumMath.equalsEpsilon(this._radii.x, this._radii.y, CesiumMath.EPSILON15)) {
+            throw new DeveloperError('Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)');
+        }
+        if (this._radii.z === 0) {
+            throw new DeveloperError('Ellipsoid.radii.z must be greater than 0');
+        }
+        //>>includeEnd('debug');
+
+        buffer = defaultValue(buffer, 0.0);
+
+        var sqauredXOverSquaredZ = this._sqauredXOverSquaredZ;
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        result.x = 0.0;
+        result.y = 0.0;
+        result.z = position.z * (1 - sqauredXOverSquaredZ);
+
+        if (Math.abs(result.z) >= this._radii.z - buffer) {
+            return undefined;
+        }
+
+        return result;
     };
 
     return Ellipsoid;

@@ -94,6 +94,7 @@ define([
      * @param {Boolean} [options.debugShowPickStatistics=false] For debugging only. Determines if rendering statistics for picking are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
+     * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
      * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
@@ -285,6 +286,7 @@ define([
             visited : 0,
             numberOfCommands : 0,
             // Loading stats
+            numberOfAttemptedRequests : 0,
             numberOfPendingRequests : 0,
             numberProcessing : 0,
             numberContentReady : 0, // Number of tiles with content loaded, does not include empty tiles
@@ -296,6 +298,8 @@ define([
             lastColor : new Cesium3DTilesetStatistics(),
             lastPick : new Cesium3DTilesetStatistics()
         };
+
+        this._tilesLoaded = false;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -324,6 +328,17 @@ define([
          * @default false
          */
         this.debugColorizeTiles = defaultValue(options.debugColorizeTiles, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, renders each tile's content as a wireframe
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugWireframe = defaultValue(options.debugWireframe, false);
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -388,6 +403,25 @@ define([
         this.loadProgress = new Event();
 
         /**
+         * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. The tileset
+         * is completely loaded for this view.
+         * <p>
+         * This event is fired at the end of the frame after the scene is rendered.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * city.allTilesLoaded.addEventListener(function() {
+         *     console.log('All tiles are loaded');
+         * });
+         *
+         * @see Cesium3DTileset#tilesLoaded
+         */
+        this.allTilesLoaded = new Event();
+
+        /**
          * The event fired to indicate that a tile's content was unloaded from the cache.
          * <p>
          * The unloaded {@link Cesium3DTile} is passed to the event listener.
@@ -438,7 +472,6 @@ define([
         this._readyPromise = when.defer();
 
         var that = this;
-
         this.loadTileset(tilesetUrl).then(function(data) {
             var tilesetJson = data.tilesetJson;
             that._asset = tilesetJson.asset;
@@ -452,15 +485,16 @@ define([
     }
 
     function Cesium3DTilesetStatistics() {
-        this.selected = -1;
-        this.visited = -1;
-        this.numberOfCommands = -1;
-        this.numberOfPendingRequests = -1;
-        this.numberProcessing = -1;
-        this.numberContentReady = -1;
-        this.numberTotal = -1;
-        this.numberOfTilesStyled = -1;
-        this.numberOfFeaturesStyled = -1;
+        this.selected = 0;
+        this.visited = 0;
+        this.numberOfCommands = 0;
+        this.numberOfAttemptedRequests = 0;
+        this.numberOfPendingRequests = 0;
+        this.numberProcessing = 0;
+        this.numberContentReady = 0;
+        this.numberTotal = 0;
+        this.numberOfTilesStyled = 0;
+        this.numberOfFeaturesStyled = 0;
     }
 
     defineProperties(Cesium3DTileset.prototype, {
@@ -568,6 +602,25 @@ define([
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
+            }
+        },
+
+        /**
+         * When <code>true</code>, all tiles that meet the screen space error this frame are loaded. The tileset is
+         * completely loaded for this view.
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         *
+         * @see Cesium3DTileset#allTilesLoaded
+         */
+        tilesLoaded : {
+            get : function() {
+                return this._tilesLoaded;
             }
         },
 
@@ -1071,13 +1124,16 @@ define([
 
         tile.requestContent();
 
+        var stats = tileset._statistics;
+
         if (!tile.contentUnloaded) {
-            var stats = tileset._statistics;
             ++stats.numberOfPendingRequests;
 
             var removeFunction = removeFromProcessingQueue(tileset, tile);
             tile.content.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile)).otherwise(removeFunction);
             tile.content.readyPromise.then(removeFunction).otherwise(removeFunction);
+        } else {
+            ++stats.numberOfAttemptedRequests;
         }
     }
 
@@ -1493,6 +1549,7 @@ define([
         var stats = tileset._statistics;
         stats.visited = 0;
         stats.numberOfCommands = 0;
+        stats.numberOfAttemptedRequests = 0;
         stats.numberOfTilesStyled = 0;
         stats.numberOfFeaturesStyled = 0;
     }
@@ -1509,6 +1566,7 @@ define([
             (last.visited !== stats.visited ||
              last.numberOfCommands !== stats.numberOfCommands ||
              last.selected !== tileset._selectedTiles.length ||
+             last.numberOfAttemptedRequests !== stats.numberOfAttemptedRequests ||
              last.numberOfPendingRequests !== stats.numberOfPendingRequests ||
              last.numberProcessing !== stats.numberProcessing ||
              last.numberContentReady !== stats.numberContentReady ||
@@ -1538,6 +1596,7 @@ define([
 
                 // --- Cache/loading stats
                 ' | Requests: ' + stats.numberOfPendingRequests +
+                ', Attempted: ' + stats.numberOfAttemptedRequests +
                 ', Processing: ' + stats.numberProcessing +
                 ', Content Ready: ' + stats.numberContentReady +
                 // Total number of tiles includes tiles without content, so "Ready" may never reach
@@ -1555,6 +1614,7 @@ define([
         last.visited = stats.visited;
         last.numberOfCommands = stats.numberOfCommands;
         last.selected = tileset._selectedTiles.length;
+        last.numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
         last.numberOfPendingRequests = stats.numberOfPendingRequests;
         last.numberProcessing = stats.numberProcessing;
         last.numberContentReady = stats.numberContentReady;
@@ -1637,9 +1697,19 @@ define([
         var lastNumberOfPendingRequest = stats.lastColor.numberOfPendingRequests;
         var lastNumberProcessing = stats.lastColor.numberProcessing;
 
-        if ((numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberProcessing !== lastNumberProcessing)) {
+        var progressChanged = (numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberProcessing !== lastNumberProcessing);
+
+        if (progressChanged) {
             frameState.afterRender.push(function() {
                 tileset.loadProgress.raiseEvent(numberOfPendingRequests, numberProcessing);
+            });
+        }
+
+        tileset._tilesLoaded = (stats.numberOfPendingRequests === 0) && (stats.numberProcessing === 0) && (stats.numberOfAttemptedRequests === 0);
+
+        if (progressChanged && tileset._tilesLoaded) {
+            frameState.afterRender.push(function() {
+                tileset.allTilesLoaded.raiseEvent();
             });
         }
     }
@@ -1681,7 +1751,7 @@ define([
      */
     Cesium3DTileset.prototype.update = function(frameState) {
         // TODO: Support 2D and CV
-        if (!this.show || !defined(this._root) || (frameState.mode !== SceneMode.SCENE3D)) {
+        if (!this.show || !this.ready || (frameState.mode !== SceneMode.SCENE3D)) {
             return;
         }
 

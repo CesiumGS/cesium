@@ -72,7 +72,7 @@ define([
                 this.texture.destroy();
             }
 
-            if (defined(this.textureWebMercator)) {
+            if (defined(this.textureWebMercator) && this.texture !== this.textureWebMercator) {
                 this.textureWebMercator.destroy();
             }
 

@@ -1,9 +1,9 @@
 /*global define*/
 define([
-       '../Core/Color',
-       '../Core/defined',
-       '../Core/defineProperties',
-       './LabelStyle'
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/defineProperties',
+        './LabelStyle'
     ], function(
         Color,
         defined,
@@ -105,7 +105,6 @@ define([
         if (!content.applyStyleWithShader(frameState, style)) {
             applyStyleWithBatchTable(frameState, content, stats, style);
         }
-
     }
 
     function applyStyleWithBatchTable(frameState, content, stats, style) {
