@@ -551,6 +551,17 @@ defineSuite([
         });
     });
 
+    it('throws when shader style is invalid', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(function() {
+                content.applyStyleWithShader(scene.frameState, new Cesium3DTileStyle({
+                    show : '1 < "2"'
+                }));
+            }).toThrowDeveloperError();
+        });
+    });
+
     it('destroys', function() {
         return Cesium3DTilesTester.tileDestroys(scene, pointCloudRGBUrl);
     });

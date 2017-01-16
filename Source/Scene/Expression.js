@@ -777,7 +777,7 @@ define([
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
             //>>includeEnd('debug');
-            return evaluate(left);
+            return evaluate(left); // jshint ignore:line
         };
     }
 
@@ -873,7 +873,7 @@ define([
             }
             //>>includeStart('debug', pragmas.debug);
             else {
-                throw new DeveloperError('"' + call + '" argument must be a vector or number. Argument is ' + value + '.');
+                throw new DeveloperError(call + ' argument must be a vector or number. Argument is ' + value + '.');
             }
             //>>includeEnd('debug');
         }
@@ -1002,7 +1002,7 @@ define([
         var left = this._left.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(left) !== 'boolean') {
-            throw new DeveloperError('Operator "!" requires a Boolean argument. Argument is type "' + typeof(left) + '".');
+            throw new DeveloperError('Operator "!" requires a boolean argument. Argument is ' + left + '.');
         }
         //>>includeEnd('debug');
         return !left;
@@ -1144,7 +1144,7 @@ define([
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.add(left, right, ScratchStorage.getCartesian4());
         } else if ((typeof(left) === 'string') || (typeof(right) === 'string')) {
-            // If only one argument is a string, the other argument calls its toString function.
+            // If only one argument is a string the other argument calls its toString function.
             return left + right;
         } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
             return left + right;
