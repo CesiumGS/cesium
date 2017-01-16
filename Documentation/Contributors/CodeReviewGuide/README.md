@@ -78,7 +78,9 @@ git checkout mybranch
 ### You want to squash all the commits in your pull request into a single commit
 
 ```
-git reset origin/target # this will reset your branch the same as origin/target, with your changes unstaged.
+git fetch --all # Ensures remote data is up to date
+git merge origin/target # Merge the remote origin target with the local branch
+git reset origin/target # This will reset your branch the same as origin/target, with your changes unstaged.
 git add # Stage local changes, use `-u` for staging all tracked changes, `-p` to add interactively.
 git commit -m "My single commit message"
 git push -f origin mybranch # Requires force push as it is changing existing history on remote
