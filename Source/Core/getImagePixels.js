@@ -14,6 +14,8 @@ define([
      * @exports getImagePixels
      *
      * @param {Image} image The image to extract pixels from.
+     * @param {Number} width The width of the image. If not defined, then image.width is assigned.
+     * @param {Number} height The height of the image. If not defined, then image.height is assigned.
      * @returns {CanvasPixelArray} The pixels of the image.
      */
     function getImagePixels(image, width, height) {

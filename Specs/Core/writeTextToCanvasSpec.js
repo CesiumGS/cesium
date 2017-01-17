@@ -80,8 +80,10 @@ defineSuite([
             stroke : false
         });
 
-        // canvas1 is filled, so there should only be two "edges"
-        expect(getColorChangeCount(canvas1)).toEqual(2);
+        // canvas1 is filled, completely by the I on the left
+        // and then has empty space on the right, so there
+        // should only be one "edge": fill -> outside
+        expect(getColorChangeCount(canvas1)).toEqual(1);
 
         var canvas2 = writeTextToCanvas('I', {
             font : '90px "Open Sans"',
@@ -90,8 +92,8 @@ defineSuite([
             strokeColor : Color.BLUE
         });
 
-        // canvas2 is stroked, so there should be four "edges"
-        expect(getColorChangeCount(canvas2)).toEqual(4);
+        // canvas2 is stroked, so there should be three "edges": outline -> inside -> outline -> outside
+        expect(getColorChangeCount(canvas2)).toEqual(3);
     });
 
     it('background color defaults to transparent', function() {

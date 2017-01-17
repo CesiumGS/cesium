@@ -16,7 +16,6 @@ define([
         './CylinderGeometryUpdater',
         './EllipseGeometryUpdater',
         './EllipsoidGeometryUpdater',
-        './EntityCluster',
         './GeometryVisualizer',
         './LabelVisualizer',
         './ModelVisualizer',
@@ -44,7 +43,6 @@ define([
         CylinderGeometryUpdater,
         EllipseGeometryUpdater,
         EllipsoidGeometryUpdater,
-        EntityCluster,
         GeometryVisualizer,
         LabelVisualizer,
         ModelVisualizer,
@@ -366,19 +364,7 @@ define([
 
         scene.primitives.add(entityCluster);
 
-        var visualizers = this._visualizersCallback(scene, entityCluster, dataSource);
-        dataSource._visualizers = visualizers;
-
-        var length = visualizers.length;
-        for (var i = 0; i < length; ++i) {
-            var visualizer = visualizers[i];
-            var cluster = visualizer._cluster;
-
-            if (defined(cluster) && !defined(cluster._scene)) {
-                cluster._initialize(scene);
-                scene.primitives.add(cluster);
-            }
-        }
+        dataSource._visualizers = this._visualizersCallback(scene, entityCluster, dataSource);
     };
 
     DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
@@ -389,11 +375,6 @@ define([
         var visualizers = dataSource._visualizers;
         var length = visualizers.length;
         for (var i = 0; i < length; i++) {
-            var cluster = visualizers[i]._cluster;
-            if (cluster !== entityCluster) {
-                scene.primitives.remove(cluster);
-            }
-
             visualizers[i].destroy();
         }
 

@@ -1,11 +1,6 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.kdbush = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/*global define*/
+define([], function() {
 'use strict';
-
-var sort = require('./sort');
-var range = require('./range');
-var within = require('./within');
-
-module.exports = kdbush;
 
 function kdbush(points, getX, getY, nodeSize, ArrayType) {
     return new KDBush(points, getX, getY, nodeSize, ArrayType);
@@ -43,11 +38,6 @@ KDBush.prototype = {
 
 function defaultGetX(p) { return p[0]; }
 function defaultGetY(p) { return p[1]; }
-
-},{"./range":2,"./sort":3,"./within":4}],2:[function(require,module,exports){
-'use strict';
-
-module.exports = range;
 
 function range(ids, coords, minX, minY, maxX, maxY, nodeSize) {
     var stack = [0, ids.length - 1, 0];
@@ -92,20 +82,15 @@ function range(ids, coords, minX, minY, maxX, maxY, nodeSize) {
     return result;
 }
 
-},{}],3:[function(require,module,exports){
-'use strict';
-
-module.exports = sortKD;
-
-function sortKD(ids, coords, nodeSize, left, right, depth) {
+function sort(ids, coords, nodeSize, left, right, depth) {
     if (right - left <= nodeSize) return;
 
     var m = Math.floor((left + right) / 2);
 
     select(ids, coords, m, left, right, depth % 2);
 
-    sortKD(ids, coords, nodeSize, left, m - 1, depth + 1);
-    sortKD(ids, coords, nodeSize, m + 1, right, depth + 1);
+    sort(ids, coords, nodeSize, left, m - 1, depth + 1);
+    sort(ids, coords, nodeSize, m + 1, right, depth + 1);
 }
 
 function select(ids, coords, k, left, right, inc) {
@@ -160,11 +145,6 @@ function swap(arr, i, j) {
     arr[j] = tmp;
 }
 
-},{}],4:[function(require,module,exports){
-'use strict';
-
-module.exports = within;
-
 function within(ids, coords, qx, qy, r, nodeSize) {
     var stack = [0, ids.length - 1, 0];
     var result = [];
@@ -212,5 +192,5 @@ function sqDist(ax, ay, bx, by) {
     return dx * dx + dy * dy;
 }
 
-},{}]},{},[1])(1)
+return kdbush;
 });

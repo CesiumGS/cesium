@@ -55,7 +55,7 @@ define([
         this.st = options.st;
 
         /**
-         * The binormal attribute (normalized), which is used for tangent-space effects like bump mapping.
+         * The bitangent attribute (normalized), which is used for tangent-space effects like bump mapping.
          * <p>
          * 32-bit floating-point.  3 components per attribute.
          * </p>
@@ -64,7 +64,7 @@ define([
          *
          * @default undefined
          */
-        this.binormal = options.binormal;
+        this.bitangent = options.bitangent;
 
         /**
          * The tangent attribute (normalized), which is used for tangent-space effects like bump mapping.

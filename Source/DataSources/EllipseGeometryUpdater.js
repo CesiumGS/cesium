@@ -246,7 +246,7 @@ define([
          * Gets the property specifying whether the geometry
          * casts or receives shadows from each light source.
          * @memberof EllipseGeometryUpdater.prototype
-         * 
+         *
          * @type {Property}
          * @readonly
          */
@@ -566,6 +566,7 @@ define([
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
      *
      * @param {PrimitiveCollection} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} groundPrimitives The ground primitives collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.

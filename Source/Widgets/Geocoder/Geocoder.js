@@ -32,6 +32,8 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Element|String} options.container The DOM element or ID that will contain the widget.
      * @param {Scene} options.scene The Scene instance to use.
+     * @param {GeocoderService[]} [options.geocoderServices] The geocoder services to be used
+     * @param {Boolean} [options.autoComplete = true] True if the geocoder should query as the user types to autocomplete
      * @param {String} [options.url='https://dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com}.
@@ -66,11 +68,23 @@ define([
         textBox.className = 'cesium-geocoder-input';
         textBox.setAttribute('placeholder', 'Enter an address or landmark...');
         textBox.setAttribute('data-bind', '\
-value: searchText,\
-valueUpdate: "afterkeydown",\
+textInput: searchText,\
 disable: isSearchInProgress,\
-css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 }');
+event: { keyup: handleKeyUp, keydown: handleKeyDown, mouseover: deselectSuggestion },\
+css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 },\
+hasFocus: _focusTextbox');
+
+        this._onTextBoxFocus = function() {
+            // as of 2016-10-19, setTimeout is required to ensure that the
+            // text is focused on Safari 10
+            setTimeout(function() {
+                textBox.select();
+            }, 0);
+        };
+
+        textBox.addEventListener('focus', this._onTextBoxFocus, false);
         form.appendChild(textBox);
+        this._textBox = textBox;
 
         var searchButton = document.createElement('span');
         searchButton.className = 'cesium-geocoder-searchButton';
@@ -81,21 +95,41 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
 
         container.appendChild(form);
 
+        var searchSuggestionsContainer = document.createElement('div');
+        searchSuggestionsContainer.className = 'search-results';
+        searchSuggestionsContainer.setAttribute('data-bind', 'visible: _suggestionsVisible');
+
+        var suggestionsList = document.createElement('ul');
+        suggestionsList.setAttribute('data-bind', 'foreach: _suggestions');
+        var suggestions = document.createElement('li');
+        suggestionsList.appendChild(suggestions);
+        suggestions.setAttribute('data-bind', 'text: $data.displayName, \
+click: $parent.activateSuggestion, \
+event: { mouseover: $parent.handleMouseover}, \
+css: { active: $data === $parent._selectedSuggestion }');
+
+        searchSuggestionsContainer.appendChild(suggestionsList);
+        container.appendChild(searchSuggestionsContainer);
+
         knockout.applyBindings(viewModel, form);
+        knockout.applyBindings(viewModel, searchSuggestionsContainer);
 
         this._container = container;
+        this._searchSuggestionsContainer = searchSuggestionsContainer;
         this._viewModel = viewModel;
         this._form = form;
 
         this._onInputBegin = function(e) {
             if (!container.contains(e.target)) {
-                textBox.blur();
+                viewModel._focusTextbox = false;
+                viewModel.hideSuggestions();
             }
         };
 
         this._onInputEnd = function(e) {
             if (container.contains(e.target)) {
-                textBox.focus();
+                viewModel._focusTextbox = true;
+                viewModel.showSuggestions();
             }
         };
 
@@ -105,11 +139,13 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
         if (FeatureDetection.supportsPointerEvents()) {
             document.addEventListener('pointerdown', this._onInputBegin, true);
             document.addEventListener('pointerup', this._onInputEnd, true);
+            document.addEventListener('pointercancel', this._onInputEnd, true);
         } else {
             document.addEventListener('mousedown', this._onInputBegin, true);
             document.addEventListener('mouseup', this._onInputEnd, true);
             document.addEventListener('touchstart', this._onInputBegin, true);
             document.addEventListener('touchend', this._onInputEnd, true);
+            document.addEventListener('touchcancel', this._onInputEnd, true);
         }
 
     }
@@ -124,6 +160,18 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
         container : {
             get : function() {
                 return this._container;
+            }
+        },
+
+        /**
+         * Gets the parent container.
+         * @memberof Geocoder.prototype
+         *
+         * @type {Element}
+         */
+        searchSuggestionsContainer : {
+            get : function() {
+                return this._searchSuggestionsContainer;
             }
         },
 
@@ -161,9 +209,12 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
             document.removeEventListener('touchstart', this._onInputBegin, true);
             document.removeEventListener('touchend', this._onInputEnd, true);
         }
-
+        this._viewModel.destroy();
         knockout.cleanNode(this._form);
+        knockout.cleanNode(this._searchSuggestionsContainer);
         this._container.removeChild(this._form);
+        this._container.removeChild(this._searchSuggestionsContainer);
+        this._textBox.removeEventListener('focus', this._onTextBoxFocus, false);
 
         return destroyObject(this);
     };

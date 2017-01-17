@@ -264,19 +264,23 @@ define([
         var time = tokens[1];
         var tmp;
         var inLeapYear;
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(date)) {
             throw new DeveloperError(iso8601ErrorMessage);
         }
 
         var dashCount;
+        //>>includeEnd('debug');
 
         //First match the date against possible regular expressions.
         tokens = date.match(matchCalendarDate);
         if (tokens !== null) {
+            //>>includeStart('debug', pragmas.debug);
             dashCount = date.split('-').length - 1;
             if (dashCount > 0 && dashCount !== 2) {
                 throw new DeveloperError(iso8601ErrorMessage);
             }
+            //>>includeEnd('debug');
             year = +tokens[1];
             month = +tokens[2];
             day = +tokens[3];
@@ -300,9 +304,11 @@ define([
                         inLeapYear = isLeapYear(year);
 
                         //This validation is only applicable for this format.
+                        //>>includeStart('debug', pragmas.debug);
                         if (dayOfYear < 1 || (inLeapYear && dayOfYear > 366) || (!inLeapYear && dayOfYear > 365)) {
                             throw new DeveloperError(iso8601ErrorMessage);
                         }
+                        //>>includeEnd('debug')
                     } else {
                         tokens = date.match(matchWeekDate);
                         if (tokens !== null) {
@@ -312,18 +318,22 @@ define([
                             var weekNumber = +tokens[2];
                             var dayOfWeek = +tokens[3] || 0;
 
+                            //>>includeStart('debug', pragmas.debug);
                             dashCount = date.split('-').length - 1;
                             if (dashCount > 0 &&
                                ((!defined(tokens[3]) && dashCount !== 1) ||
                                (defined(tokens[3]) && dashCount !== 2))) {
                                 throw new DeveloperError(iso8601ErrorMessage);
                             }
+                            //>>includeEnd('debug')
 
                             var january4 = new Date(Date.UTC(year, 0, 4));
                             dayOfYear = (weekNumber * 7) + dayOfWeek - january4.getUTCDay() - 3;
                         } else {
                             //None of our regular expressions succeeded in parsing the date properly.
+                            //>>includeStart('debug', pragmas.debug);
                             throw new DeveloperError(iso8601ErrorMessage);
+                            //>>includeEnd('debug')
                         }
                     }
                     //Split an ordinal date into month/day.
@@ -337,19 +347,23 @@ define([
 
         //Now that we have all of the date components, validate them to make sure nothing is out of range.
         inLeapYear = isLeapYear(year);
+        //>>includeStart('debug', pragmas.debug);
         if (month < 1 || month > 12 || day < 1 || ((month !== 2 || !inLeapYear) && day > daysInMonth[month - 1]) || (inLeapYear && month === 2 && day > daysInLeapFeburary)) {
             throw new DeveloperError(iso8601ErrorMessage);
         }
+        //>>includeEnd('debug')
 
         //Not move onto the time string, which is much simpler.
         var offsetIndex;
         if (defined(time)) {
             tokens = time.match(matchHoursMinutesSeconds);
             if (tokens !== null) {
+                //>>includeStart('debug', pragmas.debug);
                 dashCount = time.split(':').length - 1;
                 if (dashCount > 0 && dashCount !== 2 && dashCount !== 3) {
                     throw new DeveloperError(iso8601ErrorMessage);
                 }
+                //>>includeEnd('debug')
 
                 hour = +tokens[1];
                 minute = +tokens[2];
@@ -359,10 +373,12 @@ define([
             } else {
                 tokens = time.match(matchHoursMinutes);
                 if (tokens !== null) {
+                    //>>includeStart('debug', pragmas.debug);
                     dashCount = time.split(':').length - 1;
                     if (dashCount > 2) {
                         throw new DeveloperError(iso8601ErrorMessage);
                     }
+                    //>>includeEnd('debug')
 
                     hour = +tokens[1];
                     minute = +tokens[2];
@@ -375,15 +391,19 @@ define([
                         minute = +(tokens[2] || 0) * 60.0;
                         offsetIndex = 3;
                     } else {
+                        //>>includeStart('debug', pragmas.debug);
                         throw new DeveloperError(iso8601ErrorMessage);
+                        //>>includeEnd('debug')
                     }
                 }
             }
 
             //Validate that all values are in proper range.  Minutes and hours have special cases at 60 and 24.
+            //>>includeStart('debug', pragmas.debug);
             if (minute >= 60 || second >= 61 || hour > 24 || (hour === 24 && (minute > 0 || second > 0 || millisecond > 0))) {
                 throw new DeveloperError(iso8601ErrorMessage);
             }
+            //>>includeEnd('debug');
 
             //Check the UTC offset value, if no value exists, use local time
             //a Z indicates UTC, + or - are offsets.

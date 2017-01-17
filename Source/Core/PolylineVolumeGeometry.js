@@ -17,6 +17,7 @@ define([
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
+        './oneTimeWarning',
         './PolygonPipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
@@ -40,6 +41,7 @@ define([
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
+        oneTimeWarning,
         PolygonPipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
@@ -94,7 +96,7 @@ define([
             indices[index++] = lr;
         }
 
-        if (vertexFormat.st || vertexFormat.tangent || vertexFormat.binormal) { // st required for tangent/binormal calculation
+        if (vertexFormat.st || vertexFormat.tangent || vertexFormat.bitangent) { // st required for tangent/bitangent calculation
             var st = new Float32Array(vertexCount * 2);
             var lengthSt = 1 / (length - 1);
             var heightSt = 1 / (boundingRectangle.height);
@@ -162,13 +164,19 @@ define([
             geometry = GeometryPipeline.computeNormal(geometry);
         }
 
-        if (vertexFormat.tangent || vertexFormat.binormal) {
-            geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+        if (vertexFormat.tangent || vertexFormat.bitangent) {
+            try {
+                geometry = GeometryPipeline.computeTangentAndBitangent(geometry);
+            } catch (e) {
+                oneTimeWarning('polyline-volume-tangent-bitangent', 'Unable to compute tangents and bitangents for polyline volume geometry');
+                //TODO https://github.com/AnalyticalGraphicsInc/cesium/issues/3609
+            }
+
             if (!vertexFormat.tangent) {
                 geometry.attributes.tangent = undefined;
             }
-            if (!vertexFormat.binormal) {
-                geometry.attributes.binormal = undefined;
+            if (!vertexFormat.bitangent) {
+                geometry.attributes.bitangent = undefined;
             }
             if (!vertexFormat.st) {
                 geometry.attributes.st = undefined;

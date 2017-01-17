@@ -1,3 +1,29 @@
+ /**
+  * Decodes a unit-length vector in 'oct' encoding to a normalized 3-component Cartesian vector.
+  * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
+  * Cigolle et al 2014: http://jcgt.org/published/0003/02/01/
+  *
+  * @name czm_octDecode
+  * @param {vec2} encoded The oct-encoded, unit-length vector
+  * @param {float} range The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax+1) bits.
+  * @returns {vec3} The decoded and normalized vector
+  */
+  vec3 czm_octDecode(vec2 encoded, float range)
+  {
+      if (encoded.x == 0.0 && encoded.y == 0.0) {
+          return vec3(0.0, 0.0, 0.0);
+      }
+
+     encoded = encoded / range * 2.0 - 1.0;
+     vec3 v = vec3(encoded.x, encoded.y, 1.0 - abs(encoded.x) - abs(encoded.y));
+     if (v.z < 0.0)
+     {
+         v.xy = (1.0 - abs(v.yx)) * czm_signNotZero(v.xy);
+     }
+
+     return normalize(v);
+  }
+
 /**
  * Decodes a unit-length vector in 'oct' encoding to a normalized 3-component Cartesian vector.
  * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
@@ -9,14 +35,7 @@
  */
  vec3 czm_octDecode(vec2 encoded)
  {
-    encoded = encoded / 255.0 * 2.0 - 1.0;
-    vec3 v = vec3(encoded.x, encoded.y, 1.0 - abs(encoded.x) - abs(encoded.y));
-    if (v.z < 0.0)
-    {
-        v.xy = (1.0 - abs(v.yx)) * czm_signNotZero(v.xy);
-    }
-    
-    return normalize(v);
+    return czm_octDecode(encoded, 255.0);
  }
 
  /**

@@ -2,13 +2,11 @@
 define([
         '../Core/defined',
         '../Scene/PrimitivePipeline',
-        '../ThirdParty/when',
         './createTaskProcessorWorker',
         'require'
     ], function(
         defined,
         PrimitivePipeline,
-        when,
         createTaskProcessorWorker,
         require) {
     'use strict';

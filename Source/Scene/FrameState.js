@@ -9,6 +9,7 @@ define([
      * State information about the current frame.  An instance of this class
      * is provided to update functions.
      *
+     * @param {Context} context The rendering context.
      * @param {CreditDisplay} creditDisplay Handles adding and removing credits from an HTML element
      *
      * @alias FrameState
@@ -94,6 +95,15 @@ define([
          * @default undefined
          */
         this.occluder = undefined;
+
+        /**
+         * The maximum screen-space error used to drive level-of-detail refinement.  Higher
+         * values will provide better performance but lower visual quality.
+         *
+         * @type {Number}
+         * @default 2
+         */
+        this.maximumScreenSpaceError = undefined;
 
         this.passes = {
             /**

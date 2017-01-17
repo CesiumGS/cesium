@@ -7,6 +7,7 @@ defineSuite([
         'Core/Math',
         'Core/Rectangle',
         'Scene/Camera',
+        'Scene/SceneMode',
         'Specs/createScene'
     ], function(
         SceneTransforms,
@@ -16,6 +17,7 @@ defineSuite([
         CesiumMath,
         Rectangle,
         Camera,
+        SceneMode,
         createScene) {
     'use strict';
 
@@ -32,6 +34,7 @@ defineSuite([
     });
 
     beforeEach(function() {
+        scene.mode = SceneMode.SCENE3D;
         scene.camera.position = defaultCamera.position.clone();
         scene.camera.direction = defaultCamera.direction.clone();
         scene.camera.up = defaultCamera.up.clone();
@@ -179,6 +182,10 @@ defineSuite([
     });
 
     it('returns correct drawing buffer position in 2D', function() {
+        scene.camera.setView({
+            destination : Rectangle.fromDegrees(-0.000001, -0.000001, 0.000001, 0.000001)
+        });
+
         // Update scene state
         scene.morphTo2D(0);
         scene.renderForSpecs();
