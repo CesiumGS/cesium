@@ -650,7 +650,7 @@ define([
                 console.log('KML - Unsupported Icon viewRefreshMode: ' + viewRefreshMode);
             }
 
-            var viewBoundScale = defaultValue(queryStringValue(iconNode, 'viewBoundScale', namespaces.kml), 1.0);
+            var viewBoundScale = defaultValue(queryNumericValue(iconNode, 'viewBoundScale', namespaces.kml), 1.0);
             var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
             var viewFormat = defaultValue(queryStringValue(iconNode, 'viewFormat', namespaces.kml), defaultViewFormat);
             var httpQuery = queryStringValue(iconNode, 'httpQuery', namespaces.kml);
@@ -1944,7 +1944,7 @@ define([
                 } else {
                     newSourceUri = href; // Not a data uri so use the fully qualified uri
                     var viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
-                    var viewBoundScale = defaultValue(queryStringValue(link, 'viewBoundScale', namespaces.kml), 1.0);
+                    var viewBoundScale = defaultValue(queryNumericValue(link, 'viewBoundScale', namespaces.kml), 1.0);
                     var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
                     var viewFormat = defaultValue(queryStringValue(link, 'viewFormat', namespaces.kml), defaultViewFormat);
                     var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
