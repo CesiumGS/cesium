@@ -37,6 +37,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Erik Andersson](https://github.com/erikmaarten)
    * [Austin Eng](https://github.com/austinEng)
    * [Shehzan Mohammed](https://github.com/shehzan10)
+   * [Rachel Hwang](https://github.com/rahwang)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
