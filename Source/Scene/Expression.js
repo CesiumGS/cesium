@@ -311,7 +311,7 @@ define([
                 var j = exp.indexOf('}');
                 //>>includeStart('debug', pragmas.debug);
                 if (j < 0) {
-                    throw new DeveloperError('Error: unmatched {.');
+                    throw new DeveloperError('Unmatched {.');
                 }
                 //>>includeEnd('debug');
                 result += "czm_" + exp.substr(i + 2, j - (i + 2));
@@ -353,7 +353,7 @@ define([
                 // Make sure this is called on a valid type
                 //>>includeStart('debug', pragmas.debug);
                 if (object.callee.name !== 'regExp') {
-                    throw new DeveloperError('Error: ' + call + ' is not a function.');
+                    throw new DeveloperError(call + ' is not a function.');
                 }
                 //>>includeEnd('debug');
                 if (argsLength === 0) {
@@ -372,7 +372,7 @@ define([
             }
 
             //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Error: Unexpected function call "' + call + '".');
+            throw new DeveloperError('Unexpected function call "' + call + '".');
             //>>includeEnd('debug');
         }
 
@@ -391,7 +391,7 @@ define([
         } else if (call === 'rgb' || call === 'hsl') {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength < 3) {
-                throw new DeveloperError('Error: ' + call + ' requires three arguments.');
+                throw new DeveloperError(call + ' requires three arguments.');
             }
             //>>includeEnd('debug');
             val = [
@@ -403,7 +403,7 @@ define([
         } else if (call === 'rgba' || call === 'hsla') {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength < 4) {
-                throw new DeveloperError('Error: ' + call + ' requires four arguments.');
+                throw new DeveloperError(call + ' requires four arguments.');
             }
             //>>includeEnd('debug');
             val = [
@@ -433,7 +433,7 @@ define([
         } else if (call === 'isExactClass' || call === 'isClass') {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength < 1 || argsLength > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+                throw new DeveloperError(call + ' requires exactly one argument.');
             }
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
@@ -441,14 +441,14 @@ define([
         } else if (call === 'getExactClassName') {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength > 0) {
-                throw new DeveloperError('Error: ' + call + ' does not take any argument.');
+                throw new DeveloperError(call + ' does not take any argument.');
             }
             //>>includeEnd('debug');
             return new Node(ExpressionNodeType.UNARY, call);
         } else if (defined(unaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength !== 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+                throw new DeveloperError(call + ' requires exactly one argument.');
             }
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
@@ -456,7 +456,7 @@ define([
         } else if (defined(binaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength !== 2) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly two arguments.');
+                throw new DeveloperError(call + ' requires exactly two arguments.');
             }
             //>>includeEnd('debug');
             left = createRuntimeAst(expression, args[0]);
@@ -465,7 +465,7 @@ define([
         } else if (defined(ternaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength !== 3) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly three arguments.');
+                throw new DeveloperError(call + ' requires exactly three arguments.');
             }
             //>>includeEnd('debug');
             left = createRuntimeAst(expression, args[0]);
@@ -495,7 +495,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('Error: Unexpected function call "' + call + '".');
+        throw new DeveloperError('Unexpected function call "' + call + '".');
         //>>includeEnd('debug');
     }
 
@@ -557,7 +557,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('Error: ' + ast.name + ' is not defined.');
+        throw new DeveloperError(ast.name + ' is not defined.');
         //>>includeEnd('debug');
     }
 
@@ -604,7 +604,7 @@ define([
                 node = new Node(ExpressionNodeType.UNARY, op, child);
             } else {
                 //>>includeStart('debug', pragmas.debug);
-                throw new DeveloperError('Error: Unexpected operator "' + op + '".');
+                throw new DeveloperError('Unexpected operator "' + op + '".');
                 //>>includeEnd('debug');
             }
         } else if (ast.type === 'BinaryExpression') {
@@ -615,7 +615,7 @@ define([
                 node = new Node(ExpressionNodeType.BINARY, op, left, right);
             } else {
                 //>>includeStart('debug', pragmas.debug);
-                throw new DeveloperError('Error: Unexpected operator "' + op + '".');
+                throw new DeveloperError('Unexpected operator "' + op + '".');
                 //>>includeEnd('debug');
             }
         } else if (ast.type === 'LogicalExpression') {
@@ -642,9 +642,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         else if (ast.type === 'Compound') {
             // empty expression or multiple expressions
-            throw new DeveloperError('Error: Provide exactly one expression.');
+            throw new DeveloperError('Provide exactly one expression.');
         }  else {
-            throw new DeveloperError('Error: Cannot parse expression.');
+            throw new DeveloperError('Cannot parse expression.');
         }
         //>>includeEnd('debug');
 
@@ -774,7 +774,10 @@ define([
             } else if (left instanceof Cartesian4) {
                 return Cartesian4.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), evaluate(left.w), ScratchStorage.getCartesian4());
             }
-            return evaluate(left);
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
+            //>>includeEnd('debug');
+            return evaluate(left); // jshint ignore:line
         };
     }
 
@@ -854,6 +857,7 @@ define([
         // vec2(vec4(1), 1)  // too many components
 
         var components = ScratchStorage.getArray();
+        var call = this._value;
         var args = this._left;
         var argsLength = args.length;
         for (var i = 0; i < argsLength; ++i) {
@@ -867,19 +871,23 @@ define([
             } else if (value instanceof Cartesian4) {
                 components.push(value.x, value.y, value.z, value.w);
             }
+            //>>includeStart('debug', pragmas.debug);
+            else {
+                throw new DeveloperError(call + ' argument must be a vector or number. Argument is ' + value + '.');
+            }
+            //>>includeEnd('debug');
         }
 
         var componentsLength = components.length;
-        var call = this._value;
         var vectorLength = parseInt(call.charAt(3));
 
         //>>includeStart('debug', pragmas.debug);
         if (componentsLength === 0) {
-            throw new DeveloperError('Error: Invalid ' + call + ' constructor. No valid arguments.');
+            throw new DeveloperError('Invalid ' + call + ' constructor. No valid arguments.');
         } else if ((componentsLength < vectorLength) && (componentsLength > 1)) {
-            throw new DeveloperError('Error: Invalid ' + call + ' constructor. Not enough arguments.');
+            throw new DeveloperError('Invalid ' + call + ' constructor. Not enough arguments.');
         } else if ((componentsLength > vectorLength) && (argsLength > 1)) {
-            throw new DeveloperError('Error: Invalid ' + call + ' constructor. Too many arguments.');
+            throw new DeveloperError('Invalid ' + call + ' constructor. Too many arguments.');
         }
         //>>includeEnd('debug');
 
@@ -991,7 +999,13 @@ define([
     // that we can assign if we know the types before runtime
 
     Node.prototype._evaluateNot = function(frameState, feature) {
-        return !(this._left.evaluate(frameState, feature));
+        var left = this._left.evaluate(frameState, feature);
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(left) !== 'boolean') {
+            throw new DeveloperError('Operator "!" requires a boolean argument. Argument is ' + left + '.');
+        }
+        //>>includeEnd('debug');
+        return !left;
     };
 
     Node.prototype._evaluateNegative = function(frameState, feature) {
@@ -1002,39 +1016,77 @@ define([
             return Cartesian3.negate(left, ScratchStorage.getCartesian3());
         } else if (left instanceof Cartesian4) {
             return Cartesian4.negate(left, ScratchStorage.getCartesian4());
+        } else if (typeof(left) === 'number') {
+            return -left;
         }
-        return -left;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "-" requires a vector or number argument. Argument is ' + left + '.');
+        //>>includeEnd('debug');
+        return -left; // jshint ignore:line
     };
 
     Node.prototype._evaluatePositive = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
-        if ((left instanceof Cartesian2) || (left instanceof Cartesian3) || (left instanceof Cartesian4)) {
-            return left;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!((left instanceof Cartesian2) || (left instanceof Cartesian3) || (left instanceof Cartesian4) || (typeof(left) === 'number'))) {
+            throw new DeveloperError('Operator "+" requires a vector or number argument. Argument is ' + left + '.');
         }
-        return +left;
+        //>>includeEnd('debug');
+
+        return left;
     };
 
     Node.prototype._evaluateLessThan = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((typeof(left) !== 'number') || (typeof(right) !== 'number')) {
+            throw new DeveloperError('Operator "<" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
+        }
+        //>>includeEnd('debug');
+
         return left < right;
     };
 
     Node.prototype._evaluateLessThanOrEquals = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((typeof(left) !== 'number') || (typeof(right) !== 'number')) {
+            throw new DeveloperError('Operator "<=" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
+        }
+        //>>includeEnd('debug');
+
         return left <= right;
     };
 
     Node.prototype._evaluateGreaterThan = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((typeof(left) !== 'number') || (typeof(right) !== 'number')) {
+            throw new DeveloperError('Operator ">" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
+        }
+        //>>includeEnd('debug');
+
         return left > right;
     };
 
     Node.prototype._evaluateGreaterThanOrEquals = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((typeof(left) !== 'number') || (typeof(right) !== 'number')) {
+            throw new DeveloperError('Operator ">=" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
+        }
+        //>>includeEnd('debug');
+
         return left >= right;
     };
 
@@ -1042,7 +1094,7 @@ define([
         var left = this._left.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(left) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined.');
+            throw new DeveloperError('Operator "||" requires boolean arguments. First argument is ' + left + '.');
         }
         //>>includeEnd('debug');
 
@@ -1054,7 +1106,7 @@ define([
         var right = this._right.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(right) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined.');
+            throw new DeveloperError('Operator "||" requires boolean arguments. Second argument is ' + right + '.');
         }
         //>>includeEnd('debug');
         return left || right;
@@ -1064,7 +1116,7 @@ define([
         var left = this._left.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(left) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined.');
+            throw new DeveloperError('Operator "&&" requires boolean arguments. First argument is ' + left + '.');
         }
         //>>includeEnd('debug');
 
@@ -1076,7 +1128,7 @@ define([
         var right = this._right.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(right) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined.');
+            throw new DeveloperError('Operator "&&" requires boolean arguments. Second argument is ' + right + '.');
         }
         //>>includeEnd('debug');
         return left && right;
@@ -1091,8 +1143,18 @@ define([
             return Cartesian3.add(left, right, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.add(left, right, ScratchStorage.getCartesian4());
+        } else if ((typeof(left) === 'string') || (typeof(right) === 'string')) {
+            // If only one argument is a string the other argument calls its toString function.
+            return left + right;
+        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+            return left + right;
         }
-        return left + right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "+" requires vector or number arguments of matching types, or at least one string argument. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return left + right; // jshint ignore:line
     };
 
     Node.prototype._evaluateMinus = function(frameState, feature) {
@@ -1104,8 +1166,15 @@ define([
             return Cartesian3.subtract(left, right, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.subtract(left, right, ScratchStorage.getCartesian4());
+        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+            return left - right;
         }
-        return left - right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "-" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return left - right; // jshint ignore:line
     };
 
     Node.prototype._evaluateTimes = function(frameState, feature) {
@@ -1129,8 +1198,15 @@ define([
             return Cartesian4.multiplyByScalar(right, left, ScratchStorage.getCartesian4());
         } else if ((left instanceof Cartesian4) && (typeof(right) === 'number')) {
             return Cartesian4.multiplyByScalar(left, right, ScratchStorage.getCartesian4());
+        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+            return left * right;
         }
-        return left * right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "*" requires vector or number arguments. If both arguments are vectors they must be matching types. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return left * right; // jshint ignore:line
     };
 
     Node.prototype._evaluateDivide = function(frameState, feature) {
@@ -1148,8 +1224,15 @@ define([
             return Cartesian4.divideComponents(left, right, ScratchStorage.getCartesian4());
         } else if ((left instanceof Cartesian4) && (typeof(right) === 'number')) {
             return Cartesian4.divideByScalar(left, right, ScratchStorage.getCartesian4());
+        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+            return left / right;
         }
-        return left / right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "/" requires vector or number arguments of matching types, or a number as the second argument. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return left / right; // jshint ignore:line
     };
 
     Node.prototype._evaluateMod = function(frameState, feature) {
@@ -1161,8 +1244,15 @@ define([
             return Cartesian3.fromElements(left.x % right.x, left.y % right.y, left.z % right.z, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.fromElements(left.x % right.x, left.y % right.y, left.z % right.z, left.w % right.w, ScratchStorage.getCartesian4());
+        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+            return left % right;
         }
-        return left % right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "%" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return left % right; // jshint ignore:line
     };
 
     Node.prototype._evaluateEqualsStrict = function(frameState, feature) {
@@ -1315,7 +1405,7 @@ define([
         }
         //>>includeStart('debug', pragmas.debug);
         else {
-            throw new DeveloperError('Error: Unexpected function call "' + this._value + '".');
+            throw new DeveloperError('Unexpected function call "' + this._value + '".');
         }
         //>>includeEnd('debug');
     };
