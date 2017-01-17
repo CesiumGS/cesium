@@ -56,32 +56,32 @@ var tileStyle = new Cesium.Cesium3DTileStyle({
     }
 });
 
-var styleElements = [];
-var numberofColors = 6;
-var currentPropertyName = 'Height';
+//var styleElements = [];
+//var numberofColors = 6;
+//var currentPropertyName = 'Height';
 
 viewer.cesium3DTilesInspector.onLoad(function(tileset) {
     var boundingSphere = tileset.boundingSphere;
     viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
-    var addStyleUI = createStylingFunctions(tileset);
+//    var addStyleUI = createStylingFunctions(tileset);
     var properties = tileset.properties;
     if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
         tileset.style = tileStyle;
-        addStyleUI(tileset);
+//        addStyleUI(tileset);
     }
 });
 
 viewer.cesium3DTilesInspector.onUnload(function(tileset) {
     // Remove style UI for the previous tileset
-    var buttonsLength = styleElements.length;
-    for (var i = 0; i < buttonsLength; ++i) {
-        var element = styleElements[i];
-        element.parentNode.removeChild(element);
-    }
-    styleElements = [];
-    numberofColors = 6;
+//    var buttonsLength = styleElements.length;
+//    for (var i = 0; i < buttonsLength; ++i) {
+//        var element = styleElements[i];
+//        element.parentNode.removeChild(element);
+//    }
+//    styleElements = [];
+//    numberofColors = 6;
 });
 
 viewer.cesium3DTilesInspector.onSelect(function(feature) {
@@ -115,6 +115,100 @@ model.tilesets = {
     'PointCloudBatched': '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudBatched/'
 };
 
+
+var tileset;
+var tilesets = {
+    'Tileset': '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/',
+    'Translucent': '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucent/',
+    'Translucent/Opaque': '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/',
+    'Multi-color': '../../../Specs/Data/Cesium3DTiles/Batched/BatchedColors/',
+    'Request Volume': '../../../Specs/Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/',
+    'Batched': '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/',
+    'Instanced': '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/',
+    'Instanced/Orientation': '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientationWithBatchTable/',
+    'Composite': '../../../Specs/Data/Cesium3DTiles/Composite/Composite/',
+    'PointCloud': '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudRGB/',
+    'PointCloudConstantColor': '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/',
+    'PointCloudNormals': '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/',
+    'PointCloudBatched': '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudBatched/'
+};
+
+var viewModel = {
+    tilesets: [
+        {
+            name: 'Tileset',
+            url: '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/'
+        }, {
+            name: 'Translucent',
+            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucent/'
+        }, {
+            name: 'Translucent/Opaque',
+            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/'
+        }, {
+            name: 'Multi-color',
+            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedColors/'
+        }, {
+            name: 'Request Volume',
+            url: '../../../Specs/Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/'
+        }, {
+            name: 'Batched',
+            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/'
+        }, {
+            name: 'Instanced',
+            url: '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/'
+        }, {
+            name: 'Instanced/Orientation',
+            url: '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientationWithBatchTable/'
+        }, {
+            name: 'Composite',
+            url: '../../../Specs/Data/Cesium3DTiles/Composite/Composite/'
+        }, {
+            name: 'PointCloud',
+            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudRGB/'
+        }, {
+            name: 'PointCloudConstantColor',
+            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/'
+        }, {
+            name: 'PointCloudNormals',
+            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/'
+        }, {
+            name: 'PointCloudBatched',
+            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudBatched/'
+        }
+    ],
+    selectedTileset: undefined
+};
+
+Cesium.knockout.track(viewModel);
+
+var toolbar = document.getElementById('toolbar');
+var dropdown = document.createElement('select');
+    dropdown.setAttribute('data-bind', 'options: tilesets, ' +
+                                   'optionsText: "name", ' +
+                                   'value: selectedTileset, ' +
+                                   'optionsCaption: "Choose a Tileset..."');
+toolbar.appendChild(dropdown);
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(option) {
+    if (Cesium.defined(tileset)) {
+        scene.primitives.remove(tileset);
+    }
+    tileset = new Cesium.Cesium3DTileset({
+        url: option.url
+    });
+    model.tileset = tileset;
+    scene.primitives.add(tileset);
+    tileset.readyPromise.then(function(tileset) {
+        var boundingSphere = tileset.boundingSphere;
+        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    });
+});
+
+
+
+/*
 function createStylingFunctions(tileset) {
     // Styling ////////////////////////////////////////////////////////////////////
 
@@ -308,7 +402,7 @@ function createStylingFunctions(tileset) {
 
     return addStyleUI;
 }
-
+*/
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }

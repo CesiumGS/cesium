@@ -110,26 +110,30 @@ define([
         knockout.applyBindings(this._inspectorModel, element);
 
         // now add and bind just the tileset selection option
-        var tilesets = document.createElement('select');
-        tilesets.setAttribute('data-bind', 'options: _tilesetOptions, ' +
-                                           'optionsText: "name", ' +
-                                           'value: _selectedTileset, ' +
-                                           'optionsCaption: "Choose a Tileset..."');
-        tilesets.className = 'cesium-cesiumInspector-select';
-        element.insertBefore(tilesets, tilesetPanel);
-        knockout.applyBindings(viewModel, tilesets);
+        // var tilesets = document.createElement('select');
+        // tilesets.setAttribute('data-bind', 'options: _tilesetOptions, ' +
+        //                                    'optionsText: "name", ' +
+        //                                    'value: _selectedTileset, ' +
+        //                                    'optionsCaption: "Choose a Tileset..."');
+        // tilesets.className = 'cesium-cesiumInspector-select';
+        // element.insertBefore(tilesets, tilesetPanel);
+        // knockout.applyBindings(viewModel, tilesets);
 
         // build and bind each panel separately
+        var tilesetURL = document.createElement('div');
+        tilesetURL.setAttribute('data-bind', 'text: tilesetURL');
+        tilesetURL.setAttribute('style', 'word-break: break-all;');
+        tilesetPanel.contents.appendChild(tilesetURL);
         tilesetPanel.contents.appendChild(makeButton('trimTilesCache', 'Trim Tiles Cache'));
         tilesetPanel.contents.appendChild(makeCheckbox('picking', 'Enable Picking'));
-        var pickPanelWrapper = document.createElement('div');
-        pickPanelWrapper.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : picking, "cesium-cesiumInspector-hide" : !picking}');
-        var pickPanel = makeSection('Picking');
-        pickPanel.contents.appendChild(makeCheckbox('annotatePicked', 'Annotate Features', 'picking'));
-        pickPanel.contents.appendChild(makeCheckbox('zoomPicked', 'Fly to Features', 'picking'));
-        pickPanel.contents.appendChild(makeCheckbox('hidePicked', 'Hide Features', 'picking'));
-        pickPanelWrapper.append(pickPanel);
-        tilesetPanel.contents.appendChild(pickPanelWrapper);
+        // var pickPanelWrapper = document.createElement('div');
+        // pickPanelWrapper.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : picking, "cesium-cesiumInspector-hide" : !picking}');
+        // var pickPanel = makeSection('Picking');
+        // pickPanel.contents.appendChild(makeCheckbox('annotatePicked', 'Annotate Features', 'picking'));
+        // pickPanel.contents.appendChild(makeCheckbox('zoomPicked', 'Fly to Features', 'picking'));
+        // pickPanel.contents.appendChild(makeCheckbox('hidePicked', 'Hide Features', 'picking'));
+        // pickPanelWrapper.append(pickPanel);
+        // tilesetPanel.contents.appendChild(pickPanelWrapper);
         knockout.applyBindings(viewModel, tilesetPanel.contents);
 
 
@@ -159,11 +163,15 @@ define([
         loggingPanel.contents.appendChild(this._viewModel._performanceDisplay._container);
         this._viewModel._performanceDisplay._container.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : performance, "cesium-cesiumInspector-hide" : !performance}');
         loggingPanel.contents.appendChild(makeCheckbox('showStats', 'Stats'));
-        loggingPanel.contents.appendChild(makeCheckbox('showPickStats', 'Pick Stats'));
         var stats = document.createElement('div');
-        stats.setAttribute('data-bind', 'text: statsText');
+        stats.setAttribute('data-bind', 'text: statsText, css: {"cesium-cesiumInspector-show" : showStats, "cesium-cesiumInspector-hide" : !showStats}');
         stats.setAttribute('style', 'font-size: 10px');
         loggingPanel.contents.appendChild(stats);
+        loggingPanel.contents.appendChild(makeCheckbox('showPickStats', 'Pick Stats'));
+        var pickStats = document.createElement('div');
+        pickStats.setAttribute('data-bind', 'text: pickStatsText, css: {"cesium-cesiumInspector-show" : showPickStats, "cesium-cesiumInspector-hide" : !showPickStats}');
+        pickStats.setAttribute('style', 'font-size: 10px');
+        loggingPanel.contents.appendChild(pickStats);
         knockout.applyBindings(viewModel, loggingPanel.contents);
     }
 

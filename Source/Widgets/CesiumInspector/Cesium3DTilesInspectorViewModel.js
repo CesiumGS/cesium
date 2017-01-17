@@ -94,7 +94,7 @@ define([
         var eventHandler = new ScreenSpaceEventHandler(canvas);
         this._scene = scene;
         this._canvas = canvas;
-        this._annotations = new LabelCollection();
+        // this._annotations = new LabelCollection();
 
         this._performanceDisplay = new PerformanceDisplay({
             container: document.createElement('div')
@@ -114,8 +114,8 @@ define([
                 default: true,
                 subscribe: function(val) {
                     if (that._tileset) {
-                        // force a show of stats because the toggle has been enabled
-                        showStats(that._tileset, false, true);
+                        // force an update of stats because the toggle has been enabled
+                        that._updateStats(false, true);
                     }
                 }
             },
@@ -130,8 +130,8 @@ define([
                 default: true,
                 subscribe: function(val) {
                     if (that._tileset && val) {
-                        // force a show of pick stats because the toggle has been enabled
-                        showStats(that._tileset, true, true);
+                        // force an update of pick stats because the toggle has been enabled
+                        that._updateStats(true, true);
                     }
                 }
             },
@@ -149,37 +149,39 @@ define([
                         if (val) {
                             eventHandler.setInputAction(function(e) {
                                 that._feature = scene.pick(e.endPosition);
-                                if (that._tileset) {
-                                    showStats(that._tileset, true, false);
-                                }
+                                that._updateStats(true, false);
+                                // if (that._tileset) {
+
+                                    // showStats(that._tileset, true, false);
+                                // }
                             }, ScreenSpaceEventType.MOUSE_MOVE);
-
-                            eventHandler.setInputAction(function() {
-                                if (defined(that._feature)) {
-                                    onSelect(that._feature);
-                                }
-                            }, ScreenSpaceEventType.LEFT_CLICK);
-
-                            eventHandler.setInputAction(function(e) {
-                                if (that.annotatePicked) {
-                                    annotate(e.position);
-                                }
-                                if (that.zoomPicked) {
-                                    zoom(that._feature);
-                                }
-                            }, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-
-                            eventHandler.setInputAction(function() {
-                                if (defined(that._feature) && that.hidePicked) {
-                                    that._feature.show = false;
-                                }
-                            }, ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
+            //
+            //                 eventHandler.setInputAction(function() {
+            //                     if (defined(that._feature)) {
+            //                         onSelect(that._feature);
+            //                     }
+            //                 }, ScreenSpaceEventType.LEFT_CLICK);
+            //
+            //                 eventHandler.setInputAction(function(e) {
+            //                     if (that.annotatePicked) {
+            //                         annotate(e.position);
+            //                     }
+            //                     if (that.zoomPicked) {
+            //                         zoom(that._feature);
+            //                     }
+            //                 }, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+            //
+            //                 eventHandler.setInputAction(function() {
+            //                     if (defined(that._feature) && that.hidePicked) {
+            //                         that._feature.show = false;
+            //                     }
+            //                 }, ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
                         } else {
                             that._feature = undefined;
                             eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
-                            eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
-                            eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-                            eventHandler.removeInputAction(ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
+            //                 eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
+            //                 eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+            //                 eventHandler.removeInputAction(ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
                         }
                     };
                 })()
@@ -191,9 +193,9 @@ define([
              * @type {Boolean}
              * @default false
              */
-            annotatePicked: {
-                default: false
-            },
+            // annotatePicked: {
+            //     default: false
+            // },
             /**
              * Gets or sets the flag to fly to features on double click.  This property is observable.
              * @memberof Cesium3DTilesInspectorViewModel.prototype
@@ -201,9 +203,9 @@ define([
              * @type {Boolean}
              * @default true
              */
-            zoomPicked: {
-                default: true
-            },
+            // zoomPicked: {
+            //     default: true
+            // },
             /**
              * Gets or sets the flag to hide features on double middle mouse click.  This property is observable.
              * @memberof Cesium3DTilesInspectorViewModel.prototype
@@ -211,9 +213,9 @@ define([
              * @type {Boolean}
              * @default true
              */
-            hidePicked: {
-                default: true
-            },
+            // hidePicked: {
+            //     default: true
+            // },
             /**
              * Gets or sets the flag to suspend updates.  This property is observable.
              * @memberof Cesium3DTilesInspectorViewModel.prototype
@@ -404,42 +406,23 @@ define([
              */
             statsText : {
                 default: ''
+            },
+            /**
+             * Gets or sets the flag to set pick stats text.  This property is observable.
+             * @memberof Cesium3DTilesInspectorViewModel.prototype
+             *
+             * @type {String}
+             * @default ''
+             */
+            pickStatsText : {
+                default: ''
             }
         };
         this._subscriptions = {};
         createKnockoutBindings(this, tilesetOptions);
         createKnockoutBindings(this, {
-            _tilesetOptions: {
-                default: []
-            },
             _tileset: {
-                default: undefined,
-                subscribe: (function() {
-                    var old;
-                    return function(tileset) {
-                        if (defined(old)) {
-                            that._scene.primitives.remove(old);
-                            that._annotations.removeAll();
-                            onUnload(old);
-                        }
-                        if (defined(tileset)) {
-                            old = tileset;
-                            tileset.readyPromise.then(tilesetLoaded);
-                        }
-                    };
-                })()
-            },
-            _selectedTileset: {
-                default: undefined,
-                subscribe: function(val) {
-                    if (defined(val)) {
-                        that._tileset = that._scene.primitives.add(new Cesium3DTileset({
-                            url: val.url
-                        }));
-                    } else {
-                        that._tileset = undefined;
-                    }
-                }
+                default: undefined
             },
             _feature: {
                 default: undefined,
@@ -466,174 +449,55 @@ define([
                 })()
             }
         });
-
-        function tilesetLoaded(tileset) {
-            for (var name in tilesetOptions) {
-                if (tilesetOptions.hasOwnProperty(name)) {
-                    // force an update on all options so the new tileset gets updated with previous settings
-                    knockout.getObservable(that, name).valueHasMutated();
-                }
-            }
-
-            tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
-                showStats(tileset, false, false);
-            });
-
-            tileset.allTilesLoaded.addEventListener(function() {
-                showStats(tileset, false, false);
-            });
-
-            onLoad(tileset);
-        }
-
-        function annotate(position) {
-            if (defined(that._feature && that._scene.pickPositionSupported)) {
-                var cartesian = that._scene.pickPosition(position);
-                var cartographic = Cartographic.fromCartesian(cartesian);
-                var height = cartographic.height.toFixed(2) + ' m';
-
-                that._annotations.add({
-                    position: cartesian,
-                    text: height,
-                    horizontalOrigin: HorizontalOrigin.LEFT,
-                    verticalOrigin: VerticalOrigin.BOTTOM,
-                    eyeOffset: new Cartesian3(0.0, 0.0, -1.0)
-                });
+        for (var name in tilesetOptions) {
+            if (tilesetOptions.hasOwnProperty(name)) {
+                // force an update on all options so default event listeners are created
+                knockout.getObservable(that, name).valueHasMutated();
             }
         }
 
-        function zoom(feature) {
-            if (defined(feature)) {
-                var longitude = feature.getProperty('Longitude');
-                var latitude = feature.getProperty('Latitude');
-                var height = feature.getProperty('Height');
-
-                if (!defined(longitude) || !defined(latitude) || !defined(height)) {
-                    return;
-                }
-
-                var positionCartographic = new Cartographic(longitude, latitude, height * 0.5);
-                var position = that._scene.globe.ellipsoid.cartographicToCartesian(positionCartographic);
-
-                var camera = scene.camera;
-                var heading = camera.heading;
-                var pitch = camera.pitch;
-
-                var offset = offsetFromHeadingPitchRange(heading, pitch, height * 2.0);
-
-                var transform = Transforms.eastNorthUpToFixedFrame(position);
-                Matrix4.multiplyByPoint(transform, offset, position);
-
-                camera.flyTo({
-                    destination : position,
-                    orientation : {
-                        heading : heading,
-                        pitch : pitch
-                    },
-                    easingFunction : EasingFunction.QUADRATIC_OUT
-                });
+        this.tilesetURL = knockout.pureComputed(function() {
+            if (!defined(that._tileset)) {
+                return '';
             }
-        }
-
-        function offsetFromHeadingPitchRange(heading, pitch, range) {
-            pitch = Math.clamp(pitch, -Math.PI_OVER_TWO, Math.PI_OVER_TWO);
-            heading = Math.zeroToTwoPi(heading) - Math.PI_OVER_TWO;
-
-            var pitchQuat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -pitch);
-            var headingQuat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -heading);
-            var rotQuat = Quaternion.multiply(headingQuat, pitchQuat, headingQuat);
-            var rotMatrix = Matrix3.fromQuaternion(rotQuat);
-
-            var offset = Cartesian3.clone(Cartesian3.UNIT_X);
-            Matrix3.multiplyByVector(rotMatrix, offset, offset);
-            Cartesian3.negate(offset, offset);
-            Cartesian3.multiplyByScalar(offset, range, offset);
-            return offset;
-        }
-
-        function showStats(tileset, isPick, force) {
-            var stats = tileset.statistics;
-            var last = isPick ? stats.lastPick : stats.lastColor;
-            var outputStats = (that.showStats && !isPick) || (that.showPickStats && isPick);
-            var statsChanged =
-                (last.visited !== stats.visited ||
-                 last.numberOfCommands !== stats.numberOfCommands ||
-                 last.selected !== tileset._selectedTiles.length ||
-                 last.numberOfAttemptedRequests !== stats.numberOfAttemptedRequests ||
-                 last.numberOfPendingRequests !== stats.numberOfPendingRequests ||
-                 last.numberProcessing !== stats.numberProcessing ||
-                 last.numberContentReady !== stats.numberContentReady ||
-                 last.numberTotal !== stats.numberTotal ||
-                 last.numberOfTilesStyled !== stats.numberOfTilesStyled ||
-                 last.numberOfFeaturesStyled !== stats.numberOfFeaturesStyled);
-
-            if (outputStats && (force || statsChanged)) {
-                // Since the pick pass uses a smaller frustum around the pixel of interest,
-                // the stats will be different than the normal render pass.
-                var s = isPick ? '[Pick ]: ' : '[Color]: ';
-                s +=
-                    // --- Rendering stats
-                    'Visited: ' + stats.visited +
-                    // Number of commands returned is likely to be higher than the number of tiles selected
-                    // because of tiles that create multiple commands.
-                    ', Selected: ' + tileset._selectedTiles.length +
-                    // Number of commands executed is likely to be higher because of commands overlapping
-                    // multiple frustums.
-                    ', Commands: ' + stats.numberOfCommands +
-
-                    // --- Cache/loading stats
-                    ' | Requests: ' + stats.numberOfPendingRequests +
-                    ', Attempted: ' + stats.numberOfAttemptedRequests +
-                    ', Processing: ' + stats.numberProcessing +
-                    ', Content Ready: ' + stats.numberContentReady +
-                    // Total number of tiles includes tiles without content, so "Ready" may never reach
-                    // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
-                    ', Total: ' + stats.numberTotal +
-
-                    // --- Styling stats
-                    ' | Tiles styled: ' + stats.numberOfTilesStyled +
-                    ', Features styled: ' + stats.numberOfFeaturesStyled;
-
-                that.statsText = s;
-            }
-
-            last.visited = stats.visited;
-            last.numberOfCommands = stats.numberOfCommands;
-            last.selected = tileset._selectedTiles.length;
-            last.numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
-            last.numberOfPendingRequests = stats.numberOfPendingRequests;
-            last.numberProcessing = stats.numberProcessing;
-            last.numberContentReady = stats.numberContentReady;
-            last.numberTotal = stats.numberTotal;
-            last.numberOfTilesStyled = stats.numberOfTilesStyled;
-            last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
-        }
+            return that._tileset.url;
+        });
     }
 
     defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
         /**
-         * Gets and sets the tilesets used for the view model
+         * Gets or sets the tileset used for the view model
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          *
-         * @type Object
+         * @type {Cesium3DTileset}
          */
-        tilesets : {
-            get : function() {
-                return this._tilesets;
+        tileset: {
+            get: function() {
+                return this._tileset;
             },
-            set: function(tilesets) {
-                this._tilesets = tilesets;
-                while(this._tilesetOptions.length > 0) {
-                    this._tilesetOptions.pop();
+            set: function(tileset) {
+                this._tileset = tileset;
+                if (defined(this._statsLogger)) {
+                    tileset.loadProgress.removeEventListener(this._statsLogger);
+                    tileset.allTilesLoaded.removeEventListener(this._statsLogger);
                 }
-                for (var name in this._tilesets) {
-                    if (this._tilesets.hasOwnProperty(name)) {
-                        this._tilesetOptions.push({
-                            name: name,
-                            url: this._tilesets[name]
-                        });
-                    }
+                if (defined(tileset)) {
+                    this._statsLogger = this._updateStats.bind(this, false, false);
+                    tileset.loadProgress.addEventListener(this._statsLogger);
+                    tileset.allTilesLoaded.addEventListener(this._statsLogger);
                 }
+            }
+        },
+
+        /**
+         * Gets the current feature of the view model
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Object}
+         */
+        feature: {
+            get: function() {
+                return this._feature;
             }
         },
 
@@ -654,6 +518,76 @@ define([
             }
         }
     });
+
+    /**
+     * Uodates the view model's stats text
+     */
+    Cesium3DTilesInspectorViewModel.prototype._updateStats = function(isPick, force) {
+        var tileset = this._tileset;
+        if (!defined(tileset)) {
+            return;
+        }
+
+        var stats = tileset.statistics;
+        var last = isPick ? stats.lastPick : stats.lastColor;
+        var outputStats = (this.showStats && !isPick) || (this.showPickStats && isPick);
+        var statsChanged =
+            (last.visited !== stats.visited ||
+             last.numberOfCommands !== stats.numberOfCommands ||
+             last.selected !== tileset._selectedTiles.length ||
+             last.numberOfAttemptedRequests !== stats.numberOfAttemptedRequests ||
+             last.numberOfPendingRequests !== stats.numberOfPendingRequests ||
+             last.numberProcessing !== stats.numberProcessing ||
+             last.numberContentReady !== stats.numberContentReady ||
+             last.numberTotal !== stats.numberTotal ||
+             last.numberOfTilesStyled !== stats.numberOfTilesStyled ||
+             last.numberOfFeaturesStyled !== stats.numberOfFeaturesStyled);
+
+        if (outputStats && (force || statsChanged)) {
+            // Since the pick pass uses a smaller frustum around the pixel of interest,
+            // the stats will be different than the normal render pass.
+            var s = isPick ? '[Pick ]: ' : '[Color]: ';
+            s +=
+                // --- Rendering stats
+                'Visited: ' + stats.visited +
+                // Number of commands returned is likely to be higher than the number of tiles selected
+                // because of tiles that create multiple commands.
+                ', Selected: ' + tileset._selectedTiles.length +
+                // Number of commands executed is likely to be higher because of commands overlapping
+                // multiple frustums.
+                ', Commands: ' + stats.numberOfCommands +
+
+                // --- Cache/loading stats
+                ' | Requests: ' + stats.numberOfPendingRequests +
+                ', Attempted: ' + stats.numberOfAttemptedRequests +
+                ', Processing: ' + stats.numberProcessing +
+                ', Content Ready: ' + stats.numberContentReady +
+                // Total number of tiles includes tiles without content, so "Ready" may never reach
+                // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
+                ', Total: ' + stats.numberTotal +
+
+                // --- Styling stats
+                ' | Tiles styled: ' + stats.numberOfTilesStyled +
+                ', Features styled: ' + stats.numberOfFeaturesStyled;
+
+            if (isPick) {
+                this.pickStatsText = s;
+            } else {
+                this.statsText = s;
+            }
+        }
+
+        last.visited = stats.visited;
+        last.numberOfCommands = stats.numberOfCommands;
+        last.selected = tileset._selectedTiles.length;
+        last.numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
+        last.numberOfPendingRequests = stats.numberOfPendingRequests;
+        last.numberProcessing = stats.numberProcessing;
+        last.numberContentReady = stats.numberContentReady;
+        last.numberTotal = stats.numberTotal;
+        last.numberOfTilesStyled = stats.numberOfTilesStyled;
+        last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
+    };
 
     /**
      * Updates the view model
