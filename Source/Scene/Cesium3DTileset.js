@@ -90,8 +90,6 @@ define([
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
-     * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
-     * @param {Boolean} [options.debugShowPickStatistics=false] For debugging only. Determines if rendering statistics for picking are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -254,30 +252,6 @@ define([
         this.colorBlendAmount = 0.5;
 
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * Determines if rendering statistics are output to the console.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowStatistics = defaultValue(options.debugShowStatistics, false);
-        this._debugShowStatistics = false;
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * Determines if rendering statistics for picking are output to the console.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowPickStatistics = defaultValue(options.debugShowPickStatistics, false);
-        this._debugShowPickStatistics = false;
 
         this._statistics = {
             // Rendering stats
@@ -776,7 +750,7 @@ define([
                     throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
                 }
                 //>>includeEnd('debug');
-
+                
                 return this._root._boundingVolume;
             }
         },
@@ -840,6 +814,15 @@ define([
         styleEngine : {
             get : function() {
                 return this._styleEngine;
+            }
+        },
+
+        /**
+         * @private
+         */
+        statistics : {
+            get : function() {
+                return this._statistics;
             }
         }
     });
@@ -1540,75 +1523,6 @@ define([
         stats.numberOfFeaturesStyled = 0;
     }
 
-    function showStats(tileset, isPick) {
-        var stats = tileset._statistics;
-        var last = isPick ? stats.lastPick : stats.lastColor;
-
-        var outputStats = (tileset.debugShowStatistics && !isPick) || (tileset.debugShowPickStatistics && isPick);
-        var showStatsThisFrame =
-            ((tileset._debugShowStatistics !== tileset.debugShowStatistics) ||
-             (tileset._debugShowPickStatistics !== tileset.debugShowPickStatistics));
-        var statsChanged =
-            (last.visited !== stats.visited ||
-             last.numberOfCommands !== stats.numberOfCommands ||
-             last.selected !== tileset._selectedTiles.length ||
-             last.numberOfAttemptedRequests !== stats.numberOfAttemptedRequests ||
-             last.numberOfPendingRequests !== stats.numberOfPendingRequests ||
-             last.numberProcessing !== stats.numberProcessing ||
-             last.numberContentReady !== stats.numberContentReady ||
-             last.numberTotal !== stats.numberTotal ||
-             last.numberOfTilesStyled !== stats.numberOfTilesStyled ||
-             last.numberOfFeaturesStyled !== stats.numberOfFeaturesStyled);
-
-        if (outputStats && (showStatsThisFrame || statsChanged)) {
-            // The shadowed properties are used to ensure that when a show stats properties
-            // is set to true, it outputs the stats on the next frame even if they didn't
-            // change from the previous frame.
-            tileset._debugShowStatistics = tileset.debugShowStatistics;
-            tileset._debugShowPickStatistics = tileset.debugShowPickStatistics;
-
-            // Since the pick pass uses a smaller frustum around the pixel of interest,
-            // the stats will be different than the normal render pass.
-            var s = isPick ? '[Pick ]: ' : '[Color]: ';
-            s +=
-                // --- Rendering stats
-                'Visited: ' + stats.visited +
-                // Number of commands returned is likely to be higher than the number of tiles selected
-                // because of tiles that create multiple commands.
-                ', Selected: ' + tileset._selectedTiles.length +
-                // Number of commands executed is likely to be higher because of commands overlapping
-                // multiple frustums.
-                ', Commands: ' + stats.numberOfCommands +
-
-                // --- Cache/loading stats
-                ' | Requests: ' + stats.numberOfPendingRequests +
-                ', Attempted: ' + stats.numberOfAttemptedRequests +
-                ', Processing: ' + stats.numberProcessing +
-                ', Content Ready: ' + stats.numberContentReady +
-                // Total number of tiles includes tiles without content, so "Ready" may never reach
-                // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
-                ', Total: ' + stats.numberTotal +
-
-                // --- Styling stats
-                ' | Tiles styled: ' + stats.numberOfTilesStyled +
-                ', Features styled: ' + stats.numberOfFeaturesStyled;
-
-            /*global console*/
-            console.log(s);
-        }
-
-        last.visited = stats.visited;
-        last.numberOfCommands = stats.numberOfCommands;
-        last.selected = tileset._selectedTiles.length;
-        last.numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
-        last.numberOfPendingRequests = stats.numberOfPendingRequests;
-        last.numberProcessing = stats.numberProcessing;
-        last.numberContentReady = stats.numberContentReady;
-        last.numberTotal = stats.numberTotal;
-        last.numberOfTilesStyled = stats.numberOfTilesStyled;
-        last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
-    }
-
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
@@ -1776,8 +1690,6 @@ define([
         // may resolve outside of the update loop that then raise events, e.g.,
         // model's readyPromise.
         raiseLoadProgressEvent(this, frameState);
-
-        showStats(this, isPick);
     };
 
     /**

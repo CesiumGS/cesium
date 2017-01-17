@@ -100,9 +100,6 @@ define([
             container: document.createElement('div')
         });
 
-        this._tilesetLoadPromise = when.defer();
-        this._featureSelectPromise = when.defer();
-
         this.highlightColor = new Color(1.0, 1.0, 0.0, 0.4);
 
         var tilesetOptions = {
@@ -114,10 +111,11 @@ define([
              * @default false
              */
             showStats: {
-                default: false,
+                default: true,
                 subscribe: function(val) {
                     if (that._tileset) {
-                        that._tileset.debugShowStatistics = val;
+                        // force a show of stats because the toggle has been enabled
+                        showStats(that._tileset, false, true);
                     }
                 }
             },
@@ -129,10 +127,11 @@ define([
              * @default false
              */
             showPickStats: {
-                default: false,
+                default: true,
                 subscribe: function(val) {
-                    if (that._tileset) {
-                        that._tileset.debugShowPickStatistics = val;
+                    if (that._tileset && val) {
+                        // force a show of pick stats because the toggle has been enabled
+                        showStats(that._tileset, true, true);
                     }
                 }
             },
@@ -150,6 +149,9 @@ define([
                         if (val) {
                             eventHandler.setInputAction(function(e) {
                                 that._feature = scene.pick(e.endPosition);
+                                if (that._tileset) {
+                                    showStats(that._tileset, true, false);
+                                }
                             }, ScreenSpaceEventType.MOUSE_MOVE);
 
                             eventHandler.setInputAction(function() {
@@ -163,7 +165,7 @@ define([
                                     annotate(e.position);
                                 }
                                 if (that.zoomPicked) {
-                                    zoom(e.position);
+                                    zoom(that._feature);
                                 }
                             }, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
@@ -309,7 +311,7 @@ define([
              * @type {Number}
              * @default 16
              */
-            SSE: {
+            maximumSSE : {
                 default: 16,
                 subscribe: function(val) {
                     if (that._tileset) {
@@ -324,7 +326,7 @@ define([
              * @type {Boolean}
              * @default false
              */
-            dynamicSSE: {
+            dynamicSSE : {
                 default: false,
                 subscribe: function(val) {
                     if (that._tileset) {
@@ -337,10 +339,10 @@ define([
              * @memberof Cesium3DTilesInspectorViewModel.prototype
              *
              * @type {Number}
-             * @default 1.0
+             * @default 0.00278
              */
-            dynamicSSEDensity: {
-                default: 1.0,
+            dynamicSSEDensity : {
+                default: 0.00278,
                 subscribe: function(val) {
                     if (that._tileset) {
                         that._tileset.dynamicScreenSpaceErrorDensity = val;
@@ -352,10 +354,10 @@ define([
              * @memberof Cesium3DTilesInspectorViewModel.prototype
              *
              * @type {Number}
-             * @default 10.0
+             * @default 4.0
              */
-            dynamicSSEFactor: {
-                default: 10.0,
+            dynamicSSEFactor : {
+                default: 4.0,
                 subscribe: function(val) {
                     if (that._tileset) {
                         that._tileset.dynamicScreenSpaceErrorFactor = val;
@@ -369,7 +371,7 @@ define([
              * @type {Boolean}
              * @default false
              */
-            performance: {
+            performance : {
                 default: false
             },
             /**
@@ -379,7 +381,7 @@ define([
              * @type {Boolean}
              * @default false
              */
-            showTileURL: {
+            showTileURL : {
                 default: false
             },
             /**
@@ -389,8 +391,19 @@ define([
              * @type {Boolean}
              * @default false
              */
-            ignoreBatchTable: {
+            ignoreBatchTable : {
                 default: false
+            },
+
+            /**
+             * Gets or sets the flag to set stats text.  This property is observable.
+             * @memberof Cesium3DTilesInspectorViewModel.prototype
+             *
+             * @type {String}
+             * @default ''
+             */
+            statsText : {
+                default: ''
             }
         };
         this._subscriptions = {};
@@ -461,6 +474,15 @@ define([
                     knockout.getObservable(that, name).valueHasMutated();
                 }
             }
+
+            tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
+                showStats(tileset, false, false);
+            });
+
+            tileset.allTilesLoaded.addEventListener(function() {
+                showStats(tileset, false, false);
+            });
+
             onLoad(tileset);
         }
 
@@ -480,8 +502,7 @@ define([
             }
         }
 
-        function zoom() {
-            var feature = that._feature;
+        function zoom(feature) {
             if (defined(feature)) {
                 var longitude = feature.getProperty('Longitude');
                 var latitude = feature.getProperty('Latitude');
@@ -528,6 +549,64 @@ define([
             Cartesian3.negate(offset, offset);
             Cartesian3.multiplyByScalar(offset, range, offset);
             return offset;
+        }
+
+        function showStats(tileset, isPick, force) {
+            var stats = tileset.statistics;
+            var last = isPick ? stats.lastPick : stats.lastColor;
+            var outputStats = (that.showStats && !isPick) || (that.showPickStats && isPick);
+            var statsChanged =
+                (last.visited !== stats.visited ||
+                 last.numberOfCommands !== stats.numberOfCommands ||
+                 last.selected !== tileset._selectedTiles.length ||
+                 last.numberOfAttemptedRequests !== stats.numberOfAttemptedRequests ||
+                 last.numberOfPendingRequests !== stats.numberOfPendingRequests ||
+                 last.numberProcessing !== stats.numberProcessing ||
+                 last.numberContentReady !== stats.numberContentReady ||
+                 last.numberTotal !== stats.numberTotal ||
+                 last.numberOfTilesStyled !== stats.numberOfTilesStyled ||
+                 last.numberOfFeaturesStyled !== stats.numberOfFeaturesStyled);
+
+            if (outputStats && (force || statsChanged)) {
+                // Since the pick pass uses a smaller frustum around the pixel of interest,
+                // the stats will be different than the normal render pass.
+                var s = isPick ? '[Pick ]: ' : '[Color]: ';
+                s +=
+                    // --- Rendering stats
+                    'Visited: ' + stats.visited +
+                    // Number of commands returned is likely to be higher than the number of tiles selected
+                    // because of tiles that create multiple commands.
+                    ', Selected: ' + tileset._selectedTiles.length +
+                    // Number of commands executed is likely to be higher because of commands overlapping
+                    // multiple frustums.
+                    ', Commands: ' + stats.numberOfCommands +
+
+                    // --- Cache/loading stats
+                    ' | Requests: ' + stats.numberOfPendingRequests +
+                    ', Attempted: ' + stats.numberOfAttemptedRequests +
+                    ', Processing: ' + stats.numberProcessing +
+                    ', Content Ready: ' + stats.numberContentReady +
+                    // Total number of tiles includes tiles without content, so "Ready" may never reach
+                    // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
+                    ', Total: ' + stats.numberTotal +
+
+                    // --- Styling stats
+                    ' | Tiles styled: ' + stats.numberOfTilesStyled +
+                    ', Features styled: ' + stats.numberOfFeaturesStyled;
+
+                that.statsText = s;
+            }
+
+            last.visited = stats.visited;
+            last.numberOfCommands = stats.numberOfCommands;
+            last.selected = tileset._selectedTiles.length;
+            last.numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
+            last.numberOfPendingRequests = stats.numberOfPendingRequests;
+            last.numberProcessing = stats.numberProcessing;
+            last.numberContentReady = stats.numberContentReady;
+            last.numberTotal = stats.numberTotal;
+            last.numberOfTilesStyled = stats.numberOfTilesStyled;
+            last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
         }
     }
 

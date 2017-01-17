@@ -63,10 +63,10 @@ define([
 
         this._inspectorModel = {
             inspectorVisible: true,
-            tilesetVisible: true,
-            displayVisible: true,
-            updateVisible: true,
-            loggingVisible: true,
+            tilesetVisible: false,
+            displayVisible: false,
+            updateVisible: false,
+            loggingVisible: false,
             toggleInspector: function() {
                 that._inspectorModel.inspectorVisible = !that._inspectorModel.inspectorVisible;
             },
@@ -84,7 +84,7 @@ define([
             }
         };
 
-        knockout.track(this._inspectorModel, ['inspectorVisible', 'tilesetVisible', 'displayVisible', 'updateVisible']);
+        knockout.track(this._inspectorModel, ['inspectorVisible', 'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible']);
 
         var element = document.createElement('div');
         this._element = element;
@@ -102,19 +102,24 @@ define([
         var updatePanel = makeSection('Update', 'updateVisible', 'toggleUpdate');
         var loggingPanel = makeSection('Logging', 'loggingVisible', 'toggleLogging');
 
+        // first add and bind all the toggleable panels
         element.appendChild(tilesetPanel);
         element.appendChild(displayPanel);
         element.appendChild(updatePanel);
         element.appendChild(loggingPanel);
         knockout.applyBindings(this._inspectorModel, element);
 
+        // now add and bind just the tileset selection option
         var tilesets = document.createElement('select');
         tilesets.setAttribute('data-bind', 'options: _tilesetOptions, ' +
                                            'optionsText: "name", ' +
                                            'value: _selectedTileset, ' +
                                            'optionsCaption: "Choose a Tileset..."');
         tilesets.className = 'cesium-cesiumInspector-select';
-        tilesetPanel.contents.appendChild(tilesets);
+        element.insertBefore(tilesets, tilesetPanel);
+        knockout.applyBindings(viewModel, tilesets);
+
+        // build and bind each panel separately
         tilesetPanel.contents.appendChild(makeButton('trimTilesCache', 'Trim Tiles Cache'));
         tilesetPanel.contents.appendChild(makeCheckbox('picking', 'Enable Picking'));
         var pickPanel = makeSection('Picking', 'picking');
@@ -137,13 +142,13 @@ define([
         updatePanel.contents.appendChild(makeCheckbox('dynamicSSE', 'Dynamic SSE'));
         var sseContainer = document.createElement('div');
         sseContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : !dynamicSSE, "cesium-cesiumInspector-hide" : dynamicSSE}');
-        sseContainer.appendChild(makeRangeInput('SSE', 0, 50, 'Maximum SSE'));
+        sseContainer.appendChild(makeRangeInput('maximumSSE', 0, 30, 'Maximum SSE'));
         updatePanel.contents.appendChild(sseContainer);
 
         var dynamicSSEContainer = document.createElement('div');
         dynamicSSEContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : dynamicSSE, "cesium-cesiumInspector-hide" : !dynamicSSE}');
-        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEDensity', 0, 2, 'SSE Density'));
-        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEFactor', 0, 50, 'SSE Factor'));
+        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEDensity', 0, 1, 'SSE Density'));
+        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEFactor', 0, 10, 'SSE Factor'));
         updatePanel.contents.appendChild(dynamicSSEContainer);
         knockout.applyBindings(viewModel, updatePanel.contents);
 
@@ -152,6 +157,10 @@ define([
         this._viewModel._performanceDisplay._container.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : performance, "cesium-cesiumInspector-hide" : !performance}');
         loggingPanel.contents.appendChild(makeCheckbox('showStats', 'Stats'));
         loggingPanel.contents.appendChild(makeCheckbox('showPickStats', 'Pick Stats'));
+        var stats = document.createElement('div');
+        stats.setAttribute('data-bind', 'text: statsText');
+        stats.setAttribute('style', 'font-size: 10px');
+        loggingPanel.contents.appendChild(stats);
         knockout.applyBindings(viewModel, loggingPanel.contents);
     }
 
@@ -288,7 +297,7 @@ define([
         slider.type = 'range';
         slider.min = min;
         slider.max = max;
-        slider.step = (max - min) / 20;
+        slider.step = (max - min) / 100;
         slider.setAttribute('data-bind', 'value: ' + property);
 
         container.appendChild(document.createTextNode(text));
