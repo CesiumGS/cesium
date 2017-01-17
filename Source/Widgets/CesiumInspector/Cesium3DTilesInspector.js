@@ -122,11 +122,14 @@ define([
         // build and bind each panel separately
         tilesetPanel.contents.appendChild(makeButton('trimTilesCache', 'Trim Tiles Cache'));
         tilesetPanel.contents.appendChild(makeCheckbox('picking', 'Enable Picking'));
-        var pickPanel = makeSection('Picking', 'picking');
+        var pickPanelWrapper = document.createElement('div');
+        pickPanelWrapper.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : picking, "cesium-cesiumInspector-hide" : !picking}');
+        var pickPanel = makeSection('Picking');
         pickPanel.contents.appendChild(makeCheckbox('annotatePicked', 'Annotate Features', 'picking'));
         pickPanel.contents.appendChild(makeCheckbox('zoomPicked', 'Fly to Features', 'picking'));
         pickPanel.contents.appendChild(makeCheckbox('hidePicked', 'Hide Features', 'picking'));
-        tilesetPanel.contents.appendChild(pickPanel);
+        pickPanelWrapper.append(pickPanel);
+        tilesetPanel.contents.appendChild(pickPanelWrapper);
         knockout.applyBindings(viewModel, tilesetPanel.contents);
 
 
