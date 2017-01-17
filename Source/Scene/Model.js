@@ -3527,6 +3527,7 @@ define([
     }
 
     var scratchNodeStack = [];
+    var scratchComputedTranslation = new Cartesian4();
     var scratchComputedMatrixIn2D = new Matrix4();
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
@@ -3540,7 +3541,14 @@ define([
         var computedModelMatrix = model._computedModelMatrix;
 
         if (model._mode !== SceneMode.SCENE3D) {
-            computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
+            var translation = Matrix4.getColumn(computedModelMatrix, 3, scratchComputedTranslation);
+            if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
+                computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
+            } else {
+                var center = model.boundingSphere.center;
+                var to2D = Transforms.wgs84To2DModelMatrix(projection, center, scratchComputedMatrixIn2D);
+                computedModelMatrix = Matrix4.multiply(to2D, computedModelMatrix, scratchComputedMatrixIn2D);
+            }
         }
 
         for (var i = 0; i < length; ++i) {

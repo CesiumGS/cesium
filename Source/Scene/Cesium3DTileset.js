@@ -216,7 +216,7 @@ define([
 
         /**
          * Determines whether the tileset casts or receives shadows from each light source.
-         *  
+         *
          * @type {ShadowMode}
          * @default ShadowMode.ENABLED
          */
@@ -776,7 +776,7 @@ define([
                     throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
                 }
                 //>>includeEnd('debug');
-                
+
                 return this._root._boundingVolume;
             }
         },
@@ -1053,7 +1053,6 @@ define([
     }
 
     function getScreenSpaceError(tileset, geometricError, tile, frameState) {
-        // TODO: screenSpaceError2D like QuadtreePrimitive.js
         if (geometricError === 0.0) {
             // Leaf nodes do not have any error so save the computation
             return 0.0;
@@ -1061,17 +1060,29 @@ define([
 
         // Avoid divide by zero when viewer is inside the tile
         var camera = frameState.camera;
-        var distance = Math.max(tile.distanceToCamera, CesiumMath.EPSILON7);
-        var height = frameState.context.drawingBufferHeight;
-        var sseDenominator = camera.frustum.sseDenominator;
+        var context = frameState.context;
+        var height = context.drawingBufferHeight;
 
-        var error = (geometricError * height) / (distance * sseDenominator);
+        var error;
+        if (frameState.mode === SceneMode.SCENE2D) {
+            var frustum = camera.frustum;
+            var width = context.drawingBufferWidth;
 
-        if (tileset.dynamicScreenSpaceError) {
-            var density = tileset._dynamicScreenSpaceErrorComputedDensity;
-            var factor = tileset.dynamicScreenSpaceErrorFactor;
-            var dynamicError = CesiumMath.fog(distance, density) * factor;
-            error -= dynamicError;
+            var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
+            error = geometricError / pixelSize;
+        } else {
+            // Avoid divide by zero when viewer is inside the tile
+            var distance = Math.max(tile.distanceToCamera, CesiumMath.EPSILON7);
+            var sseDenominator = camera.frustum.sseDenominator;
+            error = (geometricError * height) / (distance * sseDenominator);
+
+            // TODO: fix in 2D
+            if (tileset.dynamicScreenSpaceError && frameState.mode === SceneMode.SCENE3D) {
+                var density = tileset._dynamicScreenSpaceErrorComputedDensity;
+                var factor = tileset.dynamicScreenSpaceErrorFactor;
+                var dynamicError = CesiumMath.fog(distance, density) * factor;
+                error -= dynamicError;
+            }
         }
 
         return error;
@@ -1103,7 +1114,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function isVisible(visibilityPlaneMask) {
-        return visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+        return true;//visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
     }
 
     function requestContent(tileset, tile, outOfCore) {
@@ -1197,9 +1208,11 @@ define([
         }
 
         root.visibilityPlaneMask = root.visibility(cullingVolume, CullingVolume.MASK_INDETERMINATE);
+        /*
         if (root.visibilityPlaneMask === CullingVolume.MASK_OUTSIDE) {
             return;
         }
+        */
 
         if (root.contentUnloaded) {
             requestContent(tileset, root, outOfCore);
@@ -1217,7 +1230,7 @@ define([
             t.replaced = false;
             ++stats.visited;
 
-            var visibilityPlaneMask = t.visibilityPlaneMask;
+            var visibilityPlaneMask = CullingVolume.MASK_INSIDE;//t.visibilityPlaneMask;
             var fullyVisible = (visibilityPlaneMask === CullingVolume.MASK_INSIDE);
 
             touch(tileset, t, outOfCore);
@@ -1238,7 +1251,7 @@ define([
                 // and geometric error are equal to its parent.
                 if (t.contentReady) {
                     child = t.children[0];
-                    child.visibilityPlaneMask = t.visibilityPlaneMask;
+                    child.visibilityPlaneMask = CullingVolume.MASK_INSIDE;//t.visibilityPlaneMask;
                     child.distanceToCamera = t.distanceToCamera;
                     child.updateTransform(t.computedTransform);
                     if (child.contentUnloaded) {
@@ -1273,10 +1286,10 @@ define([
                         // With additive refinement, we only request or refine when children are visible
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            if (child.insideViewerRequestVolume(frameState)) {
+                            //if (child.insideViewerRequestVolume(frameState)) {
                                 // Use parent's geometric error with child's box to see if we already meet the SSE
                                 if (getScreenSpaceError(tileset, t.geometricError, child, frameState) > maximumScreenSpaceError) {
-                                    child.visibilityPlaneMask = child.visibility(cullingVolume, visibilityPlaneMask);
+                                    child.visibilityPlaneMask = CullingVolume.MASK_INSIDE;//child.visibility(cullingVolume, visibilityPlaneMask);
                                     if (isVisible(child.visibilityPlaneMask)) {
                                         if (child.contentUnloaded) {
                                             requestContent(tileset, child, outOfCore);
@@ -1285,7 +1298,7 @@ define([
                                         }
                                     }
                                 }
-                            }
+                            //}
                         }
                     }
                 }
@@ -1343,11 +1356,11 @@ define([
                         var anyChildrenVisible = false;
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            if (child.insideViewerRequestVolume(frameState)) {
-                                child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
-                            } else {
-                                child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
-                            }
+                            //if (child.insideViewerRequestVolume(frameState)) {
+                            //    child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
+                            //} else {
+                                child.visibilityPlaneMask = CullingVolume.MASK_INSIDE;//CullingVolume.MASK_OUTSIDE;
+                            //}
 
                             if (isVisible(child.visibilityPlaneMask)) {
                                 stack.push(child);
@@ -1381,11 +1394,11 @@ define([
                     for (k = 0; k < childrenLength; ++k) {
                         child = children[k];
                         child.updateTransform(t.computedTransform);
-                        if (child.insideViewerRequestVolume(frameState)) {
-                            child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
-                        } else {
-                            child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
-                        }
+                        //if (child.insideViewerRequestVolume(frameState)) {
+                        //    child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
+                        //} else {
+                            child.visibilityPlaneMask = CullingVolume.MASK_INSIDE;//CullingVolume.MASK_OUTSIDE;
+                        //}
                         if (isVisible(child.visibilityPlaneMask)) {
                             if (child.contentReady) {
                                 someVisibleChildrenLoaded = true;
@@ -1736,8 +1749,7 @@ define([
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status
      */
     Cesium3DTileset.prototype.update = function(frameState) {
-        // TODO: Support 2D and CV
-        if (!this.show || !this.ready || (frameState.mode !== SceneMode.SCENE3D)) {
+        if (!this.show || !this.ready) {
             return;
         }
 
