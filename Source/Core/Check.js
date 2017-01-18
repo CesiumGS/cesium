@@ -25,11 +25,11 @@ define([
     Check.numeric = {};
 
     function getUndefinedErrorMessage(name) {
-        return name + ' was required but undefined.';
+        return name + ' is required, actual value was undefined';
     }
 
     function getFailedTypeErrorMessage(actual, expected, name) {
-        return 'Expected ' + name + ' to be typeof ' + expected + ', got ' + actual;
+        return 'Expected ' + name + ' to be typeof ' + expected + ', actual typeof was ' + actual;
     }
 
     /**
