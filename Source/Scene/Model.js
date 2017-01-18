@@ -3601,14 +3601,12 @@ define([
                             if (defined(command) && model._mode === SceneMode.SCENE2D) {
                                 Matrix4.clone(nodeMatrix, command.modelMatrix);
                                 command.modelMatrix[13] -= CesiumMath.sign(command.modelMatrix[13]) * 2.0 * CesiumMath.PI * projection.ellipsoid.maximumRadius;
-                                //BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
-                                command.boundingVolume = undefined;
+                                BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
 
                                 if (allowPicking) {
                                     var pickCommand2D = primitiveCommand.pickCommand2D;
                                     Matrix4.clone(command.modelMatrix, pickCommand2D.modelMatrix);
-                                    //BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
-                                    pickCommand2D.boundingVolume = undefined;
+                                    BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
                                 }
                             }
                         }

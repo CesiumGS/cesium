@@ -1114,7 +1114,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function isVisible(visibilityPlaneMask) {
-        return true;//visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+        return visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
     }
 
     function requestContent(tileset, tile, outOfCore) {
@@ -1143,7 +1143,7 @@ define([
     function selectTile(tileset, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.contentReady && (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
+        if (tile.contentReady && (fullyVisible || (tile.contentsVisibility(frameState) !== Intersect.OUTSIDE))) {
             tileset._selectedTiles.push(tile);
             tile.selected = true;
 
@@ -1207,12 +1207,10 @@ define([
             return;
         }
 
-        root.visibilityPlaneMask = root.visibility(cullingVolume, CullingVolume.MASK_INDETERMINATE);
-        /*
+        root.visibilityPlaneMask = root.visibility(frameState, CullingVolume.MASK_INDETERMINATE);
         if (root.visibilityPlaneMask === CullingVolume.MASK_OUTSIDE) {
             return;
         }
-        */
 
         if (root.contentUnloaded) {
             requestContent(tileset, root, outOfCore);
@@ -1230,7 +1228,7 @@ define([
             t.replaced = false;
             ++stats.visited;
 
-            var visibilityPlaneMask = CullingVolume.MASK_INSIDE;//t.visibilityPlaneMask;
+            var visibilityPlaneMask = t.visibilityPlaneMask;
             var fullyVisible = (visibilityPlaneMask === CullingVolume.MASK_INSIDE);
 
             touch(tileset, t, outOfCore);
@@ -1251,7 +1249,7 @@ define([
                 // and geometric error are equal to its parent.
                 if (t.contentReady) {
                     child = t.children[0];
-                    child.visibilityPlaneMask = CullingVolume.MASK_INSIDE;//t.visibilityPlaneMask;
+                    child.visibilityPlaneMask = t.visibilityPlaneMask;
                     child.distanceToCamera = t.distanceToCamera;
                     child.updateTransform(t.computedTransform);
                     if (child.contentUnloaded) {
@@ -1286,10 +1284,10 @@ define([
                         // With additive refinement, we only request or refine when children are visible
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            //if (child.insideViewerRequestVolume(frameState)) {
+                            if (child.insideViewerRequestVolume(frameState)) {
                                 // Use parent's geometric error with child's box to see if we already meet the SSE
                                 if (getScreenSpaceError(tileset, t.geometricError, child, frameState) > maximumScreenSpaceError) {
-                                    child.visibilityPlaneMask = CullingVolume.MASK_INSIDE;//child.visibility(cullingVolume, visibilityPlaneMask);
+                                    child.visibilityPlaneMask = child.visibility(frameState, visibilityPlaneMask);
                                     if (isVisible(child.visibilityPlaneMask)) {
                                         if (child.contentUnloaded) {
                                             requestContent(tileset, child, outOfCore);
@@ -1298,7 +1296,7 @@ define([
                                         }
                                     }
                                 }
-                            //}
+                            }
                         }
                     }
                 }
@@ -1356,11 +1354,11 @@ define([
                         var anyChildrenVisible = false;
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            //if (child.insideViewerRequestVolume(frameState)) {
-                            //    child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
-                            //} else {
-                                child.visibilityPlaneMask = CullingVolume.MASK_INSIDE;//CullingVolume.MASK_OUTSIDE;
-                            //}
+                            if (child.insideViewerRequestVolume(frameState)) {
+                                child.visibilityPlaneMask = child.visibility(frameState, visibilityPlaneMask);
+                            } else {
+                                child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
+                            }
 
                             if (isVisible(child.visibilityPlaneMask)) {
                                 stack.push(child);
@@ -1394,11 +1392,11 @@ define([
                     for (k = 0; k < childrenLength; ++k) {
                         child = children[k];
                         child.updateTransform(t.computedTransform);
-                        //if (child.insideViewerRequestVolume(frameState)) {
-                        //    child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
-                        //} else {
-                            child.visibilityPlaneMask = CullingVolume.MASK_INSIDE;//CullingVolume.MASK_OUTSIDE;
-                        //}
+                        if (child.insideViewerRequestVolume(frameState)) {
+                            child.visibilityPlaneMask = child.visibility(frameState, visibilityPlaneMask);
+                        } else {
+                            child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
+                        }
                         if (isVisible(child.visibilityPlaneMask)) {
                             if (child.contentReady) {
                                 someVisibleChildrenLoaded = true;
