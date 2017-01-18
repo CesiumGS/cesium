@@ -1076,8 +1076,7 @@ define([
             var sseDenominator = camera.frustum.sseDenominator;
             error = (geometricError * height) / (distance * sseDenominator);
 
-            // TODO: fix in 2D
-            if (tileset.dynamicScreenSpaceError && frameState.mode === SceneMode.SCENE3D) {
+            if (tileset.dynamicScreenSpaceError) {
                 var density = tileset._dynamicScreenSpaceErrorComputedDensity;
                 var factor = tileset.dynamicScreenSpaceErrorFactor;
                 var dynamicError = CesiumMath.fog(distance, density) * factor;
