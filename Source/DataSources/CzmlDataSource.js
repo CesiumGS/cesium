@@ -42,6 +42,7 @@ define([
         '../Scene/VerticalOrigin',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './ArbitraryProperties',
         './BillboardGraphics',
         './BoxGraphics',
         './ColorMaterialProperty',
@@ -127,6 +128,7 @@ define([
         VerticalOrigin,
         Uri,
         when,
+        ArbitraryProperties,
         BillboardGraphics,
         BoxGraphics,
         ColorMaterialProperty,
@@ -992,7 +994,7 @@ define([
         var propertiesData = packet.properties;
         if (defined(propertiesData)) {
             if (!defined(entity.properties)) {
-                entity.properties = {};
+                entity.properties = new ArbitraryProperties();
             }
             var key;
             //We cannot simply call processPacketData(entity, 'properties', propertyData, undefined, sourceUri, entityCollection)
@@ -1000,6 +1002,7 @@ define([
             //The properties will be accessible as entity.properties.myprop.getValue(time).
             for (key in propertiesData) {
                 if (propertiesData.hasOwnProperty(key)) {
+                    entity.properties.addProperty(key);
                     processPacketData(Object, entity.properties, key, propertiesData[key], undefined, sourceUri, entityCollection);
                 }
             }

@@ -24,6 +24,7 @@ defineSuite([
         'Core/Spherical',
         'Core/TimeInterval',
         'Core/TranslationRotationScale',
+        'DataSources/CompositeEntityCollection',
         'DataSources/EntityCollection',
         'DataSources/ReferenceProperty',
         'DataSources/StripeOrientation',
@@ -59,6 +60,7 @@ defineSuite([
         Spherical,
         TimeInterval,
         TranslationRotationScale,
+        CompositeEntityCollection,
         EntityCollection,
         ReferenceProperty,
         StripeOrientation,
@@ -1521,6 +1523,84 @@ defineSuite([
 
         expect(entity.properties.changing_array.getValue(time1)).toEqual(array1);
         expect(entity.properties.changing_array.getValue(time2)).toEqual(array2);
+    });
+
+    it('handles properties in a way that allows CompositeEntityCollection to work', function() {
+        var testObject1 = {
+            foo: 4,
+            bar: {
+                name: 'bar'
+            }
+        };
+        var testArray1 = [2, 4, 16, 'test'];
+        var packet1 = {
+            id: 'test',
+            properties: {
+                constant_name: 'ABC',
+                constant_height: 8,
+                constant_object: {
+                    value: testObject1
+                },
+                constant_array: {
+                    value: testArray1
+                }
+            }
+        };
+
+        var dataSource1 = new CzmlDataSource();
+        dataSource1.load(makePacket(packet1));
+
+        var dataSource2 = new CzmlDataSource();
+        var composite = new CompositeEntityCollection([dataSource1.entities, dataSource2.entities]);
+
+        // Initially we use all the properties from dataSource1.
+        var entity = composite.values[0];
+        expect(entity.properties.constant_name.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet1.properties.constant_name);
+        expect(entity.properties.constant_height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet1.properties.constant_height);
+        expect(entity.properties.constant_object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject1);
+        expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray1);
+
+        // Load a new packet into dataSource2 and it should take precedence in the composite.
+        var packet2 = {
+            id: 'test',
+            properties: {
+                constant_name: 'DEF'
+            }
+        };
+
+        dataSource2.load(makePacket(packet2));
+
+        entity = composite.values[0];
+        expect(entity.properties.constant_name.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet2.properties.constant_name);
+        expect(entity.properties.constant_height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet1.properties.constant_height);
+        expect(entity.properties.constant_object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject1);
+        expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray1);
+
+        // Changed values should be mirrored in the composite, too.
+        var testObject3 = {
+            some: 'value'
+        };
+        var testArray3 = ['not', 'the', 'same', 4];
+        var packet3 = {
+            id: 'test',
+            properties: {
+                constant_height: 9,
+                constant_object: {
+                    value: testObject3
+                },
+                constant_array: {
+                    value: testArray3
+                }
+            }
+        };
+
+        dataSource2.process(packet3);
+
+        entity = composite.values[0];
+        expect(entity.properties.constant_name.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet2.properties.constant_name);
+        expect(entity.properties.constant_height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet3.properties.constant_height);
+        expect(entity.properties.constant_object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject3);
+        expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray3);
     });
 
     it('CZML Availability works with a single interval.', function() {
