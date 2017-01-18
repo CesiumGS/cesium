@@ -1179,7 +1179,6 @@ define([
         }
 
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
-        var cullingVolume = frameState.cullingVolume;
 
         tileset._selectedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
