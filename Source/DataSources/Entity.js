@@ -11,7 +11,7 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Transforms',
-        './ArbitraryProperties',
+        './PropertyBag',
         './BillboardGraphics',
         './BoxGraphics',
         './ConstantPositionProperty',
@@ -43,7 +43,7 @@ define([
         Matrix4,
         Quaternion,
         Transforms,
-        ArbitraryProperties,
+        PropertyBag,
         BillboardGraphics,
         BoxGraphics,
         ConstantPositionProperty,
@@ -111,7 +111,7 @@ define([
      * @param {PointGraphics} [options.point] A point to associate with this entity.
      * @param {PolygonGraphics} [options.polygon] A polygon to associate with this entity.
      * @param {PolylineGraphics} [options.polyline] A polyline to associate with this entity.
-     * @param {ArbitraryProperties} [options.properties] Arbitrary properties to associate with this entity.
+     * @param {PropertyBag} [options.properties] Arbitrary properties to associate with this entity.
      * @param {PolylineVolumeGraphics} [options.polylineVolume] A polylineVolume to associate with this entity.
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
@@ -424,9 +424,9 @@ define([
         /**
          * Gets or sets the bag of arbitrary properties associated with this entity.
          * @memberof Entity.prototype
-         * @type {ArbitraryProperties}
+         * @type {PropertyBag}
          */
-        properties : createPropertyTypeDescriptor('properties', ArbitraryProperties),
+        properties : createPropertyTypeDescriptor('properties', PropertyBag),
         /**
          * Gets or sets the position.
          * @memberof Entity.prototype
