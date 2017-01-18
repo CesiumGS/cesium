@@ -104,18 +104,16 @@ define([
         var startDaysSinceEpoch = getDaysSinceEpoch(this, startDayTT, startSecondTT);
         var stopDaysSinceEpoch = getDaysSinceEpoch(this, stopDayTT, stopSecondTT);
 
-        var startIndex = (startDaysSinceEpoch / this._stepSizeDays - this._interpolationOrder / 2) | 0;
-        if (startIndex < 0) {
-            startIndex = 0;
-        }
+        var startIndex = (startDaysSinceEpoch / this._stepSizeDays - this._interpolationOrder / 2);
+        startIndex = Math.max(0, startIndex);
 
-        var stopIndex = (stopDaysSinceEpoch / this._stepSizeDays - this._interpolationOrder / 2) | 0 + this._interpolationOrder;
-        if (stopIndex >= this._totalSamples) {
+        var stopIndex = (stopDaysSinceEpoch / this._stepSizeDays - this._interpolationOrder / 2) + this._interpolationOrder;
+        if ((stopIndex < 0) || (stopIndex > this._totalSamples - 1)) {
             stopIndex = this._totalSamples - 1;
         }
 
-        var startChunk = (startIndex / this._samplesPerXysFile) | 0;
-        var stopChunk = (stopIndex / this._samplesPerXysFile) | 0;
+        var startChunk = (startIndex / this._samplesPerXysFile);
+        var stopChunk = (stopIndex / this._samplesPerXysFile);
 
         var promises = [];
         for ( var i = startChunk; i <= stopChunk; ++i) {
