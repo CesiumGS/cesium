@@ -10,7 +10,6 @@ defineSuite([
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Rectangle',
-        'Scene/OrthographicFrustum',
         'Scene/PointPrimitive',
         'Specs/createScene'
     ], function(
@@ -24,7 +23,6 @@ defineSuite([
         CesiumMath,
         NearFarScalar,
         Rectangle,
-        OrthographicFrustum,
         PointPrimitive,
         createScene) {
     'use strict';

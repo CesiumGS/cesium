@@ -1,9 +1,7 @@
 /*global defineSuite*/
 defineSuite([
-        'Widgets/SvgPathBindingHandler',
         'ThirdParty/knockout'
     ], function(
-        SvgPathBindingHandler,
         knockout) {
     'use strict';
 

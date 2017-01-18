@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/TrustedServers'
-], function(
-    TrustedServers) {
+        'Core/TrustedServers'
+    ], function(
+        TrustedServers) {
     'use strict';
 
     afterEach(function() {

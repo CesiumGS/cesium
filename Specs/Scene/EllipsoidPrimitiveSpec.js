@@ -4,7 +4,6 @@ defineSuite([
         'Core/Cartesian3',
         'Core/defined',
         'Core/Matrix4',
-        'Renderer/ClearCommand',
         'Scene/Material',
         'Specs/createScene'
     ], function(
@@ -12,7 +11,6 @@ defineSuite([
         Cartesian3,
         defined,
         Matrix4,
-        ClearCommand,
         Material,
         createScene) {
     'use strict';
@@ -57,7 +55,7 @@ defineSuite([
         var e = new EllipsoidPrimitive({
             center : new Cartesian3(1.0, 2.0, 3.0),
             radii : new Cartesian3(4.0, 5.0, 6.0),
-            modelMatrix : Matrix4.fromScale(2.0),
+            modelMatrix : Matrix4.fromUniformScale(2.0),
             show : false,
             material : material,
             id : 'id',
@@ -66,7 +64,7 @@ defineSuite([
 
         expect(e.center).toEqual(new Cartesian3(1.0, 2.0, 3.0));
         expect(e.radii).toEqual(new Cartesian3(4.0, 5.0, 6.0));
-        expect(e.modelMatrix).toEqual(Matrix4.fromScale(2.0));
+        expect(e.modelMatrix).toEqual(Matrix4.fromUniformScale(2.0));
         expect(e.show).toEqual(false);
         expect(e.material).toBe(material);
         expect(e.id).toEqual('id');

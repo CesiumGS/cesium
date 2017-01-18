@@ -17,7 +17,7 @@ define([
      * Visualizes a vertex attribute by displaying it as a color for debugging.
      * <p>
      * Components for well-known unit-length vectors, i.e., <code>normal</code>,
-     * <code>binormal</code>, and <code>tangent</code>, are scaled and biased
+     * <code>tangent</code>, and <code>bitangent</code>, are scaled and biased
      * from [-1.0, 1.0] to (-1.0, 1.0).
      * </p>
      *
@@ -26,7 +26,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.attributeName The name of the attribute to visualize.
-     * @param {Boolean} options.perInstanceAttribute Boolean that determines whether this attribute is a per-instance geometry attribute.
+     * @param {Boolean} [options.perInstanceAttribute=false] Boolean that determines whether this attribute is a per-instance geometry attribute.
      * @param {String} [options.glslDatatype='vec3'] The GLSL datatype of the attribute.  Supported datatypes are <code>float</code>, <code>vec2</code>, <code>vec3</code>, and <code>vec4</code>.
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
@@ -51,17 +51,18 @@ define([
         if (!defined(attributeName)) {
             throw new DeveloperError('options.attributeName is required.');
         }
-        if (!defined(perInstanceAttribute)) {
-            throw new DeveloperError('options.perInstanceAttribute is required.');
-        }
         //>>includeEnd('debug');
+
+        if (!defined(perInstanceAttribute)) {
+            perInstanceAttribute = false;
+        }
 
         var glslDatatype = defaultValue(options.glslDatatype, 'vec3');
         var varyingName = 'v_' + attributeName;
         var getColor;
 
         // Well-known normalized vector attributes in VertexFormat
-        if ((attributeName === 'normal') || (attributeName === 'binormal') || (attributeName === 'tangent')) {
+        if ((attributeName === 'normal') || (attributeName === 'tangent') || (attributeName === 'bitangent')) {
             getColor = 'vec4 getColor() { return vec4((' + varyingName + ' + vec3(1.0)) * 0.5, 1.0); }\n';
         } else {
             // All other attributes, both well-known and custom
@@ -82,8 +83,10 @@ define([
                 case 'vec4':
                     getColor = 'vec4 getColor() { return ' + varyingName + '; }\n';
                     break;
+                //>>includeStart('debug', pragmas.debug);
                 default:
                     throw new DeveloperError('options.glslDatatype must be float, vec2, vec3, or vec4.');
+                //>>includeEnd('debug');
             }
         }
 

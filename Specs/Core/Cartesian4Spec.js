@@ -439,6 +439,12 @@ defineSuite([
         expect(cartesian).toEqual(expectedResult);
     });
 
+    it('normalize throws with zero vector', function() {
+        expect(function() {
+            Cartesian4.normalize(Cartesian4.ZERO, new Cartesian4());
+        }).toThrowDeveloperError();
+    });
+
     it('multiplyComponents works with a result parameter', function() {
         var left = new Cartesian4(2.0, 3.0, 6.0, 8.0);
         var right = new Cartesian4(4.0, 5.0, 7.0, 9.0);
@@ -454,6 +460,25 @@ defineSuite([
         var right = new Cartesian4(4.0, 5.0, 7.0, 9.0);
         var expectedResult = new Cartesian4(8.0, 15.0, 42.0, 72.0);
         var returnedResult = Cartesian4.multiplyComponents(left, right, left);
+        expect(left).toBe(returnedResult);
+        expect(left).toEqual(expectedResult);
+    });
+
+    it('divideComponents works with a result parameter', function() {
+        var left = new Cartesian4(2.0, 3.0, 6.0, 15.0);
+        var right = new Cartesian4(4.0, 5.0, 8.0, 2.0);
+        var result = new Cartesian4();
+        var expectedResult = new Cartesian4(0.5, 0.6, 0.75, 7.5);
+        var returnedResult = Cartesian4.divideComponents(left, right, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('divideComponents works with a result parameter that is an input parameter', function() {
+        var left = new Cartesian4(2.0, 3.0, 6.0, 15.0);
+        var right = new Cartesian4(4.0, 5.0, 8.0, 2.0);
+        var expectedResult = new Cartesian4(0.5, 0.6, 0.75, 7.5);
+        var returnedResult = Cartesian4.divideComponents(left, right, left);
         expect(left).toBe(returnedResult);
         expect(left).toEqual(expectedResult);
     });
@@ -734,6 +759,20 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('divideComponents throw with no left parameter', function() {
+        var right = new Cartesian4(4.0, 5.0, 6.0, 7.0);
+        expect(function() {
+            Cartesian4.divideComponents(undefined, right);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideComponents throw with no right parameter', function() {
+        var left = new Cartesian4(4.0, 5.0, 6.0, 7.0);
+        expect(function() {
+            Cartesian4.divideComponents(left, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('dot throws with no right parameter', function() {
         expect(function() {
             Cartesian4.dot(new Cartesian4(), undefined);
@@ -857,6 +896,12 @@ defineSuite([
     it('multiplyComponents throws with no result', function() {
         expect(function() {
             Cartesian4.multiplyComponents(new Cartesian4(), new Cartesian4());
+        }).toThrowDeveloperError();
+    });
+
+    it('divideComponents throws with no result', function() {
+        expect(function() {
+            Cartesian4.divideComponents(new Cartesian4(), new Cartesian4());
         }).toThrowDeveloperError();
     });
 

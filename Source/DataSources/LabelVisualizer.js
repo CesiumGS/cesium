@@ -6,7 +6,6 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
@@ -16,7 +15,6 @@ define([
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
         './BoundingSphereState',
-        './EntityCluster',
         './Property'
     ], function(
         AssociativeArray,
@@ -25,7 +23,6 @@ define([
         Color,
         defaultValue,
         defined,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
@@ -35,7 +32,6 @@ define([
         LabelStyle,
         VerticalOrigin,
         BoundingSphereState,
-        EntityCluster,
         Property) {
     'use strict';
 
@@ -45,6 +41,9 @@ define([
     var defaultFillColor = Color.WHITE;
     var defaultOutlineColor = Color.BLACK;
     var defaultOutlineWidth = 1.0;
+    var defaultShowBackground = false;
+    var defaultBackgroundColor = new Color(0.165, 0.165, 0.165, 0.8);
+    var defaultBackgroundPadding = new Cartesian2(7, 5);
     var defaultPixelOffset = Cartesian2.ZERO;
     var defaultEyeOffset = Cartesian3.ZERO;
     var defaultHeightReference = HeightReference.NONE;
@@ -54,6 +53,8 @@ define([
     var position = new Cartesian3();
     var fillColor = new Color();
     var outlineColor = new Color();
+    var backgroundColor = new Color();
+    var backgroundPadding = new Cartesian2();
     var eyeOffset = new Cartesian3();
     var pixelOffset = new Cartesian2();
     var translucencyByDistance = new NearFarScalar();
@@ -84,13 +85,6 @@ define([
             throw new DeveloperError('entityCollection is required.');
         }
         //>>includeEnd('debug');
-
-        if (!defined(entityCluster.minimumClusterSize)) {
-            deprecationWarning('BillboardVisualizer scene constructor parameter', 'The scene is no longer a parameter the BillboardVisualizer. An EntityCluster is required.');
-            entityCluster = new EntityCluster({
-                enabled : false
-            });
-        }
 
         entityCollection.collectionChanged.addEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
 
@@ -134,7 +128,7 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                cluster.removeLabel(entity);
+                returnPrimitive(item, entity, cluster);
                 continue;
             }
 
@@ -157,6 +151,9 @@ define([
             label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, time, defaultFillColor, fillColor);
             label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
             label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, time, defaultOutlineWidth);
+            label.showBackground = Property.getValueOrDefault(labelGraphics._showBackground, time, defaultShowBackground);
+            label.backgroundColor = Property.getValueOrDefault(labelGraphics._backgroundColor, time, defaultBackgroundColor, backgroundColor);
+            label.backgroundPadding = Property.getValueOrDefault(labelGraphics._backgroundPadding, time, defaultBackgroundPadding, backgroundPadding);
             label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, defaultPixelOffset, pixelOffset);
             label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
             label.heightReference = Property.getValueOrDefault(labelGraphics._heightReference, time, defaultHeightReference);
@@ -215,6 +212,10 @@ define([
      */
     LabelVisualizer.prototype.destroy = function() {
         this._entityCollection.collectionChanged.removeEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
+        var entities = this._entityCollection.values;
+        for (var i = 0; i < entities.length; i++) {
+            this._cluster.removeLabel(entities[i]);
+        }
         return destroyObject(this);
     };
 
@@ -238,17 +239,24 @@ define([
                     items.set(entity.id, new EntityData(entity));
                 }
             } else {
-                cluster.removeLabel(entity);
+                returnPrimitive(items.get(entity.id), entity, cluster);
                 items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            cluster.removeLabel(entity);
+            returnPrimitive(items.get(entity.id), entity, cluster);
             items.remove(entity.id);
         }
     };
+
+    function returnPrimitive(item, entity, cluster) {
+        if (defined(item)) {
+            item.label = undefined;
+            cluster.removeLabel(entity);
+        }
+    }
 
     return LabelVisualizer;
 });

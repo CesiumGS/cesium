@@ -17,10 +17,8 @@ define([
         './loadArrayBuffer',
         './loadJson',
         './Math',
-        './Matrix3',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
-        './RuntimeError',
         './TerrainProvider',
         './throttleRequestByServer',
         './TileProviderError'
@@ -42,10 +40,8 @@ define([
         loadArrayBuffer,
         loadJson,
         CesiumMath,
-        Matrix3,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
-        RuntimeError,
         TerrainProvider,
         throttleRequestByServer,
         TileProviderError) {

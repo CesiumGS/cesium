@@ -5,9 +5,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
@@ -16,7 +14,6 @@ define([
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
         './BoundingSphereState',
-        './EntityCluster',
         './Property'
     ], function(
         AssociativeArray,
@@ -24,9 +21,7 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
-        defaultValue,
         defined,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
@@ -35,7 +30,6 @@ define([
         HorizontalOrigin,
         VerticalOrigin,
         BoundingSphereState,
-        EntityCluster,
         Property) {
     'use strict';
 
@@ -84,13 +78,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(entityCluster.minimumClusterSize)) {
-            deprecationWarning('BillboardVisualizer scene constructor parameter', 'The scene is no longer a parameter the BillboardVisualizer. An EntityCluster is required.');
-            entityCluster = new EntityCluster({
-                enabled : false
-            });
-        }
-
         entityCollection.collectionChanged.addEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
 
         this._cluster = entityCluster;
@@ -132,7 +119,7 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                cluster.removeBillboard(entity);
+                returnPrimitive(item, entity, cluster);
                 continue;
             }
 
@@ -148,7 +135,7 @@ define([
             }
 
             billboard.show = show;
-            if (item.textureValue !== textureValue) {
+            if (!defined(billboard.image) || item.textureValue !== textureValue) {
                 billboard.image = textureValue;
                 item.textureValue = textureValue;
             }
@@ -231,6 +218,10 @@ define([
      */
     BillboardVisualizer.prototype.destroy = function() {
         this._entityCollection.collectionChanged.removeEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
+        var entities = this._entityCollection.values;
+        for (var i = 0; i < entities.length; i++) {
+            this._cluster.removeBillboard(entities[i]);
+        }
         return destroyObject(this);
     };
 
@@ -254,17 +245,24 @@ define([
                     items.set(entity.id, new EntityData(entity));
                 }
             } else {
-                cluster.removeBillboard(entity);
+                returnPrimitive(items.get(entity.id), entity, cluster);
                 items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            cluster.removeBillboard(entity);
+            returnPrimitive(items.get(entity.id), entity, cluster);
             items.remove(entity.id);
         }
     };
+
+    function returnPrimitive(item, entity, cluster) {
+        if (defined(item)) {
+            item.billboard = undefined;
+            cluster.removeBillboard(entity);
+        }
+    }
 
     return BillboardVisualizer;
 });

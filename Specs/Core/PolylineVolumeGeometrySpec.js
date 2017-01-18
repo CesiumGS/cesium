@@ -84,7 +84,27 @@ defineSuite([
         expect(m.indices.length).toEqual(44 * 3);
     });
 
-    it('compute all vertex attributes', function() {
+    it('computes most vertex attributes', function() {
+        var m = PolylineVolumeGeometry.createGeometry(new PolylineVolumeGeometry({
+            vertexFormat : VertexFormat.POSITION_NORMAL_AND_ST,
+            polylinePositions : Cartesian3.fromDegreesArray([
+                90.0, -30.0,
+                90.0, -35.0
+            ]),
+            cornerType: CornerType.MITERED,
+            shapePositions: shape
+        }));
+
+        var numVertices = 56;
+        var numTriangles = 44;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.st.values.length).toEqual(numVertices * 2);
+        expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
+    });
+
+    //https://github.com/AnalyticalGraphicsInc/cesium/issues/3609
+    xit('compute all vertex attributes', function() {
         var m = PolylineVolumeGeometry.createGeometry(new PolylineVolumeGeometry({
             vertexFormat : VertexFormat.ALL,
             polylinePositions : Cartesian3.fromDegreesArray([
@@ -101,7 +121,7 @@ defineSuite([
         expect(m.attributes.st.values.length).toEqual(numVertices * 2);
         expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
-        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
     });
 

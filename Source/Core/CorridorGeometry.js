@@ -58,16 +58,16 @@ define([
     function addNormals(attr, normal, left, front, back, vertexFormat) {
         var normals = attr.normals;
         var tangents = attr.tangents;
-        var binormals = attr.binormals;
+        var bitangents = attr.bitangents;
         var forward = Cartesian3.normalize(Cartesian3.cross(left, normal, scratch1), scratch1);
         if (vertexFormat.normal) {
             CorridorGeometryLibrary.addAttribute(normals, normal, front, back);
         }
-        if (vertexFormat.binormal) {
-            CorridorGeometryLibrary.addAttribute(binormals, left, front, back);
-        }
         if (vertexFormat.tangent) {
             CorridorGeometryLibrary.addAttribute(tangents, forward, front, back);
+        }
+        if (vertexFormat.bitangent) {
+            CorridorGeometryLibrary.addAttribute(bitangents, left, front, back);
         }
     }
 
@@ -119,11 +119,11 @@ define([
         var finalPositions = new Float64Array(size);
         var normals = (vertexFormat.normal) ? new Float32Array(size) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(size) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Float32Array(size) : undefined;
+        var bitangents = (vertexFormat.bitangent) ? new Float32Array(size) : undefined;
         var attr = {
             normals : normals,
             tangents : tangents,
-            binormals : binormals
+            bitangents : bitangents
         };
         var front = 0;
         var back = size - 1;
@@ -408,11 +408,11 @@ define([
             });
         }
 
-        if (vertexFormat.binormal) {
-            attributes.binormal = new GeometryAttribute({
+        if (vertexFormat.bitangent) {
+            attributes.bitangent = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
-                values : attr.binormals
+                values : attr.bitangents
             });
         }
 
@@ -423,31 +423,31 @@ define([
     }
 
     function extrudedAttributes(attributes, vertexFormat) {
-        if (!vertexFormat.normal && !vertexFormat.binormal && !vertexFormat.tangent && !vertexFormat.st) {
+        if (!vertexFormat.normal && !vertexFormat.tangent && !vertexFormat.bitangent && !vertexFormat.st) {
             return attributes;
         }
         var positions = attributes.position.values;
         var topNormals;
-        var topBinormals;
-        if (vertexFormat.normal || vertexFormat.binormal) {
+        var topBitangents;
+        if (vertexFormat.normal || vertexFormat.bitangent) {
             topNormals = attributes.normal.values;
-            topBinormals = attributes.binormal.values;
+            topBitangents = attributes.bitangent.values;
         }
         var size = attributes.position.values.length / 18;
         var threeSize = size * 3;
         var twoSize = size * 2;
         var sixSize = threeSize * 2;
         var i;
-        if (vertexFormat.normal || vertexFormat.binormal || vertexFormat.tangent) {
+        if (vertexFormat.normal || vertexFormat.bitangent || vertexFormat.tangent) {
             var normals = (vertexFormat.normal) ? new Float32Array(threeSize * 6) : undefined;
-            var binormals = (vertexFormat.binormal) ? new Float32Array(threeSize * 6) : undefined;
             var tangents = (vertexFormat.tangent) ? new Float32Array(threeSize * 6) : undefined;
+            var bitangents = (vertexFormat.bitangent) ? new Float32Array(threeSize * 6) : undefined;
             var topPosition = cartesian1;
             var bottomPosition = cartesian2;
             var previousPosition = cartesian3;
             var normal = cartesian4;
             var tangent = cartesian5;
-            var binormal = cartesian6;
+            var bitangent = cartesian6;
             var attrIndex = sixSize;
             for (i = 0; i < threeSize; i += 3) {
                 var attrIndexOffset = attrIndex + sixSize;
@@ -463,17 +463,17 @@ define([
                     CorridorGeometryLibrary.addAttribute(normals, normal, attrIndex);
                     CorridorGeometryLibrary.addAttribute(normals, normal, attrIndex + 3);
                 }
-                if (vertexFormat.tangent || vertexFormat.binormal) {
-                    binormal = Cartesian3.fromArray(topNormals, i, binormal);
-                    if (vertexFormat.binormal) {
-                        CorridorGeometryLibrary.addAttribute(binormals, binormal, attrIndexOffset);
-                        CorridorGeometryLibrary.addAttribute(binormals, binormal, attrIndexOffset + 3);
-                        CorridorGeometryLibrary.addAttribute(binormals, binormal, attrIndex);
-                        CorridorGeometryLibrary.addAttribute(binormals, binormal, attrIndex + 3);
+                if (vertexFormat.tangent || vertexFormat.bitangent) {
+                    bitangent = Cartesian3.fromArray(topNormals, i, bitangent);
+                    if (vertexFormat.bitangent) {
+                        CorridorGeometryLibrary.addAttribute(bitangents, bitangent, attrIndexOffset);
+                        CorridorGeometryLibrary.addAttribute(bitangents, bitangent, attrIndexOffset + 3);
+                        CorridorGeometryLibrary.addAttribute(bitangents, bitangent, attrIndex);
+                        CorridorGeometryLibrary.addAttribute(bitangents, bitangent, attrIndex + 3);
                     }
 
                     if (vertexFormat.tangent) {
-                        tangent = Cartesian3.normalize(Cartesian3.cross(binormal, normal, tangent), tangent);
+                        tangent = Cartesian3.normalize(Cartesian3.cross(bitangent, normal, tangent), tangent);
                         CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndexOffset);
                         CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndexOffset + 3);
                         CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndex);
@@ -495,12 +495,12 @@ define([
                 attributes.normal = undefined;
             }
 
-            if (vertexFormat.binormal) {
-                binormals.set(topBinormals); //top
-                binormals.set(topBinormals, threeSize); //bottom
-                attributes.binormal.values = binormals;
+            if (vertexFormat.bitangent) {
+                bitangents.set(topBitangents); //top
+                bitangents.set(topBitangents, threeSize); //bottom
+                attributes.bitangent.values = bitangents;
             } else {
-                attributes.binormal = undefined;
+                attributes.bitangent = undefined;
             }
 
             if (vertexFormat.tangent) {
@@ -561,10 +561,10 @@ define([
 
     function computePositionsExtruded(params, vertexFormat) {
         var topVertexFormat = new VertexFormat({
-            position : vertexFormat.positon,
-            normal : (vertexFormat.normal || vertexFormat.binormal),
+            position : vertexFormat.position,
+            normal : (vertexFormat.normal || vertexFormat.bitangent || params.shadowVolume),
             tangent : vertexFormat.tangent,
-            binormal : (vertexFormat.normal || vertexFormat.binormal),
+            bitangent : (vertexFormat.normal || vertexFormat.bitangent),
             st : vertexFormat.st
         });
         var ellipsoid = params.ellipsoid;
@@ -590,28 +590,49 @@ define([
         newPositions.set(wallPositions, length * 2);
         attributes.position.values = newPositions;
 
-        length /= 3;
+        attributes = extrudedAttributes(attributes, vertexFormat);
+        var size = length / 3;
+        if (params.shadowVolume) {
+            var topNormals = attributes.normal.values;
+            length = topNormals.length;
+
+            var extrudeNormals = new Float32Array(length * 6);
+            for (i = 0; i < length; i ++) {
+                topNormals[i] = -topNormals[i];
+            }
+            //only get normals for bottom layer that's going to be pushed down
+            extrudeNormals.set(topNormals, length); //bottom face
+            extrudeNormals = addWallPositions(topNormals, length*4, extrudeNormals); //bottom wall
+            attributes.extrudeDirection = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : extrudeNormals
+            });
+            if (!vertexFormat.normal) {
+                attributes.normal = undefined;
+            }
+        }
+
         var i;
         var iLength = indices.length;
-        var twoLength = length + length;
-        var newIndices = IndexDatatype.createTypedArray(newPositions.length / 3, iLength * 2 + twoLength * 3);
+        var twoSize = size + size;
+        var newIndices = IndexDatatype.createTypedArray(newPositions.length / 3, iLength * 2 + twoSize * 3);
         newIndices.set(indices);
         var index = iLength;
         for (i = 0; i < iLength; i += 3) { // bottom indices
             var v0 = indices[i];
             var v1 = indices[i + 1];
             var v2 = indices[i + 2];
-            newIndices[index++] = v2 + length;
-            newIndices[index++] = v1 + length;
-            newIndices[index++] = v0 + length;
+            newIndices[index++] = v2 + size;
+            newIndices[index++] = v1 + size;
+            newIndices[index++] = v0 + size;
         }
 
-        attributes = extrudedAttributes(attributes, vertexFormat);
         var UL, LL, UR, LR;
 
-        for (i = 0; i < twoLength; i += 2) { //wall indices
-            UL = i + twoLength;
-            LL = UL + twoLength;
+        for (i = 0; i < twoSize; i += 2) { //wall indices
+            UL = i + twoSize;
+            LL = UL + twoSize;
             UR = UL + 1;
             LR = LL + 1;
             newIndices[index++] = UL;
@@ -678,8 +699,9 @@ define([
     var scratchCartographicMax = new Cartographic();
 
     function computeRectangle(positions, ellipsoid, width, cornerType) {
-        var length = positions.length - 1;
-        if (length === 0) {
+        var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
+        var length = cleanPositions.length;
+        if (length < 2 || width <= 0) {
             return new Rectangle();
         }
         var halfWidth = width * 0.5;
@@ -692,8 +714,8 @@ define([
         var lat, lon;
         if (cornerType === CornerType.ROUNDED) {
             // Compute start cap
-            var first = positions[0];
-            Cartesian3.subtract(first, positions[1], scratchCartesianOffset);
+            var first = cleanPositions[0];
+            Cartesian3.subtract(first, cleanPositions[1], scratchCartesianOffset);
             Cartesian3.normalize(scratchCartesianOffset, scratchCartesianOffset);
             Cartesian3.multiplyByScalar(scratchCartesianOffset, halfWidth, scratchCartesianOffset);
             Cartesian3.add(first, scratchCartesianOffset, scratchCartesianEnds);
@@ -708,14 +730,14 @@ define([
         }
 
         // Compute the rest
-        for (var i = 0; i < length; ++i) {
-            computeOffsetPoints(positions[i], positions[i+1], ellipsoid, halfWidth,
+        for (var i = 0; i < length-1; ++i) {
+            computeOffsetPoints(cleanPositions[i], cleanPositions[i+1], ellipsoid, halfWidth,
                 scratchCartographicMin, scratchCartographicMax);
         }
 
         // Compute ending point
-        var last = positions[length];
-        Cartesian3.subtract(last, positions[length-1], scratchCartesianOffset);
+        var last = cleanPositions[length-1];
+        Cartesian3.subtract(last, cleanPositions[length-2], scratchCartesianOffset);
         Cartesian3.normalize(scratchCartesianOffset, scratchCartesianOffset);
         Cartesian3.multiplyByScalar(scratchCartesianOffset, halfWidth, scratchCartesianOffset);
         Cartesian3.add(last, scratchCartesianOffset, scratchCartesianEnds);
@@ -792,6 +814,7 @@ define([
         this._extrudedHeight = defaultValue(options.extrudedHeight, this._height);
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createCorridorGeometry';
         this._rectangle = computeRectangle(positions, this._ellipsoid, width, this._cornerType);
 
@@ -799,7 +822,7 @@ define([
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 5;
+        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 6;
     }
 
     /**
@@ -844,7 +867,8 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._cornerType;
-        array[startingIndex]   = value._granularity;
+        array[startingIndex++] = value._granularity;
+        array[startingIndex] = value._shadowVolume ? 1.0 : 0.0;
 
         return array;
     };
@@ -860,7 +884,8 @@ define([
         height : undefined,
         extrudedHeight : undefined,
         cornerType : undefined,
-        granularity : undefined
+        granularity : undefined,
+        shadowVolume: undefined
     };
 
     /**
@@ -900,7 +925,8 @@ define([
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var cornerType = array[startingIndex++];
-        var granularity = array[startingIndex];
+        var granularity = array[startingIndex++];
+        var shadowVolume = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
             scratchOptions.positions = positions;
@@ -909,6 +935,7 @@ define([
             scratchOptions.extrudedHeight = extrudedHeight;
             scratchOptions.cornerType = cornerType;
             scratchOptions.granularity = granularity;
+            scratchOptions.shadowVolume = shadowVolume;
             return new CorridorGeometry(scratchOptions);
         }
 
@@ -921,6 +948,7 @@ define([
         result._cornerType = cornerType;
         result._granularity = granularity;
         result._rectangle = Rectangle.clone(rectangle);
+        result._shadowVolume = shadowVolume;
 
         return result;
     };
@@ -961,6 +989,7 @@ define([
             height = h;
             params.height = height;
             params.extrudedHeight = extrudedHeight;
+            params.shadowVolume = corridorGeometry._shadowVolume;
             attr = computePositionsExtruded(params, vertexFormat);
         } else {
             var computedPositions = CorridorGeometryLibrary.computePositions(params);
@@ -999,7 +1028,8 @@ define([
             granularity : granularity,
             extrudedHeight : minHeight,
             height : maxHeight,
-            vertexFormat : VertexFormat.POSITION_ONLY
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            shadowVolume: true
         });
     };
 

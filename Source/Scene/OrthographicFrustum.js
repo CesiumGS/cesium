@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/defined',
@@ -9,7 +8,6 @@ define([
         '../Core/Matrix4',
         './CullingVolume'
     ], function(
-        Cartesian2,
         Cartesian3,
         Cartesian4,
         defined,

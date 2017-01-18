@@ -12,18 +12,18 @@ defineSuite([
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/RuntimeError',
+        'Core/WebGLConstants',
         'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
         'Renderer/Framebuffer',
+        'Renderer/Pass',
         'Renderer/PixelDatatype',
         'Renderer/ShaderProgram',
         'Renderer/Texture',
-        'Renderer/WebGLConstants',
         'Scene/Camera',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/FrameState',
         'Scene/Globe',
-        'Scene/Pass',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
         'Scene/Scene',
@@ -47,18 +47,18 @@ defineSuite([
         Rectangle,
         RectangleGeometry,
         RuntimeError,
+        WebGLConstants,
         WebMercatorProjection,
         DrawCommand,
         Framebuffer,
+        Pass,
         PixelDatatype,
         ShaderProgram,
         Texture,
-        WebGLConstants,
         Camera,
         EllipsoidSurfaceAppearance,
         FrameState,
         Globe,
-        Pass,
         Primitive,
         PrimitiveCollection,
         Scene,
@@ -117,7 +117,7 @@ defineSuite([
         var contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements
         expect(contextAttributes.alpha).toEqual(false);
-        expect(contextAttributes.stencil).toEqual(false);
+        expect(contextAttributes.stencil).toEqual(true);
         expect(contextAttributes.premultipliedAlpha).toEqual(true);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
     });
@@ -871,6 +871,50 @@ defineSuite([
     it('get maximumCubeMapSize', function() {
         var s = createScene();
         expect(s.maximumCubeMapSize).toBeGreaterThanOrEqualTo(16);
+        s.destroyForSpecs();
+    });
+
+    it('does not throw with debugShowCommands', function() {
+        var s = createScene();
+        if (s.context.drawBuffers) {
+            s.debugShowCommands = true;
+
+            var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+            var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+            var primitives = s.primitives;
+            primitives.add(rectanglePrimitive);
+
+            s.camera.setView({ destination : rectangle });
+
+            expect(function() {
+                s.renderForSpecs();
+            }).not.toThrowRuntimeError();
+        }
+        s.destroyForSpecs();
+    });
+    
+    it('does not throw with debugShowFrustums', function() {
+        var s = createScene();
+        if (s.context.drawBuffers) {
+            s.debugShowFrustums = true;
+
+            var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+            var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+            var primitives = s.primitives;
+            primitives.add(rectanglePrimitive);
+
+            s.camera.setView({ destination : rectangle });
+
+            expect(function() {
+                s.renderForSpecs();
+            }).not.toThrowRuntimeError();
+        }
         s.destroyForSpecs();
     });
 }, 'WebGL');
