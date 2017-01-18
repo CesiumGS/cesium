@@ -652,7 +652,6 @@ define([
         Check.typeOf.object(rectangle, 'rectangle');
         Rectangle.validate(rectangle);
         Check.numeric.minimum(rectangle.north, rectangle.south);
-
         //>>includeEnd('debug');
 
         var rotation = defaultValue(options.rotation, 0.0);
