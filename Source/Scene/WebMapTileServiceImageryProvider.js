@@ -8,6 +8,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/freezeObject',
+        '../Core/isArray',
         '../Core/objectToQuery',
         '../Core/queryToObject',
         '../Core/Rectangle',
@@ -25,6 +26,7 @@ define([
         DeveloperError,
         Event,
         freezeObject,
+        isArray,
         objectToQuery,
         queryToObject,
         Rectangle,
@@ -90,7 +92,7 @@ define([
      *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
-     * 
+     *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -103,6 +105,7 @@ define([
     function WebMapTileServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.url)) {
             throw new DeveloperError('options.url is required.');
         }
@@ -115,6 +118,7 @@ define([
         if (!defined(options.tileMatrixSetID)) {
             throw new DeveloperError('options.tileMatrixSetID is required.');
         }
+        //>>includeEnd('debug');
 
         this._url = options.url;
         this._layer = options.layer;
@@ -143,9 +147,11 @@ define([
         var swTile = this._tilingScheme.positionToTileXY(Rectangle.southwest(this._rectangle), this._minimumLevel);
         var neTile = this._tilingScheme.positionToTileXY(Rectangle.northeast(this._rectangle), this._minimumLevel);
         var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
+        //>>includeStart('debug', pragmas.debug);
         if (tileCount > 4) {
             throw new DeveloperError('The imagery provider\'s rectangle and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
         }
+        //>>includeEnd('debug');
 
         this._errorEvent = new Event();
 
@@ -153,7 +159,7 @@ define([
         this._credit = typeof credit === 'string' ? new Credit(credit) : credit;
 
         this._subdomains = options.subdomains;
-        if (Array.isArray(this._subdomains)) {
+        if (isArray(this._subdomains)) {
             this._subdomains = this._subdomains.slice();
         } else if (defined(this._subdomains) && this._subdomains.length > 0) {
             this._subdomains = this._subdomains.split('');
@@ -459,7 +465,7 @@ define([
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.
      */
-    WebMapTileServiceImageryProvider.prototype.pickFeatures = function() {
+    WebMapTileServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
 

@@ -72,7 +72,7 @@ defineSuite([
         expect(m.attributes.st.values.length).toEqual(numVertices * 2);
         expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
-        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
@@ -145,6 +145,28 @@ defineSuite([
         expect(st[length - 1]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
     });
 
+    it('compute texture coordinate rotation with rectangle rotation', function() {
+        var rectangle = new Rectangle(-1, -1, 1, 1);
+        var angle = CesiumMath.toRadians(30);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            rectangle : rectangle,
+            rotation: angle,
+            stRotation : angle,
+            granularity : 1.0
+        }));
+        var st = m.attributes.st.values;
+
+        expect(st[0]).toEqual(0.0); //top left corner
+        expect(st[1]).toEqual(1.0);
+        expect(st[4]).toEqual(1.0); //top right corner
+        expect(st[5]).toEqual(1.0);
+        expect(st[12]).toEqual(0.0); //bottom left corner
+        expect(st[13]).toEqual(0.0);
+        expect(st[16]).toEqual(1.0); //bottom right corner
+        expect(st[17]).toEqual(0.0);
+    });
+
     it('throws without rectangle', function() {
         expect(function() {
             return new RectangleGeometry({});
@@ -195,7 +217,7 @@ defineSuite([
         expect(m.attributes.st.values.length).toEqual(numVertices * 2);
         expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
-        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
@@ -303,12 +325,30 @@ defineSuite([
         }).not.toThrowDeveloperError();
     });
 
+    it('can create rectangle geometry where the nw corner and the center are on opposite sides of the IDL', function() {
+        var rectangle = new Rectangle(
+            Math.PI - 0.005,
+            CesiumMath.PI_OVER_SIX + 0.02,
+            0.01 - Math.PI,
+            CesiumMath.PI_OVER_SIX + 0.04
+        );
+
+        var geometry = new RectangleGeometry({
+            rectangle: rectangle,
+            rotation: 0.5
+        });
+
+        expect(function() {
+            RectangleGeometry.createGeometry(geometry);
+        }).not.toThrowDeveloperError();
+    });
+
     var rectangle = new RectangleGeometry({
         vertexFormat : VertexFormat.POSITION_ONLY,
         rectangle : new Rectangle(-2.0, -1.0, 0.0, 1.0),
         granularity : 1.0,
         ellipsoid : Ellipsoid.UNIT_SPHERE
     });
-    var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.0, -1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0];
+    var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.0, -1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0];
     createPackableSpecs(RectangleGeometry, rectangle, packedInstance);
 });

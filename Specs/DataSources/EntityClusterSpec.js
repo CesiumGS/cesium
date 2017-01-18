@@ -6,11 +6,14 @@ defineSuite([
         'Core/defineProperties',
         'Core/Ellipsoid',
         'Core/Event',
+        'Core/JulianDate',
+        'DataSources/CustomDataSource',
+        'DataSources/DataSourceDisplay',
         'DataSources/Entity',
         'Scene/SceneTransforms',
         'Specs/createCanvas',
         'Specs/createGlobe',
-        'Specs/createScene',
+        'Specs/createScene'
     ], function(
         EntityCluster,
         Cartesian2,
@@ -18,6 +21,9 @@ defineSuite([
         defineProperties,
         Ellipsoid,
         Event,
+        JulianDate,
+        CustomDataSource,
+        DataSourceDisplay,
         Entity,
         SceneTransforms,
         createCanvas,
@@ -38,7 +44,9 @@ defineSuite([
                 tileProvider : {
                     ready : true
                 },
-                _tileLoadQueue : {},
+                _tileLoadQueueHigh : [],
+                _tileLoadQueueMedium : [],
+                _tileLoadQueueLow : [],
                 _debug : {
                     tilesWaitingForChildren : 0
                 }
@@ -90,6 +98,9 @@ defineSuite([
         expect(cluster.enabled).toEqual(false);
         expect(cluster.pixelRange).toEqual(80);
         expect(cluster.minimumClusterSize).toEqual(2);
+        expect(cluster.clusterBillboards).toEqual(true);
+        expect(cluster.clusterLabels).toEqual(true);
+        expect(cluster.clusterPoints).toEqual(true);
 
         cluster.enabled = true;
         expect(cluster.enabled).toEqual(true);
@@ -105,12 +116,18 @@ defineSuite([
         var options = {
             enabled : true,
             pixelRange : 30,
-            minimumClusterSize : 5
+            minimumClusterSize : 5,
+            clusterBillboards : false,
+            clusterLabels : false,
+            clusterPoints : false
         };
         cluster = new EntityCluster(options);
         expect(cluster.enabled).toEqual(options.enabled);
         expect(cluster.pixelRange).toEqual(options.pixelRange);
         expect(cluster.minimumClusterSize).toEqual(options.minimumClusterSize);
+        expect(cluster.clusterBillboards).toEqual(options.clusterBillboards);
+        expect(cluster.clusterLabels).toEqual(options.clusterLabels);
+        expect(cluster.clusterPoints).toEqual(options.clusterPoints);
     });
 
     function createBillboardImage() {
@@ -152,7 +169,7 @@ defineSuite([
         expect(cluster._clusterLabelCollection).toBeDefined();
         expect(cluster._clusterLabelCollection.length).toEqual(1);
 
-        cluster.enabled = false;
+        cluster.clusterBillboards = false;
         cluster.update(frameState);
 
         expect(cluster._clusterLabelCollection).not.toBeDefined();
@@ -185,7 +202,7 @@ defineSuite([
         expect(cluster._clusterLabelCollection).toBeDefined();
         expect(cluster._clusterLabelCollection.length).toEqual(1);
 
-        cluster.enabled = false;
+        cluster.clusterLabels = false;
         cluster.update(frameState);
 
         expect(cluster._clusterLabelCollection).not.toBeDefined();
@@ -218,10 +235,120 @@ defineSuite([
         expect(cluster._clusterLabelCollection).toBeDefined();
         expect(cluster._clusterLabelCollection.length).toEqual(1);
 
-        cluster.enabled = false;
+        cluster.clusterPoints = false;
         cluster.update(frameState);
 
         expect(cluster._clusterLabelCollection).not.toBeDefined();
+    });
+
+    it('clusters points that have labels', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        var point = cluster.getPoint(entity);
+        point.id = entity;
+        point.pixelSize = 1;
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        entity = new Entity();
+        point = cluster.getPoint(entity);
+        point.id = entity;
+        point.pixelSize = 1;
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+
+        var frameState = scene.frameState;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+
+        point.id.label = cluster.getLabel(entity);
+
+        cluster.enabled = true;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).toBeDefined();
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+
+        cluster.clusterPoints = false;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+    });
+
+    it('records entity collection indices on getting billboard, label and point', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        cluster.getBillboard(entity);
+        cluster.getLabel(entity);
+        cluster.getPoint(entity);
+
+        expect(cluster._collectionIndicesByEntity[entity.id].billboardIndex).toBeDefined();
+        expect(cluster._collectionIndicesByEntity[entity.id].labelIndex).toBeDefined();
+        expect(cluster._collectionIndicesByEntity[entity.id].pointIndex).toBeDefined();
+    });
+
+    it('removes entity collection indices when billboard, label and point have been removed', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        cluster.getBillboard(entity);
+        cluster.getLabel(entity);
+        cluster.getPoint(entity);
+
+        cluster.removeBillboard(entity);
+        cluster.removeLabel(entity);
+        cluster.removePoint(entity);
+
+        expect(cluster._collectionIndicesByEntity[entity.id]).toBeUndefined();
+    });
+
+    it('can destroy cluster and re-add entities', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity1 = new Entity();
+        var billboard = cluster.getBillboard(entity1);
+        billboard.id = entity1;
+
+        var entity2 = new Entity();
+        var label = cluster.getLabel(entity2);
+        label.id = entity2;
+
+        var entity3 = new Entity();
+        var point = cluster.getPoint(entity3);
+        point.id = entity3;
+
+        cluster.destroy();
+        expect(cluster._billboardCollection).not.toBeDefined();
+        expect(cluster._labelCollection).not.toBeDefined();
+        expect(cluster._pointCollection).not.toBeDefined();
+
+        expect(cluster.getBillboard(entity1)).toBeDefined();
+        expect(cluster.getLabel(entity2)).toBeDefined();
+        expect(cluster.getPoint(entity3)).toBeDefined();
+        expect(cluster._billboardCollection).toBeDefined();
+        expect(cluster._labelCollection).toBeDefined();
+        expect(cluster._pointCollection).toBeDefined();
+    });
+
+
+    it('does not remove entity collection indices when at least one of billboard, label and point remain', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        cluster.getBillboard(entity);
+        cluster.getLabel(entity);
+        cluster.getPoint(entity);
+
+        cluster.removeBillboard(entity);
+        cluster.removeLabel(entity);
+
+        expect(cluster._collectionIndicesByEntity[entity.id]).toBeDefined();
     });
 
     it('pixel range', function() {
@@ -377,5 +504,59 @@ defineSuite([
 
         expect(cluster._clusterBillboardCollection).toBeDefined();
         expect(cluster._clusterBillboardCollection.length).toEqual(1);
+    });
+
+    it('renders billboards with invisible labels that are not clustered', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+        cluster.minimumClusterSize = 3;
+
+        var dataSource = new CustomDataSource('test');
+        dataSource.clustering = cluster;
+        dataSource._visualizers = DataSourceDisplay.defaultVisualizersCallback(scene, cluster, dataSource);
+
+        var entityCollection = dataSource.entities;
+
+        entityCollection.add({
+            position : SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.9),
+            billboard : {
+                image : createBillboardImage()
+            },
+            label : {
+                show : true
+            }
+        });
+
+        entityCollection.add({
+            position : SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.9),
+            billboard : {
+                image : createBillboardImage()
+            },
+            label : {
+                show : true
+            }
+        });
+
+        var visualizers = dataSource._visualizers;
+        var length = visualizers.length;
+        for (var i = 0; i < length; i++) {
+            visualizers[i].update(JulianDate.now());
+        }
+
+        var frameState = scene.frameState;
+        cluster.update(frameState);
+
+        expect(cluster._clusterBillboardCollection).not.toBeDefined();
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+
+        cluster.enabled = true;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+        expect(cluster._clusterBillboardCollection).not.toBeDefined();
+
+        expect(cluster._labelCollection).not.toBeDefined();
+        expect(cluster._billboardCollection).toBeDefined();
+        expect(cluster._billboardCollection.length).toEqual(2);
     });
 }, 'WebGL');

@@ -15,7 +15,6 @@ defineSuite([
         'Core/EllipseGeometry',
         'Core/Ellipsoid',
         'Core/EllipsoidGeometry',
-        'Core/GeographicProjection',
         'Core/Geometry',
         'Core/GeometryAttribute',
         'Core/GeometryInstance',
@@ -31,10 +30,8 @@ defineSuite([
         'Core/SphereGeometry',
         'Core/Transforms',
         'Core/WallGeometry',
-        'Renderer/ClearCommand',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Material',
-        'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
         'Scene/PolylineColorAppearance',
         'Scene/Primitive',
@@ -57,7 +54,6 @@ defineSuite([
         EllipseGeometry,
         Ellipsoid,
         EllipsoidGeometry,
-        GeographicProjection,
         Geometry,
         GeometryAttribute,
         GeometryInstance,
@@ -73,10 +69,8 @@ defineSuite([
         SphereGeometry,
         Transforms,
         WallGeometry,
-        ClearCommand,
         EllipsoidSurfaceAppearance,
         Material,
-        OrthographicFrustum,
         PerInstanceColorAppearance,
         PolylineColorAppearance,
         Primitive,
@@ -1578,6 +1572,55 @@ defineSuite([
                     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                         Cartesian3.fromDegrees(0,0)), new Cartesian3(0.0, 0.0, 10000.0), new Matrix4()),
                     id : 'customWithoutIndices',
+                    attributes : {
+                        color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
+                    }
+                });
+                geometry = instance.geometry;
+                geometry.boundingSphere = BoundingSphere.fromVertices(instance.geometry.attributes.position.values);
+                geometry.boundingSphereWC = BoundingSphere.transform(geometry.boundingSphere, instance.modelMatrix);
+            });
+
+            it('3D', function() {
+                render3D(instance);
+            });
+
+            it('Columbus view', function() {
+                renderCV(instance);
+            });
+
+            it('2D', function() {
+                render2D(instance);
+            });
+
+            it('pick', function() {
+                pickGeometry(instance);
+            });
+        }, 'WebGL');
+
+        describe('with native arrays as attributes and indices', function() {
+            var instance;
+            beforeAll(function() {
+                instance = new GeometryInstance({
+                    geometry : new Geometry({
+                        attributes : {
+                            position : new GeometryAttribute({
+                                componentDatatype : ComponentDatatype.DOUBLE,
+                                componentsPerAttribute : 3,
+                                values : [
+                                    1000000.0, 0.0, 0.0,
+                                    1000000.0, 1000000.0, 0.0,
+                                    1000000.0, 0.0, 1000000.0,
+                                    1000000.0, 1000000.0, 1000000.0
+                                ]
+                            })
+                        },
+                        indices : [0, 1, 2, 2, 1, 3],
+                        primitiveType : PrimitiveType.TRIANGLES
+                    }),
+                    modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                        Cartesian3.fromDegrees(0,0)), new Cartesian3(0.0, 0.0, 10000.0), new Matrix4()),
+                    id : 'customWithIndices',
                     attributes : {
                         color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
                     }

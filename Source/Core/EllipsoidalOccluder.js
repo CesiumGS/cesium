@@ -305,6 +305,10 @@ define([
     var directionToPointScratch = new Cartesian3();
 
     function computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint) {
+        if (Cartesian3.equals(directionToPoint, Cartesian3.ZERO)) {
+            return directionToPoint;
+        }
+
         ellipsoid.transformPositionToScaledSpace(directionToPoint, directionToPointScratch);
         return Cartesian3.normalize(directionToPointScratch, directionToPointScratch);
     }

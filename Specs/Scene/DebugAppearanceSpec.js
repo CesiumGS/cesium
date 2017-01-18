@@ -8,7 +8,6 @@ defineSuite([
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/VertexFormat',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Primitive',
         'Specs/createScene'
@@ -21,7 +20,6 @@ defineSuite([
         Rectangle,
         RectangleGeometry,
         VertexFormat,
-        ClearCommand,
         Appearance,
         Primitive,
         createScene) {
@@ -65,7 +63,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('default construct with normal, binormal, or tangent attribute name', function() {
+    it('default construct with normal, bitangent, or tangent attribute name', function() {
         var a = new DebugAppearance({
             attributeName : 'normal',
             perInstanceAttribute : false
@@ -204,16 +202,16 @@ defineSuite([
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
-    it('renders binormal', function() {
+    it('renders bitangent', function() {
         var vertexFormat = new VertexFormat({
             position : true,
             normal : true,
-            binormal : true
+            bitangent : true
         });
         primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
-                attributeName : 'binormal',
+                attributeName : 'bitangent',
                 perInstanceAttribute : false
             }),
             asynchronous : false,

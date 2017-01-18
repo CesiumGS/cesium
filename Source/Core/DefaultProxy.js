@@ -22,7 +22,8 @@ define(function() {
      * @returns {String} proxied resource
      */
     DefaultProxy.prototype.getURL = function(resource) {
-        return this.proxy + '?' + encodeURIComponent(resource);
+        var prefix = this.proxy.indexOf('?') === -1 ? '?' : '';
+        return this.proxy + prefix + encodeURIComponent(resource);
     };
 
     return DefaultProxy;

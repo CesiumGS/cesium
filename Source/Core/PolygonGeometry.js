@@ -14,7 +14,6 @@ define([
         './EllipsoidTangentPlane',
         './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes',
         './GeometryInstance',
         './GeometryPipeline',
         './IndexDatatype',
@@ -41,7 +40,6 @@ define([
         EllipsoidTangentPlane,
         Geometry,
         GeometryAttribute,
-        GeometryAttributes,
         GeometryInstance,
         GeometryPipeline,
         IndexDatatype,
@@ -109,12 +107,12 @@ define([
     var scratchPosition = new Cartesian3();
     var scratchNormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
-    var scratchBinormal = new Cartesian3();
+    var scratchBitangent = new Cartesian3();
     var p1Scratch = new Cartesian3();
     var p2Scratch = new Cartesian3();
     var scratchPerPosNormal = new Cartesian3();
     var scratchPerPosTangent = new Cartesian3();
-    var scratchPerPosBinormal = new Cartesian3();
+    var scratchPerPosBitangent = new Cartesian3();
 
     var appendTextureCoordinatesOrigin = new Cartesian2();
     var appendTextureCoordinatesCartesian2 = new Cartesian2();
@@ -125,7 +123,8 @@ define([
     function computeAttributes(options) {
         var vertexFormat = options.vertexFormat;
         var geometry = options.geometry;
-        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+        var shadowVolume = options.shadowVolume;
+        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent || shadowVolume) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
             // PERFORMANCE_IDEA: Compute with createGeometryFromPositions() for fast path when there's no holes.
             var boundingRectangle = options.boundingRectangle;
@@ -154,14 +153,15 @@ define([
                 }
             }
             var tangents = vertexFormat.tangent ? new Float32Array(length) : undefined;
-            var binormals = vertexFormat.binormal ? new Float32Array(length) : undefined;
+            var bitangents = vertexFormat.bitangent ? new Float32Array(length) : undefined;
+            var extrudeNormals = shadowVolume ? new Float32Array(length) : undefined;
 
             var textureCoordIndex = 0;
             var attrIndex = 0;
 
             var normal = scratchNormal;
             var tangent = scratchTangent;
-            var binormal = scratchBinormal;
+            var bitangent = scratchBitangent;
             var recomputeNormal = true;
 
             var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, stRotation, appendTextureCoordinatesQuaternion);
@@ -200,7 +200,7 @@ define([
                     textureCoordIndex += 2;
                 }
 
-                if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent || shadowVolume) {
                     var attrIndex1 = attrIndex + 1;
                     var attrIndex2 = attrIndex + 2;
 
@@ -224,28 +224,28 @@ define([
                             }
                         }
 
-                        if (vertexFormat.tangent || vertexFormat.binormal) {
-                            binormal = ellipsoid.geodeticSurfaceNormal(position, binormal);
+                        if (vertexFormat.tangent || vertexFormat.bitangent) {
+                            bitangent = ellipsoid.geodeticSurfaceNormal(position, bitangent);
                             if (vertexFormat.tangent) {
-                                tangent = Cartesian3.normalize(Cartesian3.cross(binormal, normal, tangent), tangent);
+                                tangent = Cartesian3.normalize(Cartesian3.cross(bitangent, normal, tangent), tangent);
                             }
                         }
                     } else {
                         normal = ellipsoid.geodeticSurfaceNormal(position, normal);
-                        if (vertexFormat.tangent || vertexFormat.binormal) {
+                        if (vertexFormat.tangent || vertexFormat.bitangent) {
                             if (perPositionHeight) {
                                 scratchPerPosNormal = Cartesian3.fromArray(normals, attrIndex, scratchPerPosNormal);
                                 scratchPerPosTangent = Cartesian3.cross(Cartesian3.UNIT_Z, scratchPerPosNormal, scratchPerPosTangent);
                                 scratchPerPosTangent = Cartesian3.normalize(Matrix3.multiplyByVector(textureMatrix, scratchPerPosTangent, scratchPerPosTangent), scratchPerPosTangent);
-                                if (vertexFormat.binormal) {
-                                    scratchPerPosBinormal = Cartesian3.normalize(Cartesian3.cross(scratchPerPosNormal, scratchPerPosTangent, scratchPerPosBinormal), scratchPerPosBinormal);
+                                if (vertexFormat.bitangent) {
+                                    scratchPerPosBitangent = Cartesian3.normalize(Cartesian3.cross(scratchPerPosNormal, scratchPerPosTangent, scratchPerPosBitangent), scratchPerPosBitangent);
                                 }
                             }
 
                             tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
                             tangent = Cartesian3.normalize(Matrix3.multiplyByVector(textureMatrix, tangent, tangent), tangent);
-                            if (vertexFormat.binormal) {
-                                binormal = Cartesian3.normalize(Cartesian3.cross(normal, tangent, binormal), binormal);
+                            if (vertexFormat.bitangent) {
+                                bitangent = Cartesian3.normalize(Cartesian3.cross(normal, tangent, bitangent), bitangent);
                             }
                         }
                     }
@@ -266,6 +266,15 @@ define([
                             normals[attrIndex1] = normal.y;
                             normals[attrIndex2] = normal.z;
                         }
+                    }
+
+                    if (shadowVolume) {
+                        if (wall) {
+                            normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+                        }
+                        extrudeNormals[attrIndex + bottomOffset] = -normal.x;
+                        extrudeNormals[attrIndex1 + bottomOffset] = -normal.y;
+                        extrudeNormals[attrIndex2 + bottomOffset] = -normal.z;
                     }
 
                     if (vertexFormat.tangent) {
@@ -292,21 +301,21 @@ define([
                         }
                     }
 
-                    if (vertexFormat.binormal) {
+                    if (vertexFormat.bitangent) {
                         if (bottom) {
-                            binormals[attrIndex + bottomOffset] = binormal.x;
-                            binormals[attrIndex1 + bottomOffset] = binormal.y;
-                            binormals[attrIndex2 + bottomOffset] = binormal.z;
+                            bitangents[attrIndex + bottomOffset] = bitangent.x;
+                            bitangents[attrIndex1 + bottomOffset] = bitangent.y;
+                            bitangents[attrIndex2 + bottomOffset] = bitangent.z;
                         }
                         if (top) {
                             if (perPositionHeight) {
-                                binormals[attrIndex] = scratchPerPosBinormal.x;
-                                binormals[attrIndex1] = scratchPerPosBinormal.y;
-                                binormals[attrIndex2] = scratchPerPosBinormal.z;
+                                bitangents[attrIndex] = scratchPerPosBitangent.x;
+                                bitangents[attrIndex1] = scratchPerPosBitangent.y;
+                                bitangents[attrIndex2] = scratchPerPosBitangent.z;
                             } else {
-                                binormals[attrIndex] = binormal.x;
-                                binormals[attrIndex1] = binormal.y;
-                                binormals[attrIndex2] = binormal.z;
+                                bitangents[attrIndex] = bitangent.x;
+                                bitangents[attrIndex1] = bitangent.y;
+                                bitangents[attrIndex2] = bitangent.z;
                             }
                         }
                     }
@@ -338,11 +347,19 @@ define([
                 });
             }
 
-            if (vertexFormat.binormal) {
-                geometry.attributes.binormal = new GeometryAttribute({
+            if (vertexFormat.bitangent) {
+                geometry.attributes.bitangent = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
-                    values : binormals
+                    values : bitangents
+                });
+            }
+
+            if (shadowVolume) {
+                geometry.attributes.extrudeDirection = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : extrudeNormals
                 });
             }
         }
@@ -367,12 +384,12 @@ define([
 
             if (closeTop && closeBottom) {
                 var topBottomPositions = edgePoints.concat(edgePoints);
+
                 numPositions = topBottomPositions.length / 3;
 
                 newIndices = IndexDatatype.createTypedArray(numPositions, indices.length * 2);
                 newIndices.set(indices);
                 var ilength = indices.length;
-
 
                 var length = numPositions / 2;
 
@@ -581,6 +598,7 @@ define([
         this._closeBottom = defaultValue(options.closeBottom, true);
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
+        this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createPolygonGeometry';
 
         var positions = polygonHierarchy.positions;
@@ -594,7 +612,7 @@ define([
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 9;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 10;
     }
 
     /**
@@ -695,6 +713,7 @@ define([
         array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
         array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
         array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
+        array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
         array[startingIndex] = value.packedLength;
 
         return array;
@@ -746,6 +765,7 @@ define([
         var perPositionHeight = array[startingIndex++] === 1.0;
         var closeTop = array[startingIndex++] === 1.0;
         var closeBottom = array[startingIndex++] === 1.0;
+        var shadowVolume = array[startingIndex++] === 1.0;
         var packedLength = array[startingIndex];
 
         if (!defined(result)) {
@@ -764,6 +784,7 @@ define([
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;
         result._rectangle = Rectangle.clone(rectangle);
+        result._shadowVolume = shadowVolume;
         result.packedLength = packedLength;
         return result;
     };
@@ -826,6 +847,7 @@ define([
         if (extrude) {
             options.top = closeTop;
             options.bottom = closeBottom;
+            options.shadowVolume = polygonGeometry._shadowVolume;
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
 
@@ -906,7 +928,8 @@ define([
             perPositionHeight : false,
             extrudedHeight : minHeight,
             height : maxHeight,
-            vertexFormat : VertexFormat.POSITION_ONLY
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            shadowVolume: true
         });
     };
 

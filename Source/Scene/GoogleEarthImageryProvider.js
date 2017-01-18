@@ -95,7 +95,7 @@ define([
      *     url : 'https://earth.localdomain',
      *     channel : 1008
      * });
-     * 
+     *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
     function GoogleEarthImageryProvider(options) {
@@ -568,7 +568,7 @@ define([
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.
      */
-    GoogleEarthImageryProvider.prototype.pickFeatures = function() {
+    GoogleEarthImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
 

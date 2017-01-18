@@ -2,7 +2,6 @@
 define([
         './Cartographic',
         './defined',
-        './DeveloperError',
         './EllipsoidTangentPlane',
         './Math',
         './PolygonPipeline',
@@ -11,7 +10,6 @@ define([
     ], function(
         Cartographic,
         defined,
-        DeveloperError,
         EllipsoidTangentPlane,
         CesiumMath,
         PolygonPipeline,

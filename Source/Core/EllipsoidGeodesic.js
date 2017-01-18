@@ -337,6 +337,7 @@ define([
      * Provides the location of a point at the indicated portion along the geodesic.
      *
      * @param {Number} fraction The portion of the distance between the initial and final points.
+     * @param {Cartographic} result The object in which to store the result.
      * @returns {Cartographic} The location of the point along the geodesic.
      */
     EllipsoidGeodesic.prototype.interpolateUsingFraction = function(fraction, result) {
@@ -347,14 +348,15 @@ define([
      * Provides the location of a point at the indicated distance along the geodesic.
      *
      * @param {Number} distance The distance from the inital point to the point of interest along the geodesic
+     * @param {Cartographic} result The object in which to store the result.
      * @returns {Cartographic} The location of the point along the geodesic.
      *
-     * @exception {DeveloperError} start and end must be set before calling funciton interpolateUsingSurfaceDistance
+     * @exception {DeveloperError} start and end must be set before calling function interpolateUsingSurfaceDistance
      */
     EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function(distance, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this._distance)) {
-            throw new DeveloperError('start and end must be set before calling funciton interpolateUsingSurfaceDistance');
+            throw new DeveloperError('start and end must be set before calling function interpolateUsingSurfaceDistance');
         }
         //>>includeEnd('debug');
 
