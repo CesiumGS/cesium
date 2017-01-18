@@ -23,7 +23,6 @@ define([
     '../../Core/ScreenSpaceEventType',
     '../../Scene/VerticalOrigin',
     '../createCommand',
-    'ThirdParty/when'
     ], function(
         Cartesian3,
         Cartographic,
@@ -47,8 +46,7 @@ define([
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         VerticalOrigin,
-        createCommand,
-        when) {
+        createCommand) {
     'use strict';
 
     function createKnockoutBindings(model, options) {
@@ -64,9 +62,10 @@ define([
 
         for (name in options) {
             if (options.hasOwnProperty(name)) {
+                model._observables[name] = knockout.getObservable(model, name);
                 var subscription = options[name].subscribe;
                 if (subscription) {
-                    model._subscriptions[name] = knockout.getObservable(model, name).subscribe(subscription);
+                    model._subscriptions[name] = model._observables[name].subscribe(subscription);
                 }
             }
         }
@@ -102,6 +101,8 @@ define([
 
         this.highlightColor = new Color(1.0, 1.0, 0.0, 0.4);
 
+        this._subscriptions = {};
+        this._observables = {};
         var tilesetOptions = {
             /**
              * Gets or sets the flag to show stats.  This property is observable.
@@ -150,72 +151,14 @@ define([
                             eventHandler.setInputAction(function(e) {
                                 that._feature = scene.pick(e.endPosition);
                                 that._updateStats(true, false);
-                                // if (that._tileset) {
-
-                                    // showStats(that._tileset, true, false);
-                                // }
                             }, ScreenSpaceEventType.MOUSE_MOVE);
-            //
-            //                 eventHandler.setInputAction(function() {
-            //                     if (defined(that._feature)) {
-            //                         onSelect(that._feature);
-            //                     }
-            //                 }, ScreenSpaceEventType.LEFT_CLICK);
-            //
-            //                 eventHandler.setInputAction(function(e) {
-            //                     if (that.annotatePicked) {
-            //                         annotate(e.position);
-            //                     }
-            //                     if (that.zoomPicked) {
-            //                         zoom(that._feature);
-            //                     }
-            //                 }, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-            //
-            //                 eventHandler.setInputAction(function() {
-            //                     if (defined(that._feature) && that.hidePicked) {
-            //                         that._feature.show = false;
-            //                     }
-            //                 }, ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
                         } else {
                             that._feature = undefined;
                             eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
-            //                 eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
-            //                 eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-            //                 eventHandler.removeInputAction(ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
                         }
                     };
                 })()
             },
-            /**
-             * Gets or sets the flag to annotate features on double click.  This property is observable.
-             * @memberof Cesium3DTilesInspectorViewModel.prototype
-             *
-             * @type {Boolean}
-             * @default false
-             */
-            // annotatePicked: {
-            //     default: false
-            // },
-            /**
-             * Gets or sets the flag to fly to features on double click.  This property is observable.
-             * @memberof Cesium3DTilesInspectorViewModel.prototype
-             *
-             * @type {Boolean}
-             * @default true
-             */
-            // zoomPicked: {
-            //     default: true
-            // },
-            /**
-             * Gets or sets the flag to hide features on double middle mouse click.  This property is observable.
-             * @memberof Cesium3DTilesInspectorViewModel.prototype
-             *
-             * @type {Boolean}
-             * @default true
-             */
-            // hidePicked: {
-            //     default: true
-            // },
             /**
              * Gets or sets the flag to suspend updates.  This property is observable.
              * @memberof Cesium3DTilesInspectorViewModel.prototype
@@ -418,7 +361,7 @@ define([
                 default: ''
             }
         };
-        this._subscriptions = {};
+
         createKnockoutBindings(this, tilesetOptions);
         createKnockoutBindings(this, {
             _tileset: {
@@ -485,6 +428,12 @@ define([
                     this._statsLogger = this._updateStats.bind(this, false, false);
                     tileset.loadProgress.addEventListener(this._statsLogger);
                     tileset.allTilesLoaded.addEventListener(this._statsLogger);
+                    for (var name in this._observables) {
+                        if (this._observables.hasOwnProperty(name)) {
+                            // force an update on all options so settings are applied to new tileset
+                            this._observables[name].valueHasMutated();
+                        }
+                    }
                 }
             }
         },
@@ -567,7 +516,7 @@ define([
                 '<li><strong>Content Ready: </strong>' + stats.numberContentReady + '</li>' +
                 // Total number of tiles includes tiles without content, so "Ready" may never reach
                 // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
-                '<li><strong>Total: </strong>' + stats.numberTotal + '</li>'
+                '<li><strong>Total: </strong>' + stats.numberTotal + '</li>';
             s += '</ul>';
             s += '<ul class="cesium-cesiumInspector-stats">';
             s +=
