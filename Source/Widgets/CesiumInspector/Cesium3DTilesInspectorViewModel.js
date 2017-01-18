@@ -9,20 +9,11 @@ define([
     '../../Core/defined',
     '../../Core/defineProperties',
     '../../Core/destroyObject',
-    '../../Core/EasingFunction',
-    '../../Scene/HorizontalOrigin',
     '../../ThirdParty/knockout',
-    '../../Scene/LabelCollection',
-    '../../Core/Math',
-    '../../Core/Matrix3',
-    '../../Core/Matrix4',
-    '../../Core/Transforms',
     '../../Scene/PerformanceDisplay',
-    '../../Core/Quaternion',
     '../../Core/ScreenSpaceEventHandler',
     '../../Core/ScreenSpaceEventType',
-    '../../Scene/VerticalOrigin',
-    '../createCommand',
+    '../createCommand'
     ], function(
         Cartesian3,
         Cartographic,
@@ -33,19 +24,10 @@ define([
         defined,
         defineProperties,
         destroyObject,
-        EasingFunction,
-        HorizontalOrigin,
         knockout,
-        LabelCollection,
-        Math,
-        Matrix3,
-        Matrix4,
-        Transforms,
         PerformanceDisplay,
-        Quaternion,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
-        VerticalOrigin,
         createCommand) {
     'use strict';
 
@@ -99,7 +81,7 @@ define([
         });
 
         this.highlightColor = new Color(1.0, 1.0, 0.0, 0.4);
-
+        this._style = undefined;
         this._subscriptions = {};
         var tilesetOptions = {
             /**
@@ -357,6 +339,27 @@ define([
              */
             pickStatsText : {
                 default: ''
+            },
+            /**
+             * Gets or sets the JSON for the tileset style.  This property is observable.
+             * @memberof Cesium3DTilesInspectorViewModel.prototype
+             *
+             * @type {String}
+             * @default undefined
+             */
+            styleString : {
+                default: undefined,
+                subscribe: function(val) {
+                    if (defined(that._style)) {
+                        if (val !== JSON.stringify(that._style.style)) {
+                            if (defined(that._tileset)) {
+                                var style = new Cesium3DTileStyle(JSON.parse(val));
+                                that._tileset.style = style;
+                                that._style = style;
+                            }
+                        }
+                    }
+                }
             }
         };
 
@@ -475,6 +478,21 @@ define([
                     }
                 });
             }
+        },
+
+        /**
+         * Gets the command to pick a tileset
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        pickTileset: {
+            get: function() {
+                var that = this;
+                return createCommand(function() {
+
+                });
+            }
         }
     });
 
@@ -559,6 +577,15 @@ define([
     Cesium3DTilesInspectorViewModel.prototype.update = function() {
         if (this.performance) {
             this._performanceDisplay.update();
+        }
+
+        if (defined(this._tileset) && this._style !== this._tileset.style) {
+            this._style = this._tileset.style;
+            if (defined(this._style)) {
+                this.styleString = JSON.stringify(this._style.style, null, '    ');
+            } else {
+                this.styleString = '';
+            }
         }
     };
 

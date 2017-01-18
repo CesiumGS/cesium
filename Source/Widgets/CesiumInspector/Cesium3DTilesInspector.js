@@ -26,13 +26,14 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Scene} scene the Scene instance to use.
      *
-     * @exception {DeveloperError} container is requred.
+     * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} scene is required.
      */
     function Cesium3DTilesInspector(container, scene) {
         //>includeStart('debug', pragmas.debug);
         Check.defined(container, 'container');
         Check.typeOf.object(scene, 'scene');
+        //>>includeEnd('debug');
 
         container = getElement(container);
 
@@ -67,6 +68,7 @@ define([
             displayVisible: false,
             updateVisible: false,
             loggingVisible: false,
+            styleVisible: false,
             toggleInspector: function() {
                 that._inspectorModel.inspectorVisible = !that._inspectorModel.inspectorVisible;
             },
@@ -81,15 +83,18 @@ define([
             },
             toggleLogging: function() {
                 that._inspectorModel.loggingVisible = !that._inspectorModel.loggingVisible;
+            },
+            toggleStyle: function() {
+                that._inspectorModel.styleVisible = !that._inspectorModel.styleVisible;
             }
         };
 
-        knockout.track(this._inspectorModel, ['inspectorVisible', 'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible']);
+        knockout.track(this._inspectorModel, ['inspectorVisible', 'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible']);
 
         var element = document.createElement('div');
         this._element = element;
         var text = document.createElement('div');
-        text.textContent = 'Cesium Inspector';
+        text.textContent = '3D Tiles Inspector';
         text.className = 'cesium-cesiumInspector-button';
         text.setAttribute('data-bind', 'click: toggleInspector');
         element.appendChild(text);
@@ -101,39 +106,25 @@ define([
         var displayPanel = makeSection('Display', 'displayVisible', 'toggleDisplay');
         var updatePanel = makeSection('Update', 'updateVisible', 'toggleUpdate');
         var loggingPanel = makeSection('Logging', 'loggingVisible', 'toggleLogging');
+        var stylePanel = makeSection('Style', 'styleVisible', 'toggleStyle');
 
         // first add and bind all the toggleable panels
         element.appendChild(tilesetPanel);
         element.appendChild(displayPanel);
         element.appendChild(updatePanel);
         element.appendChild(loggingPanel);
+        element.appendChild(stylePanel);
         knockout.applyBindings(this._inspectorModel, element);
-
-        // now add and bind just the tileset selection option
-        // var tilesets = document.createElement('select');
-        // tilesets.setAttribute('data-bind', 'options: _tilesetOptions, ' +
-        //                                    'optionsText: "name", ' +
-        //                                    'value: _selectedTileset, ' +
-        //                                    'optionsCaption: "Choose a Tileset..."');
-        // tilesets.className = 'cesium-cesiumInspector-select';
-        // element.insertBefore(tilesets, tilesetPanel);
-        // knockout.applyBindings(viewModel, tilesets);
 
         // build and bind each panel separately
         var tilesetURL = document.createElement('div');
         tilesetURL.setAttribute('data-bind', 'html: tilesetURL');
         tilesetURL.setAttribute('style', 'word-break: break-all;');
         tilesetPanel.contents.appendChild(tilesetURL);
+        tilesetPanel.contents.appendChild(makeButton('pickTileset', 'Pick Tileset'));
         tilesetPanel.contents.appendChild(makeButton('trimTilesCache', 'Trim Tiles Cache'));
+        // tilesetPanel.contents.appendChild(makeCheckbox('editStyles', 'Edit Styles'));
         tilesetPanel.contents.appendChild(makeCheckbox('picking', 'Enable Picking'));
-        // var pickPanelWrapper = document.createElement('div');
-        // pickPanelWrapper.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : picking, "cesium-cesiumInspector-hide" : !picking}');
-        // var pickPanel = makeSection('Picking');
-        // pickPanel.contents.appendChild(makeCheckbox('annotatePicked', 'Annotate Features', 'picking'));
-        // pickPanel.contents.appendChild(makeCheckbox('zoomPicked', 'Fly to Features', 'picking'));
-        // pickPanel.contents.appendChild(makeCheckbox('hidePicked', 'Hide Features', 'picking'));
-        // pickPanelWrapper.append(pickPanel);
-        // tilesetPanel.contents.appendChild(pickPanelWrapper);
         knockout.applyBindings(viewModel, tilesetPanel.contents);
 
 
@@ -173,6 +164,16 @@ define([
         pickStats.setAttribute('style', 'font-size: 11px');
         loggingPanel.contents.appendChild(pickStats);
         knockout.applyBindings(viewModel, loggingPanel.contents);
+
+        var styleEditor = document.createElement('textarea');
+        styleEditor.setAttribute('data-bind', 'value: styleString');
+        stylePanel.contents.className = 'cesium-cesiumInspector-styleEditor';
+        stylePanel.contents.appendChild(styleEditor);
+        stylePanel.contents.appendChild(document.createElement('br'));
+        var closeStylesBtn = makeButton('toggleStyle', 'Close');
+        stylePanel.contents.appendChild(closeStylesBtn);
+        knockout.applyBindings(this._inspectorModel, closeStylesBtn);
+        knockout.applyBindings(viewModel, styleEditor);
     }
 
     defineProperties(Cesium3DTilesInspector.prototype, {

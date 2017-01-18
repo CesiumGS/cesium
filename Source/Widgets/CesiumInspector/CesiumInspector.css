@@ -194,3 +194,29 @@ input[type=range]:focus {
     background: #ffffff;
     cursor: pointer;
 }
+
+.cesium-cesiumInspector-styleEditor {
+    position: fixed;
+    top: 30px;
+    left: 30px;
+}
+
+.cesium-cesiumInspector-hide .cesium-cesiumInspector-styleEditor {
+    display: none;
+}
+
+.cesium-cesiumInspector-styleEditor {
+    padding: 10px;
+    border-radius: 5px;
+    background: rgba(48, 51, 54, 0.8);
+    border: 1px solid #444;
+}
+
+.cesium-cesiumInspector-styleEditor textarea {
+    width: 300px;
+    height: 300px;
+    background: transparent;
+    color: #edffff;
+    border: none;
+    padding: 0px;
+}

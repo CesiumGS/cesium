@@ -39,44 +39,12 @@ var model = viewer.cesium3DTilesInspector.viewModel;
 var scene = viewer.scene;
 scene.fog.enabled = false;
 
-var tileStyle = new Cesium.Cesium3DTileStyle({
-    color: {
-        conditions: [
-            ["${Height} >= 83", "color('purple', 0.5)"],
-            ["${Height} >= 80", "color('red')"],
-            ["${Height} >= 70", "color('orange')"],
-            ["${Height} >= 12", "color('yellow')"],
-            ["${Height} >= 7", "color('lime')"],
-            ["${Height} >= 1", "color('cyan')"],
-            ["true", "color('blue')"]
-        ]
-    },
-    meta: {
-        description: "'Building id ${id} has height ${Height}.'"
-    }
-});
-
 //var styleElements = [];
 //var numberofColors = 6;
 //var currentPropertyName = 'Height';
 var annotations = scene.primitives.add(new Cesium.LabelCollection());
 
 var tileset;
-var tilesets = {
-    'Tileset': '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/',
-    'Translucent': '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucent/',
-    'Translucent/Opaque': '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/',
-    'Multi-color': '../../../Specs/Data/Cesium3DTiles/Batched/BatchedColors/',
-    'Request Volume': '../../../Specs/Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/',
-    'Batched': '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/',
-    'Instanced': '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/',
-    'Instanced/Orientation': '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientationWithBatchTable/',
-    'Composite': '../../../Specs/Data/Cesium3DTiles/Composite/Composite/',
-    'PointCloud': '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudRGB/',
-    'PointCloudConstantColor': '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/',
-    'PointCloudNormals': '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/',
-    'PointCloudBatched': '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudBatched/'
-};
 
 var viewModel = {
     tilesets: [
@@ -163,6 +131,26 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
         var boundingSphere = tileset.boundingSphere;
         viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+        var properties = tileset.properties;
+        if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
+            tileset.style = new Cesium.Cesium3DTileStyle({
+                color: {
+                    conditions: [
+                        ["${Height} >= 83", "color('purple', 0.5)"],
+                        ["${Height} >= 80", "color('red')"],
+                        ["${Height} >= 70", "color('orange')"],
+                        ["${Height} >= 12", "color('yellow')"],
+                        ["${Height} >= 7", "color('lime')"],
+                        ["${Height} >= 1", "color('cyan')"],
+                        ["true", "color('blue')"]
+                    ]
+                },
+                meta: {
+                    description: "'Building id ${id} has height ${Height}.'"
+                }
+            });
+        }
     });
 });
 
@@ -276,201 +264,7 @@ function zoom(movement) {
         });
     }
 }
-/*
-function createStylingFunctions(tileset) {
-    // Styling ////////////////////////////////////////////////////////////////////
 
-    function getRandomColor() {
-        var color = Cesium.Color.fromRandom();
-        color.alpha = 1.0;
-        return color.toCssColorString();
-    }
-
-    function styleFunction(name) {
-        var conditions = [];
-        var intervalSize = Math.floor(100/numberofColors);
-        for (var i = numberofColors; i >= 0; --i) {
-            var cond = '${' + name + '} > ' + (i * intervalSize);
-            conditions.push([cond, getRandomColor()]);
-        }
-        conditions.push(['true', getRandomColor()]);
-
-        tileset.style = new Cesium.Cesium3DTileStyle({
-            color : {
-                conditions : conditions
-            },
-            show : '${' + name + '} >= 0'
-        });
-
-        currentPropertyName = name;
-    }
-
-    function getStyleFunction(name) {
-        return function() {
-            styleFunction(name);
-        };
-    }
-
-    function addStyleUI() {
-        var button;
-
-        var properties = tileset.properties;
-        if (Cesium.defined(properties)) {
-            for (var name in properties) {
-                // Include all properties except longitude and latitude
-                if (properties.hasOwnProperty(name) && (name !== 'Longitude') && (name !== 'Latitude')) {
-                    button = Sandcastle.addToolbarButton('Style with ' + name, getStyleFunction(name));
-                    styleElements.push(button);
-                }
-            }
-        }
-
-        button = Sandcastle.addToolbarButton('Custom style', function() {
-            var style = new Cesium.Cesium3DTileStyle();
-            style.show = {
-                evaluate : function(frameState, feature) {
-                    tileset.makeStyleDirty(); // Force the style to be constantly evaluated
-                    return Cesium.Math.nextRandomNumber() > 0.5;
-                }
-            };
-            style.color = {
-                evaluateColor : function(frameState, feature, result) {
-                    tileset.makeStyleDirty(); // Force the style to be constantly evaluated
-                    return Cesium.Color.fromRandom(undefined, result);
-                }
-            };
-            tileset.style = style;
-        });
-        styleElements.push(button);
-
-        button = Sandcastle.addToolbarButton('Remove style', function() {
-            tileset.style = undefined;
-        });
-        styleElements.push(button);
-
-        function setColorBlendMode(colorBlendMode) {
-            return function() {
-                tileset.colorBlendMode = colorBlendMode;
-            };
-        }
-
-        var menu = Sandcastle.addToolbarMenu([{
-            text : 'Color Blend Mode'
-        }, {
-            text : 'Highlight',
-            onselect : setColorBlendMode(Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT)
-        }, {
-            text : 'Replace',
-            onselect : setColorBlendMode(Cesium.Cesium3DTileColorBlendMode.REPLACE)
-        }, {
-            text : 'Mix',
-            onselect : setColorBlendMode(Cesium.Cesium3DTileColorBlendMode.MIX)
-        }]);
-        styleElements.push(menu);
-
-        button = Sandcastle.addToolbarButton('colors++', function() {
-            ++numberofColors;
-            styleFunction(currentPropertyName);
-        });
-        styleElements.push(button);
-
-        button = Sandcastle.addToolbarButton('colors--', function() {
-            numberofColors = Math.max(numberofColors - 1, 1);
-            styleFunction(currentPropertyName);
-        });
-        styleElements.push(button);
-
-        var leftOperand = 0;
-        var rightOperand = 0;
-        var op = '==';
-
-        // Left operand (properties and literals)
-
-        function getLeftOperandFunction(name) {
-            return function() {
-                leftOperand = name;
-                updateExpression();
-            };
-        }
-        addOperands('Expression left operand', getLeftOperandFunction);
-
-        // Operator
-
-        var ops = ['<', '<=', '>', '>=', '==', '!='];
-        var operators = [{
-            text : 'Operator',
-            onselect : function() {
-            }
-        }];
-
-        function getOperatorFunction(operator) {
-            return function() {
-                op = operator;
-                updateExpression();
-            };
-        }
-
-        for (var i = 0; i < ops.length; ++i) {
-            operators.push({
-                text : ops[i],
-                onselect : getOperatorFunction(ops[i])
-            });
-        }
-
-        menu = Sandcastle.addToolbarMenu(operators);
-        styleElements.push(menu);
-
-        // Right operand
-
-        function getRightOperandFunction(operand) {
-            return function() {
-                rightOperand = operand;
-                updateExpression();
-            };
-        }
-        addOperands('Right operand', getRightOperandFunction);
-
-        function updateExpression() {
-            var exp = '' + leftOperand + op + rightOperand;
-            tileset.style = new Cesium.Cesium3DTileStyle({ show : exp });
-        }
-    }
-
-    function addOperands(text, getOperandFunction) {
-        var expressionOperands = [{
-            text : text,
-            onselect : function() {
-            }
-        }];
-
-        var properties = tileset.properties;
-        for (var name in properties) {
-            if (properties.hasOwnProperty(name)) {
-                var property = '${' + name + '}';
-                expressionOperands.push({
-                    text : property,
-                    onselect : getOperandFunction(property)
-                });
-            }
-        }
-
-        var oprs = [1, 10, 50, 100];
-        for (var j = 0; j < oprs.length; ++j) {
-            expressionOperands.push({
-                text : oprs[j],
-                onselect : getOperandFunction(oprs[j])
-            });
-        }
-
-        var menu = Sandcastle.addToolbarMenu(expressionOperands);
-        styleElements.push(menu);
-    }
-
-    // End of Styling /////////////////////////////////////////////////////////////
-
-    return addStyleUI;
-}
-*/
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
