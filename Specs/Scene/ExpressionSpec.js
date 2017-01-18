@@ -251,11 +251,13 @@ defineSuite([
 
         expression = new Expression('Infinity');
         expect(expression.evaluate(frameState, undefined)).toEqual(Infinity);
+    });
 
-        expression = new Expression('PI');
+    it('evaluates math constants', function() {
+        var expression = new Expression('Math.PI');
         expect(expression.evaluate(frameState, undefined)).toEqual(Math.PI);
 
-        expression = new Expression('E');
+        expression = new Expression('Math.E');
         expect(expression.evaluate(frameState, undefined)).toEqual(Math.E);
     });
 
@@ -1587,13 +1589,13 @@ defineSuite([
         var expression = new Expression('cos(0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
 
-        expression = new Expression('cos(vec2(0, PI))');
+        expression = new Expression('cos(vec2(0, Math.PI))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(1.0, -1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('cos(vec3(0, PI, -PI)');
+        expression = new Expression('cos(vec3(0, Math.PI, -Math.PI)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(1.0, -1.0, -1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('cos(vec4(0, PI, -PI, 0)');
+        expression = new Expression('cos(vec4(0, Math.PI, -Math.PI, 0)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(1.0, -1.0, -1.0, 1.0), CesiumMath.EPSILON7);
     });
 
@@ -1611,13 +1613,13 @@ defineSuite([
         var expression = new Expression('sin(0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(0);
 
-        expression = new Expression('sin(vec2(0, PI/2))');
+        expression = new Expression('sin(vec2(0, Math.PI/2))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, 1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('sin(vec3(0, PI/2, -PI/2)');
+        expression = new Expression('sin(vec3(0, Math.PI/2, -Math.PI/2)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, 1.0, -1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('sin(vec4(0, PI/2, -PI/2, 0)');
+        expression = new Expression('sin(vec4(0, Math.PI/2, -Math.PI/2, 0)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, 1.0, -1.0, 0.0), CesiumMath.EPSILON7);
     });
 
@@ -1635,13 +1637,13 @@ defineSuite([
         var expression = new Expression('tan(0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(0);
 
-        expression = new Expression('tan(vec2(0, PI/4))');
+        expression = new Expression('tan(vec2(0, Math.PI/4))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, 1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('tan(vec3(0, PI/4, PI)');
+        expression = new Expression('tan(vec3(0, Math.PI/4, Math.PI)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('tan(vec4(0, PI/4, PI, -PI/4)');
+        expression = new Expression('tan(vec4(0, Math.PI/4, Math.PI, -Math.PI/4)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, 1.0, 0.0, -1.0), CesiumMath.EPSILON7);
     });
 
@@ -1752,16 +1754,16 @@ defineSuite([
     });
 
     it('evaluates degrees function', function() {
-        var expression = new Expression('degrees(2 * PI)');
+        var expression = new Expression('degrees(2 * Math.PI)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(360, CesiumMath.EPSILON10);
 
-        expression = new Expression('degrees(vec2(2 * PI, PI))');
+        expression = new Expression('degrees(vec2(2 * Math.PI, Math.PI))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(360, 180), CesiumMath.EPSILON7);
 
-        expression = new Expression('degrees(vec3(2 * PI, PI, 2 * PI))');
+        expression = new Expression('degrees(vec3(2 * Math.PI, Math.PI, 2 * Math.PI))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(360, 180, 360), CesiumMath.EPSILON7);
 
-        expression = new Expression('degrees(vec4(2 * PI, PI, 2 * PI, PI)');
+        expression = new Expression('degrees(vec4(2 * Math.PI, Math.PI, 2 * Math.PI, Math.PI)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(360, 180, 360, 180), CesiumMath.EPSILON7);
     });
 
@@ -1989,13 +1991,13 @@ defineSuite([
         expression = new Expression('log(10.0)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(2.302585092994046, CesiumMath.EPSILON7);
 
-        expression = new Expression('log(vec2(1.0, E))');
+        expression = new Expression('log(vec2(1.0, Math.E))');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(0.0, 1.0));
 
-        expression = new Expression('log(vec3(1.0, E, 1.0))');
+        expression = new Expression('log(vec3(1.0, Math.E, 1.0))');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(0.0, 1.0, 0.0));
 
-        expression = new Expression('log(vec4(1.0, E, 1.0, E))');
+        expression = new Expression('log(vec4(1.0, Math.E, 1.0, Math.E))');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0.0, 1.0, 0.0, 1.0));
     });
 
@@ -2126,7 +2128,7 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.0, CesiumMath.EPSILON10);
 
         expression = new Expression('atan2(1,0)');
-        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.5*Math.PI, CesiumMath.EPSILON10);
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.5 * Math.PI, CesiumMath.EPSILON10);
     });
 
     it('throws if atan2 function takes an invalid number of arguments', function() {
@@ -2604,9 +2606,9 @@ defineSuite([
         expect(expression.evaluate(frameState, feature)).toEqual(70);
     });
 
-    it('evaluates TILES3D_TILESET_TIME expression', function() {
+    it('evaluates tiles3d_tileset_time expression', function() {
         var feature = new MockFeature();
-        var expression = new Expression('TILES3D_TILESET_TIME');
+        var expression = new Expression('${tiles3d_tileset_time}');
         expect(expression.evaluate(frameState, feature)).toEqual(0.0);
         feature._content._tileset.timeSinceLoad = 1.0;
         expect(expression.evaluate(frameState, feature)).toEqual(1.0);
@@ -2992,8 +2994,8 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
-    it('gets shader expression for TILES3D_TILESET_TIME', function() {
-        var expression = new Expression('TILES3D_TILESET_TIME');
+    it('gets shader expression for tiles3d_tileset_time', function() {
+        var expression = new Expression('${tiles3d_tileset_time}');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'u_tilesetTime';
         expect(shaderExpression).toEqual(expected);

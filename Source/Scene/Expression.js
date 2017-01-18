@@ -292,7 +292,7 @@ define([
         var result = '';
         var i = exp.indexOf('${');
         while (i >= 0) {
-            // check if string is inside quotes
+            // Check if string is inside quotes
             var openSingleQuote = exp.indexOf('\'');
             var openDoubleQuote = exp.indexOf('"');
             var closeQuote;
@@ -541,19 +541,18 @@ define([
 
     function parseKeywordsAndVariables(ast) {
         if (isVariable(ast.name)) {
-            return new Node(ExpressionNodeType.VARIABLE, getPropertyName(ast.name));
+            var name = getPropertyName(ast.name);
+            if (name.substr(0, 8) === 'tiles3d_') {
+                return new Node(ExpressionNodeType.BUILTIN_VARIABLE, name);
+            } else {
+                return new Node(ExpressionNodeType.VARIABLE, name);
+            }
         } else if (ast.name === 'NaN') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, NaN);
         } else if (ast.name === 'Infinity') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, Infinity);
         } else if (ast.name === 'undefined') {
             return new Node(ExpressionNodeType.LITERAL_UNDEFINED, undefined);
-        } else if (ast.name === 'PI') {
-            return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.PI);
-        } else if (ast.name === 'E') {
-            return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.E);
-        } else if (ast.name === 'TILES3D_TILESET_TIME') {
-            return new Node(ExpressionNodeType.LITERAL_GLOBAL, ast.name);
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -561,7 +560,20 @@ define([
         //>>includeEnd('debug');
     }
 
+    function parseMathConstant(ast) {
+        var name = ast.property.name;
+        if (name === 'PI') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.PI);
+        } else if (name === 'E') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.E);
+        }
+    }
+
     function parseMemberExpression(expression, ast) {
+        if (ast.object.name === 'Math') {
+            return parseMathConstant(ast);
+        }
+
         var val;
         var obj = createRuntimeAst(expression, ast.object);
         if (ast.computed) {
@@ -748,16 +760,16 @@ define([
             node.evaluate = node._evaluateLiteralString;
         } else if (node._type === ExpressionNodeType.REGEX) {
             node.evaluate = node._evaluateRegExp;
-        } else if (node._type === ExpressionNodeType.LITERAL_GLOBAL) {
-            if (node._value === 'TILES3D_TILESET_TIME') {
-                node.evaluate = evaluateTime;
+        } else if (node._type === ExpressionNodeType.BUILTIN_VARIABLE) {
+            if (node._value === 'tiles3d_tileset_time') {
+                node.evaluate = evaluateTilesetTime;
             }
         } else {
             node.evaluate = node._evaluateLiteral;
         }
     }
 
-    function evaluateTime(frameState, feature) {
+    function evaluateTilesetTime(frameState, feature) {
         return feature._content._tileset.timeSinceLoad;
     }
 
@@ -1709,8 +1721,8 @@ define([
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: undefined is not supported.');
                 //>>includeEnd('debug');
-            case ExpressionNodeType.LITERAL_GLOBAL:
-                if (value === 'TILES3D_TILESET_TIME') {
+            case ExpressionNodeType.BUILTIN_VARIABLE:
+                if (value === 'tiles3d_tileset_time') {
                     return 'u_tilesetTime';
                 }
         }
