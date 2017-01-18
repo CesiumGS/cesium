@@ -51,10 +51,165 @@ define([
      * @exports Transforms
      */
     var Transforms = {};
+    const vectorProductLocalFrame = {
+      up: {
+        south: 'east',
+        north: 'west',
+        west: 'south',
+        east: 'north'
+      },
+      down: {
+        south: 'west',
+        north: 'east',
+        west: 'north',
+        east: 'south'
+      },
+      south: {
+        up: 'west',
+        down: 'east',
+        west: 'down',
+        east: 'up'
+      },
+      north: {
+        up: 'east',
+        down: 'west',
+        west: 'up',
+        east: 'down'
+      },
+      west: {
+        up: 'north',
+        down: 'south',
+        north: 'down',
+        south: 'up'
+      },
+      east: {
+        up: 'south',
+        down: 'north',
+        north: 'up',
+        south: 'down'
+      }
+    };
 
-    var eastNorthUpToFixedFrameNormal = new Cartesian3();
-    var eastNorthUpToFixedFrameTangent = new Cartesian3();
-    var eastNorthUpToFixedFrameBitangent = new Cartesian3();
+    const degeneratePositionLocalFrame = {
+      north: [
+        -1, 0, 0
+      ],
+      east: [
+        0, 1, 0
+      ],
+      up: [
+        0, 0, 1
+      ],
+      south: [
+        1, 0, 0
+      ],
+      west: [
+        0, -1, 0
+      ],
+      down: [0, 0, -1]
+    };
+    /**
+    * Generates a function that computes a 4x4 transformation matrix from a reference frame
+    * centered at the provided origin to the provided ellipsoid's fixed reference frame.
+    * @param  {String} firstAxis  name of the first axis of the local reference frame. Must be
+    *  east, north, up, west, south or down.
+    * @param  {String} secondAxis  name of the second axis of the local reference frame. Must be
+    *  east, north, up, west, south or down.
+    * @return {localFrameToFixedFrameGenerator~resultat} The function that will computes a
+    * 4x4 transformation matrix from a reference frame, with first axis and second axis compliant with the parameters,
+    */
+    Transforms.localFrameToFixedFrameGenerator = function( firstAxis, secondAxis) {
+      if (!vectorProductLocalFrame.hasOwnProperty(firstAxis) || !vectorProductLocalFrame[firstAxis].hasOwnProperty(secondAxis)) {
+        throw new DeveloperError('firstAxis and secondAxis must be east, north, up, west, south or down.');
+      }
+      var thirdAxis = vectorProductLocalFrame[firstAxis][secondAxis];
+      var calculateCartesian = {
+        east: new Cartesian3(),
+        north: new Cartesian3(),
+        up: new Cartesian3(),
+        west: new Cartesian3(),
+        south: new Cartesian3(),
+        down: new Cartesian3()
+      };
+      var firstCartesian = new Cartesian3();
+      var secondCartesian = new Cartesian3();
+      var thirdCartesian = new Cartesian3();
+
+      /**
+       * [resultat description]
+       * @param {Cartesian3} origin The center point of the local reference frame.
+       * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+       * @param {Matrix4} [result] The object onto which to store the result.
+       * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+       */
+      var resultat= function(origin, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(origin)) {
+          throw new DeveloperError('origin is required.');
+        }
+        //>>includeEnd('debug');
+        if (!defined(result)) {
+          result = new Matrix4();
+        }
+        // If x and y are zero, assume origin is at a pole, which is a special case.
+        if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) && CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
+          var sign = CesiumMath.sign(origin.z);
+
+          Cartesian3.unpack(degeneratePositionLocalFrame[firstAxis], 0, firstCartesian);
+          if (firstAxis !== 'east' && firstAxis !== 'west') {
+            Cartesian3.multiplyByScalar(firstCartesian, sign, firstCartesian);
+          }
+
+          Cartesian3.unpack(degeneratePositionLocalFrame[secondAxis], 0, secondCartesian);
+          if (secondAxis !== 'east' && secondAxis !== 'west') {
+            Cartesian3.multiplyByScalar(secondCartesian, sign, secondCartesian);
+          }
+
+          Cartesian3.unpack(degeneratePositionLocalFrame[thirdAxis], 0, thirdCartesian);
+          if (thirdAxis !== 'east' && thirdAxis !== 'west') {
+            Cartesian3.multiplyByScalar(thirdCartesian, sign, thirdCartesian);
+          }
+        } else {
+
+          ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+          ellipsoid.geodeticSurfaceNormal(origin, calculateCartesian.up);
+
+          var up = calculateCartesian.up;
+          var east = calculateCartesian.east;
+          east.x = -origin.y;
+          east.y = origin.x;
+          east.z = 0.0;
+          Cartesian3.normalize(east, calculateCartesian.east);
+          Cartesian3.cross(up, east, calculateCartesian.north);
+
+          Cartesian3.multiplyByScalar(calculateCartesian.up, -1, calculateCartesian.down);
+          Cartesian3.multiplyByScalar(calculateCartesian.east, -1, calculateCartesian.west);
+          Cartesian3.multiplyByScalar(calculateCartesian.north, -1, calculateCartesian.south);
+
+          firstCartesian = calculateCartesian[firstAxis];
+          secondCartesian = calculateCartesian[secondAxis];
+          thirdCartesian = calculateCartesian[thirdAxis];
+        }
+        result[0] = firstCartesian.x;
+        result[1] = firstCartesian.y;
+        result[2] = firstCartesian.z;
+        result[3] = 0.0;
+        result[4] = secondCartesian.x;
+        result[5] = secondCartesian.y;
+        result[6] = secondCartesian.z;
+        result[7] = 0.0;
+        result[8] = thirdCartesian.x;
+        result[9] = thirdCartesian.y;
+        result[10] = thirdCartesian.z;
+        result[11] = 0.0;
+        result[12] = origin.x;
+        result[13] = origin.y;
+        result[14] = origin.z;
+        result[15] = 1.0;
+        return result;
+      };
+      return resultat;
+    }
 
     /**
      * Computes a 4x4 transformation matrix from a reference frame with an east-north-up axes
@@ -76,86 +231,7 @@ define([
      * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
      */
-    Transforms.eastNorthUpToFixedFrame = function(origin, ellipsoid, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(origin)) {
-            throw new DeveloperError('origin is required.');
-        }
-        //>>includeEnd('debug');
-
-        // If x and y are zero, assume origin is at a pole, which is a special case.
-        if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) &&
-            CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
-            var sign = CesiumMath.sign(origin.z);
-            if (!defined(result)) {
-                return new Matrix4(
-                        0.0, -sign,  0.0, origin.x,
-                        1.0,   0.0,  0.0, origin.y,
-                        0.0,   0.0, sign, origin.z,
-                        0.0,   0.0,  0.0, 1.0);
-            }
-            result[0] = 0.0;
-            result[1] = 1.0;
-            result[2] = 0.0;
-            result[3] = 0.0;
-            result[4] = -sign;
-            result[5] = 0.0;
-            result[6] = 0.0;
-            result[7] = 0.0;
-            result[8] = 0.0;
-            result[9] = 0.0;
-            result[10] = sign;
-            result[11] = 0.0;
-            result[12] = origin.x;
-            result[13] = origin.y;
-            result[14] = origin.z;
-            result[15] = 1.0;
-            return result;
-        }
-
-        var normal = eastNorthUpToFixedFrameNormal;
-        var tangent  = eastNorthUpToFixedFrameTangent;
-        var bitangent = eastNorthUpToFixedFrameBitangent;
-
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        ellipsoid.geodeticSurfaceNormal(origin, normal);
-
-        tangent.x = -origin.y;
-        tangent.y = origin.x;
-        tangent.z = 0.0;
-        Cartesian3.normalize(tangent, tangent);
-
-        Cartesian3.cross(normal, tangent, bitangent);
-
-        if (!defined(result)) {
-            return new Matrix4(
-                    tangent.x, bitangent.x, normal.x, origin.x,
-                    tangent.y, bitangent.y, normal.y, origin.y,
-                    tangent.z, bitangent.z, normal.z, origin.z,
-                    0.0,       0.0,         0.0,      1.0);
-        }
-        result[0] = tangent.x;
-        result[1] = tangent.y;
-        result[2] = tangent.z;
-        result[3] = 0.0;
-        result[4] = bitangent.x;
-        result[5] = bitangent.y;
-        result[6] = bitangent.z;
-        result[7] = 0.0;
-        result[8] = normal.x;
-        result[9] = normal.y;
-        result[10] = normal.z;
-        result[11] = 0.0;
-        result[12] = origin.x;
-        result[13] = origin.y;
-        result[14] = origin.z;
-        result[15] = 1.0;
-        return result;
-    };
-
-    var northEastDownToFixedFrameNormal = new Cartesian3();
-    var northEastDownToFixedFrameTangent = new Cartesian3();
-    var northEastDownToFixedFrameBitangent = new Cartesian3();
+    Transforms.eastNorthUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator('east','north');
 
     /**
      * Computes a 4x4 transformation matrix from a reference frame with an north-east-down axes
@@ -177,82 +253,7 @@ define([
      * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var transform = Cesium.Transforms.northEastDownToFixedFrame(center);
      */
-    Transforms.northEastDownToFixedFrame = function(origin, ellipsoid, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(origin)) {
-            throw new DeveloperError('origin is required.');
-        }
-        //>>includeEnd('debug');
-
-        if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) &&
-            CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
-            // The poles are special cases.  If x and y are zero, assume origin is at a pole.
-            var sign = CesiumMath.sign(origin.z);
-            if (!defined(result)) {
-                return new Matrix4(
-                  -sign, 0.0,   0.0, origin.x,
-                    0.0, 1.0,   0.0, origin.y,
-                    0.0, 0.0, -sign, origin.z,
-                    0.0, 0.0,   0.0, 1.0);
-            }
-            result[0] = -sign;
-            result[1] = 0.0;
-            result[2] = 0.0;
-            result[3] = 0.0;
-            result[4] = 0.0;
-            result[5] = 1.0;
-            result[6] = 0.0;
-            result[7] = 0.0;
-            result[8] = 0.0;
-            result[9] = 0.0;
-            result[10] = -sign;
-            result[11] = 0.0;
-            result[12] = origin.x;
-            result[13] = origin.y;
-            result[14] = origin.z;
-            result[15] = 1.0;
-            return result;
-        }
-
-        var normal = northEastDownToFixedFrameNormal;
-        var tangent = northEastDownToFixedFrameTangent;
-        var bitangent = northEastDownToFixedFrameBitangent;
-
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        ellipsoid.geodeticSurfaceNormal(origin, normal);
-
-        tangent.x = -origin.y;
-        tangent.y = origin.x;
-        tangent.z = 0.0;
-        Cartesian3.normalize(tangent, tangent);
-
-        Cartesian3.cross(normal, tangent, bitangent);
-
-        if (!defined(result)) {
-            return new Matrix4(
-                    bitangent.x, tangent.x, -normal.x, origin.x,
-                    bitangent.y, tangent.y, -normal.y, origin.y,
-                    bitangent.z, tangent.z, -normal.z, origin.z,
-                    0.0,       0.0,         0.0,      1.0);
-        }
-        result[0] = bitangent.x;
-        result[1] = bitangent.y;
-        result[2] = bitangent.z;
-        result[3] = 0.0;
-        result[4] = tangent.x;
-        result[5] = tangent.y;
-        result[6] = tangent.z;
-        result[7] = 0.0;
-        result[8] = -normal.x;
-        result[9] = -normal.y;
-        result[10] = -normal.z;
-        result[11] = 0.0;
-        result[12] = origin.x;
-        result[13] = origin.y;
-        result[14] = origin.z;
-        result[15] = 1.0;
-        return result;
-    };
+    Transforms.northEastDownToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north','east');
 
     /**
      * Computes a 4x4 transformation matrix from a reference frame with an north-up-east axes
@@ -274,82 +275,7 @@ define([
      * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var transform = Cesium.Transforms.northUpEastToFixedFrame(center);
      */
-    Transforms.northUpEastToFixedFrame = function(origin, ellipsoid, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(origin)) {
-            throw new DeveloperError('origin is required.');
-        }
-        //>>includeEnd('debug');
-
-        // If x and y are zero, assume origin is at a pole, which is a special case.
-        if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) &&
-            CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
-            var sign = CesiumMath.sign(origin.z);
-            if (!defined(result)) {
-                return new Matrix4(
-                       -sign, 0.0,  0.0, origin.x,
-                        0.0,  0.0,  1.0, origin.y,
-                        0.0,  sign, 0.0, origin.z,
-                        0.0,  0.0,  0.0, 1.0);
-            }
-            result[0] = -sign;
-            result[1] = 0.0;
-            result[2] = 0.0;
-            result[3] = 0.0;
-            result[4] = 0.0;
-            result[5] = 0.0;
-            result[6] = sign;
-            result[7] = 0.0;
-            result[8] = 0.0;
-            result[9] = 1.0;
-            result[10] = 0.0;
-            result[11] = 0.0;
-            result[12] = origin.x;
-            result[13] = origin.y;
-            result[14] = origin.z;
-            result[15] = 1.0;
-            return result;
-        }
-
-        var normal = eastNorthUpToFixedFrameNormal;
-        var tangent  = eastNorthUpToFixedFrameTangent;
-        var bitangent = eastNorthUpToFixedFrameBitangent;
-
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        ellipsoid.geodeticSurfaceNormal(origin, normal);
-
-        tangent.x = -origin.y;
-        tangent.y = origin.x;
-        tangent.z = 0.0;
-        Cartesian3.normalize(tangent, tangent);
-
-        Cartesian3.cross(normal, tangent, bitangent);
-
-        if (!defined(result)) {
-            return new Matrix4(
-                    bitangent.x, normal.x, tangent.x, origin.x,
-                    bitangent.y, normal.y, tangent.y, origin.y,
-                    bitangent.z, normal.z, tangent.z, origin.z,
-                    0.0,       0.0,         0.0,      1.0);
-        }
-        result[0] = bitangent.x;
-        result[1] = bitangent.y;
-        result[2] = bitangent.z;
-        result[3] = 0.0;
-        result[4] = normal.x;
-        result[5] = normal.y;
-        result[6] = normal.z;
-        result[7] = 0.0;
-        result[8] = tangent.x;
-        result[9] = tangent.y;
-        result[10] = tangent.z;
-        result[11] = 0.0;
-        result[12] = origin.x;
-        result[13] = origin.y;
-        result[14] = origin.z;
-        result[15] = 1.0;
-        return result;
-    };
+    Transforms.northUpEastToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north','up');
 
     /**
     * Computes a 4x4 transformation matrix from a reference frame with an north-west-up axes
@@ -371,82 +297,7 @@ define([
     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
     * var transform = Cesium.Transforms.northWestUpToFixedFrame(center);
     */
-   Transforms.northWestUpToFixedFrame = function(origin, ellipsoid, result) {
-       //>>includeStart('debug', pragmas.debug);
-       if (!defined(origin)) {
-           throw new DeveloperError('origin is required.');
-       }
-       //>>includeEnd('debug');
-
-       // If x and y are zero, assume origin is at a pole, which is a special case.
-       if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) &&
-           CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
-           var sign = CesiumMath.sign(origin.z);
-           if (!defined(result)) {
-               return new Matrix4(
-                      -sign, 0.0,  0.0, origin.x,
-                       0.0,  -1.0,  0.0, origin.y,
-                       0.0,  0.0, sign, origin.z,
-                       0.0,  0.0,  0.0, 1.0);
-           }
-           result[0] = -sign;
-           result[1] = 0.0;
-           result[2] = 0.0;
-           result[3] = 0.0;
-           result[4] = 0.0;
-           result[5] = -1.0;
-           result[6] = 0.0;
-           result[7] = 0.0;
-           result[8] = 0.0;
-           result[9] = 0.0;
-           result[10] = sign;
-           result[11] = 0.0;
-           result[12] = origin.x;
-           result[13] = origin.y;
-           result[14] = origin.z;
-           result[15] = 1.0;
-           return result;
-       }
-
-       var normal = eastNorthUpToFixedFrameNormal;//Up
-       var tangent  = eastNorthUpToFixedFrameTangent;//East
-       var bitangent = eastNorthUpToFixedFrameBitangent;//North
-
-       ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-       ellipsoid.geodeticSurfaceNormal(origin, normal);
-
-       tangent.x = -origin.y;
-       tangent.y = origin.x;
-       tangent.z = 0.0;
-       Cartesian3.normalize(tangent, tangent);
-
-       Cartesian3.cross(normal, tangent, bitangent);
-
-       if (!defined(result)) {
-           return new Matrix4(
-                   bitangent.x, -tangent.x, normal.x, origin.x,
-                   bitangent.y, -tangent.y, normal.y, origin.y,
-                   bitangent.z, -tangent.z, normal.z, origin.z,
-                   0.0,       0.0,         0.0,      1.0);
-       }
-       result[0] = bitangent.x;
-       result[1] = bitangent.y;
-       result[2] = bitangent.z;
-       result[3] = 0.0;
-       result[4] = -tangent.x;
-       result[5] = -tangent.y;
-       result[6] = -tangent.z;
-       result[7] = 0.0;
-       result[8] = normal.x;
-       result[9] = normal.y;
-       result[10] = normal.z;
-       result[11] = 0.0;
-       result[12] = origin.x;
-       result[13] = origin.y;
-       result[14] = origin.z;
-       result[15] = 1.0;
-       return result;
-};
+   Transforms.northWestUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north','west');
 
     var scratchHPRQuaternion = new Quaternion();
     var scratchScale = new Cartesian3(1.0, 1.0, 1.0);
@@ -461,6 +312,8 @@ define([
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+     * @param {function} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation matrix from a reference frame
+     *  to the provided ellipsoid's fixed reference frame
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
      *
@@ -473,16 +326,17 @@ define([
      * var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
      * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
      */
-    Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, result) {
+    Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) {
         Check.typeOf.object(headingPitchRoll, 'headingPitchRoll');
         var heading = headingPitchRoll.heading;
         var pitch = headingPitchRoll.pitch;
         var roll = headingPitchRoll.roll;
 
         // checks for required parameters happen in the called functions
+        fixedFrameTransform=defaultValue(fixedFrameConverter,Transforms.eastNorthUpToFixedFrame);
         var hprQuaternion = Quaternion.fromHeadingPitchRoll(heading, pitch, roll, scratchHPRQuaternion);
         var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
-        result = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid, result);
+        result = fixedFrameTransform(origin, ellipsoid, result);
         return Matrix4.multiply(result, hprMatrix, result);
     };
 
@@ -498,6 +352,8 @@ define([
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+     * @param {function} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation matrix from a reference frame
+     *  to the provided ellipsoid's fixed reference frame
      * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
      *
@@ -510,10 +366,10 @@ define([
      * var hpr = new HeadingPitchRoll(heading, pitch, roll);
      * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, hpr);
      */
-    Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, result) {
+    Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) {
         // checks for required parameters happen in the called functions
         Check.typeOf.object(headingPitchRoll, 'headingPitchRoll');
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, scratchENUMatrix4);
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid,fixedFrameTransform, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
     };
