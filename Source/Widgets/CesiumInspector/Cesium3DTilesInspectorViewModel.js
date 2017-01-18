@@ -458,9 +458,9 @@ define([
 
         this.tilesetURL = knockout.pureComputed(function() {
             if (!defined(that._tileset)) {
-                return '';
+                return '<strong>URL: </strong>None';
             }
-            return that._tileset.url;
+            return '<strong>URL: </strong>' + that._tileset.url;
         });
     }
 
@@ -546,30 +546,35 @@ define([
         if (outputStats && (force || statsChanged)) {
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
-            var s = isPick ? '[Pick ]: ' : '[Color]: ';
+            // var s = isPick ? '<strong>[Pick ]: </strong>' : '<strong>[Color]: </strong>';
+            var s = '<ul class="cesium-cesiumInspector-stats">';
             s +=
                 // --- Rendering stats
-                'Visited: ' + stats.visited +
+                '<li><strong>Visited: </strong>' + stats.visited + '</li>' +
                 // Number of commands returned is likely to be higher than the number of tiles selected
                 // because of tiles that create multiple commands.
-                ', Selected: ' + tileset._selectedTiles.length +
+                '<li><strong>Selected: </strong>' + tileset._selectedTiles.length + '</li>' +
                 // Number of commands executed is likely to be higher because of commands overlapping
                 // multiple frustums.
-                ', Commands: ' + stats.numberOfCommands +
-
+                '<li><strong>Commands: </strong>' + stats.numberOfCommands + '</li>';
+            s += '</ul>';
+            s += '<ul class="cesium-cesiumInspector-stats">';
+            s +=
                 // --- Cache/loading stats
-                ' | Requests: ' + stats.numberOfPendingRequests +
-                ', Attempted: ' + stats.numberOfAttemptedRequests +
-                ', Processing: ' + stats.numberProcessing +
-                ', Content Ready: ' + stats.numberContentReady +
+                '<li><strong>Requests: </strong>' + stats.numberOfPendingRequests + '</li>' +
+                '<li><strong>Attempted: </strong>' + stats.numberOfAttemptedRequests + '</li>' +
+                '<li><strong>Processing: </strong>' + stats.numberProcessing + '</li>' +
+                '<li><strong>Content Ready: </strong>' + stats.numberContentReady + '</li>' +
                 // Total number of tiles includes tiles without content, so "Ready" may never reach
                 // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
-                ', Total: ' + stats.numberTotal +
-
+                '<li><strong>Total: </strong>' + stats.numberTotal + '</li>'
+            s += '</ul>';
+            s += '<ul class="cesium-cesiumInspector-stats">';
+            s +=
                 // --- Styling stats
-                ' | Tiles styled: ' + stats.numberOfTilesStyled +
-                ', Features styled: ' + stats.numberOfFeaturesStyled;
-
+                '<li><strong>Tiles styled: </strong>' + stats.numberOfTilesStyled + '</li>' +
+                '<li><strong>Features styled: </strong>' + stats.numberOfFeaturesStyled + '</li>';
+            s += '</ul>';
             if (isPick) {
                 this.pickStatsText = s;
             } else {

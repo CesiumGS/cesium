@@ -121,7 +121,7 @@ define([
 
         // build and bind each panel separately
         var tilesetURL = document.createElement('div');
-        tilesetURL.setAttribute('data-bind', 'text: tilesetURL');
+        tilesetURL.setAttribute('data-bind', 'html: tilesetURL');
         tilesetURL.setAttribute('style', 'word-break: break-all;');
         tilesetPanel.contents.appendChild(tilesetURL);
         tilesetPanel.contents.appendChild(makeButton('trimTilesCache', 'Trim Tiles Cache'));
@@ -149,13 +149,13 @@ define([
         updatePanel.contents.appendChild(makeCheckbox('dynamicSSE', 'Dynamic SSE'));
         var sseContainer = document.createElement('div');
         sseContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : !dynamicSSE, "cesium-cesiumInspector-hide" : dynamicSSE}');
-        sseContainer.appendChild(makeRangeInput('maximumSSE', 0, 30, 'Maximum SSE'));
+        sseContainer.appendChild(makeRangeInput('maximumSSE', 0, 128, 0.5, 'Maximum SSE'));
         updatePanel.contents.appendChild(sseContainer);
 
         var dynamicSSEContainer = document.createElement('div');
         dynamicSSEContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : dynamicSSE, "cesium-cesiumInspector-hide" : !dynamicSSE}');
-        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEDensity', 0, 1, 'SSE Density'));
-        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEFactor', 0, 10, 'SSE Factor'));
+        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEDensity', 0, 1, 0.01, 'SSE Density'));
+        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEFactor', 0, 10, 0.1, 'SSE Factor'));
         updatePanel.contents.appendChild(dynamicSSEContainer);
         knockout.applyBindings(viewModel, updatePanel.contents);
 
@@ -164,13 +164,13 @@ define([
         this._viewModel._performanceDisplay._container.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : performance, "cesium-cesiumInspector-hide" : !performance}');
         loggingPanel.contents.appendChild(makeCheckbox('showStats', 'Stats'));
         var stats = document.createElement('div');
-        stats.setAttribute('data-bind', 'text: statsText, css: {"cesium-cesiumInspector-show" : showStats, "cesium-cesiumInspector-hide" : !showStats}');
-        stats.setAttribute('style', 'font-size: 10px');
+        stats.setAttribute('data-bind', 'html: statsText, css: {"cesium-cesiumInspector-show" : showStats, "cesium-cesiumInspector-hide" : !showStats}');
+        stats.setAttribute('style', 'font-size: 11px');
         loggingPanel.contents.appendChild(stats);
         loggingPanel.contents.appendChild(makeCheckbox('showPickStats', 'Pick Stats'));
         var pickStats = document.createElement('div');
-        pickStats.setAttribute('data-bind', 'text: pickStatsText, css: {"cesium-cesiumInspector-show" : showPickStats, "cesium-cesiumInspector-hide" : !showPickStats}');
-        pickStats.setAttribute('style', 'font-size: 10px');
+        pickStats.setAttribute('data-bind', 'html: pickStatsText, css: {"cesium-cesiumInspector-show" : showPickStats, "cesium-cesiumInspector-hide" : !showPickStats}');
+        pickStats.setAttribute('style', 'font-size: 11px');
         loggingPanel.contents.appendChild(pickStats);
         knockout.applyBindings(viewModel, loggingPanel.contents);
     }
@@ -297,7 +297,7 @@ define([
         return container;
     }
 
-    function makeRangeInput(property, min, max, text) {
+    function makeRangeInput(property, min, max, step, text) {
         var container = document.createElement('div');
         container.className = 'cesium-cesiumInspector-slider';
         var input = document.createElement('input');
@@ -308,14 +308,15 @@ define([
         slider.type = 'range';
         slider.min = min;
         slider.max = max;
-        slider.step = (max - min) / 100;
+        slider.step = step;
         slider.setAttribute('data-bind', 'value: ' + property);
 
         container.appendChild(document.createTextNode(text));
-        container.appendChild(document.createElement('br'));
-        container.appendChild(slider);
-        container.appendChild(document.createElement('br'));
-        container.appendChild(input);
+        var wrapper = document.createElement('div');
+        wrapper.appendChild(input);
+        wrapper.appendChild(slider);
+        container.appendChild(wrapper);
+
         return container;
     }
 

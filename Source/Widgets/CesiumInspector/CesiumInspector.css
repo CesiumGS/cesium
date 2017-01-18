@@ -124,8 +124,14 @@
     padding-top: 10px;
 }
 
-.cesium-cesiumInspector-select {
-    margin: 5px 0;
+ul.cesium-cesiumInspector-stats {
+    margin: 0;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+ul.cesium-cesiumInspector-stats + ul.cesium-cesiumInspector-stats {
+    border-top: 1px solid #aaa;
 }
 
 .cesium-cesiumInspector-slider {
@@ -133,11 +139,14 @@
 }
 
 .cesium-cesiumInspector-slider input[type=number] {
-    text-align: center;
-    background-color: transparent;
+    text-align: left;
+    background-color: #222;
     outline: none;
-    border: none;
+    border: 1px solid #444;
     color: #edffff;
+    width: 35px;
+    border-radius: 3px;
+    padding: 1px;
 }
 
 .cesium-cesiumInspector-slider input[type=number]::-webkit-outer-spin-button,
@@ -147,7 +156,8 @@
 }
 
 .cesium-cesiumInspector-slider input[type=range] {
-    width: 100%;
+    margin-left: 5px;
+    vertical-align: middle;
     -webkit-appearance: none;
     background: #ddd;
     height: 3px;
