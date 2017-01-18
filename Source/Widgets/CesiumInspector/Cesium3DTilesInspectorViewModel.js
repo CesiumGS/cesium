@@ -62,10 +62,9 @@ define([
 
         for (name in options) {
             if (options.hasOwnProperty(name)) {
-                model._observables[name] = knockout.getObservable(model, name);
                 var subscription = options[name].subscribe;
                 if (subscription) {
-                    model._subscriptions[name] = model._observables[name].subscribe(subscription);
+                    model._subscriptions[name] = knockout.getObservable(model, name).subscribe(subscription);
                 }
             }
         }
@@ -102,7 +101,6 @@ define([
         this.highlightColor = new Color(1.0, 1.0, 0.0, 0.4);
 
         this._subscriptions = {};
-        this._observables = {};
         var tilesetOptions = {
             /**
              * Gets or sets the flag to show stats.  This property is observable.
@@ -428,12 +426,24 @@ define([
                     this._statsLogger = this._updateStats.bind(this, false, false);
                     tileset.loadProgress.addEventListener(this._statsLogger);
                     tileset.allTilesLoaded.addEventListener(this._statsLogger);
-                    for (var name in this._observables) {
-                        if (this._observables.hasOwnProperty(name)) {
-                            // force an update on all options so settings are applied to new tileset
-                            this._observables[name].valueHasMutated();
-                        }
+
+                    // update tileset with existing settings
+                    var settings = ['colorize',
+                                    'wireframe',
+                                    'showBoundingVolumes',
+                                    'showContentBoundingVolumes',
+                                    'showRequestVolumes',
+                                    'suspendUpdates'];
+                    var length = settings.length;
+                    for (var i = 0; i < length; ++i) {
+                        knockout.getObservable(this, settings[i]).valueHasMutated();
                     }
+
+                    // update model with existing tileset settings
+                    this.maximumSSE = tileset.maximumScreenSpaceError;
+                    this.dynamicSSE = tileset.dynamicScreenSpaceError;
+                    this.dynamicSSEDensity = tileset.dynamicScreenSpaceErrorDensity;
+                    this.dynamicSSEFactor = tileset.dynamicScreenSpaceErrorFactor;
                 }
             }
         },

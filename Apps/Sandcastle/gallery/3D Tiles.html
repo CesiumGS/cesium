@@ -150,6 +150,10 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
         annotations.removeAll();
         scene.primitives.remove(tileset);
     }
+    if (!Cesium.defined(option)) {
+        model.tileset = undefined;
+        return;
+    }
     tileset = new Cesium.Cesium3DTileset({
         url: option.url
     });
