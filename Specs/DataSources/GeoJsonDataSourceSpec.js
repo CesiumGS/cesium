@@ -465,7 +465,7 @@ defineSuite([
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];
             expect(entity.name).toBeUndefined();
-            expect(entity.properties.name).toBe(featureWithNullName.properties.name);
+            expect(entity.properties.name.getValue()).toBe(featureWithNullName.properties.name);
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(featureWithNullName.geometry.coordinates));
             expect(entity.billboard).toBeDefined();
         });
