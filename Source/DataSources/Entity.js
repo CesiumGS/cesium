@@ -424,7 +424,7 @@ define([
         /**
          * Gets or sets the bag of arbitrary properties associated with this entity.
          * @memberof Entity.prototype
-         * @type {Object}
+         * @type {ArbitraryProperties}
          */
         properties : createPropertyTypeDescriptor('properties', ArbitraryProperties),
         /**
