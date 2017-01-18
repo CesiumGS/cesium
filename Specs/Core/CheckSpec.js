@@ -126,52 +126,59 @@ defineSuite([
 
     describe('Check.numeric', function () {
         it('minimum throws on value less than minimum', function () {
+            var test = 4;
+            var minimum = 5;
             expect(function () {
-                Check.numeric.minimum(4, 5);
+                Check.numeric.minimum(test, 'test', minimum);
             }).toThrowDeveloperError();
         });
         it('minimum does not throw on value at least as big as minimum', function () {
+            var test = 4;
             expect(function () {
-                Check.numeric.minimum(4, 4);
-                Check.numeric.minimum(4, 3);
+                Check.numeric.minimum(test, 'test', 4);
+                Check.numeric.minimum(test, 'test', 3);
             }).not.toThrowDeveloperError();
         });
 
         it('maximum throws on value greater than maximum', function () {
+            var test = 6;
             expect(function () {
-                Check.numeric.maximum(6, 5);
+                Check.numeric.maximum(test, 'test', 5);
             }).toThrowDeveloperError();
         });
         it('maximum does not throw on value at most as big as maximum', function () {
             expect(function () {
-                Check.numeric.maximum(5, 5);
-                Check.numeric.maximum(4, 5);
+                var test = 5;
+                Check.numeric.maximum(test, 'test', 5);
+                test = 4;
+                Check.numeric.maximum(test, 'test', 5);
             }).not.toThrowDeveloperError();
         });
     });
 
-    it('Check.defined does not throw unless passed value that is undefined or null', function () {
-        expect(function () {
-            Check.defined({}, 'mockName');
-        }).not.toThrowDeveloperError();
-        expect(function () {
-            Check.defined([], 'mockName');
-        }).not.toThrowDeveloperError();
-        expect(function () {
-            Check.defined(2, 'mockName');
-        }).not.toThrowDeveloperError();
-        expect(function () {
-            Check.defined(function() {return true;}, 'mockName');
-        }).not.toThrowDeveloperError();
-        expect(function () {
-            Check.defined('snt', 'mockName');
-        }).not.toThrowDeveloperError();
-    });
+    describe('Check.defined', function () {
+        it('does not throw unless passed value that is undefined or null', function () {
+            expect(function () {
+                Check.defined({}, 'mockName');
+            }).not.toThrowDeveloperError();
+            expect(function () {
+                Check.defined([], 'mockName');
+            }).not.toThrowDeveloperError();
+            expect(function () {
+                Check.defined(2, 'mockName');
+            }).not.toThrowDeveloperError();
+            expect(function () {
+                Check.defined(function() {return true;}, 'mockName');
+            }).not.toThrowDeveloperError();
+            expect(function () {
+                Check.defined('snt', 'mockName');
+            }).not.toThrowDeveloperError();
+        });
 
-    it('Check.defined throws when passed undefined', function () {
-        expect(function () {
-            Check.defined(undefined, 'mockName');
-        }).toThrowDeveloperError();
+        it('throws when passed undefined', function () {
+            expect(function () {
+                Check.defined(undefined, 'mockName');
+            }).toThrowDeveloperError();
+        });
     });
-
 });
