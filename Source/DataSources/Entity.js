@@ -11,7 +11,6 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Transforms',
-        './PropertyBag',
         './BillboardGraphics',
         './BoxGraphics',
         './ConstantPositionProperty',
@@ -29,6 +28,7 @@ define([
         './PolylineGraphics',
         './PolylineVolumeGraphics',
         './Property',
+        './PropertyBag',
         './RectangleGraphics',
         './WallGraphics'
     ], function(
@@ -43,7 +43,6 @@ define([
         Matrix4,
         Quaternion,
         Transforms,
-        PropertyBag,
         BillboardGraphics,
         BoxGraphics,
         ConstantPositionProperty,
@@ -61,6 +60,7 @@ define([
         PolylineGraphics,
         PolylineVolumeGraphics,
         Property,
+        PropertyBag,
         RectangleGraphics,
         WallGraphics) {
     'use strict';
