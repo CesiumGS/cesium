@@ -543,7 +543,7 @@ define([
         if (isVariable(ast.name)) {
             var name = getPropertyName(ast.name);
             if (name.substr(0, 8) === 'tiles3d_') {
-                return new Node(ExpressionNodeType.GLOBAL_VARIABLE, name);
+                return new Node(ExpressionNodeType.BUILTIN_VARIABLE, name);
             } else {
                 return new Node(ExpressionNodeType.VARIABLE, name);
             }
@@ -760,7 +760,7 @@ define([
             node.evaluate = node._evaluateLiteralString;
         } else if (node._type === ExpressionNodeType.REGEX) {
             node.evaluate = node._evaluateRegExp;
-        } else if (node._type === ExpressionNodeType.GLOBAL_VARIABLE) {
+        } else if (node._type === ExpressionNodeType.BUILTIN_VARIABLE) {
             if (node._value === 'tiles3d_tileset_time') {
                 node.evaluate = evaluateTilesetTime;
             }
@@ -1631,7 +1631,7 @@ define([
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: undefined is not supported.');
                 //>>includeEnd('debug');
-            case ExpressionNodeType.GLOBAL_VARIABLE:
+            case ExpressionNodeType.BUILTIN_VARIABLE:
                 if (value === 'tiles3d_tileset_time') {
                     return 'u_tilesetTime';
                 }
