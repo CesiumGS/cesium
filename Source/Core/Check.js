@@ -52,12 +52,8 @@ define([
      * @param {String} name The name of the variable being tested
      * @param {Number} maximum The maximum allowed value
      * @exception {DeveloperError} test must not be greater than maximum
-     * @exception {DeveloperError} Both test and maximum must be typeof 'number'
      */
     Check.numeric.maximum = function (test, name, maximum) {
-        Check.typeOf.number(test, 'test');
-        Check.typeOf.string(name, 'name');
-        Check.typeOf.number(maximum, 'maximum');
         if (test > maximum) {
             throw new DeveloperError('Expected ' + name + ' to be at most ' + maximum + ', actual value was ' + test);
         }
@@ -70,12 +66,8 @@ define([
      * @param {String} name The name of the variable being tested
      * @param {Number} minimum The minimum allowed value
      * @exception {DeveloperError} test must not be less than mininum
-     * @exception {DeveloperError} Both test and maximum must be typeof 'number'
      */
     Check.numeric.minimum = function (test, name, minimum) {
-        Check.typeOf.number(test, 'test');
-        Check.typeOf.string(name, 'name');
-        Check.typeOf.number(minimum, 'minimum');
         if (test < minimum) {
             throw new DeveloperError('Expected ' + name + ' to be at least ' + minimum + ', actual value was ' + test);
         }
