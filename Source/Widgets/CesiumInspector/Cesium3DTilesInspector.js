@@ -36,29 +36,8 @@ define([
         //>>includeEnd('debug');
 
         container = getElement(container);
-
         var that = this;
-
-        function onLoad(tileset) {
-            if (that._onLoad) {
-                that._onLoad(tileset);
-            }
-        }
-
-        function onUnload(tileset) {
-            if (that._onUnload) {
-                that._onUnload(tileset);
-            }
-        }
-
-        function onSelect(feature) {
-            if (that._onSelect) {
-                that._onSelect(feature);
-            }
-        }
-
-        var viewModel = new Cesium3DTilesInspectorViewModel(scene, onLoad, onUnload, onSelect);
-
+        var viewModel = new Cesium3DTilesInspectorViewModel(scene);
         this._viewModel = viewModel;
         this._container = container;
 
@@ -121,9 +100,8 @@ define([
         tilesetURL.setAttribute('data-bind', 'html: tilesetURL');
         tilesetURL.setAttribute('style', 'word-break: break-all;');
         tilesetPanel.contents.appendChild(tilesetURL);
-        tilesetPanel.contents.appendChild(makeButton('pickTileset', 'Pick Tileset'));
+        tilesetPanel.contents.appendChild(makeButton('_togglePickTileset', 'Pick Tileset', '_pickActive'));
         tilesetPanel.contents.appendChild(makeButton('trimTilesCache', 'Trim Tiles Cache'));
-        // tilesetPanel.contents.appendChild(makeCheckbox('editStyles', 'Edit Styles'));
         tilesetPanel.contents.appendChild(makeCheckbox('picking', 'Enable Picking'));
         knockout.applyBindings(viewModel, tilesetPanel.contents);
 
@@ -321,12 +299,18 @@ define([
         return container;
     }
 
-    function makeButton(action, text) {
+    function makeButton(action, text, active) {
         var button = document.createElement('input');
         button.type = 'button';
         button.value = text;
         button.className = 'cesium-cesiumInspector-pickButton';
-        button.setAttribute('data-bind', 'click: ' + action);
+        var binding = 'click: ' + action;
+        if (defined(active)) {
+            binding += ', css: {"cesium-cesiumInspector-pickButtonHighlight" : ' + active + '}';
+        }
+        button.setAttribute('data-bind', binding);
+
+
         return button;
     }
 

@@ -58,23 +58,33 @@ define([
      * @constructor
      *
      * @param {Scene} scene The scene instance to use.
-     * @param {Function} onLoad Callback on tileset load
-     * @param {Function} onUnload Callback on tileset unload
-     * @param {Function} onSelect Callback on feature select
      *
      * @exception {DeveloperError} scene is required.
      */
-    function Cesium3DTilesInspectorViewModel(scene, onLoad, onUnload, onSelect) {
+    function Cesium3DTilesInspectorViewModel(scene) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object(scene, 'scene');
         //>>includeEnd('debug');
 
         var that = this;
         var canvas = scene.canvas;
-        var eventHandler = new ScreenSpaceEventHandler(canvas);
+        this._eventHandler = new ScreenSpaceEventHandler(canvas);
         this._scene = scene;
         this._canvas = canvas;
-        // this._annotations = new LabelCollection();
+
+        function pickTileset(e) {
+            var pick = that._scene.pick(e.position);
+            if (defined(pick) && pick.primitive instanceof Cesium3DTileset) {
+                that.tileset = pick.primitive;
+            } else {
+                that.tileset = undefined;
+            }
+            that._pickActive = false;
+        }
+
+        this._togglePickTileset = createCommand(function() {
+            that._pickActive = !that._pickActive;
+        });
 
         this._performanceDisplay = new PerformanceDisplay({
             container: document.createElement('div')
@@ -128,13 +138,13 @@ define([
                 subscribe: (function() {
                     return function(val) {
                         if (val) {
-                            eventHandler.setInputAction(function(e) {
+                            that._eventHandler.setInputAction(function(e) {
                                 that._feature = scene.pick(e.endPosition);
                                 that._updateStats(true, false);
                             }, ScreenSpaceEventType.MOUSE_MOVE);
                         } else {
                             that._feature = undefined;
-                            eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
+                            that._eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
                         }
                     };
                 })()
@@ -366,7 +376,43 @@ define([
         createKnockoutBindings(this, tilesetOptions);
         createKnockoutBindings(this, {
             _tileset: {
-                default: undefined
+                default: undefined,
+                subscribe: function(tileset) {
+                    that._style = undefined;
+                    that.statsText = '';
+                    that.pickStatsText = '';
+
+                    if (defined(that._statsLogger)) {
+                        tileset.loadProgress.removeEventListener(that._statsLogger);
+                        tileset.allTilesLoaded.removeEventListener(that._statsLogger);
+                    }
+                    if (defined(tileset)) {
+                        that._statsLogger = that._updateStats.bind(that, false, false);
+                        tileset.loadProgress.addEventListener(that._statsLogger);
+                        tileset.allTilesLoaded.addEventListener(that._statsLogger);
+
+                        // update tileset with existing settings
+                        var settings = ['colorize',
+                                        'wireframe',
+                                        'showBoundingVolumes',
+                                        'showContentBoundingVolumes',
+                                        'showRequestVolumes',
+                                        'suspendUpdates'];
+                        var length = settings.length;
+                        for (var i = 0; i < length; ++i) {
+                            knockout.getObservable(that, settings[i]).valueHasMutated();
+                        }
+
+                        // update model with existing tileset settings
+                        that.maximumSSE = tileset.maximumScreenSpaceError;
+                        that.dynamicSSE = tileset.dynamicScreenSpaceError;
+                        that.dynamicSSEDensity = tileset.dynamicScreenSpaceErrorDensity;
+                        that.dynamicSSEFactor = tileset.dynamicScreenSpaceErrorFactor;
+
+                        that._updateStats(false, true);
+                        that._updateStats(true, true);
+                    }
+                }
             },
             _feature: {
                 default: undefined,
@@ -377,7 +423,7 @@ define([
                     };
                     return function(feature) {
                         if (current.feature !== feature) {
-                            if (defined(current.feature)) {
+                            if (defined(current.feature) && !current.feature._batchTable.isDestroyed()) {
                                 // Restore original color to feature that is no longer selected
                                 current.feature.color = Color.clone(current.color, current.feature.color);
                                 current.feature = undefined;
@@ -391,6 +437,16 @@ define([
                         }
                     };
                 })()
+            },
+            _pickActive: {
+                default: false,
+                subscribe: function(val) {
+                    if (val) {
+                        that._eventHandler.setInputAction(pickTileset, ScreenSpaceEventType.LEFT_CLICK);
+                    } else {
+                        that._eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
+                    }
+                }
             }
         });
         for (var name in tilesetOptions) {
@@ -410,7 +466,7 @@ define([
 
     defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
         /**
-         * Gets or sets the tileset used for the view model
+         * Gets or sets the tileset of the view model
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          *
          * @type {Cesium3DTileset}
@@ -419,35 +475,10 @@ define([
             get: function() {
                 return this._tileset;
             },
+
             set: function(tileset) {
+                this._feature = undefined;
                 this._tileset = tileset;
-                if (defined(this._statsLogger)) {
-                    tileset.loadProgress.removeEventListener(this._statsLogger);
-                    tileset.allTilesLoaded.removeEventListener(this._statsLogger);
-                }
-                if (defined(tileset)) {
-                    this._statsLogger = this._updateStats.bind(this, false, false);
-                    tileset.loadProgress.addEventListener(this._statsLogger);
-                    tileset.allTilesLoaded.addEventListener(this._statsLogger);
-
-                    // update tileset with existing settings
-                    var settings = ['colorize',
-                                    'wireframe',
-                                    'showBoundingVolumes',
-                                    'showContentBoundingVolumes',
-                                    'showRequestVolumes',
-                                    'suspendUpdates'];
-                    var length = settings.length;
-                    for (var i = 0; i < length; ++i) {
-                        knockout.getObservable(this, settings[i]).valueHasMutated();
-                    }
-
-                    // update model with existing tileset settings
-                    this.maximumSSE = tileset.maximumScreenSpaceError;
-                    this.dynamicSSE = tileset.dynamicScreenSpaceError;
-                    this.dynamicSSEDensity = tileset.dynamicScreenSpaceErrorDensity;
-                    this.dynamicSSEFactor = tileset.dynamicScreenSpaceErrorFactor;
-                }
             }
         },
 
@@ -455,7 +486,7 @@ define([
          * Gets the current feature of the view model
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          *
-         * @type {Object}
+         * @type {Cesium3DTileFeature}
          */
         feature: {
             get: function() {
@@ -478,26 +509,11 @@ define([
                     }
                 });
             }
-        },
-
-        /**
-         * Gets the command to pick a tileset
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
-         * @type {Command}
-         */
-        pickTileset: {
-            get: function() {
-                var that = this;
-                return createCommand(function() {
-
-                });
-            }
         }
     });
 
     /**
-     * Uodates the view model's stats text
+     * Updates the view model's stats text
      */
     Cesium3DTilesInspectorViewModel.prototype._updateStats = function(isPick, force) {
         var tileset = this._tileset;
