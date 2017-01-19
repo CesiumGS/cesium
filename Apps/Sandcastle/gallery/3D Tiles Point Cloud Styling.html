@@ -32,6 +32,8 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer', {
     scene3DOnly : true
 });
+viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
+var model = viewer.cesium3DTilesInspector.viewModel;
 
 var scene = viewer.scene;
 var url = '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/';
@@ -39,6 +41,7 @@ var url = '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointPr
 var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
     url : url
 }));
+model.tileset = tileset;
 
 tileset.readyPromise.then(function(tileset) {
     var boundingSphere = tileset.boundingSphere;

@@ -423,7 +423,10 @@ define([
                     };
                     return function(feature) {
                         if (current.feature !== feature) {
-                            if (defined(current.feature) && !current.feature._batchTable.isDestroyed()) {
+                            if (defined(current.feature) &&
+                                defined(current.feature._batchTable) &&
+                                !current.feature._batchTable.isDestroyed()) {
+
                                 // Restore original color to feature that is no longer selected
                                 current.feature.color = Color.clone(current.color, current.feature.color);
                                 current.feature = undefined;

@@ -154,6 +154,13 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
     });
 });
 
+var canvas = viewer.canvas;
+canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
+canvas.onclick = function() {
+    // To get key events
+    canvas.focus();
+};
+
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
 handler.setInputAction(function(movement) {
