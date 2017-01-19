@@ -4,17 +4,17 @@ define([
         'Core/Color',
         'Core/defined',
         'Renderer/ClearCommand',
+        'Renderer/Pass',
         'Scene/CreditDisplay',
-        'Scene/FrameState',
-        'Scene/Pass'
+        'Scene/FrameState'
     ], function(
         BoundingRectangle,
         Color,
         defined,
         ClearCommand,
+        Pass,
         CreditDisplay,
-        FrameState,
-        Pass) {
+        FrameState) {
     'use strict';
 
     function executeCommands(context, passState, commands) {

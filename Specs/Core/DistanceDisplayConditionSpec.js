@@ -1,12 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/DistanceDisplayCondition',
-        'Core/Cartesian3',
-        'Core/Matrix4'
+        'Core/DistanceDisplayCondition'
     ], function(
-        DistanceDisplayCondition,
-        Cartesian3,
-        Matrix4) {
+        DistanceDisplayCondition) {
     'use strict';
 
     it('default constructs', function() {

@@ -56,14 +56,14 @@
         </td>
     </tr>
 </tbody></table>
-<div id="toggleLighting"></div>
-<div id="toggleFog"></div>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    sceneModePicker:false
+});
 var scene = viewer.scene;
 var skyAtmosphere = scene.skyAtmosphere;
 
@@ -93,13 +93,13 @@ subscribeParameter('hueShift');
 subscribeParameter('saturationShift');
 subscribeParameter('brightnessShift');
 
-Sandcastle.addToolbarButton('Toggle Lighting', function() {
-    scene.globe.enableLighting = !scene.globe.enableLighting;
-}, 'toggleLighting');
+Sandcastle.addToggleButton('Lighting', scene.globe.enableLighting, function(checked) {
+    scene.globe.enableLighting = checked;
+});
 
-Sandcastle.addToolbarButton('Toggle Fog', function() {
-    scene.fog.enabled = !scene.fog.enabled;
-}, 'toggleFog');
+Sandcastle.addToggleButton('Fog', scene.fog.enabled, function(checked) {
+    scene.fog.enabled = checked;
+});
 
 var camera = viewer.camera;
 camera.setView({

@@ -5,7 +5,6 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Primitive',
         'Specs/createScene'
@@ -15,7 +14,6 @@ defineSuite([
         GeometryInstance,
         Rectangle,
         RectangleGeometry,
-        ClearCommand,
         Appearance,
         Primitive,
         createScene) {

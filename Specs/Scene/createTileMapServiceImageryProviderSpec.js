@@ -263,7 +263,7 @@ defineSuite([
         });
 
         var provider = createTileMapServiceImageryProvider({
-            url : 'server.invalid?query=1',
+            url : 'server.invalid?query=1'
         });
 
         return requestMetadata.promise.then(function(url) {

@@ -16,7 +16,7 @@ define([
         './Rectangle',
         './TerrainEncoding',
         './Transforms',
-        './WebMercatorProjection',
+        './WebMercatorProjection'
     ], function(
         AxisAlignedBoundingBox,
         BoundingSphere,
@@ -82,7 +82,7 @@ define([
      *                 are provided, they're assumed to be consistent.
      * @param {Boolean} [options.isGeographic=true] True if the heightmap uses a {@link GeographicProjection}, or false if it uses
      *                  a {@link WebMercatorProjection}.
-     * @param {Cartesian3} [options.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
+     * @param {Cartesian3} [options.relativeToCenter=Cartesian3.ZERO] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to which the heightmap applies.
      * @param {Object} [options.structure] An object describing the structure of the height data.
      * @param {Number} [options.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
@@ -200,7 +200,9 @@ define([
             geographicNorth = rectangle.north;
         }
 
-        var relativeToCenter = defaultValue(options.relativeToCenter, Cartesian3.ZERO);
+        var relativeToCenter = options.relativeToCenter;
+        var hasRelativeToCenter = defined(relativeToCenter);
+        relativeToCenter = hasRelativeToCenter ? relativeToCenter : Cartesian3.ZERO;
         var exaggeration = defaultValue(options.exaggeration, 1.0);
         var includeWebMercatorT = defaultValue(options.includeWebMercatorT, false);
 
@@ -390,10 +392,9 @@ define([
         }
 
         var occludeePointInScaledSpace;
-        var center = options.relativetoCenter;
-        if (defined(center)) {
+        if (hasRelativeToCenter) {
             var occluder = new EllipsoidalOccluder(ellipsoid);
-            occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(center, positions);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(relativeToCenter, positions);
         }
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);

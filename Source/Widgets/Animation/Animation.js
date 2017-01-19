@@ -518,6 +518,7 @@ define([
         document.addEventListener('touchmove', mouseCallback, true);
         document.addEventListener('mouseup', mouseCallback, true);
         document.addEventListener('touchend', mouseCallback, true);
+        document.addEventListener('touchcancel', mouseCallback, true);
         this._shuttleRingPointer.addEventListener('mousedown', mouseCallback, true);
         this._shuttleRingPointer.addEventListener('touchstart', mouseCallback, true);
         this._knobOuter.addEventListener('mousedown', mouseCallback, true);
@@ -619,6 +620,7 @@ define([
         document.removeEventListener('touchmove', mouseCallback, true);
         document.removeEventListener('mouseup', mouseCallback, true);
         document.removeEventListener('touchend', mouseCallback, true);
+        document.removeEventListener('touchcancel', mouseCallback, true);
         this._shuttleRingPointer.removeEventListener('mousedown', mouseCallback, true);
         this._shuttleRingPointer.removeEventListener('touchstart', mouseCallback, true);
         this._knobOuter.removeEventListener('mousedown', mouseCallback, true);

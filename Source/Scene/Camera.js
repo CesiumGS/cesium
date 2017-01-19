@@ -927,7 +927,7 @@ define([
         }
 
         var globe = this._scene.globe;
-        var globeFinishedUpdating = !defined(globe) || (globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0);
+        var globeFinishedUpdating = !defined(globe) || (globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0);
         if (this._suspendTerrainAdjustment) {
             this._suspendTerrainAdjustment = !globeFinishedUpdating;
         }
@@ -1087,7 +1087,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3|Rectangle} [options.destination] The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
-     * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
+     * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pitch and roll properties. By default, the direction will point
      * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
      * y direction in Columbus view. Orientation is not used in 2D when in infinite scrolling mode.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame of the camera.
@@ -2729,11 +2729,11 @@ define([
         if (!defined(boundingSphere)) {
             throw new DeveloperError('boundingSphere is required.');
         }
-        //>>includeEnd('debug');
 
         if (this._mode === SceneMode.MORPHING) {
             throw new DeveloperError('viewBoundingSphere is not supported while morphing.');
         }
+        //>>includeEnd('debug');
 
         offset = adjustBoundingSphereOffset(this, boundingSphere, offset);
         this.lookAt(boundingSphere.center, offset);
@@ -2846,8 +2846,15 @@ define([
         var qUnit = Cartesian3.normalize(q, scratchCartesian3_2);
 
         // Determine the east and north directions at q.
-        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3_3), scratchCartesian3_3);
-        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit, scratchCartesian3_4), scratchCartesian3_4);
+        var eUnit;
+        var nUnit;
+        if (Cartesian3.equalsEpsilon(qUnit, Cartesian3.UNIT_Z, CesiumMath.EPSILON10)) {
+            eUnit = new Cartesian3(0, 1, 0);
+            nUnit = new Cartesian3(0, 0, 1);
+        } else {
+            eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, qUnit, scratchCartesian3_3), scratchCartesian3_3);
+            nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit, scratchCartesian3_4), scratchCartesian3_4);
+        }
 
         // Determine the radius of the 'limb' of the ellipsoid.
         var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);

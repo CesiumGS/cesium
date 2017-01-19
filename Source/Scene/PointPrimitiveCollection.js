@@ -1,8 +1,6 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -14,9 +12,11 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
+        '../Core/WebGLConstants',
         '../Renderer/BufferUsage',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -24,13 +24,10 @@ define([
         '../Shaders/PointPrimitiveCollectionFS',
         '../Shaders/PointPrimitiveCollectionVS',
         './BlendingState',
-        './Pass',
         './PointPrimitive',
         './SceneMode'
     ], function(
         BoundingSphere,
-        Cartesian2,
-        Cartesian3,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -42,9 +39,11 @@ define([
         CesiumMath,
         Matrix4,
         PrimitiveType,
+        WebGLConstants,
         BufferUsage,
         ContextLimits,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -52,7 +51,6 @@ define([
         PointPrimitiveCollectionFS,
         PointPrimitiveCollectionVS,
         BlendingState,
-        Pass,
         PointPrimitive,
         SceneMode) {
     'use strict';
@@ -853,7 +851,8 @@ define([
             if (!defined(this._rs)) {
                 this._rs = RenderState.fromCache({
                     depthTest : {
-                        enabled : true
+                        enabled : true,
+                        func : WebGLConstants.LEQUAL
                     },
                     blending : BlendingState.ALPHA_BLEND
                 });

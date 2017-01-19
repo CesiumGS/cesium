@@ -509,9 +509,11 @@ define([
             var program = this._program;
 
             gl.validateProgram(program);
+            //>>includeStart('debug', pragmas.debug);
             if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
                 throw new DeveloperError('Program validation failed.  Program info log: ' + gl.getProgramInfoLog(program));
             }
+            //>>includeEnd('debug');
         }
     };
 

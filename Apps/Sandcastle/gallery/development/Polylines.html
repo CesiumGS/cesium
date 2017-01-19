@@ -99,6 +99,26 @@ function createPrimitives(scene) {
         material : Cesium.Material.fromType(Cesium.Material.PolylineArrowType)
     });
     Sandcastle.declare(localPolyline); // For highlighting on mouseover in Sandcastle.
+
+    //Polyline using the fade material
+    var fadingPolyline = polylines.add({
+        positions : Cesium.PolylinePipeline.generateCartesianArc({
+            positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 43, 500000,
+                                                                   -125, 43, 500000])
+        }),
+        width : 5,
+        material : Cesium.Material.fromType(Cesium.Material.FadeType, {
+            repeat: false,
+            fadeInColor: Cesium.Color.CYAN,
+            fadeOutColor: Cesium.Color.CYAN.withAlpha(0),
+            time: new Cesium.Cartesian2(0.0, 0.0),
+            fadeDirection: {
+                x: true,
+                y: false
+            }
+        })
+    });
+    Sandcastle.declare(fadingPolyline); // For highlighting on mouseover in Sandcastle.
 }
 
 var viewer = new Cesium.Viewer('cesiumContainer');

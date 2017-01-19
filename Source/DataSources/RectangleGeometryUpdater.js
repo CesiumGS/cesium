@@ -534,7 +534,8 @@ define([
             !Property.isConstant(rotation) || //
             !Property.isConstant(outlineWidth) || //
             !Property.isConstant(closeBottom) || //
-            !Property.isConstant(closeTop)) {
+            !Property.isConstant(closeTop) || //
+            (onTerrain && !Property.isConstant(material))) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
