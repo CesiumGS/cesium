@@ -9,6 +9,7 @@ Change Log
     * Removed separate `heading`, `pitch`, `roll` parameters from `Transform.headingPitchRollToFixedFrame` and `Transform.headingPitchRollQuaternion`. Pass a `headingPitchRoll` object instead. [#4843](https://github.com/AnalyticalGraphicsInc/cesium/pull/4843)
     * The property `binornmal` has been renamed to `bitangent` for `Geometry` and `VertexFormat`. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
     * A handful of `CesiumInspectorViewModel` properties were removed or changed from variables to functions.  See [#4857](https://github.com/AnalyticalGraphicsInc/cesium/pull/4857)
+    * The top-level `properties` in an `Entity` created by `GeoJsonDataSource` are now instances of `ConstantProperty` instead of raw values.
 * Added support for custom geocoder services and autocomplete [#4723](https://github.com/AnalyticalGraphicsInc/cesium/pull/4723).
     * Added [Custom Geocoder Sandcastle example](http://localhost:8080/Apps/Sandcastle/index.html?src=Custom%20Geocoder.html)
 * Added `GeocoderService`, an interface for geocoders.
@@ -23,6 +24,7 @@ Change Log
 * Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
 * The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.
 * Fixed a bug that would cause a crash when `debugShowFrustums` is enabled with OIT [#4864](https://github.com/AnalyticalGraphicsInc/cesium/pull/4864)
+* Added support for time-varying properties in CZML [#3162](https:/github.com/AnalyticalGraphicsInc/cesium/issues/3162).
 
 ### 1.29 - 2017-01-02
 * Improved 3D Models

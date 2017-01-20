@@ -450,6 +450,8 @@ define([
                 return defaultValue(czmlInterval.number, czmlInterval);
             case NearFarScalar:
                 return czmlInterval.nearFarScalar;
+            case Object:
+                return defaultValue(czmlInterval.value, czmlInterval);
             case Quaternion:
                 return unwrapQuaternionInterval(czmlInterval);
             case Rotation:
@@ -531,7 +533,7 @@ define([
             unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
             packedLength = defaultValue(type.packedLength, 1);
             unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
-            isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
+            isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && (unwrappedIntervalLength > packedLength) && (type !== Object);
         }
 
         //Rotation is a special case because it represents a native type (Number)
@@ -982,6 +984,28 @@ define([
         var orientationData = packet.orientation;
         if (defined(orientationData)) {
             processPacketData(Quaternion, entity, 'orientation', orientationData, undefined, sourceUri, entityCollection);
+        }
+    }
+
+    //Process the 'properties' property
+    function processProperties(entity, packet, entityCollection, sourceUri) {
+        var propertiesData = packet.properties;
+        if (defined(propertiesData)) {
+            if (!defined(entity.properties)) {
+                entity.properties = new PropertyBag();
+            }
+            var key;
+            //We cannot simply call processPacketData(entity, 'properties', propertyData, undefined, sourceUri, entityCollection)
+            //because each property of "properties" may vary separately.
+            //The properties will be accessible as entity.properties.myprop.getValue(time).
+            for (key in propertiesData) {
+                if (propertiesData.hasOwnProperty(key)) {
+                    if (!entity.properties.hasProperty(key)) {
+                        entity.properties.addProperty(key);
+                    }
+                    processPacketData(Object, entity.properties, key, propertiesData[key], undefined, sourceUri, entityCollection);
+                }
+            }
         }
     }
 
@@ -1989,6 +2013,7 @@ define([
         processPoint, //
         processPolygon, //
         processPolyline, //
+        processProperties, //
         processRectangle, //
         processPosition, //
         processViewFrom, //
