@@ -4,9 +4,11 @@ define([
         './Check',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './FeatureDetection',
         './freezeObject',
+        './HeadingPitchRoll',
         './Math',
         './Matrix3'
     ], function(
@@ -14,9 +16,11 @@ define([
         Check,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         FeatureDetection,
         freezeObject,
+        HeadingPitchRoll,
         CesiumMath,
         Matrix3) {
     'use strict';
@@ -184,17 +188,29 @@ define([
      * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
      */
-    Quaternion.fromHeadingPitchRoll = function(heading, pitch, roll, result) {
+    Quaternion.fromHeadingPitchRoll = function(headingOrHeadingPitchRoll, pitchOrResult, roll, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number(heading, 'heading');
-        Check.typeOf.number(pitch, 'pitch');
-        Check.typeOf.number(roll, 'roll');
+        if (headingOrHeadingPitchRoll instanceof HeadingPitchRoll) {
+          Check.typeOf.object(headingOrHeadingPitchRoll, 'HeadingPitchRoll');
+        } else {
+          Check.typeOf.number(headingOrHeadingPitchRoll, 'heading');
+          Check.typeOf.number(pitchOrResult, 'pitch');
+          Check.typeOf.number(roll, 'roll');
+        }
         //>>includeEnd('debug');
-
-        var rollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, roll, scratchHPRQuaternion);
-        var pitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -pitch, result);
+        deprecationWarning('Quaternion.fromHeadingPitchRoll(heading, pitch, roll,result)', 'The method was deprecated in Cesium 1.31 and will be removed in version 1.32. ' +
+        'Use Quaternion.fromHeadingPitchRoll(hpr,result) where hpr is a HeadingPitchRoll');
+        var hpr;
+        if (headingOrHeadingPitchRoll instanceof HeadingPitchRoll) {
+          hpr = headingOrHeadingPitchRoll;
+          result = pitchOrResult;
+        } else {
+          hpr = new HeadingPitchRoll(headingOrHeadingPitchRoll, pitchOrResult, roll);
+        }
+        var rollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, hpr.roll, scratchHPRQuaternion);
+        var pitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -hpr.pitch, result);
         result = Quaternion.multiply(pitchQuaternion, rollQuaternion, pitchQuaternion);
-        var headingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -heading, scratchHPRQuaternion);
+        var headingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -hpr.heading, scratchHPRQuaternion);
         return Quaternion.multiply(headingQuaternion, result, result);
     };
 
