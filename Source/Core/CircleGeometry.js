@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -10,6 +11,7 @@ define([
         './VertexFormat'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -54,9 +56,7 @@ define([
         var radius = options.radius;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(radius)) {
-            throw new DeveloperError('radius is required.');
-        }
+        Check.typeOf.number(radius, 'radius');
         //>>includeEnd('debug');
 
         var ellipseGeometryOptions = {
@@ -92,9 +92,7 @@ define([
      */
     CircleGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
+        Check.typeOf.object(value, 'value');
         //>>includeEnd('debug');
         return EllipseGeometry.pack(value._ellipseGeometry, array, startingIndex);
     };
