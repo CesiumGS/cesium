@@ -136,7 +136,7 @@ define([
         }
 
         for (i = remainingToCoverByLevel.length - 1; i >= 0; --i) {
-            if (remainingToCoverByLevel[i] && remainingToCoverByLevel[i].length === 0) {
+            if (defined(remainingToCoverByLevel[i]) && remainingToCoverByLevel[i].length === 0) {
                 return i;
             }
         }

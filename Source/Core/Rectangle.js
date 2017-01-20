@@ -223,19 +223,14 @@ define([
      * var rectangle = Cesium.Rectangle.fromRadians(0.0, Math.PI/4, Math.PI/8, 3*Math.PI/4);
      */
     Rectangle.fromRadians = function(west, south, east, north, result) {
-        west = defaultValue(west, 0.0);
-        south = defaultValue(south, 0.0);
-        east = defaultValue(east, 0.0);
-        north = defaultValue(north, 0.0);
-
         if (!defined(result)) {
             return new Rectangle(west, south, east, north);
         }
 
-        result.west = west;
-        result.south = south;
-        result.east = east;
-        result.north = north;
+        result.west = defaultValue(west, 0.0);
+        result.south = defaultValue(south, 0.0);
+        result.east = defaultValue(east, 0.0);
+        result.north = defaultValue(north, 0.0);
 
         return result;
     };
