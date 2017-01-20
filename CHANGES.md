@@ -23,6 +23,7 @@ Change Log
 * Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
 * The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.
 * Fixed a bug that would cause a crash when `debugShowFrustums` is enabled with OIT [#4864](https://github.com/AnalyticalGraphicsInc/cesium/pull/4864)
+* Fixed a bug in `Iau2006XysData.preload` that would cause incorrect indices to load and result in unkept promises. [#4368](https://github.com/AnalyticalGraphicsInc/cesium/issues/4638)
 
 ### 1.29 - 2017-01-02
 * Improved 3D Models
