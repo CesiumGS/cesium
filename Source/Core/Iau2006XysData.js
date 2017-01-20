@@ -105,12 +105,10 @@ define([
         var stopDaysSinceEpoch = getDaysSinceEpoch(this, stopDayTT, stopSecondTT);
 
         var startIndex = (startDaysSinceEpoch / this._stepSizeDays - this._interpolationOrder / 2) | 0;
-        if (startIndex < 0) {
-            startIndex = 0;
-        }
+        startIndex = Math.max(0, startIndex);
 
         var stopIndex = (stopDaysSinceEpoch / this._stepSizeDays - this._interpolationOrder / 2) | 0 + this._interpolationOrder;
-        if (stopIndex >= this._totalSamples) {
+        if ((stopIndex < 0) || (stopIndex > this._totalSamples - 1)) {
             stopIndex = this._totalSamples - 1;
         }
 
