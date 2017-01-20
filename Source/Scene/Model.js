@@ -671,8 +671,10 @@ define([
         this._pickIds = [];
 
         // CESIUM_RTC extension
-        this._rtcCenter = undefined;    // in world coordinates
+        this._rtcCenter = undefined;    // reference to either 3D or 2D
         this._rtcCenterEye = undefined; // in eye coordinates
+        this._rtcCenter3D = undefined;  // in world coordinates
+        this._rtcCenter2D = undefined;  // in projected world coordinates
     }
 
     defineProperties(Model.prototype, {
@@ -3325,6 +3327,7 @@ define([
     }
 
     var scratchNodeStack = [];
+    var scratchComputedTranslation = new Cartesian4();
     var scratchComputedMatrixIn2D = new Matrix4();
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
@@ -3338,7 +3341,20 @@ define([
         var computedModelMatrix = model._computedModelMatrix;
 
         if (model._mode !== SceneMode.SCENE3D) {
-            computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
+            var translation = Matrix4.getColumn(computedModelMatrix, 3, scratchComputedTranslation);
+            if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
+                computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
+                model._rtcCenter = model._rtcCenter3D;
+            } else {
+                var center = model.boundingSphere.center;
+                var to2D = Transforms.wgs84To2DModelMatrix(projection, center, scratchComputedMatrixIn2D);
+                computedModelMatrix = Matrix4.multiply(to2D, computedModelMatrix, scratchComputedMatrixIn2D);
+
+                if (defined(model._rtcCenter)) {
+                    Matrix4.setTranslation(computedModelMatrix, Cartesian4.UNIT_W, computedModelMatrix);
+                    model._rtcCenter = model._rtcCenter2D;
+                }
+            }
         }
 
         for (var i = 0; i < length; ++i) {
@@ -4091,8 +4107,17 @@ define([
             if (this._state !== ModelState.FAILED) {
                 var extensions = this.gltf.extensions;
                 if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
-                    this._rtcCenter = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
+                    this._rtcCenter3D = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
+
+                    var projection = frameState.mapProjection;
+                    var ellipsoid = projection.ellipsoid;
+                    var cartographic = ellipsoid.cartesianToCartographic(this._rtcCenter3D);
+                    var projectedCart = projection.project(cartographic);
+                    Cartesian3.fromElements(projectedCart.z, projectedCart.x, projectedCart.y, projectedCart);
+                    this._rtcCenter2D = projectedCart;
+
                     this._rtcCenterEye = new Cartesian3();
+                    this._rtcCenter = this._rtcCenter3D;
                 }
 
                 this._loadResources = new LoadResources();
