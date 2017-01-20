@@ -112,26 +112,12 @@ define([
      * for applications that require ultra precise shadows.
      *
      * @alias ShadowMap
-     * @constructor
-     *
-     * @param {Object} options An object containing the following properties:
-     * @param {Context} options.context The context in which to create the shadow map.
-     * @param {Camera} options.lightCamera A camera representing the light source.
-     * @param {Boolean} [options.enabled=true] Whether the shadow map is enabled.
-     * @param {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
-     * @param {Boolean} [options.pointLightRadius=100.0] Radius of the point light.
-     * @param {Boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
-     * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
-     * @param {Number} [options.maximumDistance=5000.0] The maximum distance used for generating cascaded shadows. Lower values improve shadow quality.
-     * @param {Number} [options.size=2048] The width and height, in pixels, of each shadow map.
-     * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
-     * @param {Number} [options.darkness=0.3] The shadow darkness.
+     * @internalConstructor
      *
      * @exception {DeveloperError} Only one or four cascades are supported.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
      *
-     * @private
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
