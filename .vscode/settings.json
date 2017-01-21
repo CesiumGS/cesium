@@ -1,0 +1,31 @@
+// Cesium project settings for VSCode.
+{
+    "files.exclude": {
+        "**/.git": true,
+        ".idea": true,
+        ".metadata": true,
+        "Build": true,
+        "Instrumented": true,
+        "**/Cesium-*.zip": true,
+        "**/cesium-*.tgz": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+
+        "Apps/CesiumViewer/Gallery/gallery-index.js": true,
+
+        "Apps/Sandcastle/jsHintOptions.js": true,
+        "Apps/Sandcastle/gallery/gallery-index.js": true,
+
+        "Source/Cesium.js": true,
+        "Source/Shaders/**/*.js": true,
+
+        "Specs/SpecList.js": true,
+        "node_modules": true,
+        "npm-debug.log": true
+    },
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false
+}
