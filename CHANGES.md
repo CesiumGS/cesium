@@ -27,7 +27,7 @@ Change Log
 * Added `Rectangle.fromRadians`.
 * `TerrainProvider` now optionally exposes an `availability` property that can be used to query the terrain level that is available at a location or in a rectangle.  Currently only `CesiumTerrainProvider` exposes this property.
 * Added `sampleTerrainMostDetailed` to sample the height of an array of positions using the best available terrain data at each point.  This requires a `TerrainProvider` with the `availability` property.
-* Fixed an issue transparent billboards/points were not working as expected. [#4886](https://github.com/AnalyticalGraphicsInc/cesium/pull/4886)
+* Transparent parts of billboards, labels, and points no longer overwrite parts of the scene behind them. [#4886](https://github.com/AnalyticalGraphicsInc/cesium/pull/4886)
 
 ### 1.29 - 2017-01-02
 
