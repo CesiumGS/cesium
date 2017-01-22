@@ -72,6 +72,7 @@
   },
   "scripts": {
     "start": "node server.js",
+    "startPublic": "node server.js --public",
     "build": "gulp build",
     "build-watch": "gulp build-watch",
     "buildApps": "gulp buildApps",
