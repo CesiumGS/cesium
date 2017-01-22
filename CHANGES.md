@@ -23,6 +23,9 @@ Change Log
 * Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
 * The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.
 * Fixed a bug that would cause a crash when `debugShowFrustums` is enabled with OIT [#4864](https://github.com/AnalyticalGraphicsInc/cesium/pull/4864)
+* Added `Rectangle.fromRadians`.
+* `TerrainProvider` now optionally exposes an `availability` property that can be used to query the terrain level that is available at a location or in a rectangle.  Currently only `CesiumTerrainProvider` exposes this property.
+* Added `sampleTerrainMostDetailed` to sample the height of an array of positions using the best available terrain data at each point.  This requires a `TerrainProvider` with the `availability` property.
 
 ### 1.29 - 2017-01-02
 * Improved 3D Models
