@@ -62,7 +62,7 @@ var blackMarble = layers.addImageryProvider(Cesium.createTileMapServiceImageryPr
     credit : 'Black Marble imagery courtesy NASA Earth Observatory',
     flipXY : true // Only old gdal2tile.py generated tilesets need this flag.
 }));
-blackMarble.viewportSplit = -1.0; // Only show to the left of the slider.
+blackMarble.viewportSplit = Cesium.ImagerySplitDirection.LEFT; // Only show to the left of the slider.
 
 // Sync the position of the slider with the split position
 var slider = document.getElementById('slider');
