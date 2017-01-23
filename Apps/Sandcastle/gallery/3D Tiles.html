@@ -259,10 +259,10 @@ handler.setInputAction(function(movement) {
         // Add annotation showing the height at the click location
         annotate(movement);
     } else {
-        // When a feature is double clicked, zoom to it
+        // When a feature is right clicked, zoom to it
         zoom(movement);
     }
-}, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+}, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
 
 function annotate(movement) {
     if (Cesium.defined(current.feature) && scene.pickPositionSupported) {
@@ -330,7 +330,7 @@ function zoom(movement) {
     }
 }
 
-//When a feature is double middle clicked, hide it
+//When a feature is middle clicked, hide it
 handler.setInputAction(function(movement) {
     if (!pickingEnabled) {
         return;
@@ -339,7 +339,7 @@ handler.setInputAction(function(movement) {
     if (Cesium.defined(current.feature)) {
         current.feature.show = false;
     }
-}, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
+}, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
 
 ///////////////////////////////////////////////////////////////////////////////
 
