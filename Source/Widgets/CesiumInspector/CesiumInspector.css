@@ -230,3 +230,7 @@ input[type=range]:focus {
     width: 100%;
     box-sizing: border-box;
 }
+
+.cesium-cesiumInspector-error {
+    color: red;
+}

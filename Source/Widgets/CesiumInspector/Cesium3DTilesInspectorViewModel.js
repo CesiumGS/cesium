@@ -364,9 +364,19 @@ define([
                     if (defined(that._style)) {
                         if (val !== JSON.stringify(that._style.style)) {
                             if (defined(that._tileset)) {
-                                var style = new Cesium3DTileStyle(JSON.parse(val));
-                                that._tileset.style = style;
-                                that._style = style;
+                                var old = that._tileset.style;
+                                that._editorError = '';
+                                try {
+                                    var style = new Cesium3DTileStyle(JSON.parse(val));
+                                    that._tileset.style = style;
+                                    that._style = style;
+                                    that._tileset.update(that._scene.frameState);
+                                } catch(err) {
+                                    console.log(err);
+                                    that._tileset.style = old;
+                                    that._style = old;
+                                    that._editorError = err.toString();
+                                }
                             }
                         }
                     }
@@ -453,6 +463,9 @@ define([
                 }
             },
             _styleString: {
+                default: ''
+            },
+            _editorError: {
                 default: ''
             }
         });

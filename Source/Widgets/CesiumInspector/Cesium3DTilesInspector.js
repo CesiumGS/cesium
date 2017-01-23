@@ -147,9 +147,12 @@ define([
         styleEditor.setAttribute('data-bind', 'valueUpdate: "keyup", value: _styleString, event: { keypress: _checkCompile }');
         stylePanel.contents.className = 'cesium-cesiumInspector-styleEditor';
         stylePanel.contents.appendChild(styleEditor);
-        stylePanel.contents.appendChild(document.createElement('br'));
         var closeStylesBtn = makeButton('_compileStyle', 'Compile (Ctrl+Enter');
         stylePanel.contents.appendChild(closeStylesBtn);
+        var errorBox = document.createElement('div');
+        errorBox.className = 'cesium-cesiumInspector-error';
+        errorBox.setAttribute('data-bind', 'text: _editorError');
+        stylePanel.contents.appendChild(errorBox);
         knockout.applyBindings(viewModel, stylePanel.contents);
     }
 
