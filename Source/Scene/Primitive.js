@@ -1206,11 +1206,14 @@ define([
                 batchTable.setBatchedAttribute(i, center3DLowIndex, encodedCenter.low);
 
                 var cartographic = ellipsoid.cartesianToCartographic(center, scratchBoundingSphereCartographic);
-                var center2D = projection.project(cartographic, scratchBoundingSphereCenter2D);
-                encodedCenter = EncodedCartesian3.fromCartesian(center2D, scratchBoundingSphereCenterEncoded);
-                batchTable.setBatchedAttribute(i, center2DHighIndex, encodedCenter.high);
-                batchTable.setBatchedAttribute(i, center2DLowIndex, encodedCenter.low);
-                batchTable.setBatchedAttribute(i, radiusIndex, radius);
+
+                if(cartographic) {
+                    var center2D = projection.project(cartographic, scratchBoundingSphereCenter2D);
+                    encodedCenter = EncodedCartesian3.fromCartesian(center2D, scratchBoundingSphereCenterEncoded);
+                    batchTable.setBatchedAttribute(i, center2DHighIndex, encodedCenter.high);
+                    batchTable.setBatchedAttribute(i, center2DLowIndex, encodedCenter.low);
+                    batchTable.setBatchedAttribute(i, radiusIndex, radius);
+                }
             }
         }
 
