@@ -6,7 +6,7 @@ define([
     'use strict';
 
     /**
-     * The direction to display an ImageryLayer relative to the {@link Scene} imagerySplitPosition.
+     * The direction to display an ImageryLayer relative to the {@link Scene#imagerySplitPosition}.
      *
      * @exports ImagerySplitDirection
      *
@@ -14,7 +14,7 @@ define([
      */
     var ImagerySplitDirection = {
         /**
-         * Display the ImageryLayer to the left of the {@link Scene} imagerySplitPosition.
+         * Display the ImageryLayer to the left of the {@link Scene#imagerySplitPosition}.
          *
          * @type {Number}
          * @constant
@@ -30,7 +30,7 @@ define([
         NONE: 0.0,
 
         /**
-         * Display the ImageryLayer to the right of the {@link Scene} imagerySplitPosition.
+         * Display the ImageryLayer to the right of the {@link Scene#imagerySplitPosition}.
          *
          * @type {Number}
          * @constant
