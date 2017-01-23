@@ -1135,7 +1135,6 @@ define([
                 uniformMapProperties.dayTextureSplit[numberOfDayTextures] = imageryLayer.viewportSplit;
                 applySplit = applySplit || uniformMapProperties.dayTextureSplit[numberOfDayTextures] !== 0.0;
 
-
                 if (defined(imagery.credits)) {
                     var creditDisplay = frameState.creditDisplay;
                     var credits = imagery.credits;
