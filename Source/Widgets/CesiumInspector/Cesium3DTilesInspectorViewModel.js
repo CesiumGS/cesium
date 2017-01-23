@@ -358,8 +358,9 @@ define([
              * @default undefined
              */
             styleString : {
-                default: undefined,
+                default: '',
                 subscribe: function(val) {
+                    that._styleString = val;
                     if (defined(that._style)) {
                         if (val !== JSON.stringify(that._style.style)) {
                             if (defined(that._tileset)) {
@@ -450,6 +451,9 @@ define([
                         that._eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
                     }
                 }
+            },
+            _styleString: {
+                default: ''
             }
         });
         for (var name in tilesetOptions) {
@@ -510,6 +514,27 @@ define([
                     if (defined(that._tileset)) {
                         that._tileset.trimLoadedTiles();
                     }
+                });
+            }
+        },
+
+        _compileStyle: {
+            get: function() {
+                var that = this;
+                return createCommand(function() {
+                    that.styleString = that._styleString;
+                });
+            }
+        },
+
+        _checkCompile: {
+            get: function() {
+                var that = this;
+                return createCommand(function(sender, event) {
+                    if (event.ctrlKey && event.key === "Enter") {
+                        that._compileStyle();
+                    }
+                    return true;
                 });
             }
         }
@@ -598,7 +623,7 @@ define([
             this._performanceDisplay.update();
         }
 
-        if (defined(this._tileset) && this._style !== this._tileset.style) {
+        if (defined(this._tileset) && (!defined(this._style) || this._style !== this._tileset.style)) {
             this._style = this._tileset.style;
             if (defined(this._style)) {
                 this.styleString = JSON.stringify(this._style.style, null, '    ');

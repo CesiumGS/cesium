@@ -77,7 +77,7 @@ define([
         text.className = 'cesium-cesiumInspector-button';
         text.setAttribute('data-bind', 'click: toggleInspector');
         element.appendChild(text);
-        element.className = 'cesium-cesiumInspector';
+        element.className = 'cesium-cesiumInspector cesium-3DTilesInspector';
         element.setAttribute('data-bind', 'css: { "cesium-cesiumInspector-visible" : inspectorVisible, "cesium-cesiumInspector-hidden" : !inspectorVisible }');
         container.appendChild(this._element);
 
@@ -144,14 +144,13 @@ define([
         knockout.applyBindings(viewModel, loggingPanel.contents);
 
         var styleEditor = document.createElement('textarea');
-        styleEditor.setAttribute('data-bind', 'value: styleString');
+        styleEditor.setAttribute('data-bind', 'valueUpdate: "keyup", value: _styleString, event: { keypress: _checkCompile }');
         stylePanel.contents.className = 'cesium-cesiumInspector-styleEditor';
         stylePanel.contents.appendChild(styleEditor);
         stylePanel.contents.appendChild(document.createElement('br'));
-        var closeStylesBtn = makeButton('toggleStyle', 'Close');
+        var closeStylesBtn = makeButton('_compileStyle', 'Compile (Ctrl+Enter');
         stylePanel.contents.appendChild(closeStylesBtn);
-        knockout.applyBindings(this._inspectorModel, closeStylesBtn);
-        knockout.applyBindings(viewModel, styleEditor);
+        knockout.applyBindings(viewModel, stylePanel.contents);
     }
 
     defineProperties(Cesium3DTilesInspector.prototype, {
@@ -291,8 +290,9 @@ define([
         slider.setAttribute('data-bind', 'valueUpdate: "input", value: ' + property);
 
         container.appendChild(document.createTextNode(text));
+        container.appendChild(input);
         var wrapper = document.createElement('div');
-        wrapper.appendChild(input);
+
         wrapper.appendChild(slider);
         container.appendChild(wrapper);
 

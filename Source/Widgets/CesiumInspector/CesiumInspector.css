@@ -144,9 +144,10 @@ ul.cesium-cesiumInspector-stats + ul.cesium-cesiumInspector-stats {
     outline: none;
     border: 1px solid #444;
     color: #edffff;
-    width: 35px;
+    width: 45px;
     border-radius: 3px;
     padding: 1px;
+    margin-left: 10px;
 }
 
 .cesium-cesiumInspector-slider input[type=number]::-webkit-outer-spin-button,
@@ -196,9 +197,9 @@ input[type=range]:focus {
 }
 
 .cesium-cesiumInspector-styleEditor {
-    position: fixed;
-    top: 30px;
-    left: 30px;
+    /*position: fixed;*/
+    /*top: 30px;*/
+    /*left: 30px;*/
 }
 
 .cesium-cesiumInspector-hide .cesium-cesiumInspector-styleEditor {
@@ -213,10 +214,19 @@ input[type=range]:focus {
 }
 
 .cesium-cesiumInspector-styleEditor textarea {
-    width: 300px;
+    width: 100%;
     height: 300px;
     background: transparent;
     color: #edffff;
     border: none;
     padding: 0px;
+}
+
+.cesium-3DTilesInspector {
+    width: 300px;
+}
+
+.cesium-3DTilesInspector div, .cesium-3DTilesInspector input[type=range] {
+    width: 100%;
+    box-sizing: border-box;
 }
