@@ -62,11 +62,11 @@ var blackMarble = layers.addImageryProvider(Cesium.createTileMapServiceImageryPr
     credit : 'Black Marble imagery courtesy NASA Earth Observatory',
     flipXY : true // Only old gdal2tile.py generated tilesets need this flag.
 }));
-blackMarble.split = -1.0; // Only show to the left of the slider.
+blackMarble.viewportSplit = -1.0; // Only show to the left of the slider.
 
 // Sync the position of the slider with the split position
 var slider = document.getElementById('slider');
-viewer.scene.frameState.splitPosition = (slider.offsetLeft) / slider.parentElement.offsetWidth;
+viewer.scene.frameState.imagerySplitPosition = (slider.offsetLeft) / slider.parentElement.offsetWidth;
 
 var dragStartX = 0;
 
@@ -87,7 +87,7 @@ function sliderMove(e) {
   var slider = document.getElementById('slider');
   var splitPosition = (e.clientX - dragStartX) / slider.parentElement.offsetWidth;
   slider.style.left = 100.0 * splitPosition + "%";
-  viewer.scene.frameState.splitPosition = splitPosition;
+  viewer.scene.frameState.imagerySplitPosition = splitPosition;
 }
 
 

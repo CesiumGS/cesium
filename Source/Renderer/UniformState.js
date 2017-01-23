@@ -150,7 +150,7 @@ define([
 
         this._fogDensity = undefined;
 
-        this._splitPosition = 0.0;
+        this._imagerySplitPosition = 0.0;
         this._pixelSizePerMeter = undefined;
         this._geometricToleranceOverMeter = undefined;
     }
@@ -796,9 +796,9 @@ define([
          * @memberof UniformState.prototype
          * @type {Number}
          */
-        splitPosition : {
+        imagerySplitPosition : {
             get : function() {
-                return this._splitPosition;
+                return this._imagerySplitPosition;
             }
         }
     });
@@ -961,7 +961,7 @@ define([
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
 
-        this._splitPosition = frameState.splitPosition;
+        this._imagerySplitPosition = frameState.imagerySplitPosition;
         var fov = camera.frustum.fov;
         var viewport = this._viewport;
         var pixelSizePerMeter;

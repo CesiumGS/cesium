@@ -232,7 +232,7 @@ define([
         * The position of the splitter to use when rendering imagery layers on either side of a splitter.
         * This value should be between 0.0 and 1.0 with 0 being the far left of the viewport and 1 being the far right of the viewport.
         */
-        this.splitPosition = 0.0;
+        this.imagerySplitPosition = 0.0;
     }
 
     /**

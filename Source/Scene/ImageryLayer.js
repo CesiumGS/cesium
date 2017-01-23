@@ -128,7 +128,7 @@ define([
      *                          imagery tile for which the gamma is required, and it is expected to return
      *                          the gamma value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
-     * @param {Number|Function} [options.split=0.0] The split to apply to this layer.
+     * @param {Number|Function} [options.viewportSplit=0.0] The split to apply to this layer.
      *                          0.0 means disabled, 1.0 means split to the right, -1.0 means split to the left.
      * @param {Boolean} [options.show=true] True if the layer is shown; otherwise, false.
      * @param {Number} [options.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
@@ -198,10 +198,10 @@ define([
         this.gamma = defaultValue(options.gamma, defaultValue(imageryProvider.defaultGamma, ImageryLayer.DEFAULT_GAMMA));
 
         /**
-         * The split to apply to this layer.  0.0 means disabled, 1.0 means split to the right, -1.0 means split to the left.
+         * The viewport split to apply to this layer.  0.0 means disabled, 1.0 means split to the right, -1.0 means split to the left.
          *
          */
-        this.split = defaultValue(options.split, defaultValue(imageryProvider.defaultSplit, ImageryLayer.DEFAULT_SPLIT));
+        this.viewportSplit = defaultValue(options.viewportSplit, defaultValue(imageryProvider.defaultSplit, ImageryLayer.DEFAULT_SPLIT));
 
         /**
          * Determines if this layer is shown.
@@ -307,7 +307,6 @@ define([
      * @default 0.0
      */
     ImageryLayer.DEFAULT_SPLIT = 0.0;
-
 
     /**
      * Gets a value indicating whether this layer is the base layer in the

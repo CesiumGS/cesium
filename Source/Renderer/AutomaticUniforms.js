@@ -1481,19 +1481,19 @@ define([
          /**
          * An automatic GLSL uniform representing the splitter position to use when rendering imagery layers with a splitter.
          *
-         * @alias czm_splitPosition
+         * @alias czm_imagerySplitPosition
          * @glslUniform
          *
          *
          * @example
          * // GLSL declaration
-         * uniform float czm_splitPosition;
+         * uniform float czm_imagerySplitPosition;
          */
-        czm_splitPosition : new AutomaticUniform({
+        czm_imagerySplitPosition : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.splitPosition;
+                return uniformState.imagerySplitPosition;
             }
         }),
 
