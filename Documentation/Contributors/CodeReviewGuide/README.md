@@ -1,4 +1,4 @@
-# Code Review Guide
+
 
 All code in Cesium is publicly peer reviewed.  We review code to share knowledge, foster shared ownership, and improve code quality and consistency.  Just knowing that code will be reviewed improves its quality.
 
@@ -53,6 +53,66 @@ This guide describes best practices for code reviews.
 
 * Delete the branch after merging the pull request.
 * Verify that the corresponding issue (if any) was closed.
+
+## Useful Git Commit Management
+
+Sometimes it is useful to clean up the pull request. Here are some scenarios and how to tackle them.
+The tips below will use the following keywords:
+* **origin** will refer to the user fork, ie. `git@github.com/username/cesium.git`.
+* **upstream** will refer to the AGI repo, ie. `git@github.com/AnalyticalGraphicsInc/cesium.git`.
+* **mybranch** will refer to your local branch name.
+* **target** will refer to the target branch the PR is to be merged into (and also the source for `mybranch`).
+
+If you are new to git, it may be useful to create a backup of your branch in case something goes wrong.
+To do that, use:
+```
+git branch # This should show that you are currently on "mybranch", otherwise use "git checkout mybranch"
+git checkout -b mybranch-backup # This should change your current branch to "mybranch-backup", which should be identical to "mybranch"
+# if you wish to be even more conservative, you can push this to remote
+git push origin mybranch-backup
+
+# Now switch back to your working "mybranch"
+git checkout mybranch
+```
+
+### You want to squash all the commits in your pull request into a single commit
+
+```
+git fetch --all # Ensures remote data is up to date
+git merge origin/target # Merge the remote origin target with the local branch
+git reset origin/target # This will reset your branch the same as origin/target, with your changes unstaged.
+git add # Stage local changes, use `-u` for staging all tracked changes, `-p` to add interactively.
+git commit -m "My single commit message"
+git push -f origin mybranch # Requires force push as it is changing existing history on remote
+```
+
+### You want to merge the latest upstream target branch into mybranch
+
+There are 2 ways to do this, **merge** (recommended) and **rebase** (pretty).
+
+The rule of thumb here is if you are working on a longer term feature branch that may have conflicts with the target branch, then it is best to **merge**.
+
+If you are working on a a shorter pull request (like a bug fix) with a few commits that probably will not result in a conflict, then it is best to **rebase**.
+
+When in doubt, merge.
+
+Futher Reading: [Merge vs Rebase](https://www.derekgourlay.com/blog/git-when-to-merge-vs-when-to-rebase/).
+
+#### Merge
+With merge, your commits will become interleaved with other target branch commits based on timestamp. 
+```
+git fetch --all # Fetch updates from all remotes
+git merge upstream/target
+git push origin mybranch # Does not require force push as it does not change history
+```
+
+#### Rebase
+With rebase, your commits will be added on top of the target branch and will look sequential.
+```
+git fetch --all # Fetch updates from all remotes
+git rebase -i upstream/target
+git push -f origin mybranch # Requires force push as it is changing existing history on remote
+```
 
 ## Resources
 
