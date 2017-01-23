@@ -61,9 +61,10 @@ Then browse to [http://localhost:8080/](http://localhost:8080/). You should see 
 * **Documentation**
 
 These apps have slightly different build processes. The basics:
-`npm run build` will build Cesium Viewer, Sandcastle, Cesium Inspector and Timeline Demo from source. 
-`npm run combine release` will build Hello World, which uses a built version of Cesium.
-`npm run generateDocumentation` will [build the docs](https://github.com/rahwang/cesium/tree/master/Documentation/Contributors/DocumentationGuide).
+
+* `npm run build` will build Cesium Viewer, Sandcastle, Cesium Inspector and Timeline Demo from source. 
+* `npm run combine release` will build Hello World, which uses a built version of Cesium.
+* `npm run generateDocumentation` will [build the docs](https://github.com/rahwang/cesium/tree/master/Documentation/Contributors/DocumentationGuide).
 
 Read the complete list of build scripts below for more details.
 
