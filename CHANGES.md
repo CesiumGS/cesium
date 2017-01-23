@@ -5,6 +5,7 @@ Change Log
 * Deprecated
     * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.31. These properties will be available on geocoder services that support them, like `BingMapsGeocoderService`.
     * The function `createBinormalAndBitangent` of `GeometryPipeline` will be removed in 1.31. Use the function `createTangentAndBitangent` instead. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
+    * The enums `LEFT_DOUBLE_CLICK`, `MIDDLE_DOUBLE_CLICK`, and `RIGHT_MIDDLE_CLICK` from `ScreenSpaceEventType` have been deprecated and will be removed  in 1.31. [#2631](https://github.com/AnalyticalGraphicsInc/cesium/issues/2631)
 * Breaking changes
     * Removed separate `heading`, `pitch`, `roll` parameters from `Transform.headingPitchRollToFixedFrame` and `Transform.headingPitchRollQuaternion`. Pass a `headingPitchRoll` object instead. [#4843](https://github.com/AnalyticalGraphicsInc/cesium/pull/4843)
     * The property `binornmal` has been renamed to `bitangent` for `Geometry` and `VertexFormat`. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)

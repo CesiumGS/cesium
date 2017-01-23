@@ -4,6 +4,7 @@ define([
         './Cartesian2',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './destroyObject',
         './DeveloperError',
         './FeatureDetection',
@@ -15,6 +16,7 @@ define([
         Cartesian2,
         defaultValue,
         defined,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         FeatureDetection,
@@ -483,7 +485,7 @@ define([
 
                 action(touch2StartEvent);
 
-                // Touch-enabled devices, in particular iOS can have many default behaviours for 
+                // Touch-enabled devices, in particular iOS can have many default behaviours for
                 // "pinch" events, which can still be executed unless we prevent them here.
                 event.preventDefault();
             }
@@ -684,6 +686,14 @@ define([
         registerListeners(this);
     }
 
+    function checkForDoubleClick(type) {
+        if (type === ScreenSpaceEventType.LEFT_DOUBLE_CLICK ||
+            type === ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK ||
+            type === ScreenSpaceEventType.RIGHT_DOUBLE_CLICK) {
+            deprecationWarning('Double Click', 'ScreenSpaceEventType.LEFT_DOUBLE_CLICK, ScreenSpaceEventType.MIDDLE_CLICK, and ScreenSpaceEventType.RIGHT_CLICK were deprecated in Cesium 1.30.  They will be removed in 1.31.');
+        }
+    }
+
     /**
      * Set a function to be executed on an input event.
      *
@@ -704,6 +714,8 @@ define([
             throw new DeveloperError('type is required.');
         }
         //>>includeEnd('debug');
+
+        checkForDoubleClick(type);
 
         var key = getInputEventKey(type, modifier);
         this._inputEvents[key] = action;
@@ -726,6 +738,8 @@ define([
         }
         //>>includeEnd('debug');
 
+        checkForDoubleClick(type);
+
         var key = getInputEventKey(type, modifier);
         return this._inputEvents[key];
     };
@@ -746,6 +760,8 @@ define([
             throw new DeveloperError('type is required.');
         }
         //>>includeEnd('debug');
+
+        checkForDoubleClick(type);
 
         var key = getInputEventKey(type, modifier);
         delete this._inputEvents[key];

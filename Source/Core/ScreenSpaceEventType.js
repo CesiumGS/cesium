@@ -6,7 +6,7 @@ define([
     'use strict';
 
     /**
-     * This enumerated type is for classifying mouse events: down, up, click, double click, move and move while a button is held down.
+     * This enumerated type is for classifying mouse events: down, up, click, move and move while a button is held down.
      *
      * @exports ScreenSpaceEventType
      */
@@ -40,6 +40,8 @@ define([
          *
          * @type {Number}
          * @constant
+         *
+         * @deprecated
          */
         LEFT_DOUBLE_CLICK : 3,
 
@@ -72,6 +74,8 @@ define([
          *
          * @type {Number}
          * @constant
+         *
+         * @deprecated
          */
         RIGHT_DOUBLE_CLICK : 8,
 
@@ -104,6 +108,8 @@ define([
          *
          * @type {Number}
          * @constant
+         *
+         * @deprecated
          */
         MIDDLE_DOUBLE_CLICK : 13,
 
