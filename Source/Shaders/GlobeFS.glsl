@@ -110,8 +110,6 @@ vec4 sampleAndBlend(
     }
 #endif
 
-
-
 #ifdef APPLY_BRIGHTNESS
     color = mix(vec3(0.0), color, textureBrightness);
 #endif
