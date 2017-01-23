@@ -130,7 +130,7 @@ define([
      *                          imagery tile for which the gamma is required, and it is expected to return
      *                          the gamma value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
-     * @param {ImagerySplitDirection|Function} [options.viewportSplit=ImagerySplitDirection.NONE] The {@link ImagerySplitDirection} split to apply to this layer.
+     * @param {ImagerySplitDirection|Function} [options.splitDirection=ImagerySplitDirection.NONE] The {@link ImagerySplitDirection} split to apply to this layer.
      * @param {Boolean} [options.show=true] True if the layer is shown; otherwise, false.
      * @param {Number} [options.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
      *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
@@ -202,7 +202,7 @@ define([
          * The {@link ImagerySplitDirection} to apply to this layer.
          *
          */
-        this.viewportSplit = defaultValue(options.viewportSplit, defaultValue(imageryProvider.defaultSplit, ImageryLayer.DEFAULT_SPLIT));
+        this.splitDirection = defaultValue(options.splitDirection, defaultValue(imageryProvider.defaultSplit, ImageryLayer.DEFAULT_SPLIT));
 
         /**
          * Determines if this layer is shown.

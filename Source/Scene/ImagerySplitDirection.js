@@ -10,7 +10,7 @@ define([
      *
      * @exports ImagerySplitDirection
      *
-     * @see ImageryLayer#viewportSplit
+     * @see ImageryLayer#splitDirection
      */
     var ImagerySplitDirection = {
         /**

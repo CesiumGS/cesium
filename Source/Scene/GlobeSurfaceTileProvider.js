@@ -1132,7 +1132,7 @@ define([
                 uniformMapProperties.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
                 applyGamma = applyGamma || uniformMapProperties.dayTextureOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
 
-                uniformMapProperties.dayTextureSplit[numberOfDayTextures] = imageryLayer.viewportSplit;
+                uniformMapProperties.dayTextureSplit[numberOfDayTextures] = imageryLayer.splitDirection;
                 applySplit = applySplit || uniformMapProperties.dayTextureSplit[numberOfDayTextures] !== 0.0;
 
                 if (defined(imagery.credits)) {

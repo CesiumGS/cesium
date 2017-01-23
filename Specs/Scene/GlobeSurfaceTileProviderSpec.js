@@ -478,7 +478,7 @@ defineSuite([
         layer.gamma = 0.321;
         layer.saturation = 0.123;
         layer.hue = 0.456;
-        layer.viewportSplit = ImagerySplitDirection.LEFT;
+        layer.splitDirection = ImagerySplitDirection.LEFT;
 
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
