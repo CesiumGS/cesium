@@ -650,9 +650,9 @@ define([
                 console.log('KML - Unsupported Icon viewRefreshMode: ' + viewRefreshMode);
             }
 
-            var viewBoundScale = defaultValue(queryStringValue(iconNode, 'viewBoundScale', namespaces.kml), 1.0);
+            var viewBoundScale = defaultValue(queryNumericValue(iconNode, 'viewBoundScale', namespaces.kml), 1.0);
             var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
-            var viewFormat = defaultValue(queryStringValue(iconNode, 'viewFormat', namespaces.kml), defaultViewFormat);
+            var viewFormat = defaultValue(queryNumericValue(iconNode, 'viewFormat', namespaces.kml), defaultViewFormat);
             var httpQuery = queryStringValue(iconNode, 'httpQuery', namespaces.kml);
             var queryString = makeQueryString(viewFormat, httpQuery);
 
