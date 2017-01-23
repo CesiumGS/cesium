@@ -63,7 +63,7 @@ defineSuite([
             new Cartesian3(0.0, 1.0, 0.0),  // +Y
             new Cartesian3(0.0, -1.0, 0.0), // -Y
             new Cartesian3(0.0, 0.0, 1.0),  // +Z
-            new Cartesian3(0.0, 0.0, -1.0), // -Z
+            new Cartesian3(0.0, 0.0, -1.0)  // -Z
         ];
 
         var uniformMap = {

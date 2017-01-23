@@ -479,8 +479,8 @@ defineSuite([
         });
         clearCommand.execute(context);
         expect({
-            context: context,
-            framebuffer: framebuffer
+            context : context,
+            framebuffer : framebuffer
         }).toReadPixels([0, 0, 0, 0]);
 
         // 2 of 3.  Does not pass depth test
@@ -498,8 +498,8 @@ defineSuite([
         });
         command.execute(context);
         expect({
-            context: context,
-            framebuffer: framebuffer
+            context : context,
+            framebuffer : framebuffer
         }).toReadPixels([0, 0, 0, 0]);
 
         // 3 of 3.  Passes depth test
@@ -517,8 +517,8 @@ defineSuite([
         });
         command.execute(context);
         expect({
-            context: context,
-            framebuffer: framebuffer
+            context : context,
+            framebuffer : framebuffer
         }).toReadPixels([255, 255, 255, 255]);
     });
 
@@ -599,7 +599,7 @@ defineSuite([
             },
             u_texture1 : function() {
                 return colorTexture1;
-            },
+            }
         };
 
         command = new DrawCommand({

@@ -51,7 +51,6 @@ defineSuite([
                 ShaderSource._czmBuiltinsAndUniforms[functionName] = injectedTestFunctions[functionName];
             }
         }
-
     });
 
     afterAll(function() {

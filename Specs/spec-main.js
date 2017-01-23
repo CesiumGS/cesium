@@ -204,11 +204,11 @@
          * More browser specific code - wrap the query string in an object and to allow for getting/setting parameters from the runner user interface.
          */
 
-         var queryString = Cesium.queryToObject(window.location.search.substring(1));
+        var queryString = Cesium.queryToObject(window.location.search.substring(1));
 
-         if (queryString.webglValidation !== undefined) {
+        if (queryString.webglValidation !== undefined) {
             window.webglValidation = true;
-         }
+        }
 
         if (queryString.webglStub !== undefined) {
             window.webglStub = true;

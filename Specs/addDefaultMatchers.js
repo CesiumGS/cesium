@@ -13,7 +13,7 @@ define([
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
         'Renderer/ShaderProgram',
-        'Renderer/VertexArray',
+        'Renderer/VertexArray'
     ], function(
         equals,
         Cartesian2,
@@ -92,7 +92,7 @@ define([
         return {
             toBeGreaterThanOrEqualTo : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         return { pass : actual >= expected };
                     }
                 };
@@ -100,7 +100,7 @@ define([
 
             toBeLessThanOrEqualTo : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         return { pass : actual <= expected };
                     }
                 };
@@ -108,7 +108,7 @@ define([
 
             toBeBetween : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, lower, upper) {
+                    compare : function(actual, lower, upper) {
                         if (lower > upper) {
                             var tmp = upper;
                             upper = lower;
@@ -121,7 +121,7 @@ define([
 
             toStartWith : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         return { pass : actual.slice(0, expected.length) === expected };
                     }
                 };
@@ -129,7 +129,7 @@ define([
 
             toEndWith : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         return { pass : actual.slice(-expected.length) === expected };
                     }
                 };
@@ -137,7 +137,7 @@ define([
 
             toEqual : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         return { pass : equals(util, customEqualityTesters, actual, expected) };
                     }
                 };
@@ -145,7 +145,7 @@ define([
 
             toEqualEpsilon : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected, epsilon) {
+                    compare : function(actual, expected, epsilon) {
                         function equalityTester(a, b) {
                             if (Array.isArray(a) && Array.isArray(b)) {
                                 if (a.length !== b.length) {
@@ -228,7 +228,7 @@ define([
 
             toRender : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         return renderEquals(util, customEqualityTesters, actual, expected, true);
                     }
                 };
@@ -236,7 +236,7 @@ define([
 
             notToRender : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         return renderEquals(util, customEqualityTesters, actual, expected, false);
                     }
                 };
@@ -244,7 +244,7 @@ define([
 
             toRenderAndCall : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         var actualRgba = renderAndReadPixels(actual);
 
                         var webglStub = !!window.webglStub;
@@ -264,7 +264,7 @@ define([
 
             toPickPrimitive : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         return pickPrimitiveEquals(actual, expected);
                     }
                 };
@@ -280,7 +280,7 @@ define([
 
             toPickAndCall : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         var scene = actual;
                         var result = scene.pick(new Cartesian2(0, 0));
 
@@ -301,7 +301,7 @@ define([
 
             toDrillPickAndCall : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         var scene = actual;
                         var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
 
@@ -322,7 +322,7 @@ define([
 
             toReadPixels : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         var context;
                         var framebuffer;
                         var epsilon = 0;
@@ -369,7 +369,7 @@ define([
 
             notToReadPixels : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         var context = actual;
                         var rgba = context.readPixels();
 
@@ -397,7 +397,7 @@ define([
 
             contextToRender : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         return expectContextToRender(actual, expected, true);
                     }
                 };
@@ -405,7 +405,7 @@ define([
 
             notContextToRender : function(util, customEqualityTesters) {
                 return {
-                    compare: function(actual, expected) {
+                    compare : function(actual, expected) {
                         return expectContextToRender(actual, expected, false);
                     }
                 };

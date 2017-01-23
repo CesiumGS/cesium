@@ -84,8 +84,8 @@ defineSuite([
             context : context,
             vertexShaderSource : vertexShader,
             fragmentShaderSource : fragmentShader,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 

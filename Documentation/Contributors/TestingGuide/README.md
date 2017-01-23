@@ -425,9 +425,9 @@ expect(context).notToReadPixels([0, 0, 0, 0]);
 
 ```javascript
 expect({
-    context: context,
-    framebuffer: framebuffer,
-    epsilon: 1
+    context : context,
+    framebuffer : framebuffer,
+    epsilon : 1
 }).toReadPixels([0, 0, 0, 255]);
 ```
 

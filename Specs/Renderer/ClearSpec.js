@@ -110,8 +110,8 @@ defineSuite([
         command.execute(context);
 
         expect({
-            context: context,
-            framebuffer: framebuffer
+            context : context,
+            framebuffer : framebuffer
         }).toReadPixels([0, 255, 0, 255]);
 
         framebuffer = framebuffer.destroy();

@@ -406,15 +406,15 @@ defineSuite([
         // 2 of 3:  Blend:  0 + 0.5
         command.execute(cxt);
         expect({
-            context: cxt,
-            epsilon: 1
+            context : cxt,
+            epsilon : 1
         }).toReadPixels([127, 127, 127, 127]);
 
         // 3 of 3:  Blend:  0.5 + 0.5
         command.execute(cxt);
         expect({
-            context: cxt,
-            epsilon: 1
+            context : cxt,
+            epsilon : 1
         }).toReadPixels([254, 254, 254, 254]);
 
         sp.destroy();
@@ -477,15 +477,15 @@ defineSuite([
         // 2 of 3:  Blend:  RGB:  (255 * 0.5) + (0 * 0.5), Alpha: 0.5 + 0
         command.execute(cxt);
         expect({
-            context: cxt,
-            epsilon: 1
+            context : cxt,
+            epsilon : 1
         }).toReadPixels([127, 127, 127, 127]);
 
         // 3 of 3:  Blend:  RGB:  (255 * 0.5) + (127 * 0.5), Alpha: 0.5 + 0
         command.execute(cxt);
         expect({
-            context: cxt,
-            epsilon: 2
+            context : cxt,
+            epsilon : 2
         }).toReadPixels([191, 191, 191, 127]);
 
         sp.destroy();
@@ -548,8 +548,8 @@ defineSuite([
         //   Epsilon of 1 because ANGLE gives 127 and desktop GL gives 128.
         command.execute(context);
         expect({
-            context: context,
-            epsilon: 1
+            context : context,
+            epsilon : 1
         }).toReadPixels([128, 128, 128, 255]);
     });
 
