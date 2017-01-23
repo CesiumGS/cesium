@@ -143,6 +143,15 @@ define([
         loggingPanel.contents.appendChild(pickStats);
         knockout.applyBindings(viewModel, loggingPanel.contents);
 
+        stylePanel.contents.appendChild(document.createTextNode('Color Blend Mode: '));
+        var blendDropdown = document.createElement('select');
+        blendDropdown.setAttribute('data-bind', 'options: _colorBlendModes, ' +
+                                           'optionsText: "text", ' +
+                                           'optionsValue: "val", ' +
+                                           'value: colorBlendMode');
+        stylePanel.contents.appendChild(blendDropdown);
+
+
         var styleEditor = document.createElement('textarea');
         styleEditor.setAttribute('data-bind', 'valueUpdate: "keyup", value: _styleString, event: { keypress: _checkCompile }');
         stylePanel.contents.className = 'cesium-cesiumInspector-styleEditor';

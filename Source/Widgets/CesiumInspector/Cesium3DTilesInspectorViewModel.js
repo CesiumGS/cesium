@@ -4,6 +4,7 @@ define([
     '../../Core/Cartographic',
     '../../Scene/Cesium3DTileset',
     '../../Scene/Cesium3DTileStyle',
+    '../../Scene/Cesium3DTileColorBlendMode',
     '../../Core/Check',
     '../../Core/Color',
     '../../Core/defined',
@@ -19,6 +20,7 @@ define([
         Cartographic,
         Cesium3DTileset,
         Cesium3DTileStyle,
+        Cesium3DTileColorBlendMode,
         Check,
         Color,
         defined,
@@ -91,6 +93,21 @@ define([
         });
 
         this.highlightColor = new Color(1.0, 1.0, 0.0, 0.4);
+        this._colorBlendModes =  [
+            {
+                text: 'Highlight',
+                val: Cesium3DTileColorBlendMode.HIGHLIGHT
+            },
+            {
+                text: 'Replace',
+                val: Cesium3DTileColorBlendMode.REPLACE
+            },
+            {
+                text: 'Mix',
+                val: Cesium3DTileColorBlendMode.MIX
+            }
+        ];
+
         this._style = undefined;
         this._subscriptions = {};
         var tilesetOptions = {
@@ -372,13 +389,28 @@ define([
                                     that._style = style;
                                     that._tileset.update(that._scene.frameState);
                                 } catch(err) {
-                                    console.log(err);
                                     that._tileset.style = old;
                                     that._style = old;
                                     that._editorError = err.toString();
                                 }
                             }
                         }
+                    }
+                }
+            },
+
+            /**
+             * Gets or sets the color blend mode.  This property is observable.
+             * @memberof Cesium3DTilesInspectorViewModel.prototype
+             *
+             * @type {Cesium3DTileColorBlendMode}
+             * @default Cesium3DTileColorBlendMode.HIGHLIGHT
+             */
+            colorBlendMode: {
+                default: Cesium3DTileColorBlendMode.HIGHLIGHT,
+                subscribe: function(val) {
+                    if (defined(that._tileset)) {
+                        that._tileset.colorBlendMode = val;
                     }
                 }
             }
@@ -419,6 +451,7 @@ define([
                         that.dynamicSSE = tileset.dynamicScreenSpaceError;
                         that.dynamicSSEDensity = tileset.dynamicScreenSpaceErrorDensity;
                         that.dynamicSSEFactor = tileset.dynamicScreenSpaceErrorFactor;
+                        that.colorBlendMode = tileset.colorBlendMode;
 
                         that._updateStats(false, true);
                         that._updateStats(true, true);
