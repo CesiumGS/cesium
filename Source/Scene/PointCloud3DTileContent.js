@@ -699,7 +699,8 @@ define([
             pickUniformMap = batchTable.getPickUniformMapCallback()(uniformMap);
         } else {
             content._pickId = context.createPickId({
-                primitive : content
+                primitive : content._tileset,
+                content : content
             });
 
             pickUniformMap = combine(uniformMap, {

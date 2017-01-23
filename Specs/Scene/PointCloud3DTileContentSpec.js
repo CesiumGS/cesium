@@ -268,7 +268,8 @@ defineSuite([
             tileset.show = true;
             picked = scene.pickForSpecs();
             expect(picked).toBeDefined();
-            expect(picked.primitive).toBe(content);
+            expect(picked.primitive).toBe(tileset);
+            expect(picked.content).toBe(content);
         });
     });
 
