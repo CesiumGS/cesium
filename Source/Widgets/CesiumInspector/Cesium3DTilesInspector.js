@@ -288,7 +288,7 @@ define([
         slider.min = min;
         slider.max = max;
         slider.step = step;
-        slider.setAttribute('data-bind', 'value: ' + property);
+        slider.setAttribute('data-bind', 'valueUpdate: "input", value: ' + property);
 
         container.appendChild(document.createTextNode(text));
         var wrapper = document.createElement('div');
