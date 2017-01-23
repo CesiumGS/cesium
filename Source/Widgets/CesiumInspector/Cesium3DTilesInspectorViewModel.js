@@ -424,15 +424,17 @@ define([
                     that._style = undefined;
                     that.statsText = '';
                     that.pickStatsText = '';
+                    that._properties = {};
 
-                    if (defined(that._statsLogger)) {
-                        tileset.loadProgress.removeEventListener(that._statsLogger);
-                        tileset.allTilesLoaded.removeEventListener(that._statsLogger);
-                    }
                     if (defined(tileset)) {
                         that._statsLogger = that._updateStats.bind(that, false, false);
                         tileset.loadProgress.addEventListener(that._statsLogger);
                         tileset.allTilesLoaded.addEventListener(that._statsLogger);
+
+                        tileset.readyPromise.then(function(tileset) {
+                            console.log(tileset);
+                            that._properties = tileset.properties;
+                        });
 
                         // update tileset with existing settings
                         var settings = ['colorize',
@@ -500,6 +502,9 @@ define([
             },
             _editorError: {
                 default: ''
+            },
+            _properties: {
+                default: {}
             }
         });
         for (var name in tilesetOptions) {
@@ -514,6 +519,16 @@ define([
                 return '<strong>URL: </strong>None';
             }
             return '<strong>URL: </strong>' + that._tileset.url;
+        });
+
+        this.propertiesText = knockout.pureComputed(function() {
+            var names = [];
+            for (var prop in that._properties) {
+                if (that._properties.hasOwnProperty(prop)) {
+                    names.push(prop);
+                }
+            }
+            return '<strong>Properties: </strong>' + names.join(', ');
         });
     }
 

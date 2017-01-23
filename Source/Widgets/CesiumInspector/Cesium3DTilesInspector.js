@@ -100,6 +100,9 @@ define([
         tilesetURL.setAttribute('data-bind', 'html: tilesetURL');
         tilesetURL.setAttribute('style', 'word-break: break-all;');
         tilesetPanel.contents.appendChild(tilesetURL);
+        var propertiesText = document.createElement('div');
+        propertiesText.setAttribute('data-bind', 'html: propertiesText');
+        tilesetPanel.contents.appendChild(propertiesText);
         tilesetPanel.contents.appendChild(makeButton('_togglePickTileset', 'Pick Tileset', '_pickActive'));
         tilesetPanel.contents.appendChild(makeButton('trimTilesCache', 'Trim Tiles Cache'));
         tilesetPanel.contents.appendChild(makeCheckbox('picking', 'Enable Picking'));
