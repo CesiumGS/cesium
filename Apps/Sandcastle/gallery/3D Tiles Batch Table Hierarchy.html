@@ -277,7 +277,7 @@ handler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-// When a feature is double middle clicked, hide it
+// When a feature is middle clicked, hide it
 handler.setInputAction(function(movement) {
     if (!pickingEnabled) {
         return;
@@ -286,7 +286,7 @@ handler.setInputAction(function(movement) {
     if (Cesium.defined(current.feature)) {
         current.feature.show = false;
     }
-}, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
+}, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
 
 //Sandcastle_End
 Sandcastle.finishedLoading();
