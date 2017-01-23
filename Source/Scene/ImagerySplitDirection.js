@@ -7,21 +7,10 @@ define([
 
     /**
      * The direction to display an ImageryLayer relative to the {@link Scene} imagerySplitPosition.
-
-
-     * The vertical location of an origin relative to an object, e.g., a {@link Billboard}
-     * or {@link Label}.  For example, setting the vertical origin to <code>TOP</code>
-     * or <code>BOTTOM</code> will display a billboard above or below (in screen space)
-     * the anchor position.
-     * <br /><br />
-     * <div align='center'>
-     * <img src='images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
-     * </div>
      *
      * @exports ImagerySplitDirection
      *
-     * @see Billboard#verticalOrigin
-     * @see Label#verticalOrigin
+     * @see ImageryLayer#viewportSplit
      */
     var ImagerySplitDirection = {
         /**
