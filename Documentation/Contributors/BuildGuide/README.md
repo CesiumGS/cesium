@@ -8,12 +8,13 @@
 ## Get the Code
 
 * Setup Git if it isn't already ([link](https://help.github.com/articles/set-up-git/#platform-all)).
+   * New to git or need a refresher? Now's a good time to learn! [Easy tutorials here.](https://guides.github.com/)
    * Make sure your SSH keys are configured ([linux](https://help.github.com/articles/generating-ssh-keys#platform-linux) | [mac](https://help.github.com/articles/generating-ssh-keys#platform-mac) | [windows](https://help.github.com/articles/generating-ssh-keys#platform-windows)).
    * Double-check your settings for name and email: `git config --get-regexp user.*`.
    * Recommended Git settings:
       * `git config --global pull.rebase preserve` - when pulling remote changes, rebase your local changes on top of the remote changes, to avoid unnecessary merge commits.
       * `git config --global fetch.prune true` - when fetching remote changes, remove any remote branches that no longer exist on the remote.
-* Have commit access to cesium?
+* Have [commit access](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/CommittersGuide/README.md) to cesium?
    * No
       * Fork [cesium](https://github.com/AnalyticalGraphicsInc/cesium).
       * Use the [GitHub website](https://github.com/AnalyticalGraphicsInc/cesium/branches/all) to delete all branches in your fork except `master`.
@@ -22,13 +23,15 @@
    * Yes
       * Clone the cesium repo, e.g., `git clone git@github.com:AnalyticalGraphicsInc/cesium.git`
       * Make changes in a branch, e.g., `git checkout -b my-feature`.
+* For more about our workflow, see [github pull request workflows](http://cesiumjs.org/2013/10/08/GitHub-Pull-Request-Workflows/).
+
 
 ## Build the Code
 
 Prerequisites:
  * Install [Node.js](http://nodejs.org/) on your system.  Building Cesium requires Node 4.x or newer.
 
-Cesium uses npm modules for development, so after syncing, you need to run `npm install` from the Cesium root directory:
+Cesium uses [npm modules](https://docs.npmjs.com/getting-started/creating-node-modules) for development, so after syncing, you need to run `npm install` from the Cesium root directory:
 
 ```
 npm install
@@ -44,9 +47,25 @@ Cesium ships with a simple HTTP server for testing, run `npm start` after buildi
 
 ```
 npm start
-```
+``` 
 
-Then browse to [http://localhost:8080/](http://localhost:8080/).
+Then browse to [http://localhost:8080/](http://localhost:8080/). You should see the following:
+
+* **Apps**
+   * **Cesium Viewer** : our core 3D globe viewer with some basic features included
+   * **Hello World** : basic app to [get you started](http://cesiumjs.org/tutorials/cesium-up-and-running/)
+   * **Sandcastle** : live coding app for viewing and modifying source code from [many examples](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Hello%20World.html&label=Showcases)
+   * **Cesium Inspector** : Cesium Viewer with extra view options to expose underlying technical details
+   * **Timeline Demo** : demo of the Cesium Timeline widget, for use with time-dynamic data
+* **Test Suites**
+* **Documentation**
+
+These apps have slightly different build processes. The basics:
+`npm run build` will build Cesium Viewer, Sandcastle, Cesium Inspector and Timeline Demo from source. 
+`npm run combine release` will build Hello World, which uses a built version of Cesium.
+`npm run generateDocumentation` will [build the docs](https://github.com/rahwang/cesium/tree/master/Documentation/Contributors/DocumentationGuide).
+
+Read the complete list of build scripts below for more details.
 
 By default, the server only allows connections from your local machine.  To allow connections from other machines, pass
 the `--public` option to npm. Note the extra `--` is intentional and required by npm.
@@ -76,38 +95,43 @@ npm run [target-name]
 ```
 
 Here's the full set of scripts and what they do.
-   * `build` - A fast, developer-oriented build that prepares the source tree for use as standard [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD) modules, suitable for running tests and most examples (some Sandcastle examples require running `combine`).  This runs automatically when saving files in Eclipse.
-   * `build-watch` - A never-ending task that watches your file system for changes to Cesium and runs `build` on the source code as needed. 
-   * `combine` - Runs `build`, plus the [the RequireJS optimizer](http://requirejs.org/docs/optimization.html) to combine Cesium and [the Almond AMD loader](http://requirejs.org/docs/faq-optimization.html#wrap) to produce all-in-one files in the `Build/Cesium` directory that expose the entire Cesium API attached to a single global Cesium object.  This version is useful if you don't want to use the modules directly with a standard AMD loader.
-   * `minify` - Runs `combine`, plus [minifies](http://en.wikipedia.org/wiki/Minification_\(programming\)) Cesium.js using [UglifyJS2](https://github.com/mishoo/UglifyJS2) for a smaller deployable file.
-   * `combineRelease` - Runs `combine`, plus uses the optimizer to remove debugging code that validates function input and throws DeveloperErrors.  The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
-   * `minifyRelease` - Runs `minify`, and removes debugging code.
-   * `requirejs` - Used internally by the build system and can not be called directly.
-   * `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
-   * `generateDocumentation` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc).
-   * `release` - A full release build that creates a shippable product, including building apps and generating documentation.
-   * `instrumentForCoverage` - Runs [JSCoverage](http://siliconforks.com/jscoverage/) on the source tree to allow running tests with coverage information.  Use the link in index.html.  Currently Windows only.
-   * `jsHint` - Runs [JSHint](http://www.jshint.com/) on the entire source tree.
-   * `jsHint-watch` - A never-ending task that watches your file system for changes to Cesium and runs [JSHint](http://www.jshint.com/) on any changed source files.  
-   * `makeZipFile` - Builds a zip file containing all release files.  This includes the source tree (suitable for use from an AMD-aware application), plus the combined and minified Cesium.js files, the generated documentation, the test suite, and the example applications (in both built and source form).
-   * `clean` - Removes all generated build artifacts.
-   * `cloc` - Runs [CLOC](https://github.com/AlDanial/cloc) to count the lines of code on the Source and Specs directories.  This requires [Perl](http://www.perl.org/) to execute.
-   * `sortRequires` - Alphabetically sorts the list of required modules in every `js` file.  It also makes sure that the top of every source file uses the same formatting.
-   * `test` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) using the default browser specified in the Karma config file.
-   * `test-all` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) using all browsers installed on the current system.
-   * `test-non-webgl` - Runs only non-WebGL tests with [Karma](http://karma-runner.github.io/0.13/index.html).
-   * `test-webgl` - Runs only WebGL tests with [Karma](http://karma-runner.github.io/0.13/index.html).
-   * `test-webgl-validation` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) and enables low-level WebGL validation.
-   * `test-release` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) on the minified release version of built Cesium.
-   * `deploy-s3` - Deploys the built cesium files, the npm package, and the zip file to Amazon S3. This requires having credentials set up for the S3 bucket to which you are deploying.
-   * `deploy-status` - Set the deployment statuses in GitHub, for use with Travis.
-   * `deploy-set-version` - Sets the version of `package.json`, for use with Travis.
+
+   * **Build scripts** -- rebuild various Cesium apps (and documentation)
+      * `build` - A fast, developer-oriented build that prepares the source tree for use as standard [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD) modules, suitable for running tests and most examples (some Sandcastle examples require running `combine`).  This runs automatically when saving files in Eclipse.
+      * `build-watch` - A never-ending task that watches your file system for changes to Cesium and runs `build` on the source code as needed. 
+      * `combine` - Runs `build`, plus the [the RequireJS optimizer](http://requirejs.org/docs/optimization.html) to combine Cesium and [the Almond AMD loader](http://requirejs.org/docs/faq-optimization.html#wrap) to produce all-in-one files in the `Build/Cesium` directory that expose the entire Cesium API attached to a single global Cesium object.  This version is useful if you don't want to use the modules directly with a standard AMD loader.
+      * `minify` - Runs `combine`, plus [minifies](http://en.wikipedia.org/wiki/Minification_\(programming\)) Cesium.js using [UglifyJS2](https://github.com/mishoo/UglifyJS2) for a smaller deployable file.
+      * `combineRelease` - Runs `combine`, plus uses the optimizer to remove debugging code that validates function input and throws DeveloperErrors.  The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
+      * `minifyRelease` - Runs `minify`, and removes debugging code.
+      * `requirejs` - Used internally by the build system and can not be called directly.
+      * `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
+      * `generateDocumentation` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). More [details here](https://github.com/rahwang/cesium/tree/master/Documentation/Contributors/DocumentationGuide).
+      * `release` - A full release build that creates a shippable product, including building apps and generating documentation.
+   * **Utility scripts** -- crucial development tools
+      * `instrumentForCoverage` - Runs [JSCoverage](http://siliconforks.com/jscoverage/) on the source tree to allow running tests with coverage information.  Use the link in index.html.  Currently Windows only.
+      * `jsHint` - Runs [JSHint](http://www.jshint.com/), a helpful code analysis tool, on the entire source tree.
+      * `jsHint-watch` - A never-ending task that watches your file system for changes to Cesium and runs [JSHint](http://www.jshint.com/) on any changed source files.  
+      * `makeZipFile` - Builds a zip file containing all release files.  This includes the source tree (suitable for use from an AMD-aware application), plus the combined and minified Cesium.js files, the generated documentation, the test suite, and the example applications (in both built and source form).
+      * `clean` - Removes all generated build artifacts.
+      * `cloc` - Runs [CLOC](https://github.com/AlDanial/cloc) to count the lines of code on the Source and Specs directories.  This requires [Perl](http://www.perl.org/) to execute.
+      * `sortRequires` - Alphabetically sorts the list of required modules in every `js` file.  It also makes sure that the top of every source file uses the same formatting.
+   * **Testing scripts** -- build and run our tests
+      * `test` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) using the default browser specified in the Karma config file.
+      * `test-all` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) using all browsers installed on the current system.
+      * `test-non-webgl` - Runs only non-WebGL tests with [Karma](http://karma-runner.github.io/0.13/index.html).
+      * `test-webgl` - Runs only WebGL tests with [Karma](http://karma-runner.github.io/0.13/index.html).
+      * `test-webgl-validation` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) and enables low-level WebGL validation.
+      * `test-release` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) on the minified release version of built Cesium.
+   * **Deployment scripts**
+      * `deploy-s3` - Deploys the built cesium files, the npm package, and the zip file to Amazon S3. This requires having credentials set up for the S3 bucket to which you are deploying.
+      * `deploy-status` - Set the deployment statuses in GitHub, for use with Travis.
+      * `deploy-set-version` - Sets the version of `package.json`, for use with Travis.
 
 ## Travis and Continuous Integration
 
-Cesium uses [Travis](https://travis-ci.org/) for continuous integration. The Travis configuration and all the steps of the build process are defined in `travis.yml`. The blog post [Cesium Continuous Integration](http://cesiumjs.org/2016/04/07/Cesium-Continuous-Integration/) contains an in-depth explaination of the travis build process.
+Cesium uses [Travis](https://travis-ci.org/) for continuous integration, building and testing pull requests automatically. The Travis configuration and all the steps of the build process are defined in `travis.yml`. The blog post [Cesium Continuous Integration](http://cesiumjs.org/2016/04/07/Cesium-Continuous-Integration/) contains an in-depth explaination of the travis build process.
 
-After pushing code to the Cesium repository or when opening a pull request, the build is triggered. After the build has completed, at the bottom on the pull request, the status of the build is shown and you can access the build by clicking the "Details" link.
+Travis triggers a build whenever someone opens a pull request or pushes code to the Cesium repository. After the build has completed, at the bottom on the pull request, the status of the build is shown and you can access the build by clicking the "Details" link.
 
 ![Checks](checks_failed.jpg)
 
@@ -119,7 +143,7 @@ Additional set up is required for deployment if you do not have commit access to
 
 ### Configure a Different S3 Bucket
 
-It is possible to configure your `travis.yml` and `gulpfile.js` to deploy to a different S3 Bucket. If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
+It is possible to configure your `travis.yml` and `gulpfile.js` to deploy to a different S3 Bucket ([an Amazon Webservices storage unit](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html)), which will allow you to use our build and testing infrastructure even if you don't have Cesium access. If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
 
 * In `travis.yml`, edit the following line:
 
