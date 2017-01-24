@@ -2698,10 +2698,13 @@ define([
             // CESIUM_RTC extension
             var mvRtc = new Matrix4();
             return function() {
-                Matrix4.getTranslation(uniformState.model, scratchTranslationRtc);
-                Cartesian3.add(scratchTranslationRtc, model._rtcCenter, scratchTranslationRtc);
-                Matrix4.multiplyByPoint(uniformState.view, scratchTranslationRtc, scratchTranslationRtc);
-                return Matrix4.setTranslation(uniformState.modelView, scratchTranslationRtc, mvRtc);
+                if (defined(model._rtcCenter)) {
+                    Matrix4.getTranslation(uniformState.model, scratchTranslationRtc);
+                    Cartesian3.add(scratchTranslationRtc, model._rtcCenter, scratchTranslationRtc);
+                    Matrix4.multiplyByPoint(uniformState.view, scratchTranslationRtc, scratchTranslationRtc);
+                    return Matrix4.setTranslation(uniformState.modelView, scratchTranslationRtc, mvRtc);
+                }
+                return uniformState.modelView;
             };
         },
         MODELVIEWPROJECTION : function(uniformState, model) {
@@ -4309,17 +4312,20 @@ define([
             if (this._state !== ModelState.FAILED) {
                 var extensions = this.gltf.extensions;
                 if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
-                    this._rtcCenter3D = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
+                    var center = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
+                    if (!Cartesian3.equals(center, Cartesian3.ZERO)) {
+                        this._rtcCenter3D = center;
 
-                    var projection = frameState.mapProjection;
-                    var ellipsoid = projection.ellipsoid;
-                    var cartographic = ellipsoid.cartesianToCartographic(this._rtcCenter3D);
-                    var projectedCart = projection.project(cartographic);
-                    Cartesian3.fromElements(projectedCart.z, projectedCart.x, projectedCart.y, projectedCart);
-                    this._rtcCenter2D = projectedCart;
+                        var projection = frameState.mapProjection;
+                        var ellipsoid = projection.ellipsoid;
+                        var cartographic = ellipsoid.cartesianToCartographic(this._rtcCenter3D);
+                        var projectedCart = projection.project(cartographic);
+                        Cartesian3.fromElements(projectedCart.z, projectedCart.x, projectedCart.y, projectedCart);
+                        this._rtcCenter2D = projectedCart;
 
-                    this._rtcCenterEye = new Cartesian3();
-                    this._rtcCenter = this._rtcCenter3D;
+                        this._rtcCenterEye = new Cartesian3();
+                        this._rtcCenter = this._rtcCenter3D;
+                    }
                 }
 
                 this._loadResources = new LoadResources();
