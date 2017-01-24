@@ -21,6 +21,9 @@ Change Log
 * Fixed a bug that caused all models to use the same highlight color. [#4798] (https://github.com/AnalyticalGraphicsInc/cesium/pull/4798)
 * Fixed KML for when color is an empty string [#4826](https://github.com/AnalyticalGraphicsInc/cesium/pull/4826)
 * Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
+* Added ability to draw an `ImageryLayer` with a splitter to allow layers to only display to the left or right of a splitter.
+   * `ImageryLayer.splitDirection` controls how the layer is rendered with the splitter.  Values are taken from the new `ImagerySplitPosition` enum.
+   *  New `Scene.imagerySplitPosition` property controls the splitter position.  Values are from 0 to 1 relative across the width of the viewport.
 * The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.
 * Fixed a bug that would cause a crash when `debugShowFrustums` is enabled with OIT [#4864](https://github.com/AnalyticalGraphicsInc/cesium/pull/4864)
 * Fixed a bug that affected dynamic graphics with time-dynamic modelMatrix [#4907](https://github.com/AnalyticalGraphicsInc/cesium/pull/4907).
