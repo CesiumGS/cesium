@@ -1317,7 +1317,15 @@ define([
     };
 
     Node.prototype._evaluateConditional = function(frameState, feature) {
-        if (this._test.evaluate(frameState, feature)) {
+        var test = this._test.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof test !== 'boolean') {
+            throw new DeveloperError('First argument of conditional expression must be a boolean. Argument is ' + type + '.');
+        }
+        //>>includeEnd('debug');
+
+        if (test) {
             return this._left.evaluate(frameState, feature);
         }
         return this._right.evaluate(frameState, feature);
