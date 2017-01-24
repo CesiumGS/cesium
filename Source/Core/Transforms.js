@@ -474,7 +474,7 @@ define([
      * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
      */
     Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, result) {
-        Check.typeOf.object(headingPitchRoll, 'headingPitchRoll');
+        Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         var heading = headingPitchRoll.heading;
         var pitch = headingPitchRoll.pitch;
         var roll = headingPitchRoll.roll;
@@ -512,7 +512,7 @@ define([
      */
     Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, result) {
         // checks for required parameters happen in the called functions
-        Check.typeOf.object(headingPitchRoll, 'headingPitchRoll');
+        Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
