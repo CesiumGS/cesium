@@ -117,10 +117,9 @@ define([
         knockout.applyBindings(viewModel, displayPanel.contents);
 
 
-        updatePanel.contents.appendChild(makeCheckbox('suspendUpdates', 'Suspend Updates'));
+        updatePanel.contents.appendChild(makeCheckbox('freezeFrame', 'Freeze Frame'));
         updatePanel.contents.appendChild(makeCheckbox('dynamicSSE', 'Dynamic SSE'));
         var sseContainer = document.createElement('div');
-        sseContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : !dynamicSSE, "cesium-cesiumInspector-hide" : dynamicSSE}');
         sseContainer.appendChild(makeRangeInput('maximumSSE', 0, 128, 0.5, 'Maximum SSE'));
         updatePanel.contents.appendChild(sseContainer);
 
@@ -159,7 +158,7 @@ define([
         styleEditor.setAttribute('data-bind', 'valueUpdate: "keyup", value: _styleString, event: { keypress: _checkCompile }');
         stylePanel.contents.className = 'cesium-cesiumInspector-styleEditor';
         stylePanel.contents.appendChild(styleEditor);
-        var closeStylesBtn = makeButton('_compileStyle', 'Compile (Ctrl+Enter');
+        var closeStylesBtn = makeButton('_compileStyle', 'Compile (Ctrl+Enter)');
         stylePanel.contents.appendChild(closeStylesBtn);
         var errorBox = document.createElement('div');
         errorBox.className = 'cesium-cesiumInspector-error';

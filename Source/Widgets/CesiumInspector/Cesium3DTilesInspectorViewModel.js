@@ -14,7 +14,8 @@ define([
     '../../Scene/PerformanceDisplay',
     '../../Core/ScreenSpaceEventHandler',
     '../../Core/ScreenSpaceEventType',
-    '../createCommand'
+    '../createCommand',
+    'ThirdParty/when'
     ], function(
         Cartesian3,
         Cartographic,
@@ -30,7 +31,8 @@ define([
         PerformanceDisplay,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
-        createCommand) {
+        createCommand,
+        when) {
     'use strict';
 
     function createKnockoutBindings(model, options) {
@@ -122,7 +124,6 @@ define([
                 default: true,
                 subscribe: function(val) {
                     if (that._tileset) {
-                        // force an update of stats because the toggle has been enabled
                         that._updateStats(false, true);
                     }
                 }
@@ -137,8 +138,7 @@ define([
             showPickStats: {
                 default: true,
                 subscribe: function(val) {
-                    if (that._tileset && val) {
-                        // force an update of pick stats because the toggle has been enabled
+                    if (that._tileset) {
                         that._updateStats(true, true);
                     }
                 }
@@ -173,7 +173,7 @@ define([
              * @type {Boolean}
              * @default false
              */
-            suspendUpdates: {
+            freezeFrame: {
                 default: false,
                 subscribe: function(val) {
                     if (that._tileset) {
@@ -372,10 +372,10 @@ define([
              * @memberof Cesium3DTilesInspectorViewModel.prototype
              *
              * @type {String}
-             * @default undefined
+             * @default '{}'
              */
             styleString : {
-                default: '',
+                default: '{}',
                 subscribe: function(val) {
                     that._styleString = val;
                     if (defined(that._style)) {
@@ -384,6 +384,9 @@ define([
                                 var old = that._tileset.style;
                                 that._editorError = '';
                                 try {
+                                    if (val.length === 0) {
+                                        val = {};
+                                    }
                                     var style = new Cesium3DTileStyle(JSON.parse(val));
                                     that._tileset.style = style;
                                     that._style = style;
@@ -432,8 +435,8 @@ define([
                         tileset.allTilesLoaded.addEventListener(that._statsLogger);
 
                         tileset.readyPromise.then(function(tileset) {
-                            console.log(tileset);
                             that._properties = tileset.properties;
+                            that._tilesetLoaded.resolve(tileset);
                         });
 
                         // update tileset with existing settings
@@ -442,7 +445,7 @@ define([
                                         'showBoundingVolumes',
                                         'showContentBoundingVolumes',
                                         'showRequestVolumes',
-                                        'suspendUpdates'];
+                                        'freezeFrame'];
                         var length = settings.length;
                         for (var i = 0; i < length; ++i) {
                             knockout.getObservable(that, settings[i]).valueHasMutated();
@@ -498,7 +501,7 @@ define([
                 }
             },
             _styleString: {
-                default: ''
+                default: '{}'
             },
             _editorError: {
                 default: ''
@@ -546,6 +549,7 @@ define([
 
             set: function(tileset) {
                 this._feature = undefined;
+                this._tilesetLoaded = when.defer();
                 this._tileset = tileset;
             }
         },
@@ -657,12 +661,16 @@ define([
                 '<li><strong>Tiles styled: </strong>' + stats.numberOfTilesStyled + '</li>' +
                 '<li><strong>Features styled: </strong>' + stats.numberOfFeaturesStyled + '</li>';
             s += '</ul>';
+
             if (isPick) {
                 this.pickStatsText = s;
             } else {
                 this.statsText = s;
             }
         }
+
+        this.pickStatsText = this.showPickStats ? this.pickStatsText : '';
+        this.statsText = this.showStats ? this.statsText : '';
 
         last.visited = stats.visited;
         last.numberOfCommands = stats.numberOfCommands;
@@ -692,6 +700,13 @@ define([
                 this.styleString = '';
             }
         }
+    };
+
+    /**
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    Cesium3DTilesInspectorViewModel.prototype.isDestroyed = function() {
+        return false;
     };
 
     /**
