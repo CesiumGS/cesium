@@ -201,6 +201,8 @@ define([
         /**
          * The {@link ImagerySplitDirection} to apply to this layer.
          *
+         * @type {ImagerySplitDirection}
+         * @default {@link ImageryLayer.DEFAULT_SPLIT}
          */
         this.splitDirection = defaultValue(options.splitDirection, defaultValue(imageryProvider.defaultSplit, ImageryLayer.DEFAULT_SPLIT));
 

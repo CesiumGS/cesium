@@ -35,7 +35,7 @@ define([
          * @type {Number}
          * @constant
          */
-        RIGHT : 1
+        RIGHT : 1.0
     };
 
     return freezeObject(ImagerySplitDirection);

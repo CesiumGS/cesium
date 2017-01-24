@@ -22,8 +22,8 @@ Change Log
 * Fixed KML for when color is an empty string [#4826](https://github.com/AnalyticalGraphicsInc/cesium/pull/4826)
 * Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
 * Added ability to draw an `ImageryLayer` with a splitter to allow layers to only display to the left or right of a splitter.
-   * `ImageryLayer.split` controls whether splitting is enabled for a layer. Negative values show to the left of the splitter, positive values show to the right of the splitter.  0 displays the imagery normally.
-   *  New `FrameState.splitPosition` property controls the splitter position.  Values are from 0 to 1 relative across the width of the viewport.
+   * `ImageryLayer.splitDirection` controls how the layer is rendered with the splitter.  Values are taken from the new `ImagerySplitPosition` enum.
+   *  New `Scene.imagerySplitPosition` property controls the splitter position.  Values are from 0 to 1 relative across the width of the viewport.
 * The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.
 
 ### 1.29 - 2017-01-02
