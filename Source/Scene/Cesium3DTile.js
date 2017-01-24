@@ -506,6 +506,18 @@ define([
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
     };
 
+    var scratchProjectedBoundingSphere = new BoundingSphere();
+
+    function getBoundingVolume(tile, frameState) {
+        if (frameState.mode !== SceneMode.SCENE3D && !defined(tile._boundingVolume2D)) {
+            var boundingSphere = tile._boundingVolume.boundingSphere;
+            var sphere = BoundingSphere.projectTo2D(boundingSphere, frameState.mapProjection, scratchProjectedBoundingSphere);
+            tile._boundingVolume2D = new TileBoundingSphere(sphere.center, sphere.radius);
+        }
+
+        return frameState.mode !== SceneMode.SCENE3D ? tile._boundingVolume2D : tile._boundingVolume;
+    }
+
     /**
      * Determines whether the tile's bounding volume intersects the culling volume.
      *
@@ -516,13 +528,8 @@ define([
      * @private
      */
     Cesium3DTile.prototype.visibility = function(frameState, parentVisibilityPlaneMask) {
-        if (frameState.mode !== SceneMode.SCENE3D && !defined(this._boundingVolume2D)) {
-            var boundingSphere = this._boundingVolume.boundingSphere;
-            this._boundingVolume2D = BoundingSphere.projectTo2D(boundingSphere);
-        }
-
         var cullingVolume = frameState.cullingVolume;
-        var boundingVolume = frameState.mode !== SceneMode.SCENE3D ? this._boundingVolume2D : this._boundingVolume;
+        var boundingVolume = getBoundingVolume(this, frameState)
         return cullingVolume.computeVisibilityWithPlaneMask(boundingVolume, parentVisibilityPlaneMask);
     };
 
@@ -563,7 +570,8 @@ define([
      * @private
      */
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
-        return this._boundingVolume.distanceToCamera(frameState);
+        var boundingVolume = getBoundingVolume(this, frameState);
+        return boundingVolume.distanceToCamera(frameState);
     };
 
     /**
