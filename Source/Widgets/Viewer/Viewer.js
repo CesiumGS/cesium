@@ -703,7 +703,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndSelectObject, ScreenSpaceEventType.LEFT_CLICK);
-        cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.MIDDLE_CLICK);
+        cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     }
 
     defineProperties(Viewer.prototype, {
@@ -1370,7 +1370,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var i;
 
         this.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
-        this.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.MIDDLE_CLICK);
+        this.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
         // Unsubscribe from data sources
         var dataSources = this.dataSources;

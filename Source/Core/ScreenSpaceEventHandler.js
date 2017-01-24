@@ -687,10 +687,10 @@ define([
     }
 
     function checkForDoubleClick(type) {
-        if (type === ScreenSpaceEventType.LEFT_DOUBLE_CLICK ||
-            type === ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK ||
-            type === ScreenSpaceEventType.RIGHT_DOUBLE_CLICK) {
-            deprecationWarning('Double Click', 'ScreenSpaceEventType.LEFT_DOUBLE_CLICK, ScreenSpaceEventType.MIDDLE_CLICK, and ScreenSpaceEventType.RIGHT_CLICK were deprecated in Cesium 1.30.  They will be removed in 1.31.');
+        if (type === ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK) {
+            deprecationWarning('MIDDLE_DOUBLE_CLICK', 'ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK was deprecated in Cesium 1.30.  It will be removed in 1.31.');
+        } else if (type === ScreenSpaceEventType.RIGHT_DOUBLE_CLICK) {
+            deprecationWarning('RIGHT_DOUBLE_CLICK', 'ScreenSpaceEventType.RIGHT_DOUBLE_CLICK was deprecated in Cesium 1.30.  It will be removed in 1.31.');
         }
     }
 
