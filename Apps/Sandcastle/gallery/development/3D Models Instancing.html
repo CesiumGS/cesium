@@ -137,7 +137,7 @@ function reset() {
             var roll = Math.random();
             var scale = (Math.random() + 1.0)/2.0;
 
-            var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(position, heading, pitch, roll);
+            var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(position, new Cesium.HeadingPitchRoll(heading, pitch, roll));
             Cesium.Matrix4.multiplyByUniformScale(modelMatrix, scale, modelMatrix);
 
             instances.push({

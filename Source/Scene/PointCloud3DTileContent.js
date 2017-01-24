@@ -699,7 +699,8 @@ define([
             pickUniformMap = batchTable.getPickUniformMapCallback()(uniformMap);
         } else {
             content._pickId = context.createPickId({
-                primitive : content
+                primitive : content._tileset,
+                content : content
             });
 
             pickUniformMap = combine(uniformMap, {
@@ -1108,6 +1109,19 @@ define([
             fragmentShaderSource : pickFS,
             attributeLocations : attributeLocations
         });
+
+        try {
+            // Check if the shader compiles correctly. If not there is likely a syntax error with the style.
+            drawCommand.shaderProgram._bind();
+        } catch (error) {
+            //>>includeStart('debug', pragmas.debug);
+            // Turn the RuntimeError into a DeveloperError and rephrase it.
+            throw new DeveloperError('Error generating style shader: this may be caused by a type mismatch, index out-of-bounds, or other syntax error.');
+            //>>includeEnd('debug');
+
+            // In release silently ignore and recreate the shader without a style. Tell jsHint to ignore this line.
+            createShaders(content, frameState, undefined);  // jshint ignore:line
+        }
     }
 
     /**

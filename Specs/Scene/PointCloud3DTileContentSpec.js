@@ -268,7 +268,8 @@ defineSuite([
             tileset.show = true;
             picked = scene.pickForSpecs();
             expect(picked).toBeDefined();
-            expect(picked.primitive).toBe(content);
+            expect(picked.primitive).toBe(tileset);
+            expect(picked.content).toBe(content);
         });
     });
 
@@ -548,6 +549,17 @@ defineSuite([
 
             // Point cloud is styled through the batch table
             expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        });
+    });
+
+    it('throws when shader style is invalid', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(function() {
+                content.applyStyleWithShader(scene.frameState, new Cesium3DTileStyle({
+                    show : '1 < "2"'
+                }));
+            }).toThrowDeveloperError();
         });
     });
 
