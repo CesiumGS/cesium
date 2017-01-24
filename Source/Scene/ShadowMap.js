@@ -379,7 +379,7 @@ define([
         },
 
         /**
-         * Amount to offset shadows by along the normal. Addresses shadow acne problems.
+         * Determines if a normal bias will be applied to shadows.
          *
          * @memberof ShadowMap.prototype
          * @type {Boolean}
