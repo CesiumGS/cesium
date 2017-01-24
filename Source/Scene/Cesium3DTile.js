@@ -529,7 +529,7 @@ define([
      */
     Cesium3DTile.prototype.visibility = function(frameState, parentVisibilityPlaneMask) {
         var cullingVolume = frameState.cullingVolume;
-        var boundingVolume = getBoundingVolume(this, frameState)
+        var boundingVolume = getBoundingVolume(this, frameState);
         return cullingVolume.computeVisibilityWithPlaneMask(boundingVolume, parentVisibilityPlaneMask);
     };
 
