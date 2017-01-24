@@ -219,11 +219,15 @@ input[type=range]:focus {
     background: transparent;
     color: #edffff;
     border: none;
-    padding: 0px;
+    padding: 0;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: scroll;
 }
 
 .cesium-3DTilesInspector {
     width: 300px;
+    pointer-events: all;
 }
 
 .cesium-3DTilesInspector div, .cesium-3DTilesInspector input[type=range] {
@@ -232,5 +236,40 @@ input[type=range]:focus {
 }
 
 .cesium-cesiumInspector-error {
-    color: red;
+    color: #ff9e9e;
+}
+
+.cesium-3DTilesInspector .cesium-cesiumInspector-section {
+    padding-left: 20px;
+    margin-top: 3px;
+}
+
+.cesium-3DTilesInspector .cesium-cesiumInspector-sectionHeader + .cesium-cesiumInspector-show {
+    border-top: 1px solid white;
+}
+
+input.cesium-cesiumInspector-url {
+    overflow: hidden;
+    white-space: nowrap;
+    overflow-x: scroll;
+    background-color: transparent;
+    color: white;
+    outline: none;
+    border: none;
+    height: 1em;
+    width: 100%;
+}
+
+.cesium-cesiumInspector .field-group {
+    display: table;
+}
+
+.cesium-cesiumInspector .field-group > label {
+    display: table-cell;
+    font-weight: bold;
+}
+
+.cesium-cesiumInspector .field-group > .field {
+    display: table-cell;
+    width: 100%;
 }

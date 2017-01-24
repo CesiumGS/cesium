@@ -97,12 +97,27 @@ define([
 
         // build and bind each panel separately
         var tilesetURL = document.createElement('div');
-        tilesetURL.setAttribute('data-bind', 'html: tilesetURL');
-        tilesetURL.setAttribute('style', 'word-break: break-all;');
+        tilesetURL.className = 'field-group';
+        var urlLabel = document.createElement('label');
+        urlLabel.className = 'field-label';
+        urlLabel.appendChild(document.createTextNode('URL: '));
+        tilesetURL.appendChild(urlLabel);
+        var url = document.createElement('input');
+        url.className = 'cesium-cesiumInspector-url field';
+        url.setAttribute('data-bind', 'value: (tilesetURL)');
+        tilesetURL.appendChild(url);
         tilesetPanel.contents.appendChild(tilesetURL);
-        var propertiesText = document.createElement('div');
-        propertiesText.setAttribute('data-bind', 'html: propertiesText');
-        tilesetPanel.contents.appendChild(propertiesText);
+
+        var properties = document.createElement('div');
+        properties.classNAme = 'field-group';
+        var propertiesLabel = document.createElement('label');
+        propertiesLabel.className = 'field-label';
+        propertiesLabel.appendChild(document.createTextNode('Properties: '));
+        var propertiesField = document.createElement('div');
+        properties.setAttribute('data-bind', 'text: propertiesText');
+        properties.appendChild(propertiesLabel);
+        properties.appendChild(propertiesField);
+        tilesetPanel.contents.appendChild(properties);
         tilesetPanel.contents.appendChild(makeButton('_togglePickTileset', 'Pick Tileset', '_pickActive'));
         tilesetPanel.contents.appendChild(makeButton('trimTilesCache', 'Trim Tiles Cache'));
         tilesetPanel.contents.appendChild(makeCheckbox('picking', 'Enable Picking'));
@@ -120,7 +135,7 @@ define([
         updatePanel.contents.appendChild(makeCheckbox('freezeFrame', 'Freeze Frame'));
         updatePanel.contents.appendChild(makeCheckbox('dynamicSSE', 'Dynamic SSE'));
         var sseContainer = document.createElement('div');
-        sseContainer.appendChild(makeRangeInput('maximumSSE', 0, 128, 0.5, 'Maximum SSE'));
+        sseContainer.appendChild(makeRangeInput('maximumSSE', 0, 128, 1, 'Maximum SSE'));
         updatePanel.contents.appendChild(sseContainer);
 
         var dynamicSSEContainer = document.createElement('div');
@@ -155,6 +170,7 @@ define([
 
 
         var styleEditor = document.createElement('textarea');
+        styleEditor.setAttribute('wrap', 'soft');
         styleEditor.setAttribute('data-bind', 'valueUpdate: "keyup", value: _styleString, event: { keypress: _checkCompile }');
         stylePanel.contents.className = 'cesium-cesiumInspector-styleEditor';
         stylePanel.contents.appendChild(styleEditor);

@@ -519,9 +519,9 @@ define([
 
         this.tilesetURL = knockout.pureComputed(function() {
             if (!defined(that._tileset)) {
-                return '<strong>URL: </strong>None';
+                return 'None';
             }
-            return '<strong>URL: </strong>' + that._tileset.url;
+            return that._tileset.url;
         });
 
         this.propertiesText = knockout.pureComputed(function() {
@@ -531,7 +531,7 @@ define([
                     names.push(prop);
                 }
             }
-            return '<strong>Properties: </strong>' + names.join(', ');
+            return names.join(', ');
         });
     }
 
@@ -645,22 +645,24 @@ define([
                 '<li><strong>Commands: </strong>' + stats.numberOfCommands + '</li>';
             s += '</ul>';
             s += '<ul class="cesium-cesiumInspector-stats">';
-            s +=
-                // --- Cache/loading stats
-                '<li><strong>Requests: </strong>' + stats.numberOfPendingRequests + '</li>' +
-                '<li><strong>Attempted: </strong>' + stats.numberOfAttemptedRequests + '</li>' +
-                '<li><strong>Processing: </strong>' + stats.numberProcessing + '</li>' +
-                '<li><strong>Content Ready: </strong>' + stats.numberContentReady + '</li>' +
-                // Total number of tiles includes tiles without content, so "Ready" may never reach
-                // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
-                '<li><strong>Total: </strong>' + stats.numberTotal + '</li>';
-            s += '</ul>';
-            s += '<ul class="cesium-cesiumInspector-stats">';
-            s +=
-                // --- Styling stats
-                '<li><strong>Tiles styled: </strong>' + stats.numberOfTilesStyled + '</li>' +
-                '<li><strong>Features styled: </strong>' + stats.numberOfFeaturesStyled + '</li>';
-            s += '</ul>';
+            if (!isPick) {
+                s +=
+                    // --- Cache/loading stats
+                    '<li><strong>Requests: </strong>' + stats.numberOfPendingRequests + '</li>' +
+                    '<li><strong>Attempted: </strong>' + stats.numberOfAttemptedRequests + '</li>' +
+                    '<li><strong>Processing: </strong>' + stats.numberProcessing + '</li>' +
+                    '<li><strong>Content Ready: </strong>' + stats.numberContentReady + '</li>' +
+                    // Total number of tiles includes tiles without content, so "Ready" may never reach
+                    // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
+                    '<li><strong>Total: </strong>' + stats.numberTotal + '</li>';
+                s += '</ul>';
+                s += '<ul class="cesium-cesiumInspector-stats">';
+                s +=
+                    // --- Styling stats
+                    '<li><strong>Tiles styled: </strong>' + stats.numberOfTilesStyled + '</li>' +
+                    '<li><strong>Features styled: </strong>' + stats.numberOfFeaturesStyled + '</li>';
+                s += '</ul>';
+            }
 
             if (isPick) {
                 this.pickStatsText = s;

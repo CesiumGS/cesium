@@ -29,7 +29,7 @@ define([
         //>>includeEnd('debug');
 
         var container = document.createElement('div');
-        container.className = 'cesium-viewer-cesiumInspectorContainer';
+        container.className = 'cesium-viewer-cesium3DTilesInspectorContainer';
         viewer.container.appendChild(container);
         var cesium3DTilesInspector = new Cesium3DTilesInspector(container, viewer.scene);
 
