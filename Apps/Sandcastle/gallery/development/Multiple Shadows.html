@@ -64,7 +64,7 @@
             camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
             var shadowMap = new Cesium.ShadowMap({
-                context : scene.context,
+                scene : scene,
                 lightCamera : pointLightCamera,
                 isPointLight : true,
                 softShadows : false

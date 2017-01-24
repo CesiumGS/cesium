@@ -563,7 +563,7 @@ define([
          * @type {ShadowMap}
          */
         this.shadowMap = new ShadowMap({
-            context : context,
+            scene : this,
             lightCamera : this._sunCamera,
             enabled : defaultValue(options.shadows, false)
         });

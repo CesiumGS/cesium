@@ -275,7 +275,7 @@ defineSuite([
         lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 1.0));
 
         scene.shadowMap = new ShadowMap({
-            context : scene.context,
+            scene : scene,
             lightCamera : lightCamera
         });
     }
@@ -289,7 +289,7 @@ defineSuite([
         lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 1.0));
 
         scene.shadowMap = new ShadowMap({
-            context : scene.context,
+            scene : scene,
             lightCamera : lightCamera,
             numberOfCascades : 1
         });
@@ -313,7 +313,7 @@ defineSuite([
         lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 20.0));
 
         scene.shadowMap = new ShadowMap({
-            context : scene.context,
+            scene : scene,
             lightCamera : lightCamera,
             cascadesEnabled : false
         });
@@ -331,7 +331,7 @@ defineSuite([
         lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 20.0));
 
         scene.shadowMap = new ShadowMap({
-            context : scene.context,
+            scene : scene,
             lightCamera : lightCamera,
             cascadesEnabled : false
         });
@@ -345,7 +345,7 @@ defineSuite([
         lightCamera.position = center;
 
         scene.shadowMap = new ShadowMap({
-            context : scene.context,
+            scene : scene,
             lightCamera : lightCamera,
             isPointLight : true
         });
@@ -390,7 +390,7 @@ defineSuite([
 
     it('sets default shadow map properties', function() {
         scene.shadowMap = new ShadowMap({
-            context : scene.context,
+            scene : scene,
             lightCamera : new Camera(scene)
         });
 
@@ -413,7 +413,7 @@ defineSuite([
     it('throws without options.lightCamera', function() {
         expect(function() {
             scene.shadowMap = new ShadowMap({
-                context : scene.context
+                scene : scene
             });
         }).toThrowDeveloperError();
     });
@@ -421,7 +421,7 @@ defineSuite([
     it('throws when options.numberOfCascades is not one or four', function() {
         expect(function() {
             scene.shadowMap = new ShadowMap({
-                context : scene.context,
+                scene : scene,
                 lightCamera : new Camera(scene),
                 numberOfCascades : 3
             });
@@ -511,7 +511,7 @@ defineSuite([
         lightCamera.lookAt(center, new Cartesian3(1.0, 0.0, 0.1));
 
         scene.shadowMap = new ShadowMap({
-            context : scene.context,
+            scene : scene,
             lightCamera : lightCamera
         });
 
@@ -564,7 +564,7 @@ defineSuite([
         lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 1.0));
 
         scene.shadowMap = new ShadowMap({
-            context : scene.context,
+            scene : scene,
             lightCamera : lightCamera
         });
 
@@ -848,7 +848,7 @@ defineSuite([
         lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 1.0));
 
         scene.shadowMap = new ShadowMap({
-            context : scene.context,
+            scene : scene,
             lightCamera : lightCamera
         });
 

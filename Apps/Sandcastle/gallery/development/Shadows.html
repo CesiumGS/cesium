@@ -410,30 +410,30 @@ function updateShadows() {
 
     if (lightSource === 'Fixed') {
         shadowOptions = {
-            context : context,
+            scene : scene,
             lightCamera : fixedLightCamera,
             cascadesEnabled : false
         };
     } else if (lightSource === 'Point') {
         shadowOptions = {
-            context : context,
+            scene : scene,
             lightCamera : pointLightCamera,
             isPointLight : true
         };
     } else if (lightSource === 'Spot') {
         shadowOptions = {
-            context : context,
+            scene : scene,
             lightCamera : spotLightCamera,
             cascadesEnabled : false
         };
     } else if (cascades === 4) {
         shadowOptions = {
-            context : context,
+            scene : scene,
             lightCamera : lightCamera
         };
     } else if (cascades === 1) {
         shadowOptions = {
-            context : context,
+            scene : scene,
             lightCamera : lightCamera,
             numberOfCascades : 1
         };

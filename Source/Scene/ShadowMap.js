@@ -107,6 +107,9 @@ define([
 
     /**
      * Creates a shadow map from the provided light camera.
+     * <p>
+     *     Use {@link Viewer#shadowMap}
+     * </p>
      *
      * The normalOffset bias pushes the shadows forward slightly, and may be disabled
      * for applications that require ultra precise shadows.
@@ -121,11 +124,11 @@ define([
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var context = options.context;
+        var scene = options.scene;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(context)) {
-            throw new DeveloperError('context is required.');
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
         }
         if (!defined(options.lightCamera)) {
             throw new DeveloperError('lightCamera is required.');
@@ -137,6 +140,8 @@ define([
 
         this._enabled = defaultValue(options.enabled, true);
         this._softShadows = defaultValue(options.softShadows, false);
+        this._normalOffset = defaultValue(options.normalOffset, true);
+        this._normalOffsetScale = defaultValue(options.normalOffsetScale, 0.1);
         this.dirty = true;
 
         /**
@@ -171,6 +176,7 @@ define([
         // In IE11 and Edge polygon offset is not functional.
         // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
         // Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
+        var context = scene._context;
         var polygonOffsetSupported = true;
         if (FeatureDetection.isInternetExplorer() || FeatureDetection.isEdge() || ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) && FeatureDetection.isWindows() && !context.depthTexture)) {
             polygonOffsetSupported = false;
@@ -181,8 +187,8 @@ define([
             polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : true,
-            normalOffsetScale : 0.5,
+            normalOffset : this._normalOffset,
+            normalOffsetScale : this._normalOffsetScale,
             normalShading : true,
             normalShadingSmooth : 0.3,
             depthBias : 0.0001
@@ -192,8 +198,8 @@ define([
             polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : true,
-            normalOffsetScale : 0.1,
+            normalOffset : this._normalOffset,
+            normalOffsetScale : this._normalOffsetScale,
             normalShading : true,
             normalShadingSmooth : 0.05,
             depthBias : 0.00002
@@ -203,8 +209,8 @@ define([
             polygonOffset : false,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : false,
-            normalOffsetScale : 0.0,
+            normalOffset : this._normalOffset,
+            normalOffsetScale : this._normalOffsetScale,
             normalShading : true,
             normalShadingSmooth : 0.1,
             depthBias : 0.0005
@@ -369,6 +375,40 @@ define([
             set : function(value) {
                 this.dirty = this._enabled !== value;
                 this._enabled = value;
+            }
+        },
+
+        /**
+         * Amount to offset shadows by along the normal. Addresses shadow acne problems.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        normalOffset : {
+            get : function() {
+                return this._normalOffset;
+            },
+            set : function(value) {
+                this.dirty = this._normalOffset !== value;
+                this._normalOffset = value;
+            }
+        },
+
+        /**
+         * Amount to offset shadows by along the normal. Addresses shadow acne problems.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Number}
+         * @default 0.1
+         */
+        normalOffsetScale : {
+            get : function() {
+                return this._normalOffsetScale;
+            },
+            set : function(value) {
+                this.dirty = this._normalOffsetScale !== value;
+                this._normalOffsetScale = value;
             }
         },
 
