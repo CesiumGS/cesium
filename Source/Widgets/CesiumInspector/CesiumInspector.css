@@ -144,7 +144,7 @@ ul.cesium-cesiumInspector-stats + ul.cesium-cesiumInspector-stats {
     outline: none;
     border: 1px solid #444;
     color: #edffff;
-    width: 45px;
+    width: 100px;
     border-radius: 3px;
     padding: 1px;
     margin-left: 10px;

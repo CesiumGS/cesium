@@ -140,7 +140,7 @@ define([
 
         var dynamicSSEContainer = document.createElement('div');
         dynamicSSEContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : dynamicSSE, "cesium-cesiumInspector-hide" : !dynamicSSE}');
-        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEDensity', 0, 1, 0.01, 'SSE Density'));
+        dynamicSSEContainer.appendChild(makeExponentialRangeInput('dynamicSSEDensity', 0, 1, 200, 10, 'SSE Density'));
         dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEFactor', 0, 10, 0.1, 'SSE Factor'));
         updatePanel.contents.appendChild(dynamicSSEContainer);
         knockout.applyBindings(viewModel, updatePanel.contents);
@@ -318,6 +318,37 @@ define([
         slider.max = max;
         slider.step = step;
         slider.setAttribute('data-bind', 'valueUpdate: "input", value: ' + property);
+
+        container.appendChild(document.createTextNode(text));
+        container.appendChild(input);
+        var wrapper = document.createElement('div');
+
+        wrapper.appendChild(slider);
+        container.appendChild(wrapper);
+
+        return container;
+    }
+
+    function makeExponentialRangeInput(property, min, max, steps, exponent, text) {
+        var container = document.createElement('div');
+        container.className = 'cesium-cesiumInspector-slider';
+        var input = document.createElement('input');
+        input.setAttribute('data-bind', 'value: ' + property);
+        input.type = 'number';
+
+        var slider = document.createElement('input');
+        slider.type = 'range';
+        slider.min = min;
+        slider.max = max;
+        slider.step = (max - min) / steps;
+
+        slider.oninput = function() {
+            input.value = Math.pow(this.value, exponent);
+        };
+
+        input.onchange = function() {
+            slider.value = Math.pow(this.value, 1 / exponent);
+        };
 
         container.appendChild(document.createTextNode(text));
         container.appendChild(input);
