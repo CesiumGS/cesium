@@ -1383,35 +1383,63 @@ define([
     };
 
     Node.prototype._evaluateRegExpTest = function(frameState, feature) {
-        return this._left.evaluate(frameState, feature).test(this._right.evaluate(frameState, feature));
+        var left = this._left.evaluate(frameState, feature);
+        var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!((left instanceof RegExp) && (typeof right === 'string'))) {
+            throw new DeveloperError('RegExp.test requires the first argument to be a RegExp and the second argument to be a string. Arguments are ' + left + ' and ' + right + '.');
+        }
+        //>>includeEnd('debug');
+
+        return left.test(right);
     };
 
     Node.prototype._evaluateRegExpMatch = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
-        if (left instanceof RegExp) {
+
+        if ((left instanceof RegExp) && (typeof right === 'string')) {
             return left.test(right);
-        } else if (right instanceof RegExp) {
+        } else if ((right instanceof RegExp) && (typeof left === 'string')) {
             return right.test(left);
-        } else {
-            return false;
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "=~" requires one RegExp argument and one string argument. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return false; // jshint ignore:line
     };
 
     Node.prototype._evaluateRegExpNotMatch = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
-        if (left instanceof RegExp) {
+
+        if ((left instanceof RegExp) && (typeof right === 'string')) {
             return !(left.test(right));
-        } else if (right instanceof RegExp) {
+        } else if ((right instanceof RegExp) && (typeof left === 'string')) {
             return !(right.test(left));
-        } else {
-            return false;
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "!~" requires one RegExp argument and one string argument. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return false; // jshint ignore:line
     };
 
     Node.prototype._evaluateRegExpExec = function(frameState, feature) {
-        var exec = this._left.evaluate(frameState, feature).exec(this._right.evaluate(frameState, feature));
+        var left = this._left.evaluate(frameState, feature);
+        var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!((left instanceof RegExp) && (typeof right === 'string'))) {
+            throw new DeveloperError('RegExp.exec requires the first argument to be a RegExp and the second argument to be a string. Arguments are ' + left + ' and ' + right + '.');
+        }
+        //>>includeEnd('debug');
+
+        var exec = left.exec(right);
         if (!defined(exec)) {
             return null;
         }

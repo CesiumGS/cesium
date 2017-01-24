@@ -2443,6 +2443,18 @@ defineSuite([
         expect(expression.evaluate(frameState, feature)).toEqual(true);
     });
 
+    it('throws if regex test function has invalid arguments', function() {
+        var expression = new Expression('regExp("1").test(1)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('regExp("a").test(regExp("b"))');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates regex exec function', function() {
         var feature = new MockFeature();
         feature.addProperty('property', 'abc');
@@ -2467,6 +2479,18 @@ defineSuite([
         expect(expression.evaluate(frameState, feature)).toEqual('1');
     });
 
+    it('throws if regex exec function has invalid arguments', function() {
+        var expression = new Expression('regExp("1").exec(1)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('regExp("a").exec(regExp("b"))');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates regex match operator', function() {
         var feature = new MockFeature();
         feature.addProperty('property', 'abc');
@@ -2486,17 +2510,28 @@ defineSuite([
         expression = new Expression('regExp("quick\\s(brown).+?(jumps)", "ig") =~ "The Quick Brown Fox Jumps Over The Lazy Dog"');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
 
-        expression = new Expression('regExp("a") =~ 1');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
-        expression = new Expression('1 =~ regExp("a")');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
-        expression = new Expression('1 =~ 1');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
         expression = new Expression('regExp(${property}) =~ ${property}');
         expect(expression.evaluate(frameState, feature)).toEqual(true);
+    });
+
+    it('throws if regex match operator has invalid arguments', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
+        var expression = new Expression('regExp("a") =~ 1');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1 =~ regExp("a")');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1 =~ 1');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates regex not match operator', function() {
@@ -2518,17 +2553,25 @@ defineSuite([
         expression = new Expression('regExp("quick\\s(brown).+?(jumps)", "ig") !~ "The Quick Brown Fox Jumps Over The Lazy Dog"');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
 
-        expression = new Expression('regExp("a") !~ 1');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('1 !~ regExp("a")');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('1 !~ 1');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
         expression = new Expression('regExp(${property}) !~ ${property}');
         expect(expression.evaluate(frameState, feature)).toEqual(false);
+    });
+
+    it('throws if regex not match operator has invalid arguments', function() {
+        var expression = new Expression('regExp("a") !~ 1');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1 !~ regExp("a")');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1 !~ 1');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('throws if test is not called with a RegExp', function() {
