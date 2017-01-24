@@ -23,15 +23,13 @@
    * Yes
       * Clone the cesium repo, e.g., `git clone git@github.com:AnalyticalGraphicsInc/cesium.git`
       * Make changes in a branch, e.g., `git checkout -b my-feature`.
-* For more about our workflow, see [github pull request workflows](http://cesiumjs.org/2013/10/08/GitHub-Pull-Request-Workflows/).
-
 
 ## Build the Code
 
 Prerequisites:
  * Install [Node.js](http://nodejs.org/) on your system.  Building Cesium requires Node 4.x or newer.
 
-Cesium uses [npm modules](https://docs.npmjs.com/getting-started/creating-node-modules) for development, so after syncing, you need to run `npm install` from the Cesium root directory:
+Cesium uses [npm modules](https://docs.npmjs.com/getting-started/what-is-npm) for development, so after syncing, you need to run `npm install` from the Cesium root directory:
 
 ```
 npm install
@@ -52,19 +50,19 @@ npm start
 Then browse to [http://localhost:8080/](http://localhost:8080/). You should see the following:
 
 * **Apps**
-   * **Cesium Viewer** : our core 3D globe viewer with some basic features included
-   * **Hello World** : basic app to [get you started](http://cesiumjs.org/tutorials/cesium-up-and-running/)
-   * **Sandcastle** : live coding app for viewing and modifying source code from [many examples](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Hello%20World.html&label=Showcases)
-   * **Cesium Inspector** : Cesium Viewer with extra view options to expose underlying technical details
-   * **Timeline Demo** : demo of the Cesium Timeline widget, for use with time-dynamic data
+   * **Cesium Viewer** : a sample application using asynchronous module definitions (AMD) to create a Cesium 3D globe viewer with some extra features
+   * **Hello World** : an example using the combined and minified Cesium library to create a 3D globe. [Tutorial here](http://cesiumjs.org/tutorials/cesium-up-and-running/)
+   * **Sandcastle** : an app for viewing and creating [code examples](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Hello%20World.html&label=Showcases), complete with a live preview
+   * **Cesium Inspector** : an example for using the Cesium Inspector widget to enable debugging features to better understand technical details of the scene
+   * **Timeline Demo** : demo of the Cesium Timeline widget
 * **Test Suites**
 * **Documentation**
 
 These apps have slightly different build processes. The basics:
 
 * `npm run build` will build Cesium Viewer, Sandcastle, Cesium Inspector and Timeline Demo from source. 
-* `npm run combine release` will build Hello World, which uses a built version of Cesium.
-* `npm run generateDocumentation` will [build the docs](https://github.com/rahwang/cesium/tree/master/Documentation/Contributors/DocumentationGuide).
+* `npm run minifyRelease` will build Hello World, which uses a built version of Cesium.
+* `npm run generateDocumentation` will build the [documentation](http://cesiumjs.org/refdoc.html).
 
 Read the complete list of build scripts below for more details.
 
@@ -97,7 +95,7 @@ npm run [target-name]
 
 Here's the full set of scripts and what they do.
 
-   * **Build scripts** -- rebuild various Cesium apps (and documentation)
+   * **Build scripts** -- build and package the source code (and documentation)
       * `build` - A fast, developer-oriented build that prepares the source tree for use as standard [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD) modules, suitable for running tests and most examples (some Sandcastle examples require running `combine`).  This runs automatically when saving files in Eclipse.
       * `build-watch` - A never-ending task that watches your file system for changes to Cesium and runs `build` on the source code as needed. 
       * `combine` - Runs `build`, plus the [the RequireJS optimizer](http://requirejs.org/docs/optimization.html) to combine Cesium and [the Almond AMD loader](http://requirejs.org/docs/faq-optimization.html#wrap) to produce all-in-one files in the `Build/Cesium` directory that expose the entire Cesium API attached to a single global Cesium object.  This version is useful if you don't want to use the modules directly with a standard AMD loader.
@@ -130,7 +128,7 @@ Here's the full set of scripts and what they do.
 
 ## Travis and Continuous Integration
 
-Cesium uses [Travis](https://travis-ci.org/) for continuous integration, building and testing pull requests automatically. The Travis configuration and all the steps of the build process are defined in `travis.yml`. The blog post [Cesium Continuous Integration](http://cesiumjs.org/2016/04/07/Cesium-Continuous-Integration/) contains an in-depth explaination of the travis build process.
+Cesium uses [Travis](https://travis-ci.org/) for continuous integration. The Travis configuration and all the steps of the build process are defined in `travis.yml`. The blog post [Cesium Continuous Integration](http://cesiumjs.org/2016/04/07/Cesium-Continuous-Integration/) contains an in-depth explaination of the travis build process.
 
 Travis triggers a build whenever someone opens a pull request or pushes code to the Cesium repository. After the build has completed, at the bottom on the pull request, the status of the build is shown and you can access the build by clicking the "Details" link.
 
@@ -144,7 +142,7 @@ Additional set up is required for deployment if you do not have commit access to
 
 ### Configure a Different S3 Bucket
 
-It is possible to configure your `travis.yml` and `gulpfile.js` to deploy to a different S3 Bucket ([an Amazon Webservices storage unit](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html)), which will allow you to use our build and testing infrastructure even if you don't have Cesium access. If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
+It is possible to configure your `travis.yml` and `gulpfile.js` to deploy to a different S3 Bucket ([an Amazon Webservices storage unit](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html)), which will allow you to use our build and testing infrastructure even if you don't have Cesium commit access. If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
 
 * In `travis.yml`, edit the following line:
 
