@@ -148,7 +148,7 @@ define([
      */
     function Expression(expression) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof(expression) !== 'string') {
+        if (typeof expression !== 'string') {
             throw new DeveloperError('expression must be a string.');
         }
         //>>includeEnd('debug');
@@ -324,7 +324,7 @@ define([
     }
 
     function parseLiteral(ast) {
-        var type = typeof(ast.value);
+        var type = typeof ast.value;
         if (ast.value === null) {
             return new Node(ExpressionNodeType.LITERAL_NULL, null);
         } else if (type === 'boolean') {
@@ -777,7 +777,7 @@ define([
         var evaluate = unaryFunctions[call];
         return function(feature) {
             var left = this._left.evaluate(feature);
-            if (typeof(left) === 'number') {
+            if (typeof left === 'number') {
                 return evaluate(left);
             } else if (left instanceof Cartesian2) {
                 return Cartesian2.fromElements(evaluate(left.x), evaluate(left.y), ScratchStorage.getCartesian2());
@@ -874,7 +874,7 @@ define([
         var argsLength = args.length;
         for (var i = 0; i < argsLength; ++i) {
             var value = args[i].evaluate(frameState, feature);
-            if (typeof(value) === 'number') {
+            if (typeof value === 'number') {
                 components.push(value);
             } else if (value instanceof Cartesian2) {
                 components.push(value.x, value.y);
@@ -1013,7 +1013,7 @@ define([
     Node.prototype._evaluateNot = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'boolean') {
+        if (typeof left !== 'boolean') {
             throw new DeveloperError('Operator "!" requires a boolean argument. Argument is ' + left + '.');
         }
         //>>includeEnd('debug');
@@ -1028,7 +1028,7 @@ define([
             return Cartesian3.negate(left, ScratchStorage.getCartesian3());
         } else if (left instanceof Cartesian4) {
             return Cartesian4.negate(left, ScratchStorage.getCartesian4());
-        } else if (typeof(left) === 'number') {
+        } else if (typeof left === 'number') {
             return -left;
         }
 
@@ -1042,7 +1042,7 @@ define([
         var left = this._left.evaluate(frameState, feature);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!((left instanceof Cartesian2) || (left instanceof Cartesian3) || (left instanceof Cartesian4) || (typeof(left) === 'number'))) {
+        if (!((left instanceof Cartesian2) || (left instanceof Cartesian3) || (left instanceof Cartesian4) || (typeof left === 'number'))) {
             throw new DeveloperError('Operator "+" requires a vector or number argument. Argument is ' + left + '.');
         }
         //>>includeEnd('debug');
@@ -1055,7 +1055,7 @@ define([
         var right = this._right.evaluate(frameState, feature);
 
         //>>includeStart('debug', pragmas.debug);
-        if ((typeof(left) !== 'number') || (typeof(right) !== 'number')) {
+        if ((typeof left !== 'number') || (typeof right !== 'number')) {
             throw new DeveloperError('Operator "<" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
         }
         //>>includeEnd('debug');
@@ -1068,7 +1068,7 @@ define([
         var right = this._right.evaluate(frameState, feature);
 
         //>>includeStart('debug', pragmas.debug);
-        if ((typeof(left) !== 'number') || (typeof(right) !== 'number')) {
+        if ((typeof left !== 'number') || (typeof right !== 'number')) {
             throw new DeveloperError('Operator "<=" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
         }
         //>>includeEnd('debug');
@@ -1081,7 +1081,7 @@ define([
         var right = this._right.evaluate(frameState, feature);
 
         //>>includeStart('debug', pragmas.debug);
-        if ((typeof(left) !== 'number') || (typeof(right) !== 'number')) {
+        if ((typeof left !== 'number') || (typeof right !== 'number')) {
             throw new DeveloperError('Operator ">" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
         }
         //>>includeEnd('debug');
@@ -1094,7 +1094,7 @@ define([
         var right = this._right.evaluate(frameState, feature);
 
         //>>includeStart('debug', pragmas.debug);
-        if ((typeof(left) !== 'number') || (typeof(right) !== 'number')) {
+        if ((typeof left !== 'number') || (typeof right !== 'number')) {
             throw new DeveloperError('Operator ">=" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
         }
         //>>includeEnd('debug');
@@ -1105,7 +1105,7 @@ define([
     Node.prototype._evaluateOr = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'boolean') {
+        if (typeof left !== 'boolean') {
             throw new DeveloperError('Operator "||" requires boolean arguments. First argument is ' + left + '.');
         }
         //>>includeEnd('debug');
@@ -1117,7 +1117,7 @@ define([
 
         var right = this._right.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
-        if (typeof(right) !== 'boolean') {
+        if (typeof right !== 'boolean') {
             throw new DeveloperError('Operator "||" requires boolean arguments. Second argument is ' + right + '.');
         }
         //>>includeEnd('debug');
@@ -1127,7 +1127,7 @@ define([
     Node.prototype._evaluateAnd = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'boolean') {
+        if (typeof left !== 'boolean') {
             throw new DeveloperError('Operator "&&" requires boolean arguments. First argument is ' + left + '.');
         }
         //>>includeEnd('debug');
@@ -1139,7 +1139,7 @@ define([
 
         var right = this._right.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
-        if (typeof(right) !== 'boolean') {
+        if (typeof right !== 'boolean') {
             throw new DeveloperError('Operator "&&" requires boolean arguments. Second argument is ' + right + '.');
         }
         //>>includeEnd('debug');
@@ -1155,10 +1155,10 @@ define([
             return Cartesian3.add(left, right, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.add(left, right, ScratchStorage.getCartesian4());
-        } else if ((typeof(left) === 'string') || (typeof(right) === 'string')) {
+        } else if ((typeof left === 'string') || (typeof right === 'string')) {
             // If only one argument is a string the other argument calls its toString function.
             return left + right;
-        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+        } else if ((typeof left === 'number') && (typeof right === 'number')) {
             return left + right;
         }
 
@@ -1178,7 +1178,7 @@ define([
             return Cartesian3.subtract(left, right, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.subtract(left, right, ScratchStorage.getCartesian4());
-        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+        } else if ((typeof left === 'number') && (typeof right === 'number')) {
             return left - right;
         }
 
@@ -1194,23 +1194,23 @@ define([
         var right = this._right.evaluate(frameState, feature);
         if ((right instanceof Cartesian2) && (left instanceof Cartesian2)) {
             return Cartesian2.multiplyComponents(left, right, ScratchStorage.getCartesian2());
-        } else if ((right instanceof Cartesian2) && (typeof(left) === 'number')) {
+        } else if ((right instanceof Cartesian2) && (typeof left === 'number')) {
             return Cartesian2.multiplyByScalar(right, left, ScratchStorage.getCartesian2());
-        } else if ((left instanceof Cartesian2) && (typeof(right) === 'number')) {
+        } else if ((left instanceof Cartesian2) && (typeof right === 'number')) {
             return Cartesian2.multiplyByScalar(left, right, ScratchStorage.getCartesian2());
         } else if ((right instanceof Cartesian3) && (left instanceof Cartesian3)) {
             return Cartesian3.multiplyComponents(left, right, ScratchStorage.getCartesian3());
-        } else if ((right instanceof Cartesian3) && (typeof(left) === 'number')) {
+        } else if ((right instanceof Cartesian3) && (typeof left === 'number')) {
             return Cartesian3.multiplyByScalar(right, left, ScratchStorage.getCartesian3());
-        } else if ((left instanceof Cartesian3) && (typeof(right) === 'number')) {
+        } else if ((left instanceof Cartesian3) && (typeof right === 'number')) {
             return Cartesian3.multiplyByScalar(left, right, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.multiplyComponents(left, right, ScratchStorage.getCartesian4());
-        } else if ((right instanceof Cartesian4) && (typeof(left) === 'number')) {
+        } else if ((right instanceof Cartesian4) && (typeof left === 'number')) {
             return Cartesian4.multiplyByScalar(right, left, ScratchStorage.getCartesian4());
-        } else if ((left instanceof Cartesian4) && (typeof(right) === 'number')) {
+        } else if ((left instanceof Cartesian4) && (typeof right === 'number')) {
             return Cartesian4.multiplyByScalar(left, right, ScratchStorage.getCartesian4());
-        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+        } else if ((typeof left === 'number') && (typeof right === 'number')) {
             return left * right;
         }
 
@@ -1226,17 +1226,17 @@ define([
         var right = this._right.evaluate(frameState, feature);
         if ((right instanceof Cartesian2) && (left instanceof Cartesian2)) {
             return Cartesian2.divideComponents(left, right, ScratchStorage.getCartesian2());
-        } else if ((left instanceof Cartesian2) && (typeof(right) === 'number')) {
+        } else if ((left instanceof Cartesian2) && (typeof right === 'number')) {
             return Cartesian2.divideByScalar(left, right, ScratchStorage.getCartesian2());
         } else if ((right instanceof Cartesian3) && (left instanceof Cartesian3)) {
             return Cartesian3.divideComponents(left, right, ScratchStorage.getCartesian3());
-        } else if ((left instanceof Cartesian3) && (typeof(right) === 'number')) {
+        } else if ((left instanceof Cartesian3) && (typeof right === 'number')) {
             return Cartesian3.divideByScalar(left, right, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.divideComponents(left, right, ScratchStorage.getCartesian4());
-        } else if ((left instanceof Cartesian4) && (typeof(right) === 'number')) {
+        } else if ((left instanceof Cartesian4) && (typeof right === 'number')) {
             return Cartesian4.divideByScalar(left, right, ScratchStorage.getCartesian4());
-        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+        } else if ((typeof left === 'number') && (typeof right === 'number')) {
             return left / right;
         }
 
@@ -1256,7 +1256,7 @@ define([
             return Cartesian3.fromElements(left.x % right.x, left.y % right.y, left.z % right.z, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.fromElements(left.x % right.x, left.y % right.y, left.z % right.z, left.w % right.w, ScratchStorage.getCartesian4());
-        } else if ((typeof(left) === 'number') && (typeof(right) === 'number')) {
+        } else if ((typeof left === 'number') && (typeof right === 'number')) {
             return left % right;
         }
 
