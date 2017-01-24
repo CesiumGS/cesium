@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/Check'
+        'Core/Check'
     ], function(
         Check) {
     'use strict';
@@ -23,7 +23,7 @@ defineSuite([
                 Check.typeOf.bool('mockName', 1);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.typeOf.bool('snth', 'mockName');
+                Check.typeOf.bool('mockName', 'snth');
             }).toThrowDeveloperError();
             expect(function () {
                 Check.typeOf.bool('mockName', function () {return true;});
@@ -47,7 +47,7 @@ defineSuite([
                 Check.typeOf.func('mockName', 1);
             }).toThrowDeveloperError();
             expect(function () {
-                Check.typeOf.func('snth', 'mockName');
+                Check.typeOf.func('mockName', 'snth');
             }).toThrowDeveloperError();
             expect(function () {
                 Check.typeOf.func('mockName', true);
@@ -62,7 +62,7 @@ defineSuite([
 
         it('Check.typeOf.object throws when passed non-object', function() {
             expect(function () {
-                Check.typeOf.object('snth', 'mockName');
+                Check.typeOf.object('mockName', 'snth');
             }).toThrowDeveloperError();
             expect(function () {
                 Check.typeOf.object('mockName', true);
@@ -83,7 +83,7 @@ defineSuite([
 
         it('Check.typeOf.number throws when passed non-number', function() {
             expect(function () {
-                Check.typeOf.number('snth', 'mockName');
+                Check.typeOf.number('mockName', 'snth');
             }).toThrowDeveloperError();
             expect(function () {
                 Check.typeOf.number('mockName', true);
@@ -101,7 +101,7 @@ defineSuite([
 
         it('Check.typeOf.string does not throw when passed a string', function () {
             expect(function () {
-                Check.typeOf.string('s', 'mockName');
+                Check.typeOf.string('mockName', 's');
             }).not.toThrowDeveloperError();
         });
 
@@ -139,7 +139,7 @@ defineSuite([
                 Check.defined('mockName', function () {return true;});
             }).not.toThrowDeveloperError();
             expect(function () {
-                Check.defined('snt', 'mockName');
+                Check.defined('mockName', 'snt');
             }).not.toThrowDeveloperError();
         });
 

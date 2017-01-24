@@ -1,7 +1,7 @@
 /*global define*/
 define([
-    './defined',
-    './DeveloperError'
+        './defined',
+        './DeveloperError'
     ], function(
         defined,
         DeveloperError) {
