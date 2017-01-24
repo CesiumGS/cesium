@@ -543,7 +543,7 @@ define([
         }
 
         if (frameState.mode !== SceneMode.SCENE3D && !defined(this._contentBoundingVolume2D)) {
-            var boundingSphere = this._contentBoundingVolume2D.boundingSphere;
+            var boundingSphere = this._contentBoundingVolume.boundingSphere;
             this._contentBoundingVolume2D = BoundingSphere.projectTo2D(boundingSphere);
         }
 
