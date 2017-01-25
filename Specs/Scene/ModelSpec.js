@@ -289,6 +289,28 @@ defineSuite([
         });
     });
 
+    it('renders RTC in CV', function() {
+        return loadModel(boxRtcUrl, {
+            modelMatrix : Matrix4.IDENTITY,
+            minimumPixelSize : 1
+        }).then(function(m) {
+            scene.morphToColumbusView(0.0);
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders ECEF in CV', function() {
+        return loadModel(boxesEcefUrl, {
+            modelMatrix : Matrix4.IDENTITY,
+            minimumPixelSize : undefined
+        }).then(function(m) {
+            scene.morphToColumbusView(0.0);
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
     it('resolves readyPromise', function() {
         return texturedBoxModel.readyPromise.then(function(model) {
             verifyRender(model);
