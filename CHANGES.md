@@ -45,6 +45,7 @@ Change Log
 * Fixed texture rotation for `RectangleGeometry`. [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
 * Fixed issue where billboards on terrain had an incorrect offset. [#4598](https://github.com/AnalyticalGraphicsInc/cesium/issues/4598)
 * Fixed issue where `globe.getHeight` incorrectly returned `undefined`. [#3411](https://github.com/AnalyticalGraphicsInc/cesium/issues/3411)
+* Fixed a crash when using Entity path visualization with reference properties. [#4915](https://github.com/AnalyticalGraphicsInc/cesium/issues/4915)
 * Fixed a bug that caused `GroundPrimitive` to render incorrectly on systems without the `WEBGL_depth_texture` extension. [#4747](https://github.com/AnalyticalGraphicsInc/cesium/pull/4747)
 * Fixed default Mapbox token and added a watermark to notify users that they need to sign up for their own token.
 * Fixed glTF models with skinning that used `bindShapeMatrix`. [#4722](https://github.com/AnalyticalGraphicsInc/cesium/issues/4722)
