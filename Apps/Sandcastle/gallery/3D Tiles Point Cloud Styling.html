@@ -29,9 +29,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    scene3DOnly : true
-});
+var viewer = new Cesium.Viewer('cesiumContainer');
 
 var scene = viewer.scene;
 var url = '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/';
@@ -40,10 +38,14 @@ var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
     url : url
 }));
 
-tileset.readyPromise.then(function(tileset) {
+function zoomToTileset() {
     var boundingSphere = tileset.boundingSphere;
     viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
-});
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+}
+
+tileset.readyPromise.then(zoomToTileset);
+scene.morphComplete.addEventListener(zoomToTileset);
 
 var styles = [];
 function addStyle(name, style) {

@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -19,6 +20,7 @@ define([
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
+        '../Core/Transforms',
         '../Core/WebGLConstants',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
@@ -34,9 +36,11 @@ define([
         './Cesium3DTileColorBlendMode',
         './Cesium3DTileContentState',
         './Cesium3DTileFeature',
-        './Cesium3DTileFeatureTable'
+        './Cesium3DTileFeatureTable',
+        './SceneMode'
     ], function(
         Cartesian3,
+        Cartesian4,
         Color,
         combine,
         ComponentDatatype,
@@ -55,6 +59,7 @@ define([
         Request,
         RequestScheduler,
         RequestType,
+        Transforms,
         WebGLConstants,
         Buffer,
         BufferUsage,
@@ -70,7 +75,8 @@ define([
         Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
         Cesium3DTileFeature,
-        Cesium3DTileFeatureTable) {
+        Cesium3DTileFeatureTable,
+        SceneMode) {
     'use strict';
 
     /**
@@ -120,6 +126,8 @@ define([
         this._pointSize = 1.0;
         this._quantizedVolumeScale = undefined;
         this._quantizedVolumeOffset = undefined;
+
+        this._mode = undefined;
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
@@ -1142,11 +1150,15 @@ define([
         return false;
     };
 
+    var scratchComputedTranslation = new Cartesian4();
+    var scratchComputedMatrixIn2D = new Matrix4();
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
-        var updateModelMatrix = this._tile.transformDirty;
+        var updateModelMatrix = this._tile.transformDirty || this._mode !== frameState.mode;
+        this._mode = frameState.mode;
 
         if (!defined(this._drawCommand)) {
             createResources(this, frameState);
@@ -1167,7 +1179,31 @@ define([
             } else {
                 Matrix4.clone(this._tile.computedTransform, this._drawCommand.modelMatrix);
             }
+
+            if (frameState.mode !== SceneMode.SCENE3D) {
+                var projection = frameState.mapProjection;
+                var modelMatrix = this._drawCommand.modelMatrix;
+                var translation = Matrix4.getColumn(modelMatrix, 3, scratchComputedTranslation);
+                if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
+                    Transforms.basisTo2D(projection, modelMatrix, modelMatrix);
+                } else {
+                    var center = this._tile.boundingSphere.center;
+                    var to2D = Transforms.wgs84To2DModelMatrix(projection, center, scratchComputedMatrixIn2D);
+                    Matrix4.multiply(to2D, modelMatrix, modelMatrix);
+                }
+            }
+
             Matrix4.clone(this._drawCommand.modelMatrix, this._pickCommand.modelMatrix);
+
+            var boundingVolume;
+            if (defined(this._tile._contentBoundingVolume)) {
+                boundingVolume = this._mode === SceneMode.SCENE3D ? this._tile._contentBoundingVolume.boundingSphere : this._tile._contentBoundingVolume2D.boundingSphere;
+            } else {
+                boundingVolume = this._mode === SceneMode.SCENE3D ? this._tile._boundingVolume.boundingSphere : this._tile._boundingVolume2D.boundingSphere;
+            }
+
+            this._drawCommand.boundingVolume = boundingVolume;
+            this._pickCommand.boundingVolume = boundingVolume;
         }
 
         if (this.backFaceCulling !== this._backFaceCulling) {

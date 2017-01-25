@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/BoxOutlineGeometry',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -27,11 +28,12 @@ define([
         './Empty3DTileContent',
         './PerInstanceColorAppearance',
         './Primitive',
+        './SceneMode',
         './TileBoundingRegion',
         './TileBoundingSphere',
-        './TileOrientedBoundingBox',
-        './Tileset3DTileContent'
+        './TileOrientedBoundingBox'
     ], function(
+        BoundingSphere,
         BoxOutlineGeometry,
         Cartesian3,
         Color,
@@ -59,10 +61,10 @@ define([
         Empty3DTileContent,
         PerInstanceColorAppearance,
         Primitive,
+        SceneMode,
         TileBoundingRegion,
         TileBoundingSphere,
-        TileOrientedBoundingBox,
-        Tileset3DTileContent) {
+        TileOrientedBoundingBox) {
     'use strict';
 
     /**
@@ -98,6 +100,7 @@ define([
         this._transformDirty = true;
 
         this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform);
+        this._boundingVolume2D = undefined;
 
         var contentBoundingVolume;
 
@@ -110,6 +113,7 @@ define([
             contentBoundingVolume = this.createBoundingVolume(contentHeader.boundingVolume, computedTransform);
         }
         this._contentBoundingVolume = contentBoundingVolume;
+        this._contentBoundingVolume2D = undefined;
 
         var viewerRequestVolume;
         if (defined(header.viewerRequestVolume)) {
@@ -502,37 +506,58 @@ define([
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
     };
 
+    var scratchProjectedBoundingSphere = new BoundingSphere();
+
+    function getBoundingVolume(tile, frameState) {
+        if (frameState.mode !== SceneMode.SCENE3D && !defined(tile._boundingVolume2D)) {
+            var boundingSphere = tile._boundingVolume.boundingSphere;
+            var sphere = BoundingSphere.projectTo2D(boundingSphere, frameState.mapProjection, scratchProjectedBoundingSphere);
+            tile._boundingVolume2D = new TileBoundingSphere(sphere.center, sphere.radius);
+        }
+
+        return frameState.mode !== SceneMode.SCENE3D ? tile._boundingVolume2D : tile._boundingVolume;
+    }
+
     /**
      * Determines whether the tile's bounding volume intersects the culling volume.
      *
-     * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile is to be tested.
+     * @param {FrameState} frameState The frame state.
      * @param {Number} parentVisibilityPlaneMask The parent's plane mask to speed up the visibility check.
      * @returns {Number} A plane mask as described above in {@link CullingVolume#computeVisibilityWithPlaneMask}.
      *
      * @private
      */
-    Cesium3DTile.prototype.visibility = function(cullingVolume, parentVisibilityPlaneMask) {
-        return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, parentVisibilityPlaneMask);
+    Cesium3DTile.prototype.visibility = function(frameState, parentVisibilityPlaneMask) {
+        var cullingVolume = frameState.cullingVolume;
+        var boundingVolume = getBoundingVolume(this, frameState);
+        return cullingVolume.computeVisibilityWithPlaneMask(boundingVolume, parentVisibilityPlaneMask);
     };
 
     /**
      * Assuming the tile's bounding volume intersects the culling volume, determines
      * whether the tile's content's bounding volume intersects the culling volume.
      *
-     * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile's content is to be tested.
+     * @param {FrameState} frameState The frame state.
      * @returns {Intersect} The result of the intersection: the tile's content is completely outside, completely inside, or intersecting the culling volume.
      *
      * @private
      */
-    Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
+    Cesium3DTile.prototype.contentsVisibility = function(frameState) {
         // Assumes the tile's bounding volume intersects the culling volume already, so
         // just return Intersect.INSIDE if there is no content bounding volume.
-        var boundingVolume = this._contentBoundingVolume;
-        if (!defined(boundingVolume)) {
+        if (!defined(this._contentBoundingVolume)) {
             return Intersect.INSIDE;
         }
+
+        if (frameState.mode !== SceneMode.SCENE3D && !defined(this._contentBoundingVolume2D)) {
+            var boundingSphere = this._contentBoundingVolume.boundingSphere;
+            this._contentBoundingVolume2D = BoundingSphere.projectTo2D(boundingSphere);
+        }
+
         // PERFORMANCE_IDEA: is it possible to burn less CPU on this test since we know the
         // tile's (not the content's) bounding volume intersects the culling volume?
+        var cullingVolume = frameState.cullingVolume;
+        var boundingVolume = frameState.mode !== SceneMode.SCENE3D ? this._contentBoundingVolume2D : this._contentBoundingVolume;
         return cullingVolume.computeVisibility(boundingVolume);
     };
 
@@ -545,7 +570,8 @@ define([
      * @private
      */
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
-        return this._boundingVolume.distanceToCamera(frameState);
+        var boundingVolume = getBoundingVolume(this, frameState);
+        return boundingVolume.distanceToCamera(frameState);
     };
 
     /**
