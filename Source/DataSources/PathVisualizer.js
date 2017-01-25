@@ -230,9 +230,7 @@ define([
     function reallySubSample(property, start, stop, updateTime, referenceFrame, maximumStep, index, result) {
         //Unwrap any references until we have the actual property.
         while (property instanceof ReferenceProperty) {
-            if (property instanceof ReferenceProperty) {
-                property = property.resolvedProperty;
-            }
+            property = property.resolvedProperty;
         }
 
         if (property instanceof SampledPositionProperty) {
