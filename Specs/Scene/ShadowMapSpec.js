@@ -400,6 +400,7 @@ defineSuite([
         expect(scene.shadowMap._isSpotLight).toBe(false);
         expect(scene.shadowMap._cascadesEnabled).toBe(true);
         expect(scene.shadowMap._numberOfCascades).toBe(4);
+        expect(scene.shadowMap._normalOffset).toBe(true);
     });
 
     it('throws without options.context', function() {
@@ -918,6 +919,16 @@ defineSuite([
         // When fitNearFar is true the shadowed region is smaller
         expect(shadowNear).toBeLessThan(shadowNearFit);
         expect(shadowFar).toBeGreaterThan(shadowFarFit);
+    });
+
+    it('set normalOffset', function() {
+        createCascadedShadowMap();
+        scene.shadowMap.normalOffset = false;
+
+        expect(scene.shadowMap._normalOffset, false);
+        expect(scene.shadowMap._terrainBias, false);
+        expect(scene.shadowMap._primitiveBias, false);
+        expect(scene.shadowMap._pointBias, false);
     });
 
     it('set maximumDistance', function() {
