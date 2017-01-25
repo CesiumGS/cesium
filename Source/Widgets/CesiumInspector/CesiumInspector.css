@@ -41,7 +41,7 @@
 }
 
 .cesium-cesiumInspector-show {
-    max-height: 500px;
+    max-height: 1000px;
 }
 
 .cesium-cesiumInspector-hide {
@@ -237,6 +237,7 @@ input[type=range]:focus {
 
 .cesium-cesiumInspector-error {
     color: #ff9e9e;
+    overflow: auto;
 }
 
 .cesium-3DTilesInspector .cesium-cesiumInspector-section {
