@@ -64,6 +64,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Erik Andersson](https://github.com/e-andersson)
 * [Simulation Curriculum](http://www.simulationcurriculum.com/)
    * [Dave Whipps](https://github.com/dwhipps)
+
 * [Geoscan](https://www.geoscan.aero)
    * [Andrey Orlov](https://github.com/AndreyOrlov)
 * [The Imagineers](https://www.theimagineers.com/)
