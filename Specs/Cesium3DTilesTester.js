@@ -21,6 +21,7 @@ define([
 
     var mockTile = {
         contentBoundingVolume : new TileBoundingSphere(),
+        _contentBoundingVolume : new TileBoundingSphere(),
         _header : {
             content : {
                 boundingVolume : {
