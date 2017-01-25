@@ -119,6 +119,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [David Friedman](https://github.com/duvifn)
 * [Abhishek Potnis](https://github.com/abhishekvp)
 * [Brad Hover](https://github.com/tekhaus)
+* [Jason Beverage](https://github.com/jasonbeverage)
 * [Hüseyin Ateş](https://github.com/ateshuseyin)
 * [Zsolt Simon](https://github.com/szsolt)
 * [Chris Grant](https://github.com/cwgrant)
+* [Aristeidis Bampakos](https://github.com/bampakoa)

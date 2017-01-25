@@ -6,6 +6,7 @@ Change Log
 * Deprecated
     * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.31. These properties will be available on geocoder services that support them, like `BingMapsGeocoderService`.
     * The function `createBinormalAndBitangent` of `GeometryPipeline` will be removed in 1.31. Use the function `createTangentAndBitangent` instead. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
+    * The enums `MIDDLE_DOUBLE_CLICK` and `RIGHT_DOUBLE_CLICK` from `ScreenSpaceEventType` have been deprecated and will be removed  in 1.31. [#4910](https://github.com/AnalyticalGraphicsInc/cesium/pull/4910)
 * Breaking changes
     * Removed separate `heading`, `pitch`, `roll` parameters from `Transform.headingPitchRollToFixedFrame` and `Transform.headingPitchRollQuaternion`. Pass a `headingPitchRoll` object instead. [#4843](https://github.com/AnalyticalGraphicsInc/cesium/pull/4843)
     * The property `binornmal` has been renamed to `bitangent` for `Geometry` and `VertexFormat`. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
@@ -22,8 +23,15 @@ Change Log
 * Fixed a bug that caused all models to use the same highlight color. [#4798] (https://github.com/AnalyticalGraphicsInc/cesium/pull/4798)
 * Fixed KML for when color is an empty string [#4826](https://github.com/AnalyticalGraphicsInc/cesium/pull/4826)
 * Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
+* Added ability to draw an `ImageryLayer` with a splitter to allow layers to only display to the left or right of a splitter.
+   * `ImageryLayer.splitDirection` controls how the layer is rendered with the splitter.  Values are taken from the new `ImagerySplitPosition` enum.
+   *  New `Scene.imagerySplitPosition` property controls the splitter position.  Values are from 0 to 1 relative across the width of the viewport.
 * The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.
 * Fixed a bug that would cause a crash when `debugShowFrustums` is enabled with OIT [#4864](https://github.com/AnalyticalGraphicsInc/cesium/pull/4864)
+* Fixed a bug that affected dynamic graphics with time-dynamic modelMatrix [#4907](https://github.com/AnalyticalGraphicsInc/cesium/pull/4907).
+* Added `Rectangle.fromRadians`.
+* `TerrainProvider` now optionally exposes an `availability` property that can be used to query the terrain level that is available at a location or in a rectangle.  Currently only `CesiumTerrainProvider` exposes this property.
+* Added `sampleTerrainMostDetailed` to sample the height of an array of positions using the best available terrain data at each point.  This requires a `TerrainProvider` with the `availability` property.
 * Added 2D and Columbus View support for models using the RTC extension or whose vertices are in WGS84 coordinates. [#4922](https://github.com/AnalyticalGraphicsInc/cesium/pull/4922)
 
 ### 1.29 - 2017-01-02
@@ -40,6 +48,7 @@ Change Log
 * Fixed texture rotation for `RectangleGeometry`. [#2737](https://github.com/AnalyticalGraphicsInc/cesium/issues/2737)
 * Fixed issue where billboards on terrain had an incorrect offset. [#4598](https://github.com/AnalyticalGraphicsInc/cesium/issues/4598)
 * Fixed issue where `globe.getHeight` incorrectly returned `undefined`. [#3411](https://github.com/AnalyticalGraphicsInc/cesium/issues/3411)
+* Fixed a crash when using Entity path visualization with reference properties. [#4915](https://github.com/AnalyticalGraphicsInc/cesium/issues/4915)
 * Fixed a bug that caused `GroundPrimitive` to render incorrectly on systems without the `WEBGL_depth_texture` extension. [#4747](https://github.com/AnalyticalGraphicsInc/cesium/pull/4747)
 * Fixed default Mapbox token and added a watermark to notify users that they need to sign up for their own token.
 * Fixed glTF models with skinning that used `bindShapeMatrix`. [#4722](https://github.com/AnalyticalGraphicsInc/cesium/issues/4722)
