@@ -108,7 +108,7 @@ define([
     /**
      * Creates a shadow map from the provided light camera.
      * <p>
-     *     Use {@link Viewer#shadowMap}
+     * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. In general do not construct directly.
      * </p>
      *
      * The normalOffset bias pushes the shadows forward slightly, and may be disabled
@@ -117,10 +117,23 @@ define([
      * @alias ShadowMap
      * @internalConstructor
      *
+     * @param {Object} options An object containing the following properties:
+     * @param {Context} options.context The context in which to create the shadow map.
+     * @param {Camera} options.lightCamera A camera representing the light source.
+     * @param {Boolean} [options.enabled=true] Whether the shadow map is enabled.
+     * @param {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
+     * @param {Boolean} [options.pointLightRadius=100.0] Radius of the point light.
+     * @param {Boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
+     * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
+     * @param {Number} [options.maximumDistance=5000.0] The maximum distance used for generating cascaded shadows. Lower values improve shadow quality.
+     * @param {Number} [options.size=2048] The width and height, in pixels, of each shadow map.
+     * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
+     * @param {Number} [options.darkness=0.3] The shadow darkness.
+     * @param {Boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
+     *
      * @exception {DeveloperError} Only one or four cascades are supported.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
-     *
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -141,7 +154,6 @@ define([
         this._enabled = defaultValue(options.enabled, true);
         this._softShadows = defaultValue(options.softShadows, false);
         this._normalOffset = defaultValue(options.normalOffset, true);
-        this._normalOffsetScale = defaultValue(options.normalOffsetScale, 0.1);
         this.dirty = true;
 
         /**
@@ -188,7 +200,7 @@ define([
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : this._normalOffset,
-            normalOffsetScale : this._normalOffsetScale,
+            normalOffsetScale : 0.5,
             normalShading : true,
             normalShadingSmooth : 0.3,
             depthBias : 0.0001
@@ -199,7 +211,7 @@ define([
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : this._normalOffset,
-            normalOffsetScale : this._normalOffsetScale,
+            normalOffsetScale : 0.1,
             normalShading : true,
             normalShadingSmooth : 0.05,
             depthBias : 0.00002
@@ -210,7 +222,7 @@ define([
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : this._normalOffset,
-            normalOffsetScale : this._normalOffsetScale,
+            normalOffsetScale : 0.0,
             normalShading : true,
             normalShadingSmooth : 0.1,
             depthBias : 0.0005
@@ -392,23 +404,9 @@ define([
             set : function(value) {
                 this.dirty = this._normalOffset !== value;
                 this._normalOffset = value;
-            }
-        },
-
-        /**
-         * Amount to offset shadows by along the normal. Addresses shadow acne problems.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {Number}
-         * @default 0.1
-         */
-        normalOffsetScale : {
-            get : function() {
-                return this._normalOffsetScale;
-            },
-            set : function(value) {
-                this.dirty = this._normalOffsetScale !== value;
-                this._normalOffsetScale = value;
+                this._terrainBias.normalOffset = value;
+                this._primitiveBias.normalOffset = value;
+                this._pointBias.normalOffset = value;
             }
         },
 
