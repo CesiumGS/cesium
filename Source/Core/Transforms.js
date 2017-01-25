@@ -474,7 +474,7 @@ define([
      * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
      */
     Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, result) {
-        Check.typeOf.object(headingPitchRoll, 'headingPitchRoll');
+        Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         var heading = headingPitchRoll.heading;
         var pitch = headingPitchRoll.pitch;
         var roll = headingPitchRoll.roll;
@@ -512,7 +512,7 @@ define([
      */
     Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, result) {
         // checks for required parameters happen in the called functions
-        Check.typeOf.object(headingPitchRoll, 'headingPitchRoll');
+        Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
@@ -997,6 +997,48 @@ define([
         Matrix4.setColumn(result, 1, newYAxis, result);
         Matrix4.setColumn(result, 2, newZAxis, result);
         Matrix4.setColumn(result, 3, newOrigin, result);
+
+        return result;
+    };
+
+    var swizzleMatrix = new Matrix4(
+        0.0, 0.0, 1.0, 0.0,
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 1.0);
+
+    /**
+     * @private
+     */
+    Transforms.wgs84To2DModelMatrix = function(projection, center, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(projection)) {
+            throw new DeveloperError('projection is required.');
+        }
+        if (!defined(center)) {
+            throw new DeveloperError('center is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
+        var ellipsoid = projection.ellipsoid;
+
+        var fromENU = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, scratchFromENU);
+        var toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
+
+        var cartographic = ellipsoid.cartesianToCartographic(center, scratchCartographic);
+        var projectedPosition = projection.project(cartographic, scratchCartesian3Projection);
+        var newOrigin = scratchCartesian4NewOrigin;
+        newOrigin.x = projectedPosition.z;
+        newOrigin.y = projectedPosition.x;
+        newOrigin.z = projectedPosition.y;
+        newOrigin.w = 1.0;
+
+        var translation = Matrix4.fromTranslation(newOrigin, scratchFromENU);
+        Matrix4.multiply(swizzleMatrix, toENU, result);
+        Matrix4.multiply(translation, result, result);
 
         return result;
     };

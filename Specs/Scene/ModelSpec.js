@@ -77,6 +77,7 @@ defineSuite([
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
+    var boxesEcefUrl = './Data/Models/Boxes-ECEF/ecef.glb';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
@@ -263,6 +264,50 @@ defineSuite([
             model.modelMatrix = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(180.0, 0.0, 100.0));
             scene.morphTo2D(0.0);
             verifyRender(model);
+        });
+    });
+
+    it('renders RTC in 2D', function() {
+        return loadModel(boxRtcUrl, {
+            modelMatrix : Matrix4.IDENTITY,
+            minimumPixelSize : 1
+        }).then(function(m) {
+            scene.morphTo2D(0.0);
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders ECEF in 2D', function() {
+        return loadModel(boxesEcefUrl, {
+            modelMatrix : Matrix4.IDENTITY,
+            minimumPixelSize : undefined
+        }).then(function(m) {
+            scene.morphTo2D(0.0);
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders RTC in CV', function() {
+        return loadModel(boxRtcUrl, {
+            modelMatrix : Matrix4.IDENTITY,
+            minimumPixelSize : 1
+        }).then(function(m) {
+            scene.morphToColumbusView(0.0);
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders ECEF in CV', function() {
+        return loadModel(boxesEcefUrl, {
+            modelMatrix : Matrix4.IDENTITY,
+            minimumPixelSize : undefined
+        }).then(function(m) {
+            scene.morphToColumbusView(0.0);
+            verifyRender(m);
+            primitives.remove(m);
         });
     });
 

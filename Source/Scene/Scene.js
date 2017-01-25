@@ -563,7 +563,7 @@ define([
          * @type {ShadowMap}
          */
         this.shadowMap = new ShadowMap({
-            context : context,
+            scene : this,
             lightCamera : this._sunCamera,
             enabled : defaultValue(options.shadows, false)
         });
@@ -1077,6 +1077,22 @@ define([
         mapMode2D : {
             get : function() {
                 return this._mapMode2D;
+            }
+        },
+
+         /**
+         * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
+         * @memberof Scene.prototype.
+         *
+         * @type {Number}
+         */
+        imagerySplitPosition : {
+            get: function() {
+                return this._frameState.imagerySplitPosition;
+            },
+
+            set: function(value) {
+                this._frameState.imagerySplitPosition = value;
             }
         }
     });

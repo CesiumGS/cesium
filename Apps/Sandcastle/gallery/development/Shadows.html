@@ -410,30 +410,30 @@ function updateShadows() {
 
     if (lightSource === 'Fixed') {
         shadowOptions = {
-            context : context,
+            scene : scene,
             lightCamera : fixedLightCamera,
             cascadesEnabled : false
         };
     } else if (lightSource === 'Point') {
         shadowOptions = {
-            context : context,
+            scene : scene,
             lightCamera : pointLightCamera,
             isPointLight : true
         };
     } else if (lightSource === 'Spot') {
         shadowOptions = {
-            context : context,
+            scene : scene,
             lightCamera : spotLightCamera,
             cascadesEnabled : false
         };
     } else if (cascades === 4) {
         shadowOptions = {
-            context : context,
+            scene : scene,
             lightCamera : lightCamera
         };
     } else if (cascades === 1) {
         shadowOptions = {
-            context : context,
+            scene : scene,
             lightCamera : lightCamera,
             numberOfCascades : 1
         };
@@ -703,7 +703,7 @@ canvas.onclick = function() {
 
 var handler = new Cesium.ScreenSpaceEventHandler(canvas);
 
-// Double click object to turn castShadows on/off
+// Click object to turn castShadows on/off
 handler.setInputAction(function(movement) {
     var picked = scene.pick(movement.position);
     if (Cesium.defined(picked) && Cesium.defined(picked.primitive)) {
@@ -711,9 +711,9 @@ handler.setInputAction(function(movement) {
         var receiveShadows = Cesium.ShadowMode.receiveShadows(picked.primitive.shadows);
         picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(!castShadows, receiveShadows);
     }
-}, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-// Double middle click object to turn receiveShadows on/off
+// Middle click object to turn receiveShadows on/off
 handler.setInputAction(function(movement) {
     var picked = scene.pick(movement.position);
     if (Cesium.defined(picked)) {
@@ -721,7 +721,7 @@ handler.setInputAction(function(movement) {
         var receiveShadows = Cesium.ShadowMode.receiveShadows(picked.primitive.shadows);
         picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(castShadows, !receiveShadows);
     }
-}, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
+}, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
 
 //Sandcastle_End
 Sandcastle.finishedLoading();
