@@ -56,15 +56,6 @@ defineSuite([
 
     describe('tileset options', function() {
 
-        it('shows url', function() {
-            viewModel = new Cesium3DTilesInspectorViewModel(scene);
-            viewModel.tileset = new Cesium3DTileset({
-                url: tilesetUrl
-            });
-            expect(viewModel.tilesetURL().indexOf(tilesetUrl) !== -1).toBe(true);
-            viewModel.destroy();
-        });
-
         it('show properties', function() {
             viewModel = new Cesium3DTilesInspectorViewModel(scene);
             viewModel.tileset = new Cesium3DTileset({

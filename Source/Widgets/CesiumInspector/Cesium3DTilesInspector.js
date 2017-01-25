@@ -96,25 +96,13 @@ define([
         knockout.applyBindings(this._inspectorModel, element);
 
         // build and bind each panel separately
-        var tilesetURL = document.createElement('div');
-        tilesetURL.className = 'field-group';
-        var urlLabel = document.createElement('label');
-        urlLabel.className = 'field-label';
-        urlLabel.appendChild(document.createTextNode('URL: '));
-        tilesetURL.appendChild(urlLabel);
-        var url = document.createElement('input');
-        url.className = 'cesium-cesiumInspector-url field';
-        url.setAttribute('data-bind', 'value: (tilesetURL)');
-        tilesetURL.appendChild(url);
-        tilesetPanel.contents.appendChild(tilesetURL);
-
         var properties = document.createElement('div');
-        properties.classNAme = 'field-group';
+        properties.className = 'field-group';
         var propertiesLabel = document.createElement('label');
         propertiesLabel.className = 'field-label';
         propertiesLabel.appendChild(document.createTextNode('Properties: '));
         var propertiesField = document.createElement('div');
-        properties.setAttribute('data-bind', 'text: propertiesText');
+        propertiesField.setAttribute('data-bind', 'text: propertiesText');
         properties.appendChild(propertiesLabel);
         properties.appendChild(propertiesField);
         tilesetPanel.contents.appendChild(properties);

@@ -517,13 +517,6 @@ define([
             }
         }
 
-        this.tilesetURL = knockout.pureComputed(function() {
-            if (!defined(that._tileset)) {
-                return 'None';
-            }
-            return that._tileset.url;
-        });
-
         this.propertiesText = knockout.pureComputed(function() {
             var names = [];
             for (var prop in that._properties) {
@@ -615,20 +608,8 @@ define([
         }
 
         var stats = tileset.statistics;
-        // var last = isPick ? stats.lastPick : stats.lastColor;
         var outputStats = (this.showStats && !isPick) || (this.showPickStats && isPick);
-        // var statsChanged =
-        //     (last.visited !== stats.visited ||
-        //      last.numberOfCommands !== stats.numberOfCommands ||
-        //      last.selected !== tileset._selectedTiles.length ||
-        //      last.numberOfAttemptedRequests !== stats.numberOfAttemptedRequests ||
-        //      last.numberOfPendingRequests !== stats.numberOfPendingRequests ||
-        //      last.numberProcessing !== stats.numberProcessing ||
-        //      last.numberContentReady !== stats.numberContentReady ||
-        //      last.numberTotal !== stats.numberTotal ||
-        //      last.numberOfTilesStyled !== stats.numberOfTilesStyled ||
-        //      last.numberOfFeaturesStyled !== stats.numberOfFeaturesStyled);
-        // if (outputStats && (force || statsChanged)) {
+
         if (outputStats) {
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
@@ -673,17 +654,6 @@ define([
 
         this.pickStatsText = this.showPickStats ? this.pickStatsText : '';
         this.statsText = this.showStats ? this.statsText : '';
-
-        // last.visited = stats.visited;
-        // last.numberOfCommands = stats.numberOfCommands;
-        // last.selected = tileset._selectedTiles.length;
-        // last.numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
-        // last.numberOfPendingRequests = stats.numberOfPendingRequests;
-        // last.numberProcessing = stats.numberProcessing;
-        // last.numberContentReady = stats.numberContentReady;
-        // last.numberTotal = stats.numberTotal;
-        // last.numberOfTilesStyled = stats.numberOfTilesStyled;
-        // last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
     };
 
     /**
