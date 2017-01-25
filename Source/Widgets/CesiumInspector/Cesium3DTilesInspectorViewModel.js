@@ -430,9 +430,9 @@ define([
                     that._properties = {};
 
                     if (defined(tileset)) {
-                        that._statsLogger = that._updateStats.bind(that, false, false);
-                        tileset.loadProgress.addEventListener(that._statsLogger);
-                        tileset.allTilesLoaded.addEventListener(that._statsLogger);
+                        // that._statsLogger = that._updateStats.bind(that, false, false);
+                        // tileset.loadProgress.addEventListener(that._statsLogger);
+                        // tileset.allTilesLoaded.addEventListener(that._statsLogger);
 
                         tileset.readyPromise.then(function(tileset) {
                             that._properties = tileset.properties;
@@ -608,28 +608,28 @@ define([
     /**
      * Updates the view model's stats text
      */
-    Cesium3DTilesInspectorViewModel.prototype._updateStats = function(isPick, force) {
+    Cesium3DTilesInspectorViewModel.prototype._updateStats = function(isPick) {
         var tileset = this._tileset;
         if (!defined(tileset)) {
             return;
         }
 
         var stats = tileset.statistics;
-        var last = isPick ? stats.lastPick : stats.lastColor;
+        // var last = isPick ? stats.lastPick : stats.lastColor;
         var outputStats = (this.showStats && !isPick) || (this.showPickStats && isPick);
-        var statsChanged =
-            (last.visited !== stats.visited ||
-             last.numberOfCommands !== stats.numberOfCommands ||
-             last.selected !== tileset._selectedTiles.length ||
-             last.numberOfAttemptedRequests !== stats.numberOfAttemptedRequests ||
-             last.numberOfPendingRequests !== stats.numberOfPendingRequests ||
-             last.numberProcessing !== stats.numberProcessing ||
-             last.numberContentReady !== stats.numberContentReady ||
-             last.numberTotal !== stats.numberTotal ||
-             last.numberOfTilesStyled !== stats.numberOfTilesStyled ||
-             last.numberOfFeaturesStyled !== stats.numberOfFeaturesStyled);
-
-        if (outputStats && (force || statsChanged)) {
+        // var statsChanged =
+        //     (last.visited !== stats.visited ||
+        //      last.numberOfCommands !== stats.numberOfCommands ||
+        //      last.selected !== tileset._selectedTiles.length ||
+        //      last.numberOfAttemptedRequests !== stats.numberOfAttemptedRequests ||
+        //      last.numberOfPendingRequests !== stats.numberOfPendingRequests ||
+        //      last.numberProcessing !== stats.numberProcessing ||
+        //      last.numberContentReady !== stats.numberContentReady ||
+        //      last.numberTotal !== stats.numberTotal ||
+        //      last.numberOfTilesStyled !== stats.numberOfTilesStyled ||
+        //      last.numberOfFeaturesStyled !== stats.numberOfFeaturesStyled);
+        // if (outputStats && (force || statsChanged)) {
+        if (outputStats) {
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
             // var s = isPick ? '<strong>[Pick ]: </strong>' : '<strong>[Color]: </strong>';
@@ -674,16 +674,16 @@ define([
         this.pickStatsText = this.showPickStats ? this.pickStatsText : '';
         this.statsText = this.showStats ? this.statsText : '';
 
-        last.visited = stats.visited;
-        last.numberOfCommands = stats.numberOfCommands;
-        last.selected = tileset._selectedTiles.length;
-        last.numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
-        last.numberOfPendingRequests = stats.numberOfPendingRequests;
-        last.numberProcessing = stats.numberProcessing;
-        last.numberContentReady = stats.numberContentReady;
-        last.numberTotal = stats.numberTotal;
-        last.numberOfTilesStyled = stats.numberOfTilesStyled;
-        last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
+        // last.visited = stats.visited;
+        // last.numberOfCommands = stats.numberOfCommands;
+        // last.selected = tileset._selectedTiles.length;
+        // last.numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
+        // last.numberOfPendingRequests = stats.numberOfPendingRequests;
+        // last.numberProcessing = stats.numberProcessing;
+        // last.numberContentReady = stats.numberContentReady;
+        // last.numberTotal = stats.numberTotal;
+        // last.numberOfTilesStyled = stats.numberOfTilesStyled;
+        // last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
     };
 
     /**
@@ -702,6 +702,8 @@ define([
                 this.styleString = '';
             }
         }
+
+        this._updateStats(false, false);
     };
 
     /**

@@ -750,7 +750,7 @@ define([
                     throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
                 }
                 //>>includeEnd('debug');
-                
+
                 return this._root._boundingVolume;
             }
         },
@@ -1523,6 +1523,22 @@ define([
         stats.numberOfFeaturesStyled = 0;
     }
 
+    function updateLastStats(tileset, isPick) {
+        var stats = tileset._statistics;
+        var last = isPick ? stats.lastPick : stats.lastColor;
+
+        last.visited = stats.visited;
+        last.numberOfCommands = stats.numberOfCommands;
+        last.selected = tileset._selectedTiles.length;
+        last.numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
+        last.numberOfPendingRequests = stats.numberOfPendingRequests;
+        last.numberProcessing = stats.numberProcessing;
+        last.numberContentReady = stats.numberContentReady;
+        last.numberTotal = stats.numberTotal;
+        last.numberOfTilesStyled = stats.numberOfTilesStyled;
+        last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
+    }
+
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
@@ -1690,6 +1706,8 @@ define([
         // may resolve outside of the update loop that then raise events, e.g.,
         // model's readyPromise.
         raiseLoadProgressEvent(this, frameState);
+
+        updateLastStats(this, isPick);
     };
 
     /**
