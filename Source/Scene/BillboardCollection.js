@@ -168,10 +168,11 @@ define([
         this._textureAtlasGUID = undefined;
         this._destroyTextureAtlas = true;
         this._sp = undefined;
-        this._rs = undefined;
-        this._vaf = undefined;
         this._spTranslucent = undefined;
         this._spPick = undefined;
+        this._rsOpaque = undefined;
+        this._rsTranslucent = undefined;
+        this._vaf = undefined;
 
         this._billboards = [];
         this._billboardsToUpdate = [];
@@ -1440,12 +1441,20 @@ define([
         if (pass.render) {
             var colorList = this._colorCommands;
 
-            if (!defined(this._rs)) {
-                this._rs = RenderState.fromCache({
+            if (!defined(this._rsOpaque)) {
+                this._rsOpaque = RenderState.fromCache({
                     depthTest : {
                         enabled : true,
                         func : WebGLConstants.LEQUAL  // Allows label glyphs and billboards to overlap.
                     },
+                    depthMask : true
+                });
+                this._rsTranslucent = RenderState.fromCache({
+                    depthTest : {
+                        enabled : true,
+                        func : WebGLConstants.LEQUAL  // Allows label glyphs and billboards to overlap.
+                    },
+                    depthMask : false,
                     blending : BlendingState.ALPHA_BLEND
                 });
             }
@@ -1519,7 +1528,8 @@ define([
             vaLength = va.length;
 
             colorList.length = vaLength;
-            for (j = 0; j < vaLength * 2; ++j) {
+            var totalLength = vaLength * 2;
+            for (j = 0; j < totalLength; ++j) {
                 command = colorList[j];
                 if (!defined(command)) {
                     command = colorList[j] = new DrawCommand();
@@ -1535,7 +1545,7 @@ define([
                 command.shaderProgram = (j % 2 === 0) ? this._sp : this._spTranslucent;
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[index].va;
-                command.renderState = this._rs;
+                command.renderState = (j % 2 === 0) ? this._rsOpaque : this._rsTranslucent;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
                 if (this._instanced) {
@@ -1624,7 +1634,7 @@ define([
                 command.shaderProgram = this._spPick;
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
-                command.renderState = this._rs;
+                command.renderState = this._rsOpaque;
 
                 if (this._instanced) {
                     command.count = 6;
