@@ -81,7 +81,7 @@ define([
             if (defined(pick) && pick.primitive instanceof Cesium3DTileset) {
                 that.tileset = pick.primitive;
             } else {
-                that.tileset = undefined;
+                return;
             }
             that._pickActive = false;
         }
