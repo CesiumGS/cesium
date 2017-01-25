@@ -123,3 +123,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Hüseyin Ateş](https://github.com/ateshuseyin)
 * [Zsolt Simon](https://github.com/szsolt)
 * [Chris Grant](https://github.com/cwgrant)
+* [Aristeidis Bampakos](https://github.com/bampakoa)
