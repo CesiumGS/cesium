@@ -54,10 +54,10 @@ Then browse to [http://localhost:8080/](http://localhost:8080/). The landing pag
 * **Test Suites** : tests using [Jasmine](https://jasmine.github.io/). [Testing guide here.](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/TestingGuide/README.md#testing-guide)
 * **Documentation** : reference documentation built from source. [Documentation guide here.](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/DocumentationGuide/README.md#documentation-guide)
 
-Cesium can be used in two different ways. Cesium can either read from external modules with the [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD), or it can be built as one combined file containing all modules. The basics:
+Cesium can be used in two different ways. Cesium can be either a set of modules using [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD), or it can be built as one combined file containing all modules. The basics:
 
-* `npm run build` will build AMD Cesium. This builds Cesium Viewer, Sandcastle, Cesium Inspector and Timeline Demo from source. 
-* `npm run minifyRelease` creates the built version of Cesium. This builds Hello World.
+* `npm run build` will build AMD Cesium. This also builds Cesium Viewer and Sandcastle. 
+* `npm run minifyRelease` creates the built version of Cesium. This also builds Hello World.
 
 Read the complete list of build scripts below for more details.
 
