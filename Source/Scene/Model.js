@@ -1411,16 +1411,55 @@ define([
     var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
     var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
 
-    function parseTextures(model) {
+    function parseTextures(model, context) {
         var images = model.gltf.images;
         var textures = model.gltf.textures;
         for (var id in textures) {
             if (textures.hasOwnProperty(id)) {
                 var gltfImage = images[textures[id].source];
+                var extras = gltfImage.extras;
+
+                var binary;
+                var uri;
+
+                // First check for a compressed texture
+                if (defined(extras) && defined(extras.compressedImage3DTiles)) {
+                    var s3tc = extras.compressedImage3DTiles.s3tc;
+                    var pvrtc = extras.compressedImage3DTiles.pvrtc;
+                    var etc1 = extras.compressedImage3DTiles.etc1;
+
+                    if (context.s3tc && defined(s3tc)) {
+                        if (defined(s3tc.uri)) {
+                            uri = s3tc.uri;
+                        } else {
+                            binary = s3tc;
+                        }
+                    } else if (context.pvrtc && defined(pvrtc)) {
+                        if (defined(pvrtc.uri)) {
+                            uri = pvrtc.uri;
+                        } else {
+                            binary = pvrtc;
+                        }
+                    } else if (context.etc1 && defined(etc1)) {
+                        if (defined(etc1.uri)) {
+                            uri = etc1.uri;
+                        } else {
+                            binary = etc1;
+                        }
+                    }
+                }
+
+                // No compressed texture, so image references either uri (external or base64-encoded) or bufferView
+                if (!defined(binary) && !defined(uri)) {
+                    if (defined(gltfImage.extensions) && defined(gltfImage.extensions.KHR_binary_glTF)) {
+                        binary = gltfImage.extensions.KHR_binary_glTF;
+                    } else {
+                        uri = new Uri(gltfImage.uri);
+                    }
+                }
 
                 // Image references either uri (external or base64-encoded) or bufferView
-                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.KHR_binary_glTF)) {
-                    var binary = gltfImage.extensions.KHR_binary_glTF;
+                if (defined(binary)) {
                     model._loadResources.texturesToCreateFromBufferView.enqueue({
                         id : id,
                         image : undefined,
@@ -1429,7 +1468,7 @@ define([
                     });
                 } else {
                     ++model._loadResources.pendingTextureLoads;
-                    var uri = new Uri(gltfImage.uri);
+                    uri = new Uri(uri);
                     var imagePath = uri.resolve(model._baseUri).toString();
 
                     if (ktxRegex.test(imagePath)) {
@@ -1579,13 +1618,13 @@ define([
         model._runtime.meshesByName = runtimeMeshesByName;
     }
 
-    function parse(model) {
+    function parse(model, context) {
         if (!model._loadRendererResourcesFromCache) {
             parseBuffers(model);
             parseBufferViews(model);
             parseShaders(model);
             parsePrograms(model);
-            parseTextures(model);
+            parseTextures(model, context);
         }
         parseMaterials(model);
         parseMeshes(model);
@@ -4170,7 +4209,7 @@ define([
                 }
 
                 this._loadResources = new LoadResources();
-                parse(this);
+                parse(this, context);
             }
         }
 
