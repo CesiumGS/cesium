@@ -8,7 +8,7 @@ Change Log
     * The function `GeometryPipeline.computeBinormalAndTangent` will be removed in 1.31. Use the function `GeometryPipeline.createTangentAndBitangent` instead. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
     * The enums `MIDDLE_DOUBLE_CLICK` and `RIGHT_DOUBLE_CLICK` from `ScreenSpaceEventType` have been deprecated and will be removed in 1.31. [#4910](https://github.com/AnalyticalGraphicsInc/cesium/pull/4910)
 * Breaking changes
-    * Removed separate `heading`, `pitch`, `roll` parameters from `Transform.headingPitchRollToFixedFrame` and `Transform.headingPitchRollQuaternion`. Pass a `headingPitchRoll` object instead. [#4843](https://github.com/AnalyticalGraphicsInc/cesium/pull/4843)
+    * Removed separate `heading`, `pitch`, `roll` parameters from `Transform.headingPitchRollToFixedFrame` and `Transform.headingPitchRollQuaternion`. Pass a `HeadingPitchRoll` object instead. [#4843](https://github.com/AnalyticalGraphicsInc/cesium/pull/4843)
     * The property `binormal` has been renamed to `bitangent` for `Geometry` and `VertexFormat`. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
     * A handful of `CesiumInspectorViewModel` properties were removed or changed from variables to functions.  See [#4857](https://github.com/AnalyticalGraphicsInc/cesium/pull/4857)
     * The `ShadowMap` constructor has been made private. See [#4010](https://github.com/AnalyticalGraphicsInc/cesium/issues/4010)
