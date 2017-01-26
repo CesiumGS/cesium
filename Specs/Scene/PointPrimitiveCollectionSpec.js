@@ -10,6 +10,7 @@ defineSuite([
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Rectangle',
+        'Scene/BillboardRenderTechnique',
         'Scene/PointPrimitive',
         'Specs/createScene'
     ], function(
@@ -23,6 +24,7 @@ defineSuite([
         CesiumMath,
         NearFarScalar,
         Rectangle,
+        BillboardRenderTechnique,
         PointPrimitive,
         createScene) {
     'use strict';
@@ -153,6 +155,30 @@ defineSuite([
 
     it('is not destroyed', function() {
         expect(pointPrimitives.isDestroyed()).toEqual(false);
+    });
+
+    it('renders pointPrimitive in multiple passes', function() {
+        pointPrimitives.add({
+            position : Cartesian3.ZERO,
+            color : Color.LIME
+        });
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+
+        var frameState = scene.frameState;
+        frameState.commandList.length = 0;
+        pointPrimitives.renderTechnique = BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT;
+        pointPrimitives.update(frameState);
+        expect(frameState.commandList.length).toEqual(2);
+
+        frameState.commandList.length = 0;
+        pointPrimitives.renderTechnique = BillboardRenderTechnique.OPAQUE;
+        pointPrimitives.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
+
+        frameState.commandList.length = 0;
+        pointPrimitives.renderTechnique = BillboardRenderTechnique.TRANSLUCENT;
+        pointPrimitives.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
     });
 
     it('disables pointPrimitive scaleByDistance', function() {

@@ -275,6 +275,13 @@ define([
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
+        /**
+         * The billboard rendering technique. The default is used for rendering both opaque and translucent billboards.
+         * However, if either all of the billboards are completely opaque or all are completely translucent,
+         * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve performance by 2x.
+         * @type {BillboardRenderTechnique}
+         * @default BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT
+         */
         this.renderTechnique = defaultValue(options.renderTechnique, BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT);
         this._renderTechnique = undefined;
 
@@ -1606,7 +1613,7 @@ define([
             var colorList = this._colorCommands;
 
             var opaque = this._renderTechnique === BillboardRenderTechnique.OPAQUE;
-            var opaqueAndTranslucent = this._renderTechnique === BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT
+            var opaqueAndTranslucent = this._renderTechnique === BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT;
 
             va = this._vaf.va;
             vaLength = va.length;
