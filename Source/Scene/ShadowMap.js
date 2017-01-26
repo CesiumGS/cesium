@@ -106,13 +106,12 @@ define([
     'use strict';
 
     /**
-     * Creates a shadow map from the provided light camera.
-     * <p>
-     * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. In general do not construct directly.
-     * </p>
+     * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. Do not construct this directly.
      *
+     * <p>
      * The normalOffset bias pushes the shadows forward slightly, and may be disabled
      * for applications that require ultra precise shadows.
+     * </p>
      *
      * @alias ShadowMap
      * @internalConstructor
