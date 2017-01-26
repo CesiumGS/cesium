@@ -136,10 +136,10 @@ define([
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        // options.context is an undocumented option
         var context = options.context;
 
         //>>includeStart('debug', pragmas.debug);
-        // options.context is an undocumented option
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
