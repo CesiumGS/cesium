@@ -1269,6 +1269,7 @@ define([
                 } else {
                     var uri = new Uri(buffer.uri);
                     var bufferPath = uri.resolve(model._baseUri).toString();
+                    ++loadResources.pendingBufferLoads;
                     loadArrayBuffer(bufferPath).then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
                 }
             }
@@ -1329,17 +1330,17 @@ define([
         }
     }
 
-    function imageLoad(model, id) {
+    function imageLoad(model, textureId, imageId) {
         return function(image) {
             var gltf = model.gltf;
             var loadResources = model._loadResources;
             --loadResources.pendingTextureLoads;
             loadResources.texturesToCreate.enqueue({
-                id : id,
+                id : textureId,
                 image : image,
                 bufferView : undefined
             });
-            gltf.images[id].extras._pipeline.source = image;
+            gltf.images[imageId].extras._pipeline.source = image;
         };
     }
 
@@ -1348,7 +1349,8 @@ define([
         var textures = model.gltf.textures;
         for (var id in textures) {
             if (textures.hasOwnProperty(id)) {
-                var gltfImage = images[textures[id].source];
+                var imageId = textures[id].source;
+                var gltfImage = images[imageId];
 
                 // Image references either uri (external or base64-encoded) or bufferView
                 if (defined(gltfImage.extras._pipeline.source)) {
@@ -1362,7 +1364,7 @@ define([
                     ++model._loadResources.pendingTextureLoads;
                     var uri = new Uri(gltfImage.uri);
                     var imagePath = uri.resolve(model._baseUri).toString();
-                    loadImage(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                    loadImage(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
                 }
             }
         }

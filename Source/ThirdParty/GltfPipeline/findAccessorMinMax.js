@@ -1,9 +1,9 @@
 /*global define*/
 define([
-        './getAccessorByteStride',
-        './numberOfComponentsForType',
-        '../../Core/ComponentDatatype',
-        '../../Core/defined'
+    './getAccessorByteStride',
+    './numberOfComponentsForType',
+    '../../Core/ComponentDatatype',
+    '../../Core/defined'
     ], function(
         getAccessorByteStride,
         numberOfComponentsForType,
@@ -43,7 +43,7 @@ define([
                 var componentType = accessor.componentType;
 
                 for (var i = 0; i < count; i++) {
-                    var typedArray = ComponentDatatype.createArrayBufferView(componentType, source.buffer, byteOffset, numberOfComponents);
+                    var typedArray = ComponentDatatype.createArrayBufferView(componentType, source.buffer, byteOffset + source.byteOffset, numberOfComponents);
                     for (var j = 0; j < numberOfComponents; j++) {
                         var value = typedArray[j];
                         min[j] = Math.min(min[j], value);
@@ -58,6 +58,5 @@ define([
             max : max
         };
     }
-
     return findAccessorMinMax;
 });

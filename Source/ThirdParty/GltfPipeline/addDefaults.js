@@ -1,201 +1,392 @@
 /*global define*/
 define([
-        './addExtensionsUsed',
-        '../../Core/Cartesian3',
-        '../../Core/Quaternion',
-        '../../Core/WebGLConstants',
+        './getUniqueId',
+        '../../Core/clone',
         '../../Core/defaultValue',
-        '../../Core/defined'
+        '../../Core/defined',
+        '../../Core/WebGLConstants'
     ], function(
-        addExtensionsUsed,
-        Cartesian3,
-        Quaternion,
-        WebGLConstants,
+        getUniqueId,
+        clone,
         defaultValue,
-        defined) {
+        defined,
+        WebGLConstants) {
     'use strict';
 
-    function accessorDefaults(gltf) {
-        if (!defined(gltf.accessors)) {
-            gltf.accessors = {};
-        }
-        var accessors = gltf.accessors;
-
-        for (var name in accessors) {
-            if (accessors.hasOwnProperty(name)) {
-                var accessor = accessors[name];
-                accessor.byteStride = defaultValue(accessor.byteStride, 0);
+    var gltfTemplate = {
+        accessors : {
+            '*' : {
+                byteStride : 0
             }
-        }
-    }
-
-    function animationDefaults(gltf) {
-        if (!defined(gltf.animations)) {
-            gltf.animations = {};
-        }
-        var animations = gltf.animations;
-
-        for (var name in animations) {
-            if (animations.hasOwnProperty(name)) {
-                var animation = animations[name];
-
-                if (!defined(animation.channels)) {
-                    animation.channels = [];
+        },
+        animations : {
+            '*' : {
+                channels : [],
+                samplers : {
+                    '*' : {
+                        interpolation : 'LINEAR'
+                    }
                 }
-
-                if (!defined(animation.parameters)) {
-                    animation.parameters = {};
+            }
+        },
+        asset : {
+            premultipliedAlpha : false,
+            profile : {
+                api : 'WebGL',
+                version : '1.0.3'
+            }
+        },
+        buffers : {
+            '*': {
+                byteLength: 0,
+                type: 'arraybuffer'
+            }
+        },
+        bufferViews: {
+            '*': {
+                byteLength: 0
+            }
+        },
+        cameras: {},
+        images: {},
+        materials: {
+            '*': {
+                values: function(material) {
+                    var extensions = defaultValue(material.extensions, {});
+                    var materialsCommon = extensions.KHR_materials_common;
+                    if (!defined(materialsCommon)) {
+                        return {};
+                    }
+                },
+                extensions: function(material) {
+                    var extensions = defaultValue(material.extensions, {});
+                    var materialsCommon = extensions.KHR_materials_common;
+                    if (defined(materialsCommon)) {
+                        var technique = materialsCommon.technique;
+                        var defaults = {
+                            ambient: [0.0, 0.0, 0.0, 1.0],
+                            doubleSided: false,
+                            emission: [0.0, 0.0, 0.0, 1.0],
+                            transparency: 1.0,
+                            transparent: false
+                        };
+                        if (technique !== 'CONSTANT') {
+                            defaults.diffuse = [0.0, 0.0, 0.0, 1.0];
+                            if (technique !== 'LAMBERT') {
+                                defaults.specular = [0.0, 0.0, 0.0, 1.0];
+                                defaults.shininess = 0.0;
+                            }
+                        }
+                        return {
+                            KHR_materials_common: {
+                                values: defaults
+                            }
+                        };
+                    }
                 }
-
-                if (!defined(animation.samplers)) {
-                    animation.samplers = {};
+            }
+        },
+        meshes : {
+            '*' : {
+                primitives : [
+                    {
+                        attributes : {},
+                        mode : WebGLConstants.TRIANGLES
+                    }
+                ]
+            }
+        },
+        nodes : {
+            '*' : {
+                children : [],
+                matrix : function(node) {
+                    if (!defined(node.translation) && !defined(node.rotation) && !defined(node.scale)) {
+                        return [
+                            1.0, 0.0, 0.0, 0.0,
+                            0.0, 1.0, 0.0, 0.0,
+                            0.0, 0.0, 1.0, 0.0,
+                            0.0, 0.0, 0.0, 1.0
+                        ];
+                    }
+                },
+                rotation : function(node) {
+                    if (defined(node.translation) || defined(node.scale)) {
+                        return [0.0, 0.0, 0.0, 1.0];
+                    }
+                },
+                scale : function(node) {
+                    if (defined(node.translation) || defined(node.rotation)) {
+                        return [1.0, 1.0, 1.0];
+                    }
+                },
+                translation : function(node) {
+                    if (defined(node.rotation) || defined(node.scale)) {
+                        return [0.0, 0.0, 0.0];
+                    }
                 }
+            }
+        },
+        programs : {
+            '*' : {
+                attributes : []
+            }
+        },
+        samplers : {
+            '*' : {
+                magFilter: WebGLConstants.LINEAR,
+                minFilter : WebGLConstants.NEAREST_MIPMAP_LINEAR,
+                wrapS : WebGLConstants.REPEAT,
+                wrapT : WebGLConstants.REPEAT
+            }
+        },
+        scenes : {
+            '*' : {
+                nodes : []
+            }
+        },
+        shaders : {},
+        skins : {
+            '*' : {
+                bindShapeMatrix : [
+                    1.0, 0.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 1.0
+                ]
+            }
+        },
+        techniques : {
+            '*' : {
+                parameters: {},
+                attributes: {},
+                uniforms: {},
+                states: {
+                    enable: []
+                }
+            }
+        },
+        textures : {
+            '*' : {
+                format: WebGLConstants.RGBA,
+                internalFormat: WebGLConstants.RGBA,
+                target: WebGLConstants.TEXTURE_2D,
+                type: WebGLConstants.UNSIGNED_BYTE
+            }
+        },
+        extensionsUsed : []
+    };
 
-                var samplers = animation.samplers;
-
-                for (var samplerName in samplers) {
-                    if (samplers.hasOwnProperty(samplerName)) {
-                        var sampler = samplers[samplerName];
-                        sampler.interpolation = defaultValue(sampler.interpolation, 'LINEAR');
+    function addDefaultsFromTemplate(object, template) {
+        for (var id in template) {
+            if (template.hasOwnProperty(id)) {
+                var templateValue = template[id];
+                if (typeof templateValue === 'function') {
+                    templateValue = templateValue(object);
+                }
+                if (defined(templateValue)) {
+                    if (typeof templateValue === 'object') {
+                        if (Array.isArray(templateValue)) {
+                            var arrayValue = defaultValue(object[id], []);
+                            if (templateValue.length > 0) {
+                                var arrayTemplate = templateValue[0];
+                                if (typeof arrayTemplate === 'object') {
+                                    var arrayValueLength = arrayValue.length;
+                                    for (var i = 0; i < arrayValueLength; i++) {
+                                        addDefaultsFromTemplate(arrayValue[i], arrayTemplate);
+                                    }
+                                } else {
+                                    arrayValue = defaultValue(object[id], templateValue);
+                                }
+                            }
+                            object[id] = arrayValue;
+                        } else {
+                            var applyTemplate = templateValue['*'];
+                            object[id] = defaultValue(object[id], {});
+                            var objectValue = object[id];
+                            if (defined(applyTemplate)) {
+                                for (var subId in objectValue) {
+                                    if (objectValue.hasOwnProperty(subId) && subId !== 'extras') {
+                                        var subObject = objectValue[subId];
+                                        addDefaultsFromTemplate(subObject, applyTemplate);
+                                    }
+                                }
+                            } else {
+                                addDefaultsFromTemplate(objectValue, templateValue);
+                            }
+                        }
+                    } else {
+                        object[id] = defaultValue(object[id], templateValue);
                     }
                 }
             }
         }
     }
 
-    function assetDefaults(gltf) {
-        if (!defined(gltf.asset)) {
-            gltf.asset = {};
+    var defaultMaterial = {
+        values : {
+            emission : [
+                0.5, 0.5, 0.5, 1.0
+            ]
         }
-        var asset = gltf.asset;
-        if (!defined(asset.profile)) {
-            asset.profile = {};
-        }
-        var profile = asset.profile;
-        asset.premultipliedAlpha = defaultValue(asset.premultipliedAlpha, false);
-        profile.api = defaultValue(profile.api, 'WebGL');
-        profile.version = defaultValue(profile.version, '1.0');
-    }
+    };
 
-    function bufferDefaults(gltf) {
-        if (!defined(gltf.buffers)) {
-            gltf.buffers = {};
+    var defaultTechnique = {
+        attributes : {
+            a_position : 'position'
+        },
+        parameters : {
+            modelViewMatrix : {
+                semantic : 'MODELVIEW',
+                type : WebGLConstants.FLOAT_MAT4
+            },
+            projectionMatrix : {
+                semantic : 'PROJECTION',
+                type : WebGLConstants.FLOAT_MAT4
+            },
+            emission : {
+                type : WebGLConstants.FLOAT_VEC4,
+                value : [
+                    0.5, 0.5, 0.5, 1.0
+                ]
+            },
+            position : {
+                semantic: 'POSITION',
+                type: WebGLConstants.FLOAT_VEC3
+            }
+        },
+        states : {
+            enable : [
+                WebGLConstants.CULL_FACE,
+                WebGLConstants.DEPTH_TEST
+            ]
+        },
+        uniforms : {
+            u_modelViewMatrix : 'modelViewMatrix',
+            u_projectionMatrix : 'projectionMatrix',
+            u_emission : 'emission'
         }
-        var buffers = gltf.buffers;
+    };
 
-        for (var name in buffers) {
-            if (buffers.hasOwnProperty(name)) {
-                var buffer = buffers[name];
-                buffer.type = defaultValue(buffer.type, 'arraybuffer');
+    var defaultProgram = {
+        attributes : [
+            'a_position'
+        ]
+    };
+
+    var defaultVertexShader = {
+        type : WebGLConstants.VERTEX_SHADER,
+        extras : {
+            _pipeline : {
+                source : '' +
+                    'precision highp float;\n' +
+                    '\n' +
+                    'uniform mat4 u_modelViewMatrix;\n' +
+                    'uniform mat4 u_projectionMatrix;\n' +
+                    '\n' +
+                    'attribute vec3 a_position;\n' +
+                    '\n' +
+                    'void main (void)\n' +
+                    '{\n' +
+                    '    gl_Position = u_projectionMatrix * u_modelViewMatrix * vec4(a_position, 1.0);\n' +
+                    '}\n'
             }
         }
-    }
+    };
 
-    function bufferViewDefaults(gltf) {
-        if (!defined(gltf.bufferViews)) {
-            gltf.bufferViews = {};
-        }
-    }
-
-    function cameraDefaults(gltf) {
-        if (!defined(gltf.cameras)) {
-            gltf.cameras = {};
-        }
-    }
-
-    function imageDefaults(gltf) {
-        if (!defined(gltf.images)) {
-            gltf.images = {};
-        }
-    }
-
-    function checkIfFloatVec4(value) {
-        if (defined(value) && value.length === 4) {
-            if (typeof(value[0]) === 'number' &&
-                typeof(value[1]) === 'number' &&
-                typeof(value[2]) === 'number' &&
-                typeof(value[3]) === 'number') {
-                return value;
+    var defaultFragmentShader = {
+        type : WebGLConstants.FRAGMENT_SHADER,
+        extras : {
+            _pipeline : {
+                extension : '.vert',
+                source : '' +
+                    'precision highp float;\n' +
+                    '\n' +
+                    'uniform vec4 u_emission;\n' +
+                    '\n' +
+                    'void main(void)\n' +
+                    '{\n' +
+                    '    gl_FragColor = u_emission;\n' +
+                    '}\n'
             }
         }
-        return [0, 0, 0, 1];
-    }
+    };
 
-    function guessExtensionTechnique(gltf, material, options) {
-        // Replaces the material technique, extension, and values with a close equivalent from KHR_materials_common.
-        // If no equivalent can be found, defaults to blinn for specular materials and lambert otherwise
-        var technique = options.technique;
-        var values = defined(material.values) ? material.values : {};
+    function addDefaultMaterial(gltf) {
+        var meshes = gltf.meshes;
 
-        var ambient = checkIfFloatVec4(values.ambient);
-        var diffuse = typeof(values.diffuse) === 'string' ? values.diffuse : checkIfFloatVec4(values.diffuse);
-        var emission = typeof(values.emission) === 'string' ? values.emission : checkIfFloatVec4(values.emission);
-        var specular = typeof(values.specular) === 'string' ? values.specular : checkIfFloatVec4(values.specular);
-        var shininess = typeof(values.shininess) === 'number' ? values.shininess : 0.0;
+        var defaultMaterialId;
 
-        if (!defined(technique)) {
-            if (defined(values.specular) || defined(values.shininess)) {
-                technique = 'BLINN';
-            } else {
-                technique = 'LAMBERT';
-            }
-        }
-
-        var transparency = typeof(values.transparency) === 'number' ? values.transparency : 1.0;
-
-        var diffuseTransparent = false;
-        if (typeof diffuse === 'string') {
-            diffuseTransparent = gltf.images[gltf.textures[diffuse].source].extras._pipeline.transparent;
-        } else {
-            diffuseTransparent = diffuse[3] < 1.0;
-        }
-
-        var transparent = (transparency < 1.0) || diffuseTransparent;
-
-        // Build an extensions object. Wipe existing extensions and values, if any.
-        if (defined(material.extensions)) {
-            delete material.extensions;
-        }
-        if (defined(material.values)) {
-            delete material.values;
-        }
-
-        material.extensions = {
-            KHR_materials_common : {
-                technique : technique,
-                values : {
-                    ambient : ambient,
-                    diffuse : diffuse,
-                    doubleSided : false,
-                    emission : emission,
-                    specular : specular,
-                    shininess : shininess,
-                    transparency : transparency,
-                    transparent : transparent
+        for (var meshId in meshes) {
+            if (meshes.hasOwnProperty(meshId)) {
+                var mesh = meshes[meshId];
+                var primitives = mesh.primitives;
+                var primitivesLength = primitives.length;
+                for (var i = 0; i < primitivesLength; i++) {
+                    var primitive = primitives[i];
+                    if (!defined(primitive.material)) {
+                        if (!defined(defaultMaterialId)) {
+                            defaultMaterialId = getUniqueId(gltf, 'defaultMaterial');
+                            gltf.materials[defaultMaterialId] = clone(defaultMaterial, true);
+                        }
+                        primitive.material = defaultMaterialId;
+                    }
                 }
             }
-        };
+        }
     }
 
-    function materialDefaults(gltf, options) {
-        if (!defined(gltf.materials)) {
-            gltf.materials = {};
-        }
+    function addDefaultTechnique(gltf) {
         var materials = gltf.materials;
+        var techniques = gltf.techniques;
+        var programs = gltf.programs;
+        var shaders = gltf.shaders;
 
-        for (var name in materials) {
-            if (materials.hasOwnProperty(name)) {
-                var material = materials[name];
-                if (!defined(material.technique)) {
-                    if (!defined(material.extensions) || Object.keys(material.extensions).length === 0) {
-                        guessExtensionTechnique(gltf, material, options);
-                        addExtensionsUsed(gltf, 'KHR_materials_common');
+        var defaultTechniqueId;
+        var defaultProgramId;
+        var defaultVertexShaderId;
+        var defaultFragmentShaderId;
+
+        for (var materialId in materials) {
+            if (materials.hasOwnProperty(materialId)) {
+                var material = materials[materialId];
+                var techniqueId = material.technique;
+                var extensions = defaultValue(material.extensions, {});
+                var materialsCommon = extensions.KHR_materials_common;
+                if (!defined(techniqueId)) {
+                    if (!defined(defaultTechniqueId) && !defined(materialsCommon)) {
+                        defaultTechniqueId = getUniqueId(gltf, 'defaultTechnique');
+                        defaultProgramId = getUniqueId(gltf, 'defaultProgram');
+                        defaultVertexShaderId = getUniqueId(gltf, 'defaultVertexShader');
+                        defaultFragmentShaderId = getUniqueId(gltf, 'defaultFragmentShader');
+
+                        var technique = clone(defaultTechnique, true);
+                        techniques[defaultTechniqueId] = technique;
+                        technique.program = defaultProgramId;
+
+                        var program = clone(defaultProgram, true);
+                        programs[defaultProgramId] = program;
+                        program.vertexShader = defaultVertexShaderId;
+                        program.fragmentShader = defaultFragmentShaderId;
+
+                        var vertexShader = clone(defaultVertexShader, true);
+                        shaders[defaultVertexShaderId] = vertexShader;
+
+                        var fragmentShader = clone(defaultFragmentShader, true);
+                        shaders[defaultFragmentShaderId] = fragmentShader;
                     }
+                    material.technique = defaultTechniqueId;
                 }
-                else if (!defined(material.values)) {
-                    material.values = {};
-                }
+            }
+        }
+    }
 
+    function enableDiffuseTransparency(gltf) {
+        var materials = gltf.materials;
+        var techniques = gltf.techniques;
+
+        for (var materialId in materials) {
+            if (materials.hasOwnProperty(materialId)) {
+                var material = materials[materialId];
                 if (defined(material.values) && defined(material.values.diffuse)) {
                     // Check if the diffuse texture/color is transparent
                     var diffuse = material.values.diffuse;
@@ -206,23 +397,23 @@ define([
                         diffuseTransparent = diffuse[3] < 1.0;
                     }
 
-                    var technique = gltf.techniques[material.technique];
+                    var technique = techniques[material.technique];
                     var blendingEnabled = technique.states.enable.indexOf(WebGLConstants.BLEND) > -1;
 
                     // Override the technique's states if blending isn't already enabled
                     if (diffuseTransparent && !blendingEnabled) {
                         technique.states = {
-                            enable : [
+                            enable: [
                                 WebGLConstants.DEPTH_TEST,
                                 WebGLConstants.BLEND
                             ],
-                            depthMask : false,
-                            functions : {
-                                blendEquationSeparate : [
+                            depthMask: false,
+                            functions: {
+                                blendEquationSeparate: [
                                     WebGLConstants.FUNC_ADD,
                                     WebGLConstants.FUNC_ADD
                                 ],
-                                blendFuncSeparate : [
+                                blendFuncSeparate: [
                                     WebGLConstants.ONE,
                                     WebGLConstants.ONE_MINUS_SRC_ALPHA,
                                     WebGLConstants.ONE,
@@ -236,210 +427,29 @@ define([
         }
     }
 
-    function meshDefaults(gltf) {
-        if (!defined(gltf.meshes)) {
-            gltf.meshes = {};
-        }
-        var meshes = gltf.meshes;
-
-        for (var name in meshes) {
-            if (meshes.hasOwnProperty(name)) {
-                var mesh = meshes[name];
-                if (!defined(mesh.primitives)) {
-                    mesh.primitives = [];
-                }
-
-                var primitives = mesh.primitives;
-                var length = primitives.length;
-                for (var i = 0; i < length; ++i) {
-                    var primitive = primitives[i];
-                    if (!defined(primitive.attributes)) {
-                        primitive.attributes = {};
-                    }
-                    primitive.mode = defaultValue(primitive.mode, WebGLConstants.TRIANGLES);
-
-                }
-            }
-        }
-    }
-
-    function nodeDefaults(gltf) {
-        if (!defined(gltf.nodes)) {
-            gltf.nodes = {};
-        }
-        var nodes = gltf.nodes;
-        for (var name in nodes) {
-            if (nodes.hasOwnProperty(name)) {
-                var node = nodes[name];
-
-                if (!defined(node.children)) {
-                    node.children = [];
-                }
-
-                if (!defined(node.matrix)) {
-                    // Add default identity matrix if there is no matrix property and no TRS properties
-                    if (!defined(node.translation) && !defined(node.rotation) && !defined(node.scale)) {
-                        node.matrix = [
-                            1.0, 0.0, 0.0, 0.0,
-                            0.0, 1.0, 0.0, 0.0,
-                            0.0, 0.0, 1.0, 0.0,
-                            0.0, 0.0, 0.0, 1.0
-                        ];
-                    } else {
-                        if (!defined(node.translation)) {
-                            node.translation = [0.0, 0.0, 0.0];
-                        }
-
-                        if (!defined(node.rotation)) {
-                            node.rotation = [0.0, 0.0, 0.0, 1.0];
-                        }
-
-                        if (!defined(node.scale)) {
-                            node.scale = [1.0, 1.0, 1.0];
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    function programDefaults(gltf) {
-        if (!defined(gltf.programs)) {
-            gltf.programs = {};
-        }
-        var programs = gltf.programs;
-
-        for (var name in programs) {
-            if (programs.hasOwnProperty(name)) {
-                var program = programs[name];
-                if (!defined(program.attributes)) {
-                    program.attributes = [];
-                }
-            }
-        }
-    }
-
-    function samplerDefaults(gltf) {
-        if (!defined(gltf.samplers)) {
-            gltf.samplers = {};
-        }
-        var samplers = gltf.samplers;
-
-        for (var name in samplers) {
-            if (samplers.hasOwnProperty(name)) {
-                var sampler = samplers[name];
-                sampler.magFilter = defaultValue(sampler.magFilter, WebGLConstants.LINEAR);
-                sampler.minFilter = defaultValue(sampler.minFilter, WebGLConstants.NEAREST_MIPMAP_LINEAR);
-                sampler.wrapS = defaultValue(sampler.wrapS, WebGLConstants.REPEAT);
-                sampler.wrapT = defaultValue(sampler.wrapT, WebGLConstants.REPEAT);
-            }
-        }
-    }
-
-    function sceneDefaults(gltf) {
-        if (!defined(gltf.scenes)) {
-            gltf.scenes = {};
-        }
+    function selectDefaultScene(gltf) {
         var scenes = gltf.scenes;
 
-        for (var name in scenes) {
-            if (scenes.hasOwnProperty(name)) {
-                var scene = scenes[name];
-                if (!defined(scene.nodes)) {
-                    scene.nodes = [];
+        if (!defined(gltf.scene)) {
+            for (var sceneId in scenes) {
+                if (scenes.hasOwnProperty(sceneId)) {
+                    gltf.scene = sceneId;
+                    break;
                 }
             }
         }
     }
 
-    function shaderDefaults(gltf) {
-        if (!defined(gltf.shaders)) {
-            gltf.shaders = {};
-        }
-    }
-
-    function skinDefaults(gltf) {
-        if (!defined(gltf.skins)) {
-            gltf.skins = {};
-        }
-        var skins = gltf.skins;
-
-        for (var name in skins) {
-            if (skins.hasOwnProperty(name)) {
-                var skin = skins[name];
-                if (!defined(skin.bindShapeMatrix)) {
-                    skin.bindShapeMatrix = [
-                        1.0, 0.0, 0.0, 0.0,
-                        0.0, 1.0, 0.0, 0.0,
-                        0.0, 0.0, 1.0, 0.0,
-                        0.0, 0.0, 0.0, 1.0
-                    ];
-                }
-            }
-        }
-    }
-
-    function statesDefaults(states) {
-        if (!defined(states.enable)) {
-            states.enable = [];
-        }
-    }
-
-    function techniqueDefaults(gltf, options) {
-        if (!defined(gltf.techniques)) {
-            gltf.techniques = {};
-        }
+    function optimizeForCesium(gltf) {
+        // Give the diffuse uniform a semantic to support color replacement in 3D Tiles
         var techniques = gltf.techniques;
-
-        for (var name in techniques) {
-            if (techniques.hasOwnProperty(name)) {
-                var technique = techniques[name];
-                if (!defined(technique.parameters)) {
-                    technique.parameters = {};
-                }
+        for (var techniqueId in techniques) {
+            if (techniques.hasOwnProperty(techniqueId)) {
+                var technique = techniques[techniqueId];
                 var parameters = technique.parameters;
-                for (var parameterName in parameters) {
-                    if (parameters.hasOwnProperty(parameterName)) {
-                        var parameter = parameters[parameterName];
-                        parameter.node = defaultValue(parameter.node, parameter.source);
-                        parameter.source = undefined;
-                    }
-                }
-
-                // Give the diffuse uniform a semantic to support color replacement in 3D Tiles
-                if (defined(parameters.diffuse) && options.optimizeForCesium) {
+                if (defined(parameters.diffuse)) {
                     parameters.diffuse.semantic = '_3DTILESDIFFUSE';
                 }
-
-                if (!defined(technique.attributes)) {
-                    technique.attributes = {};
-                }
-
-                if (!defined(technique.uniforms)) {
-                    technique.uniforms = {};
-                }
-
-                if (!defined(technique.states)) {
-                    technique.states = {};
-                }
-                statesDefaults(technique.states);
-            }
-        }
-    }
-
-    function textureDefaults(gltf) {
-        if (!defined(gltf.textures)) {
-            gltf.textures = {};
-        }
-        var textures = gltf.textures;
-
-        for (var name in textures) {
-            if (textures.hasOwnProperty(name)) {
-                var texture = textures[name];
-                texture.format = defaultValue(texture.format, WebGLConstants.RGBA);
-                texture.internalFormat = defaultValue(texture.internalFormat, texture.format);
-                texture.target = defaultValue(texture.target, WebGLConstants.TEXTURE_2D);
-                texture.type = defaultValue(texture.type, WebGLConstants.UNSIGNED_BYTE);
             }
         }
     }
@@ -451,36 +461,22 @@ define([
      *
      * @param {Object} gltf A javascript object containing a glTF asset.
      * @param {Object} [options] An object with the following properties:
-     * @param {String} [options.technique] The shading technique to use. Possible techniques are 'CONSTANT', 'LAMBERT', 'BLINN', and 'PHONG'.
-     * @param {Boolean} [options.optimizeForCesium] Optimize the defaults for CesiumCore. Uses the Cesium sun as the default light source.
+     * @param {Boolean} [options.optimizeForCesium] Optimize the defaults for Cesium. Uses the Cesium sun as the default light source.
      * @returns {Object} The modified glTF.
      *
      * @see addPipelineExtras
      * @see loadGltfUris
      */
     function addDefaults(gltf, options) {
-        gltf = defaultValue(gltf, {});
         options = defaultValue(options, {});
-        gltf.extensionsUsed = defaultValue(gltf.extensionsUsed, []);
-
-        accessorDefaults(gltf);
-        animationDefaults(gltf);
-        assetDefaults(gltf);
-        bufferDefaults(gltf);
-        bufferViewDefaults(gltf);
-        cameraDefaults(gltf);
-        imageDefaults(gltf);
-        techniqueDefaults(gltf, options);
-        materialDefaults(gltf, options);
-        meshDefaults(gltf);
-        nodeDefaults(gltf);
-        programDefaults(gltf);
-        samplerDefaults(gltf);
-        sceneDefaults(gltf);
-        shaderDefaults(gltf);
-        skinDefaults(gltf);
-        textureDefaults(gltf);
-
+        addDefaultsFromTemplate(gltf, gltfTemplate);
+        addDefaultMaterial(gltf);
+        addDefaultTechnique(gltf);
+        enableDiffuseTransparency(gltf);
+        selectDefaultScene(gltf);
+        if (options.optimizeForCesium) {
+            optimizeForCesium(gltf);
+        }
         return gltf;
     }
 

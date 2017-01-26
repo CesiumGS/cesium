@@ -7,10 +7,15 @@ define([
         defined) {
     'use strict';
 
-    // Objects with these ids should not get extras added
+    // Objects with these ids should not have extras added
     var exceptions = {
-        attributes: true
+        attributes: true,
+        uniforms: true,
+        extensions: true,
+        values: true,
+        samplers: true
     };
+
     /**
      * Adds extras._pipeline to each object that can have extras in the glTF asset.
      *
@@ -19,37 +24,33 @@ define([
      */
     function addPipelineExtras(gltf) {
         var objectStack = [];
-        gltf.extras = defaultValue(gltf.extras, {});
-        gltf.extras._pipeline = defaultValue(gltf.extras._pipeline, {});
         for (var rootObjectId in gltf) {
             if (gltf.hasOwnProperty(rootObjectId)) {
                 var rootObject = gltf[rootObjectId];
-                for (var topLevelObjectId in rootObject) {
-                    if (rootObject.hasOwnProperty(topLevelObjectId)) {
-                        var topLevelObject = rootObject[topLevelObjectId];
-                        if (defined(topLevelObject) && typeof topLevelObject === 'object') {
-                            objectStack.push(topLevelObject);
+                objectStack.push(rootObject);
+            }
+        }
+        while (objectStack.length > 0) {
+            var object = objectStack.pop();
+            for (var propertyId in object) {
+                if (object.hasOwnProperty(propertyId)) {
+                    var property = object[propertyId];
+                    if (defined(property) && typeof property === 'object' && propertyId !== 'extras') {
+                        objectStack.push(property);
+                        if (!exceptions[propertyId] && !Array.isArray(property)) {
+                            property.extras = defaultValue(property.extras, {});
+                            property.extras._pipeline = defaultValue(property.extras._pipeline, {});
                         }
                     }
                 }
             }
         }
-        while (objectStack.length > 0) {
-            var object = objectStack.pop();
-            object.extras = defaultValue(object.extras, {});
-            object.extras._pipeline = defaultValue(object.extras._pipeline, {});
-            for (var propertyId in object) {
-                if (object.hasOwnProperty(propertyId)) {
-                    var property = object[propertyId];
-                    if (defined(property) && typeof property === 'object' && propertyId !== 'extras' && !exceptions[propertyId]) {
-                        objectStack.push(property);
-                    }
-                }
-            }
-        }
-
+        gltf.extras = defaultValue(gltf.extras, {});
+        gltf.extras._pipeline = defaultValue(gltf.extras._pipeline, {});
+        gltf.asset = defaultValue(gltf.asset, {});
+        gltf.asset.extras = defaultValue(gltf.asset.extras, {});
+        gltf.asset.extras._pipeline = defaultValue(gltf.asset.extras._pipeline, {});
         return gltf;
     }
-
     return addPipelineExtras;
 });

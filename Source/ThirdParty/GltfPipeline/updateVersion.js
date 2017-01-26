@@ -1,35 +1,34 @@
 /*global define*/
 define([
-        './findAccessorMinMax',
         './getUniqueId',
+        './findAccessorMinMax',
         '../../Core/Cartesian3',
-        '../../Core/defaultValue',
-        '../../Core/defined',
         '../../Core/Math',
-        '../../Core/Matrix3',
         '../../Core/Matrix4',
         '../../Core/Quaternion',
-        '../../Core/WebGLConstants'
+        '../../Core/WebGLConstants',
+        '../../Core/defaultValue',
+        '../../Core/defined'
     ], function(
-        findAccessorMinMax,
         getUniqueId,
+        findAccessorMinMax,
         Cartesian3,
-        defaultValue,
-        defined,
         CesiumMath,
-        Matrix3,
         Matrix4,
         Quaternion,
-        WebGLConstants) {
+        WebGLConstants,
+        defaultValue,
+        defined) {
     'use strict';
 
     var updateFunctions = {
         '0.8' : glTF08to10,
-        '1.0' : glTF10to11
+        '1.0' : glTF10to20,
+        '2.0' : null
     };
 
     /**
-     * Update the glTF version to the latest (1.1), or targetVersion if specified.
+     * Update the glTF version to the latest version (2.0), or targetVersion if specified.
      * Applies changes made to the glTF spec between revisions so that the core library
      * only has to handle the latest version.
      *
@@ -41,21 +40,27 @@ define([
     function updateVersion(gltf, options) {
         options = defaultValue(options, {});
         var targetVersion = options.targetVersion;
-        if (defined(gltf)) {
-            var version = gltf.version;
-            gltf.asset = defaultValue(gltf.asset, {
-                version : '1.0'
-            });
-            version = defaultValue(version, gltf.asset.version);
-            var updateFunction = updateFunctions[version];
-            while (defined(updateFunction)) {
-                if (version === targetVersion) {
-                    break;
-                }
-                updateFunction(gltf);
-                version = gltf.asset.version;
-                updateFunction = updateFunctions[version];
+        var version = gltf.version;
+
+        gltf.asset = defaultValue(gltf.asset, {
+            version: '1.0'
+        });
+
+        version = defaultValue(version, gltf.asset.version);
+        // invalid version, default to 1.0
+        if (!updateFunctions.hasOwnProperty(version)) {
+            version = '1.0';
+        }
+
+        var updateFunction = updateFunctions[version];
+        while (defined(updateFunction)) {
+            version = gltf.asset.version;
+            if (version === targetVersion) {
+                break;
             }
+            updateFunction(gltf);
+            version = gltf.asset.version;
+            updateFunction = updateFunctions[version];
         }
         return gltf;
     }
@@ -164,6 +169,15 @@ define([
         updateNodes(gltf);
         // technique.pass and techniques.passes are deprecated
         removeTechniquePasses(gltf);
+        // gltf.lights -> khrMaterialsCommon.lights
+        if (defined(gltf.lights)) {
+            var extensions = defaultValue(gltf.extensions, {});
+            gltf.extensions = extensions;
+            var materialsCommon = defaultValue(extensions.KHR_materials_common, {});
+            extensions.KHR_materials_common = materialsCommon;
+            materialsCommon.lights = gltf.lights;
+            delete gltf.lights;
+        }
         // gltf.allExtensions -> extensionsUsed
         if (defined(gltf.allExtensions)) {
             gltf.extensionsUsed = gltf.allExtensions;
@@ -188,7 +202,6 @@ define([
         KHR_materials_common : true,
         WEB3D_quantized_attributes : true
     };
-
     function requireKnownExtensions(gltf) {
         var extensionsUsed = gltf.extensionsUsed;
         gltf.extensionsRequired = defaultValue(gltf.extensionsRequired, []);
@@ -198,8 +211,6 @@ define([
                 var extension = extensionsUsed[i];
                 if (defined(knownExtensions[extension])) {
                     gltf.extensionsRequired.push(extension);
-                    extensionsUsed.splice(i, 1);
-                    i--;
                 }
             }
         }
@@ -236,15 +247,17 @@ define([
             if (animations.hasOwnProperty(animationId)) {
                 var animation = animations[animationId];
                 var parameters = animation.parameters;
-                var samplers = animation.samplers;
-                for (var samplerId in samplers) {
-                    if (samplers.hasOwnProperty(samplerId)) {
-                        var sampler = samplers[samplerId];
-                        sampler.input = parameters[sampler.input];
-                        sampler.output = parameters[sampler.output];
+                if (defined(parameters)) {
+                    var samplers = animation.samplers;
+                    for (var samplerId in samplers) {
+                        if (samplers.hasOwnProperty(samplerId)) {
+                            var sampler = samplers[samplerId];
+                            sampler.input = parameters[sampler.input];
+                            sampler.output = parameters[sampler.output];
+                        }
                     }
+                    delete animation.parameters;
                 }
-                delete animation.parameters;
             }
         }
     }
@@ -296,8 +309,7 @@ define([
                                 if (semantic === 'TEXCOORD') {
                                     attributes.TEXCOORD_0 = attributes[semantic];
                                     delete attributes[semantic];
-                                }
-                                if (semantic === 'COLOR') {
+                                } else if (semantic === 'COLOR') {
                                     attributes.COLOR_0 = attributes[semantic];
                                     delete attributes[semantic];
                                 }
@@ -330,15 +342,13 @@ define([
     }
 
     var knownSemantics = {
-        POSITION : true,
-        NORMAL : true,
-        TEXCOORD : true,
-        COLOR : true,
-        JOINT : true,
-        WEIGHT : true,
-        BATCHID : true
+        POSITION: true,
+        NORMAL: true,
+        TEXCOORD: true,
+        COLOR: true,
+        JOINT: true,
+        WEIGHT: true,
     };
-
     function underscoreApplicationSpecificSemantics(gltf) {
         var mappedSemantics = {};
         var meshes = gltf.meshes;
@@ -524,7 +534,6 @@ define([
     var scratchRotation = new Quaternion();
     var scratchScale = new Cartesian3();
     var defaultScale = new Cartesian3(1.0, 1.0, 1.0);
-    var scratchMatrix3 = new Matrix3();
     var scratchMatrix4 = new Matrix4();
     var scratchPreApplyTransform = new Matrix4();
     function getNodeTransform(node) {
@@ -580,52 +589,58 @@ define([
         }
 
         var sceneId = gltf.scene;
-        var scene = scenes[sceneId];
+        if (defined(sceneId)) {
+            var scene = scenes[sceneId];
 
-        var skinnedNodesLength = skinnedNodes.length;
-        for (i = 0; i < skinnedNodesLength; i++) {
-            var skinnedNodeId = skinnedNodes[i];
-            var skinnedNode = nodes[skinnedNodeId];
-            skeletonIds = skinnedNode.skeletons;
-            var skeletonIdsLength = skeletonIds.length;
-            for (var j = 0; j < skeletonIdsLength; j++) {
-                var skeletonId = skeletonIds[j];
-                var parentNodeId = parentNodes[skeletonId];
-                if (defined(parentNodeId)) {
-                    var parentNode = nodes[parentNodeId];
-                    var parentChildren = parentNode.children;
-                    var index = parentChildren.indexOf(skeletonId);
-                    parentChildren.splice(index, 1);
-                    parentNode.children = parentChildren;
-                    Matrix4.IDENTITY.clone(scratchPreApplyTransform);
-                    while(defined(parentNode)) {
-                        var parentTransform = getNodeTransform(parentNode);
-                        Matrix4.multiply(parentTransform, scratchPreApplyTransform, scratchPreApplyTransform);
-                        parentNodeId = parentNodes[parentNodeId];
-                        parentNode = nodes[parentNodeId];
+            var skinnedNodesLength = skinnedNodes.length;
+            for (i = 0; i < skinnedNodesLength; i++) {
+                var skinnedNodeId = skinnedNodes[i];
+                var skinnedNode = nodes[skinnedNodeId];
+                skeletonIds = skinnedNode.skeletons;
+                var skeletonIdsLength = skeletonIds.length;
+                for (var j = 0; j < skeletonIdsLength; j++) {
+                    var skeletonId = skeletonIds[j];
+                    var parentNodeId = parentNodes[skeletonId];
+                    if (defined(parentNodeId)) {
+                        var parentNode = nodes[parentNodeId];
+                        var parentChildren = parentNode.children;
+                        var index = parentChildren.indexOf(skeletonId);
+                        parentChildren.splice(index, 1);
+                        parentNode.children = parentChildren;
+                        Matrix4.IDENTITY.clone(scratchPreApplyTransform);
+                        while (defined(parentNode)) {
+                            var parentTransform = getNodeTransform(parentNode);
+                            Matrix4.multiply(parentTransform, scratchPreApplyTransform, scratchPreApplyTransform);
+                            parentNodeId = parentNodes[parentNodeId];
+                            parentNode = nodes[parentNodeId];
+                        }
+                        if (!Matrix4.equals(scratchPreApplyTransform, Matrix4.IDENTITY)) {
+                            var newRootNodeId = getUniqueId(gltf, 'root-' + skeletonId);
+                            var newRootNode = {
+                                children: [],
+                                matrix: Matrix4.pack(scratchPreApplyTransform, [], 0),
+                                extras: {
+                                    _pipeline: {}
+                                }
+                            };
+                            newRootNode.children.push(skeletonId);
+                            nodes[newRootNodeId] = newRootNode;
+                            skeletonId = newRootNodeId;
+                            skeletonIds[j] = newRootNodeId;
+                        }
+                        scene.nodes.push(skeletonId);
                     }
-                    if (!Matrix4.equals(scratchPreApplyTransform, Matrix4.IDENTITY)) {
-                        var newRootNodeId = getUniqueId(gltf, 'root-' + skeletonId);
-                        var newRootNode = {
-                            children: [],
-                            matrix: Matrix4.pack(scratchPreApplyTransform, [], 0)
-                        };
-                        newRootNode.children.push(skeletonId);
-                        nodes[newRootNodeId] = newRootNode;
-                        skeletonId = newRootNodeId;
-                        skeletonIds[j] = newRootNodeId;
-                    }
-                    scene.nodes.push(skeletonId);
                 }
             }
         }
     }
 
-    function glTF10to11(gltf) {
+    function glTF10to20(gltf) {
+        if (!defined(gltf.asset)) {
+            gltf.asset = {};
+        }
         var asset = gltf.asset;
-        asset.version = '1.1';
-        // glTF uris need to be loaded if they haven't been
-        // loadGltfUris(gltf);
+        asset.version = '2.0';
         // profile.version does not include revision number ("1.0.3" -> "1.0")
         stripWebGLRevisionNumber(gltf);
         // move known extensions from extensionsUsed to extensionsRequired
@@ -654,7 +669,7 @@ define([
         clampTechniqueFunctionStates(gltf);
         // clamp camera parameters
         clampCameraParameters(gltf);
-        // skeleton nodes must be root nodes
+        // skeleton hierarchy must be separate from the node hierarchy (a node with jointName cannot contain camera, skeletons, skins, or meshes)
         separateSkeletonHierarchy(gltf);
     }
 

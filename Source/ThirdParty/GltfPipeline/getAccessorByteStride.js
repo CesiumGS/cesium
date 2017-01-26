@@ -1,7 +1,7 @@
 /*global define*/
 define([
-        './byteLengthForComponentType',
-        './numberOfComponentsForType'
+    './byteLengthForComponentType',
+    './numberOfComponentsForType'
     ], function(
         byteLengthForComponentType,
         numberOfComponentsForType) {
@@ -20,6 +20,5 @@ define([
         }
         return byteLengthForComponentType(accessor.componentType) * numberOfComponentsForType(accessor.type);
     }
-
     return getAccessorByteStride;
 });

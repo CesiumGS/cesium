@@ -1,9 +1,9 @@
 /*global define*/
 define([
-        './techniqueParameterForSemantic',
-        '../../Core/WebGLConstants',
-        '../../Core/defined',
-        '../../Core/defaultValue'
+    './techniqueParameterForSemantic',
+    '../../Core/WebGLConstants',
+    '../../Core/defined',
+    '../../Core/defaultValue'
     ], function(
         techniqueParameterForSemantic,
         WebGLConstants,
@@ -72,69 +72,69 @@ define([
                         case 'ambient':
                             var ambient = light.ambient;
                             result[lightBaseName + 'Color'] = {
-                                type : WebGLConstants.FLOAT_VEC3,
-                                value : ambient.color
+                                type: WebGLConstants.FLOAT_VEC3,
+                                value: ambient.color
                             };
                             break;
                         case 'directional':
                             var directional = light.directional;
                             result[lightBaseName + 'Color'] = {
-                                type : WebGLConstants.FLOAT_VEC3,
-                                value : directional.color
+                                type: WebGLConstants.FLOAT_VEC3,
+                                value: directional.color
                             };
                             if (defined(light.node)) {
                                 result[lightBaseName + 'Transform'] = {
-                                    node : light.node,
-                                    semantic : 'MODELVIEW',
-                                    type : WebGLConstants.FLOAT_MAT4
+                                    node: light.node,
+                                    semantic: 'MODELVIEW',
+                                    type: WebGLConstants.FLOAT_MAT4
                                 };
                             }
                             break;
                         case 'point':
                             var point = light.point;
                             result[lightBaseName + 'Color'] = {
-                                type : WebGLConstants.FLOAT_VEC3,
-                                value : point.color
+                                type: WebGLConstants.FLOAT_VEC3,
+                                value: point.color
                             };
                             if (defined(light.node)) {
                                 result[lightBaseName + 'Transform'] = {
-                                    node : light.node,
-                                    semantic : 'MODELVIEW',
-                                    type : WebGLConstants.FLOAT_MAT4
+                                    node: light.node,
+                                    semantic: 'MODELVIEW',
+                                    type: WebGLConstants.FLOAT_MAT4
                                 };
                             }
                             result[lightBaseName + 'Attenuation'] = {
-                                type : WebGLConstants.FLOAT_VEC3,
-                                value : [point.constantAttenuation, point.linearAttenuation, point.quadraticAttenuation]
+                                type: WebGLConstants.FLOAT_VEC3,
+                                value: [point.constantAttenuation, point.linearAttenuation, point.quadraticAttenuation]
                             };
                             break;
                         case 'spot':
                             var spot = light.spot;
                             result[lightBaseName + 'Color'] = {
-                                type : WebGLConstants.FLOAT_VEC3,
-                                value : spot.color
+                                type: WebGLConstants.FLOAT_VEC3,
+                                value: spot.color
                             };
                             if (defined(light.node)) {
                                 result[lightBaseName + 'Transform'] = {
-                                    node : light.node,
-                                    semantic : 'MODELVIEW',
-                                    type : WebGLConstants.FLOAT_MAT4
+                                    node: light.node,
+                                    semantic: 'MODELVIEW',
+                                    type: WebGLConstants.FLOAT_MAT4
                                 };
                                 result[lightBaseName + 'InverseTransform'] = {
-                                    node : light.node,
-                                    semantic : 'MODELVIEWINVERSE',
-                                    type : WebGLConstants.FLOAT_MAT4,
-                                    useInFragment : true
+                                    node: light.node,
+                                    semantic: 'MODELVIEWINVERSE',
+                                    type: WebGLConstants.FLOAT_MAT4,
+                                    useInFragment: true
                                 };
                             }
                             result[lightBaseName + 'Attenuation'] = {
-                                type : WebGLConstants.FLOAT_VEC3,
-                                value : [spot.constantAttenuation, spot.linearAttenuation, spot.quadraticAttenuation]
+                                type: WebGLConstants.FLOAT_VEC3,
+                                value: [spot.constantAttenuation, spot.linearAttenuation, spot.quadraticAttenuation]
                             };
 
                             result[lightBaseName + 'FallOff'] = {
-                                type : WebGLConstants.FLOAT_VEC2,
-                                value : [spot.fallOffAngle, spot.fallOffExponent]
+                                type: WebGLConstants.FLOAT_VEC2,
+                                value: [spot.fallOffAngle, spot.fallOffExponent]
                             };
                             break;
                     }
@@ -188,28 +188,28 @@ define([
         // Add techniques
         var techniqueParameters = {
             // Add matrices
-            modelViewMatrix : {
-                semantic : 'MODELVIEW',
-                type : WebGLConstants.FLOAT_MAT4
+            modelViewMatrix: {
+                semantic: 'MODELVIEW',
+                type: WebGLConstants.FLOAT_MAT4
             },
-            projectionMatrix : {
-                semantic : 'PROJECTION',
-                type : WebGLConstants.FLOAT_MAT4
+            projectionMatrix: {
+                semantic: 'PROJECTION',
+                type: WebGLConstants.FLOAT_MAT4
             }
         };
 
         if (hasNormals) {
             techniqueParameters.normalMatrix = {
-                semantic : 'MODELVIEWINVERSETRANSPOSE',
-                type : WebGLConstants.FLOAT_MAT3
+                semantic: 'MODELVIEWINVERSETRANSPOSE',
+                type: WebGLConstants.FLOAT_MAT3
             };
         }
 
         if (hasSkinning) {
             techniqueParameters.jointMatrix = {
-                count : jointCount,
-                semantic : 'JOINTMATRIX',
-                type : WebGLConstants.FLOAT_MAT4
+                count: jointCount,
+                semantic: 'JOINTMATRIX',
+                type: WebGLConstants.FLOAT_MAT4
             };
         }
 
@@ -226,7 +226,7 @@ define([
                     hasTexCoords = true;
                 }
                 techniqueParameters[lowerCase] = {
-                    type : valType
+                    type: valType
                 };
             }
         }
@@ -273,11 +273,11 @@ define([
 
         // Add position always
         var techniqueAttributes = {
-            a_position : 'position'
+            a_position: 'position'
         };
         techniqueParameters.position = {
-            semantic : 'POSITION',
-            type : WebGLConstants.FLOAT_VEC3
+            semantic: 'POSITION',
+            type: WebGLConstants.FLOAT_VEC3
         };
         vertexShader += 'attribute vec3 a_position;\n';
         vertexShader += 'varying vec3 v_positionEC;\n';
@@ -294,8 +294,8 @@ define([
         if (hasNormals) {
             techniqueAttributes.a_normal = 'normal';
             techniqueParameters.normal = {
-                semantic : 'NORMAL',
-                type : WebGLConstants.FLOAT_VEC3
+                semantic: 'NORMAL',
+                type: WebGLConstants.FLOAT_VEC3
             };
             vertexShader += 'attribute vec3 a_normal;\n';
             vertexShader += 'varying vec3 v_normal;\n';
@@ -313,8 +313,8 @@ define([
         if (hasTexCoords) {
             techniqueAttributes.a_texcoord_0 = 'texcoord_0';
             techniqueParameters.texcoord_0 = {
-                semantic : 'TEXCOORD_0',
-                type : WebGLConstants.FLOAT_VEC2
+                semantic: 'TEXCOORD_0',
+                type: WebGLConstants.FLOAT_VEC2
             };
 
             v_texcoord = 'v_texcoord_0';
@@ -328,13 +328,13 @@ define([
         if (hasSkinning) {
             techniqueAttributes.a_joint = 'joint';
             techniqueParameters.joint = {
-                semantic : 'JOINT',
-                type : WebGLConstants.FLOAT_VEC4
+                semantic: 'JOINT',
+                type: WebGLConstants.FLOAT_VEC4
             };
             techniqueAttributes.a_weight = 'weight';
             techniqueParameters.weight = {
-                semantic : 'WEIGHT',
-                type : WebGLConstants.FLOAT_VEC4
+                semantic: 'WEIGHT',
+                type: WebGLConstants.FLOAT_VEC4
             };
 
             vertexShader += 'attribute vec4 a_joint;\n';
@@ -342,7 +342,7 @@ define([
         }
 
         var hasSpecular = hasNormals && ((lightingModel === 'BLINN') || (lightingModel === 'PHONG')) &&
-                          defined(techniqueParameters.specular) && defined(techniqueParameters.shininess);
+            defined(techniqueParameters.specular) && defined(techniqueParameters.shininess);
 
         // Generate lighting code blocks
         var hasNonAmbientLights = false;
@@ -530,17 +530,17 @@ define([
         var techniqueStates;
         if (parameterValues.transparent) {
             techniqueStates = {
-                enable : [
+                enable: [
                     WebGLConstants.DEPTH_TEST,
                     WebGLConstants.BLEND
                 ],
-                depthMask : false,
-                functions : {
-                    blendEquationSeparate : [
+                depthMask: false,
+                functions: {
+                    blendEquationSeparate: [
                         WebGLConstants.FUNC_ADD,
                         WebGLConstants.FUNC_ADD
                     ],
-                    blendFuncSeparate : [
+                    blendFuncSeparate: [
                         WebGLConstants.ONE,
                         WebGLConstants.ONE_MINUS_SRC_ALPHA,
                         WebGLConstants.ONE,
@@ -550,42 +550,42 @@ define([
             };
         } else if (parameterValues.doubleSided) {
             techniqueStates = {
-                enable : [
+                enable: [
                     WebGLConstants.DEPTH_TEST
                 ]
             };
         } else { // Not transparent or double sided
             techniqueStates = {
-                enable : [
+                enable: [
                     WebGLConstants.CULL_FACE,
                     WebGLConstants.DEPTH_TEST
                 ]
             };
         }
         techniques[techniqueId] = {
-            attributes : techniqueAttributes,
-            parameters : techniqueParameters,
-            program : programId,
-            states : techniqueStates,
-            uniforms : techniqueUniforms
+            attributes: techniqueAttributes,
+            parameters: techniqueParameters,
+            program: programId,
+            states: techniqueStates,
+            uniforms: techniqueUniforms
         };
 
         // Add shaders
         shaders[vertexShaderId] = {
-            type : WebGLConstants.VERTEX_SHADER,
-            extras : {
-                _pipeline : {
-                    source : vertexShader,
-                    extension : '.glsl'
+            type: WebGLConstants.VERTEX_SHADER,
+            extras: {
+                _pipeline: {
+                    source: vertexShader,
+                    extension: '.glsl'
                 }
             }
         };
         shaders[fragmentShaderId] = {
-            type : WebGLConstants.FRAGMENT_SHADER,
-            extras : {
-                _pipeline : {
-                    source : fragmentShader,
-                    extension : '.glsl'
+            type: WebGLConstants.FRAGMENT_SHADER,
+            extras: {
+                _pipeline: {
+                    source: fragmentShader,
+                    extension: '.glsl'
                 }
             }
         };
@@ -593,9 +593,9 @@ define([
         // Add program
         var programAttributes = Object.keys(techniqueAttributes);
         programs[programId] = {
-            attributes : programAttributes,
-            fragmentShader : fragmentShaderId,
-            vertexShader : vertexShaderId
+            attributes: programAttributes,
+            fragmentShader: fragmentShaderId,
+            vertexShader: vertexShaderId
         };
 
         return techniqueId;
@@ -673,12 +673,7 @@ define([
         }
         var khrMaterialsCommon = extensions.KHR_materials_common;
 
-        if (defined(gltf.lights)) {
-            // glTF 0.8 backward compatibility
-            khrMaterialsCommon.lights = gltf.lights;
-            delete gltf.lights;
-        }
-        else if (!defined(khrMaterialsCommon.lights)) {
+        if (!defined(khrMaterialsCommon.lights)) {
             khrMaterialsCommon.lights = {};
         }
         var lights = khrMaterialsCommon.lights;
@@ -766,8 +761,8 @@ define([
                     var lowerCase = semantic.toLowerCase();
                     var attributeName = 'a_' + lowerCase;
                     technique.parameters[lowerCase] = {
-                        semantic : semantic,
-                        type : accessor.componentType
+                        semantic: semantic,
+                        type: accessor.componentType
                     };
                     technique.attributes[attributeName] = lowerCase;
                     program.attributes.push(attributeName);
@@ -799,7 +794,6 @@ define([
      */
     function modelMaterialsCommon(gltf, options) {
         options = defaultValue(options, {});
-        var i;
 
         if (!defined(gltf)) {
             return undefined;
@@ -809,7 +803,7 @@ define([
         var extensionsUsed = gltf.extensionsUsed;
         if (defined(extensionsUsed)) {
             var extensionsUsedCount = extensionsUsed.length;
-            for (i = 0; i < extensionsUsedCount; ++i) {
+            for (var i = 0; i < extensionsUsedCount; ++i) {
                 if (extensionsUsed[i] === 'KHR_materials_common') {
                     hasExtension = true;
                     extensionsUsed.splice(i, 1);
@@ -818,20 +812,8 @@ define([
             }
         }
 
-        var requiresExtension = false;
-        var extensionsRequired = gltf.extensionsRequired;
-        if (defined(extensionsRequired)) {
-            var extensionsRequiredLength = extensionsRequired.length;
-            for (i = 0; i < extensionsRequiredLength; i++) {
-                if (extensionsRequired[i] === 'KHR_materials_common') {
-                    requiresExtension = true;
-                    extensionsRequired.splice(i, 1);
-                    break;
-                }
-            }
-        }
-
-        if (hasExtension || requiresExtension) {
+        if (hasExtension) {
+            gltf.asset.premultipliedAlpha = true;
             if (!defined(gltf.programs)) {
                 gltf.programs = {};
             }

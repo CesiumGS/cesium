@@ -17,6 +17,5 @@ define([
             }
         }
     }
-
     return techniqueParameterForSemantic;
 });

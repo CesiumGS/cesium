@@ -1,29 +1,28 @@
 /*global define*/
 define([
-        './addPipelineExtras',
-        '../../Core/defined',
-        '../../Core/defaultValue',
-        '../../Core/ComponentDatatype',
-        '../../Core/DeveloperError',
-        '../../Core/getMagic',
-        '../../Core/getStringFromTypedArray',
-        '../../Core/WebGLConstants'
+    './addPipelineExtras',
+    '../../Core/ComponentDatatype',
+    '../../Core/defined',
+    '../../Core/DeveloperError',
+    '../../Core/defaultValue',
+    '../../Core/getMagic',
+    '../../Core/getStringFromTypedArray',
+    '../../Core/WebGLConstants'
     ], function(
         addPipelineExtras,
-        defined,
-        defaultValue,
         ComponentDatatype,
+        defined,
         DeveloperError,
+        defaultValue,
         getMagic,
         getStringFromTypedArray,
         WebGLConstants) {
-
     'use strict';
 
     /**
      * Parses a binary glTF buffer into glTF JSON.
      *
-     * @param {Uint8Array} data The binary glTF buffer to parse.
+     * @param {Uint8Array} data The binary glTF data to parse.
      * @returns {Object} The parsed binary glTF.
      */
     function parseBinaryGltf(data) {
@@ -34,7 +33,7 @@ define([
             throw new DeveloperError('File is not valid binary glTF');
         }
 
-        var uint32View = ComponentDatatype.createArrayBufferView(WebGLConstants.INT, data.buffer, 0, 5);
+        var uint32View = ComponentDatatype.createArrayBufferView(WebGLConstants.INT, data.buffer, data.byteOffset, 5);
 
         // Check that the version is 1
         if (uint32View[1] !== 1) {
@@ -233,6 +232,5 @@ define([
             throw new DeveloperError('Binary image does not have valid header');
         }
     }
-
     return parseBinaryGltf;
 });

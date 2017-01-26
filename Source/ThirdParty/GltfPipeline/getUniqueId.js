@@ -28,6 +28,5 @@ define([
         }
         return id;
     }
-
     return getUniqueId;
 });

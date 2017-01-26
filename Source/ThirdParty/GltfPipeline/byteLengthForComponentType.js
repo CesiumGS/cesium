@@ -33,6 +33,5 @@ define([
                 return 4;
         }
     }
-
     return byteLengthForComponentType;
 });

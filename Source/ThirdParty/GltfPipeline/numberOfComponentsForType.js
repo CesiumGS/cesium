@@ -1,5 +1,8 @@
 /*global define*/
-define([], function() {
+define([
+        ''
+    ], function(
+        ) {
     'use strict';
 
     /**
@@ -33,6 +36,5 @@ define([], function() {
                 return 16;
         }
     }
-
     return numberOfComponentsForType;
 });

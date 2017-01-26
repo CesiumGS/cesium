@@ -22,6 +22,5 @@ define([
             extensionsUsed.push(extension);
         }
     }
-
     return addExtensionsUsed;
 });
