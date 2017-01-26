@@ -106,19 +106,17 @@ define([
     'use strict';
 
     /**
-     * Creates a shadow map from the provided light camera.
-     * <p>
-     * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. In general do not construct directly.
-     * </p>
+     * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. Do not construct this directly.
      *
+     * <p>
      * The normalOffset bias pushes the shadows forward slightly, and may be disabled
      * for applications that require ultra precise shadows.
+     * </p>
      *
      * @alias ShadowMap
      * @internalConstructor
      *
      * @param {Object} options An object containing the following properties:
-     * @param {Context} options.context The context in which to create the shadow map.
      * @param {Camera} options.lightCamera A camera representing the light source.
      * @param {Boolean} [options.enabled=true] Whether the shadow map is enabled.
      * @param {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
@@ -137,11 +135,12 @@ define([
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var scene = options.scene;
+        // options.context is an undocumented option
+        var context = options.context;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
+        if (!defined(context)) {
+            throw new DeveloperError('context is required.');
         }
         if (!defined(options.lightCamera)) {
             throw new DeveloperError('lightCamera is required.');
@@ -188,7 +187,6 @@ define([
         // In IE11 and Edge polygon offset is not functional.
         // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
         // Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
-        var context = scene._context;
         var polygonOffsetSupported = true;
         if (FeatureDetection.isInternetExplorer() || FeatureDetection.isEdge() || ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) && FeatureDetection.isWindows() && !context.depthTexture)) {
             polygonOffsetSupported = false;
