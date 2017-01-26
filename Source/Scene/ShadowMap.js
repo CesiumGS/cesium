@@ -118,7 +118,6 @@ define([
      * @internalConstructor
      *
      * @param {Object} options An object containing the following properties:
-     * @param {Context} options.context The context in which to create the shadow map.
      * @param {Camera} options.lightCamera A camera representing the light source.
      * @param {Boolean} [options.enabled=true] Whether the shadow map is enabled.
      * @param {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
@@ -140,6 +139,7 @@ define([
         var context = options.context;
 
         //>>includeStart('debug', pragmas.debug);
+        // options.context is an undocumented option
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
