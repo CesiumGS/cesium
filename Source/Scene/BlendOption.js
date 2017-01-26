@@ -6,9 +6,9 @@ define([
     'use strict';
 
     /**
-     * Determines how billboards, points, and labels are rendered.
+     * Determines how opaque and translucent parts of billboards, points, and labels are blended with the scene.
      *
-     * @exports BillboardRenderTechnique
+     * @exports BlendOption
      */
     var BlendOption = {
         /**
