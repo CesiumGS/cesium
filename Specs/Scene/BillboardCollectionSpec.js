@@ -13,6 +13,7 @@ defineSuite([
         'Core/NearFarScalar',
         'Core/Rectangle',
         'Scene/Billboard',
+        'Scene/BlendOption',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/OrthographicFrustum',
@@ -36,6 +37,7 @@ defineSuite([
         NearFarScalar,
         Rectangle,
         Billboard,
+        BlendOption,
         HeightReference,
         HorizontalOrigin,
         OrthographicFrustum,
@@ -228,6 +230,30 @@ defineSuite([
 
     it('is not destroyed', function() {
         expect(billboards.isDestroyed()).toEqual(false);
+    });
+
+    it('renders billboard in multiple passes', function() {
+        billboards.add({
+            position : Cartesian3.ZERO,
+            image : greenImage
+        });
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+
+        var frameState = scene.frameState;
+        frameState.commandList.length = 0;
+        billboards.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
+        billboards.update(frameState);
+        expect(frameState.commandList.length).toEqual(2);
+
+        frameState.commandList.length = 0;
+        billboards.blendOption = BlendOption.OPAQUE;
+        billboards.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
+
+        frameState.commandList.length = 0;
+        billboards.blendOption = BlendOption.TRANSLUCENT;
+        billboards.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
     });
 
     it('renders billboard with sizeInMeters', function() {
