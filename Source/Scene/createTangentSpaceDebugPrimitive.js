@@ -23,8 +23,8 @@ define([
 
     /**
      * Creates a {@link Primitive} to visualize well-known vector vertex attributes:
-     * <code>normal</code>, <code>binormal</code>, and <code>tangent</code>.  Normal
-     * is red; binormal is green; and tangent is blue.  If an attribute is not
+     * <code>normal</code>, <code>tangent</code>, and <code>bitangent</code>.  Normal
+     * is red; tangent is green; and bitangent is blue.  If an attribute is not
      * present, it is not drawn.
      *
      * @exports createTangentSpaceDebugPrimitive
@@ -73,9 +73,9 @@ define([
             }));
         }
 
-        if (defined(attributes.binormal)) {
+        if (defined(attributes.tangent)) {
             instances.push(new GeometryInstance({
-              geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'binormal', length),
+              geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'tangent', length),
               attributes : {
                   color : new ColorGeometryInstanceAttribute(0.0, 1.0, 0.0, 1.0)
               },
@@ -83,9 +83,9 @@ define([
             }));
         }
 
-        if (defined(attributes.tangent)) {
+        if (defined(attributes.bitangent)) {
             instances.push(new GeometryInstance({
-              geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'tangent', length),
+              geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'bitangent', length),
               attributes : {
                   color : new ColorGeometryInstanceAttribute(0.0, 0.0, 1.0, 1.0)
               },

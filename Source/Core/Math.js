@@ -486,7 +486,7 @@ define([
             throw new DeveloperError('angle is required.');
         }
         //>>includeEnd('debug');
-        
+
         return CesiumMath.clamp(angle, -1*CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
     };
 
@@ -496,13 +496,13 @@ define([
      * @param {Number} angle in radians
      * @returns {Number} The angle in the range [<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>].
      */
-    CesiumMath.negativePiToPi = function(x) {
+    CesiumMath.negativePiToPi = function(angle) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(x)) {
-            throw new DeveloperError('x is required.');
+        if (!defined(angle)) {
+            throw new DeveloperError('angle is required.');
         }
         //>>includeEnd('debug');
-        return CesiumMath.zeroToTwoPi(x + CesiumMath.PI) - CesiumMath.PI;
+        return CesiumMath.zeroToTwoPi(angle + CesiumMath.PI) - CesiumMath.PI;
     };
 
     /**
@@ -511,14 +511,14 @@ define([
      * @param {Number} angle in radians
      * @returns {Number} The angle in the range [0, <code>CesiumMath.TWO_PI</code>].
      */
-    CesiumMath.zeroToTwoPi = function(x) {
+    CesiumMath.zeroToTwoPi = function(angle) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(x)) {
-            throw new DeveloperError('x is required.');
+        if (!defined(angle)) {
+            throw new DeveloperError('angle is required.');
         }
         //>>includeEnd('debug');
-        var mod = CesiumMath.mod(x, CesiumMath.TWO_PI);
-        if (Math.abs(mod) < CesiumMath.EPSILON14 && Math.abs(x) > CesiumMath.EPSILON14) {
+        var mod = CesiumMath.mod(angle, CesiumMath.TWO_PI);
+        if (Math.abs(mod) < CesiumMath.EPSILON14 && Math.abs(angle) > CesiumMath.EPSILON14) {
             return CesiumMath.TWO_PI;
         }
         return mod;
@@ -592,7 +592,7 @@ define([
      * @example
      * //Compute 7!, which is equal to 5040
      * var computedFactorial = Cesium.Math.factorial(7);
-     * 
+     *
      * @see {@link http://en.wikipedia.org/wiki/Factorial|Factorial on Wikipedia}
      */
     CesiumMath.factorial = function(n) {

@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError'
     ], function(
+        Check,
         defaultValue,
         defined,
         DeveloperError) {
@@ -29,14 +31,12 @@ define([
      * Converts the provided Cartesian3 into Spherical coordinates.
      *
      * @param {Cartesian3} cartesian3 The Cartesian3 to be converted to Spherical.
-     * @param {Spherical} [spherical] The object in which the result will be stored, if undefined a new instance will be created.
+     * @param {Spherical} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns {Spherical} The modified result parameter, or a new instance if one was not provided.
      */
     Spherical.fromCartesian3 = function(cartesian3, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian3)) {
-            throw new DeveloperError('cartesian3 is required');
-        }
+        Check.typeOf.object('cartesian3', cartesian3);
         //>>includeEnd('debug');
 
         var x = cartesian3.x;
@@ -85,9 +85,7 @@ define([
      */
     Spherical.normalize = function(spherical, result) {
       //>>includeStart('debug', pragmas.debug);
-        if (!defined(spherical)) {
-            throw new DeveloperError('spherical is required');
-        }
+        Check.typeOf.object('spherical', spherical);
         //>>includeEnd('debug');
 
         if (!defined(result)) {

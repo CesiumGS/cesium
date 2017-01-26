@@ -107,12 +107,15 @@ define([
 
     /**
      * Creates a shadow map from the provided light camera.
+     * <p>
+     * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. In general do not construct directly.
+     * </p>
      *
      * The normalOffset bias pushes the shadows forward slightly, and may be disabled
      * for applications that require ultra precise shadows.
      *
      * @alias ShadowMap
-     * @constructor
+     * @internalConstructor
      *
      * @param {Object} options An object containing the following properties:
      * @param {Context} options.context The context in which to create the shadow map.
@@ -126,6 +129,7 @@ define([
      * @param {Number} [options.size=2048] The width and height, in pixels, of each shadow map.
      * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
      * @param {Number} [options.darkness=0.3] The shadow darkness.
+     * @param {Boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
      *
      * @exception {DeveloperError} Only one or four cascades are supported.
      *
@@ -133,11 +137,11 @@ define([
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var context = options.context;
+        var scene = options.scene;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(context)) {
-            throw new DeveloperError('context is required.');
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
         }
         if (!defined(options.lightCamera)) {
             throw new DeveloperError('lightCamera is required.');
@@ -149,6 +153,7 @@ define([
 
         this._enabled = defaultValue(options.enabled, true);
         this._softShadows = defaultValue(options.softShadows, false);
+        this._normalOffset = defaultValue(options.normalOffset, true);
         this.dirty = true;
 
         /**
@@ -183,6 +188,7 @@ define([
         // In IE11 and Edge polygon offset is not functional.
         // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
         // Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
+        var context = scene._context;
         var polygonOffsetSupported = true;
         if (FeatureDetection.isInternetExplorer() || FeatureDetection.isEdge() || ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) && FeatureDetection.isWindows() && !context.depthTexture)) {
             polygonOffsetSupported = false;
@@ -193,7 +199,7 @@ define([
             polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : true,
+            normalOffset : this._normalOffset,
             normalOffsetScale : 0.5,
             normalShading : true,
             normalShadingSmooth : 0.3,
@@ -204,7 +210,7 @@ define([
             polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : true,
+            normalOffset : this._normalOffset,
             normalOffsetScale : 0.1,
             normalShading : true,
             normalShadingSmooth : 0.05,
@@ -215,7 +221,7 @@ define([
             polygonOffset : false,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : false,
+            normalOffset : this._normalOffset,
             normalOffsetScale : 0.0,
             normalShading : true,
             normalShadingSmooth : 0.1,
@@ -381,6 +387,26 @@ define([
             set : function(value) {
                 this.dirty = this._enabled !== value;
                 this._enabled = value;
+            }
+        },
+
+        /**
+         * Determines if a normal bias will be applied to shadows.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        normalOffset : {
+            get : function() {
+                return this._normalOffset;
+            },
+            set : function(value) {
+                this.dirty = this._normalOffset !== value;
+                this._normalOffset = value;
+                this._terrainBias.normalOffset = value;
+                this._primitiveBias.normalOffset = value;
+                this._pointBias.normalOffset = value;
             }
         },
 

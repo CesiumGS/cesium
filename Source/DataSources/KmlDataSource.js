@@ -487,7 +487,7 @@ define([
     var colorOptions = {};
 
     function parseColorString(value, isRandom) {
-        if (!defined(value)) {
+        if (!defined(value) || /^\s*$/gm.test(value)) {
             return undefined;
         }
 

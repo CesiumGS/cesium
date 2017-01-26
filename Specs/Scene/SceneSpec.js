@@ -873,4 +873,48 @@ defineSuite([
         expect(s.maximumCubeMapSize).toBeGreaterThanOrEqualTo(16);
         s.destroyForSpecs();
     });
+
+    it('does not throw with debugShowCommands', function() {
+        var s = createScene();
+        if (s.context.drawBuffers) {
+            s.debugShowCommands = true;
+
+            var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+            var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+            var primitives = s.primitives;
+            primitives.add(rectanglePrimitive);
+
+            s.camera.setView({ destination : rectangle });
+
+            expect(function() {
+                s.renderForSpecs();
+            }).not.toThrowRuntimeError();
+        }
+        s.destroyForSpecs();
+    });
+    
+    it('does not throw with debugShowFrustums', function() {
+        var s = createScene();
+        if (s.context.drawBuffers) {
+            s.debugShowFrustums = true;
+
+            var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+            var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+            var primitives = s.primitives;
+            primitives.add(rectanglePrimitive);
+
+            s.camera.setView({ destination : rectangle });
+
+            expect(function() {
+                s.renderForSpecs();
+            }).not.toThrowRuntimeError();
+        }
+        s.destroyForSpecs();
+    });
 }, 'WebGL');
