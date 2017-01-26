@@ -4,6 +4,7 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
+        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -30,6 +31,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -647,12 +649,10 @@ define([
         var rectangle = options.rectangle;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required.');
-        }
+        Check.typeOf.object('rectangle', rectangle);
         Rectangle.validate(rectangle);
         if (rectangle.north < rectangle.south) {
-            throw new DeveloperError('options.rectangle.north must be greater than options.rectangle.south');
+            throw new DeveloperError('options.rectangle.north must be greater than or equal to options.rectangle.south');
         }
         //>>includeEnd('debug');
 
@@ -690,13 +690,8 @@ define([
      */
     RectangleGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -753,9 +748,7 @@ define([
      */
     RectangleGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

@@ -35,7 +35,7 @@ define([
                 var primitive = scene.primitives.get(0);
                 expect(state).toBe(BoundingSphereState.DONE);
                 var attributes = primitive.getGeometryInstanceAttributes(entity);
-                expect(result).toEqualEpsilon(BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, new BoundingSphere()), CesiumMath.EPSILON6);
+                expect(result).toEqualEpsilon(attributes.boundingSphere, CesiumMath.EPSILON6);
 
                 updater.destroy();
                 scene.primitives.removeAll();
@@ -62,7 +62,7 @@ define([
                 var primitive = scene.primitives.get(0);
                 expect(state).toBe(BoundingSphereState.DONE);
                 var attributes = primitive.getGeometryInstanceAttributes(entity);
-                expect(result).toEqualEpsilon(BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, new BoundingSphere()), CesiumMath.EPSILON6);
+                expect(result).toEqualEpsilon(attributes.boundingSphere, CesiumMath.EPSILON6);
 
                 updater.destroy();
                 scene.primitives.removeAll();
