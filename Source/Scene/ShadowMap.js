@@ -137,11 +137,11 @@ define([
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var scene = options.scene;
+        var context = options.context;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
+        if (!defined(context)) {
+            throw new DeveloperError('context is required.');
         }
         if (!defined(options.lightCamera)) {
             throw new DeveloperError('lightCamera is required.');
@@ -188,7 +188,6 @@ define([
         // In IE11 and Edge polygon offset is not functional.
         // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
         // Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
-        var context = scene._context;
         var polygonOffsetSupported = true;
         if (FeatureDetection.isInternetExplorer() || FeatureDetection.isEdge() || ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) && FeatureDetection.isWindows() && !context.depthTexture)) {
             polygonOffsetSupported = false;
