@@ -3165,12 +3165,24 @@ define([
 
                 var children = gltfNode.children;
                 var childrenLength = children.length;
-                for (var k = 0; k < childrenLength; ++k) {
+                for (var j = 0; j < childrenLength; j++) {
                     stack.push({
                         parentRuntimeNode : runtimeNode,
-                        gltfNode : nodes[children[k]],
-                        id : children[k]
+                        gltfNode : nodes[children[j]],
+                        id : children[j]
                     });
+                }
+
+                var skeletons = gltfNode.skeletons;
+                if (defined(skeletons)) {
+                var skeletonsLength = skeletons.length;
+                    for (var k = 0; k < skeletonsLength; k++) {
+                        stack.push({
+                            parentRuntmeNode : undefined,
+                            gltfNode : nodes[skeletons[k]],
+                            id : skeletons[k]
+                        });
+                    }
                 }
             }
         }
