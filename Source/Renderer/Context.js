@@ -273,7 +273,7 @@ define([
         this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
-        this._s3tc = !!getExtension(gl, ['WEBGL_compressed_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
+        this._s3tc = !!getExtension(gl, ['WEBGL_compressed_texture_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
         this._pvrtc = !!getExtension(gl, ['WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc']);
         this._etc1 = !!getExtension(gl, ['WEBGL_compressed_texture_etc1']);
 
