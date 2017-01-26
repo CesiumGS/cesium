@@ -23,8 +23,8 @@ define([
         '../Renderer/VertexArrayFacade',
         '../Shaders/PointPrimitiveCollectionFS',
         '../Shaders/PointPrimitiveCollectionVS',
-        './BillboardRenderTechnique',
         './BlendingState',
+        './BlendOption',
         './PointPrimitive',
         './SceneMode'
     ], function(
@@ -51,8 +51,8 @@ define([
         VertexArrayFacade,
         PointPrimitiveCollectionFS,
         PointPrimitiveCollectionVS,
-        BillboardRenderTechnique,
         BlendingState,
+        BlendOption,
         PointPrimitive,
         SceneMode) {
     'use strict';
@@ -89,9 +89,9 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each point from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     * @param {BillboardRenderTechnique} [options.renderTechnique=BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT] The billboard rendering technique. The default
+     * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The point blending option. The default
      * is used for rendering both opaque and translucent points. However, if either all of the points are completely opaque or all are completely translucent,
-     * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve performance by 2x.
+     * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve performance by up to 2x.
      *
      * @performance For best performance, prefer a few collections, each with many points, to
      * many collections with only a few points each.  Organize collections so that points
@@ -205,14 +205,15 @@ define([
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         /**
-         * The billboard rendering technique. The default is used for rendering both opaque and translucent points.
+         * The point blending option. The default is used for rendering both opaque and translucent points.
          * However, if either all of the points are completely opaque or all are completely translucent,
-         * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve performance by 2x.
-         * @type {BillboardRenderTechnique}
-         * @default BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT
+         * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve
+         * performance by up to 2x.
+         * @type {BlendOption}
+         * @default BlendOption.OPAQUE_AND_TRANSLUCENT
          */
-        this.renderTechnique = defaultValue(options.renderTechnique, BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT);
-        this._renderTechnique = undefined;
+        this.blendOption = defaultValue(options.blendOption, BlendOption.OPAQUE_AND_TRANSLUCENT);
+        this._blendOption = undefined;
 
         this._mode = SceneMode.SCENE3D;
         this._maxTotalPointSize = 1;
@@ -852,10 +853,10 @@ define([
         }
         updateBoundingVolume(this, frameState, boundingVolume);
 
-        var techniqueChanged = this._renderTechnique !== this.renderTechnique;
-        this._renderTechnique = this.renderTechnique;
+        var blendOptionChanged = this._blendOption !== this.blendOption;
+        this._blendOption = this.blendOption;
 
-        if (techniqueChanged) {
+        if (blendOptionChanged) {
             this._rsOpaque = RenderState.fromCache({
                 depthTest : {
                     enabled : true,
@@ -864,7 +865,7 @@ define([
                 depthMask : true
             });
 
-            if (this._renderTechnique === BillboardRenderTechnique.TRANSLUCENT || this._renderTechnique === BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT) {
+            if (this._blendOption === BlendOption.TRANSLUCENT || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
                 this._rsTranslucent = RenderState.fromCache({
                     depthTest : {
                         enabled : true,
@@ -878,7 +879,7 @@ define([
             }
         }
 
-        if (techniqueChanged ||
+        if (blendOptionChanged ||
             (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
             (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
             (this._shaderDistanceDisplayCondition && !this._compiledShaderDistanceDisplayCondition)) {
@@ -896,7 +897,7 @@ define([
                 vs.defines.push('DISTANCE_DISPLAY_CONDITION');
             }
 
-            if (this._renderTechnique === BillboardRenderTechnique.OPAQUE || this._renderTechnique === BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT) {
+            if (this._blendOption === BlendOption.OPAQUE || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
                 fs = new ShaderSource({
                     defines : ['OPAQUE'],
                     sources : [PointPrimitiveCollectionFS]
@@ -913,7 +914,7 @@ define([
                 this._sp = undefined;
             }
 
-            if (this._renderTechnique === BillboardRenderTechnique.TRANSLUCENT || this._renderTechnique === BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT) {
+            if (this._blendOption === BlendOption.TRANSLUCENT || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
                 fs = new ShaderSource({
                     defines : ['TRANSLUCENT'],
                     sources : [PointPrimitiveCollectionFS]
@@ -985,8 +986,8 @@ define([
         if (pass.render) {
             var colorList = this._colorCommands;
 
-            var opaque = this._renderTechnique === BillboardRenderTechnique.OPAQUE;
-            var opaqueAndTranslucent = this._renderTechnique === BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT;
+            var opaque = this._blendOption === BlendOption.OPAQUE;
+            var opaqueAndTranslucent = this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT;
 
             va = this._vaf.va;
             vaLength = va.length;

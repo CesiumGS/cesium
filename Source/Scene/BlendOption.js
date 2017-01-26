@@ -6,32 +6,32 @@ define([
     'use strict';
 
     /**
-     * Determines how billboards and points are rendered.
+     * Determines how billboards, points, and labels are rendered.
      *
      * @exports BillboardRenderTechnique
      */
-    var BillboardRenderTechnique = {
+    var BlendOption = {
         /**
-         * The billboards in the collection are completely opaque.
+         * The billboards, points, or labels in the collection are completely opaque.
          * @type {Number}
          * @constant
          */
         OPAQUE : 0,
 
         /**
-         * The billboards in the collection are completely translucent.
+         * The billboards, points, or labels in the collection are completely translucent.
          * @type {Number}
          * @constant
          */
         TRANSLUCENT : 1,
 
         /**
-         * The billboards in the collection are both opaque and translucent.
+         * The billboards, points, or labels in the collection are both opaque and translucent.
          * @type {Number}
          * @constant
          */
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
-    return freezeObject(BillboardRenderTechnique);
+    return freezeObject(BlendOption);
 });

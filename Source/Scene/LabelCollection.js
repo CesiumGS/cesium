@@ -11,6 +11,7 @@ define([
         '../Core/Matrix4',
         '../Core/writeTextToCanvas',
         './BillboardCollection',
+        './BlendOption',
         './HorizontalOrigin',
         './Label',
         './LabelStyle',
@@ -28,6 +29,7 @@ define([
         Matrix4,
         writeTextToCanvas,
         BillboardCollection,
+        BlendOption,
         HorizontalOrigin,
         Label,
         LabelStyle,
@@ -440,6 +442,9 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each label from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {Scene} [options.scene] Must be passed in for labels that use the height reference property or will be depth tested against the globe.
+     * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The label blending option. The default
+     * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
+     * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve performance by up to 2x.
      *
      * @performance For best performance, prefer a few collections, each with many labels, to
      * many collections with only a few labels each.  Avoid having collections where some
@@ -533,6 +538,16 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+
+        /**
+         * The label blending option. The default is used for rendering both opaque and translucent labels.
+         * However, if either all of the labels are completely opaque or all are completely translucent,
+         * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve
+         * performance by up to 2x.
+         * @type {BlendOption}
+         * @default BlendOption.OPAQUE_AND_TRANSLUCENT
+         */
+        this.blendOption = defaultValue(options.blendOption, BlendOption.OPAQUE_AND_TRANSLUCENT);
     }
 
     defineProperties(LabelCollection.prototype, {
@@ -732,8 +747,10 @@ define([
 
         billboardCollection.modelMatrix = this.modelMatrix;
         billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
+        billboardCollection.blendOption = this.blendOption;
         backgroundBillboardCollection.modelMatrix = this.modelMatrix;
         backgroundBillboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
+        backgroundBillboardCollection.blendOption = this.blendOption;
 
         var context = frameState.context;
 

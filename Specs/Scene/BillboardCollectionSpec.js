@@ -13,7 +13,7 @@ defineSuite([
         'Core/NearFarScalar',
         'Core/Rectangle',
         'Scene/Billboard',
-        'Scene/BillboardRenderTechnique',
+        'Scene/BlendOption',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/OrthographicFrustum',
@@ -37,7 +37,7 @@ defineSuite([
         NearFarScalar,
         Rectangle,
         Billboard,
-        BillboardRenderTechnique,
+        BlendOption,
         HeightReference,
         HorizontalOrigin,
         OrthographicFrustum,
@@ -241,17 +241,17 @@ defineSuite([
 
         var frameState = scene.frameState;
         frameState.commandList.length = 0;
-        billboards.renderTechnique = BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT;
+        billboards.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
         billboards.update(frameState);
         expect(frameState.commandList.length).toEqual(2);
 
         frameState.commandList.length = 0;
-        billboards.renderTechnique = BillboardRenderTechnique.OPAQUE;
+        billboards.blendOption = BlendOption.OPAQUE;
         billboards.update(frameState);
         expect(frameState.commandList.length).toEqual(1);
 
         frameState.commandList.length = 0;
-        billboards.renderTechnique = BillboardRenderTechnique.TRANSLUCENT;
+        billboards.blendOption = BlendOption.TRANSLUCENT;
         billboards.update(frameState);
         expect(frameState.commandList.length).toEqual(1);
     });

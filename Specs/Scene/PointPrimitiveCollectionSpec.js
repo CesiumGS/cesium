@@ -10,7 +10,7 @@ defineSuite([
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Rectangle',
-        'Scene/BillboardRenderTechnique',
+        'Scene/BlendOption',
         'Scene/PointPrimitive',
         'Specs/createScene'
     ], function(
@@ -24,7 +24,7 @@ defineSuite([
         CesiumMath,
         NearFarScalar,
         Rectangle,
-        BillboardRenderTechnique,
+        BlendOption,
         PointPrimitive,
         createScene) {
     'use strict';
@@ -166,17 +166,17 @@ defineSuite([
 
         var frameState = scene.frameState;
         frameState.commandList.length = 0;
-        pointPrimitives.renderTechnique = BillboardRenderTechnique.OPAQUE_AND_TRANSLUCENT;
+        pointPrimitives.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
         pointPrimitives.update(frameState);
         expect(frameState.commandList.length).toEqual(2);
 
         frameState.commandList.length = 0;
-        pointPrimitives.renderTechnique = BillboardRenderTechnique.OPAQUE;
+        pointPrimitives.blendOption = BlendOption.OPAQUE;
         pointPrimitives.update(frameState);
         expect(frameState.commandList.length).toEqual(1);
 
         frameState.commandList.length = 0;
-        pointPrimitives.renderTechnique = BillboardRenderTechnique.TRANSLUCENT;
+        pointPrimitives.blendOption = BlendOption.TRANSLUCENT;
         pointPrimitives.update(frameState);
         expect(frameState.commandList.length).toEqual(1);
     });
