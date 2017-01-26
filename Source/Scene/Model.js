@@ -1567,7 +1567,7 @@ define([
                     rendererBuffers[accessor.bufferView] = indexBuffer;
                     // In theory, several glTF accessors with different componentTypes could
                     // point to the same glTF bufferView, which would break this.
-                    // In practice, it is unlikely, but possible with uint32 indices in glTF 1.1.
+                    // In practice, it is unlikely, but possible with uint32 indices in glTF 2.0.
                 }
             }
         }

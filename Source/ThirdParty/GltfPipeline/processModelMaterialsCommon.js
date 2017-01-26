@@ -171,7 +171,7 @@ define([
             lights = gltf.extensions.KHR_materials_common.lights;
         }
         var parameterValues = khrMaterialsCommon.values;
-        var jointCount = defaultValue(parameterValues.jointCount, 0);
+        var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
         var hasSkinning = (jointCount > 0);
 
         var vertexShader = 'precision highp float;\n';
@@ -792,7 +792,7 @@ define([
     /**
      * @private
      */
-    function modelMaterialsCommon(gltf, options) {
+    function processModelMaterialsCommon(gltf, options) {
         options = defaultValue(options, {});
 
         if (!defined(gltf)) {
@@ -800,14 +800,18 @@ define([
         }
 
         var hasExtension = false;
+        var extensionsRequired = gltf.extensionsRequired;
         var extensionsUsed = gltf.extensionsUsed;
         if (defined(extensionsUsed)) {
-            var extensionsUsedCount = extensionsUsed.length;
-            for (var i = 0; i < extensionsUsedCount; ++i) {
-                if (extensionsUsed[i] === 'KHR_materials_common') {
-                    hasExtension = true;
-                    extensionsUsed.splice(i, 1);
-                    break;
+            var index = extensionsUsed.indexOf('KHR_materials_common');
+            if (index >= 0) {
+                extensionsUsed.splice(index, 1);
+                hasExtension = true;
+            }
+            if (defined(extensionsRequired)) {
+                index = extensionsRequired.indexOf('KHR_materials_common');
+                if (index >= 0) {
+                    extensionsRequired.splice(index, 1);
                 }
             }
         }
@@ -878,5 +882,5 @@ define([
         return gltf;
     }
 
-    return modelMaterialsCommon;
+    return processModelMaterialsCommon;
 });

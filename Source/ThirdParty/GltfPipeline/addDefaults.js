@@ -1,10 +1,10 @@
 /*global define*/
 define([
-        './getUniqueId',
-        '../../Core/clone',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/WebGLConstants'
+    './getUniqueId',
+    '../../Core/clone',
+    '../../Core/defaultValue',
+    '../../Core/defined',
+    '../../Core/WebGLConstants'
     ], function(
         getUniqueId,
         clone,
@@ -33,7 +33,7 @@ define([
             premultipliedAlpha : false,
             profile : {
                 api : 'WebGL',
-                version : '1.0.3'
+                version : '1.0'
             }
         },
         buffers : {
@@ -173,7 +173,8 @@ define([
                 type: WebGLConstants.UNSIGNED_BYTE
             }
         },
-        extensionsUsed : []
+        extensionsUsed : [],
+        extensionsRequired : []
     };
 
     function addDefaultsFromTemplate(object, template) {

@@ -1,14 +1,14 @@
 /*global define*/
 define([
-        './getUniqueId',
-        './findAccessorMinMax',
-        '../../Core/Cartesian3',
-        '../../Core/Math',
-        '../../Core/Matrix4',
-        '../../Core/Quaternion',
-        '../../Core/WebGLConstants',
-        '../../Core/defaultValue',
-        '../../Core/defined'
+    './getUniqueId',
+    './findAccessorMinMax',
+    '../../Core/Cartesian3',
+    '../../Core/Math',
+    '../../Core/Matrix4',
+    '../../Core/Quaternion',
+    '../../Core/WebGLConstants',
+    '../../Core/defaultValue',
+    '../../Core/defined'
     ], function(
         getUniqueId,
         findAccessorMinMax,
