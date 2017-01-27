@@ -1222,7 +1222,10 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = vec4(czm_imagerySplitPosition == 0.0); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
 }, 'WebGL');
