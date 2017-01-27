@@ -740,7 +740,7 @@ defineSuite([
     });
 
     it('Throws because of an invalid Binary glTF header - version', function() {
-        var arrayBuffer = new ArrayBuffer(16);
+        var arrayBuffer = new ArrayBuffer(20);
         var bytes = new Uint8Array(arrayBuffer);
         bytes[0] = 'g'.charCodeAt(0);
         bytes[1] = 'l'.charCodeAt(0);

@@ -49,7 +49,7 @@ define([
         version = defaultValue(version, gltf.asset.version);
         // invalid version
         if (!updateFunctions.hasOwnProperty(version)) {
-            // try truncating trailing version numbers
+            // try truncating trailing version numbers, could be a number as well if it is 0.8
             if (defined(version)) {
                 version = ('' + version).substring(0, 3);
             }
@@ -550,15 +550,15 @@ define([
         } else if (defined(node.translation) || defined(node.rotation) || defined(node.scale)) {
             Cartesian3.ZERO.clone(scratchTranslation);
             if (defined(node.translation)) {
-                Cartesian3.unpack(node.translation, scratchTranslation);
+                Cartesian3.unpack(node.translation, 0, scratchTranslation);
             }
             Quaternion.IDENTITY.clone(scratchRotation);
             if (defined(node.rotation)) {
-                Quaternion.unpack(node.rotation, scratchRotation);
+                Quaternion.unpack(node.rotation, 0, scratchRotation);
             }
             defaultScale.clone(scratchScale);
             if (defined(node.scale)) {
-                Cartesian3.unpack(node.scale, scratchScale);
+                Cartesian3.unpack(node.scale, 0, scratchScale);
             }
             Matrix4.fromTranslationQuaternionRotationScale(scratchTranslation, scratchRotation, scratchScale, scratchMatrix4);
             return scratchMatrix4;

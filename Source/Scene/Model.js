@@ -644,7 +644,8 @@ define([
         };
 
         this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
-        this._extensionsUsed = undefined; // Cached used extensions in a hash-map so we don't have to search the gltf array
+        this._extensionsUsed = undefined;     // Cached used glTF extensions
+        this._extensionsRequired = undefined; // Cached required glTF extensions
         this._quantizedUniforms = {};     // Quantized uniforms for each program for WEB3D_quantized_attributes
         this._programPrimitives = {};
         this._rendererResources = {       // Cached between models with the same url/cache-key
@@ -944,6 +945,24 @@ define([
                 }
                 //>>includeEnd('debug');
                 this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
+            }
+        },
+
+        extensionsUsed : {
+            get : function() {
+                if (!defined(this._extensionsUsed)) {
+                    this._extensionsUsed = getUsedExtensions(this);
+                }
+                return this._extensionsUsed;
+            }
+        },
+
+        extensionsRequired : {
+            get : function() {
+                if (!defined(this._extensionsRequired)) {
+                    this._extensionsRequired = getRequiredExtensions(this);
+                }
+                return this._extensionsRequired;
             }
         }
     });
@@ -1480,13 +1499,12 @@ define([
         var runtimeMeshesByName = {};
         var runtimeMaterialsById = model._runtime.materialsById;
         var meshes = model.gltf.meshes;
-        var usesQuantizedAttributes = usesExtension(model, 'WEB3D_quantized_attributes');
 
         for (var id in meshes) {
             if (meshes.hasOwnProperty(id)) {
                 var mesh = meshes[id];
                 runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
-                if (usesQuantizedAttributes) {
+                if (defined(model.extensionsUsed.WEB3D_quantized_attributes)) {
                     // Cache primitives according to their program
                     var primitives = mesh.primitives;
                     var primitivesLength = primitives.length;
@@ -1507,17 +1525,34 @@ define([
         model._runtime.meshesByName = runtimeMeshesByName;
     }
 
-    function usesExtension(model, extension) {
-        var cachedExtensionsUsed = model._extensionsUsed;
-        if (!defined(cachedExtensionsUsed)) {
-            var extensionsUsed = model.gltf.extensionsUsed;
-            cachedExtensionsUsed = {};
-            var extensionsLength = extensionsUsed.length;
-            for (var i = 0; i < extensionsLength; i++) {
-                cachedExtensionsUsed[extensionsUsed[i]] = true;
+    function getUsedExtensions(model) {
+        var extensionsUsed = model.gltf.extensionsUsed;
+        var cachedExtensionsUsed = {};
+
+        if (defined(extensionsUsed)) {
+            var extensionsUsedLength = extensionsUsed.length;
+            for (var i = 0; i < extensionsUsedLength; i++) {
+                var extension = extensionsUsed[i];
+                cachedExtensionsUsed[extension] = true;
+            }
+
+        }
+        return cachedExtensionsUsed;
+    }
+
+    function getRequiredExtensions(model) {
+        var extensionsRequired = model.gltf.extensionsRequired;
+        var cachedExtensionsRequired = {};
+
+        if (defined(extensionsRequired)) {
+            var extensionsRequiredLength = extensionsRequired.length;
+            for (var i = 0; i < extensionsRequiredLength; i++) {
+                var extension = extensionsRequired[i];
+                cachedExtensionsRequired[extension] = true;
             }
         }
-        return defined(cachedExtensionsUsed[extension]);
+
+        return cachedExtensionsRequired;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1659,14 +1694,19 @@ define([
             if (getProgramForPrimitive(model, primitive) === programName) {
                 for (var attributeSemantic in primitive.attributes) {
                     if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
+                        var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
+                        var accessorId = primitive.attributes[attributeSemantic];
+
+                        if (attributeSemantic.charAt(0) === '_') {
+                            attributeSemantic = attributeSemantic.substring(1);
+                        }
                         var decodeUniformVarName = 'gltf_u_dec_' + attributeSemantic.toLowerCase();
+
                         var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
                         var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
                         if (!defined(quantizedUniforms[decodeUniformVarName]) && !defined(quantizedUniforms[decodeUniformVarNameScale])) {
-                            var accessorId = primitive.attributes[attributeSemantic];
                             var quantizedAttributes = getQuantizedAttributes(model, accessorId);
                             if (defined(quantizedAttributes)) {
-                                var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
                                 var decodeMatrix = quantizedAttributes.decodeMatrix;
                                 var newMain = 'gltf_decoded_' + attributeSemantic;
                                 var decodedAttributeVarName = attributeVarName.replace('a_', 'gltf_a_dec_');
@@ -1786,7 +1826,7 @@ define([
             }
         }
 
-        if (usesExtension(model, 'WEB3D_quantized_attributes')) {
+        if (model.extensionsUsed.WEB3D_quantized_attributes) {
             vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
         }
 
@@ -1859,7 +1899,6 @@ define([
             });
 
             --loadResources.pendingBufferViewToImage;
-
         };
     }
 
@@ -2221,12 +2260,16 @@ define([
                             // with an attribute that wasn't used and the asset wasn't optimized.
                             if (defined(attributeLocation)) {
                                 var a = accessors[primitiveAttributes[attributeName]];
+                                var normalize = false;
+                                if (defined(a.normalized) && a.normalized) {
+                                    normalize = true;
+                                }
                                 attributes.push({
                                     index : attributeLocation,
                                     vertexBuffer : rendererBuffers[a.bufferView],
                                     componentsPerAttribute : numberOfComponentsForType(a.type),
                                     componentDatatype : a.componentType,
-                                    normalize : false,
+                                    normalize : normalize,
                                     offsetInBytes : a.byteOffset,
                                     strideInBytes : a.byteStride
                                 });
@@ -2271,7 +2314,6 @@ define([
         booleanStates[WebGLConstants.CULL_FACE] = false;
         booleanStates[WebGLConstants.DEPTH_TEST] = false;
         booleanStates[WebGLConstants.POLYGON_OFFSET_FILL] = false;
-        booleanStates[WebGLConstants.SCISSOR_TEST] = false;
 
         var enable = states.enable;
         var length = enable.length;
@@ -2317,7 +2359,6 @@ define([
         var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
         var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
         var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
-        var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
 
         // Change the render state to use traditional alpha blending instead of premultiplied alpha blending
         if (booleanStates[WebGLConstants.BLEND] && hasPremultipliedAlpha(model)) {
@@ -2340,15 +2381,6 @@ define([
                 enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
                 factor : polygonOffset[0],
                 units : polygonOffset[1]
-            },
-            scissorTest : {
-                enabled : booleanStates[WebGLConstants.SCISSOR_TEST],
-                rectangle : {
-                    x : scissor[0],
-                    y : scissor[1],
-                    width : scissor[2],
-                    height : scissor[3]
-                }
             },
             depthRange : {
                 near : depthRange[0],
@@ -2818,6 +2850,10 @@ define([
                 var a = accessors[accessorId];
                 var extensions = a.extensions;
 
+                if (attribute.charAt(0) === '_') {
+                    attribute = attribute.substring(1);
+                }
+
                 if (defined(extensions)) {
                     var quantizedAttributes = extensions.WEB3D_quantized_attributes;
                     if (defined(quantizedAttributes)) {
@@ -2992,7 +3028,7 @@ define([
                 }
 
                 // Add uniforms for decoding quantized attributes if used
-                if (usesExtension(model, 'WEB3D_quantized_attributes')) {
+                if (model.extensionsUsed.WEB3D_quantized_attributes) {
                     var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive, context);
                     uniformMap = combine(uniformMap, quantizedUniformMap);
                 }
@@ -3197,6 +3233,7 @@ define([
         var context = frameState.context;
         var scene3DOnly = frameState.scene3DOnly;
 
+        checkSupportedGlExtensions(model, context);
         if (model._loadRendererResourcesFromCache) {
             var resources = model._rendererResources;
             var cachedResources = model._cachedRendererResources;
@@ -3817,15 +3854,27 @@ define([
     }
 
     function checkSupportedExtensions(model) {
-        var extensionsUsed = model.gltf.extensionsUsed;
-        if (defined(extensionsUsed)) {
-            var extensionsUsedCount = extensionsUsed.length;
-            for (var index=0;index<extensionsUsedCount;++index) {
-                var extension = extensionsUsed[index];
-
+        var extensionsRequired = model.extensionsRequired;
+        for (var extension in extensionsRequired) {
+            if (extensionsRequired.hasOwnProperty(extension)) {
                 if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
                     extension !== 'KHR_materials_common' && extension !== 'WEB3D_quantized_attributes') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
+                }
+            }
+        }
+    }
+
+    function checkSupportedGlExtensions(model, context) {
+        var glExtensionsUsed = model.gltf.glExtensionsUsed;
+        if (defined(glExtensionsUsed)) {
+            var glExtensionsUsedLength = glExtensionsUsed.length;
+            for (var i = 0; i < glExtensionsUsedLength; i++) {
+                var extension = glExtensionsUsed[i];
+                if (extension !== 'OES_element_index_uint') {
+                    throw new RuntimeError('Unsupported WebGL Extension: ' + extension);
+                } else if (!context.elementIndexUint) {
+                    throw new RuntimeError('OES_element_index_uint WebGL extension is not enabled.');
                 }
             }
         }
@@ -4030,7 +4079,6 @@ define([
 
             this._state = ModelState.LOADING;
 
-            checkSupportedExtensions(this);
             if (this._state !== ModelState.FAILED) {
                 var extensions = this.gltf.extensions;
                 if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
@@ -4069,6 +4117,7 @@ define([
             if (loadResources.pendingBufferLoads === 0) {
                 if (!this._updatedGltfVersion) {
                     updateVersion(this.gltf);
+                    checkSupportedExtensions(this);
                     processModelMaterialsCommon(this.gltf);
                     addDefaults(this.gltf);
 
