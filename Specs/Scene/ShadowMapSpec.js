@@ -491,10 +491,7 @@ defineSuite([
 
         // Render with shadows. The area should not be shadowed because the box's texture is transparent in the center.
         scene.shadowMap.enabled = true;
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRender(unshadowedColor);
+        renderAndExpect(unshadowedColor);
 
         // Move the camera into the shadowed area
         scene.camera.moveRight(0.2);
@@ -508,10 +505,7 @@ defineSuite([
 
         // Move the camera away from the shadow
         scene.camera.moveRight(0.3);
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRender(unshadowedColor);
+        renderAndExpect(unshadowedColor);
     });
 
     it('primitive casts shadows onto another primitive', function() {
@@ -593,10 +587,7 @@ defineSuite([
             // Render with globe casting off
             scene.shadowMap.enabled = true;
             scene.globe.shadows = ShadowMode.DISABLED;
-            expect({
-                scene : scene,
-                primeShadowMap : true
-            }).toRender(unshadowedColor);
+            renderAndExpect(unshadowedColor);
 
             // Render with globe casting on
             scene.globe.shadows = ShadowMode.ENABLED;
@@ -635,10 +626,7 @@ defineSuite([
 
         // Change the light direction so the unshadowed area is now shadowed
         lightCamera.lookAt(center, new Cartesian3(0.1, 0.0, 1.0));
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRender(shadowedColor);
+        renderAndExpect(shadowedColor);
     });
 
     it('sun shadow map works', function() {
@@ -754,18 +742,12 @@ defineSuite([
             // Check that setting a smaller radius works
             var radius = scene.shadowMap._pointLightRadius;
             scene.shadowMap._pointLightRadius = 3.0;
-            expect({
-                scene : scene,
-                primeShadowMap : true
-            }).toRender(unshadowedColor);
+            renderAndExpect(unshadowedColor);
             scene.shadowMap._pointLightRadius = radius;
 
             // Move the camera away from the shadow
             scene.camera.moveRight(0.5);
-            expect({
-                scene : scene,
-                primeShadowMap : true
-            }).toRender(unshadowedColor);
+            renderAndExpect(unshadowedColor);
 
             scene.primitives.remove(box);
         }
@@ -781,10 +763,7 @@ defineSuite([
 
         // Change size
         scene.shadowMap.size = 256;
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRender(shadowedColor);
+        renderAndExpect(shadowedColor);
 
         // Cascaded shadows combine four maps into one texture
         expect(scene.shadowMap._shadowMapTexture.width).toBe(512);
@@ -1060,10 +1039,7 @@ defineSuite([
 
         // Set a maximimum distance where the shadows are not visible
         scene.shadowMap.maximumDistance = 3.0;
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRender(unshadowedColor);
+        renderAndExpect(unshadowedColor);
     });
 
     it('shadows are disabled during the pick pass', function() {
@@ -1182,20 +1158,14 @@ defineSuite([
         scene.shadowMap._primitiveBias.normalShadingSmooth = 0.4;
         scene.shadowMap.debugCreateRenderStates();
         scene.shadowMap.dirty = true;
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRender(shadowedColor);
+        renderAndExpect(shadowedColor);
 
         scene.shadowMap._primitiveBias.normalOffset = false;
         scene.shadowMap._primitiveBias.normalShading = false;
         scene.shadowMap._primitiveBias.polygonOffset = false;
         scene.shadowMap.debugCreateRenderStates();
         scene.shadowMap.dirty = true;
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRender(shadowedColor);
+        renderAndExpect(shadowedColor);
     });
 
     it('destroys', function() {
