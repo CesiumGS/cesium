@@ -15,8 +15,8 @@ script:
   - npm run jsHint -- --failTaskOnError
   - echo -en 'travis_fold:end:script.jsHint\\r'
 
-  - echo 'test non-webgl' && echo -en 'travis_fold:start:script.test\\r'
-  - npm run test -- --exclude WebGL --browsers Electron --failTaskOnError --suppressPassed
+  - echo 'test webgl-stub' && echo -en 'travis_fold:start:script.test\\r'
+  - npm run test -- --browsers Electron --webgl-stub --failTaskOnError --suppressPassed
   - echo -en 'travis_fold:end:script.test\\r'
 
   - echo 'makeZipFile' && echo -en 'travis_fold:start:script.makeZipFile\\r'
@@ -30,8 +30,8 @@ script:
   - npm run deploy-status -- --status success --message Deployed
   - echo -en 'travis_fold:end:script.deploy\\r'
 
-  - echo 'test non-webgl release' && echo -en 'travis_fold:start:script test.release\\r'
-  - npm run test -- --exclude WebGL --browsers Electron --failTaskOnError --release --suppressPassed
+  - echo 'test webgl-stub release' && echo -en 'travis_fold:start:script test.release\\r'
+  - npm run test -- --browsers Electron --failTaskOnError --webgl-stub --release --suppressPassed
   - echo -en 'travis_fold:end:script test.release\\r'
 
   - echo 'cloc' && echo -en 'travis_fold:start:script.cloc\\r'
