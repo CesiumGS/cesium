@@ -60,15 +60,8 @@ defineSuite([
             expect(widget.viewModel.showInstructions).toEqual(false);
 
             widget.viewModel.showInstructions = true;
-
-// TODO: does anyone have a real fix for this workaround?
-//
-// This happens when running "Run all tests against combined file with debug code removed"
-// http://localhost:8080/Specs/SpecRunner.html?built=true&release=true
-            if (defined(container.firstChild)) {
-                func(container.firstChild);
-                expect(widget.viewModel.showInstructions).toEqual(true);
-            }
+            func(container.firstChild);
+            expect(widget.viewModel.showInstructions).toEqual(true);
 
             widget.destroy();
             document.body.removeChild(container);
