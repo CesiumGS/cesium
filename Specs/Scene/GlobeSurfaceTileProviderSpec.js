@@ -18,6 +18,7 @@ defineSuite([
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
         'Scene/ImageryLayerCollection',
+        'Scene/ImagerySplitDirection',
         'Scene/QuadtreeTile',
         'Scene/QuadtreeTileProvider',
         'Scene/SceneMode',
@@ -44,6 +45,7 @@ defineSuite([
         Globe,
         GlobeSurfaceShaderSet,
         ImageryLayerCollection,
+        ImagerySplitDirection,
         QuadtreeTile,
         QuadtreeTileProvider,
         SceneMode,
@@ -477,6 +479,7 @@ defineSuite([
         layer.gamma = 0.321;
         layer.saturation = 0.123;
         layer.hue = 0.456;
+        layer.splitDirection = ImagerySplitDirection.LEFT;
 
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
@@ -502,6 +505,7 @@ defineSuite([
                 expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0 / 0.321]);
                 expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
                 expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
+                expect(uniforms.u_dayTextureSplit()).toEqual([ImagerySplitDirection.LEFT]);
             }
 
             expect(tileCommandCount).toBeGreaterThan(0);

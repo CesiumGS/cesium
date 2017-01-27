@@ -1078,6 +1078,22 @@ define([
             get : function() {
                 return this._mapMode2D;
             }
+        },
+
+         /**
+         * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
+         * @memberof Scene.prototype.
+         *
+         * @type {Number}
+         */
+        imagerySplitPosition : {
+            get: function() {
+                return this._frameState.imagerySplitPosition;
+            },
+
+            set: function(value) {
+                this._frameState.imagerySplitPosition = value;
+            }
         }
     });
 
@@ -1433,22 +1449,38 @@ define([
         var sp = defaultValue(shaderProgram, command.shaderProgram);
         var fs = sp.fragmentShaderSource.clone();
 
+        var targets = [];
         fs.sources = fs.sources.map(function(source) {
             source = ShaderSource.replaceMain(source, 'czm_Debug_main');
+            var re = /gl_FragData\[(\d+)\]/g;
+            var match;
+            while ((match = re.exec(source)) !== null) {
+                if (targets.indexOf(match[1]) === -1) {
+                    targets.push(match[1]);
+                }
+            }
             return source;
         });
+        var length = targets.length;
 
         var newMain =
             'void main() \n' +
             '{ \n' +
             '    czm_Debug_main(); \n';
 
+        var i;
         if (scene.debugShowCommands) {
             if (!defined(command._debugColor)) {
                 command._debugColor = Color.fromRandom();
             }
             var c = command._debugColor;
-            newMain += '    gl_FragColor.rgb *= vec3(' + c.red + ', ' + c.green + ', ' + c.blue + '); \n';
+            if (length > 0) {
+                for (i = 0; i < length; ++i) {
+                    newMain += '    gl_FragData[' + targets[i] + '].rgb *= vec3(' + c.red + ', ' + c.green + ', ' + c.blue + '); \n';
+                }
+            } else {
+                newMain += '    ' + 'gl_FragColor' + '.rgb *= vec3(' + c.red + ', ' + c.green + ', ' + c.blue + '); \n';
+            }
         }
 
         if (scene.debugShowFrustums) {
@@ -1457,7 +1489,13 @@ define([
             var r = (command.debugOverlappingFrustums & (1 << 0)) ? '1.0' : '0.0';
             var g = (command.debugOverlappingFrustums & (1 << 1)) ? '1.0' : '0.0';
             var b = (command.debugOverlappingFrustums & (1 << 2)) ? '1.0' : '0.0';
-            newMain += '    gl_FragColor.rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n';
+            if (length > 0) {
+                for (i = 0; i < length; ++i) {
+                    newMain += '    gl_FragData[' + targets[i] + '].rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n';
+                }
+            } else {
+                newMain += '    ' + 'gl_FragColor' + '.rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n';
+            }
         }
 
         newMain += '}';

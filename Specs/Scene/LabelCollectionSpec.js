@@ -11,6 +11,7 @@ defineSuite([
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Rectangle',
+        'Scene/BlendOption',
         'Scene/Globe',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
@@ -31,6 +32,7 @@ defineSuite([
         CesiumMath,
         NearFarScalar,
         Rectangle,
+        BlendOption,
         Globe,
         HeightReference,
         HorizontalOrigin,
@@ -345,6 +347,32 @@ defineSuite([
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).toBeGreaterThan(10);
         });
+    });
+
+    it('renders in multiple passes', function() {
+        labels.add({
+            position : Cartesian3.ZERO,
+            text : 'x',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER
+        });
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+
+        var frameState = scene.frameState;
+        frameState.commandList.length = 0;
+        labels.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
+        labels.update(frameState);
+        expect(frameState.commandList.length).toEqual(2);
+
+        frameState.commandList.length = 0;
+        labels.blendOption = BlendOption.OPAQUE;
+        labels.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
+
+        frameState.commandList.length = 0;
+        labels.blendOption = BlendOption.TRANSLUCENT;
+        labels.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
     });
 
     it('can render after adding a label', function() {
