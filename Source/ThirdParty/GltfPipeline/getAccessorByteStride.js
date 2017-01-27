@@ -1,7 +1,7 @@
 /*global define*/
 define([
-    './byteLengthForComponentType',
-    './numberOfComponentsForType'
+        './byteLengthForComponentType',
+        './numberOfComponentsForType'
     ], function(
         byteLengthForComponentType,
         numberOfComponentsForType) {

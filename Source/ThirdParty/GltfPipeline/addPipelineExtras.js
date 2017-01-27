@@ -1,7 +1,7 @@
 /*global define*/
 define([
-    '../../Core/defaultValue',
-    '../../Core/defined'
+        '../../Core/defaultValue',
+        '../../Core/defined'
     ], function(
         defaultValue,
         defined) {

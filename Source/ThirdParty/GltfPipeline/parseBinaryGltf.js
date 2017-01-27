@@ -1,13 +1,13 @@
 /*global define*/
 define([
-    './addPipelineExtras',
-    '../../Core/ComponentDatatype',
-    '../../Core/defined',
-    '../../Core/DeveloperError',
-    '../../Core/defaultValue',
-    '../../Core/getMagic',
-    '../../Core/getStringFromTypedArray',
-    '../../Core/WebGLConstants'
+        './addPipelineExtras',
+        '../../Core/ComponentDatatype',
+        '../../Core/defined',
+        '../../Core/DeveloperError',
+        '../../Core/defaultValue',
+        '../../Core/getMagic',
+        '../../Core/getStringFromTypedArray',
+        '../../Core/WebGLConstants'
     ], function(
         addPipelineExtras,
         ComponentDatatype,

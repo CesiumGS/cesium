@@ -1,9 +1,9 @@
 /*global define*/
 define([
-    './getAccessorByteStride',
-    './numberOfComponentsForType',
-    '../../Core/ComponentDatatype',
-    '../../Core/defined'
+        './getAccessorByteStride',
+        './numberOfComponentsForType',
+        '../../Core/ComponentDatatype',
+        '../../Core/defined'
     ], function(
         getAccessorByteStride,
         numberOfComponentsForType,

@@ -1,6 +1,6 @@
 /*global define*/
 define([
-    '../../Core/WebGLConstants'
+        '../../Core/WebGLConstants'
     ], function(
         WebGLConstants) {
     'use strict';

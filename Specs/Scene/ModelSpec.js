@@ -671,8 +671,8 @@ defineSuite([
         return loadModel(cesiumAir_0_8Url, {
             minimumPixelSize : 1
         }).then(function(m) {
-            // 0.8 models had a number version. Verify it is converted to a string.
-            expect(m.gltf.asset.version).toEqual('0.8');
+            // Verify that the version has been updated
+            expect(m.gltf.asset.version).toEqual('2.0');
 
             // Verify that rotation is converted from
             // Axis-Angle (1,0,0,0) to Quaternion (0,0,0,1)

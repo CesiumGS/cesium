@@ -1,9 +1,9 @@
 /*global define*/
 define([
-    './techniqueParameterForSemantic',
-    '../../Core/WebGLConstants',
-    '../../Core/defined',
-    '../../Core/defaultValue'
+        './techniqueParameterForSemantic',
+        '../../Core/WebGLConstants',
+        '../../Core/defined',
+        '../../Core/defaultValue'
     ], function(
         techniqueParameterForSemantic,
         WebGLConstants,

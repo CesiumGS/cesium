@@ -1,6 +1,6 @@
 /*global define*/
 define([
-    '../../Core/defined'
+        '../../Core/defined'
     ], function(
         defined) {
     'use strict';

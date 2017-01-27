@@ -1,14 +1,14 @@
 /*global define*/
 define([
-    './getUniqueId',
-    './findAccessorMinMax',
-    '../../Core/Cartesian3',
-    '../../Core/Math',
-    '../../Core/Matrix4',
-    '../../Core/Quaternion',
-    '../../Core/WebGLConstants',
-    '../../Core/defaultValue',
-    '../../Core/defined'
+        './getUniqueId',
+        './findAccessorMinMax',
+        '../../Core/Cartesian3',
+        '../../Core/Math',
+        '../../Core/Matrix4',
+        '../../Core/Quaternion',
+        '../../Core/WebGLConstants',
+        '../../Core/defaultValue',
+        '../../Core/defined'
     ], function(
         getUniqueId,
         findAccessorMinMax,
@@ -24,7 +24,7 @@ define([
     var updateFunctions = {
         '0.8' : glTF08to10,
         '1.0' : glTF10to20,
-        '2.0' : null
+        '2.0' : undefined
     };
 
     /**
@@ -47,12 +47,20 @@ define([
         });
 
         version = defaultValue(version, gltf.asset.version);
-        // invalid version, default to 1.0
+        // invalid version
         if (!updateFunctions.hasOwnProperty(version)) {
-            version = '1.0';
+            // try truncating trailing version numbers
+            if (defined(version)) {
+                version = ('' + version).substring(0, 3);
+            }
+            // default to 1.0 if it cannot be determined
+            if (!updateFunctions.hasOwnProperty(version)) {
+                version = '1.0';
+            }
         }
 
         var updateFunction = updateFunctions[version];
+
         while (defined(updateFunction)) {
             version = gltf.asset.version;
             if (version === targetVersion) {
@@ -635,6 +643,47 @@ define([
         }
     }
 
+    function stripTechniqueAttributeValues(gltf) {
+        var techniques = gltf.techniques;
+        for (var techniqueId in techniques) {
+            if (techniques.hasOwnProperty(techniqueId)) {
+                var technique = techniques[techniqueId];
+                var attributes = technique.attributes;
+                var parameters = technique.parameters;
+                for (var attributeName in attributes) {
+                    if (attributes.hasOwnProperty(attributeName)) {
+                        var parameterId = attributes[attributeName];
+                        var parameter = parameters[parameterId];
+                        if (defined(parameter.value)) {
+                            delete parameter.value;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function stripTechniqueParameterCount(gltf) {
+        var techniques = gltf.techniques;
+        for (var techniqueId in techniques) {
+            if (techniques.hasOwnProperty(techniqueId)) {
+                var technique = techniques[techniqueId];
+                var parameters = technique.parameters;
+                for (var parameterId in parameters) {
+                    if (parameters.hasOwnProperty(parameterId)) {
+                        var parameter = parameters[parameterId];
+                        if (defined(parameter.count)) {
+                            var semantic = parameter.semantic;
+                            if (!defined(semantic) || (semantic !== 'JOINTMATRIX' && semantic.indexOf('_') !== 0)) {
+                                delete parameter.count;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     function glTF10to20(gltf) {
         if (!defined(gltf.asset)) {
             gltf.asset = {};
@@ -671,6 +720,10 @@ define([
         clampCameraParameters(gltf);
         // skeleton hierarchy must be separate from the node hierarchy (a node with jointName cannot contain camera, skeletons, skins, or meshes)
         separateSkeletonHierarchy(gltf);
+        // a technique parameter specified as an attribute cannot have a value
+        stripTechniqueAttributeValues(gltf);
+        // only techniques with a JOINTMATRIX or application specific semantic may have a defined count property
+        stripTechniqueParameterCount(gltf);
     }
 
     return updateVersion;

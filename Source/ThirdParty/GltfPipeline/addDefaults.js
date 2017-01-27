@@ -1,10 +1,10 @@
 /*global define*/
 define([
-    './getUniqueId',
-    '../../Core/clone',
-    '../../Core/defaultValue',
-    '../../Core/defined',
-    '../../Core/WebGLConstants'
+        './getUniqueId',
+        '../../Core/clone',
+        '../../Core/defaultValue',
+        '../../Core/defined',
+        '../../Core/WebGLConstants'
     ], function(
         getUniqueId,
         clone,
@@ -278,6 +278,7 @@ define([
         type : WebGLConstants.VERTEX_SHADER,
         extras : {
             _pipeline : {
+                extension : '.vert',
                 source : '' +
                     'precision highp float;\n' +
                     '\n' +
@@ -298,7 +299,7 @@ define([
         type : WebGLConstants.FRAGMENT_SHADER,
         extras : {
             _pipeline : {
-                extension : '.vert',
+                extension: '.frag',
                 source : '' +
                     'precision highp float;\n' +
                     '\n' +
