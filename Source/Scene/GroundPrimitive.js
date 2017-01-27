@@ -1032,7 +1032,6 @@ define([
      * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     GroundPrimitive.prototype.update = function(frameState) {
-        var context = frameState.context;
         if (!this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
             return;
         }
