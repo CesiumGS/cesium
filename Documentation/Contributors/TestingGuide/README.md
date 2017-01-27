@@ -418,7 +418,7 @@ For tests that render the scene themselves, `toReadPixels` and `notToReadPixels`
 ```javascript
 expect(context).toReadPixels([0, 0, 0, 255]);
 
-expect(context).notToReadPixels([0, 0, 0, 0]);
+expect(context).notToReadPixels([0, 0, 0, 255]);
 ```
 
 `toReadPixels` can also read from a given framebuffer and use an epsilon for the RGBA comparison test, e.g.:
