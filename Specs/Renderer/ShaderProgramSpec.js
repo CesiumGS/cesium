@@ -470,7 +470,7 @@ defineSuite([
         var fs =
             '#version 100 \n' +
             'void main() { gl_FragColor = vec4(1.0); }';
-        var sp = ShaderProgram.fromCache({
+        sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs
@@ -486,7 +486,7 @@ defineSuite([
             '\n' +
             '#version 100 \n' +
             'void main() { gl_FragColor = vec4(1.0); }';
-        var sp = ShaderProgram.fromCache({
+        sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs
