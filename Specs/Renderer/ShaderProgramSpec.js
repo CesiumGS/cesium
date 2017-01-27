@@ -23,9 +23,9 @@ defineSuite([
         createContext) {
     'use strict';
 
+    var webglStub = !!window.webglStub;
     var context;
     var sp;
-    var va;
 
     var injectedTestFunctions = {
         czm_circularDependency1 : 'void czm_circularDependency1() { czm_circularDependency2(); }',
@@ -51,7 +51,6 @@ defineSuite([
                 ShaderSource._czmBuiltinsAndUniforms[functionName] = injectedTestFunctions[functionName];
             }
         }
-
     });
 
     afterAll(function() {
@@ -64,33 +63,9 @@ defineSuite([
         }
     });
 
-    function renderFragment(context, shaderProgram, uniformMap) {
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                index : sp.vertexAttributes.position.index,
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : shaderProgram,
-            vertexArray : va,
-            uniformMap : uniformMap
-        });
-        command.execute(context);
-
-        return context.readPixels();
-    }
+    afterEach(function() {
+        sp = sp && sp.destroy();
+    });
 
     it('has vertex and fragment shader source', function() {
         var vs = 'void main() { gl_Position = vec4(1.0); }';
@@ -123,6 +98,10 @@ defineSuite([
             fragmentShaderSource : fs
         });
 
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
+
         expect(sp.numberOfVertexAttributes).toEqual(1);
         expect(sp.vertexAttributes.position.name).toEqual('position');
     });
@@ -148,6 +127,10 @@ defineSuite([
             attributeLocations : attributes
         });
 
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
+
         expect(sp.numberOfVertexAttributes).toEqual(3);
         expect(sp.vertexAttributes.position.name).toEqual('position');
         expect(sp.vertexAttributes.position.index).toEqual(attributes.position);
@@ -165,6 +148,10 @@ defineSuite([
             vertexShaderSource : vs,
             fragmentShaderSource : fs
         });
+
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
 
         expect(sp.allUniforms.u_vec4.name).toEqual('u_vec4');
         expect(sp.allUniforms.czm_viewport.name).toEqual('czm_viewport');
@@ -199,6 +186,10 @@ defineSuite([
             fragmentShaderSource : fs
         });
 
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
+
         expect(sp.allUniforms.u_float.name).toEqual('u_float');
         expect(sp.allUniforms.u_vec2.name).toEqual('u_vec2');
         expect(sp.allUniforms.u_vec3.name).toEqual('u_vec3');
@@ -226,6 +217,10 @@ defineSuite([
             vertexShaderSource : vs,
             fragmentShaderSource : fs
         });
+
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
 
         expect(sp.allUniforms['u_struct.f'].name).toEqual('u_struct.f');
         expect(sp.allUniforms['u_struct.v'].name).toEqual('u_struct.v');
@@ -259,6 +254,10 @@ defineSuite([
             vertexShaderSource : vs,
             fragmentShaderSource : fs
         });
+
+        if (webglStub) {
+            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+        }
 
         expect(sp.allUniforms.u_float.name).toEqual('u_float');
         expect(sp.allUniforms.u_vec2.name).toEqual('u_vec2');
@@ -298,7 +297,6 @@ defineSuite([
     });
 
     it('has predefined constants', function() {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'void main() { ' +
             '  float f = ((czm_pi > 0.0) && \n' +
@@ -314,17 +312,14 @@ defineSuite([
             '    (czm_degreesPerRadian > 0.0)) ? 1.0 : 0.0; \n' +
             '  gl_FragColor = vec4(f); \n' +
             '}';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
 
-        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has built-in constant, structs, and functions', function() {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'void main() { \n' +
             '  czm_materialInput materialInput; \n' +
@@ -334,13 +329,11 @@ defineSuite([
             '  material.diffuse = czm_hue(material.diffuse, czm_twoPi); \n' +
             '  gl_FragColor = vec4(material.diffuse, material.alpha); \n' +
             '}';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
 
-        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('creates duplicate uniforms if precision of uniforms in vertex and fragment shader do not match', function() {
@@ -348,69 +341,71 @@ defineSuite([
         ContextLimits._highpFloatSupported = false;
         var vs = 'attribute vec4 position; uniform float u_value; varying float v_value; void main() { gl_PointSize = 1.0; v_value = u_value * czm_viewport.z; gl_Position = position; }';
         var fs = 'uniform float u_value; varying float v_value; void main() { gl_FragColor = vec4(u_value * v_value * czm_viewport.z); }';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
         var uniformMap = {
             u_value : function() {
                 return 1.0;
             }
         };
-        expect(sp.allUniforms.u_value).toBeDefined();
-        expect(sp.allUniforms.czm_mediump_u_value).toBeDefined();
-        expect(renderFragment(context, sp, uniformMap)).not.toEqual([0, 0, 0, 0]);
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
+
+        if (!webglStub) {
+            // WebGL Stub does not return vertex attribute and uniforms in the shader
+            expect(sp.allUniforms.u_value).toBeDefined();
+            expect(sp.allUniforms.czm_mediump_u_value).toBeDefined();
+        }
+
+        expect({
+            context : context,
+            vertexShader : vs,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).notContextToRender([0, 0, 0, 0]);
+
         ContextLimits._highpFloatSupported = highpFloatSupported;
     });
 
     it('1 level function dependency', function() {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'void main() { \n' +
             '  czm_testFunction1(vec4(1.0)); \n' +
             '}';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
 
-        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('2 level function dependency', function() {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'void main() { \n' +
             '  czm_testFunction2(vec4(1.0)); \n' +
             '}';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
 
-        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('3 level function dependency', function() {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'void main() { \n' +
             '  czm_testFunction3(vec4(1.0)); \n' +
             '}';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
 
-        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('diamond dependency', function() {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'void main() { \n' +
             '  vec4 color = vec4(1.0, 1.0, 1.0, 0.8); \n' +
@@ -418,17 +413,14 @@ defineSuite([
             '  color = czm_testDiamondDependency2(color); \n' +
             '  gl_FragColor = color; \n' +
             '}';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
 
-        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('diamond plus 3 level function dependency', function() {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'void main() { \n' +
             '  vec4 color = vec4(1.0, 1.0, 1.0, 0.8); \n' +
@@ -436,17 +428,14 @@ defineSuite([
             '  color = czm_testDiamondDependency2(color); \n' +
             '  czm_testFunction3(color); \n' +
             '}';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
 
-        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('big mess of function dependencies', function() {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'void main() { \n' +
             '  vec4 color = vec4(0.9, 0.9, 1.0, 0.6); \n' +
@@ -454,29 +443,24 @@ defineSuite([
             '  color = czm_testDiamondDependency2(color); \n' +
             '  czm_testFunction4(color); \n' +
             '}';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
 
-        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('doc comment with reference to another function', function() {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'void main() { \n' +
             '  vec4 color = vec4(1.0, 1.0, 1.0, 1.0); \n' +
             '  czm_testFunctionWithComment(color); \n' +
             '}';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
 
-        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('compiles with #version at the top', function() {
@@ -510,6 +494,10 @@ defineSuite([
     });
 
     it('fails vertex shader compile', function() {
+        if (webglStub) {
+            return; // WebGL Stub does not actually try to compile the shader
+        }
+
         var vs = 'does not compile.';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = ShaderProgram.fromCache({
@@ -524,6 +512,10 @@ defineSuite([
     });
 
     it('fails fragment shader compile', function() {
+        if (webglStub) {
+            return; // WebGL Stub does not actually try to compile the shader
+        }
+
         var vs = 'void main() { gl_Position = vec4(0.0); }';
         var fs = 'does not compile.';
         sp = ShaderProgram.fromCache({
@@ -538,6 +530,10 @@ defineSuite([
     });
 
     it('fails to link', function() {
+        if (webglStub) {
+            return; // WebGL Stub does not actually try to compile and link the shader
+        }
+
         var vs = 'void nomain() { }';
         var fs = 'void nomain() { }';
         sp = ShaderProgram.fromCache({
