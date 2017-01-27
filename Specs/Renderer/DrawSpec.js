@@ -820,7 +820,7 @@ defineSuite([
         // I believe different GL implementations are allowed to AA
         // in different ways (or at least that is what we see in practice),
         // so verify it at least rendered something.
-        expect(context).notToReadPixels([0, 0, 0, 0]);
+        expect(context).notToReadPixels([0, 0, 0, 255]);
     });
 
     it('draws with polygon offset', function() {

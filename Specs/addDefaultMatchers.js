@@ -470,20 +470,23 @@ define([
         var scene = actual;
         var result = scene.pick(new Cartesian2(0, 0));
 
+        if (!!window.webglStub) {
+            return {
+                pass : true
+            };
+        }
+
         var pass = true;
         var message;
 
-        var webglStub = !!window.webglStub;
-        if (!webglStub) {
-            if (defined(expected)) {
-                pass = (result.primitive === expected);
-            } else {
-                pass = !defined(result);
-            }
+        if (defined(expected)) {
+            pass = (result.primitive === expected);
+        } else {
+            pass = !defined(result);
+        }
 
-            if (!pass) {
-                message = 'Expected to pick ' + expected + ', but picked: ' + result;
-            }
+        if (!pass) {
+            message = 'Expected to pick ' + expected + ', but picked: ' + result;
         }
 
         return {

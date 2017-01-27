@@ -351,7 +351,15 @@ defineSuite([
         });
     }
 
-    function renderAndReadPixels(time) {
+    function renderAndExpect(rgba, time) {
+        expect({
+            scene : scene,
+            time : time,
+            primeShadowMap : true
+        }).toRender(rgba);
+    }
+
+    function renderAndReadPixels() {
         var color;
 
         expect({
@@ -364,9 +372,10 @@ defineSuite([
         return color;
     }
 
-    function renderAndCall(expectationCallback) {
+    function renderAndCall(expectationCallback, time) {
         expect({
             scene : scene,
+            time : time,
             primeShadowMap : true
         }).toRenderAndCall(function(rgba) {
             expectationCallback(rgba);
@@ -396,34 +405,19 @@ defineSuite([
 
         // Turn shadow casting off/on
         caster.shadows = ShadowMode.DISABLED;
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRender(unshadowedColor);
+        renderAndExpect(unshadowedColor);
         caster.shadows = ShadowMode.ENABLED;
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRender(shadowedColor);
+        renderAndExpect(shadowedColor);
 
         // Turn shadow receiving off/on
         receiver.shadows = ShadowMode.DISABLED;
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRender(unshadowedColor);
+        renderAndExpect(unshadowedColor);
         receiver.shadows = ShadowMode.ENABLED;
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRender(shadowedColor);
+        renderAndExpect(shadowedColor);
 
         // Move the camera away from the shadow
         scene.camera.moveRight(0.5);
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRender(unshadowedColor);
+        renderAndExpect(unshadowedColor);
     }
 
     it('sets default shadow map properties', function() {
@@ -671,21 +665,13 @@ defineSuite([
 
         // Render with shadows
         scene.shadowMap.enabled = true;
-        expect({
-            scene : scene,
-            time : startTime,
-            primeShadowMap : true
-        }).toRenderAndCall(function(rgba) {
+        renderAndCall(function(rgba) {
             expect(rgba).not.toEqual(backgroundColor);
             expect(rgba).not.toEqual(unshadowedColor);
-        });
+        }, startTime);
 
         // Change the time so that the shadows are no longer pointing straight down
-        expect({
-            scene : scene,
-            time : endTime,
-            primeShadowMap : true
-        }).toRender(unshadowedColor);
+        renderAndExpect(unshadowedColor, endTime);
 
         scene.shadowMap = undefined;
     });
@@ -1051,10 +1037,7 @@ defineSuite([
         // Render without shadows
         scene.shadowMap.enabled = false;
         var unshadowedColor;
-        expect({
-            scene : scene,
-            primeShadowMap : true
-        }).toRenderAndCall(function(rgba) {
+        renderAndCall(function(rgba) {
             expect(rgba).not.toEqual(backgroundColor);
             unshadowedColor = rgba;
         });

@@ -475,7 +475,6 @@ defineSuite([
             vertexShaderSource : vs,
             fragmentShaderSource : fs
         });
-        sp.destroy();
     });
 
     it('compiles with #version after whitespace and comments', function() {
@@ -492,12 +491,11 @@ defineSuite([
             vertexShaderSource : vs,
             fragmentShaderSource : fs
         });
-        sp.destroy();
     });
 
     it('fails vertex shader compile', function() {
         if (webglStub) {
-            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+            return; // WebGL Stub does not actually try to compile the shader
         }
 
         var vs = 'does not compile.';
@@ -515,7 +513,7 @@ defineSuite([
 
     it('fails fragment shader compile', function() {
         if (webglStub) {
-            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+            return; // WebGL Stub does not actually try to compile the shader
         }
 
         var vs = 'void main() { gl_Position = vec4(0.0); }';
@@ -533,7 +531,7 @@ defineSuite([
 
     it('fails to link', function() {
         if (webglStub) {
-            return; // WebGL Stub does not return vertex attribute and uniforms in the shader
+            return; // WebGL Stub does not actually try to compile and link the shader
         }
 
         var vs = 'void nomain() { }';
