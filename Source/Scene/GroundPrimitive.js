@@ -400,7 +400,7 @@ define([
      * @returns {Boolean} <code>true</code> if GroundPrimitives are supported; otherwise, returns <code>false</code>
      */
     GroundPrimitive.isSupported = function(scene) {
-        return scene.context.fragmentDepth && scene.context.stencilBuffer;
+        return scene.context.stencilBuffer;
     };
 
     GroundPrimitive._defaultMaxTerrainHeight = 9000.0;
@@ -1033,7 +1033,7 @@ define([
      */
     GroundPrimitive.prototype.update = function(frameState) {
         var context = frameState.context;
-        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
+        if (!this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
             return;
         }
 
