@@ -11,17 +11,15 @@
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
 
-        "Apps/CesiumViewer/Gallery/gallery-index.js": true,
+        "Apps/Sandcastle/jsHintOption?.js": true,
+        "Apps/Sandcastle/gallery/gallery-inde?.js": true,
 
-        "Apps/Sandcastle/jsHintOptions.js": true,
-        "Apps/Sandcastle/gallery/gallery-index.js": true,
-
-        "Source/Cesium.js": true,
+        "Source/Cesiu?.js": true,
         "Source/Shaders/**/*.js": true,
 
-        "Specs/SpecList.js": true,
+        "Specs/SpecLis?.js": true,
         "node_modules": true,
-        "npm-debug.log": true
+        "npm-debu?.log": true
     },
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
