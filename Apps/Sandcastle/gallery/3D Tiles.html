@@ -35,7 +35,6 @@ function startup(Cesium) {
 //Sandcastle_Begin
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    scene3DOnly : true,
     shadows : true
 });
 viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
@@ -149,6 +148,12 @@ canvas.onclick = function() {
     // To get key events
     canvas.focus();
 };
+
+document.addEventListener('keyup', function(e) {
+    if (e.keyCode === 'W'.charCodeAt(0)) {
+        viewModel.annotate = !viewModel.annotate;
+    }
+}, false);
 
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 

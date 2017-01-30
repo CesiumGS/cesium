@@ -52,11 +52,7 @@ defineSuite([
     }
 
     beforeAll(function() {
-        // Point tiles use RTC, which for now requires scene3DOnly to be true
-        scene = createScene({
-            scene3DOnly : true
-        });
-
+        scene = createScene();
         scene.frameState.passes.render = true;
     });
 
@@ -65,6 +61,7 @@ defineSuite([
     });
 
     beforeEach(function() {
+        scene.morphTo3D(0.0);
         setCamera(centerLongitude, centerLatitude);
     });
 
@@ -256,6 +253,23 @@ defineSuite([
             tileset.debugColorizeTiles = false;
             debugColor = expectRenderPointCloud(tileset);
             expect(debugColor).toEqual(color);
+        });
+    });
+
+    it('renders in CV', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            scene.morphToColumbusView(0.0);
+            setCamera(centerLongitude, centerLatitude);
+            expectRenderPointCloud(tileset);
+        });
+    });
+
+    it('renders in 2D', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            scene.morphTo2D(0.0);
+            setCamera(centerLongitude, centerLatitude);
+            tileset.maximumScreenSpaceError = 3;
+            expectRenderPointCloud(tileset);
         });
     });
 

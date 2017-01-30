@@ -11,6 +11,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/oneTimeWarning',
         '../Core/PrimitiveType',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
@@ -33,6 +34,7 @@ define([
         DeveloperError,
         CesiumMath,
         Matrix4,
+        oneTimeWarning,
         PrimitiveType,
         Buffer,
         BufferUsage,
@@ -78,7 +80,7 @@ define([
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the collection casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
-     * 
+     *
      * @exception {DeveloperError} Must specify either <options.gltf> or <options.url>, but not both.
      * @exception {DeveloperError} Shader program cannot be optimized for instancing. Parameters cannot have any of the following semantics: MODEL, MODELINVERSE, MODELVIEWINVERSE, MODELVIEWPROJECTIONINVERSE, MODELINVERSETRANSPOSE.
      *
@@ -766,6 +768,7 @@ define([
 
     ModelInstanceCollection.prototype.update = function(frameState) {
         if (frameState.mode !== SceneMode.SCENE3D) {
+            oneTimeWarning('Instanced models in 2D', 'Instanced models are only supported in 3D.');
             return;
         }
 

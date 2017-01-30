@@ -110,6 +110,7 @@ defineSuite([
     });
 
     beforeEach(function() {
+        scene.morphTo3D(0.0);
         originalMaximumRequests = RequestScheduler.maximumRequests;
         viewAllTiles();
     });
@@ -305,6 +306,27 @@ defineSuite([
         });
     });
 
+    it('renders tileset in CV', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            scene.morphToColumbusView(0.0);
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            expect(stats.visited).toEqual(5);
+            expect(stats.numberOfCommands).toEqual(5);
+        });
+    });
+
+    it('renders tileset in 2D', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            scene.morphTo2D(0.0);
+            tileset.maximumScreenSpaceError = 3;
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            expect(stats.visited).toEqual(5);
+            expect(stats.numberOfCommands).toEqual(10);
+        });
+    });
+
     it('renders tileset with empty root tile', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetEmptyRootUrl).then(function(tileset) {
             scene.renderForSpecs();
@@ -380,7 +402,7 @@ defineSuite([
             scene.renderForSpecs();
             expect(stats.visited).toEqual(0);
             expect(stats.numberOfCommands).toEqual(0);
-            expect(tileset._root.visibility(scene.frameState.cullingVolume, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
+            expect(tileset._root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
         });
     });
 
@@ -1110,7 +1132,7 @@ defineSuite([
             var spyUpdate = jasmine.createSpy('listener');
             tileset.tileVisible.addEventListener(spyUpdate);
             scene.renderForSpecs();
-            expect(tileset._root.visibility(scene.frameState.cullingVolume, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+            expect(tileset._root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
             expect(spyUpdate.calls.count()).toEqual(1);
             expect(spyUpdate.calls.argsFor(0)[0]).toBe(tileset._root);
         });
@@ -1814,7 +1836,7 @@ defineSuite([
             tileset.tileUnload.addEventListener(spyUpdate);
             scene.renderForSpecs();
 
-            expect(tileset._root.visibility(scene.frameState.cullingVolume, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+            expect(tileset._root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
             expect(spyUpdate.calls.count()).toEqual(4);
             expect(spyUpdate.calls.argsFor(0)[0]).toBe(tileset._root.children[0]);
             expect(spyUpdate.calls.argsFor(1)[0]).toBe(tileset._root.children[1]);
