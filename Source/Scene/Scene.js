@@ -42,6 +42,7 @@ define([
         './Camera',
         './CreditDisplay',
         './CullingVolume',
+        './DebugCameraPrimitive',
         './DepthPlane',
         './DeviceOrientationCameraController',
         './Fog',
@@ -109,6 +110,7 @@ define([
         Camera,
         CreditDisplay,
         CullingVolume,
+        DebugCameraPrimitive,
         DepthPlane,
         DeviceOrientationCameraController,
         Fog,
@@ -514,6 +516,9 @@ define([
          * @default 1
          */
         this.debugShowDepthFrustum = 1;
+
+        this._debugShowFrustumPlanes = false;
+        this._debugFrustumPlanes = undefined;
 
         /**
          * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
@@ -941,6 +946,40 @@ define([
         debugFrustumStatistics : {
             get : function() {
                 return this._debugFrustumStatistics;
+            }
+        },
+
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * When <code>true</code>, draws primitives to show the boundaries of the camera frustum
+         * </p>
+         *
+         * @type Boolean
+         *
+         * @default false
+         */
+        debugShowFrustumPlanes : {
+            get : function() {
+                return this._debugShowFrustumPlanes;
+            },
+
+            set : function(val) {
+                if (!val) {
+                    if (defined(this._debugFrustumPlanes)) {
+                        this.primitives.remove(this._debugFrustumPlanes);
+                        this._debugFrustumPlanes = this._debugFrustumPlanes && !this._debugFrustumPlanes.isDestroyed() && this._debugFrustumPlanes.destroy();
+                    }
+                } else if (val !== this._debugShowFrustumPlanes) {
+                    this._debugFrustumPlanes = this._debugFrustumPlanes && !this._debugFrustumPlanes.isDestroyed() && this._debugFrustumPlanes.destroy();
+                    this._debugFrustumPlanes = new DebugCameraPrimitive({
+                        camera: this.camera,
+                        updateOnChange: false
+                    });
+                    this._debugFrustumPlanes.update(this.frameState);
+                    this.primitives.add(this._debugFrustumPlanes);
+                }
+                this._debugShowFrustumPlanes = val;
             }
         },
 
@@ -1428,6 +1467,9 @@ define([
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
                 (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
+            frameState.near = near;
+            frameState.far = far;
+            frameState.farToNearRatio = farToNearRatio;
             createPotentiallyVisibleSet(scene);
         }
     }

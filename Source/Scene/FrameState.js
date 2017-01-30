@@ -235,6 +235,10 @@ define([
         * @default 0.0
         */
         this.imagerySplitPosition = 0.0;
+
+        this.near = 1.0;
+        this.far = 1000.0;
+        this.farToNearRatio = 1000.0;
     }
 
     /**
