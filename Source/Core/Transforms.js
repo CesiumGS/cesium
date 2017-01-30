@@ -329,7 +329,7 @@ define([
      * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
      */
     Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransformOrResult, result) {
-        Check.typeOf.object(headingPitchRoll, 'HeadingPitchRoll');
+        Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
 
         // checks for required parameters happen in the called functions
         deprecationWarning('Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)', 'The method was deprecated in Cesium 1.31 and will be removed in version 1.32. ' +
@@ -373,7 +373,7 @@ define([
      */
     Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransformOrResult, result) {
         // checks for required parameters happen in the called functions
-        Check.typeOf.object(headingPitchRoll, 'HeadingPitchRoll');
+        Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         deprecationWarning('Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)', 'The method was deprecated in Cesium 1.31 and will be removed in version 1.32. ' +
         'Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator)');
         if(fixedFrameTransformOrResult instanceof Quaternion){

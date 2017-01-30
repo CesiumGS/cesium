@@ -191,7 +191,7 @@ define([
     Quaternion.fromHeadingPitchRoll = function(headingOrHeadingPitchRoll, pitchOrResult, roll, result) {
         //>>includeStart('debug', pragmas.debug);
         if (headingOrHeadingPitchRoll instanceof HeadingPitchRoll) {
-          Check.typeOf.object(headingOrHeadingPitchRoll, 'HeadingPitchRoll');
+          Check.typeOf.object('headingPitchRoll',headingOrHeadingPitchRoll );
         } else {
           Check.typeOf.number(headingOrHeadingPitchRoll, 'heading');
           Check.typeOf.number(pitchOrResult, 'pitch');
