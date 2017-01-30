@@ -814,7 +814,7 @@ defineSuite([
     });
 
     it('renders textured box with external CRN texture', function() {
-        if (!(scene.context.s3tc)) {
+        if (!scene.context.s3tc) {
             return;
         }
         return loadModel(texturedBoxCRNUrl).then(function(m) {
@@ -824,7 +824,7 @@ defineSuite([
     });
 
     it('renders textured box with embedded binary CRN texture', function() {
-        if (!(scene.context.s3tc)) {
+        if (!scene.context.s3tc) {
             return;
         }
         return loadModel(texturedBoxCRNBinaryUrl).then(function(m) {
@@ -834,7 +834,7 @@ defineSuite([
     });
 
     it('renders textured box with embedded base64 encoded CRN texture', function() {
-        if (!(scene.context.s3tc)) {
+        if (!scene.context.s3tc) {
             return;
         }
         return loadModel(texturedBoxCRNEmbeddedUrl).then(function(m) {

@@ -254,7 +254,7 @@ defineSuite([
     });
 
     it('draws the expected ETC1 compressed texture color', function() {
-        if (context.etc1) {
+        if (!context.etc1) {
             return;
         }
 
@@ -272,12 +272,7 @@ defineSuite([
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).toRenderAndCall(function (pixels) {
-            expect(pixels[0]).toEqual(0);
-            expect(pixels[1]).toBeGreaterThan(250);
-            expect(pixels[2]).toEqual(0);
-            expect(pixels[3]).toEqual(255);
-        });
+        }).contextToRender([0, 253, 0, 255]);
     });
 
     it('renders with premultiplied alpha', function() {
