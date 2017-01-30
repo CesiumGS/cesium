@@ -5,9 +5,13 @@ Change Log
 * Deprecated
     * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.31. These properties will be available on geocoder services that support them, like `BingMapsGeocoderService`.
     * The function `createBinormalAndBitangent` of `GeometryPipeline` will be removed in 1.31. Use the function `createTangentAndBitangent` instead. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
+<<<<<<< HEAD
     * The function `Quaternion.fromHeadingPitchRoll(heading, pitch, roll,result)` will be removed in 1.32. Use `Quaternion.fromHeadingPitchRoll(hpr,result)` instead  where hpr is a HeadingPitchRoll.
     * The function `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)` will be removed in 1.32. Use `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator).
     * The function `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)` will be removed in 1.32. Use `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator).
+=======
+    * The enums `MIDDLE_DOUBLE_CLICK` and `RIGHT_DOUBLE_CLICK` from `ScreenSpaceEventType` have been deprecated and will be removed  in 1.31. [#4910](https://github.com/AnalyticalGraphicsInc/cesium/pull/4910)
+>>>>>>> upstream/master
 * Breaking changes
     * Removed separate `heading`, `pitch`, `roll` parameters from `Transform.headingPitchRollToFixedFrame` and `Transform.headingPitchRollQuaternion`. Pass a `headingPitchRoll` object instead. [#4843](https://github.com/AnalyticalGraphicsInc/cesium/pull/4843)
     * The property `binornmal` has been renamed to `bitangent` for `Geometry` and `VertexFormat`. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
@@ -24,6 +28,9 @@ Change Log
 * Fixed a bug that caused all models to use the same highlight color. [#4798] (https://github.com/AnalyticalGraphicsInc/cesium/pull/4798)
 * Fixed KML for when color is an empty string [#4826](https://github.com/AnalyticalGraphicsInc/cesium/pull/4826)
 * Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
+* Added ability to draw an `ImageryLayer` with a splitter to allow layers to only display to the left or right of a splitter.
+   * `ImageryLayer.splitDirection` controls how the layer is rendered with the splitter.  Values are taken from the new `ImagerySplitPosition` enum.
+   *  New `Scene.imagerySplitPosition` property controls the splitter position.  Values are from 0 to 1 relative across the width of the viewport.
 * The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.
 * Fixed a bug that would cause a crash when `debugShowFrustums` is enabled with OIT [#4864](https://github.com/AnalyticalGraphicsInc/cesium/pull/4864)
 * Fixed a bug that affected dynamic graphics with time-dynamic modelMatrix [#4907](https://github.com/AnalyticalGraphicsInc/cesium/pull/4907).

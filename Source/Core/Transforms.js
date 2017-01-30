@@ -338,7 +338,7 @@ define([
           result = fixedFrameTransformOrResult;
           fixedFrameTransformOrResult = undefined;
         }
-        fixedFrameTransformOrResult=defaultValue(fixedFrameTransformOrResult,Transforms.eastNorthUpToFixedFrame);
+        fixedFrameTransformOrResult = defaultValue(fixedFrameTransformOrResult,Transforms.eastNorthUpToFixedFrame);
         var hprQuaternion = Quaternion.fromHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion);
         var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
         result = fixedFrameTransformOrResult(origin, ellipsoid, result);
