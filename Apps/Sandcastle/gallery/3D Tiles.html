@@ -38,7 +38,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     shadows : true
 });
 viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
-var model = viewer.cesium3DTilesInspector.viewModel;
+var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
 
 var scene = viewer.scene;
 scene.fog.enabled = false;
@@ -105,13 +105,13 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
         scene.primitives.remove(tileset);
     }
     if (!Cesium.defined(options)) {
-        model.tileset = undefined;
+        inspectorViewModel.tileset = undefined;
         return;
     }
     tileset = new Cesium.Cesium3DTileset({
         url: options.url
     });
-    model.tileset = tileset;
+    inspectorViewModel.tileset = tileset;
     scene.primitives.add(tileset);
     tileset.readyPromise.then(function(tileset) {
         var boundingSphere = tileset.boundingSphere;
@@ -158,7 +158,7 @@ document.addEventListener('keyup', function(e) {
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
 handler.setInputAction(function(movement) {
-    var feature = model.feature;
+    var feature = inspectorViewModel.feature;
     if (Cesium.defined(feature)) {
         if (feature.getProperty('clicked')) {
             console.log('already clicked');
@@ -194,14 +194,14 @@ handler.setInputAction(function(movement) {
 
 //When a feature is double middle clicked, hide it
 handler.setInputAction(function(movement) {
-    var feature = model.feature;
+    var feature = inspectorViewModel.feature;
     if (Cesium.defined(feature)) {
         feature.show = false;
     }
 }, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
 
 function annotate(movement) {
-    if (Cesium.defined(model.feature) && scene.pickPositionSupported) {
+    if (Cesium.defined(inspectorViewModel.feature) && scene.pickPositionSupported) {
         var cartesian = scene.pickPosition(movement.position);
         var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
         var height = cartographic.height.toFixed(2) + ' m';
@@ -233,7 +233,7 @@ function offsetFromHeadingPitchRange(heading, pitch, range) {
 }
 
 function zoom(movement) {
-    var feature = model.feature;
+    var feature = inspectorViewModel.feature;
     if (Cesium.defined(feature)) {
         var longitude = feature.getProperty('Longitude');
         var latitude = feature.getProperty('Latitude');

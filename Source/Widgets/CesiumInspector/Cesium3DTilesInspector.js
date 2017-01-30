@@ -107,14 +107,14 @@ define([
         tilesetPanel.contents.appendChild(makeButton('trimTilesCache', 'Trim Tiles Cache'));
         tilesetPanel.contents.appendChild(makeCheckbox('picking', 'Enable Picking'));
         knockout.applyBindings(viewModel, tilesetPanel.contents);
-        
+
         displayPanel.contents.appendChild(makeCheckbox('colorize', 'Colorize'));
         displayPanel.contents.appendChild(makeCheckbox('wireframe', 'Wireframe'));
         displayPanel.contents.appendChild(makeCheckbox('showBoundingVolumes', 'Bounding Volumes'));
         displayPanel.contents.appendChild(makeCheckbox('showContentBoundingVolumes', 'Content Volumes'));
         displayPanel.contents.appendChild(makeCheckbox('showRequestVolumes', 'Request Volumes'));
         knockout.applyBindings(viewModel, displayPanel.contents);
-        
+
         updatePanel.contents.appendChild(makeCheckbox('freezeFrame', 'Freeze Frame'));
         updatePanel.contents.appendChild(makeCheckbox('dynamicSSE', 'Dynamic SSE'));
         var sseContainer = document.createElement('div');
@@ -150,7 +150,7 @@ define([
                                            'optionsValue: "val", ' +
                                            'value: colorBlendMode');
         stylePanel.contents.appendChild(blendDropdown);
-        
+
         var styleEditor = document.createElement('textarea');
         styleEditor.setAttribute('wrap', 'soft');
         styleEditor.setAttribute('data-bind', 'valueUpdate: "keyup", value: _styleString, event: { keypress: _checkCompile }');
@@ -284,7 +284,7 @@ define([
         return container;
     }
 
-    function makeExponentialRangeInput(model, property, min, max, steps, exponent, text) {
+    function makeExponentialRangeInput(viewModel, property, min, max, steps, exponent, text) {
         var container = document.createElement('div');
         container.className = 'cesium-cesiumInspector-slider';
         var input = document.createElement('input');
@@ -299,7 +299,7 @@ define([
         slider.setAttribute('data-bind', 'value: (Math.pow(' + property + ', 1 / ' + exponent + '))');
 
         slider.oninput = function() {
-            model[property] = Math.pow(this.value, exponent);
+            viewModel[property] = Math.pow(this.value, exponent);
         };
 
         container.appendChild(document.createTextNode(text));
@@ -322,7 +322,7 @@ define([
             binding += ', css: {"cesium-cesiumInspector-pickButtonHighlight" : ' + active + '}';
         }
         button.setAttribute('data-bind', binding);
-        
+
         return button;
     }
 

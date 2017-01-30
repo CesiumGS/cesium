@@ -83,14 +83,14 @@ function startup(Cesium) {
 
 var viewer = new Cesium.Viewer('cesiumContainer');
 viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
-var model = viewer.cesium3DTilesInspector.viewModel;
+var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
 
 var scene = viewer.scene;
 var tilesetUrl = '../../../Specs/Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy';
 var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
     url : tilesetUrl
 }));
-model.tileset = tileset;
+inspectorViewModel.tileset = tileset;
 
 function zoomToTileset() {
     var boundingSphere = tileset.boundingSphere;
@@ -191,11 +191,11 @@ var handler = new Cesium.ScreenSpaceEventHandler(canvas);
 
 // When a feature is left clicked, print it's class name and properties
 handler.setInputAction(function(movement) {
-    if (!model.picking) {
+    if (!inspectorViewModel.picking) {
         return;
     }
 
-    var feature = model.feature;
+    var feature = inspectorViewModel.feature;
     if (Cesium.defined(feature)) {
         console.log('Class: ' + feature.getExactClassName());
         console.log('Properties:');
@@ -211,12 +211,12 @@ handler.setInputAction(function(movement) {
 
 // When a feature is middle clicked, hide it
 handler.setInputAction(function(movement) {
-    if (!model.picking) {
+    if (!inspectorViewModel.picking) {
         return;
     }
 
-    if (Cesium.defined(model.feature)) {
-        model.feature.show = false;
+    if (Cesium.defined(inspectorViewModel.feature)) {
+        inspectorViewModel.feature.show = false;
     }
 }, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
 

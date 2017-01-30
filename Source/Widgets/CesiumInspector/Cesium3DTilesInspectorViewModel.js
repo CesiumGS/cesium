@@ -78,8 +78,6 @@ define([
             var pick = that._scene.pick(e.position);
             if (defined(pick) && pick.primitive instanceof Cesium3DTileset) {
                 that.tileset = pick.primitive;
-            } else {
-                // return;
             }
             that._pickActive = false;
         }
@@ -424,7 +422,7 @@ define([
                             knockout.getObservable(that, settings[i]).valueHasMutated();
                         }
 
-                        // update model with existing tileset settings
+                        // update view model with existing tileset settings
                         that.maximumSSE = tileset.maximumScreenSpaceError;
                         that.dynamicSSE = tileset.dynamicScreenSpaceError;
                         that.dynamicSSEDensity = tileset.dynamicScreenSpaceErrorDensity;
