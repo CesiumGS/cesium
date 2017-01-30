@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-    'Widgets/CesiumInspector/Cesium3DTilesInspectorViewModel',
-    'Scene/Cesium3DTileset',
-    'Scene/Cesium3DTileStyle',
-    'Core/defined',
-    'Scene/Globe',
-    'Specs/createScene',
-    'ThirdParty/when'
-], function(
-    Cesium3DTilesInspectorViewModel,
-    Cesium3DTileset,
-    Cesium3DTileStyle,
-    defined,
-    Globe,
-    createScene,
-    when) {
+        'Widgets/CesiumInspector/Cesium3DTilesInspectorViewModel',
+        'Scene/Cesium3DTileset',
+        'Scene/Cesium3DTileStyle',
+        'Core/defined',
+        'Scene/Globe',
+        'Specs/createScene',
+        'ThirdParty/when'
+    ], function(
+        Cesium3DTilesInspectorViewModel,
+        Cesium3DTileset,
+        Cesium3DTileStyle,
+        defined,
+        Globe,
+        createScene,
+        when) {
     'use strict';
 
     // Parent tile with content and four child tiles with content
@@ -75,7 +75,6 @@ defineSuite([
     });
 
     describe('display options', function() {
-
         beforeAll(function() {
             viewModel = new Cesium3DTilesInspectorViewModel(scene);
             viewModel.tileset = new Cesium3DTileset({
@@ -132,8 +131,7 @@ defineSuite([
             });
             return viewModel._tilesetLoaded;
         });
-
-
+        
         afterAll(function() {
             viewModel.destroy();
         });

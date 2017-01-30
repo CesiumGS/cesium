@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-    'Widgets/CesiumInspector/Cesium3DTilesInspector',
-    'Scene/Cesium3DTileset',
-    'Core/Ellipsoid',
-    'Scene/Globe',
-    'Specs/createScene',
-    'ThirdParty/when'
-], function(
-    Cesium3DTilesInspector,
-    Cesium3DTileset,
-    Ellipsoid,
-    Globe,
-    createScene,
-    when) {
+        'Scene/Cesium3DTileset',
+        'Widgets/CesiumInspector/Cesium3DTilesInspector',
+        'Specs/createScene',
+        'Core/Ellipsoid',
+        'Scene/Globe',
+        'ThirdParty/when'
+    ], function(
+        Cesium3DTileset,
+        Cesium3DTilesInspector,
+        createScene,
+        Ellipsoid,
+        Globe,
+        when) {
     'use strict';
 
     // Parent tile with content and four child tiles with content
@@ -102,7 +102,6 @@ defineSuite([
             expect(viewModel.statsText).not.toBe('');
             viewModel.showStats = false;
             expect(viewModel.statsText).toBe('');
-
         });
 
         it ('shows pick stats', function() {

@@ -23,7 +23,12 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="toolbar">
+    <select data-bind="options: tilesets, optionsText: 'name', value: selectedTileset, optionsCaption: 'Choose a Tileset...'"></select>
+    <div>
+        <input type="checkbox" data-bind="checked: annotate" /> Annotate
+    </div>
+</div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -93,34 +98,19 @@ var viewModel = {
 Cesium.knockout.track(viewModel);
 
 var toolbar = document.getElementById('toolbar');
-var dropdown = document.createElement('select');
-    dropdown.setAttribute('data-bind', 'options: tilesets, ' +
-                                   'optionsText: "name", ' +
-                                   'value: selectedTileset, ' +
-                                   'optionsCaption: "Choose a Tileset..."');
-toolbar.appendChild(dropdown);
-
-var checkboxContainer = document.createElement('div');
-var checkbox = document.createElement('input');
-checkbox.type = 'checkbox';
-checkbox.setAttribute('data-bind', 'checked: annotate');
-checkboxContainer.appendChild(checkbox);
-checkboxContainer.appendChild(document.createTextNode('Annotate'));
-toolbar.appendChild(checkboxContainer);
-
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
-Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(option) {
+Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(options) {
     if (Cesium.defined(tileset)) {
         annotations.removeAll();
         scene.primitives.remove(tileset);
     }
-    if (!Cesium.defined(option)) {
+    if (!Cesium.defined(options)) {
         model.tileset = undefined;
         return;
     }
     tileset = new Cesium.Cesium3DTileset({
-        url: option.url
+        url: options.url
     });
     model.tileset = tileset;
     scene.primitives.add(tileset);
@@ -203,7 +193,7 @@ handler.setInputAction(function(movement) {
     if (Cesium.defined(feature)) {
         feature.show = false;
     }
-}, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
+}, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
 
 function annotate(movement) {
     if (Cesium.defined(model.feature) && scene.pickPositionSupported) {

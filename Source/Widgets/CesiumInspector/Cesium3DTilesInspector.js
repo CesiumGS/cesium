@@ -1,12 +1,12 @@
 /*global define*/
 define([
-    '../../Core/Check',
-    '../../Core/defined',
-    '../../Core/defineProperties',
-    '../../Core/destroyObject',
-    '../../ThirdParty/knockout',
-    '../getElement',
-    '../CesiumInspector/Cesium3DTilesInspectorViewModel'
+        '../../Core/Check',
+        '../../Core/defined',
+        '../../Core/defineProperties',
+        '../../Core/destroyObject',
+        '../../ThirdParty/knockout',
+        '../getElement',
+        '../CesiumInspector/Cesium3DTilesInspectorViewModel'
     ], function(
         Check,
         defined,
@@ -25,9 +25,6 @@ define([
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Scene} scene the Scene instance to use.
-     *
-     * @exception {DeveloperError} container is required.
-     * @exception {DeveloperError} scene is required.
      */
     function Cesium3DTilesInspector(container, scene) {
         //>includeStart('debug', pragmas.debug);
@@ -110,16 +107,14 @@ define([
         tilesetPanel.contents.appendChild(makeButton('trimTilesCache', 'Trim Tiles Cache'));
         tilesetPanel.contents.appendChild(makeCheckbox('picking', 'Enable Picking'));
         knockout.applyBindings(viewModel, tilesetPanel.contents);
-
-
+        
         displayPanel.contents.appendChild(makeCheckbox('colorize', 'Colorize'));
         displayPanel.contents.appendChild(makeCheckbox('wireframe', 'Wireframe'));
         displayPanel.contents.appendChild(makeCheckbox('showBoundingVolumes', 'Bounding Volumes'));
         displayPanel.contents.appendChild(makeCheckbox('showContentBoundingVolumes', 'Content Volumes'));
         displayPanel.contents.appendChild(makeCheckbox('showRequestVolumes', 'Request Volumes'));
         knockout.applyBindings(viewModel, displayPanel.contents);
-
-
+        
         updatePanel.contents.appendChild(makeCheckbox('freezeFrame', 'Freeze Frame'));
         updatePanel.contents.appendChild(makeCheckbox('dynamicSSE', 'Dynamic SSE'));
         var sseContainer = document.createElement('div');
@@ -128,8 +123,8 @@ define([
 
         var dynamicSSEContainer = document.createElement('div');
         dynamicSSEContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : dynamicSSE, "cesium-cesiumInspector-hide" : !dynamicSSE}');
-        dynamicSSEContainer.appendChild(makeExponentialRangeInput(viewModel, 'dynamicSSEDensity', 0, 1, 200, 6  , 'SSE Density'));
-        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEFactor', 0, 10, 0.1, 'SSE Factor'));
+        dynamicSSEContainer.appendChild(makeExponentialRangeInput(viewModel, 'dynamicSSEDensity', 0, 1, 200, 6, 'SSE Density'));
+        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEFactor', 1, 10, 0.1, 'SSE Factor'));
         updatePanel.contents.appendChild(dynamicSSEContainer);
         knockout.applyBindings(viewModel, updatePanel.contents);
 
@@ -155,8 +150,7 @@ define([
                                            'optionsValue: "val", ' +
                                            'value: colorBlendMode');
         stylePanel.contents.appendChild(blendDropdown);
-
-
+        
         var styleEditor = document.createElement('textarea');
         styleEditor.setAttribute('wrap', 'soft');
         styleEditor.setAttribute('data-bind', 'valueUpdate: "keyup", value: _styleString, event: { keypress: _checkCompile }');
@@ -196,33 +190,6 @@ define([
             }
         }
     });
-
-    /**
-     * Sets the callback function to call on tileset load
-     *
-     * @param {Function} callback the callback
-     */
-    Cesium3DTilesInspector.prototype.onLoad = function(callback) {
-        this._onLoad = callback;
-    };
-
-    /**
-     * Sets the callback function to call on tileset unload
-     *
-     * @param {Function} callback the callback
-     */
-    Cesium3DTilesInspector.prototype.onUnload = function(callback) {
-        this._onUnload = callback;
-    };
-
-    /**
-     * Sets the callback function to call on feature selection
-     *
-     * @param {Function} callback the callback
-     */
-    Cesium3DTilesInspector.prototype.onSelect = function(callback) {
-        this._onSelect = callback;
-    };
 
     /**
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
@@ -355,8 +322,7 @@ define([
             binding += ', css: {"cesium-cesiumInspector-pickButtonHighlight" : ' + active + '}';
         }
         button.setAttribute('data-bind', binding);
-
-
+        
         return button;
     }
 

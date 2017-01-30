@@ -1,21 +1,21 @@
 /*global define*/
 define([
-    '../../Core/Cartesian3',
-    '../../Core/Cartographic',
-    '../../Scene/Cesium3DTileset',
-    '../../Scene/Cesium3DTileStyle',
-    '../../Scene/Cesium3DTileColorBlendMode',
-    '../../Core/Check',
-    '../../Core/Color',
-    '../../Core/defined',
-    '../../Core/defineProperties',
-    '../../Core/destroyObject',
-    '../../ThirdParty/knockout',
-    '../../Scene/PerformanceDisplay',
-    '../../Core/ScreenSpaceEventHandler',
-    '../../Core/ScreenSpaceEventType',
-    '../createCommand',
-    'ThirdParty/when'
+        '../../Core/Cartesian3',
+        '../../Core/Cartographic',
+        '../../Scene/Cesium3DTileset',
+        '../../Scene/Cesium3DTileStyle',
+        '../../Scene/Cesium3DTileColorBlendMode',
+        '../../Core/Check',
+        '../../Core/Color',
+        '../../Core/defined',
+        '../../Core/defineProperties',
+        '../../Core/destroyObject',
+        '../../ThirdParty/knockout',
+        '../../Scene/PerformanceDisplay',
+        '../../Core/ScreenSpaceEventHandler',
+        '../../Core/ScreenSpaceEventType',
+        '../createCommand',
+        'ThirdParty/when'
     ], function(
         Cartesian3,
         Cartographic,
@@ -35,22 +35,22 @@ define([
         when) {
     'use strict';
 
-    function createKnockoutBindings(model, options) {
+    function createKnockoutBindings(viewModel, options) {
         var names = [];
         var name;
         for (name in options) {
             if (options.hasOwnProperty(name)) {
                 names.push(name);
-                model[name] = options[name].default;
+                viewModel[name] = options[name].default;
             }
         }
-        knockout.track(model, names);
+        knockout.track(viewModel, names);
 
         for (name in options) {
             if (options.hasOwnProperty(name)) {
                 var subscription = options[name].subscribe;
                 if (subscription) {
-                    model._subscriptions[name] = knockout.getObservable(model, name).subscribe(subscription);
+                    viewModel._subscriptions[name] = knockout.getObservable(viewModel, name).subscribe(subscription);
                 }
             }
         }
@@ -62,8 +62,6 @@ define([
      * @constructor
      *
      * @param {Scene} scene The scene instance to use.
-     *
-     * @exception {DeveloperError} scene is required.
      */
     function Cesium3DTilesInspectorViewModel(scene) {
         //>>includeStart('debug', pragmas.debug);
@@ -81,7 +79,7 @@ define([
             if (defined(pick) && pick.primitive instanceof Cesium3DTileset) {
                 that.tileset = pick.primitive;
             } else {
-                return;
+                // return;
             }
             that._pickActive = false;
         }
@@ -124,7 +122,7 @@ define([
                 default: true,
                 subscribe: function(val) {
                     if (that._tileset) {
-                        that._updateStats(false, true);
+                        that._updateStats(false);
                     }
                 }
             },
@@ -139,7 +137,7 @@ define([
                 default: true,
                 subscribe: function(val) {
                     if (that._tileset) {
-                        that._updateStats(true, true);
+                        that._updateStats(true);
                     }
                 }
             },
@@ -327,27 +325,6 @@ define([
                 default: false
             },
             /**
-             * Gets or sets the flag to show the tile URL.  This property is observable.
-             * @memberof Cesium3DTilesInspectorViewModel.prototype
-             *
-             * @type {Boolean}
-             * @default false
-             */
-            showTileURL : {
-                default: false
-            },
-            /**
-             * Gets or sets the flag to ignore batch table.  This property is observable.
-             * @memberof Cesium3DTilesInspectorViewModel.prototype
-             *
-             * @type {Boolean}
-             * @default false
-             */
-            ignoreBatchTable : {
-                default: false
-            },
-
-            /**
              * Gets or sets the flag to set stats text.  This property is observable.
              * @memberof Cesium3DTilesInspectorViewModel.prototype
              *
@@ -385,7 +362,7 @@ define([
                                 that._editorError = '';
                                 try {
                                     if (val.length === 0) {
-                                        val = {};
+                                        val = '{}';
                                     }
                                     var style = new Cesium3DTileStyle(JSON.parse(val));
                                     that._tileset.style = style;
@@ -430,10 +407,6 @@ define([
                     that._properties = {};
 
                     if (defined(tileset)) {
-                        // that._statsLogger = that._updateStats.bind(that, false, false);
-                        // tileset.loadProgress.addEventListener(that._statsLogger);
-                        // tileset.allTilesLoaded.addEventListener(that._statsLogger);
-
                         tileset.readyPromise.then(function(tileset) {
                             that._properties = tileset.properties;
                             that._tilesetLoaded.resolve(tileset);
@@ -458,8 +431,8 @@ define([
                         that.dynamicSSEFactor = tileset.dynamicScreenSpaceErrorFactor;
                         that.colorBlendMode = tileset.colorBlendMode;
 
-                        that._updateStats(false, true);
-                        that._updateStats(true, true);
+                        that._updateStats(false);
+                        that._updateStats(true);
                     }
                 }
             },
@@ -589,7 +562,7 @@ define([
             get: function() {
                 var that = this;
                 return createCommand(function(sender, event) {
-                    if (event.ctrlKey && event.key === "Enter") {
+                    if (event.ctrlKey && (event.keyCode === 10 || event.keyCode === 13)) {
                         that._compileStyle();
                     }
                     return true;
@@ -613,7 +586,6 @@ define([
         if (outputStats) {
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
-            // var s = isPick ? '<strong>[Pick ]: </strong>' : '<strong>[Color]: </strong>';
             var s = '<ul class="cesium-cesiumInspector-stats">';
             s +=
                 // --- Rendering stats
@@ -667,13 +639,13 @@ define([
         if (defined(this._tileset) && (!defined(this._style) || this._style !== this._tileset.style)) {
             this._style = this._tileset.style;
             if (defined(this._style)) {
-                this.styleString = JSON.stringify(this._style.style, null, '    ');
+                this.styleString = JSON.stringify(this._style.style, null, '  ');
             } else {
                 this.styleString = '';
             }
         }
 
-        this._updateStats(false, false);
+        this._updateStats(false);
     };
 
     /**
