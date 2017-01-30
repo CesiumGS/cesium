@@ -289,7 +289,7 @@ define([
     function PolygonOutlineGeometry(options) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('options', options);
-        Check.typeOf.object('options.polygonHierarchy');
+        Check.typeOf.object('options.polygonHierarchy', options.polygonHierarchy);
 
         if (defined(options.perPositionHeight) && options.perPositionHeight && defined(options.height)) {
             throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
