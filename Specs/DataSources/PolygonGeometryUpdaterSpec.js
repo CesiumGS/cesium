@@ -259,7 +259,7 @@ defineSuite([
         var color = new SampledProperty(Color);
         color.addSample(time, Color.WHITE);
         entity.polygon.material = new ColorMaterialProperty(color);
-        expect(updater.isDynamic).toBe(true);
+        expect(updater.isDynamic).toBe(groundPrimitiveSupported);
     });
 
     function validateGeometryInstance(options) {

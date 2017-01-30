@@ -649,9 +649,11 @@ define([
         var rectangle = options.rectangle;
 
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
+        Check.typeOf.object('rectangle', rectangle);
         Rectangle.validate(rectangle);
-        Check.numeric.minimum(rectangle.north, rectangle.south);
+        if (rectangle.north < rectangle.south) {
+            throw new DeveloperError('options.rectangle.north must be greater than or equal to options.rectangle.south');
+        }
         //>>includeEnd('debug');
 
         var rotation = defaultValue(options.rotation, 0.0);
@@ -688,8 +690,8 @@ define([
      */
     RectangleGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(value, 'value');
-        Check.defined(array, 'array');
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -746,7 +748,7 @@ define([
      */
     RectangleGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined(array, 'array');
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

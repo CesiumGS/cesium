@@ -119,14 +119,14 @@ defineSuite([
         scene.camera.update(scene.mode);
         scene.camera.viewBoundingSphere(geometry.boundingSphereWC);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
         if (typeof afterView === 'function') {
             afterView();
         }
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     }
 
     function renderCV(instance, afterView, appearance) {
@@ -147,13 +147,13 @@ defineSuite([
         scene.camera.update(scene.mode);
         scene.camera.viewBoundingSphere(geometry.boundingSphereWC);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
         if (typeof afterView === 'function') {
             afterView();
         }
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     }
 
     function render2D(instance, appearance) {
@@ -174,10 +174,10 @@ defineSuite([
         scene.camera.update(scene.mode);
         scene.camera.viewBoundingSphere(geometry.boundingSphereWC);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     }
 
     function pickGeometry(instance, afterView, appearance) {
@@ -203,9 +203,10 @@ defineSuite([
             afterView();
         }
 
-        var pickObject = scene.pickForSpecs();
-        expect(pickObject.primitive).toEqual(primitive);
-        expect(pickObject.id).toEqual(instance.id);
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(primitive);
+            expect(result.id).toEqual(instance.id);
+        });
     }
 
     function renderAsync(instance, afterView, appearance) {
@@ -225,7 +226,7 @@ defineSuite([
         scene.camera.update(scene.mode);
         scene.camera.viewBoundingSphere(geometry.boundingSphereWC);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
         if (typeof afterView === 'function') {
@@ -237,7 +238,7 @@ defineSuite([
             scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
         });
     }
 

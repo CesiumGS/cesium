@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/NavigationHelpButton/NavigationHelpButton',
+        'Core/defined',
         'Core/FeatureDetection',
         'Specs/DomEventSimulator'
     ], function(
         NavigationHelpButton,
+        defined,
         FeatureDetection,
         DomEventSimulator) {
     'use strict';
@@ -17,7 +19,7 @@ defineSuite([
         var widget = new NavigationHelpButton({
             container : 'testContainer'
         });
-        expect(widget.container).toBe(container);
+        expect(widget.container.id).toBe(container.id);
         expect(widget.isDestroyed()).toEqual(false);
 
         widget.destroy();

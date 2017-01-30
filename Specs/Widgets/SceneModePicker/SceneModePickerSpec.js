@@ -1,11 +1,13 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/SceneModePicker/SceneModePicker',
+        'Core/defined',
         'Core/FeatureDetection',
         'Specs/createScene',
         'Specs/DomEventSimulator'
     ], function(
         SceneModePicker,
+        defined,
         FeatureDetection,
         createScene,
         DomEventSimulator) {
@@ -27,7 +29,7 @@ defineSuite([
         document.body.appendChild(container);
 
         var widget = new SceneModePicker('testContainer', scene);
-        expect(widget.container).toBe(container);
+        expect(widget.container.id).toBe(container.id);
         expect(widget.isDestroyed()).toEqual(false);
 
         widget.destroy();
