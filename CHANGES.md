@@ -36,6 +36,7 @@ Change Log
 * Added 2D and Columbus View support for models using the RTC extension or whose vertices are in WGS84 coordinates. [#4922](https://github.com/AnalyticalGraphicsInc/cesium/pull/4922)
 * Transparent parts of billboards, labels, and points no longer overwrite parts of the scene behind them. [#4886](https://github.com/AnalyticalGraphicsInc/cesium/pull/4886)
     * Added `blendOption` property to `BillboardCollection`, `LabelCollection`, and `PointPrimitiveCollection`. The default is `BlendOption.OPAQUE_AND_TRANSLUCENT`; however, if all billboards, labels, or points are either completely opaque or completely translucent, `blendOption` can be changed to `BlendOption.OPAQUE` or `BlendOption.TRANSLUCENT`, respectively, to increase performance by up to 2x.
+* Added support to `DebugCameraPrimitive` to draw multifrustum planes. `CesiumInspector` also displays this toggle.
 
 ### 1.29 - 2017-01-02
 
