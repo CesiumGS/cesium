@@ -112,10 +112,11 @@ Here's the full set of scripts and what they do.
    * **Testing scripts** -- build and run the unit tests
       * `test` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) using the default browser specified in the Karma config file.
       * `test-all` - Runs all tests with Karma using all browsers installed on the current system.
-      * `test-non-webgl` - Runs only non-WebGL tests with Karma.
-      * `test-webgl` - Runs only WebGL tests with Karma.
+      * `test-non-webgl` - Runs only non-WebGL tests.
+      * `test-webgl` - Runs only WebGL tests.
+      * `test-webgl-stub` - Runs all tests using the WebGL stub, which WebGL calls a noop and ignores related test expectations.
       * `test-webgl-validation` - Runs all tests with Karma and enables low-level WebGL validation.
-      * `test-release` - Runs all tests with Karma on the minified release version of built Cesium.
+      * `test-release` - Runs all tests on the minified release version of built Cesium.
    * **Deployment scripts**
       * `deploy-s3` - Deploys the built cesium files, the npm package, and the zip file to Amazon S3. This requires having credentials set up for the S3 bucket to which you are deploying.
       * `deploy-status` - Set the deployment statuses in GitHub, for use with Travis.
