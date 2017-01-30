@@ -1424,27 +1424,34 @@ define([
 
                 // First check for a compressed texture
                 if (defined(extras) && defined(extras.compressedImage3DTiles)) {
+                    var crunch = extras.compressedImage3DTiles.crunch;
                     var s3tc = extras.compressedImage3DTiles.s3tc;
-                    var pvrtc = extras.compressedImage3DTiles.pvrtc;
+                    var pvrtc = extras.compressedImage3DTiles.pvrtc1;
                     var etc1 = extras.compressedImage3DTiles.etc1;
 
-                    if (context.s3tc && defined(s3tc)) {
-                        if (defined(s3tc.uri)) {
-                            uri = s3tc.uri;
+                    if (context.s3tc && defined(crunch)) {
+                        if (defined(crunch.extensions)&& defined(crunch.extensions.KHR_binary_glTF)) {
+                            binary = crunch.extensions.KHR_binary_glTF;
                         } else {
-                            binary = s3tc;
+                            uri = crunch.uri;
+                        }
+                    } else if (context.s3tc && defined(s3tc)) {
+                        if (defined(s3tc.extensions)&& defined(s3tc.extensions.KHR_binary_glTF)) {
+                            binary = s3tc.extensions.KHR_binary_glTF;
+                        } else {
+                            uri = s3tc.uri;
                         }
                     } else if (context.pvrtc && defined(pvrtc)) {
-                        if (defined(pvrtc.uri)) {
-                            uri = pvrtc.uri;
+                        if (defined(pvrtc.extensions)&& defined(pvrtc.extensions.KHR_binary_glTF)) {
+                            binary = pvrtc.extensions.KHR_binary_glTF;
                         } else {
-                            binary = pvrtc;
+                            uri = pvrtc.uri;
                         }
                     } else if (context.etc1 && defined(etc1)) {
-                        if (defined(etc1.uri)) {
-                            uri = etc1.uri;
+                        if (defined(etc1.extensions)&& defined(etc1.extensions.KHR_binary_glTF)) {
+                            binary = etc1.extensions.KHR_binary_glTF;
                         } else {
-                            binary = etc1;
+                            uri = etc1.uri;
                         }
                     }
                 }
