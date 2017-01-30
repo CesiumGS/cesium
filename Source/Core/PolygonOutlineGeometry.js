@@ -440,7 +440,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('options.positions', options.positions);
+        Check.defined('options.positions', options.positions);
         //>>includeEnd('debug');
 
         var newOptions = {
