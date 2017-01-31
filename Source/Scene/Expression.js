@@ -1290,7 +1290,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (typeof test !== 'boolean') {
-            throw new DeveloperError('First argument of conditional expression must be a boolean. Argument is ' + type + '.');
+            throw new DeveloperError('Conditional argument of conditional expression must be a boolean. Argument is ' + test + '.');
         }
         //>>includeEnd('debug');
 
