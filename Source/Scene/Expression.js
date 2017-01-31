@@ -26,7 +26,7 @@ define([
     "use strict";
 
     var unaryOperators = ['!', '-', '+'];
-    var binaryOperators = ['+', '-', '*', '/', '%', '===', '==', '!==', '!=', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
+    var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
 
     var variableRegex = /\${(.*?)}/g;
     var backslashRegex = /\\/g;
@@ -713,12 +713,8 @@ define([
                 node.evaluate = node._evaluateMod;
             } else if (node._value === '===') {
                 node.evaluate = node._evaluateEqualsStrict;
-            } else if (node._value === '==') {
-                node.evaluate = node._evaluateEquals;
             } else if (node._value === '!==') {
                 node.evaluate = node._evaluateNotEqualsStrict;
-            } else if (node._value === '!=') {
-                node.evaluate = node._evaluateNotEquals;
             } else if (node._value === '<') {
                 node.evaluate = node._evaluateLessThan;
             } else if (node._value === '<=') {
@@ -1278,20 +1274,6 @@ define([
         return left === right;
     };
 
-    Node.prototype._evaluateEquals = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
-        if ((right instanceof Cartesian2) && (left instanceof Cartesian2) ||
-            (right instanceof Cartesian3) && (left instanceof Cartesian3) ||
-            (right instanceof Cartesian4) && (left instanceof Cartesian4)) {
-            return left.equals(right);
-        }
-
-        // Specifically want to do an abstract equality comparison (==) instead of a strict equality comparison (===)
-        // so that cases like "5 == '5'" return true. Tell jsHint to ignore this line.
-        return left == right; // jshint ignore:line
-    };
-
     Node.prototype._evaluateNotEqualsStrict = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
@@ -1301,19 +1283,6 @@ define([
             return !left.equals(right);
         }
         return left !== right;
-    };
-
-    Node.prototype._evaluateNotEquals = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
-        if ((right instanceof Cartesian2) && (left instanceof Cartesian2) ||
-            (right instanceof Cartesian3) && (left instanceof Cartesian3) ||
-            (right instanceof Cartesian4) && (left instanceof Cartesian4)) {
-            return !left.equals(right);
-        }
-        // Specifically want to do an abstract inequality comparison (!=) instead of a strict inequality comparison (!==)
-        // so that cases like "5 != '5'" return false. Tell jsHint to ignore this line.
-        return left != right; // jshint ignore:line
     };
 
     Node.prototype._evaluateConditional = function(frameState, feature) {
@@ -1602,7 +1571,7 @@ define([
                 }
                 return value + left;
             case ExpressionNodeType.BINARY:
-                // Supported types: ||, &&, ===, ==, !==, !=, <, >, <=, >=, +, -, *, /, %
+                // Supported types: ||, &&, ===, !==, <, >, <=, >=, +, -, *, /, %
                 if (value === '%') {
                     return 'mod(' + left + ', ' + right + ')';
                 } else if (value === '===') {

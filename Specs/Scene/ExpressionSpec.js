@@ -1010,20 +1010,6 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
     });
 
-    it('evaluates binary equals', function() {
-        var expression = new Expression('\'hello\' == \'hello\'');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('1 == 2');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
-        expression = new Expression('false == true == false');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('1 == "1"');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-    });
-
     it('evaluates binary not equals strict', function() {
         var expression = new Expression('\'hello\' !== \'hello\'');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
@@ -1036,20 +1022,6 @@ defineSuite([
 
         expression = new Expression('1 !== "1"');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
-    });
-
-    it('evaluates binary not equals', function() {
-        var expression = new Expression('\'hello\' != \'hello\'');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
-        expression = new Expression('1 != 2');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('false != true != false');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('1 != "1"');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
     });
 
     it('evaluates binary less than', function() {
@@ -1278,14 +1250,8 @@ defineSuite([
         expression = new Expression('rgba(255, 255, 255, 1.0) % rgba(255, 255, 255, 1.0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(new Color(0, 0, 0, 0)));
 
-        expression = new Expression('color(\'green\') == color(\'green\')');
+        expression = new Expression('color(\'green\') === color(\'green\')');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('color() == color()');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('color(\'green\') != color(\'green\')');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
 
         expression = new Expression('color(\'green\') !== color(\'green\')');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
@@ -1382,15 +1348,6 @@ defineSuite([
         expression = new Expression('vec4(2, 3, 4, 5) % vec4(3, 3, 3, 2)');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(2, 0, 1, 1));
 
-        expression = new Expression('vec2(1, 3) == vec2(1, 3)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('vec3(1, 3, 4) == vec3(1, 3, 4)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('vec4(1, 3, 4, 6) == vec4(1, 3, 4, 6)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
         expression = new Expression('vec2(1, 2) === vec2(1, 2)');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
 
@@ -1399,15 +1356,6 @@ defineSuite([
 
         expression = new Expression('vec4(1, 2, 3, 4) === vec4(1, 2, 3, 4)');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('vec2(1, 2) != vec2(1, 2)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
-        expression = new Expression('vec3(1, 2, 3) != vec3(1, 2, 3)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
-        expression = new Expression('vec4(1, 2, 3, 4) != vec4(1, 2, 3, 4)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
 
         expression = new Expression('vec2(1, 2) !== vec2(1, 2)');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
@@ -2358,7 +2306,7 @@ defineSuite([
             vector : Cartesian4.UNIT_X
         });
 
-        expression = new Expression('${feature} == ${feature.feature}');
+        expression = new Expression('${feature} === ${feature.feature}');
         expect(expression.evaluate(frameState, feature)).toEqual(true);
     });
 
@@ -2751,22 +2699,8 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
-    it('gets shader expression for binary equals', function() {
-        var expression = new Expression('1.0 == 2.0');
-        var shaderExpression = expression.getShaderExpression('', {});
-        var expected = '(1.0 == 2.0)';
-        expect(shaderExpression).toEqual(expected);
-    });
-
     it('gets shader expression for binary not equals strict', function() {
         var expression = new Expression('1.0 !== 2.0');
-        var shaderExpression = expression.getShaderExpression('', {});
-        var expected = '(1.0 != 2.0)';
-        expect(shaderExpression).toEqual(expected);
-    });
-
-    it('gets shader expression for binary not equals', function() {
-        var expression = new Expression('1.0 != 2.0');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = '(1.0 != 2.0)';
         expect(shaderExpression).toEqual(expected);
