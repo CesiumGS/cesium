@@ -13,6 +13,7 @@ define([
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Visibility',
+        './OrthographicFrustum',
         './QuadtreeOccluders',
         './QuadtreeTile',
         './QuadtreeTileLoadState',
@@ -32,6 +33,7 @@ define([
         Ray,
         Rectangle,
         Visibility,
+        OrthographicFrustum,
         QuadtreeOccluders,
         QuadtreeTile,
         QuadtreeTileLoadState,
@@ -669,7 +671,7 @@ define([
     }
 
     function screenSpaceError(primitive, frameState, tile) {
-        if (frameState.mode === SceneMode.SCENE2D) {
+        if (frameState.mode === SceneMode.SCENE2D || frameState.camera.frustum instanceof OrthographicFrustum) {
             return screenSpaceError2D(primitive, frameState, tile);
         }
 

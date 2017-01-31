@@ -22,6 +22,7 @@ define([
         './CameraEventAggregator',
         './CameraEventType',
         './MapMode2D',
+        './OrthographicFrustum',
         './SceneMode',
         './SceneTransforms',
         './TweenCollection'
@@ -48,6 +49,7 @@ define([
         CameraEventAggregator,
         CameraEventType,
         MapMode2D,
+        OrthographicFrustum,
         SceneMode,
         SceneTransforms,
         TweenCollection) {
@@ -796,8 +798,10 @@ define([
             return undefined;
         }
 
+        // TODO ORTHO
         var depthIntersection;
-        if (scene.pickPositionSupported) {
+        var orthoFrustum = camera.frustum instanceof OrthographicFrustum;
+        if (scene.pickPositionSupported && !orthoFrustum) {
             depthIntersection = scene.pickPosition(mousePosition, scratchDepthIntersection);
         }
 
@@ -1532,6 +1536,15 @@ define([
 
         var unitPosition = Cartesian3.normalize(camera.position, zoom3DUnitPosition);
         handleZoom(controller, startPosition, movement, controller._zoomFactor, distance, Cartesian3.dot(unitPosition, camera.direction));
+
+        var frustum = camera.frustum;
+        if (frustum instanceof OrthographicFrustum) {
+            var ratio = frustum.right / frustum.top;
+            frustum.right = height * 0.5;
+            frustum.left = -frustum.right;
+            frustum.top = ratio * frustum.right * 0.3;
+            frustum.bottom = -frustum.top;
+        }
     }
 
     var tilt3DWindowPos = new Cartesian2();

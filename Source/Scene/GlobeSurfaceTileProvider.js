@@ -39,6 +39,7 @@ define([
         '../Scene/Primitive',
         './GlobeSurfaceTile',
         './ImageryLayer',
+        './OrthographicFrustum',
         './QuadtreeTileLoadState',
         './SceneMode',
         './ShadowMode'
@@ -82,6 +83,7 @@ define([
         Primitive,
         GlobeSurfaceTile,
         ImageryLayer,
+        OrthographicFrustum,
         QuadtreeTileLoadState,
         SceneMode,
         ShadowMode) {
@@ -473,10 +475,15 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
+        // TODO ORTHO
+        return Visibility.FULL;
+
         var distance = this.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
-        if (frameState.fog.enabled) {
+        var ortho3D = frameState.mode !== SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
+
+        if (frameState.fog.enabled && !ortho3D) {
             if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
                 // Tile is completely in fog so return that it is not visible.
                 return Visibility.NONE;
@@ -502,7 +509,7 @@ define([
             return Visibility.NONE;
         }
 
-        if (frameState.mode === SceneMode.SCENE3D) {
+        if (frameState.mode === SceneMode.SCENE3D && !ortho3D) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace)) {
                 return intersection;

@@ -28,6 +28,18 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.extend(Cesium.viewerCesiumInspectorMixin);
+
+var camera = viewer.camera;
+var height = camera.positionCartographic.height;
+var ratio = viewer.canvas.clientWidth / viewer.canvas.clientHeight;
+
+var frustum = camera.frustum = new Cesium.OrthographicFrustum();
+frustum.right = height * 0.075;
+frustum.left = -frustum.right;
+frustum.top = ratio * frustum.right * 0.3;
+frustum.bottom = -frustum.top;
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
