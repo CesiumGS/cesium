@@ -353,32 +353,7 @@ define([
                 default: '{}',
                 subscribe: function(val) {
                     that._styleString = val;
-                    if (defined(that._style)) {
-                        if (val !== JSON.stringify(that._style.style)) {
-                            if (defined(that._tileset)) {
-                                var old = that._tileset.style;
-                                that._editorError = '';
-                                try {
-                                    if (val.length === 0) {
-                                        val = '{}';
-                                    }
-                                    var style = new Cesium3DTileStyle(JSON.parse(val));
-                                    that._tileset.style = style;
-                                    that._style = style;
-                                    that._tileset.update(that._scene.frameState);
-                                } catch(err) {
-                                    that._tileset.style = old;
-                                    that._style = old;
-                                    that._editorError = err.toString();
-                                }
-
-                                // set feature again so pick coloring is set
-                                var temp = that._feature;
-                                that._feature = undefined; 
-                                that._feature = temp;
-                            }
-                        }
-                    }
+                    that._applyStyle();
                 }
             },
 
@@ -453,7 +428,6 @@ define([
                                 current.color = that._style.color.evaluateColor(frameState, current, scratchColor);
                                 current = undefined;
                             }
-                            // that.styleString = that.styleString;
                             if (defined(feature)) {
                                 // Highlight new feature
                                 current = feature;
@@ -554,6 +528,7 @@ define([
                 var that = this;
                 return createCommand(function() {
                     that.styleString = that._styleString;
+                    that._applyStyle();
                 });
             }
         },
@@ -570,6 +545,36 @@ define([
             }
         }
     });
+
+
+    Cesium3DTilesInspectorViewModel.prototype._applyStyle = function() {
+        if (defined(this._style)) {
+            if (this._styleString !== JSON.stringify(this._style.style)) {
+                if (defined(this._tileset)) {
+                    var old = this._tileset.style;
+                    this._editorError = '';
+                    try {
+                        if (this._styleString.length === 0) {
+                            this._styleString = '{}';
+                        }
+                        var style = new Cesium3DTileStyle(JSON.parse(this._styleString));
+                        this._tileset.style = style;
+                        this._style = style;
+                        this._tileset.update(this._scene.frameState);
+                    } catch(err) {
+                        this._tileset.style = old;
+                        this._style = old;
+                        this._editorError = err.toString();
+                    }
+
+                    // set feature again so pick coloring is set
+                    var temp = this._feature;
+                    this._feature = undefined; 
+                    this._feature = temp;
+                }
+            }
+        }
+    }
 
     /**
      * Updates the view model's stats text
