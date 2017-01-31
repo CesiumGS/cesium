@@ -92,7 +92,7 @@ define([
         this._planesPrimitive = undefined;
     }
 
-    var frustumCornersNDC = new Array(8);
+    var frustumCornersNDC = new Array(4);
     frustumCornersNDC[0] = new Cartesian4(-1.0, -1.0, 1.0, 1.0);
     frustumCornersNDC[1] = new Cartesian4(1.0, -1.0, 1.0, 1.0);
     frustumCornersNDC[2] = new Cartesian4(1.0, 1.0, 1.0, 1.0);
@@ -100,7 +100,7 @@ define([
 
     var scratchMatrix = new Matrix4();
     var scratchFrustumCorners = new Array(4);
-    for (var i = 0; i < 8; ++i) {
+    for (var i = 0; i < 4; ++i) {
         scratchFrustumCorners[i] = new Cartesian4();
     }
 
@@ -126,7 +126,8 @@ define([
             var viewProjection = Matrix4.multiply(projection, view, scratchMatrix);
             var inverseViewProjection = Matrix4.inverse(viewProjection, scratchMatrix);
 
-            var numFrustums = Math.max(1, Math.ceil(Math.log(frameState.far / frameState.near) / Math.log(frameState.farToNearRatio)));
+            var frustumSplits = frameState.frustumSplits;
+            var numFrustums = frustumSplits.length - 1;
 
             var positions = new Float64Array(3 * 4 * (numFrustums + 1));
             var f;
@@ -139,9 +140,8 @@ define([
                     Cartesian3.subtract(corner, this._camera.positionWC, corner);
                     Cartesian3.normalize(corner, corner);
 
-                    var d = frameState.near * Math.pow(frameState.farToNearRatio, f);
                     var fac = Cartesian3.dot(this._camera.directionWC, corner);
-                    Cartesian3.multiplyByScalar(corner, d / fac, corner);
+                    Cartesian3.multiplyByScalar(corner, frustumSplits[f] / fac, corner);
                     Cartesian3.add(corner, this._camera.positionWC, corner);
 
                     positions[12 * f + i * 3] = corner.x;
@@ -163,7 +163,7 @@ define([
 
             // Create the outline primitive
             var outlineIndices = new Uint16Array(8 * (2 * numFrustums + 1));
-            // build the far planes
+            // Build the far planes
             for (f = 0; f < numFrustums + 1; ++f) {
                 outlineIndices[f * 8] = f * 4;
                 outlineIndices[f * 8 + 1] = f * 4 + 1;
@@ -174,7 +174,7 @@ define([
                 outlineIndices[f * 8 + 6] = f * 4 + 3;
                 outlineIndices[f * 8 + 7] = f * 4;
             }
-            // build the sides of the frustums
+            // Build the sides of the frustums
             for (f = 0; f < numFrustums; ++f) {
                 offset = (numFrustums + 1 + f) * 8;
                 outlineIndices[offset] = f * 4;
@@ -210,7 +210,7 @@ define([
 
             // Create the planes primitive
             var planesIndices = new Uint16Array(6 * (5 * numFrustums + 1));
-            // build the far planes
+            // Build the far planes
             for (f = 0; f < numFrustums + 1; ++f) {
                 planesIndices[f * 6] = f * 4;
                 planesIndices[f * 6 + 1] = f * 4 + 1;
@@ -219,7 +219,7 @@ define([
                 planesIndices[f * 6 + 4] = f * 4 + 2;
                 planesIndices[f * 6 + 5] = f * 4 + 3;
             }
-            // build the sides of the frustums
+            // Build the sides of the frustums
             for (f = 0; f < numFrustums; ++f) {
                 offset = (numFrustums + 1 + 4 * f) * 6;
                 planesIndices[offset] = 4 * f + 4;

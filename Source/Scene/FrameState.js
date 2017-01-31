@@ -236,9 +236,12 @@ define([
         */
         this.imagerySplitPosition = 0.0;
 
-        this.near = 1.0;
-        this.far = 1000.0;
-        this.farToNearRatio = 1000.0;
+        /**
+         * Distances to the near and far planes of the camera frustums
+         * @type {Number[]}
+         * @default [1.0, 1000.0]
+         */
+        this.frustumSplits = [1.0, 1000.0];
     }
 
     /**

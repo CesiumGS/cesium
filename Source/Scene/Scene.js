@@ -952,7 +952,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
-         * When <code>true</code>, draws primitives to show the boundaries of the camera frustum
+         * When <code>true</code>, draws outlines to show the boundaries of the camera frustums
          * </p>
          *
          * @type Boolean
@@ -963,23 +963,19 @@ define([
             get : function() {
                 return this._debugShowFrustumPlanes;
             },
-
-            set : function(val) {
-                if (!val) {
+            set : function(value) {
+                if (!value) {
                     if (defined(this._debugFrustumPlanes)) {
-                        this.primitives.remove(this._debugFrustumPlanes);
-                        this._debugFrustumPlanes = this._debugFrustumPlanes && !this._debugFrustumPlanes.isDestroyed() && this._debugFrustumPlanes.destroy();
+                        this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
                     }
-                } else if (val !== this._debugShowFrustumPlanes) {
-                    this._debugFrustumPlanes = this._debugFrustumPlanes && !this._debugFrustumPlanes.isDestroyed() && this._debugFrustumPlanes.destroy();
+                } else if (value !== this._debugShowFrustumPlanes) { 
+                    this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
                     this._debugFrustumPlanes = new DebugCameraPrimitive({
                         camera: this.camera,
                         updateOnChange: false
                     });
-                    this._debugFrustumPlanes.update(this.frameState);
-                    this.primitives.add(this._debugFrustumPlanes);
                 }
-                this._debugShowFrustumPlanes = val;
+                this._debugShowFrustumPlanes = value;
             }
         },
 
@@ -1467,10 +1463,16 @@ define([
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
                 (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
-            frameState.near = near;
-            frameState.far = far;
-            frameState.farToNearRatio = farToNearRatio;
             createPotentiallyVisibleSet(scene);
+        }
+
+        var frustumSplits = frameState.frustumSplits;
+        frustumSplits.length = numFrustums + 1;
+        for (var j = 0; j < numFrustums; ++j) {
+            frustumSplits[j] = frustumCommandsList[j].near;
+            if (j === numFrustums - 1) {
+                frustumSplits[j + 1] = frustumCommandsList[j].far;
+            }
         }
     }
 
@@ -2282,6 +2284,9 @@ define([
 
         scene._groundPrimitives.update(frameState);
         scene._primitives.update(frameState);
+        if (defined(scene._debugFrustumPlanes)) {
+            scene._debugFrustumPlanes.update(frameState)
+        }
 
         updateShadowMaps(scene);
 
@@ -2938,6 +2943,7 @@ define([
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
         this._transitioner.destroy();
+        this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
 
         if (defined(this._globeDepth)) {
             this._globeDepth.destroy();
