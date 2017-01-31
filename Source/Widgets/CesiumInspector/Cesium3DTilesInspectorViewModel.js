@@ -153,7 +153,7 @@ define([
                         if (val) {
                             that._eventHandler.setInputAction(function(e) {
                                 that._feature = scene.pick(e.endPosition);
-                                that._updateStats(true, false);
+                                that._updateStats(true);
                             }, ScreenSpaceEventType.MOUSE_MOVE);
                         } else {
                             that._feature = undefined;
