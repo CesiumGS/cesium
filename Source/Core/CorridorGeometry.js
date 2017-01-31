@@ -58,16 +58,16 @@ define([
     function addNormals(attr, normal, left, front, back, vertexFormat) {
         var normals = attr.normals;
         var tangents = attr.tangents;
-        var binormals = attr.binormals;
+        var bitangents = attr.bitangents;
         var forward = Cartesian3.normalize(Cartesian3.cross(left, normal, scratch1), scratch1);
         if (vertexFormat.normal) {
             CorridorGeometryLibrary.addAttribute(normals, normal, front, back);
         }
-        if (vertexFormat.binormal) {
-            CorridorGeometryLibrary.addAttribute(binormals, left, front, back);
-        }
         if (vertexFormat.tangent) {
             CorridorGeometryLibrary.addAttribute(tangents, forward, front, back);
+        }
+        if (vertexFormat.bitangent) {
+            CorridorGeometryLibrary.addAttribute(bitangents, left, front, back);
         }
     }
 
@@ -119,11 +119,11 @@ define([
         var finalPositions = new Float64Array(size);
         var normals = (vertexFormat.normal) ? new Float32Array(size) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(size) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Float32Array(size) : undefined;
+        var bitangents = (vertexFormat.bitangent) ? new Float32Array(size) : undefined;
         var attr = {
             normals : normals,
             tangents : tangents,
-            binormals : binormals
+            bitangents : bitangents
         };
         var front = 0;
         var back = size - 1;
@@ -408,11 +408,11 @@ define([
             });
         }
 
-        if (vertexFormat.binormal) {
-            attributes.binormal = new GeometryAttribute({
+        if (vertexFormat.bitangent) {
+            attributes.bitangent = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
-                values : attr.binormals
+                values : attr.bitangents
             });
         }
 
@@ -423,31 +423,31 @@ define([
     }
 
     function extrudedAttributes(attributes, vertexFormat) {
-        if (!vertexFormat.normal && !vertexFormat.binormal && !vertexFormat.tangent && !vertexFormat.st) {
+        if (!vertexFormat.normal && !vertexFormat.tangent && !vertexFormat.bitangent && !vertexFormat.st) {
             return attributes;
         }
         var positions = attributes.position.values;
         var topNormals;
-        var topBinormals;
-        if (vertexFormat.normal || vertexFormat.binormal) {
+        var topBitangents;
+        if (vertexFormat.normal || vertexFormat.bitangent) {
             topNormals = attributes.normal.values;
-            topBinormals = attributes.binormal.values;
+            topBitangents = attributes.bitangent.values;
         }
         var size = attributes.position.values.length / 18;
         var threeSize = size * 3;
         var twoSize = size * 2;
         var sixSize = threeSize * 2;
         var i;
-        if (vertexFormat.normal || vertexFormat.binormal || vertexFormat.tangent) {
+        if (vertexFormat.normal || vertexFormat.bitangent || vertexFormat.tangent) {
             var normals = (vertexFormat.normal) ? new Float32Array(threeSize * 6) : undefined;
-            var binormals = (vertexFormat.binormal) ? new Float32Array(threeSize * 6) : undefined;
             var tangents = (vertexFormat.tangent) ? new Float32Array(threeSize * 6) : undefined;
+            var bitangents = (vertexFormat.bitangent) ? new Float32Array(threeSize * 6) : undefined;
             var topPosition = cartesian1;
             var bottomPosition = cartesian2;
             var previousPosition = cartesian3;
             var normal = cartesian4;
             var tangent = cartesian5;
-            var binormal = cartesian6;
+            var bitangent = cartesian6;
             var attrIndex = sixSize;
             for (i = 0; i < threeSize; i += 3) {
                 var attrIndexOffset = attrIndex + sixSize;
@@ -463,17 +463,17 @@ define([
                     CorridorGeometryLibrary.addAttribute(normals, normal, attrIndex);
                     CorridorGeometryLibrary.addAttribute(normals, normal, attrIndex + 3);
                 }
-                if (vertexFormat.tangent || vertexFormat.binormal) {
-                    binormal = Cartesian3.fromArray(topNormals, i, binormal);
-                    if (vertexFormat.binormal) {
-                        CorridorGeometryLibrary.addAttribute(binormals, binormal, attrIndexOffset);
-                        CorridorGeometryLibrary.addAttribute(binormals, binormal, attrIndexOffset + 3);
-                        CorridorGeometryLibrary.addAttribute(binormals, binormal, attrIndex);
-                        CorridorGeometryLibrary.addAttribute(binormals, binormal, attrIndex + 3);
+                if (vertexFormat.tangent || vertexFormat.bitangent) {
+                    bitangent = Cartesian3.fromArray(topNormals, i, bitangent);
+                    if (vertexFormat.bitangent) {
+                        CorridorGeometryLibrary.addAttribute(bitangents, bitangent, attrIndexOffset);
+                        CorridorGeometryLibrary.addAttribute(bitangents, bitangent, attrIndexOffset + 3);
+                        CorridorGeometryLibrary.addAttribute(bitangents, bitangent, attrIndex);
+                        CorridorGeometryLibrary.addAttribute(bitangents, bitangent, attrIndex + 3);
                     }
 
                     if (vertexFormat.tangent) {
-                        tangent = Cartesian3.normalize(Cartesian3.cross(binormal, normal, tangent), tangent);
+                        tangent = Cartesian3.normalize(Cartesian3.cross(bitangent, normal, tangent), tangent);
                         CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndexOffset);
                         CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndexOffset + 3);
                         CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndex);
@@ -495,12 +495,12 @@ define([
                 attributes.normal = undefined;
             }
 
-            if (vertexFormat.binormal) {
-                binormals.set(topBinormals); //top
-                binormals.set(topBinormals, threeSize); //bottom
-                attributes.binormal.values = binormals;
+            if (vertexFormat.bitangent) {
+                bitangents.set(topBitangents); //top
+                bitangents.set(topBitangents, threeSize); //bottom
+                attributes.bitangent.values = bitangents;
             } else {
-                attributes.binormal = undefined;
+                attributes.bitangent = undefined;
             }
 
             if (vertexFormat.tangent) {
@@ -562,9 +562,9 @@ define([
     function computePositionsExtruded(params, vertexFormat) {
         var topVertexFormat = new VertexFormat({
             position : vertexFormat.position,
-            normal : (vertexFormat.normal || vertexFormat.binormal || params.shadowVolume),
+            normal : (vertexFormat.normal || vertexFormat.bitangent || params.shadowVolume),
             tangent : vertexFormat.tangent,
-            binormal : (vertexFormat.normal || vertexFormat.binormal),
+            bitangent : (vertexFormat.normal || vertexFormat.bitangent),
             st : vertexFormat.st
         });
         var ellipsoid = params.ellipsoid;

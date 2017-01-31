@@ -130,6 +130,7 @@ defineSuite([
         expect(viewModel._selectedSuggestion.displayName).toEqual('a');
         viewModel._handleArrowUp(viewModel);
         expect(viewModel._selectedSuggestion).toBeUndefined();
+        document.body.removeChild(container);
     });
 
 }, 'WebGL');

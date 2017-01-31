@@ -74,7 +74,7 @@ defineSuite([
         expect(m.attributes.st.values.length).toEqual(numVertices * 2);
         expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
-        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
@@ -110,7 +110,7 @@ defineSuite([
         expect(m.attributes.st.values.length).toEqual(numVertices * 2);
         expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
-        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
     });
 

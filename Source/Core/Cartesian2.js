@@ -120,8 +120,8 @@ define([
      */
     Cartesian2.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(value, 'value');
-        Check.defined(array, 'array');
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -142,7 +142,7 @@ define([
      */
     Cartesian2.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined(array, 'array');
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -164,7 +164,7 @@ define([
      */
     Cartesian2.packArray = function(array, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined(array, 'array');
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         var length = array.length;
@@ -189,7 +189,7 @@ define([
      */
     Cartesian2.unpackArray = function(array, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined(array, 'array');
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         var length = array.length;
@@ -234,7 +234,7 @@ define([
      */
     Cartesian2.maximumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian, 'cartesian');
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         return Math.max(cartesian.x, cartesian.y);
@@ -248,7 +248,7 @@ define([
      */
     Cartesian2.minimumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian, 'cartesian');
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         return Math.min(cartesian.x, cartesian.y);
@@ -264,9 +264,9 @@ define([
      */
     Cartesian2.minimumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(first, 'first');
-        Check.typeOf.object(second, 'second');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('first', first);
+        Check.typeOf.object('second', second);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
 
@@ -286,9 +286,9 @@ define([
      */
     Cartesian2.maximumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(first, 'first');
-        Check.typeOf.object(second, 'second');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('first', first);
+        Check.typeOf.object('second', second);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = Math.max(first.x, second.x);
@@ -304,7 +304,7 @@ define([
      */
     Cartesian2.magnitudeSquared = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian, 'cartesian');
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         return cartesian.x * cartesian.x + cartesian.y * cartesian.y;
@@ -376,8 +376,8 @@ define([
      */
     Cartesian2.normalize = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian, 'cartesian');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var magnitude = Cartesian2.magnitude(cartesian);
@@ -403,8 +403,8 @@ define([
      */
     Cartesian2.dot = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left, 'left');
-        Check.typeOf.object(right, 'right');
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         return left.x * right.x + left.y * right.y;
@@ -420,9 +420,9 @@ define([
      */
     Cartesian2.multiplyComponents = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left, 'left');
-        Check.typeOf.object(right, 'right');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = left.x * right.x;
@@ -440,9 +440,9 @@ define([
      */
     Cartesian2.divideComponents = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left, 'left');
-        Check.typeOf.object(right, 'right');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = left.x / right.x;
@@ -460,9 +460,9 @@ define([
      */
     Cartesian2.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left, 'left');
-        Check.typeOf.object(right, 'right');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = left.x + right.x;
@@ -480,9 +480,9 @@ define([
      */
     Cartesian2.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left, 'left');
-        Check.typeOf.object(right, 'right');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = left.x - right.x;
@@ -500,9 +500,9 @@ define([
      */
     Cartesian2.multiplyByScalar = function(cartesian, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian, 'cartesian');
-        Check.typeOf.number(scalar, 'scalar');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.number('scalar', scalar);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = cartesian.x * scalar;
@@ -520,9 +520,9 @@ define([
      */
     Cartesian2.divideByScalar = function(cartesian, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian, 'cartesian');
-        Check.typeOf.number(scalar, 'scalar');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.number('scalar', scalar);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = cartesian.x / scalar;
@@ -539,8 +539,8 @@ define([
      */
     Cartesian2.negate = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian, 'cartesian');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = -cartesian.x;
@@ -557,8 +557,8 @@ define([
      */
     Cartesian2.abs = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian, 'cartesian');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = Math.abs(cartesian.x);
@@ -578,10 +578,10 @@ define([
      */
     Cartesian2.lerp = function(start, end, t, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(start, 'start');
-        Check.typeOf.object(end, 'end');
-        Check.typeOf.number(t, 't');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('start', start);
+        Check.typeOf.object('end', end);
+        Check.typeOf.number('t', t);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         Cartesian2.multiplyByScalar(end, t, lerpScratch);
@@ -600,8 +600,8 @@ define([
      */
     Cartesian2.angleBetween = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left, 'left');
-        Check.typeOf.object(right, 'right');
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         Cartesian2.normalize(left, angleBetweenScratch);
@@ -619,8 +619,8 @@ define([
      */
     Cartesian2.mostOrthogonalAxis = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian, 'cartesian');
-        Check.typeOf.object(result, 'result');
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var f = Cartesian2.normalize(cartesian, mostOrthogonalAxisScratch);

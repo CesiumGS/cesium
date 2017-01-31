@@ -83,13 +83,16 @@ defineSuite([
         var shaderProgram = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vertexShader,
-            fragmentShaderSource : fragmentShader
+            fragmentShaderSource : fragmentShader,
+            attributeLocations : {
+                position : 0
+            }
         });
 
         var vertexArray = new VertexArray({
             context : context,
             attributes : [{
-                index : shaderProgram.vertexAttributes.position.index,
+                index : 0,
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
                     typedArray : new Float32Array([0, 0, 0, 1]),
@@ -153,9 +156,9 @@ defineSuite([
         viewportQuad.material = Material.fromType(Material.ImageType);
         viewportQuad.material.uniforms.image = outputTexture;
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.primitives.add(new CommandMockPrimitive(computeCommand));
         scene.primitives.add(viewportQuad);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 }, 'WebGL');
