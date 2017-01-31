@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Color',
+        'Core/defined',
         'Core/HeadingPitchRange',
         'Core/Matrix2',
         'Core/Matrix3',
@@ -19,6 +20,7 @@ defineSuite([
         Cartesian3,
         Cartesian4,
         Color,
+        defined,
         HeadingPitchRange,
         Matrix2,
         Matrix3,
@@ -63,15 +65,6 @@ defineSuite([
     afterEach(function() {
         scene.primitives.removeAll();
     });
-
-    function expectRender(tileset) {
-        tileset.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-        tileset.show = true;
-        var pixelColor = scene.renderForSpecs();
-        expect(pixelColor).not.toEqual([0, 0, 0, 255]);
-        return pixelColor;
-    }
 
     it('setShow throws with invalid batchId', function() {
         var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
@@ -142,7 +135,7 @@ defineSuite([
         batchTable.setShow(0, false);
         expect(batchTable.getShow(0)).toEqual(false);
     });
-    
+
     it('setColor throws with invalid batchId', function() {
         var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
@@ -578,49 +571,70 @@ defineSuite([
 
     it('renders with featuresLength of zero', function() {
         return Cesium3DTilesTester.loadTileset(scene, batchLengthZeroUrl).then(function(tileset) {
-            expectRender(tileset);
+            Cesium3DTilesTester.expectRender(scene, tileset);
 
-            // Expect the picked primitive to be the entire model rather than a single building
-            var picked = scene.pickForSpecs().primitive;
-            expect(picked).toBe(tileset._root.content._model);
+            expect(scene).toPickAndCall(function(result) {
+                expect(result).toBeDefined();
+                expect(result.primitive).toBe(tileset._root.content._model);
+            });
         });
     });
 
     it('renders with debug color', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var color = expectRender(tileset);
+            // Get initial color
+            var color;
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                color = rgba;
+            });
+
+            // Check for debug color
             tileset.debugColorizeTiles = true;
-            var debugColor = expectRender(tileset);
-            expect(debugColor).not.toEqual(color);
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                expect(rgba).not.toEqual(color);
+            });
+
+            // Check for original color
             tileset.debugColorizeTiles = false;
-            debugColor = expectRender(tileset);
-            expect(debugColor).toEqual(color);
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                expect(rgba).toEqual(color);
+            });
         });
     });
 
+    function expectRenderTranslucent(tileset) {
+        var batchTable = tileset._root.content.batchTable;
+
+        // Get initial color
+        var opaqueColor;
+        Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+            opaqueColor = rgba;
+        });
+
+        // Render translucent
+        batchTable.setAllColor(new Color(1.0, 1.0, 1.0, 0.5));
+        Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+            expect(rgba).not.toEqual(opaqueColor);
+        });
+
+        // Render restored to opaque
+        batchTable.setAllColor(Color.WHITE);
+        Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+            expect(rgba).toEqual(opaqueColor);
+        });
+
+        // Generate both translucent and opaque commands
+        batchTable.setColor(0, new Color(1.0, 1.0, 1.0, 0.5));
+        Cesium3DTilesTester.expectRender(scene, tileset);
+
+        // Fully transparent
+        batchTable.setAllColor(new Color(1.0, 1.0, 1.0, 0.0));
+        Cesium3DTilesTester.expectRenderBlank(scene, tileset);
+    }
+
     it('renders translucent style', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var batchTable = tileset._root.content.batchTable;
-
-            var opaqueColor = expectRender(tileset);
-
-            // Render transparent
-            batchTable.setAllColor(new Color(1.0, 1.0, 1.0, 0.5));
-            var translucentColor = expectRender(tileset);
-            expect(translucentColor).not.toEqual(opaqueColor);
-
-            // Render restored to opaque
-            batchTable.setAllColor(Color.WHITE);
-            var restoredOpaque = expectRender(tileset);
-            expect(restoredOpaque).toEqual(opaqueColor);
-
-            // Generate both translucent and opaque commands
-            batchTable.setColor(0, new Color(1.0, 1.0, 1.0, 0.5));
-            expectRender(tileset);
-
-            // Fully transparent
-            batchTable.setAllColor(new Color(1.0, 1.0, 1.0, 0.0));
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expectRenderTranslucent(tileset);
         });
     });
 
@@ -628,30 +642,8 @@ defineSuite([
         // Disable VTF
         var maximumVertexTextureImageUnits = ContextLimits.maximumVertexTextureImageUnits;
         ContextLimits._maximumVertexTextureImageUnits = 0;
-
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var batchTable = tileset._root.content.batchTable;
-
-            var opaqueColor = expectRender(tileset);
-
-            // Render transparent
-            batchTable.setAllColor(new Color(1.0, 1.0, 1.0, 0.5));
-            var translucentColor = expectRender(tileset);
-            expect(translucentColor).not.toEqual(opaqueColor);
-
-            // Render restored to opaque
-            batchTable.setAllColor(Color.WHITE);
-            var restoredOpaque = expectRender(tileset);
-            expect(restoredOpaque).toEqual(opaqueColor);
-
-            // Generate both translucent and opaque commands
-            batchTable.setColor(0, new Color(1.0, 1.0, 1.0, 0.5));
-            expectRender(tileset);
-
-            // Fully transparent
-            batchTable.setAllColor(new Color(1.0, 1.0, 1.0, 0.0));
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
+            expectRenderTranslucent(tileset);
             // Re-enable VTF
             ContextLimits._maximumVertexTextureImageUnits = maximumVertexTextureImageUnits;
         });
@@ -713,33 +705,51 @@ defineSuite([
     function checkHierarchyStyling(tileset) {
         // Check that a feature is colored from a generic batch table property.
         tileset.style = new Cesium3DTileStyle({color : "${height} === 6.0 ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0); // Expect red
+        });
 
         // Check that a feature is colored from a class property.
         tileset.style = new Cesium3DTileStyle({color : "${roof_name} === 'roof2' ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0); // Expect red
+        });
 
         // Check that a feature is colored from an inherited property.
         tileset.style = new Cesium3DTileStyle({color : "${building_name} === 'building2' ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0); // Expect red
+        });
 
         // Check isExactClass
         tileset.style = new Cesium3DTileStyle({color : "isExactClass('roof') ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0); // Expect red
+        });
         tileset.style = new Cesium3DTileStyle({color : "isExactClass('door') ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[1]).toBeGreaterThan(0); // Expect green
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[1]).toBeGreaterThan(1); // Expect green
+        });
 
         // Check isClass
         tileset.style = new Cesium3DTileStyle({color : "isClass('roof') ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0); // Expect red
+        });
         tileset.style = new Cesium3DTileStyle({color : "isClass('zone') ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0); // Expect red
+        });
 
         // Check getExactClassName
         tileset.style = new Cesium3DTileStyle({color : "getExactClassName() === 'roof' ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(0); // Expect red
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0); // Expect red
+        });
         tileset.style = new Cesium3DTileStyle({color : "getExactClassName() === 'zone' ? color('red') : color('green')"});
-        expect(scene.renderForSpecs()[1]).toBeGreaterThan(0); // Expect green
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[1]).toBeGreaterThan(0); // Expect green
+        });
     }
 
     function checkHierarchyProperties(tileset, multipleParents) {
