@@ -163,6 +163,41 @@ define([
         errorBox.setAttribute('data-bind', 'text: _editorError');
         stylePanel.contents.appendChild(errorBox);
         knockout.applyBindings(viewModel, stylePanel.contents);
+
+        styleEditor.addEventListener('keydown', function(e) {
+            if (e.keyCode === 9) {
+                e.preventDefault();
+                var start = this.selectionStart;
+                var end = this.selectionEnd;
+                var newEnd = end;
+                var selected = this.value.slice(start, end);
+                var lines = selected.split('\n');
+                var length = lines.length;
+                var i;
+                if (!e.shiftKey) {
+                    for(i = 0; i < length; ++i) {
+                        lines[i] = '  ' + lines[i];
+                        newEnd += 2;
+                    }
+                } else {
+                    for(i = 0; i < length; ++i) {
+                        if (lines[i][0] === ' ') {
+                            if (lines[i][1] === ' ') {
+                                lines[i] = lines[i].substr(2);
+                                newEnd -= 2;
+                            } else {
+                                lines[i] = lines[i].substr(1);
+                                newEnd -= 1;
+                            }
+                        }
+                    }
+                }
+                var newText = lines.join('\n');
+                this.value = this.value.slice(0, start) + newText + this.value.slice(end);
+                this.selectionStart = start !== end ? start : newEnd;
+                this.selectionEnd = newEnd;
+            }
+        });
     }
 
     defineProperties(Cesium3DTilesInspector.prototype, {
