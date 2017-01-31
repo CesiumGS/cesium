@@ -2285,7 +2285,7 @@ define([
         scene._groundPrimitives.update(frameState);
         scene._primitives.update(frameState);
         if (defined(scene._debugFrustumPlanes)) {
-            scene._debugFrustumPlanes.update(frameState)
+            scene._debugFrustumPlanes.update(frameState);
         }
 
         updateShadowMaps(scene);
