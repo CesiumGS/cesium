@@ -9,6 +9,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/Math',
         '../Core/PixelFormat',
         '../Core/RuntimeError',
@@ -28,6 +29,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         CesiumMath,
         PixelFormat,
         RuntimeError,
@@ -273,6 +275,9 @@ define([
         return Cartesian4.fromElements(x, y, z, w, result);
     }
 
+    if (!FeatureDetection.supportsTypedArrays()) {
+        return;
+    }
     var scratchFloatArray = new Float32Array(1);
 
     function packFloat(value, result) {
