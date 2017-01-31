@@ -371,6 +371,11 @@ define([
                                     that._style = old;
                                     that._editorError = err.toString();
                                 }
+
+                                // set feature again so pick coloring is set
+                                var temp = that._feature;
+                                that._feature = undefined; 
+                                that._feature = temp;
                             }
                         }
                     }
@@ -437,25 +442,22 @@ define([
             _feature: {
                 default: undefined,
                 subscribe: (function() {
-                    var current = {
-                        feature: undefined,
-                        color: new Color()
-                    };
-                    return function(feature) {
-                        if (current.feature !== feature) {
-                            if (defined(current.feature) &&
-                                defined(current.feature._batchTable) &&
-                                !current.feature._batchTable.isDestroyed()) {
 
+                    var current;
+                    var scratchColor = new Color();
+                    return function(feature) {
+                        if (current !== feature) {
+                            if (defined(current) && defined(current._batchTable) && !current._batchTable.isDestroyed()) {
                                 // Restore original color to feature that is no longer selected
-                                current.feature.color = Color.clone(current.color, current.feature.color);
-                                current.feature = undefined;
+                                var frameState = that._scene.frameState;
+                                current.color = that._style.color.evaluateColor(frameState, current, scratchColor);
+                                current = undefined;
                             }
+                            // that.styleString = that.styleString;
                             if (defined(feature)) {
                                 // Highlight new feature
-                                current.feature = feature;
-                                Color.clone(feature.color, current.color);
-                                feature.color = Color.clone(that.highlightColor, feature.color);
+                                current = feature;
+                                feature.color = that.highlightColor;
                             }
                         }
                     };
