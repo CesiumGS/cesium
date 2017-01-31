@@ -24,7 +24,7 @@ Change Log
 * Fixed sky atmosphere from causing incorrect picking and hanging drill picking. [#4783](https://github.com/AnalyticalGraphicsInc/cesium/issues/4783) and [#4784](https://github.com/AnalyticalGraphicsInc/cesium/issues/4784)
 * Fixed KML loading when color is an empty string. [#4826](https://github.com/AnalyticalGraphicsInc/cesium/pull/4826)
 * Fixed a bug that could cause a "readyImagery is not actually ready" exception when quickly zooming past the maximum available imagery level of an imagery layer near the poles.
-* Fixed a bug that affected dynamic graphics with time-dynamic modelMatrix [#4907](https://github.com/AnalyticalGraphicsInc/cesium/pull/4907).
+* Fixed a bug that affected dynamic graphics with time-dynamic modelMatrix. [#4907](https://github.com/AnalyticalGraphicsInc/cesium/pull/4907)
 * Fixed `Geocoder` autocomplete drop down visibility in Firefox. [#4916](https://github.com/AnalyticalGraphicsInc/cesium/issues/4916)
 * Added `Rectangle.fromRadians`.
 * Updated the morph so the default view in Columbus View is now angled. [#3878](https://github.com/AnalyticalGraphicsInc/cesium/issues/3878)
