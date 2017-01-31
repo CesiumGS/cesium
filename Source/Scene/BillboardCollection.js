@@ -1467,7 +1467,7 @@ define([
                         enabled : true,
                         func : WebGLConstants.LEQUAL  // Allows label glyphs and billboards to overlap.
                     },
-                    depthMask : false,
+                    depthMask : this._blendOption === BlendOption.TRANSLUCENT,
                     blending : BlendingState.ALPHA_BLEND
                 });
             } else {
