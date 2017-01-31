@@ -258,6 +258,12 @@ define([
      */
     Camera.DEFAULT_VIEW_FACTOR = 0.5;
 
+    /**
+     * The default heading/pitch/range that is used when the camera flies to a location that contains a bounding sphere. 
+     * @type HeadingPitchRange
+     */
+    Camera.DEFAULT_OFFSET = new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_FOUR, 0.0);
+
     function updateViewMatrix(camera) {
         Matrix4.computeView(camera._position, camera._direction, camera._up, camera._right, camera._viewMatrix);
         Matrix4.multiply(camera._viewMatrix, camera._actualInvTransform, camera._viewMatrix);
@@ -2685,12 +2691,11 @@ define([
         return Math.max(right, top) * 1.50;
     }
 
-    var scratchDefaultOffset = new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_FOUR, 0.0);
     var MINIMUM_ZOOM = 100.0;
 
     function adjustBoundingSphereOffset(camera, boundingSphere, offset) {
         if (!defined(offset)) {
-            offset = HeadingPitchRange.clone(scratchDefaultOffset);
+            offset = HeadingPitchRange.clone(Camera.DEFAULT_OFFSET);
         }
 
         var range = offset.range;
