@@ -105,7 +105,7 @@ define([
     }
 
     var scratchColor = new Color();
-
+    var scratchSplits = [1.0, 100000.0];
     /**
      * @private
      */
@@ -128,6 +128,12 @@ define([
 
             var frustumSplits = frameState.frustumSplits;
             var numFrustums = frustumSplits.length - 1;
+            if (numFrustums <= 0) {
+                frustumSplits = scratchSplits; // Use near and far planes if no splits created
+                frustumSplits[0] = this._camera.frustum.near;
+                frustumSplits[1] = this._camera.frustum.far;
+                numFrustums = 1;
+            }
 
             var positions = new Float64Array(3 * 4 * (numFrustums + 1));
             var f;
