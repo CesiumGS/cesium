@@ -5,37 +5,33 @@ Change Log
 
 * Deprecated
     * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.31. These properties will be available on geocoder services that support them, like `BingMapsGeocoderService`.
-    * The function `GeometryPipeline.computeBinormalAndTangent` will be removed in 1.31. Use the function `GeometryPipeline.createTangentAndBitangent` instead. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
+    * The function `GeometryPipeline.computeBinormalAndTangent` will be removed in 1.31. Use `GeometryPipeline.createTangentAndBitangent` instead. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
     * The enums `MIDDLE_DOUBLE_CLICK` and `RIGHT_DOUBLE_CLICK` from `ScreenSpaceEventType` have been deprecated and will be removed in 1.31. [#4910](https://github.com/AnalyticalGraphicsInc/cesium/pull/4910)
 * Breaking changes
     * Removed separate `heading`, `pitch`, `roll` parameters from `Transform.headingPitchRollToFixedFrame` and `Transform.headingPitchRollQuaternion`. Pass a `HeadingPitchRoll` object instead. [#4843](https://github.com/AnalyticalGraphicsInc/cesium/pull/4843)
     * The property `binormal` has been renamed to `bitangent` for `Geometry` and `VertexFormat`. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
-    * A handful of `CesiumInspectorViewModel` properties were removed or changed from variables to functions.  See [#4857](https://github.com/AnalyticalGraphicsInc/cesium/pull/4857)
-    * The `ShadowMap` constructor has been made private. See [#4010](https://github.com/AnalyticalGraphicsInc/cesium/issues/4010)
-* Added support for custom geocoder services and autocomplete [#4723](https://github.com/AnalyticalGraphicsInc/cesium/pull/4723).
-    * Added [Custom Geocoder Sandcastle example](http://localhost:8080/Apps/Sandcastle/index.html?src=Custom%20Geocoder.html)
-* Added `GeocoderService`, an interface for geocoders.
-* Added `BingMapsGeocoderService` implementing the `GeocoderService` interface.
-* Added `CartographicGeocoderService` implementing the `GeocoderService` interface.
-* Updated the morph so the default view in Columbus View is now angled. [#3878](https://github.com/AnalyticalGraphicsInc/cesium/issues/3878)
-* Fixed bug where `GroundPrimitives` where rendering incorrectly or disappearing at different zoom levels. [#4161](https://github.com/AnalyticalGraphicsInc/cesium/issues/4161) [#4326](https://github.com/AnalyticalGraphicsInc/cesium/issues/4326)
-* Fixed sky atmosphere from causing incorrect picking and hanging drill picking. [#4783](https://github.com/AnalyticalGraphicsInc/cesium/issues/4783) and [#4784](https://github.com/AnalyticalGraphicsInc/cesium/issues/4784)
-* Fixed a bug that could cause a "readyImagery is not actually ready" exception when quickly zooming past the maximum available imagery level of an imagery layer near the poles.
-* Fixed a bug that caused all models to use the same highlight color. [#4798] (https://github.com/AnalyticalGraphicsInc/cesium/pull/4798)
-* Fixed KML for when color is an empty string [#4826](https://github.com/AnalyticalGraphicsInc/cesium/pull/4826)
-* Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
-* Added ability to draw an `ImageryLayer` with a splitter to allow layers to only display to the left or right of a splitter.
-   * `ImageryLayer.splitDirection` controls how the layer is rendered with the splitter.  Values are taken from the new `ImagerySplitPosition` enum.
-   *  New `Scene.imagerySplitPosition` property controls the splitter position.  Values are from 0 to 1 relative across the width of the viewport.
-* The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.
-* Fixed a bug that would cause a crash when `debugShowFrustums` is enabled with OIT [#4864](https://github.com/AnalyticalGraphicsInc/cesium/pull/4864)
-* Fixed a bug that affected dynamic graphics with time-dynamic modelMatrix [#4907](https://github.com/AnalyticalGraphicsInc/cesium/pull/4907).
-* Added `Rectangle.fromRadians`.
-* `TerrainProvider` now optionally exposes an `availability` property that can be used to query the terrain level that is available at a location or in a rectangle.  Currently only `CesiumTerrainProvider` exposes this property.
+    * A handful of `CesiumInspectorViewModel` properties were removed or changed from variables to functions.  [#4857](https://github.com/AnalyticalGraphicsInc/cesium/pull/4857)
+    * The `ShadowMap` constructor has been made private. [#4010](https://github.com/AnalyticalGraphicsInc/cesium/issues/4010)
 * Added `sampleTerrainMostDetailed` to sample the height of an array of positions using the best available terrain data at each point.  This requires a `TerrainProvider` with the `availability` property.
-* Added 2D and Columbus View support for models using the RTC extension or whose vertices are in WGS84 coordinates. [#4922](https://github.com/AnalyticalGraphicsInc/cesium/pull/4922)
 * Transparent parts of billboards, labels, and points no longer overwrite parts of the scene behind them. [#4886](https://github.com/AnalyticalGraphicsInc/cesium/pull/4886)
     * Added `blendOption` property to `BillboardCollection`, `LabelCollection`, and `PointPrimitiveCollection`. The default is `BlendOption.OPAQUE_AND_TRANSLUCENT`; however, if all billboards, labels, or points are either completely opaque or completely translucent, `blendOption` can be changed to `BlendOption.OPAQUE` or `BlendOption.TRANSLUCENT`, respectively, to increase performance by up to 2x.
+* Added support for custom geocoder services and autocomplete, see the [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Custom%20Geocoder.html). Added `GeocoderService`, an interface for geocoders, and `BingMapsGeocoderService` and `CartographicGeocoderService` implementations. [#4723](https://github.com/AnalyticalGraphicsInc/cesium/pull/4723)
+* Added ability to draw an `ImageryLayer` with a splitter to allow layers to only display to the left or right of a splitter.  See `ImageryLayer.splitDirection`, `Scene.imagerySplitPosition`, and the [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Split.html&label=Showcases).
+* Fixed bug where `GroundPrimitives` where rendering incorrectly or disappearing at different zoom levels. [#4161](https://github.com/AnalyticalGraphicsInc/cesium/issues/4161), [#4326](https://github.com/AnalyticalGraphicsInc/cesium/issues/4326)
+* `TerrainProvider` now optionally exposes an `availability` property that can be used to query the terrain level that is available at a location or in a rectangle.  Currently only `CesiumTerrainProvider` exposes this property.
+* Added support for WMS version 1.3 by using CRS vice SRS query string parameter to request projection. SRS is still used for older versions.
+* Fixed a bug that caused all models to use the same highlight color. [#4798] (https://github.com/AnalyticalGraphicsInc/cesium/pull/4798)
+* Fixed sky atmosphere from causing incorrect picking and hanging drill picking. [#4783](https://github.com/AnalyticalGraphicsInc/cesium/issues/4783) and [#4784](https://github.com/AnalyticalGraphicsInc/cesium/issues/4784)
+* Fixed KML loading when color is an empty string. [#4826](https://github.com/AnalyticalGraphicsInc/cesium/pull/4826)
+* Fixed a bug that could cause a "readyImagery is not actually ready" exception when quickly zooming past the maximum available imagery level of an imagery layer near the poles.
+* Fixed a bug that affected dynamic graphics with time-dynamic modelMatrix. [#4907](https://github.com/AnalyticalGraphicsInc/cesium/pull/4907)
+* Fixed `Geocoder` autocomplete drop down visibility in Firefox. [#4916](https://github.com/AnalyticalGraphicsInc/cesium/issues/4916)
+* Added `Rectangle.fromRadians`.
+* Updated the morph so the default view in Columbus View is now angled. [#3878](https://github.com/AnalyticalGraphicsInc/cesium/issues/3878)
+* Added 2D and Columbus View support for models using the RTC extension or whose vertices are in WGS84 coordinates. [#4922](https://github.com/AnalyticalGraphicsInc/cesium/pull/4922)
+* The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.
+* Fixed a bug that would cause a crash when `debugShowFrustums` is enabled with OIT. [#4864](https://github.com/AnalyticalGraphicsInc/cesium/pull/4864)
+* Added the ability to run the unit tests with a [WebGL Stub](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/TestingGuide#run-with-webgl-stub), which makes all WebGL calls a noop and ignores test expectations that rely on reading back from WebGL.  Use the web link from the main index.html or run with `npm run test-webgl-stub`.
 
 ### 1.29 - 2017-01-02
 
