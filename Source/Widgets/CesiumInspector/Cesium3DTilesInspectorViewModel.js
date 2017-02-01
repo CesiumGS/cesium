@@ -107,6 +107,7 @@ define([
         ];
 
         this._style = undefined;
+        this._shouldStyle = false;
         this._subscriptions = {};
         var tilesetOptions = {
             /**
@@ -187,8 +188,11 @@ define([
             colorize: {
                 default: false,
                 subscribe: function(val) {
-                    if (that._tileset) {
+                    if (defined(that._tileset)) {
                         that._tileset.debugColorizeTiles = val;
+                        if (!val) {
+                            that._shouldStyle = true;
+                        }
                     }
                 }
             },
@@ -649,17 +653,24 @@ define([
      * Updates the view model
      */
     Cesium3DTilesInspectorViewModel.prototype.update = function() {
+        var tileset = this._tileset;
+
         if (this.performance) {
             this._performanceDisplay.update();
         }
 
-        if (defined(this._tileset) && (!defined(this._style) || this._style !== this._tileset.style)) {
-            this._style = this._tileset.style;
+        if (defined(tileset) && (!defined(this._style) || this._style !== tileset.style)) {
+            this._style = tileset.style;
             if (defined(this._style)) {
                 this.styleString = JSON.stringify(this._style.style, null, '  ');
             } else {
                 this.styleString = '';
             }
+        }
+
+        if (this._shouldStyle && defined(tileset)) {
+            tileset._styleEngine.makeDirty();
+            this._shouldStyle = false;
         }
 
         this._updateStats(false);
