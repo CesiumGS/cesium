@@ -210,57 +210,69 @@ defineSuite([
     });
 
     it('draws the expected DXT compressed texture color', function() {
-        if (context.s3tc) {
-            texture = new Texture({
-                context : context,
-                pixelFormat : greenDXTImage.internalFormat,
-                source : {
-                    width : greenDXTImage.width,
-                    height : greenDXTImage.height,
-                    arrayBufferView : greenDXTImage.bufferView
-                }
-            });
-
-            var pixels = renderFragment(context);
-            expect(pixels).toEqual([0, 255, 0, 255]);
+        if (!context.s3tc) {
+            return;
         }
+
+        texture = new Texture({
+            context : context,
+            pixelFormat : greenDXTImage.internalFormat,
+            source : {
+                width : greenDXTImage.width,
+                height : greenDXTImage.height,
+                arrayBufferView : greenDXTImage.bufferView
+            }
+        });
+
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender([0, 255, 0, 255]);
     });
 
     it('draws the expected PVR compressed texture color', function() {
-        if (context.pvrtc) {
-            texture = new Texture({
-                context : context,
-                pixelFormat : greenPVRImage.internalFormat,
-                source : {
-                    width : greenPVRImage.width,
-                    height : greenPVRImage.height,
-                    arrayBufferView : greenPVRImage.bufferView
-                }
-            });
-
-            var pixels = renderFragment(context);
-            expect(pixels).toEqual([0, 255, 0, 255]);
+        if (!context.pvrtc) {
+            return;
         }
+
+        texture = new Texture({
+            context : context,
+            pixelFormat : greenPVRImage.internalFormat,
+            source : {
+                width : greenPVRImage.width,
+                height : greenPVRImage.height,
+                arrayBufferView : greenPVRImage.bufferView
+            }
+        });
+
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender([0, 255, 0, 255]);
     });
 
     it('draws the expected ETC1 compressed texture color', function() {
-        if (context.etc1) {
-            texture = new Texture({
-                context : context,
-                pixelFormat : greenETC1Image.internalFormat,
-                source : {
-                    width : greenETC1Image.width,
-                    height : greenETC1Image.height,
-                    arrayBufferView : greenETC1Image.bufferView
-                }
-            });
-
-            var pixels = renderFragment(context);
-            expect(pixels[0]).toEqual(0);
-            expect(pixels[1]).toBeGreaterThan(250);
-            expect(pixels[2]).toEqual(0);
-            expect(pixels[3]).toEqual(255);
+        if (!context.etc1) {
+            return;
         }
+
+        texture = new Texture({
+            context : context,
+            pixelFormat : greenETC1Image.internalFormat,
+            source : {
+                width : greenETC1Image.width,
+                height : greenETC1Image.height,
+                arrayBufferView : greenETC1Image.bufferView
+            }
+        });
+
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender([0, 253, 0, 255]);
     });
 
     it('renders with premultiplied alpha', function() {
