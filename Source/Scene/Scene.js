@@ -1082,7 +1082,7 @@ define([
 
          /**
          * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
-         * @memberof Scene.prototype.
+         * @memberof Scene.prototype
          *
          * @type {Number}
          */

@@ -3,6 +3,7 @@ define([
         './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
+        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -25,6 +26,7 @@ define([
         arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -286,9 +288,9 @@ define([
      */
     function PolygonOutlineGeometry(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options) || !defined(options.polygonHierarchy)) {
-            throw new DeveloperError('options.polygonHierarchy is required.');
-        }
+        Check.typeOf.object('options', options);
+        Check.typeOf.object('options.polygonHierarchy', options.polygonHierarchy);
+
         if (defined(options.perPositionHeight) && options.perPositionHeight && defined(options.height)) {
             throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
         }
@@ -335,12 +337,8 @@ define([
      */
     PolygonOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -375,9 +373,7 @@ define([
      */
     PolygonOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -444,9 +440,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.positions)) {
-            throw new DeveloperError('options.positions is required.');
-        }
+        Check.defined('options.positions', options.positions);
         //>>includeEnd('debug');
 
         var newOptions = {

@@ -20,7 +20,7 @@ void main()
     color.a *= wholeAlpha;
 
 // Fully transparent parts of the billboard are not pickable.
-#ifdef RENDER_FOR_PICK
+#if defined(RENDER_FOR_PICK) || (!defined(OPAQUE) && !defined(TRANSLUCENT))
     if (color.a < 0.005)   // matches 0/255 and 1/255
     {
         discard;

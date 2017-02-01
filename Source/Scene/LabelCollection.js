@@ -747,10 +747,8 @@ define([
 
         billboardCollection.modelMatrix = this.modelMatrix;
         billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
-        billboardCollection.blendOption = this.blendOption;
         backgroundBillboardCollection.modelMatrix = this.modelMatrix;
         backgroundBillboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
-        backgroundBillboardCollection.blendOption = this.blendOption;
 
         var context = frameState.context;
 
@@ -804,6 +802,10 @@ define([
             var glyphCountDifference = label._glyphs.length - preUpdateGlyphCount;
             this._totalGlyphCount += glyphCountDifference;
         }
+
+        var blendOption = backgroundBillboardCollection.length > 0 ? BlendOption.TRANSLUCENT : this.blendOption;
+        billboardCollection.blendOption = blendOption;
+        backgroundBillboardCollection.blendOption = blendOption;
 
         this._labelsToUpdate.length = 0;
         backgroundBillboardCollection.update(frameState);
