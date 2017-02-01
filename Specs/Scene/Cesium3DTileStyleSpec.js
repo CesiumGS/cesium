@@ -330,7 +330,7 @@ defineSuite([
 
     it('applies show style with variable', function() {
         var style = new Cesium3DTileStyle({
-            "show" : "${ZipCode} == '19341'"
+            "show" : "${ZipCode} === '19341'"
         });
 
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
@@ -404,10 +404,10 @@ defineSuite([
     it('applies color style that maps id to color', function() {
         var style = new Cesium3DTileStyle({
             "color" : {
-                "expression" : "regExp('^1(\\d)').exec(${id})",
+                "expression" : "regExp('^1(\\d)').exec(String(${id}))",
                 "conditions" : [
-                    ["${expression} == '1'", "color('#FF0000')"],
-                    ["${expression} == '2'", "color('#00FF00')"],
+                    ["${expression} === '1'", "color('#FF0000')"],
+                    ["${expression} === '2'", "color('#00FF00')"],
                     ["true", "color('#FFFFFF')"]
                 ]
             }
