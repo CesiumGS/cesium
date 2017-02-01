@@ -25,7 +25,7 @@ define([
      */
     function viewerCesium3DTilesInspectorMixin(viewer) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(viewer, 'viewer');
+        Check.typeOf.object('viewer', viewer);
         //>>includeEnd('debug');
 
         var container = document.createElement('div');

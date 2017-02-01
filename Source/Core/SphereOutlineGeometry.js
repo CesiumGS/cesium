@@ -70,7 +70,7 @@ define([
      */
     SphereOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(value, 'value');
+        Check.typeOf.object('value', value);
         //>>includeEnd('debug');
 
         return EllipsoidOutlineGeometry.pack(value._ellipsoidGeometry, array, startingIndex);

@@ -70,7 +70,7 @@ defineSuite([
         scene.primitives.add(new DebugCameraPrimitive({
             camera : camera
         }));
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('does not render when show is false', function() {
@@ -78,7 +78,7 @@ defineSuite([
             camera : camera,
             show : false
         }));
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('updates when underlying camera changes', function() {
@@ -108,9 +108,10 @@ defineSuite([
             id : 'id'
         }));
 
-        var pick = scene.pickForSpecs();
-        expect(pick.primitive).toBe(p);
-        expect(pick.id).toBe('id');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toBe(p);
+            expect(result.id).toBe('id');
+        });
     });
 
     it('isDestroyed', function() {

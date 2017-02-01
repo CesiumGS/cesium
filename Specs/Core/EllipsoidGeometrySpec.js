@@ -56,7 +56,7 @@ defineSuite([
         expect(m.attributes.st.values.length).toEqual(numVertices * 2);
         expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
-        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
@@ -70,18 +70,18 @@ defineSuite([
         var positions = m.attributes.position.values;
         var normals = m.attributes.normal.values;
         var tangents = m.attributes.tangent.values;
-        var binormals = m.attributes.binormal.values;
+        var bitangents = m.attributes.bitangent.values;
 
         for ( var i = 0; i < positions.length; i += 3) {
             var position = Cartesian3.fromArray(positions, i);
             var normal = Cartesian3.fromArray(normals, i);
             var tangent = Cartesian3.fromArray(tangents, i);
-            var binormal = Cartesian3.fromArray(binormals, i);
+            var bitangent = Cartesian3.fromArray(bitangents, i);
 
             expect(Cartesian3.magnitude(position)).toEqualEpsilon(1.0, CesiumMath.EPSILON10);
             expect(normal).toEqualEpsilon(Cartesian3.normalize(position, new Cartesian3()), CesiumMath.EPSILON7);
             expect(Cartesian3.dot(Cartesian3.UNIT_Z, tangent)).not.toBeLessThan(0.0);
-            expect(binormal).toEqualEpsilon(Cartesian3.cross(normal, tangent, new Cartesian3()), CesiumMath.EPSILON7);
+            expect(bitangent).toEqualEpsilon(Cartesian3.cross(normal, tangent, new Cartesian3()), CesiumMath.EPSILON7);
         }
     });
 

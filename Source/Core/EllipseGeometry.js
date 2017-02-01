@@ -65,7 +65,7 @@ define([
 
     var scratchNormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
-    var scratchBinormal = new Cartesian3();
+    var scratchBitangent = new Cartesian3();
 
     var scratchCartographic = new Cartographic();
     var projectedCenterScratch = new Cartesian3();
@@ -86,17 +86,17 @@ define([
         var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
         var normals = (vertexFormat.normal) ? new Float32Array(size * 3) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(size * 3) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Float32Array(size * 3) : undefined;
+        var bitangents = (vertexFormat.bitangent) ? new Float32Array(size * 3) : undefined;
 
         var extrudeNormals = (shadowVolume) ? new Float32Array(size * 3) : undefined;
 
         var textureCoordIndex = 0;
 
         // Raise positions to a height above the ellipsoid and compute the
-        // texture coordinates, normals, tangents, and binormals.
+        // texture coordinates, normals, tangents, and bitangents.
         var normal = scratchNormal;
         var tangent = scratchTangent;
-        var binormal = scratchBinormal;
+        var bitangent = scratchBitangent;
 
         var projection = new GeographicProjection(ellipsoid);
         var projectedCenter = projection.project(ellipsoid.cartesianToCartographic(center, scratchCartographic), projectedCenterScratch);
@@ -139,7 +139,7 @@ define([
                 textureCoordinates[textureCoordIndex++] = texCoordScratch.y;
             }
 
-            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal || shadowVolume) {
+            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent || shadowVolume) {
                 normal = ellipsoid.geodeticSurfaceNormal(position, normal);
 
                 if (shadowVolume) {
@@ -148,8 +148,8 @@ define([
                     extrudeNormals[i2 + bottomOffset] = -normal.z;
                 }
 
-                if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-                    if (vertexFormat.tangent || vertexFormat.binormal) {
+                if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
+                    if (vertexFormat.tangent || vertexFormat.bitangent) {
                         tangent = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent), tangent);
                         Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
                     }
@@ -175,15 +175,15 @@ define([
                         }
                     }
 
-                    if (vertexFormat.binormal) {
-                        binormal = Cartesian3.normalize(Cartesian3.cross(normal, tangent, binormal), binormal);
-                        binormals[i] = binormal.x;
-                        binormals[i1] = binormal.y;
-                        binormals[i2] = binormal.z;
+                    if (vertexFormat.bitangent) {
+                        bitangent = Cartesian3.normalize(Cartesian3.cross(normal, tangent, bitangent), bitangent);
+                        bitangents[i ] = bitangent.x;
+                        bitangents[i1] = bitangent.y;
+                        bitangents[i2] = bitangent.z;
                         if (extrude) {
-                            binormals[i + bottomOffset] = binormal.x;
-                            binormals[i1 + bottomOffset] = binormal.y;
-                            binormals[i2 + bottomOffset] = binormal.z;
+                            bitangents[i + bottomOffset] = bitangent.x;
+                            bitangents[i1 + bottomOffset] = bitangent.y;
+                            bitangents[i2 + bottomOffset] = bitangent.z;
                         }
                     }
                 }
@@ -233,11 +233,11 @@ define([
             });
         }
 
-        if (vertexFormat.binormal) {
-            attributes.binormal = new GeometryAttribute({
+        if (vertexFormat.bitangent) {
+            attributes.bitangent = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
-                values : binormals
+                values : bitangents
             });
         }
 
@@ -389,7 +389,7 @@ define([
         var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
         var normals = (vertexFormat.normal) ? new Float32Array(size * 3) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(size * 3) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Float32Array(size * 3) : undefined;
+        var bitangents = (vertexFormat.bitangent) ? new Float32Array(size * 3) : undefined;
 
         var shadowVolume = options.shadowVolume;
         var extrudeNormals = (shadowVolume) ? new Float32Array(size * 3) : undefined;
@@ -397,10 +397,10 @@ define([
         var textureCoordIndex = 0;
 
         // Raise positions to a height above the ellipsoid and compute the
-        // texture coordinates, normals, tangents, and binormals.
+        // texture coordinates, normals, tangents, and bitangents.
         var normal = scratchNormal;
         var tangent = scratchTangent;
-        var binormal = scratchBinormal;
+        var bitangent = scratchBitangent;
 
         var projection = new GeographicProjection(ellipsoid);
         var projectedCenter = projection.project(ellipsoid.cartesianToCartographic(center, scratchCartographic), projectedCenterScratch);
@@ -466,9 +466,9 @@ define([
                 finalPositions[i2] = position.z;
             }
 
-            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
 
-                binormal = Cartesian3.clone(normal, binormal);
+                bitangent = Cartesian3.clone(normal, bitangent);
                 var next = Cartesian3.fromArray(positions, (i + 3) % length, scratchCartesian4);
                 Cartesian3.subtract(next, position, next);
                 var bottom = Cartesian3.subtract(extrudedPosition, position, scratchCartesian3);
@@ -486,7 +486,7 @@ define([
                 }
 
                 if (vertexFormat.tangent) {
-                    tangent = Cartesian3.normalize(Cartesian3.cross(binormal, normal, tangent), tangent);
+                    tangent = Cartesian3.normalize(Cartesian3.cross(bitangent, normal, tangent), tangent);
                     tangents[i] = tangent.x;
                     tangents[i1] = tangent.y;
                     tangents[i2] = tangent.z;
@@ -496,14 +496,14 @@ define([
                     tangents[i + 2 + length] = tangent.z;
                 }
 
-                if (vertexFormat.binormal) {
-                    binormals[i] = binormal.x;
-                    binormals[i1] = binormal.y;
-                    binormals[i2] = binormal.z;
+                if (vertexFormat.bitangent) {
+                    bitangents[i ] = bitangent.x;
+                    bitangents[i1] = bitangent.y;
+                    bitangents[i2] = bitangent.z;
 
-                    binormals[i + length] = binormal.x;
-                    binormals[i1 + length] = binormal.y;
-                    binormals[i2 + length] = binormal.z;
+                    bitangents[i + length] = bitangent.x;
+                    bitangents[i1 + length] = bitangent.y;
+                    bitangents[i2 + length] = bitangent.z;
                 }
             }
         }
@@ -550,11 +550,11 @@ define([
             });
         }
 
-        if (vertexFormat.binormal) {
-            attributes.binormal = new GeometryAttribute({
+        if (vertexFormat.bitangent) {
+            attributes.bitangent = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
-                values : binormals
+                values : bitangents
             });
         }
 

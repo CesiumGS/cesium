@@ -28,8 +28,8 @@ define([
      */
     function Cesium3DTilesInspector(container, scene) {
         //>includeStart('debug', pragmas.debug);
-        Check.defined(container, 'container');
-        Check.typeOf.object(scene, 'scene');
+        Check.defined('container', container);
+        Check.typeOf.object('scene', scene);
         //>>includeEnd('debug');
 
         container = getElement(container);

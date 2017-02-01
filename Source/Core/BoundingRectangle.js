@@ -79,8 +79,8 @@ define([
      */
     BoundingRectangle.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(value, 'value');
-        Check.defined(array, 'array');
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -103,7 +103,7 @@ define([
      */
     BoundingRectangle.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined(array, 'array');
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -236,8 +236,8 @@ define([
      */
     BoundingRectangle.union = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left, 'left');
-        Check.typeOf.object(right, 'right');
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -266,8 +266,8 @@ define([
      */
     BoundingRectangle.expand = function(rectangle, point, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
-        Check.typeOf.object(point, 'point');
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('point', point);
         //>>includeEnd('debug');
 
         result = BoundingRectangle.clone(rectangle, result);
@@ -301,8 +301,8 @@ define([
      */
     BoundingRectangle.intersect = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(left, 'left');
-        Check.typeOf.object(right, 'right');
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         var leftX = left.x;

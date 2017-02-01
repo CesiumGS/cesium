@@ -85,7 +85,7 @@ define([
      * </p>
      * <p>
      * Because of the cutting edge nature of this feature in WebGL, it requires the EXT_frag_depth extension, which is currently only supported in Chrome,
-     * Firefox, and Edge. Apple support is expected in iOS 9 and MacOS Safari 9. Android support varies by hardware and IE11 will most likely never support
+     * Firefox, Edge, and Safari 10. It's not yet supported in iOS 10. Android support varies by hardware and IE11 will most likely never support
      * it. You can use webglreport.com to verify support for your hardware.
      * </p>
      * <p>
@@ -551,7 +551,7 @@ define([
 
     function getRectangle(frameState, geometry) {
         var ellipsoid = frameState.mapProjection.ellipsoid;
-        
+
         if (!defined(geometry.attributes) || !defined(geometry.attributes.position3DHigh)) {
             if (defined(geometry.rectangle)) {
                 return geometry.rectangle;
@@ -695,7 +695,7 @@ define([
 
         var result = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, 0.0);
         BoundingSphere.fromRectangle3D(rectangle, ellipsoid, maxTerrainHeight, scratchBoundingSphere);
-        
+
         return BoundingSphere.union(result, scratchBoundingSphere, result);
     }
 

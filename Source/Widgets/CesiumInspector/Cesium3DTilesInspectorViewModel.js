@@ -65,7 +65,7 @@ define([
      */
     function Cesium3DTilesInspectorViewModel(scene) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(scene, 'scene');
+        Check.typeOf.object('scene', scene);
         //>>includeEnd('debug');
 
         var that = this;
@@ -586,7 +586,7 @@ define([
                 }
             }
         }
-    }
+    };
 
     /**
      * Updates the view model's stats text
