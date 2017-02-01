@@ -517,6 +517,17 @@ define([
          */
         this.debugShowDepthFrustum = 1;
 
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * When <code>true</code>, draws outlines to show the boundaries of the camera frustums
+         * </p>
+         *
+         * @type Boolean
+         *
+         * @default false
+         */
+        this.debugShowFrustumPlanes = false;
         this._debugShowFrustumPlanes = false;
         this._debugFrustumPlanes = undefined;
 
@@ -946,36 +957,6 @@ define([
         debugFrustumStatistics : {
             get : function() {
                 return this._debugFrustumStatistics;
-            }
-        },
-
-        /**
-         * This property is for debugging only; it is not for production use.
-         * <p>
-         * When <code>true</code>, draws outlines to show the boundaries of the camera frustums
-         * </p>
-         *
-         * @type Boolean
-         *
-         * @default false
-         */
-        debugShowFrustumPlanes : {
-            get : function() {
-                return this._debugShowFrustumPlanes;
-            },
-            set : function(value) {
-                if (!value) {
-                    if (defined(this._debugFrustumPlanes)) {
-                        this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
-                    }
-                } else if (value !== this._debugShowFrustumPlanes) { 
-                    this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
-                    this._debugFrustumPlanes = new DebugCameraPrimitive({
-                        camera: this.camera,
-                        updateOnChange: false
-                    });
-                }
-                this._debugShowFrustumPlanes = value;
             }
         },
 
@@ -2284,6 +2265,19 @@ define([
 
         scene._groundPrimitives.update(frameState);
         scene._primitives.update(frameState);
+
+        if (scene.debugShowFrustumPlanes !== scene._debugShowFrustumPlanes) {
+            if (scene.debugShowFrustumPlanes) {
+                scene._debugFrustumPlanes = new DebugCameraPrimitive({
+                    camera: scene.camera,
+                    updateOnChange: false
+                });
+            } else {
+                scene._debugFrustumPlanes = scene._debugFrustumPlanes && scene._debugFrustumPlanes.destroy();
+            }
+            scene._debugShowFrustumPlanes = scene.debugShowFrustumPlanes;
+        }
+
         if (defined(scene._debugFrustumPlanes)) {
             scene._debugFrustumPlanes.update(frameState);
         }
