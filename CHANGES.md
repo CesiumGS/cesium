@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### TODO
+### 1.31 - 2017-03-01
 
 * Added compressed texture support.
    * glTF models and imagery layers can now reference [KTX](https://www.khronos.org/opengles/sdk/tools/KTX/) textures and textures compressed with [crunch](https://github.com/BinomialLLC/crunch).
