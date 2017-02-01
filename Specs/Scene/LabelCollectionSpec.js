@@ -11,6 +11,7 @@ defineSuite([
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Rectangle',
+        'Scene/BlendOption',
         'Scene/Globe',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
@@ -31,6 +32,7 @@ defineSuite([
         CesiumMath,
         NearFarScalar,
         Rectangle,
+        BlendOption,
         Globe,
         HeightReference,
         HorizontalOrigin,
@@ -307,7 +309,7 @@ defineSuite([
     });
 
     it('does not render when constructed', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('can render after modifying and removing a label', function() {
@@ -324,12 +326,14 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
 
         labelOne.scale = 2.0;
         labels.remove(labelOne);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('can render a label', function() {
@@ -340,7 +344,35 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
+    });
+
+    it('renders in multiple passes', function() {
+        labels.add({
+            position : Cartesian3.ZERO,
+            text : 'x',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER
+        });
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+
+        var frameState = scene.frameState;
+        frameState.commandList.length = 0;
+        labels.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
+        labels.update(frameState);
+        expect(frameState.commandList.length).toEqual(2);
+
+        frameState.commandList.length = 0;
+        labels.blendOption = BlendOption.OPAQUE;
+        labels.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
+
+        frameState.commandList.length = 0;
+        labels.blendOption = BlendOption.TRANSLUCENT;
+        labels.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
     });
 
     it('can render after adding a label', function() {
@@ -351,10 +383,11 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        var actual = scene.renderForSpecs();
-        expect(actual[0]).toBeGreaterThan(200);
-        expect(actual[1]).toBeGreaterThan(200);
-        expect(actual[2]).toBeGreaterThan(200);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(200);
+            expect(rgba[1]).toBeGreaterThan(200);
+            expect(rgba[2]).toBeGreaterThan(200);
+        });
 
         labels.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
@@ -369,10 +402,11 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        actual = scene.renderForSpecs();
-        expect(actual[0]).toBeGreaterThan(200);
-        expect(actual[1]).toBeLessThan(10);
-        expect(actual[2]).toBeLessThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(200);
+            expect(rgba[1]).toBeLessThan(10);
+            expect(rgba[2]).toBeLessThan(10);
+        });
     });
 
     it('can render after removing a label', function() {
@@ -383,10 +417,12 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
 
         labels.remove(label);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('can render after removing and adding a label', function() {
@@ -397,7 +433,9 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
 
         labels.remove(label);
         labels.add({
@@ -407,7 +445,9 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
     });
 
     it('can render after removing all labels', function() {
@@ -418,10 +458,12 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
 
         labels.removeAll();
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('can render after removing all labels and adding a label', function() {
@@ -432,7 +474,9 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
 
         labels.removeAll();
         labels.add({
@@ -442,7 +486,9 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
     });
 
     it('can render a label background', function() {
@@ -455,10 +501,10 @@ defineSuite([
             backgroundColor : Color.BLUE
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
 
         labels.remove(label);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('does not render labels with show set to false', function() {
@@ -469,13 +515,17 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
 
         label.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         label.show = true;
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
     });
 
     it('does not render label background with show set to false', function() {
@@ -488,13 +538,13 @@ defineSuite([
             backgroundColor : Color.BLUE
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
 
         label.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         label.show = true;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it('does not render labels that are behind the viewer', function() {
@@ -505,10 +555,12 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         label.position = Cartesian3.ZERO; // Back in front of camera
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
     });
 
     it('does not render labels with a scale of zero', function() {
@@ -520,10 +572,12 @@ defineSuite([
         });
 
         label.scale = 0.0;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         label.scale = 2.0;
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
     });
 
     it('renders label with translucencyByDistance', function() {
@@ -536,10 +590,12 @@ defineSuite([
         });
 
         camera.position = new Cartesian3(2.0, 0.0, 0.0);
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
 
         camera.position = new Cartesian3(4.0, 0.0, 0.0);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('renders label with pixelOffsetScaleByDistance', function() {
@@ -553,10 +609,12 @@ defineSuite([
         });
 
         camera.position = new Cartesian3(2.0, 0.0, 0.0);
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
 
         camera.position = new Cartesian3(4.0, 0.0, 0.0);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('renders label with distanceDisplayCondition', function() {
@@ -569,15 +627,17 @@ defineSuite([
         });
 
         camera.position = new Cartesian3(200.0, 0.0, 0.0);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         camera.position = new Cartesian3(50.0, 0.0, 0.0);
-        expect(scene.renderForSpecs()[0]).toBeGreaterThan(200);
-        expect(scene.renderForSpecs()[1]).toBeGreaterThan(200);
-        expect(scene.renderForSpecs()[2]).toBeGreaterThan(200);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(200);
+            expect(rgba[1]).toBeGreaterThan(200);
+            expect(rgba[2]).toBeGreaterThan(200);
+        });
 
         camera.position = new Cartesian3(5.0, 0.0, 0.0);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('throws new label with invalid distanceDisplayCondition (near >= far)', function() {
@@ -606,9 +666,10 @@ defineSuite([
             id : 'id'
         });
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(label);
-        expect(pick.id).toEqual('id');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(label);
+            expect(result.id).toEqual('id');
+        });
     });
 
     it('can change pick id', function() {
@@ -620,15 +681,17 @@ defineSuite([
             id : 'id'
         });
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(label);
-        expect(pick.id).toEqual('id');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(label);
+            expect(result.id).toEqual('id');
+        });
 
         label.id = 'id2';
 
-        pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(label);
-        expect(pick.id).toEqual('id2');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(label);
+            expect(result.id).toEqual('id2');
+        });
     });
 
     it('does not pick a label with show set to false', function() {
@@ -640,8 +703,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     it('picks a label using translucencyByDistance', function() {
@@ -655,15 +717,13 @@ defineSuite([
         var translucency = new NearFarScalar(1.0, 0.9, 3.0e9, 0.8);
         label.translucencyByDistance = translucency;
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(label);
+        expect(scene).toPickPrimitive(label);
 
         translucency.nearValue = 0.0;
         translucency.farValue = 0.0;
         label.translucencyByDistance = translucency;
 
-        pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     it('picks a label using pixelOffsetScaleByDistance', function() {
@@ -678,15 +738,13 @@ defineSuite([
         var pixelOffsetScale = new NearFarScalar(1.0, 0.0, 3.0e9, 0.0);
         label.pixelOffsetScaleByDistance = pixelOffsetScale;
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(label);
+        expect(scene).toPickPrimitive(label);
 
         pixelOffsetScale.nearValue = 10.0;
         pixelOffsetScale.farValue = 10.0;
         label.pixelOffsetScaleByDistance = pixelOffsetScale;
 
-        pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     it('throws when calling get without an index', function() {
@@ -1715,6 +1773,12 @@ defineSuite([
     });
 
     it('computes bounding sphere in Columbus view', function() {
+
+        // Disable collision detection to allow controlled camera position,
+        // hence predictable bounding sphere size
+        var originalEnableCollisionDetection = scene.screenSpaceCameraController.enableCollisionDetection;
+        scene.screenSpaceCameraController.enableCollisionDetection = false;
+
         var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
@@ -1740,6 +1804,7 @@ defineSuite([
         expected.center = new Cartesian3(0.0, expected.center.x, expected.center.y);
         expect(actual.center).toEqualEpsilon(expected.center, CesiumMath.EPSILON8);
         expect(actual.radius).toBeGreaterThan(expected.radius);
+        scene.screenSpaceCameraController.enableCollisionDetection = originalEnableCollisionDetection;
     });
 
     it('computes bounding sphere in 2D', function() {

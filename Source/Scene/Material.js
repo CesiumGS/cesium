@@ -1353,7 +1353,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.fadeInColor.alpha < 1.0) || (uniforms.fadeOutColor.alpha < 0.0);
+            return (uniforms.fadeInColor.alpha < 1.0) || (uniforms.fadeOutColor.alpha < 1.0);
         }
     });
 

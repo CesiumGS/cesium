@@ -150,7 +150,7 @@ defineSuite([
         expect(p.attributes.st.values.length).toEqual(numVertices * 2);
         expect(p.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(p.attributes.tangent.values.length).toEqual(numVertices * 3);
-        expect(p.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(p.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(p.indices.length).toEqual(numTriangles * 3);
     });
 
@@ -502,7 +502,7 @@ defineSuite([
         expect(p.attributes.st.values.length).toEqual(numVertices * 2);
         expect(p.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(p.attributes.tangent.values.length).toEqual(numVertices * 3);
-        expect(p.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(p.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(p.indices.length).toEqual(numTriangles * 3);
     });
 
@@ -699,6 +699,6 @@ defineSuite([
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     packedInstance.push(rectangle.west, rectangle.south, rectangle.east, rectangle.north);
-    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 55);
+    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 0, 56);
     createPackableSpecs(PolygonGeometry, polygon, packedInstance);
 });

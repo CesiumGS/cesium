@@ -33,6 +33,7 @@ define([
         '../Shaders/ReprojectWebMercatorVS',
         '../ThirdParty/when',
         './Imagery',
+        './ImagerySplitDirection',
         './ImageryState',
         './TileImagery'
     ], function(
@@ -69,6 +70,7 @@ define([
         ReprojectWebMercatorVS,
         when,
         Imagery,
+        ImagerySplitDirection,
         ImageryState,
         TileImagery) {
     'use strict';
@@ -128,6 +130,7 @@ define([
      *                          imagery tile for which the gamma is required, and it is expected to return
      *                          the gamma value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
+     * @param {ImagerySplitDirection|Function} [options.splitDirection=ImagerySplitDirection.NONE] The {@link ImagerySplitDirection} split to apply to this layer.
      * @param {Boolean} [options.show=true] True if the layer is shown; otherwise, false.
      * @param {Number} [options.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
      *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
@@ -194,6 +197,14 @@ define([
          * @default {@link ImageryLayer.DEFAULT_GAMMA}
          */
         this.gamma = defaultValue(options.gamma, defaultValue(imageryProvider.defaultGamma, ImageryLayer.DEFAULT_GAMMA));
+
+        /**
+         * The {@link ImagerySplitDirection} to apply to this layer.
+         *
+         * @type {ImagerySplitDirection}
+         * @default {@link ImageryLayer.DEFAULT_SPLIT}
+         */
+        this.splitDirection = defaultValue(options.splitDirection, defaultValue(imageryProvider.defaultSplit, ImageryLayer.DEFAULT_SPLIT));
 
         /**
          * Determines if this layer is shown.
@@ -291,6 +302,14 @@ define([
      * @default 1.0
      */
     ImageryLayer.DEFAULT_GAMMA = 1.0;
+
+    /**
+     * This value is used as the default spliat for the imagery layer if one is not provided during construction
+     * or by the imagery provider.
+     * @type {ImagerySplitDirection}
+     * @default ImagerySplitDirection.NONE
+     */
+    ImageryLayer.DEFAULT_SPLIT = ImagerySplitDirection.NONE;
 
     /**
      * Gets a value indicating whether this layer is the base layer in the
@@ -576,7 +595,7 @@ define([
                 if (!defined(clippedImageryRectangle)) {
                     continue;
                 }
-                
+
                 minV = Math.max(0.0, (clippedImageryRectangle.south - terrainRectangle.south) / terrainRectangle.height);
 
                 // If this is the southern-most imagery tile mapped to this terrain tile,
@@ -1059,6 +1078,7 @@ define([
     /**
      * Gets the level with the specified world coordinate spacing between texels, or less.
      *
+     * @param {ImageryLayer} layer The imagery layer to use.
      * @param {Number} texelSpacing The texel spacing for which to find a corresponding level.
      * @param {Number} latitudeClosestToEquator The latitude closest to the equator that we're concerned with.
      * @returns {Number} The level with the specified texel spacing or less.

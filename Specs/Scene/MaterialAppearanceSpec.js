@@ -87,10 +87,10 @@ defineSuite([
             material : Material.fromType(Material.DotType)
         });
 
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
     });
 
     it('renders textured', function() {
@@ -104,10 +104,10 @@ defineSuite([
             })
         });
 
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
     });
 
     it('renders all', function() {
@@ -119,10 +119,10 @@ defineSuite([
             material : Material.fromType(Material.NormalMapType)
         });
 
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
     });
 
 }, 'WebGL');

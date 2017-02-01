@@ -217,8 +217,8 @@ define([
      * @param {JulianDate} julianDate The date to check.
      * @returns {Boolean} <code>true</code> if the collection contains the specified date, <code>false</code> otherwise.
      */
-    TimeIntervalCollection.prototype.contains = function(date) {
-        return this.indexOf(date) >= 0;
+    TimeIntervalCollection.prototype.contains = function(julianDate) {
+        return this.indexOf(julianDate) >= 0;
     };
 
     var indexOfScratch = new TimeInterval();

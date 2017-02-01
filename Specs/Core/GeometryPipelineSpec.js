@@ -195,7 +195,7 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.createLineSegmentsForVectors(geometry, 'binormal');
+            GeometryPipeline.createLineSegmentsForVectors(geometry, 'bitangent');
         }).toThrowDeveloperError();
     });
 
@@ -1410,13 +1410,13 @@ defineSuite([
         expect(Cartesian3.fromArray(normals, 18)).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON7);
     });
 
-    it('computeBinormalAndTangent throws when geometry is undefined', function() {
+    it('computeTangentAndBitangent throws when geometry is undefined', function() {
         expect(function() {
-            GeometryPipeline.computeBinormalAndTangent();
+            GeometryPipeline.computeTangentAndBitangent();
         }).toThrowDeveloperError();
     });
 
-    it('computeBinormalAndTangent throws when position is undefined', function() {
+    it('computeTangentAndBitangent throws when position is undefined', function() {
         var geometry = new Geometry({
             attributes: {
                 normal: new GeometryAttribute({
@@ -1436,11 +1436,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.computeBinormalAndTangent(geometry);
+            GeometryPipeline.computeTangentAndBitangent(geometry);
        }).toThrowDeveloperError();
     });
 
-    it('computeBinormalAndTangent throws when normal is undefined', function() {
+    it('computeTangentAndBitangent throws when normal is undefined', function() {
         var geometry = new Geometry({
             attributes: {
                 position: new GeometryAttribute({
@@ -1460,11 +1460,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.computeBinormalAndTangent(geometry);
+            GeometryPipeline.computeTangentAndBitangent(geometry);
        }).toThrowDeveloperError();
     });
 
-    it('computeBinormalAndTangent throws when st is undefined', function() {
+    it('computeTangentAndBitangent throws when st is undefined', function() {
         var geometry = new Geometry({
             attributes: {
                 position: new GeometryAttribute({
@@ -1485,11 +1485,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.computeBinormalAndTangent(geometry);
+            GeometryPipeline.computeTangentAndBitangent(geometry);
        }).toThrowDeveloperError();
     });
 
-    it('computeBinormalAndTangent throws when geometry.indices is undefined', function() {
+    it('computeTangentAndBitangent throws when geometry.indices is undefined', function() {
         var geometry = new Geometry({
             attributes: {
                 position: new GeometryAttribute({
@@ -1513,11 +1513,11 @@ defineSuite([
         });
 
         expect(function() {
-             GeometryPipeline.computeBinormalAndTangent(geometry);
+             GeometryPipeline.computeTangentAndBitangent(geometry);
         }).toThrowDeveloperError();
     });
 
-    it('computeBinormalAndTangent throws when indices is not a multiple of 3', function() {
+    it('computeTangentAndBitangent throws when indices is not a multiple of 3', function() {
         var geometry = new Geometry({
             attributes: {
                 position: new GeometryAttribute({
@@ -1543,11 +1543,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.computeBinormalAndTangent(geometry);
+            GeometryPipeline.computeTangentAndBitangent(geometry);
        }).toThrowDeveloperError();
     });
 
-    it('computeBinormalAndTangent throws when primitive type is not triangle', function() {
+    it('computeTangentAndBitangent throws when primitive type is not triangle', function() {
         var geometry = new Geometry({
             attributes: {
                 position: new GeometryAttribute({
@@ -1573,11 +1573,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.computeBinormalAndTangent(geometry);
+            GeometryPipeline.computeTangentAndBitangent(geometry);
        }).toThrowDeveloperError();
     });
 
-    it('computeBinormalAndTangent computes tangent and binormal for one triangle', function() {
+    it('computeTangentAndBitangent computes tangent and bitangent for one triangle', function() {
         var geometry = new Geometry({
             attributes: {
                 position: new GeometryAttribute({
@@ -1596,13 +1596,13 @@ defineSuite([
         });
 
         geometry = GeometryPipeline.computeNormal(geometry);
-        geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+        geometry = GeometryPipeline.computeTangentAndBitangent(geometry);
 
         expect(geometry.attributes.tangent.values).toEqual([1, 0, 0, 1, 0, 0, 1, 0, 0]);
-        expect(geometry.attributes.binormal.values).toEqual([0, 1, 0, 0, 1, 0, 0, 1, 0]);
+        expect(geometry.attributes.bitangent.values).toEqual([0, 1, 0, 0, 1, 0, 0, 1, 0]);
     });
 
-    it('computeBinormalAndTangent computes tangent and binormal for two triangles', function() {
+    it('computeTangentAndBitangent computes tangent and bitangent for two triangles', function() {
         var geometry = new Geometry({
             attributes: {
                 position: new GeometryAttribute({
@@ -1621,18 +1621,57 @@ defineSuite([
         });
 
         geometry = GeometryPipeline.computeNormal(geometry);
-        geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+        geometry = GeometryPipeline.computeTangentAndBitangent(geometry);
         expect(geometry.attributes.tangent.values).toEqualEpsilon([0.7071067811865475, 0, 0.7071067811865475,
                                                         0, 1, 0,
                                                         0, 1, 0,
                                                         -0.5773502691896258, 0.5773502691896258, 0.5773502691896258], CesiumMath.EPSILON7);
-        expect(geometry.attributes.binormal.values).toEqualEpsilon([0, 1, 0,
+        expect(geometry.attributes.bitangent.values).toEqualEpsilon([0, 1, 0,
                                                         -1, 0, 0,
                                                         -1, 0, 0,
                                                         -0.4082482904638631, -0.8164965809277261, 0.4082482904638631], CesiumMath.EPSILON7);
     });
 
-    it ('computeBinormalAndTangent computes tangent and binormal for an BoxGeometry', function() {
+    it ('computeTangentAndBitangent computes tangent and bitangent for BoxGeometry', function() {
+        var geometry = BoxGeometry.createGeometry(new BoxGeometry({
+            vertexFormat : new VertexFormat({
+                position : true,
+                normal : true,
+                st : true
+            }),
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
+        }));
+        geometry = GeometryPipeline.computeTangentAndBitangent(geometry);
+        var actualTangents = geometry.attributes.tangent.values;
+        var actualBitangents = geometry.attributes.bitangent.values;
+
+        var expectedGeometry = BoxGeometry.createGeometry(new BoxGeometry({
+            vertexFormat: VertexFormat.ALL,
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
+        }));
+        var expectedTangents = expectedGeometry.attributes.tangent.values;
+        var expectedBitangents = expectedGeometry.attributes.bitangent.values;
+
+        expect(actualTangents.length).toEqual(expectedTangents.length);
+        expect(actualBitangents.length).toEqual(expectedBitangents.length);
+
+        for (var i = 0; i < actualTangents.length; i += 3) {
+            var actual = Cartesian3.fromArray(actualTangents, i);
+            var expected = Cartesian3.fromArray(expectedTangents, i);
+            expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
+
+            actual = Cartesian3.fromArray(actualBitangents, i);
+            expected = Cartesian3.fromArray(expectedBitangents, i);
+            expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
+        }
+    });
+
+    it ('computeBinormalAndTangent computes tangent and binormal for BoxGeometry', function() {
+        // This test is for the deprecated computeBinormalAndTangent API
+        // It tests to assert that the binormal attribute is set correctly and
+        // is a copy of the bitangent attribute
         var geometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat : new VertexFormat({
                 position : true,
@@ -1652,10 +1691,10 @@ defineSuite([
             minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         var expectedTangents = expectedGeometry.attributes.tangent.values;
-        var expectedBinormals = expectedGeometry.attributes.binormal.values;
+        var expectedBitangents = expectedGeometry.attributes.bitangent.values;
 
         expect(actualTangents.length).toEqual(expectedTangents.length);
-        expect(actualBinormals.length).toEqual(expectedBinormals.length);
+        expect(actualBinormals.length).toEqual(expectedBitangents.length);
 
         for (var i = 0; i < actualTangents.length; i += 3) {
             var actual = Cartesian3.fromArray(actualTangents, i);
@@ -1663,7 +1702,7 @@ defineSuite([
             expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
 
             actual = Cartesian3.fromArray(actualBinormals, i);
-            expected = Cartesian3.fromArray(expectedBinormals, i);
+            expected = Cartesian3.fromArray(expectedBitangents, i);
             expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
         }
     });
@@ -1770,28 +1809,28 @@ defineSuite([
         }
     });
 
-    it('compressVertices packs compressed tangents and binormals', function() {
+    it('compressVertices packs compressed tangents and bitangents', function() {
         var geometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat : new VertexFormat({
                 position : true,
                 normal : true,
                 tangent : true,
-                binormal : true
+                bitangent : true
             }),
             maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
             minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.normal).toBeDefined();
         expect(geometry.attributes.tangent).toBeDefined();
-        expect(geometry.attributes.binormal).toBeDefined();
+        expect(geometry.attributes.bitangent).toBeDefined();
         var originalNormals = Array.prototype.slice.call(geometry.attributes.normal.values);
         var originalTangents = Array.prototype.slice.call(geometry.attributes.tangent.values);
-        var originalBinormals = Array.prototype.slice.call(geometry.attributes.binormal.values);
+        var originalBitangents = Array.prototype.slice.call(geometry.attributes.bitangent.values);
 
         geometry = GeometryPipeline.compressVertices(geometry);
 
         expect(geometry.attributes.tangent).not.toBeDefined();
-        expect(geometry.attributes.binormal).not.toBeDefined();
+        expect(geometry.attributes.bitangent).not.toBeDefined();
         expect(geometry.attributes.compressedAttributes).toBeDefined();
 
         var compressedNormals = geometry.attributes.compressedAttributes.values;
@@ -1799,15 +1838,15 @@ defineSuite([
 
         var normal = new Cartesian3();
         var tangent = new Cartesian3();
-        var binormal = new Cartesian3();
+        var bitangent = new Cartesian3();
 
         for (var i = 0; i < compressedNormals.length; i += 2) {
             var compressed = Cartesian2.fromArray(compressedNormals, i, new Cartesian2());
-            AttributeCompression.octUnpack(compressed, normal, tangent, binormal);
+            AttributeCompression.octUnpack(compressed, normal, tangent, bitangent);
 
             expect(normal).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i / 2 * 3), CesiumMath.EPSILON2);
             expect(tangent).toEqualEpsilon(Cartesian3.fromArray(originalTangents, i / 2 * 3), CesiumMath.EPSILON2);
-            expect(binormal).toEqualEpsilon(Cartesian3.fromArray(originalBinormals, i / 2 * 3), CesiumMath.EPSILON2);
+            expect(bitangent).toEqualEpsilon(Cartesian3.fromArray(originalBitangents, i / 2 * 3), CesiumMath.EPSILON2);
         }
     });
 
@@ -2433,7 +2472,7 @@ defineSuite([
                         componentsPerAttribute : 3,
                         values : new Float32Array([-1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0])
                     }),
-                    binormal : new GeometryAttribute({
+                    bitangent : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
                         values : new Float32Array([0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0])
@@ -2458,8 +2497,8 @@ defineSuite([
         expect(instance.westHemisphereGeometry.attributes.position.values.length).toEqual(3 * 3);
         expect(instance.westHemisphereGeometry.attributes.normal).toBeDefined();
         expect(instance.westHemisphereGeometry.attributes.normal.values.length).toEqual(3 * 3);
-        expect(instance.westHemisphereGeometry.attributes.binormal).toBeDefined();
-        expect(instance.westHemisphereGeometry.attributes.binormal.values.length).toEqual(3 * 3);
+        expect(instance.westHemisphereGeometry.attributes.bitangent).toBeDefined();
+        expect(instance.westHemisphereGeometry.attributes.bitangent.values.length).toEqual(3 * 3);
         expect(instance.westHemisphereGeometry.attributes.tangent).toBeDefined();
         expect(instance.westHemisphereGeometry.attributes.tangent.values.length).toEqual(3 * 3);
         expect(instance.westHemisphereGeometry.attributes.st).toBeDefined();
@@ -2472,8 +2511,8 @@ defineSuite([
         expect(instance.eastHemisphereGeometry.attributes.position.values.length).toEqual(5 * 3);
         expect(instance.eastHemisphereGeometry.attributes.normal).toBeDefined();
         expect(instance.eastHemisphereGeometry.attributes.normal.values.length).toEqual(5 * 3);
-        expect(instance.eastHemisphereGeometry.attributes.binormal).toBeDefined();
-        expect(instance.eastHemisphereGeometry.attributes.binormal.values.length).toEqual(5 * 3);
+        expect(instance.eastHemisphereGeometry.attributes.bitangent).toBeDefined();
+        expect(instance.eastHemisphereGeometry.attributes.bitangent.values.length).toEqual(5 * 3);
         expect(instance.eastHemisphereGeometry.attributes.tangent).toBeDefined();
         expect(instance.eastHemisphereGeometry.attributes.tangent.values.length).toEqual(5 * 3);
         expect(instance.eastHemisphereGeometry.attributes.st).toBeDefined();

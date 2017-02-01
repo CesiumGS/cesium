@@ -1,12 +1,14 @@
 /*global define*/
 define([
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
         './EllipsoidOutlineGeometry'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         DeveloperError,
@@ -68,9 +70,7 @@ define([
      */
     SphereOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
+        Check.typeOf.object('value', value);
         //>>includeEnd('debug');
 
         return EllipsoidOutlineGeometry.pack(value._ellipsoidGeometry, array, startingIndex);

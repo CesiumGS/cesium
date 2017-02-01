@@ -469,6 +469,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             toolbar.appendChild(geocoderContainer);
             geocoder = new Geocoder({
                 container : geocoderContainer,
+                geocoderServices: defined(options.geocoder) ? (isArray(options.geocoder) ? options.geocoder : [options.geocoder]) : undefined,
                 scene : cesiumWidget.scene
             });
             // Subscribe to search so that we can clear the trackedEntity when it is clicked.
@@ -1264,6 +1265,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (defined(baseLayerPickerDropDown)) {
             baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
+        }
+
+        if (defined(this._geocoder)) {
+            var geocoderSuggestions = this._geocoder.searchSuggestionsContainer;
+            geocoderSuggestions.style.maxHeight = panelMaxHeight + 'px';
         }
 
         if (defined(this._infoBox)) {

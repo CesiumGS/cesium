@@ -357,7 +357,7 @@ defineSuite([
         var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
-        var quaternion = Transforms.headingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var actual = Matrix3.fromQuaternion(quaternion);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
     });
@@ -388,7 +388,7 @@ defineSuite([
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
         var result = new Quaternion();
-        var quaternion = Transforms.headingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
+        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, result);
         var actual = Matrix3.fromQuaternion(quaternion);
         expect(quaternion).toBe(result);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
@@ -899,6 +899,34 @@ defineSuite([
         expect(rotation2D).toEqualEpsilon(expected, CesiumMath.EPSILON3);
     });
 
+    it('wgs84To2DModelMatrix creates a model matrix to transform vertices centered origin to 2D', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new GeographicProjection(ellipsoid);
+        var origin = Cartesian3.fromDegrees(-72.0, 40.0, 100.0, ellipsoid);
+
+        var actual = Transforms.wgs84To2DModelMatrix(projection, origin, new Matrix4());
+        var expected = Matrix4.fromTranslation(origin);
+        Transforms.basisTo2D(projection, expected, expected);
+
+        var actualRotation = Matrix4.getRotation(actual, new Matrix3());
+        var expectedRotation = Matrix4.getRotation(expected, new Matrix3());
+        expect(actualRotation).toEqualEpsilon(expectedRotation, CesiumMath.EPSILON14);
+
+        var fromENU = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid, new Matrix4());
+        var toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
+        var toENUTranslation = Matrix4.getTranslation(toENU, new Cartesian4());
+        var projectedTranslation = Matrix4.getTranslation(expected, new Cartesian4());
+
+        var expectedTranslation = new Cartesian4();
+        expectedTranslation.x = projectedTranslation.x + toENUTranslation.z;
+        expectedTranslation.y = projectedTranslation.y + toENUTranslation.x;
+        expectedTranslation.z = projectedTranslation.z + toENUTranslation.y;
+
+        var actualTranslation = Matrix4.getTranslation(actual, new Cartesian4());
+
+        expect(actualTranslation).toEqualEpsilon(expectedTranslation, CesiumMath.EPSILON14);
+    });
+
     it('eastNorthUpToFixedFrame throws without an origin', function() {
         expect(function() {
             Transforms.eastNorthUpToFixedFrame(undefined, Ellipsoid.WGS84);
@@ -923,21 +951,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('headingPitchRollToFixedFrame throws without an heading', function() {
+    it('headingPitchRollToFixedFrame throws without a headingPitchRoll', function() {
         expect(function() {
-            Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, undefined, 0.0, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('headingPitchRollToFixedFrame throws without an pitch', function() {
-        expect(function() {
-            Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, 0.0, undefined, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('headingPitchRollToFixedFrame throws without an roll', function() {
-        expect(function() {
-            Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, 0.0, 0.0, undefined);
+            Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -980,6 +996,24 @@ defineSuite([
     it('basisTo2D throws without result', function() {
         expect(function() {
             Transforms.basisTo2D(new GeographicProjection(), Matrix4.IDENTITY, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it ('wgs84To2DModelMatrix throws without projection', function() {
+        expect(function() {
+            Transforms.wgs84To2DModelMatrix(undefined, Cartesian3.UNIT_X, new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it ('wgs84To2DModelMatrix throws without center', function() {
+        expect(function() {
+            Transforms.wgs84To2DModelMatrix(new GeographicProjection(), undefined, new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it ('wgs84To2DModelMatrix throws without result', function() {
+        expect(function() {
+            Transforms.wgs84To2DModelMatrix(new GeographicProjection(), Cartesian3.UNIT_X, undefined);
         }).toThrowDeveloperError();
     });
 });

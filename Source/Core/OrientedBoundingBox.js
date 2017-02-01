@@ -199,6 +199,7 @@ define([
     /**
      * Computes an OrientedBoundingBox given extents in the east-north-up space of the tangent plane.
      *
+     * @param {Plane} tangentPlane The tangent place corresponding to east-north-up.
      * @param {Number} minimumX Minimum X extent in tangent plane space.
      * @param {Number} maximumX Maximum X extent in tangent plane space.
      * @param {Number} minimumY Minimum Y extent in tangent plane space.
