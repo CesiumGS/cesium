@@ -420,17 +420,23 @@ define([
 
                     var current;
                     var scratchColor = new Color();
+                    var oldColor = new Color();
                     return function(feature) {
                         if (current !== feature) {
                             if (defined(current) && defined(current._batchTable) && !current._batchTable.isDestroyed()) {
                                 // Restore original color to feature that is no longer selected
                                 var frameState = that._scene.frameState;
-                                current.color = that._style.color.evaluateColor(frameState, current, scratchColor);
+                                if (!that._colorOverriden) {
+                                    current.color = that._style.color.evaluateColor(frameState, current, scratchColor);
+                                } else {
+                                    current.color = oldColor;
+                                }
                                 current = undefined;
                             }
                             if (defined(feature)) {
                                 // Highlight new feature
                                 current = feature;
+                                Color.clone(feature.color, oldColor);
                                 feature.color = that.highlightColor;
                             }
                         }
@@ -542,6 +548,12 @@ define([
                     }
                     return true;
                 });
+            }
+        },
+
+        _colorOverriden: {
+            get: function() {
+                return this.colorize;
             }
         }
     });
