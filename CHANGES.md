@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.31 - 2017-03-01
+
+* Enable rendering `GroundPrimitives` on hardware without the `EXT_frag_depth` extension; however, this could cause artifacts for certain viewing angles.
+
 ### 1.30 - 2017-02-01
 
 * Deprecated

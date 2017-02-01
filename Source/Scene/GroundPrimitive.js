@@ -84,9 +84,8 @@ define([
      * is supported at this time.
      * </p>
      * <p>
-     * Because of the cutting edge nature of this feature in WebGL, it requires the EXT_frag_depth extension, which is currently only supported in Chrome,
-     * Firefox, Edge, and Safari 10. It's not yet supported in iOS 10. Android support varies by hardware and IE11 will most likely never support
-     * it. You can use webglreport.com to verify support for your hardware.
+     * For correct rendering, this feature requires the EXT_frag_depth WebGL extension. For hardware that do not support this extension, there
+     * will be rendering artifacts for some viewing angles.
      * </p>
      * <p>
      * Valid geometries are {@link CircleGeometry}, {@link CorridorGeometry}, {@link EllipseGeometry}, {@link PolygonGeometry}, and {@link RectangleGeometry}.
