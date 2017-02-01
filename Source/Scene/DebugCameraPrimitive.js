@@ -159,32 +159,37 @@ define([
                 values : positions
             });
 
-            var offset;
+            var offset, idx;
 
             // Create the outline primitive
             var outlineIndices = new Uint16Array(8 * (2 * numFrustums + 1));
             // Build the far planes
             for (f = 0; f < numFrustums + 1; ++f) {
-                outlineIndices[f * 8] = f * 4;
-                outlineIndices[f * 8 + 1] = f * 4 + 1;
-                outlineIndices[f * 8 + 2] = f * 4 + 1;
-                outlineIndices[f * 8 + 3] = f * 4 + 2;
-                outlineIndices[f * 8 + 4] = f * 4 + 2;
-                outlineIndices[f * 8 + 5] = f * 4 + 3;
-                outlineIndices[f * 8 + 6] = f * 4 + 3;
-                outlineIndices[f * 8 + 7] = f * 4;
+                offset = f * 8;
+                idx = f * 4;
+
+                outlineIndices[offset] = idx;
+                outlineIndices[offset + 1] = idx + 1;
+                outlineIndices[offset + 2] = idx + 1;
+                outlineIndices[offset + 3] = idx + 2;
+                outlineIndices[offset + 4] = idx + 2;
+                outlineIndices[offset + 5] = idx + 3;
+                outlineIndices[offset + 6] = idx + 3;
+                outlineIndices[offset + 7] = idx;
             }
             // Build the sides of the frustums
             for (f = 0; f < numFrustums; ++f) {
                 offset = (numFrustums + 1 + f) * 8;
-                outlineIndices[offset] = f * 4;
-                outlineIndices[offset + 1] = f * 4 + 4;
-                outlineIndices[offset + 2] = f * 4 + 1;
-                outlineIndices[offset + 3] = f * 4 + 5;
-                outlineIndices[offset + 4] = f * 4 + 2;
-                outlineIndices[offset + 5] = f * 4 + 6;
-                outlineIndices[offset + 6] = f * 4 + 3;
-                outlineIndices[offset + 7] = f * 4 + 7;
+                idx = f * 4;
+
+                outlineIndices[offset] = idx;
+                outlineIndices[offset + 1] = idx + 4;
+                outlineIndices[offset + 2] = idx + 1;
+                outlineIndices[offset + 3] = idx + 5;
+                outlineIndices[offset + 4] = idx + 2;
+                outlineIndices[offset + 5] = idx + 6;
+                outlineIndices[offset + 6] = idx + 3;
+                outlineIndices[offset + 7] = idx + 7;
             }
 
             this._outlinePrimitive = new Primitive({
@@ -212,43 +217,48 @@ define([
             var planesIndices = new Uint16Array(6 * (5 * numFrustums + 1));
             // Build the far planes
             for (f = 0; f < numFrustums + 1; ++f) {
-                planesIndices[f * 6] = f * 4;
-                planesIndices[f * 6 + 1] = f * 4 + 1;
-                planesIndices[f * 6 + 2] = f * 4 + 2;
-                planesIndices[f * 6 + 3] = f * 4;
-                planesIndices[f * 6 + 4] = f * 4 + 2;
-                planesIndices[f * 6 + 5] = f * 4 + 3;
+                offset = f * 6;
+                idx = f * 4;
+
+                planesIndices[offset] = idx;
+                planesIndices[offset + 1] = idx + 1;
+                planesIndices[offset + 2] = idx + 2;
+                planesIndices[offset + 3] = idx;
+                planesIndices[offset + 4] = idx + 2;
+                planesIndices[offset + 5] = idx + 3;
             }
             // Build the sides of the frustums
             for (f = 0; f < numFrustums; ++f) {
                 offset = (numFrustums + 1 + 4 * f) * 6;
-                planesIndices[offset] = 4 * f + 4;
-                planesIndices[offset + 1] = 4 * f;
-                planesIndices[offset + 2] = 4 * f + 3;
-                planesIndices[offset + 3] = 4 * f + 4;
-                planesIndices[offset + 4] = 4 * f + 3;
-                planesIndices[offset + 5] = 4 * f + 7;
+                idx = f * 4;
 
-                planesIndices[offset + 6] = 4 * f + 4;
-                planesIndices[offset + 7] = 4 * f;
-                planesIndices[offset + 8] = 4 * f + 1;
-                planesIndices[offset + 9] = 4 * f + 4;
-                planesIndices[offset + 10] = 4 * f + 1;
-                planesIndices[offset + 11] = 4 * f + 5;
+                planesIndices[offset] = idx + 4;
+                planesIndices[offset + 1] = idx;
+                planesIndices[offset + 2] = idx + 3;
+                planesIndices[offset + 3] = idx + 4;
+                planesIndices[offset + 4] = idx + 3;
+                planesIndices[offset + 5] = idx + 7;
 
-                planesIndices[offset + 12] = 4 * f + 7;
-                planesIndices[offset + 13] = 4 * f + 3;
-                planesIndices[offset + 14] = 4 * f + 2;
-                planesIndices[offset + 15] = 4 * f + 7;
-                planesIndices[offset + 16] = 4 * f + 2;
-                planesIndices[offset + 17] = 4 * f + 6;
+                planesIndices[offset + 6] = idx + 4;
+                planesIndices[offset + 7] = idx;
+                planesIndices[offset + 8] = idx + 1;
+                planesIndices[offset + 9] = idx + 4;
+                planesIndices[offset + 10] = idx + 1;
+                planesIndices[offset + 11] = idx + 5;
 
-                planesIndices[offset + 18] = 4 * f + 6;
-                planesIndices[offset + 19] = 4 * f + 2;
-                planesIndices[offset + 20] = 4 * f + 1;
-                planesIndices[offset + 21] = 4 * f + 6;
-                planesIndices[offset + 22] = 4 * f + 1;
-                planesIndices[offset + 23] = 4 * f + 5;
+                planesIndices[offset + 12] = idx + 7;
+                planesIndices[offset + 13] = idx + 3;
+                planesIndices[offset + 14] = idx + 2;
+                planesIndices[offset + 15] = idx + 7;
+                planesIndices[offset + 16] = idx + 2;
+                planesIndices[offset + 17] = idx + 6;
+
+                planesIndices[offset + 18] = idx + 6;
+                planesIndices[offset + 19] = idx + 2;
+                planesIndices[offset + 20] = idx + 1;
+                planesIndices[offset + 21] = idx + 6;
+                planesIndices[offset + 22] = idx + 1;
+                planesIndices[offset + 23] = idx + 5;
             }
 
             this._planesPrimitive = new Primitive({
