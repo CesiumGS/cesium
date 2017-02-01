@@ -1536,15 +1536,6 @@ define([
 
         var unitPosition = Cartesian3.normalize(camera.position, zoom3DUnitPosition);
         handleZoom(controller, startPosition, movement, controller._zoomFactor, distance, Cartesian3.dot(unitPosition, camera.direction));
-
-        var frustum = camera.frustum;
-        if (frustum instanceof OrthographicFrustum) {
-            var ratio = frustum.right / frustum.top;
-            frustum.right = height * 0.5;
-            frustum.left = -frustum.right;
-            frustum.top = ratio * frustum.right * 0.3;
-            frustum.bottom = -frustum.top;
-        }
     }
 
     var tilt3DWindowPos = new Cartesian2();

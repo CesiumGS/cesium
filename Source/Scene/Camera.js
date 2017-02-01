@@ -25,6 +25,7 @@ define([
         '../Core/Transforms',
         './CameraFlightPath',
         './MapMode2D',
+        './OrthographicFrustum',
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
@@ -53,6 +54,7 @@ define([
         Transforms,
         CameraFlightPath,
         MapMode2D,
+        OrthographicFrustum,
         PerspectiveFrustum,
         SceneMode) {
     'use strict';
@@ -905,8 +907,10 @@ define([
             updateFrustum = this._mode === SceneMode.SCENE2D;
         }
 
+        var frustum;
+        var ratio;
         if (updateFrustum) {
-            var frustum = this._max2Dfrustum = this.frustum.clone();
+            frustum = this._max2Dfrustum = this.frustum.clone();
 
             //>>includeStart('debug', pragmas.debug);
             if (!defined(frustum.left) || !defined(frustum.right) || !defined(frustum.top) || !defined(frustum.bottom)) {
@@ -915,15 +919,11 @@ define([
             //>>includeEnd('debug');
 
             var maxZoomOut = 2.0;
-            var ratio = frustum.top / frustum.right;
+            ratio = frustum.top / frustum.right;
             frustum.right = this._maxCoord.x * maxZoomOut;
             frustum.left = -frustum.right;
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
-        }
-
-        if (this._mode === SceneMode.SCENE2D) {
-            clampMove2D(this, this.position);
         }
 
         var globe = this._scene.globe;
@@ -932,6 +932,18 @@ define([
             this._suspendTerrainAdjustment = !globeFinishedUpdating;
         }
         this._adjustHeightForTerrain();
+
+        frustum = this.frustum;
+        if (this._mode === SceneMode.SCENE2D) {
+            clampMove2D(this, this.position);
+        } else if (frustum instanceof OrthographicFrustum) {
+            ratio = this._scene.drawingBufferWidth / this._scene.drawingBufferHeight;
+            frustum.right = this.positionCartographic.height * 0.5;
+            frustum.left = -frustum.right;
+            // TODO ORTHO
+            frustum.top = ratio * frustum.right * 0.3;
+            frustum.bottom = -frustum.top;
+        }
     };
 
     var setTransformPosition = new Cartesian3();

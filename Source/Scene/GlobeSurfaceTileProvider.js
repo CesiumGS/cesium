@@ -476,7 +476,7 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
         // TODO ORTHO
-        return Visibility.FULL;
+        //return Visibility.FULL;
 
         var distance = this.computeDistanceToTile(tile, frameState);
         tile._distance = distance;

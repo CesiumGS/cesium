@@ -167,8 +167,14 @@ define([
             return undefined;
         }
 
-        if ((frameState.mode !== SceneMode.SCENE3D) &&
-            (frameState.mode !== SceneMode.MORPHING)) {
+        // TODO ORTHO
+        var mode = frameState.mode;
+        if (mode !== SceneMode.SCENE2D && !defined(frameState.camera.frustum.fov)) {
+            return undefined;
+        }
+
+        if ((mode !== SceneMode.SCENE3D) &&
+            (mode !== SceneMode.MORPHING)) {
             return undefined;
         }
 
@@ -305,7 +311,7 @@ define([
      *
      * @example
      * skyAtmosphere = skyAtmosphere && skyAtmosphere.destroy();
-     * 
+     *
      * @see SkyAtmosphere#isDestroyed
      */
     SkyAtmosphere.prototype.destroy = function() {
