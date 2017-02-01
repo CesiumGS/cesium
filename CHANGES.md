@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+### 1.31 - 2017-03-01
+* Added support to `DebugCameraPrimitive` to draw multifrustum planes. The attribute `debugShowFrustumPlanes` of `Scene` and `frustumPlanes` of `CesiumInspector` toggles this. `FrameState` has been augmented to include `frustumSplits` which is a `Number[]` of the near/far planes of the camera frustums.
+
 ### 1.30 - 2017-02-01
 
 * Deprecated
@@ -32,7 +35,6 @@ Change Log
 * The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.
 * Fixed a bug that would cause a crash when `debugShowFrustums` is enabled with OIT. [#4864](https://github.com/AnalyticalGraphicsInc/cesium/pull/4864)
 * Added the ability to run the unit tests with a [WebGL Stub](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/TestingGuide#run-with-webgl-stub), which makes all WebGL calls a noop and ignores test expectations that rely on reading back from WebGL.  Use the web link from the main index.html or run with `npm run test-webgl-stub`.
-* Added support to `DebugCameraPrimitive` to draw multifrustum planes. `CesiumInspector` also displays this toggle.
 
 ### 1.29 - 2017-01-02
 
