@@ -2087,8 +2087,15 @@ define([
         Cartesian3.normalize(right, right);
         var up = Cartesian3.cross(right, direction, cameraRF.up);
 
-        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
-        var tanTheta = camera.frustum.aspectRatio * tanPhi;
+        var tanPhi;
+        var tanTheta;
+        if (camera.frustum instanceof OrthographicFrustum) {
+            // TODO ORTHO
+            tanPhi = tanTheta = 0.5;
+        } else {
+            tanPhi = Math.tan(camera.frustum.fovy * 0.5);
+            tanTheta = camera.frustum.aspectRatio * tanPhi;
+        }
 
         var d = Math.max(
             computeD(direction, up, northWest, tanPhi),
