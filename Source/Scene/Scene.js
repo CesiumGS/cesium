@@ -1097,6 +1097,18 @@ define([
         }
     });
 
+    /**
+     * Determines if a compressed texture format is supported.
+     * @param {String} format The texture format. May be the name of the format or the WebGL extension name, e.g. s3tc or WEBGL_compressed_texture_s3tc.
+     * @return {boolean} Whether or not the format is supported.
+     */
+    Scene.prototype.getCompressedTextureFormatSupported = function(format) {
+        var context = this.context;
+        return ((format === 'WEBGL_compressed_texture_s3tc' || format === 's3tc') && context.s3tc) ||
+               ((format === 'WEBGL_compressed_texture_pvrtc' || format === 'pvrtc') && context.pvrtc) ||
+               ((format === 'WEBGL_compressed_texture_etc1' || format === 'etc1') && context.etc1);
+    };
+
     var scratchPosition0 = new Cartesian3();
     var scratchPosition1 = new Cartesian3();
     function maxComponent(a, b) {

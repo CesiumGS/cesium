@@ -4,6 +4,11 @@ Change Log
 ### 1.31 - 2017-03-01
 
 * Enable rendering `GroundPrimitives` on hardware without the `EXT_frag_depth` extension; however, this could cause artifacts for certain viewing angles.
+* Added compressed texture support. [#4758](https://github.com/AnalyticalGraphicsInc/cesium/pull/4758)
+   * glTF models and imagery layers can now reference [KTX](https://www.khronos.org/opengles/sdk/tools/KTX/) textures and textures compressed with [crunch](https://github.com/BinomialLLC/crunch).
+   * Added `loadKTX`, to load KTX textures, and `loadCRN` to load crunch compressed textures.
+   * Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_s3tc`, `WEBGL_compressed_texture_pvrtc`, and `WEBGL_compressed_texture_etc1`.
+   * Added `CompressedTextureBuffer`.
 
 ### 1.30 - 2017-02-01
 
