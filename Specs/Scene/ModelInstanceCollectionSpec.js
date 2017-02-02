@@ -165,7 +165,7 @@ defineSuite([
         expectColor = defaultValue(expectColor, true);
 
         collection.show = false;
-        expect(scene.renderForSpecs(time)).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         collection.show = true;
 
         // Verify each instance
@@ -173,9 +173,15 @@ defineSuite([
         for (var i = 0; i < length; ++i) {
             zoomTo(collection, i);
             if (expectColor) {
-                expect(scene.renderForSpecs(time)).not.toEqual([0, 0, 0, 255]);
+                expect({
+                    scene : scene,
+                    time : time
+                }).notToRender([0, 0, 0, 255]);
             } else {
-                expect(scene.renderForSpecs(time)).toEqual([0, 0, 0, 255]);
+                expect({
+                    scene : scene,
+                    time : time
+                }).toRender([0, 0, 0, 255]);
             }
         }
     }
@@ -210,7 +216,10 @@ defineSuite([
             expect(collection._cull).toEqual(true);
             expect(collection._model).toBeDefined();
             expect(collection._model.ready).toEqual(true);
-            expect(collection._model.cacheKey).toEqual(boxUrl + '#instanced');
+
+            if (collection._instancingSupported) {
+                expect(collection._model.cacheKey).toEqual(boxUrl + '#instanced');
+            }
         });
     });
 
@@ -469,10 +478,12 @@ defineSuite([
                 }
             }
 
-            // Check that vertex arrays are different, since each collection has a unique vertex buffer for instanced attributes.
-            for (name in resourcesFirst.vertexArrays) {
-                if (resourcesFirst.vertexArrays.hasOwnProperty(name)) {
-                    expect(resourcesFirst.vertexArrays[name]).not.toEqual(resourcesSecond.vertexArrays[name]);
+            if (collections[0]._instancingSupported) {
+                // Check that vertex arrays are different, since each collection has a unique vertex buffer for instanced attributes.
+                for (name in resourcesFirst.vertexArrays) {
+                    if (resourcesFirst.vertexArrays.hasOwnProperty(name)) {
+                        expect(resourcesFirst.vertexArrays[name]).not.toEqual(resourcesSecond.vertexArrays[name]);
+                    }
                 }
             }
         });

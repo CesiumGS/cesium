@@ -45,43 +45,50 @@ define([
         return string + whitespace;
     }
 
-    function expectRender(scene, tileset) {
+    Cesium3DTilesTester.expectRender = function(scene, tileset, callback) {
         tileset.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         tileset.show = true;
-        var pixelColor = scene.renderForSpecs();
-        expect(pixelColor).not.toEqual([0, 0, 0, 255]);
-        return pixelColor;
-    }
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+            if (defined(callback)) {
+                callback(rgba);
+            }
+        });
+    };
 
-    function expectRenderBlank(scene, tileset) {
+    Cesium3DTilesTester.expectRenderBlank = function(scene, tileset) {
         tileset.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         tileset.show = true;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-    }
+        expect(scene).toRender([0, 0, 0, 255]);
+    };
 
     Cesium3DTilesTester.expectRenderTileset = function(scene, tileset) {
         // Verify render before being picked
-        expectRender(scene, tileset);
+        Cesium3DTilesTester.expectRender(scene, tileset);
 
-        // Change the color of the picked feature to yellow
-        var picked = scene.pickForSpecs();
-        expect(picked).toBeDefined();
-        picked.color = Color.clone(Color.YELLOW, picked.color);
+        // Pick a feature
+        expect(scene).toPickAndCall(function(result) {
+            expect(result).toBeDefined();
 
-        // Expect the pixel color to be some shade of yellow
-        var pixelColor = expectRender(scene, tileset);
-        expect(pixelColor[0]).toBeGreaterThan(0);
-        expect(pixelColor[1]).toBeGreaterThan(0);
-        expect(pixelColor[2]).toEqual(0);
-        expect(pixelColor[3]).toEqual(255);
+            // Change the color of the picked feature to yellow
+            result.color = Color.clone(Color.YELLOW, result.color);
 
-        // Turn show off and on
-        picked.show = false;
-        expectRenderBlank(scene, tileset);
-        picked.show = true;
-        expectRender(scene, tileset);
+            // Expect the pixel color to be some shade of yellow
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[1]).toBeGreaterThan(0);
+                expect(rgba[2]).toEqual(0);
+                expect(rgba[3]).toEqual(255);
+            });
+
+            // Turn show off and on
+            result.show = false;
+            Cesium3DTilesTester.expectRenderBlank(scene, tileset);
+            result.show = true;
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     };
 
     Cesium3DTilesTester.waitForTilesLoaded = function(scene, tileset) {
