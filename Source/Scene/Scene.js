@@ -1098,7 +1098,7 @@ define([
 
          /**
          * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
-         * @memberof Scene.prototype.
+         * @memberof Scene.prototype
          *
          * @type {Number}
          */
@@ -1112,6 +1112,18 @@ define([
             }
         }
     });
+
+    /**
+     * Determines if a compressed texture format is supported.
+     * @param {String} format The texture format. May be the name of the format or the WebGL extension name, e.g. s3tc or WEBGL_compressed_texture_s3tc.
+     * @return {boolean} Whether or not the format is supported.
+     */
+    Scene.prototype.getCompressedTextureFormatSupported = function(format) {
+        var context = this.context;
+        return ((format === 'WEBGL_compressed_texture_s3tc' || format === 's3tc') && context.s3tc) ||
+               ((format === 'WEBGL_compressed_texture_pvrtc' || format === 'pvrtc') && context.pvrtc) ||
+               ((format === 'WEBGL_compressed_texture_etc1' || format === 'etc1') && context.etc1);
+    };
 
     var scratchPosition0 = new Cartesian3();
     var scratchPosition1 = new Cartesian3();
@@ -2216,6 +2228,7 @@ define([
     }
 
     function updateDebugFrustumPlanes(scene) {
+        var frameState = scene._frameState;
         if (scene.debugShowFrustumPlanes !== scene._debugShowFrustumPlanes) {
             if (scene.debugShowFrustumPlanes) {
                 scene._debugFrustumPlanes = new DebugCameraPrimitive({
