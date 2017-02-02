@@ -475,13 +475,10 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
-        // TODO ORTHO
-        //return Visibility.FULL;
-
         var distance = this.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
-        var ortho3D = frameState.mode !== SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
+        var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
 
         if (frameState.fog.enabled && !ortho3D) {
             if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
