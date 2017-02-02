@@ -235,6 +235,13 @@ define([
         * @default 0.0
         */
         this.imagerySplitPosition = 0.0;
+
+        /**
+         * Distances to the near and far planes of the camera frustums
+         * @type {Number[]}
+         * @default []
+         */
+        this.frustumSplits = [];
     }
 
     /**
