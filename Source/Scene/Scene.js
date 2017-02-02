@@ -2685,9 +2685,7 @@ define([
         } else if (defined(camera.frustum.infiniteProjectionMatrix)){
             frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
         } else {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('2D is not supported. An orthographic projection matrix is not invertible.');
-            //>>includeEnd('debug');
+            frustum = camera.frustum.clone(scratchOrthographicFrustum);
         }
 
         var numFrustums = this.numberOfFrustums;

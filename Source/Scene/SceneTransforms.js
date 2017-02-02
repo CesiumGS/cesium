@@ -10,6 +10,7 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Transforms',
+        './OrthographicFrustum',
         './SceneMode'
     ], function(
         BoundingRectangle,
@@ -22,6 +23,7 @@ define([
         CesiumMath,
         Matrix4,
         Transforms,
+        OrthographicFrustum,
         SceneMode) {
     'use strict';
 
@@ -320,11 +322,24 @@ define([
         ndc.z = (depth * 2.0) - 1.0;
         ndc.w = 1.0;
 
-        var worldCoords = Matrix4.multiplyByVector(uniformState.inverseViewProjection, ndc, scratchWorldCoords);
+        var worldCoords;
+        var frustum = scene.camera.frustum;
+        if (frustum instanceof OrthographicFrustum) {
+            var currentFrustum = uniformState.currentFrustum;
+            worldCoords = scratchWorldCoords;
+            worldCoords.x = (ndc.x * (frustum.right - frustum.left) + frustum.left + frustum.right) * 0.5;
+            worldCoords.y = (ndc.y * (frustum.top - frustum.bottom) + frustum.bottom + frustum.top) * 0.5;
+            worldCoords.z = (ndc.z * (currentFrustum.x - currentFrustum.y) - currentFrustum.x - currentFrustum.y) * 0.5;
+            worldCoords.w = 1.0;
 
-        // Reverse perspective divide
-        var w = 1.0 / worldCoords.w;
-        Cartesian3.multiplyByScalar(worldCoords, w, worldCoords);
+            worldCoords = Matrix4.multiplyByVector(uniformState.inverseView, worldCoords, worldCoords);
+        } else {
+            worldCoords = Matrix4.multiplyByVector(uniformState.inverseViewProjection, ndc, scratchWorldCoords);
+
+            // Reverse perspective divide
+            var w = 1.0 / worldCoords.w;
+            Cartesian3.multiplyByScalar(worldCoords, w, worldCoords);
+        }
 
         return Cartesian3.fromCartesian4(worldCoords, result);
     };

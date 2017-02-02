@@ -2718,7 +2718,7 @@ define([
             if (radius === 0.0) {
                 offset.range = MINIMUM_ZOOM;
             } else {
-                offset.range = camera._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(camera, radius) : distanceToBoundingSphere3D(camera, radius);
+                offset.range = camera.frustum instanceof OrthographicFrustum ? distanceToBoundingSphere2D(camera, radius) : distanceToBoundingSphere3D(camera, radius);
             }
         }
 
