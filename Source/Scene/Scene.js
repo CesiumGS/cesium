@@ -2215,6 +2215,24 @@ define([
         }
     }
 
+    function updateDebugFrustumPlanes(scene) {
+        if (scene.debugShowFrustumPlanes !== scene._debugShowFrustumPlanes) {
+            if (scene.debugShowFrustumPlanes) {
+                scene._debugFrustumPlanes = new DebugCameraPrimitive({
+                    camera: scene.camera,
+                    updateOnChange: false
+                });
+            } else {
+                scene._debugFrustumPlanes = scene._debugFrustumPlanes && scene._debugFrustumPlanes.destroy();
+            }
+            scene._debugShowFrustumPlanes = scene.debugShowFrustumPlanes;
+        }
+
+        if (defined(scene._debugFrustumPlanes)) {
+            scene._debugFrustumPlanes.update(frameState);
+        } 
+    }
+
     function updateShadowMaps(scene) {
         var frameState = scene._frameState;
         var shadowMaps = frameState.shadowMaps;
@@ -2266,22 +2284,7 @@ define([
         scene._groundPrimitives.update(frameState);
         scene._primitives.update(frameState);
 
-        if (scene.debugShowFrustumPlanes !== scene._debugShowFrustumPlanes) {
-            if (scene.debugShowFrustumPlanes) {
-                scene._debugFrustumPlanes = new DebugCameraPrimitive({
-                    camera: scene.camera,
-                    updateOnChange: false
-                });
-            } else {
-                scene._debugFrustumPlanes = scene._debugFrustumPlanes && scene._debugFrustumPlanes.destroy();
-            }
-            scene._debugShowFrustumPlanes = scene.debugShowFrustumPlanes;
-        }
-
-        if (defined(scene._debugFrustumPlanes)) {
-            scene._debugFrustumPlanes.update(frameState);
-        }
-
+        updateDebugFrustumPlanes(scene);
         updateShadowMaps(scene);
 
         if (scene._globe) {
