@@ -857,13 +857,17 @@ define([
         this._blendOption = this.blendOption;
 
         if (blendOptionChanged) {
-            this._rsOpaque = RenderState.fromCache({
-                depthTest : {
-                    enabled : true,
-                    func : WebGLConstants.LEQUAL
-                },
-                depthMask : true
-            });
+            if (this._blendOption === BlendOption.OPAQUE || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
+                this._rsOpaque = RenderState.fromCache({
+                    depthTest : {
+                        enabled : true,
+                        func : WebGLConstants.LEQUAL
+                    },
+                    depthMask : true
+                });
+            } else {
+                this._rsOpaque = undefined;
+            }
 
             if (this._blendOption === BlendOption.TRANSLUCENT || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
                 this._rsTranslucent = RenderState.fromCache({
@@ -897,7 +901,7 @@ define([
                 vs.defines.push('DISTANCE_DISPLAY_CONDITION');
             }
 
-            if (this._blendOption === BlendOption.OPAQUE || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
+            if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
                 fs = new ShaderSource({
                     defines : ['OPAQUE'],
                     sources : [PointPrimitiveCollectionFS]
@@ -909,12 +913,7 @@ define([
                     fragmentShaderSource : fs,
                     attributeLocations : attributeLocations
                 });
-            } else {
-                this._sp = this._sp && this._sp.destroy();
-                this._sp = undefined;
-            }
 
-            if (this._blendOption === BlendOption.TRANSLUCENT || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
                 fs = new ShaderSource({
                     defines : ['TRANSLUCENT'],
                     sources : [PointPrimitiveCollectionFS]
@@ -926,9 +925,32 @@ define([
                     fragmentShaderSource : fs,
                     attributeLocations : attributeLocations
                 });
-            } else {
-                this._spTranslucent = this._spTranslucent && this._spTranslucent.destroy();
-                this._spTranslucent = undefined;
+            }
+
+            if (this._blendOption === BlendOption.OPAQUE) {
+                fs = new ShaderSource({
+                    sources : [PointPrimitiveCollectionFS]
+                });
+                this._sp = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._sp,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+            }
+
+            if (this._blendOption === BlendOption.TRANSLUCENT) {
+                fs = new ShaderSource({
+                    sources : [PointPrimitiveCollectionFS]
+                });
+                this._spTranslucent = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._spTranslucent,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
             }
 
             this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
@@ -1003,7 +1025,7 @@ define([
                 }
 
                 command.primitiveType = PrimitiveType.POINTS;
-                command.pass = opaqueCommand ? Pass.OPAQUE : Pass.TRANSLUCENT;
+                command.pass = opaqueCommand || !opaqueAndTranslucent ? Pass.OPAQUE : Pass.TRANSLUCENT;
                 command.owner = this;
 
                 var index = opaqueAndTranslucent ? Math.floor(j / 2.0) : j;
