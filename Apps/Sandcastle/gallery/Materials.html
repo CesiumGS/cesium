@@ -206,12 +206,11 @@ function applyCompressedTextureMaterial(primitive, scene) {
     Sandcastle.declare(applyCompressedTextureMaterial); // For highlighting in Sandcastle.
 
     var compressedImageUrl;
-    var context = scene.context;
-    if (context.s3tc) {
+    if (scene.getCompressedTextureFormatSupported('s3tc')) {
         compressedImageUrl = '../images/LogoDXT1.ktx';
-    } else if (context.etc1) {
+    } else if (scene.getCompressedTextureFormatSupported('etc1')) {
         compressedImageUrl = '../images/LogoETC1.ktx';
-    } else if (context.pvrtc) {
+    } else if (scene.getCompressedTextureFormatSupported('pvrtc')) {
         compressedImageUrl = '../images/LogoPVR.ktx';
     }
 
@@ -473,7 +472,7 @@ function createButtons(scene) {
             Sandcastle.highlight(applyPolylineOutlineMaterial);
         }
     }]);
-    
+
     document.getElementById('toolbar').style.width = '10%';
 }
 

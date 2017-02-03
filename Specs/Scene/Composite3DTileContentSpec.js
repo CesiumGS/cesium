@@ -37,54 +37,50 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    function expectRender(tileset) {
-        tileset.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-        tileset.show = true;
-        var pixelColor = scene.renderForSpecs();
-        expect(pixelColor).not.toEqual([0, 0, 0, 255]);
-        return pixelColor;
-    }
-
-    function expectRenderBlank(tileset) {
-        tileset.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-        tileset.show = true;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-    }
-
     function expectRenderComposite(tileset) {
-        expectRender(tileset);
+        Cesium3DTilesTester.expectRender(scene, tileset);
 
-        // Change the color of the picked building to yellow
-        var pickedBuilding = scene.pickForSpecs();
-        expect(pickedBuilding).toBeDefined();
-        pickedBuilding.color = Color.clone(Color.YELLOW, pickedBuilding.color);
+        expect(scene).toPickAndCall(function(result) {
+            // Pick a building
+            var pickedBuilding = result;
+            expect(pickedBuilding).toBeDefined();
 
-        // Expect building to be some shade of yellow
-        var pixelColor = expectRender(tileset);
-        expect(pixelColor[0]).toBeGreaterThan(0);
-        expect(pixelColor[1]).toBeGreaterThan(0);
-        expect(pixelColor[2]).toEqual(0);
-        expect(pixelColor[3]).toEqual(255);
+            // Change the color of the picked building to yellow
+            pickedBuilding.color = Color.clone(Color.YELLOW, pickedBuilding.color);
 
-        // Both a building and instance are located at the center, hide the building and pick the instance
-        pickedBuilding.show = false;
-        var pickedInstance = scene.pickForSpecs();
-        expect(pickedInstance).toBeDefined();
-        expect(pickedInstance).not.toEqual(pickedBuilding);
-        pickedInstance.color = Color.clone(Color.GREEN, pickedInstance.color);
+            // Expect the pixel color to be some shade of yellow
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[1]).toBeGreaterThan(0);
+                expect(rgba[2]).toEqual(0);
+                expect(rgba[3]).toEqual(255);
+            });
 
-        // Expect instance to be some shade of green
-        pixelColor = expectRender(tileset);
-        expect(pixelColor[0]).toEqual(0);
-        expect(pixelColor[1]).toBeGreaterThan(0);
-        expect(pixelColor[2]).toEqual(0);
-        expect(pixelColor[3]).toEqual(255);
+            // Both a building and instance are located at the center, hide the building and pick the instance
+            pickedBuilding.show = false;
 
-        // Hide the instance, and expect the render to be blank
-        pickedInstance.show = false;
-        expectRenderBlank(tileset);
+            var pickedInstance;
+            expect(scene).toPickAndCall(function(result) {
+                pickedInstance = result;
+                expect(pickedInstance).toBeDefined();
+                expect(pickedInstance).not.toEqual(pickedBuilding);
+            });
+
+            // Change the color of the picked instance to green
+            pickedInstance.color = Color.clone(Color.GREEN, pickedInstance.color);
+
+            // Expect the pixel color to be some shade of green
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                expect(rgba[0]).toEqual(0);
+                expect(rgba[1]).toBeGreaterThan(0);
+                expect(rgba[2]).toEqual(0);
+                expect(rgba[3]).toEqual(255);
+            });
+
+            // Hide the instance, and expect the render to be blank
+            pickedInstance.show = false;
+            Cesium3DTilesTester.expectRenderBlank(scene, tileset);
+        });
     }
 
     it('throws with invalid magic', function() {
@@ -130,7 +126,7 @@ defineSuite([
     it('rejects readyPromise on failed request', function() {
         return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('cmpt');
     });
-    
+
     it('renders composite', function() {
         return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(expectRenderComposite);
     });
