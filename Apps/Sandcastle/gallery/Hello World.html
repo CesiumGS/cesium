@@ -28,7 +28,6 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
 var camera = viewer.camera;
 var frustum = camera.frustum = new Cesium.OrthographicFrustum();

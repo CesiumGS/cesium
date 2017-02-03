@@ -1,20 +1,14 @@
 /*global define*/
 define([
-    '../Core/Cartesian3',
-    '../Core/Cartesian4',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/Matrix4',
-    './OrthographicOffCenterFrustum'
-], function(
-    Cartesian3,
-    Cartesian4,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Matrix4,
-    OrthographicOffCenterFrustum) {
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        './OrthographicOffCenterFrustum'
+    ], function(
+        defined,
+        defineProperties,
+        DeveloperError,
+        OrthographicOffCenterFrustum) {
     'use strict';
 
     /**

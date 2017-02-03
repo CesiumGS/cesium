@@ -167,12 +167,7 @@ define([
             return undefined;
         }
 
-        // TODO ORTHO
         var mode = frameState.mode;
-        if (mode !== SceneMode.SCENE2D && !defined(frameState.camera.frustum.fov)) {
-            return undefined;
-        }
-
         if ((mode !== SceneMode.SCENE3D) &&
             (mode !== SceneMode.MORPHING)) {
             return undefined;
