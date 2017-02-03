@@ -2310,8 +2310,6 @@ define([
 
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
         var useOIT = environmentState.useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
-        // TODO ORTHO
-        environmentState.useOIT = useOIT = useOIT && !(scene.camera.frustum instanceof OrthographicFrustum);
         if (useOIT) {
             scene._oit.update(context, scene._globeDepth.framebuffer);
             scene._oit.clear(context, passState, clearColor);

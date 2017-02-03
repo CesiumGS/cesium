@@ -13,6 +13,7 @@ define([
         '../Core/Matrix4',
         '../Core/Simon1994PlanetaryPositions',
         '../Core/Transforms',
+        '../Scene/OrthographicFrustum',
         '../Scene/SceneMode'
     ], function(
         BoundingRectangle,
@@ -28,6 +29,7 @@ define([
         Matrix4,
         Simon1994PlanetaryPositions,
         Transforms,
+        OrthographicFrustum,
         SceneMode) {
     'use strict';
 
@@ -147,6 +149,7 @@ define([
         this._frustum2DWidth = 0.0;
         this._eyeHeight2D = new Cartesian2();
         this._resolutionScale = 1.0;
+        this._orthographicIn3D = false;
 
         this._fogDensity = undefined;
 
@@ -896,6 +899,8 @@ define([
         this._entireFrustum.x = camera.frustum.near;
         this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
+
+        this._orthographicIn3D = this._mode !== SceneMode.SCENE2D && camera.frustum instanceof OrthographicFrustum;
     };
 
     /**
@@ -995,10 +1000,10 @@ define([
         if (uniformState._inverseProjectionOITDirty) {
             uniformState._inverseProjectionOITDirty = false;
 
-            if (uniformState._mode !== SceneMode.SCENE2D && uniformState._mode !== SceneMode.MORPHING) {
+            if (uniformState._mode !== SceneMode.SCENE2D && uniformState._mode !== SceneMode.MORPHING && !uniformState._orthographicIn3D) {
                 Matrix4.inverse(uniformState._projection, uniformState._inverseProjectionOIT);
             } else {
-                Matrix4.clone(Matrix4.IDENTITY, uniformState._inverseProjectionOIT);
+                Matrix4.clone(Matrix4.ZERO, uniformState._inverseProjectionOIT);
             }
         }
     }
