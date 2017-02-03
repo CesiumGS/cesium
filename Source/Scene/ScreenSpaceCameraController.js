@@ -22,7 +22,6 @@ define([
         './CameraEventAggregator',
         './CameraEventType',
         './MapMode2D',
-        './OrthographicFrustum',
         './SceneMode',
         './SceneTransforms',
         './TweenCollection'
@@ -49,7 +48,6 @@ define([
         CameraEventAggregator,
         CameraEventType,
         MapMode2D,
-        OrthographicFrustum,
         SceneMode,
         SceneTransforms,
         TweenCollection) {
@@ -798,10 +796,8 @@ define([
             return undefined;
         }
 
-        // TODO ORTHO
         var depthIntersection;
-        var orthoFrustum = camera.frustum instanceof OrthographicFrustum;
-        if (scene.pickPositionSupported && !orthoFrustum) {
+        if (scene.pickPositionSupported) {
             depthIntersection = scene.pickPosition(mousePosition, scratchDepthIntersection);
         }
 
