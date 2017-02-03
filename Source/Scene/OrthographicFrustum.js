@@ -88,9 +88,14 @@ define([
             frustum._near = frustum.near;
             frustum._far = frustum.far;
 
+            var ratio = frustum.aspectRatio;
+            if (ratio > 1.0) {
+                ratio = 1.0 / frustum.aspectRatio;
+            }
+
             f.right = frustum.width * 0.5;
             f.left = -f.right;
-            f.top = frustum.aspectRatio * f.right;
+            f.top = ratio * f.right;
             f.bottom = -f.top;
             f.near = frustum.near;
             f.far = frustum.far;

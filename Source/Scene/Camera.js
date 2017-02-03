@@ -938,7 +938,6 @@ define([
             clampMove2D(this, this.position);
         } else if (frustum instanceof OrthographicFrustum) {
             frustum.width = Matrix4.equals(Matrix4.IDENTITY, this._transform) ? this.positionCartographic.height : Cartesian3.magnitude(this.position);
-            frustum.aspectRatio = this._scene.drawingBufferWidth / this._scene.drawingBufferHeight * 0.3;
         }
     };
 
