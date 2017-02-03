@@ -937,8 +937,9 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, this.position);
         } else if (frustum instanceof OrthographicFrustum) {
+            var distance = Matrix4.equals(Matrix4.IDENTITY, this._transform) ? this.positionCartographic.height : Cartesian3.magnitude(this.position);
             ratio = this._scene.drawingBufferWidth / this._scene.drawingBufferHeight;
-            frustum.right = this.positionCartographic.height * 0.5;
+            frustum.right = distance * 0.5;
             frustum.left = -frustum.right;
             // TODO ORTHO
             frustum.top = ratio * frustum.right * 0.3;
