@@ -175,6 +175,7 @@ define([
                 subscribe: function(val) {
                     if (that._tileset) {
                         that._tileset.debugFreezeFrame = val;
+                        that._scene.debugShowFrustumPlanes = val;
                     }
                 }
             },
