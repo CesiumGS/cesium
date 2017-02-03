@@ -160,24 +160,18 @@ var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 handler.setInputAction(function(movement) {
     var feature = inspectorViewModel.feature;
     if (Cesium.defined(feature)) {
-        if (feature.getProperty('clicked')) {
-            console.log('already clicked');
-        } else {
-            var properties = feature.primitive.properties; // get properties from tileset
-            if (Cesium.defined(properties)) {
-                for (var name in properties) {
-                    if (properties.hasOwnProperty(name)) {
-                        console.log(name + ': ' + feature.getProperty(name));
-                    }
+        var properties = feature.primitive.properties; // get properties from tileset
+        if (Cesium.defined(properties)) {
+            for (var name in properties) {
+                if (properties.hasOwnProperty(name)) {
+                    console.log(name + ': ' + feature.getProperty(name));
                 }
             }
+        }
 
-            // evaluate feature description
-            if (Cesium.defined(tileset.style.meta.description)) {
-                console.log("Description : " + tileset.style.meta.description.evaluate(scene.frameState, feature));
-            }
-
-            feature.setProperty('clicked', true);
+        // evaluate feature description
+        if (Cesium.defined(tileset.style.meta.description)) {
+            console.log("Description : " + tileset.style.meta.description.evaluate(scene.frameState, feature));
         }
     }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
