@@ -937,13 +937,8 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, this.position);
         } else if (frustum instanceof OrthographicFrustum) {
-            var distance = Matrix4.equals(Matrix4.IDENTITY, this._transform) ? this.positionCartographic.height : Cartesian3.magnitude(this.position);
-            ratio = this._scene.drawingBufferWidth / this._scene.drawingBufferHeight;
-            frustum.right = distance * 0.5;
-            frustum.left = -frustum.right;
-            // TODO ORTHO
-            frustum.top = ratio * frustum.right * 0.3;
-            frustum.bottom = -frustum.top;
+            frustum.width = Matrix4.equals(Matrix4.IDENTITY, this._transform) ? this.positionCartographic.height : Cartesian3.magnitude(this.position);
+            frustum.aspectRatio = this._scene.drawingBufferWidth / this._scene.drawingBufferHeight * 0.3;
         }
     };
 
@@ -2354,10 +2349,14 @@ define([
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
 
+        var frustum = camera.frustum;
+        if (!defined(frustum.top)) {
+            frustum = frustum._offCenterFrustum;
+        }
         var x = (2.0 / width) * windowPosition.x - 1.0;
-        x *= (camera.frustum.right - camera.frustum.left) * 0.5;
+        x *= (frustum.right - frustum.left) * 0.5;
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
-        y *= (camera.frustum.top - camera.frustum.bottom) * 0.5;
+        y *= (frustum.top - frustum.bottom) * 0.5;
 
         var origin = result.origin;
         Cartesian3.clone(camera.position, origin);
@@ -2690,6 +2689,9 @@ define([
 
     function distanceToBoundingSphere2D(camera, radius) {
         var frustum = camera.frustum;
+        if (!defined(frustum.top)) {
+            frustum = frustum._offCenterFrustum;
+        }
 
         var right, top;
         var ratio = frustum.right / frustum.top;
@@ -2718,8 +2720,10 @@ define([
             var radius = boundingSphere.radius;
             if (radius === 0.0) {
                 offset.range = MINIMUM_ZOOM;
+            } else if (camera.frustum instanceof OrthographicFrustum || camera._mode === SceneMode.SCENE2D) {
+                offset.range = distanceToBoundingSphere2D(camera, radius);
             } else {
-                offset.range = camera.frustum instanceof OrthographicFrustum ? distanceToBoundingSphere2D(camera, radius) : distanceToBoundingSphere3D(camera, radius);
+                offset.range = distanceToBoundingSphere3D(camera, radius);
             }
         }
 

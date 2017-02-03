@@ -31,14 +31,9 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
 var camera = viewer.camera;
-var height = camera.positionCartographic.height;
-var ratio = viewer.canvas.clientWidth / viewer.canvas.clientHeight;
-
 var frustum = camera.frustum = new Cesium.OrthographicFrustum();
-frustum.right = height * 0.075;
-frustum.left = -frustum.right;
-frustum.top = ratio * frustum.right * 0.3;
-frustum.bottom = -frustum.top;
+frustum.width = camera.positionCartographic.height;
+frustum.aspectRatio = viewer.canvas.clientWidth / viewer.canvas.clientHeight *0.3;
 
 camera.position = new Cesium.Cartesian3(1841647.0762382608, -6783164.237195379, 2471753.1074874406);
 camera.direction = new Cesium.Cartesian3(-0.30125208680184823, 0.7555331113434306, 0.5817361067195737);

@@ -13,7 +13,7 @@ define([
         '../Core/ScreenSpaceEventType',
         '../Core/Transforms',
         './Camera',
-        './OrthographicFrustum',
+        './OrthographicOffCenterFrustum',
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
@@ -30,7 +30,7 @@ define([
         ScreenSpaceEventType,
         Transforms,
         Camera,
-        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         PerspectiveFrustum,
         SceneMode) {
     'use strict';
@@ -477,7 +477,7 @@ define([
     var scratchCVTo2DEndPos = new Cartesian3();
     var scratchCVTo2DEndDir = new Cartesian3();
     var scratchCVTo2DEndUp = new Cartesian3();
-    var scratchCVTo2DFrustum = new OrthographicFrustum();
+    var scratchCVTo2DFrustum = new OrthographicOffCenterFrustum();
     var scratchCVTo2DRay = new Ray();
     var scratchCVTo2DPickPos = new Cartesian3();
     var scratchCVTo2DCamera = {
@@ -574,7 +574,7 @@ define([
         position2D : new Cartesian3(),
         direction2D : new Cartesian3(),
         up2D : new Cartesian3(),
-        frustum : new OrthographicFrustum()
+        frustum : new OrthographicOffCenterFrustum()
     };
     var scratch3DTo2DEndCamera = {
         position : new Cartesian3(),

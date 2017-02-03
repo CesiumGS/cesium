@@ -324,7 +324,10 @@ define([
 
         var worldCoords;
         var frustum = scene.camera.frustum;
-        if (frustum instanceof OrthographicFrustum) {
+        if (!defined(frustum.inverseProjection)) {
+            if (!defined(frustum.top)) {
+                frustum = frustum._offCenterFrustum;
+            }
             var currentFrustum = uniformState.currentFrustum;
             worldCoords = scratchWorldCoords;
             worldCoords.x = (ndc.x * (frustum.right - frustum.left) + frustum.left + frustum.right) * 0.5;

@@ -52,6 +52,7 @@ define([
         './MapMode2D',
         './OIT',
         './OrthographicFrustum',
+        './OrthographicOffCenterFrustum',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
@@ -119,6 +120,7 @@ define([
         MapMode2D,
         OIT,
         OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PerspectiveFrustum,
@@ -1666,6 +1668,7 @@ define([
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
+    var scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
 
     function executeCommands(scene, passState, picking) {
         var camera = scene._camera;
@@ -1680,8 +1683,10 @@ define([
             frustum = camera.frustum.clone(scratchPerspectiveFrustum);
         } else if (defined(camera.frustum.infiniteProjectionMatrix)){
             frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
-        } else {
+        } else if (defined(camera.frustum.width)) {
             frustum = camera.frustum.clone(scratchOrthographicFrustum);
+        } else {
+            frustum = camera.frustum.clone(scratchOrthographicOffCenterFrustum);
         }
 
         // Ideally, we would render the sky box and atmosphere last for
@@ -2504,7 +2509,7 @@ define([
         return Math.max(ContextLimits.minimumAliasedLineWidth, Math.min(width, ContextLimits.maximumAliasedLineWidth));
     };
 
-    var orthoPickingFrustum = new OrthographicFrustum();
+    var orthoPickingFrustum = new OrthographicOffCenterFrustum();
     var scratchOrigin = new Cartesian3();
     var scratchDirection = new Cartesian3();
     var scratchPixelSize = new Cartesian2();
@@ -2513,6 +2518,9 @@ define([
     function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
         var camera = scene._camera;
         var frustum = camera.frustum;
+        if (!defined(frustum.top)) {
+            frustum = frustum._offCenterFrustum;
+        }
 
         var viewport = scene._passState.viewport;
         var x = 2.0 * (drawingBufferPosition.x - viewport.x) / viewport.width - 1.0;
@@ -2581,7 +2589,8 @@ define([
     }
 
     function getPickCullingVolume(scene, drawingBufferPosition, width, height) {
-        if (scene.camera.frustum instanceof OrthographicFrustum) {
+        var frustum = scene.camera.frustum;
+        if (frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum) {
             return getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height);
         }
 
@@ -2684,8 +2693,10 @@ define([
             frustum = camera.frustum.clone(scratchPerspectiveFrustum);
         } else if (defined(camera.frustum.infiniteProjectionMatrix)){
             frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
-        } else {
+        } else if (defined(camera.frustum.width)) {
             frustum = camera.frustum.clone(scratchOrthographicFrustum);
+        } else {
+            frustum = camera.frustum.clone(scratchOrthographicOffCenterFrustum);
         }
 
         var numFrustums = this.numberOfFrustums;
