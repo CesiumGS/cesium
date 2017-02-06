@@ -80,6 +80,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Vignesh Panneerselvam](https://github.com/nobelium)
 * [Ognjen Bubalo](https://github.com/ognjenb)
 * [Ayudh Das](https://github.com/ayudhDas)
+* [Jane Minghui Guo] (https://github.com/Jane-Of-Art)
 * [You Lu](https://github.com/YouLu)
 * [David Hite](https://github.com/dav3hit3)
 * [Kevin Ring](https://github.com/kring)
