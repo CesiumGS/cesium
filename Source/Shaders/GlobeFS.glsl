@@ -38,6 +38,10 @@ uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_COLOR_PALETTE
+uniform sampler2D u_dayTextureColorPalette[TEXTURE_UNITS];
+#endif
+
 #ifdef SHOW_REFLECTIVE_OCEAN
 uniform sampler2D u_waterMask;
 uniform vec4 u_waterMaskTranslationAndScale;
@@ -63,6 +67,96 @@ varying float v_distance;
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 #endif
+
+vec4 sampleBlendAndPalette(
+    vec4 previousColor,
+    sampler2D texture,
+    vec2 tileTextureCoordinates,
+    vec4 textureCoordinateRectangle,
+    vec4 textureCoordinateTranslationAndScale,
+    float textureAlpha,
+    float textureBrightness,
+    float textureContrast,
+    float textureHue,
+    float textureSaturation,
+    float textureOneOverGamma,
+    float split,
+    sampler2D textureColorPalette)
+{
+    // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
+    //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
+    //    tileTextureCoordinates.s > textureCoordinateRectangle.p ||
+    //    tileTextureCoordinates.t < textureCoordinateRectangle.t ||
+    //    tileTextureCoordinates.t > textureCoordinateRectangle.q
+    // In other words, the alpha is zero if the fragment is outside the rectangle
+    // covered by this texture.  Would an actual 'if' yield better performance?
+    vec2 alphaMultiplier = step(textureCoordinateRectangle.st, tileTextureCoordinates);
+    textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
+
+    alphaMultiplier = step(vec2(0.0), textureCoordinateRectangle.pq - tileTextureCoordinates);
+    textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
+
+    vec2 translation = textureCoordinateTranslationAndScale.xy;
+    vec2 scale = textureCoordinateTranslationAndScale.zw;
+    vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
+    vec4 value = texture2D(texture, textureCoordinates);
+    vec3 color = value.rgb;
+    float alpha = value.a;
+
+#ifdef APPLY_SPLIT
+    float splitPosition = czm_imagerySplitPosition * czm_viewport.z;
+    // Split to the left
+    if (split < 0.0 && gl_FragCoord.x > splitPosition) {
+       alpha = 0.0;
+    }
+    // Split to the right
+    else if (split > 0.0 && gl_FragCoord.x < splitPosition) {
+       alpha = 0.0;
+    }
+#endif
+
+    float step = 1.0/1024.0;
+    float a1 = texture2D(texture, textureCoordinates).r;
+    float a2 = texture2D(texture, textureCoordinates + vec2(step, 0.0)).r;
+    float a3 = texture2D(texture, textureCoordinates + vec2(0.0, step)).r;
+    float a4 = texture2D(texture, textureCoordinates + vec2(step, step)).r;
+    if ((a1 != 0.0 && (a2 == 0.0 || a3 == 0.0 || a4 == 0.0)) || a1 == 0.0) {
+    } else {
+      vec2 f = fract(textureCoordinates * vec2(1024.0, 1024.0));
+      float tA = mix(a1, a2, f.x);
+      float tB = mix(a3, a4, f.x);
+      a1 = mix(tA, tB, f.y);
+    }
+
+    vec4 pixColor = texture2D(textureColorPalette, vec2(0.0, a1));
+    color = pixColor.rgb;
+    alpha = pixColor.a;
+
+#ifdef APPLY_BRIGHTNESS
+    color = mix(vec3(0.0), color, textureBrightness);
+#endif
+
+#ifdef APPLY_CONTRAST
+    color = mix(vec3(0.5), color, textureContrast);
+#endif
+
+#ifdef APPLY_HUE
+    color = czm_hue(color, textureHue);
+#endif
+
+#ifdef APPLY_SATURATION
+    color = czm_saturation(color, textureSaturation);
+#endif
+
+#ifdef APPLY_GAMMA
+    color = pow(color, vec3(textureOneOverGamma));
+#endif
+
+    float sourceAlpha = alpha * textureAlpha;
+    float outAlpha = mix(previousColor.a, 1.0, sourceAlpha);
+    vec3 outColor = mix(previousColor.rgb * previousColor.a, color, sourceAlpha) / outAlpha;
+    return vec4(outColor, outAlpha);
+}
 
 vec4 sampleAndBlend(
     vec4 previousColor,

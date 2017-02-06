@@ -62,7 +62,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, colorPaletteKeys, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -88,7 +88,8 @@ define([
                     (useWebMercatorProjection << 12) |
                     (enableFog << 13) |
                     (quantization << 14) |
-                    (applySplit << 15);
+                    (applySplit << 15) |
+                    (colorPaletteKeys << 16);
 
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
@@ -157,6 +158,10 @@ define([
                 fs.defines.push('FOG');
             }
 
+            if (colorPaletteKeys.length > 0) {
+                fs.defines.push('APPLY_COLOR_PALETTE');
+            }
+
             if (applySplit) {
                 fs.defines.push('APPLY_SPLIT');
             }
@@ -167,6 +172,25 @@ define([
         vec4 color = initialColor;\n';
 
             for (var i = 0; i < numberOfDayTextures; ++i) {
+            if(colorPaletteKeys[i] == 1) {
+                computeDayColor += '\
+    color = sampleBlendAndPalette(\n\
+        color,\n\
+        u_dayTextures[' + i + '],\n\
+        u_dayTextureUseWebMercatorT[' + i + '] ? textureCoordinates.xz : textureCoordinates.xy,\n\
+        u_dayTextureTexCoordsRectangle[' + i + '],\n\
+        u_dayTextureTranslationAndScale[' + i + '],\n\
+        ' + (applyAlpha ? 'u_dayTextureAlpha[' + i + ']' : '1.0') + ',\n\
+        ' + (applyBrightness ? 'u_dayTextureBrightness[' + i + ']' : '0.0') + ',\n\
+        ' + (applyContrast ? 'u_dayTextureContrast[' + i + ']' : '0.0') + ',\n\
+        ' + (applyHue ? 'u_dayTextureHue[' + i + ']' : '0.0') + ',\n\
+        ' + (applySaturation ? 'u_dayTextureSaturation[' + i + ']' : '0.0') + ',\n\
+        ' + (applyGamma ? 'u_dayTextureOneOverGamma[' + i + ']' : '0.0') + ',\n\
+        ' + (applySplit ? 'u_dayTextureSplit[' + i + ']' : '0.0') + ',\n\
+        u_dayTextureColorPalette[' + i + ']\n\
+    );\n';
+} else {
+
                 computeDayColor += '\
     color = sampleAndBlend(\n\
         color,\n\
@@ -182,6 +206,7 @@ define([
         ' + (applyGamma ? 'u_dayTextureOneOverGamma[' + i + ']' : '0.0') + ',\n\
         ' + (applySplit ? 'u_dayTextureSplit[' + i + ']' : '0.0') + '\n\
     );\n';
+}
             }
 
             computeDayColor += '\

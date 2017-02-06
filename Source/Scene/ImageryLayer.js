@@ -207,6 +207,14 @@ define([
         this.splitDirection = defaultValue(options.splitDirection, defaultValue(imageryProvider.defaultSplit, ImageryLayer.DEFAULT_SPLIT));
 
         /**
+         * The color palette to apply to this layer.
+         *
+         * @type {Array}
+         * @default false
+         */
+        this.colorPalette = defaultValue(options.colorPalette, defaultValue(imageryProvider.defaultColorPalette, ImageryLayer.DEFAULT_COLOR_PALETTE));
+
+        /**
          * Determines if this layer is shown.
          *
          * @type {Boolean}
@@ -311,6 +319,13 @@ define([
      */
     ImageryLayer.DEFAULT_SPLIT = ImagerySplitDirection.NONE;
 
+    /**
+     * This value is used as the default color palette for the imagery layer if one is not provided during construction
+     * or by the imagery provider.
+     * @type {Array}
+     * @default undefined
+     */
+    ImageryLayer.DEFAULT_COLOR_PALETTE = 1.0;
     /**
      * Gets a value indicating whether this layer is the base layer in the
      * {@link ImageryLayerCollection}.  The base layer is the one that underlies all
@@ -739,6 +754,22 @@ define([
                     return;
                 }
             }
+        }
+
+        if(defined(imagery.imageryLayer.colorPalette) &&
+            imagery.imageryLayer.colorPalette != ImageryLayer.DEFAULT_COLOR_PALETTE &&
+            !(imagery.imageryLayer.colorPalette instanceof Texture)
+        ) {
+            imagery.imageryLayer.colorPalette = new Texture({
+                context : context,
+                flipY : false,
+                source : {
+                    arrayBufferView : imagery.imageryLayer.colorPalette
+                },
+                width : 1,
+                height : 1024,
+                pixelFormat : PixelFormat.RGBA
+            });
         }
 
         // Imagery does not need to be discarded, so upload it to WebGL.

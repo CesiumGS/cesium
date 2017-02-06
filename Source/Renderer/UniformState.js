@@ -150,6 +150,7 @@ define([
 
         this._fogDensity = undefined;
 
+        this._imageryColorPalette = 1.0;
         this._imagerySplitPosition = 0.0;
         this._pixelSizePerMeter = undefined;
         this._geometricToleranceOverMeter = undefined;
@@ -800,6 +801,16 @@ define([
             get : function() {
                 return this._imagerySplitPosition;
             }
+        },
+
+        /**
+         * @memberof UniformState.prototype
+         * @type {Array}
+         */
+        imageryColorPalette : {
+            get : function() {
+                return this._imageryColorPalette;
+            }
         }
     });
 
@@ -962,6 +973,7 @@ define([
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
 
         this._imagerySplitPosition = frameState.imagerySplitPosition;
+        this._imageryColorPalette = frameState.imageryColorPalette;
         var fov = camera.frustum.fov;
         var viewport = this._viewport;
         var pixelSizePerMeter;
