@@ -7,7 +7,9 @@ define([
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
         '../Core/loadKTX',
-        '../Core/throttleRequestByServer'
+        '../Core/Request',
+        '../Core/RequestScheduler',
+        '../Core/RequestType'
     ], function(
         defined,
         defineProperties,
@@ -16,7 +18,9 @@ define([
         loadImage,
         loadImageViaBlob,
         loadKTX,
-        throttleRequestByServer) {
+        Request,
+        RequestScheduler,
+        RequestType) {
     'use strict';
 
     /**
@@ -268,6 +272,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Number} [distance] The distance of the tile from the camera, used to prioritize requests.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -306,22 +311,32 @@ define([
      * too many requests pending, this function will instead return undefined, indicating
      * that the request should be retried later.
      *
-     * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
+     * @param {ImageryProvider} imageryProvider The imagery provider for the URL
      * @param {String} url The URL of the image.
+     * @param {Number} [distance] The distance of the tile from the camera, used to prioritize requests.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    ImageryProvider.loadImage = function(imageryProvider, url) {
+    ImageryProvider.loadImage = function(imageryProvider, url, distance) {
+        var requestFunction;
         if (ktxRegex.test(url)) {
-            return throttleRequestByServer(url, loadKTX);
+            requestFunction = loadKTX;
         } else if (crnRegex.test(url)) {
-            return throttleRequestByServer(url, loadCRN);
+            requestFunction = loadCRN;
         } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return throttleRequestByServer(url, loadImageViaBlob);
+            requestFunction = loadImageViaBlob;
+        } else {
+            requestFunction = loadImage;
         }
-        return throttleRequestByServer(url, loadImage);
+
+        return RequestScheduler.schedule(new Request({
+            url : url,
+            requestFunction : requestFunction,
+            type : RequestType.IMAGERY,
+            distance : distance
+        }));
     };
 
     return ImageryProvider;

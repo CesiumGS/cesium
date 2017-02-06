@@ -9,6 +9,12 @@ Change Log
    * Added `loadKTX`, to load KTX textures, and `loadCRN` to load crunch compressed textures.
    * Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_s3tc`, `WEBGL_compressed_texture_pvrtc`, and `WEBGL_compressed_texture_etc1`.
    * Added `CompressedTextureBuffer`.
+* Added support for [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md) for streaming massive heterogeneous 3D geospatial datasets.  The new Cesium APIs are:
+   * `Cesium3DTileset`
+   * `Cesium3DTileStyle`, `StyleExpression`, `Expression`, and `ConditionsExpression`
+   * `Cesium3DTile`
+   * `Cesium3DTileContent`
+   * `Cesium3DTileFeature`
 
 ### 1.30 - 2017-02-01
 

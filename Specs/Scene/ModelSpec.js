@@ -252,6 +252,16 @@ defineSuite([
         expect(texturedBoxModel.colorBlendAmount).toEqual(0.5);
     });
 
+    it('preserves query string in url', function() {
+        var params = '?param1=1&param2=2';
+        var url = texturedBoxUrl + params;
+        var model = Model.fromGltf({
+            url: url
+        });
+        expect(model._basePath).toEndWith(params);
+        expect(model._baseUri).toEndWith(params);
+    });
+
     it('renders', function() {
         verifyRender(texturedBoxModel);
     });
@@ -321,6 +331,24 @@ defineSuite([
     it('resolves readyPromise', function() {
         return texturedBoxModel.readyPromise.then(function(model) {
             verifyRender(model);
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        var invalidGltf = clone(texturedBoxModel.gltf, true);
+        invalidGltf.shaders.CesiumTexturedBoxTest0FS.uri = 'invalid.glsl';
+
+        var model = primitives.add(new Model({
+            gltf : invalidGltf
+        }));
+
+        scene.renderForSpecs();
+
+        return model.readyPromise.then(function(model) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(model.ready).toEqual(false);
+            primitives.remove(model);
         });
     });
 

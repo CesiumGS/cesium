@@ -1,0 +1,39 @@
+{
+  "asset": {
+    "version": "0.0"
+  },
+  "properties": {
+    "id": {
+      "minimum": 0,
+      "maximum": 9
+    },
+    "Longitude": {
+      "minimum": -1.3196930452470341,
+      "maximum": -1.3196617964314208
+    },
+    "Latitude": {
+      "minimum": 0.6988594477444204,
+      "maximum": 0.698883763781271
+    },
+    "Height": {
+      "minimum": 6,
+      "maximum": 14
+    }
+  },
+  "geometricError": 70,
+  "root": {
+    "refine": "add",
+    "boundingVolume": {
+      "sphere": [
+        1215013.8340490046,
+        -4736316.75897742,
+        4081608.4380407534,
+        141.42
+      ]
+    },
+    "geometricError": 0,
+    "content": {
+      "url": "batchedWithBoundingSphere.b3dm"
+    }
+  }
+}

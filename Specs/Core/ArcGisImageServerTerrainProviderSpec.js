@@ -8,6 +8,7 @@ defineSuite([
         'Core/loadImage',
         'Core/Math',
         'Core/queryToObject',
+        'Core/Request',
         'Core/TerrainProvider',
         'ThirdParty/Uri',
         'ThirdParty/when'
@@ -20,6 +21,7 @@ defineSuite([
         loadImage,
         CesiumMath,
         queryToObject,
+        Request,
         TerrainProvider,
         Uri,
         when) {
@@ -238,15 +240,17 @@ defineSuite([
                 url : baseUrl
             });
 
-            var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+            var request = new Request();
+
+            var promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
             expect(promise).toBeDefined();
 
             var i;
             for (i = 0; i < 10; ++i) {
-                promise = terrainProvider.requestTileGeometry(0, 0, 0);
+                promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
             }
 
-            promise = terrainProvider.requestTileGeometry(0, 0, 0);
+            promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
             expect(promise).toBeUndefined();
 
             for (i = 0; i < deferreds.length; ++i) {

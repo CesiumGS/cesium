@@ -28,6 +28,7 @@ define([
         '../Core/Matrix4',
         '../Core/mergeSort',
         '../Core/Occluder',
+        '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/Transforms',
         '../Renderer/ClearCommand',
@@ -50,6 +51,7 @@ define([
         './FrustumCommands',
         './FXAA',
         './GlobeDepth',
+        './JobScheduler',
         './MapMode2D',
         './OIT',
         './OrthographicFrustum',
@@ -96,6 +98,7 @@ define([
         Matrix4,
         mergeSort,
         Occluder,
+        RequestScheduler,
         ShowGeometryInstanceAttribute,
         Transforms,
         ClearCommand,
@@ -118,6 +121,7 @@ define([
         FrustumCommands,
         FXAA,
         GlobeDepth,
+        JobScheduler,
         MapMode2D,
         OIT,
         OrthographicFrustum,
@@ -230,7 +234,8 @@ define([
         }
 
         this._id = createGuid();
-        this._frameState = new FrameState(context, new CreditDisplay(creditContainer));
+        this._jobScheduler = new JobScheduler();
+        this._frameState = new FrameState(context, new CreditDisplay(creditContainer), this._jobScheduler);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
         var ps = new PassState(context);
@@ -1612,7 +1617,7 @@ define([
                 scene._debugVolume = new Primitive({
                     geometryInstances : new GeometryInstance({
                         geometry : geometry,
-                        modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
+                        modelMatrix : Matrix4.fromTranslation(center),
                         attributes : {
                             color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
                         }
@@ -2470,6 +2475,8 @@ define([
         }
 
         scene._preRender.raiseEvent(scene, time);
+        scene._jobScheduler.resetBudgets();
+        RequestScheduler.resetBudgets();
 
         var context = scene.context;
         var us = context.uniformState;
@@ -2674,6 +2681,8 @@ define([
         if (!defined(this._pickFramebuffer)) {
             this._pickFramebuffer = context.createPickFramebuffer();
         }
+
+        this._jobScheduler.disableThisFrame();
 
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);

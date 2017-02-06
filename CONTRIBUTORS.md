@@ -60,7 +60,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Sergio Flores](https://github.com/relfos)
 * [CubeWerx Inc.](http://www.cubewerx.com/)
    * [Keith Pomakis](https://github.com/pomakis)
-* [Vricon](https://www.vricon.com/)
+* [Vricon](http://www.vricon.com/)
    * [Erik Andersson](https://github.com/e-andersson)
 * [Simulation Curriculum](http://www.simulationcurriculum.com/)
    * [Dave Whipps](https://github.com/dwhipps)
@@ -71,6 +71,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Camptocamp SA](https://www.camptocamp.com/)
    * [Frédéric Junod](https://github.com/fredj)
    * [Guillaume Beraudo](https://github.com/gberaudo)
+* [Safe Software](https://www.safe.com)
+   * [Joel Depooter](https://github.com/JDepooter)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
