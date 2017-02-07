@@ -1161,6 +1161,7 @@ define([
             }
 
             if (defined(polyline)) {
+                wall.outline = true;
                 wall.outlineColor = defined(polyline.material) ? polyline.material.color : Color.WHITE;
                 wall.outlineWidth = polyline.width;
             }
