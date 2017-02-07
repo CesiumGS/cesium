@@ -6,6 +6,18 @@
     "id": {
       "minimum": 0,
       "maximum": 9
+    },
+    "Longitude": {
+      "minimum": -1.3197192952275933,
+      "maximum": -1.319644104024109
+    },
+    "Latitude": {
+      "minimum": 0.698848878034009,
+      "maximum": 0.6989046192460953
+    },
+    "Height": {
+      "minimum": 6.161747192963958,
+      "maximum": 84.83180232718587
     }
   },
   "geometricError": 240,

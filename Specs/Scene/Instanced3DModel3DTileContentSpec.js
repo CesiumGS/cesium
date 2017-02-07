@@ -36,6 +36,7 @@ defineSuite([
     var quantizedUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantized/';
     var quantizedOct32POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedOct32POrientation/';
     var withTransformUrl = './Data/Cesium3DTiles/Instanced/InstancedWithTransform/';
+    var withBatchIdsUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchIds/';
 
     function setCamera(longitude, latitude) {
         // One instance is located at the center, point the camera there
@@ -189,6 +190,12 @@ defineSuite([
 
     it('renders with feature defined quantized position and Oct32P encoded orientation', function() {
         return Cesium3DTilesTester.loadTileset(scene, quantizedOct32POrientationUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with batch ids', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchIdsUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
