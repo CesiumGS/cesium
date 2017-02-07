@@ -85,7 +85,9 @@ defineSuite([
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
-    var boxesEcefUrl = './Data/Models/Boxes-ECEF/ecef.glb';
+    var boxEcefUrl = './Data/Models/Box-ECEF/ecef-y-up.gltf';
+    var boxEcefZUpUrl = './Data/Models/Box-ECEF/ecef-z-up.gltf';
+
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
@@ -286,7 +288,7 @@ defineSuite([
     });
 
     it('renders ECEF in 2D', function() {
-        return loadModel(boxesEcefUrl, {
+        return loadModel(boxEcefUrl, {
             modelMatrix : Matrix4.IDENTITY,
             minimumPixelSize : undefined
         }).then(function(m) {
@@ -308,11 +310,21 @@ defineSuite([
     });
 
     it('renders ECEF in CV', function() {
-        return loadModel(boxesEcefUrl, {
+        return loadModel(boxEcefUrl, {
             modelMatrix : Matrix4.IDENTITY,
             minimumPixelSize : undefined
         }).then(function(m) {
             scene.morphToColumbusView(0.0);
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('Renders z-up model', function() {
+        return loadModel(boxEcefZUpUrl, {
+            modelMatrix : Matrix4.IDENTITY,
+            zUp : true
+        }).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });

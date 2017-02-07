@@ -624,6 +624,9 @@ define([
         this._pickUniformMapLoaded = options.pickUniformMapLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 
+        // By default models are y-up according to the glTF spec, however geo-referenced models will typically be z-up
+        this._zUp = defaultValue(options.zUp, false);
+
         /**
          * @private
          * @readonly
@@ -1233,7 +1236,7 @@ define([
         };
     }
 
-    function computeBoundingSphere(gltf) {
+    function computeBoundingSphere(model, gltf) {
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
         var rootNodes = gltf.scenes[gltf.scene].nodes;
@@ -1289,7 +1292,10 @@ define([
         }
 
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-        return BoundingSphere.transformWithoutScale(boundingSphere, yUpToZUp, boundingSphere);
+        if (!model._zUp) {
+            BoundingSphere.transformWithoutScale(boundingSphere, yUpToZUp, boundingSphere);
+        }
+        return boundingSphere;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -4192,7 +4198,7 @@ define([
 
             this._state = ModelState.LOADING;
 
-            this._boundingSphere = computeBoundingSphere(this.gltf);
+            this._boundingSphere = computeBoundingSphere(this, this.gltf);
             this._initialRadius = this._boundingSphere.radius;
 
             checkSupportedExtensions(this);
@@ -4315,7 +4321,9 @@ define([
                 var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
                 Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
-                Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
+                if (!this._zUp) {
+                    Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
+                }
             }
 
             // Update modelMatrix throughout the graph as needed
