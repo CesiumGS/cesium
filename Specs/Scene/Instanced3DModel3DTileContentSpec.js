@@ -29,18 +29,18 @@ defineSuite([
     var withBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
     var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTableBinary/';
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/';
-    var orientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOrientationWithBatchTable/';
-    var oct16POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOct32POrientationWithBatchTable/';
-    var scaleUrl = './Data/Cesium3DTiles/Instanced/InstancedScaleWithBatchTable/';
-    var scaleNonUniformUrl = './Data/Cesium3DTiles/Instanced/InstancedScaleNonUniformWithBatchTable/';
-    var quantizedUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedWithBatchTable/';
-    var quantizedOct32POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedOct32POrientationWithBatchTable/';
+    var orientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOrientation/';
+    var oct16POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOct32POrientation/';
+    var scaleUrl = './Data/Cesium3DTiles/Instanced/InstancedScale/';
+    var scaleNonUniformUrl = './Data/Cesium3DTiles/Instanced/InstancedScaleNonUniform/';
+    var quantizedUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantized/';
+    var quantizedOct32POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedOct32POrientation/';
     var withTransformUrl = './Data/Cesium3DTiles/Instanced/InstancedWithTransform/';
 
     function setCamera(longitude, latitude) {
         // One instance is located at the center, point the camera there
         var center = Cartesian3.fromRadians(longitude, latitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 36.0));
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 30.0));
     }
 
     beforeAll(function() {
@@ -199,9 +199,8 @@ defineSuite([
 
             var newLongitude = -1.31962;
             var newLatitude = 0.698874;
-            var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 15.0);
-            var newHPR = new HeadingPitchRoll();
-            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, newHPR);
+            var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 10.0);
+            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, new HeadingPitchRoll());
 
             // Update tile transform
             tileset._root.transform = newTransform;

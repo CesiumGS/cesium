@@ -515,7 +515,7 @@ defineSuite([
             });
             expect(scene).notToRender([0, 0, 0, 255]);
             tileset.style = new Cesium3DTileStyle({
-                show : '${temperature} > 0.9'
+                show : '${temperature} > 1.0'
             });
             expect(scene).toRender([0, 0, 0, 255]);
 
