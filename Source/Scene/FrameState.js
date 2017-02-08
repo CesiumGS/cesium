@@ -237,7 +237,13 @@ define([
         this.imagerySplitPosition = 0.0;
 
         /**
-        * The color palette to use when rendering imagery layers.
+         * Distances to the near and far planes of the camera frustums
+         * @type {Number[]}
+         * @default []
+         */
+        this.frustumSplits = [];
+
+        /* The color palette to use when rendering imagery layers.
         * @type {Array}
         * @default undefined
         */
