@@ -568,14 +568,17 @@ define([
                         Cartesian3.clone(camera.direction, forward);
                         Cartesian3.add(cameraPosition, Cartesian3.multiplyByScalar(forward, 1000, scratchCartesian), center);
 
-
                         var positionToTarget = scratchPositionToTarget;
                         var positionToTargetNormal = scratchPositionToTargetNormal;
                         Cartesian3.subtract(target, cameraPosition, positionToTarget);
 
                         Cartesian3.normalize(positionToTarget, positionToTargetNormal);
 
-                        var alpha = Math.acos( -Cartesian3.dot( cameraPositionNormal, positionToTargetNormal ) );
+                        var alphaDot = Cartesian3.dot(cameraPositionNormal, positionToTargetNormal);
+                        if (alphaDot >= 0.0) {
+                            return;
+                        }
+                        var alpha = Math.acos(-alphaDot);
                         var cameraDistance = Cartesian3.magnitude( cameraPosition );
                         var targetDistance = Cartesian3.magnitude( target );
                         var remainingDistance = cameraDistance - distance;
@@ -632,7 +635,9 @@ define([
                         Cartesian3.cross(camera.right, camera.direction, camera.up);
 
                         return;
-                    } else if (defined(centerPosition)) {
+                    }
+
+                    if (defined(centerPosition)) {
                         var positionNormal = Cartesian3.normalize(centerPosition, scratchPositionNormal);
                         var pickedNormal = Cartesian3.normalize(object._zoomWorldPosition, scratchPickNormal);
                         var dotProduct = Cartesian3.dot(pickedNormal, positionNormal);
