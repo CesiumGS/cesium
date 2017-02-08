@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Use the split property to only show layers on one side of a slider.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Tutorials, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+
+<style>
+    @import url(../templates/bucket.css);
+</style>
+
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+
+<script id="cesium_sandcastle_script">
+
+function startup(Cesium) {
+    'use strict';
+
+    //Sandcastle_Begin
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        imageryProvider : new Cesium.ArcGisMapServerImageryProvider({
+            url : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+        }),
+        baseLayerPicker : false
+    });
+
+    var layers = viewer.imageryLayers;
+
+    var rawPalette = `-60	0	0	0	0
+-50	45	0	45
+-50	53	0	53
+-40	46	0	91
+-30	68	0	136
+-20	163	70	255
+-10	213	170	255
+0	255	255	255
+10	255	10	190
+20	72	0	83
+32	0	253	253
+35	88	177	164
+40	0	95	0
+50	0	197	5
+60	180	255	0
+65	255	250	78
+70	255	194	14
+80	255	126	10
+90	237	28	36
+100	107	0	0
+120	97	3	38`;
+
+    var lines = rawPalette.split('\n');
+    var unsortedColors = {};
+    Array.prototype.forEach.call(lines, function(line, i){
+        var values = line.split(/\s+/);
+        if(values.length >= 4) {
+            var key = parseFloat(values[0]);
+            unsortedColors[key] = [];
+            unsortedColors[key][0] = parseInt(values[1]);
+            unsortedColors[key][1] = parseInt(values[2]);
+            unsortedColors[key][2] = parseInt(values[3]);
+            unsortedColors[key][3] = (typeof(values[4]) !== 'undefined' && values[4] != '' ? parseInt(values[4]) : 255);
+            return true;
+        }
+    });
+
+    var sortedColors = [];
+    for (i in unsortedColors) {
+        sortedColors.push([i, unsortedColors[i]]);
+    }
+    sortedColors.sort(function(a, b) {
+        return a[0] - b[0];
+    });
+
+    var options = {
+        tileWidth: 512,
+        tileHeight: 512,
+        url: 'http://cache.allisonhouse.com/maps/raw.php?model=rtma&run=201702081600&hour=1486569600000&layers=tmp_2m_0',
+        palette: sortedColors,
+        min: sortedColors[0][0],
+        max: sortedColors[sortedColors.length-1][0]
+    };
+
+    var colorTableData = new Uint8Array(4096);
+    var palette = [];
+    var max = null;
+    var min = null;
+    var diff = null;
+    var currentVal = 0;
+    var currentValI = 0;
+    var prevVal = 0;
+    var diffVal = 1.0;
+    var nextColor = new Uint8Array(4);
+    var prevColor = new Uint8Array(4);
+
+    function setPalette(index, r, g, b, a) {
+        a = (typeof(a) !== 'undefined' ? a : 255);
+
+        var i = palette.length;
+
+        palette[i] = [];
+        palette[i]['takeoff'] = [];
+        palette[i]['approach'] = [];
+        palette[i]['value'] = parseFloat(index);
+
+        palette[i]['takeoff']['red'] = r;
+        palette[i]['takeoff']['green'] = g;
+        palette[i]['takeoff']['blue'] = b;
+        palette[i]['takeoff']['alpha'] = a;
+
+        if(i > 0) {
+            palette[i]['approach']['red'] = r;
+            palette[i]['approach']['green'] = g;
+            palette[i]['approach']['blue'] = b;
+            palette[i]['approach']['alpha'] = a;
+        }
+
+        if(index < min || min === null) {
+            min = parseFloat(index);
+        }
+
+        if(index > max || max === null) {
+            max = parseFloat(index);
+        }
+    }
+
+    for(var i = 0; i < sortedColors.length; i++) {
+        setPalette(sortedColors[i][0], sortedColors[i][1][0], sortedColors[i][1][1], sortedColors[i][1][2], sortedColors[i][1][3]);
+    }
+
+    diff = Math.abs(max - min);
+    currentVal = min;
+    prevVal = min;
+    var stepSize = diff / 1024;
+
+    for(var i = 16; i < 4096; i += 4) {
+        while (currentVal >= palette[currentValI]['value'] && (currentValI+1) < palette.length) {
+          prevColor[0] = palette[currentValI]['takeoff']['red'];
+          prevColor[1] = palette[currentValI]['takeoff']['green'];
+          prevColor[2] = palette[currentValI]['takeoff']['blue'];
+          prevColor[3] = palette[currentValI]['takeoff']['alpha'];
+          prevVal = palette[currentValI]['value'];
+          currentValI++;
+          diffVal = palette[currentValI]['value'] - prevVal;
+          nextColor[0] = palette[currentValI]['approach']['red'];
+          nextColor[1] = palette[currentValI]['approach']['green'];
+          nextColor[2] = palette[currentValI]['approach']['blue'];
+          nextColor[3] = palette[currentValI]['approach']['alpha'];
+        }
+        if (currentVal >= palette[currentValI]['value'] && (currentValI+1) >= palette.length) {
+            prevColor[0] = palette[currentValI]['approach']['red'];
+            prevColor[1] = palette[currentValI]['approach']['green'];
+            prevColor[2] = palette[currentValI]['approach']['blue'];
+            prevColor[3] = palette[currentValI]['approach']['alpha'];
+            prevVal = max;
+            currentVal = max;
+            diffVal = 1.0;
+            nextColor[0] = palette[currentValI]['approach']['red'];
+            nextColor[1] = palette[currentValI]['approach']['green'];
+            nextColor[2] = palette[currentValI]['approach']['blue'];
+            nextColor[3] = palette[currentValI]['approach']['alpha'];
+        }
+        colorTableData[i] = parseFloat(currentVal-prevVal) * (parseFloat(nextColor[0] - prevColor[0]) / diffVal) + prevColor[0];
+        colorTableData[i+1] = parseFloat(currentVal-prevVal) * parseFloat(nextColor[1] - prevColor[1]) / diffVal + prevColor[1];
+        colorTableData[i+2] = parseFloat(currentVal-prevVal) * parseFloat(nextColor[2] - prevColor[2]) / diffVal + prevColor[2];
+        colorTableData[i+3] = parseFloat(currentVal-prevVal) * parseFloat(nextColor[3] - prevColor[3]) / diffVal + prevColor[3];
+        currentVal += stepSize;
+    }
+
+    options.colorPalette = colorTableData;
+
+    layers.addImageryProvider(new Cesium.CustomTemplateImageryProvider(options));
+
+    //Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+
+</body>
+</html>
