@@ -52,6 +52,7 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './Axis',
         './BlendingState',
         './ColorBlendMode',
         './getAttributeOrUniformBySemantic',
@@ -118,6 +119,7 @@ define([
         gltfDefaults,
         Uri,
         when,
+        Axis,
         BlendingState,
         ColorBlendMode,
         getAttributeOrUniformBySemantic,
@@ -140,6 +142,7 @@ define([
     }
 
     var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
+    var xUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationY(CesiumMath.PI_OVER_TWO));
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = {
@@ -624,8 +627,14 @@ define([
         this._pickUniformMapLoaded = options.pickUniformMapLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 
-        // By default models are y-up according to the glTF spec, however geo-referenced models will typically be z-up
-        this._zUp = defaultValue(options.zUp, false);
+
+        /**
+         * By default models are y-up according to the glTF spec, however geo-referenced models will typically be z-up
+         *
+         * @private
+         * @readonly
+         */
+        this.upAxis = defaultValue(options.upAxis, Axis.Y);
 
         /**
          * @private
@@ -1292,8 +1301,10 @@ define([
         }
 
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-        if (!model._zUp) {
+        if (model.upAxis === Axis.Y) {
             BoundingSphere.transformWithoutScale(boundingSphere, yUpToZUp, boundingSphere);
+        } else if (model.upAxis === Axis.X) {
+            BoundingSphere.transformWithoutScale(boundingSphere, xUpToZUp, boundingSphere);
         }
         return boundingSphere;
     }
@@ -4321,8 +4332,10 @@ define([
                 var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
                 Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
-                if (!this._zUp) {
+                if (this.upAxis === Axis.Y) {
                     Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
+                } else if (this.upAxis === Axis.X) {
+                    Matrix4.multiplyTransformation(computedModelMatrix, xUpToZUp, computedModelMatrix);
                 }
             }
 

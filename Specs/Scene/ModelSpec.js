@@ -28,6 +28,7 @@ defineSuite([
         'Renderer/Pass',
         'Renderer/RenderState',
         'Renderer/ShaderSource',
+        'Scene/Axis',
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
@@ -63,6 +64,7 @@ defineSuite([
         Pass,
         RenderState,
         ShaderSource,
+        Axis,
         ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
@@ -85,7 +87,8 @@ defineSuite([
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
-    var boxEcefUrl = './Data/Models/Box-ECEF/ecef-y-up.gltf';
+    var boxEcefXUpUrl = './Data/Models/Box-ECEF/ecef-x-up.gltf';
+    var boxEcefYUpUrl = './Data/Models/Box-ECEF/ecef-y-up.gltf';
     var boxEcefZUpUrl = './Data/Models/Box-ECEF/ecef-z-up.gltf';
 
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
@@ -288,7 +291,7 @@ defineSuite([
     });
 
     it('renders ECEF in 2D', function() {
-        return loadModel(boxEcefUrl, {
+        return loadModel(boxEcefYUpUrl, {
             modelMatrix : Matrix4.IDENTITY,
             minimumPixelSize : undefined
         }).then(function(m) {
@@ -310,7 +313,7 @@ defineSuite([
     });
 
     it('renders ECEF in CV', function() {
-        return loadModel(boxEcefUrl, {
+        return loadModel(boxEcefYUpUrl, {
             modelMatrix : Matrix4.IDENTITY,
             minimumPixelSize : undefined
         }).then(function(m) {
@@ -320,10 +323,30 @@ defineSuite([
         });
     });
 
+    it('Renders x-up model', function() {
+        return loadModel(boxEcefXUpUrl, {
+            modelMatrix : Matrix4.IDENTITY,
+            axis : Axis.X
+        }).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('Renders x-up model', function() {
+        return loadModel(boxEcefYUpUrl, {
+            modelMatrix : Matrix4.IDENTITY,
+            axis : Axis.Y
+        }).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
     it('Renders z-up model', function() {
         return loadModel(boxEcefZUpUrl, {
             modelMatrix : Matrix4.IDENTITY,
-            zUp : true
+            axis : Axis.Z
         }).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
