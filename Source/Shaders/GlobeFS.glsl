@@ -38,7 +38,9 @@ uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_COLOR_PALETTE
 uniform sampler2D u_dayTextureColorPalette[TEXTURE_UNITS];
+#endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
 uniform sampler2D u_waterMask;
