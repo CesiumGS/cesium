@@ -660,25 +660,7 @@ defineSuite([
             Quaternion.fromRotationMatrix(undefined);
         }).toThrowDeveloperError();
     });
-/*
-    it('fromHeadingPitchRoll throws with undefined heading', function() {
-        expect(function() {
-            Quaternion.fromHeadingPitchRoll(undefined, 0.0, 0.0);
-        }).toThrowDeveloperError();
-    });
 
-    it('fromHeadingPitchRoll throws with undefined pitch', function() {
-        expect(function() {
-            Quaternion.fromHeadingPitchRoll(0.0, undefined, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('fromHeadingPitchRoll throws with undefined roll', function() {
-        expect(function() {
-            Quaternion.fromHeadingPitchRoll(0.0, 0.0, undefined);
-        }).toThrowDeveloperError();
-    });
-*/
     it('clone returns undefined with no parameter', function() {
         expect(Quaternion.clone()).toBeUndefined();
     });

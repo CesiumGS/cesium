@@ -1086,6 +1086,7 @@ define([
         endTransform : undefined
     };
 
+    var scratchHpr = new HeadingPitchRoll();
     /**
      * Sets the camera position, orientation and transform.
      *
@@ -1160,20 +1161,18 @@ define([
             orientation = directionUpToHeadingPitchRoll(this, destination, orientation, scratchSetViewOptions.orientation);
         }
 
-        var heading = defaultValue(orientation.heading, 0.0);
-        var pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
-        var roll = defaultValue(orientation.roll, 0.0);
-
-        var hpr = new HeadingPitchRoll(heading, pitch, roll);
+        scratchHpr.heading = defaultValue(orientation.heading, 0.0);
+        scratchHpr.pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
+        scratchHpr.roll = defaultValue(orientation.roll, 0.0);
 
         this._suspendTerrainAdjustment = true;
 
         if (mode === SceneMode.SCENE3D) {
-            setView3D(this, destination, hpr);
+            setView3D(this, destination, scratchHpr);
         } else if (mode === SceneMode.SCENE2D) {
-            setView2D(this, destination, hpr, convert);
+            setView2D(this, destination, scratchHpr, convert);
         } else {
-            setViewCV(this, destination, hpr, convert);
+            setViewCV(this, destination, scratchHpr, convert);
         }
     };
 
