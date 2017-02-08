@@ -14,8 +14,8 @@ define([
         '../../Scene/PerformanceDisplay',
         '../../Core/ScreenSpaceEventHandler',
         '../../Core/ScreenSpaceEventType',
-        '../createCommand',
-        'ThirdParty/when'
+        '../../ThirdParty/when',
+        '../createCommand'
     ], function(
         Cartesian3,
         Cartographic,
@@ -31,8 +31,8 @@ define([
         PerformanceDisplay,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
-        createCommand,
-        when) {
+        when,
+        createCommand) {
     'use strict';
 
     function createKnockoutBindings(viewModel, options) {
