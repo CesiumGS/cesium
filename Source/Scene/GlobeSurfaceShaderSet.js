@@ -159,10 +159,6 @@ define([
                 fs.defines.push('FOG');
             }
 
-            if (numberOfPaletteTextures > 0) {
-                fs.defines.push('APPLY_COLOR_PALETTE');
-            }
-
             if (applySplit) {
                 fs.defines.push('APPLY_SPLIT');
             }

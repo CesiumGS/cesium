@@ -38,7 +38,7 @@ uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
-#ifdef APPLY_COLOR_PALETTE
+#if PALETTE_UNITS > 0
 uniform sampler2D u_dayTextureColorPalette[PALETTE_UNITS];
 #endif
 
@@ -116,7 +116,7 @@ vec4 sampleAndBlend(
     }
 #endif
 
-#ifdef APPLY_COLOR_PALETTE
+#if PALETTE_UNITS > 0
     if(applyTextureColorPalette == 1) {
         float step = 1.0/1024.0;
         float a1 = texture2D(texture, textureCoordinates).r;
