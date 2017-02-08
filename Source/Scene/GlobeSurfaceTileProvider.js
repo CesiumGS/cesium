@@ -1018,6 +1018,7 @@ define([
 
         do {
             var numberOfDayTextures = 0;
+            var numberOfPaletteTextures = 0;
 
             var command;
             var uniformMap;
@@ -1140,9 +1141,10 @@ define([
                 uniformMapProperties.dayTextureSplit[numberOfDayTextures] = imageryLayer.splitDirection;
                 applySplit = applySplit || uniformMapProperties.dayTextureSplit[numberOfDayTextures] !== 0.0;
 
-                uniformMapProperties.dayTextureColorPalette[numberOfDayTextures] = imageryLayer.colorPalette;
-                if(uniformMapProperties.dayTextureColorPalette[numberOfDayTextures] !== ImageryLayer.DEFAULT_COLOR_PALETTE) {
-                    colorPaletteKeys[numberOfDayTextures] = 1;
+                if(imageryLayer.colorPalette !== ImageryLayer.DEFAULT_COLOR_PALETTE) {
+                    uniformMapProperties.dayTextureColorPalette[numberOfPaletteTextures] = imageryLayer.colorPalette;
+                    colorPaletteKeys[numberOfDayTextures] = numberOfPaletteTextures;
+                    numberOfPaletteTextures++;
                 }
 
                 if (defined(imagery.credits)) {
@@ -1167,7 +1169,7 @@ define([
             Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, colorPaletteKeys, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, numberOfPaletteTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, colorPaletteKeys, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

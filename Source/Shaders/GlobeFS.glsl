@@ -39,7 +39,7 @@ uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
 #ifdef APPLY_COLOR_PALETTE
-uniform sampler2D u_dayTextureColorPalette[TEXTURE_UNITS];
+uniform sampler2D u_dayTextureColorPalette[PALETTE_UNITS];
 #endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
@@ -82,7 +82,7 @@ vec4 sampleAndBlend(
     float textureSaturation,
     float textureOneOverGamma,
     float split,
-    float applyTextureColorPalette)
+    int applyTextureColorPalette)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
@@ -116,7 +116,8 @@ vec4 sampleAndBlend(
     }
 #endif
 
-    if(applyTextureColorPalette > 0.0) {
+#ifdef APPLY_COLOR_PALETTE
+    if(applyTextureColorPalette == 1) {
         float step = 1.0/1024.0;
         float a1 = texture2D(texture, textureCoordinates).r;
         float a2 = texture2D(texture, textureCoordinates + vec2(step, 0.0)).r;
@@ -134,6 +135,7 @@ vec4 sampleAndBlend(
         color = pixColor.rgb;
         alpha = pixColor.a;
     }
+#endif
 
 #ifdef APPLY_BRIGHTNESS
     color = mix(vec3(0.0), color, textureBrightness);

@@ -62,7 +62,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, colorPaletteKeys, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, numberOfPaletteTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, colorPaletteKeys, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -113,6 +113,7 @@ define([
 
             vs.defines.push(quantizationDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures);
+            fs.defines.push('PALETTE_UNITS ' + numberOfPaletteTextures);
 
             if (applyBrightness) {
                 fs.defines.push('APPLY_BRIGHTNESS');
@@ -158,7 +159,7 @@ define([
                 fs.defines.push('FOG');
             }
 
-            if (colorPaletteKeys.length > 0) {
+            if (numberOfPaletteTextures > 0) {
                 fs.defines.push('APPLY_COLOR_PALETTE');
             }
 
@@ -176,7 +177,7 @@ define([
     color = sampleAndBlend(\n\
         color,\n\
         u_dayTextures[' + i + '],\n\
-        ' + (colorPaletteKeys[i] ? 'u_dayTextureColorPalette[' + i + ']' : 'u_dayTextures[' + i + ']') + ',\n\
+        ' + (typeof(colorPaletteKeys[i]) !== 'undefined' ? 'u_dayTextureColorPalette[' + colorPaletteKeys[i] + ']' : 'u_dayTextures[' + i + ']') + ',\n\
         u_dayTextureUseWebMercatorT[' + i + '] ? textureCoordinates.xz : textureCoordinates.xy,\n\
         u_dayTextureTexCoordsRectangle[' + i + '],\n\
         u_dayTextureTranslationAndScale[' + i + '],\n\
@@ -187,7 +188,7 @@ define([
         ' + (applySaturation ? 'u_dayTextureSaturation[' + i + ']' : '0.0') + ',\n\
         ' + (applyGamma ? 'u_dayTextureOneOverGamma[' + i + ']' : '0.0') + ',\n\
         ' + (applySplit ? 'u_dayTextureSplit[' + i + ']' : '0.0') + ',\n\
-        ' + (colorPaletteKeys[i] ? '1.0' : '0.0') + '\n\
+        ' + (typeof(colorPaletteKeys[i]) !== 'undefined' ? '1' : '0') + '\n\
     );\n';
             }
 
