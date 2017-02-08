@@ -1144,7 +1144,7 @@ define([
                 if(imageryLayer.colorPalette !== ImageryLayer.DEFAULT_COLOR_PALETTE) {
                     uniformMapProperties.dayTextureColorPalette[numberOfPaletteTextures] = imageryLayer.colorPalette;
                     colorPaletteKeys[numberOfDayTextures] = numberOfPaletteTextures;
-                    numberOfPaletteTextures++;
+                    ++numberOfPaletteTextures;
                 }
 
                 if (defined(imagery.credits)) {
