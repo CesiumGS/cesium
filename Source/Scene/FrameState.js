@@ -189,7 +189,7 @@ define([
             /**
              * All shadow maps that are enabled this frame.
              */
-             shadowMaps : [],
+            shadowMaps : [],
 
             /**
              * Shadow maps that originate from light sources. Does not include shadow maps that are used for
@@ -235,6 +235,13 @@ define([
         * @default 0.0
         */
         this.imagerySplitPosition = 0.0;
+
+        /**
+         * Distances to the near and far planes of the camera frustums
+         * @type {Number[]}
+         * @default []
+         */
+        this.frustumSplits = [];
     }
 
     /**

@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+### 1.31 - 2017-03-01
+* Added support to `DebugCameraPrimitive` to draw multifrustum planes. The attribute `debugShowFrustumPlanes` of `Scene` and `frustumPlanes` of `CesiumInspector` toggles this. `FrameState` has been augmented to include `frustumSplits` which is a `Number[]` of the near/far planes of the camera frustums.
+* Enable rendering `GroundPrimitives` on hardware without the `EXT_frag_depth` extension; however, this could cause artifacts for certain viewing angles.
+* Added compressed texture support. [#4758](https://github.com/AnalyticalGraphicsInc/cesium/pull/4758)
+   * glTF models and imagery layers can now reference [KTX](https://www.khronos.org/opengles/sdk/tools/KTX/) textures and textures compressed with [crunch](https://github.com/BinomialLLC/crunch).
+   * Added `loadKTX`, to load KTX textures, and `loadCRN` to load crunch compressed textures.
+   * Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_s3tc`, `WEBGL_compressed_texture_pvrtc`, and `WEBGL_compressed_texture_etc1`.
+   * Added `CompressedTextureBuffer`.
+* Improved `RectangleGeometry` by skipping unecessary logic in the code [#4948](https://github.com/AnalyticalGraphicsInc/cesium/pull/4948)
+
 ### 1.30 - 2017-02-01
 
 * Deprecated

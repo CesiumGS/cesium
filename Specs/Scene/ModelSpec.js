@@ -76,6 +76,12 @@ defineSuite([
     var boxNoIndicesUrl = './Data/Models/Box-NoIndices/box-noindices.gltf';
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
+    var texturedBoxKTXUrl = './Data/Models/Box-Textured-KTX/CesiumTexturedBoxTest.gltf';
+    var texturedBoxKTXBinaryUrl = './Data/Models/Box-Textured-KTX-Binary/CesiumTexturedBoxTest.glb';
+    var texturedBoxKTXEmbeddedUrl = './Data/Models/Box-Textured-KTX-Embedded/CesiumTexturedBoxTest.gltf';
+    var texturedBoxCRNUrl = './Data/Models/Box-Textured-CRN/CesiumTexturedBoxTest.gltf';
+    var texturedBoxCRNBinaryUrl = './Data/Models/Box-Textured-CRN-Binary/CesiumTexturedBoxTest.glb';
+    var texturedBoxCRNEmbeddedUrl = './Data/Models/Box-Textured-CRN-Embedded/CesiumTexturedBoxTest.gltf';
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
@@ -781,6 +787,57 @@ defineSuite([
 
     it('renders textured box with external resources: .glsl, .bin, and .png files', function() {
         return loadModel(texturedBoxSeparateUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with external KTX texture', function() {
+        return loadModel(texturedBoxKTXUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with embedded binary KTX texture', function() {
+        return loadModel(texturedBoxKTXBinaryUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with embedded base64 encoded KTX texture', function() {
+        return loadModel(texturedBoxKTXEmbeddedUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with external CRN texture', function() {
+        if (!scene.context.s3tc) {
+            return;
+        }
+        return loadModel(texturedBoxCRNUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with embedded binary CRN texture', function() {
+        if (!scene.context.s3tc) {
+            return;
+        }
+        return loadModel(texturedBoxCRNBinaryUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with embedded base64 encoded CRN texture', function() {
+        if (!scene.context.s3tc) {
+            return;
+        }
+        return loadModel(texturedBoxCRNEmbeddedUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
