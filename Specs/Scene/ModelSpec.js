@@ -324,14 +324,14 @@ defineSuite([
     it('Renders x-up model', function() {
         return loadJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be z-up to x-up.
-            var zUpToXUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationY(-CesiumMath.PI_OVER_TWO));
-            gltf.nodes.node_transform.matrix = Matrix4.pack(zUpToXUp, new Array(16));
+            gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_X_UP, new Array(16));
 
             return loadModelJson(gltf, {
                 modelMatrix : Matrix4.IDENTITY,
                 upAxis : Axis.X
             }).then(function(m) {
                 verifyRender(m);
+                expect(m.upAxis).toBe(Axis.X);
                 primitives.remove(m);
             });
         });
@@ -340,14 +340,14 @@ defineSuite([
     it('Renders y-up model', function() {
         return loadJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be z-up to y-up.
-            var zUpToYUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(-CesiumMath.PI_OVER_TWO));
-            gltf.nodes.node_transform.matrix = Matrix4.pack(zUpToYUp, new Array(16));
+            gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_Y_UP, new Array(16));
 
             return loadModelJson(gltf, {
                 modelMatrix : Matrix4.IDENTITY,
                 upAxis : Axis.Y
             }).then(function(m) {
                 verifyRender(m);
+                expect(m.upAxis).toBe(Axis.Y);
                 primitives.remove(m);
             });
         });
@@ -360,9 +360,10 @@ defineSuite([
 
             return loadModelJson(gltf, {
                 modelMatrix : Matrix4.IDENTITY,
-                upAxis : Axis.Y
+                upAxis : Axis.Z
             }).then(function(m) {
                 verifyRender(m);
+                expect(m.upAxis).toBe(Axis.Z);
                 primitives.remove(m);
             });
         });
