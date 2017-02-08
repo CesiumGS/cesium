@@ -247,7 +247,7 @@ define([
         * @type {Array}
         * @default undefined
         */
-        this.imageryColorPalette = 0.0;
+        this.imageryColorPalette = 1.0;
     }
 
     /**
