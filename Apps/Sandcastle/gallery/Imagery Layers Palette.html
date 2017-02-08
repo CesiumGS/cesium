@@ -89,7 +89,7 @@ function startup(Cesium) {
     var options = {
         tileWidth: 512,
         tileHeight: 512,
-        url: 'http://cache.allisonhouse.com/maps/raw.php?model=rtma&run=201702081600&hour=1486569600000&layers=tmp_2m_0',
+        url: 'http://cache.allisonhouse.com/maps/raw.php?model=rtma&run=201702081600&hour=1486569600000&layers=tmp_2m_0&x={x}&y={y}&z={z}&min={min}&max={max}',
         palette: sortedColors,
         min: sortedColors[0][0],
         max: sortedColors[sortedColors.length-1][0]
@@ -183,7 +183,10 @@ function startup(Cesium) {
 
     options.colorPalette = colorTableData;
 
-    layers.addImageryProvider(new Cesium.CustomTemplateImageryProvider(options));
+    var newLayer = new Cesium.CustomTemplateImageryProvider(options);
+
+    var layer = layers.addImageryProvider(newLayer);
+    layer.colorPalette = (Cesium.defined(newLayer._colorPalette) ? newLayer._colorPalette : []);
 
     //Sandcastle_End
     Sandcastle.finishedLoading();
