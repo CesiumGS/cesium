@@ -505,6 +505,7 @@ define([
         var modelMatrix = options.modelMatrix;
         var depth = defaultValue(options.depth, 0.0);
         var clear = defaultValue(options.clear, true);
+        var epsilon = defaultValue(options.epsilon, 0);
 
         if (!defined(expected)) {
             expected = [255, 255, 255, 255];
@@ -584,20 +585,20 @@ define([
         var rgba = context.readPixels();
         if (!webglStub) {
             if (expectEqual) {
-                if ((rgba[0] !== expected[0]) ||
-                    (rgba[1] !== expected[1]) ||
-                    (rgba[2] !== expected[2]) ||
-                    (rgba[3] !== expected[3])) {
+                if (!CesiumMath.equalsEpsilon(rgba[0], expected[0], epsilon) ||
+                    !CesiumMath.equalsEpsilon(rgba[1], expected[1], epsilon) ||
+                    !CesiumMath.equalsEpsilon(rgba[2], expected[2], epsilon) ||
+                    !CesiumMath.equalsEpsilon(rgba[3], expected[3], epsilon)) {
                     return {
                         pass : false,
                         message : 'Expected context to render ' + expected + ', but rendered: ' + rgba
                     };
                 }
             } else {
-                if ((rgba[0] === expected[0]) &&
-                    (rgba[1] === expected[1]) &&
-                    (rgba[2] === expected[2]) &&
-                    (rgba[3] === expected[3])) {
+                if (CesiumMath.equalsEpsilon(rgba[0], expected[0], epsilon) &&
+                    CesiumMath.equalsEpsilon(rgba[1], expected[1], epsilon) &&
+                    CesiumMath.equalsEpsilon(rgba[2], expected[2], epsilon) &&
+                    CesiumMath.equalsEpsilon(rgba[3], expected[3], epsilon)) {
                     return {
                         pass : false,
                         message : 'Expected context not to render ' + expected + ', but rendered: ' + rgba
