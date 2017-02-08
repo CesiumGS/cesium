@@ -87,9 +87,7 @@ defineSuite([
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
-    var boxEcefXUpUrl = './Data/Models/Box-ECEF/ecef-x-up.gltf';
-    var boxEcefYUpUrl = './Data/Models/Box-ECEF/ecef-y-up.gltf';
-    var boxEcefZUpUrl = './Data/Models/Box-ECEF/ecef-z-up.gltf';
+    var boxEcefUrl = './Data/Models/Box-ECEF/ecef.gltf';
 
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
@@ -291,7 +289,7 @@ defineSuite([
     });
 
     it('renders ECEF in 2D', function() {
-        return loadModel(boxEcefYUpUrl, {
+        return loadModel(boxEcefUrl, {
             modelMatrix : Matrix4.IDENTITY,
             minimumPixelSize : undefined
         }).then(function(m) {
@@ -313,7 +311,7 @@ defineSuite([
     });
 
     it('renders ECEF in CV', function() {
-        return loadModel(boxEcefYUpUrl, {
+        return loadModel(boxEcefUrl, {
             modelMatrix : Matrix4.IDENTITY,
             minimumPixelSize : undefined
         }).then(function(m) {
@@ -324,32 +322,49 @@ defineSuite([
     });
 
     it('Renders x-up model', function() {
-        return loadModel(boxEcefXUpUrl, {
-            modelMatrix : Matrix4.IDENTITY,
-            axis : Axis.X
-        }).then(function(m) {
-            verifyRender(m);
-            primitives.remove(m);
+        return loadJson(boxEcefUrl).then(function(gltf) {
+            // Model data is z-up. Edit the transform to be z-up to x-up.
+            var zUpToXUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationY(-CesiumMath.PI_OVER_TWO));
+            gltf.nodes.node_transform.matrix = Matrix4.pack(zUpToXUp, new Array(16));
+
+            return loadModelJson(gltf, {
+                modelMatrix : Matrix4.IDENTITY,
+                upAxis : Axis.X
+            }).then(function(m) {
+                verifyRender(m);
+                primitives.remove(m);
+            });
         });
     });
 
-    it('Renders x-up model', function() {
-        return loadModel(boxEcefYUpUrl, {
-            modelMatrix : Matrix4.IDENTITY,
-            axis : Axis.Y
-        }).then(function(m) {
-            verifyRender(m);
-            primitives.remove(m);
+    it('Renders y-up model', function() {
+        return loadJson(boxEcefUrl).then(function(gltf) {
+            // Model data is z-up. Edit the transform to be z-up to y-up.
+            var zUpToYUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(-CesiumMath.PI_OVER_TWO));
+            gltf.nodes.node_transform.matrix = Matrix4.pack(zUpToYUp, new Array(16));
+
+            return loadModelJson(gltf, {
+                modelMatrix : Matrix4.IDENTITY,
+                upAxis : Axis.Y
+            }).then(function(m) {
+                verifyRender(m);
+                primitives.remove(m);
+            });
         });
     });
 
     it('Renders z-up model', function() {
-        return loadModel(boxEcefZUpUrl, {
-            modelMatrix : Matrix4.IDENTITY,
-            axis : Axis.Z
-        }).then(function(m) {
-            verifyRender(m);
-            primitives.remove(m);
+        return loadJson(boxEcefUrl).then(function(gltf) {
+            // Model data is z-up. Edit the transform to be the identity.
+            gltf.nodes.node_transform.matrix = Matrix4.pack(Matrix4.IDENTITY, new Array(16));
+
+            return loadModelJson(gltf, {
+                modelMatrix : Matrix4.IDENTITY,
+                upAxis : Axis.Y
+            }).then(function(m) {
+                verifyRender(m);
+                primitives.remove(m);
+            });
         });
     });
 

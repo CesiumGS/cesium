@@ -141,8 +141,6 @@ define([
         return {};
     }
 
-    var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
-    var xUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationY(CesiumMath.PI_OVER_TWO));
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = {
@@ -1302,9 +1300,9 @@ define([
 
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
         if (model.upAxis === Axis.Y) {
-            BoundingSphere.transformWithoutScale(boundingSphere, yUpToZUp, boundingSphere);
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Y_UP_TO_Z_UP, boundingSphere);
         } else if (model.upAxis === Axis.X) {
-            BoundingSphere.transformWithoutScale(boundingSphere, xUpToZUp, boundingSphere);
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.X_UP_TO_Z_UP, boundingSphere);
         }
         return boundingSphere;
     }
@@ -4333,9 +4331,9 @@ define([
                 var computedModelMatrix = this._computedModelMatrix;
                 Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
                 if (this.upAxis === Axis.Y) {
-                    Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
+                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
                 } else if (this.upAxis === Axis.X) {
-                    Matrix4.multiplyTransformation(computedModelMatrix, xUpToZUp, computedModelMatrix);
+                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
                 }
             }
 
