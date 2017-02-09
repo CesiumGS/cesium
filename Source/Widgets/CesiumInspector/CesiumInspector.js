@@ -26,9 +26,6 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Scene} scene The Scene instance to use.
      *
-     * @exception {DeveloperError} container is required.
-     * @exception {DeveloperError} scene is required.
-     *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
      */
     function CesiumInspector(container, scene) {
@@ -80,6 +77,7 @@ define([
         generalSection.className = 'cesium-cesiumInspector-section';
         generalSection.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : generalVisible, "cesium-cesiumInspector-hide" : !generalVisible}');
         panel.appendChild(generalSection);
+
         var debugShowFrustums = document.createElement('div');
         generalSection.appendChild(debugShowFrustums);
         var frustumStats = document.createElement('div');
@@ -91,6 +89,14 @@ define([
         debugShowFrustums.appendChild(frustumsCheckbox);
         debugShowFrustums.appendChild(document.createTextNode('Show Frustums'));
         debugShowFrustums.appendChild(frustumStats);
+
+        var debugShowFrustumPlanes = document.createElement('div');
+        generalSection.appendChild(debugShowFrustumPlanes);
+        var frustumPlanesCheckbox = document.createElement('input');
+        frustumPlanesCheckbox.type = 'checkbox';
+        frustumPlanesCheckbox.setAttribute('data-bind', 'checked: frustumPlanes');
+        debugShowFrustumPlanes.appendChild(frustumPlanesCheckbox);
+        debugShowFrustumPlanes.appendChild(document.createTextNode('Show Frustum Planes'));
 
         var performanceDisplay = document.createElement('div');
         generalSection.appendChild(performanceDisplay);
