@@ -39,7 +39,7 @@ var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     requestVertexNormals : true
 });
 viewer.terrainProvider = cesiumTerrainProviderMeshes;
-
+viewer.scene.globe.depthTestAgainstTerrain = true;
 Sandcastle.addDefaultToolbarMenu([{
     //
     // To clamp points or billboards set the heightReference to CLAMP_TO_GROUND or RELATIVE_TO_GROUND
