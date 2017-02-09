@@ -674,17 +674,6 @@ define([
         });
     }
 
-    function buildPickFeaturesUrl(imageryProvider, x, y, level, longitude, latitude, format) {
-        degreesScratchComputed = false;
-        projectedScratchComputed = false;
-        ijScratchComputed = false;
-        longitudeLatitudeProjectedScratchComputed = false;
-
-        return buildUrl(imageryProvider, imageryProvider._pickFeaturesUrlParts, function(partFunction) {
-            return partFunction(imageryProvider, x, y, level, longitude, latitude, format);
-        });
-    }
-
     function buildUrl(imageryProvider, parts, partFunctionInvoker) {
         var url = '';
 
