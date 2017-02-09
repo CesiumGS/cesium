@@ -1188,7 +1188,7 @@ define([
 
         if (mode === SceneMode.SCENE2D) {
             this.flyTo({
-                destination : Camera.DEFAULT_VIEW_RECTANGLE,
+                destination : Rectangle.MAX_VALUE,
                 duration : duration,
                 endTransform : Matrix4.IDENTITY
             });
