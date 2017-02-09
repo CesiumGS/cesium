@@ -126,3 +126,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Aristeidis Bampakos](https://github.com/bampakoa)
 * [Jane Minghui Guo](https://github.com/Jane-Of-Art)
 * [Prasanna Natarajan](https://github.com/PrasannaNatarajan)
+* [Joseph Klinger](https://github.com/klingerj)

@@ -1374,7 +1374,7 @@ define([
      * @constant
      * @type {Color}
      */
-    Color.FUSCHIA = freezeObject(Color.fromCssColorString('#FF00FF'));
+    Color.FUCHSIA = freezeObject(Color.fromCssColorString('#FF00FF'));
 
     /**
      * An immutable Color instance initialized to CSS color #DCDCDC
