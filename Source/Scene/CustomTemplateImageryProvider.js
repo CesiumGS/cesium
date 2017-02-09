@@ -629,8 +629,7 @@ define([
         if(!defined(imagePromise)) {
             return imagePromise;
         }
-
-        var that = this;
+        
         return when(imagePromise, function(image) {
             return image;
         });
