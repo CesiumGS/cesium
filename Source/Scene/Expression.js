@@ -104,7 +104,8 @@ define([
         exp2 : exp2,
         log : Math.log,
         log2 : log2,
-        fract : fract
+        fract : fract,
+        noise: Math.sin
     };
 
     var ternaryFunctions = {
@@ -773,7 +774,9 @@ define([
         var evaluate = unaryFunctions[call];
         return function(feature) {
             var left = this._left.evaluate(feature);
-            if (typeof left === 'number') {
+            if (call === 'noise' && left instanceof Cartesian3) {
+                return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
+            } else if (typeof left === 'number') {
                 return evaluate(left);
             } else if (left instanceof Cartesian2) {
                 return Cartesian2.fromElements(evaluate(left.x), evaluate(left.y), ScratchStorage.getCartesian2());
@@ -1557,7 +1560,9 @@ define([
                 } else if (value === 'Number') {
                     return 'float(' + left + ')';
                 } else if (value === 'round') {
-                	return 'floor(' + left + ' + 0.5)';
+                    return 'floor(' + left + ' + 0.5)';
+                } else if (value === 'noise') {
+                    return 'czm_noise(' + left + ')';
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
                 } else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {
