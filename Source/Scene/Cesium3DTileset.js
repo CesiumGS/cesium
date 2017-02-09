@@ -3,6 +3,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Color',
+        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -26,6 +27,7 @@ define([
         '../ThirdParty/when',
         './Cesium3DTile',
         './Cesium3DTileColorBlendMode',
+        './Cesium3DTileOptimizations',
         './Cesium3DTileRefine',
         './Cesium3DTileStyleEngine',
         './CullingVolume',
@@ -39,6 +41,7 @@ define([
         Cartesian3,
         Cartographic,
         Color,
+        clone,
         defaultValue,
         defined,
         defineProperties,
@@ -62,6 +65,7 @@ define([
         when,
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
+        Cesium3DTileOptimizations,
         Cesium3DTileRefine,
         Cesium3DTileStyleEngine,
         CullingVolume,
@@ -270,7 +274,8 @@ define([
             lastColor : new Cesium3DTilesetStatistics(),
             lastPick : new Cesium3DTilesetStatistics()
         };
-
+        
+        this._optimizations = defaultValue(options.optimizations, new Cesium3DTileOptimizations());
         this._tilesLoaded = false;
 
         /**
@@ -822,6 +827,12 @@ define([
             get : function() {
                 return this._statistics;
             }
+        },
+
+        optimizations : {
+            get : function() {
+                return this._optimizations;
+            }
         }
     });
 
@@ -1154,6 +1165,46 @@ define([
     var scratchStack = [];
     var scratchRefiningTiles = [];
 
+    var ChildrenVisibilityFlags = {
+        NONE: 0x0,
+        VISIBLE: 0x1,
+        IN_REQUEST_VOLUME: 0x2,
+        VISIBLE_IN_REQUEST_VOLUME: 0x4
+    };
+
+    function computeChildrenVisibility(tile, frameState, checkViewerRequestVolume) {
+        var flag = ChildrenVisibilityFlags.NONE;
+        var children = tile.children;
+        var childrenLength = children.length;
+        var visibilityPlaneMask = tile.visibilityPlaneMask;
+        for (var k = 0; k < childrenLength; ++k) {
+            var child = children[k];
+            
+            var visibilityMask = child.visibility(frameState, visibilityPlaneMask);
+            
+            if (isVisible(visibilityMask)) {
+                flag |= ChildrenVisibilityFlags.VISIBLE;
+            }
+
+            if (checkViewerRequestVolume) {
+                if (!child.insideViewerRequestVolume(frameState)) {
+                    visibilityMask = CullingVolume.MASK_OUTSIDE;
+                } else {
+                    flag |= ChildrenVisibilityFlags.IN_REQUEST_VOLUME;
+                    if (isVisible(visibilityMask)) {
+                        flag |= ChildrenVisibilityFlags.VISIBLE_IN_REQUEST_VOLUME;
+                    }
+                }
+            }
+
+            child.visibilityPlaneMask = visibilityMask
+        }
+
+        tile.childrenVisibility = flag;
+        
+        return flag;
+    }
+
     function selectTiles(tileset, frameState, outOfCore) {
         if (tileset.debugFreezeFrame) {
             return;
@@ -1285,11 +1336,21 @@ define([
                 // With replacement refinement, if the tile's SSE
                 // is not sufficient, its children (or ancestors) are
                 // rendered instead
+                var useChildrenBoundUnion = t._optimizations.checkChildrenWithinParent(t, true);
 
+                var childrenVisibility;
+                
                 if ((sse <= maximumScreenSpaceError) || (childrenLength === 0)) {
                     // This tile meets the SSE so add its commands.
                     // Select tile if it's a leaf (childrenLength === 0)
-                    selectTile(tileset, t, fullyVisible, frameState);
+                    if (useChildrenBoundUnion) {
+                        childrenVisibility = computeChildrenVisibility(t, frameState, false);
+                        if ((childrenVisibility & ChildrenVisibilityFlags.VISIBLE) || childrenLength === 0) {
+                            selectTile(tileset, t, fullyVisible, frameState);
+                        }
+                    } else {
+                        selectTile(tileset, t, fullyVisible, frameState);
+                    }
                 } else if (!tileset._refineToVisible) {
                     // Tile does not meet SSE.
                     // Refine when all children (visible or not) are loaded.
@@ -1311,37 +1372,34 @@ define([
                     }
 
                     if (!allChildrenLoaded) {
-                        // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
-                        selectTile(tileset, t, fullyVisible, frameState);
+                        childrenVisibility = computeChildrenVisibility(t, frameState, false);
+                        if (!useChildrenBoundUnion || (childrenVisibility & ChildrenVisibilityFlags.VISIBLE) || childrenLength === 0) {
+                            // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
+                            selectTile(tileset, t, fullyVisible, frameState);
 
-                        if (outOfCore) {
-                            for (k = 0; (k < childrenLength) && t.canRequestContent(); ++k) {
-                                child = children[k];
-                                // PERFORMANCE_IDEA: we could spin a bit less CPU here by keeping separate lists for unloaded/ready children.
-                                if (child.contentUnloaded) {
-                                    requestContent(tileset, child, outOfCore);
-                                } else {
-                                    // Touch loaded child even though it is not selected this frame since
-                                    // we want to keep it in the cache for when all children are loaded
-                                    // and this tile can refine to them.
-                                    touch(tileset, child, outOfCore);
+                            if (outOfCore) {
+                                for (k = 0; (k < childrenLength) && t.canRequestContent(); ++k) {
+                                    child = children[k];
+                                    // PERFORMANCE_IDEA: we could spin a bit less CPU here by keeping separate lists for unloaded/ready children.
+                                    if (child.contentUnloaded) {
+                                        requestContent(tileset, child, outOfCore);
+                                    } else {
+                                        // Touch loaded child even though it is not selected this frame since
+                                        // we want to keep it in the cache for when all children are loaded
+                                        // and this tile can refine to them.
+                                        touch(tileset, child, outOfCore);
+                                    }
                                 }
                             }
                         }
                     } else {
                         // Tile does not meet SSE and its children are loaded.  Refine to them in front-to-back order.
-                        var anyChildrenVisible = false;
+                        childrenVisibility = computeChildrenVisibility(t, frameState, true);
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            if (child.insideViewerRequestVolume(frameState)) {
-                                child.visibilityPlaneMask = child.visibility(frameState, visibilityPlaneMask);
-                            } else {
-                                child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
-                            }
 
                             if (isVisible(child.visibilityPlaneMask)) {
                                 stack.push(child);
-                                anyChildrenVisible = true;
                             } else {
                                 // Touch the child tile even if it is not visible. Since replacement refinement
                                 // requires all child tiles to be loaded to refine to them, we want to keep it in the cache.
@@ -1349,12 +1407,12 @@ define([
                             }
                         }
 
-                        if (anyChildrenVisible) {
+                        if (childrenVisibility & ChildrenVisibilityFlags.VISIBLE_IN_REQUEST_VOLUME) {
                             t.replaced = true;
                             if (defined(t.descendantsWithContent)) {
                                 scratchRefiningTiles.push(t);
                             }
-                        } else {
+                        } else if (!useChildrenBoundUnion || (childrenVisibility & ChildrenVisibilityFlags.VISIBLE) || childrenLength === 0) {
                             // Even though the children are all loaded they may not be visible if the camera
                             // is not inside their request volumes.
                             selectTile(tileset, t, fullyVisible, frameState);
@@ -1366,16 +1424,17 @@ define([
 
                     // Get visibility for all children. Check if any visible children are not loaded.
                     // PERFORMANCE_IDEA: exploit temporal coherence to avoid checking visibility every frame
+                    updateTransforms(children, t.computedTransform);
+                    childrenVisibility = computeChildrenVisibility(t, frameState, true);
+
+                    if (useChildrenBoundUnion && childrenVisibility === ChildrenVisibilityFlags.NONE && childrenLength !== 0) {
+                        continue;
+                    }
+
                     var allVisibleChildrenLoaded = true;
                     var someVisibleChildrenLoaded = false;
                     for (k = 0; k < childrenLength; ++k) {
                         child = children[k];
-                        child.updateTransform(t.computedTransform);
-                        if (child.insideViewerRequestVolume(frameState)) {
-                            child.visibilityPlaneMask = child.visibility(frameState, visibilityPlaneMask);
-                        } else {
-                            child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
-                        }
                         if (isVisible(child.visibilityPlaneMask)) {
                             if (child.contentReady) {
                                 someVisibleChildrenLoaded = true;
@@ -1461,6 +1520,7 @@ define([
             for (j = 0; j < descendantsLength; ++j) {
                 descendant = refiningTile.descendantsWithContent[j];
                 if (!descendant.selected && !descendant.replaced &&
+                    ((descendant.childrenVisibility & ChildrenVisibilityFlags.VISIBLE) || descendant.children.length === 0) &&
                     (frameState.cullingVolume.computeVisibility(descendant.contentBoundingVolume) !== Intersect.OUTSIDE)) {
                         refinable = false;
                         break;
