@@ -687,12 +687,6 @@ define([
             funcs.push(applyColorMask);
         }
 
-	/*
-        if (previousState.depthMask !== nextState.depthMask) {
-            funcs.push(applyDepthMask);
-        }
-*/
-
         if (previousState.stencilMask !== nextState.stencilMask) {
             funcs.push(applyStencilMask);
         }
