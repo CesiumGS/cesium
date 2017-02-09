@@ -2,15 +2,12 @@ Change Log
 ==========
 
 ### 1.31 - 2017-03-01
-<<<<<<< HEAD
 * Deprecated
   * The function `Quaternion.fromHeadingPitchRoll(heading, pitch, roll,result)` will be removed in 1.33. Use `Quaternion.fromHeadingPitchRoll(hpr,result)` instead  where hpr is a HeadingPitchRoll.
   * The function `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)` will be removed in 1.33. Use `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator).
   * The function `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)` will be removed in 1.33. Use `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator).
-=======
 * Breaking changes
   * Corrected spelling of `Color.FUCHSIA` from `Color.FUSCHIA`
->>>>>>> upstream/master
 * Added support to `DebugCameraPrimitive` to draw multifrustum planes. The attribute `debugShowFrustumPlanes` of `Scene` and `frustumPlanes` of `CesiumInspector` toggles this. `FrameState` has been augmented to include `frustumSplits` which is a `Number[]` of the near/far planes of the camera frustums.
 * Enable rendering `GroundPrimitives` on hardware without the `EXT_frag_depth` extension; however, this could cause artifacts for certain viewing angles.
 * Added compressed texture support. [#4758](https://github.com/AnalyticalGraphicsInc/cesium/pull/4758)

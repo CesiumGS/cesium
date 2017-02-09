@@ -194,21 +194,20 @@ define([
     Quaternion.fromHeadingPitchRoll = function(headingOrHeadingPitchRoll, pitchOrResult, roll, result) {
         //>>includeStart('debug', pragmas.debug);
         if (headingOrHeadingPitchRoll instanceof HeadingPitchRoll) {
-          Check.typeOf.object('headingPitchRoll',headingOrHeadingPitchRoll );
+            Check.typeOf.object('headingPitchRoll', headingOrHeadingPitchRoll);
         } else {
-          Check.typeOf.number(headingOrHeadingPitchRoll, 'heading');
-          Check.typeOf.number(pitchOrResult, 'pitch');
-          Check.typeOf.number(roll, 'roll');
+            Check.typeOf.number(headingOrHeadingPitchRoll, 'heading');
+            Check.typeOf.number(pitchOrResult, 'pitch');
+            Check.typeOf.number(roll, 'roll');
         }
         //>>includeEnd('debug');
         var hpr;
         if (headingOrHeadingPitchRoll instanceof HeadingPitchRoll) {
-          hpr = headingOrHeadingPitchRoll;
-          result = pitchOrResult;
+            hpr = headingOrHeadingPitchRoll;
+            result = pitchOrResult;
         } else {
-          deprecationWarning('Quaternion.fromHeadingPitchRoll(heading, pitch, roll,result)', 'The method was deprecated in Cesium 1.32 and will be removed in version 1.33. ' +
-          'Use Quaternion.fromHeadingPitchRoll(hpr,result) where hpr is a HeadingPitchRoll');
-          hpr = new HeadingPitchRoll(headingOrHeadingPitchRoll, pitchOrResult, roll);
+            deprecationWarning('Quaternion.fromHeadingPitchRoll(heading, pitch, roll,result)', 'The method was deprecated in Cesium 1.32 and will be removed in version 1.33. ' + 'Use Quaternion.fromHeadingPitchRoll(hpr,result) where hpr is a HeadingPitchRoll');
+            hpr = new HeadingPitchRoll(headingOrHeadingPitchRoll, pitchOrResult, roll);
         }
         scratchRollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, hpr.roll, scratchHPRQuaternion);
         scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -hpr.pitch, result);
