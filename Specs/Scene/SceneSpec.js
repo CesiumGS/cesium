@@ -227,12 +227,13 @@ defineSuite([
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
-        var radius = Cartesian3.magnitude(scene.camera.position) - 10.0;
+        var radius = 10.0;
+        var center = Cartesian3.add(scene.camera.position, scene.camera.direction, new Cartesian3());
 
         var c = new DrawCommand({
             pass : Pass.OPAQUE,
             debugShowBoundingVolume : true,
-            boundingVolume : new BoundingSphere(Cartesian3.ZERO, radius)
+            boundingVolume : new BoundingSphere(center, radius)
         });
         c.execute = function() {};
 
@@ -905,7 +906,7 @@ defineSuite([
         }
         s.destroyForSpecs();
     });
-    
+
     it('does not throw with debugShowFrustums', function() {
         var s = createScene();
         if (s.context.drawBuffers) {
