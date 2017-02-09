@@ -81,7 +81,7 @@ function startup(Cesium) {
     var sortedColors = [];
     var i;
     for (i in unsortedColors) {
-        if(sortedColors.hasOwnProperty(i)) {
+        if(unsortedColors.hasOwnProperty(i)) {
             sortedColors.push([i, unsortedColors[i]]);
         }
     }
