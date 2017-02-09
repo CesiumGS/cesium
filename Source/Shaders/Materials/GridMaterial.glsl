@@ -1,6 +1,4 @@
-#ifdef GL_OES_standard_derivatives
-    #extension GL_OES_standard_derivatives : enable
-#endif
+#extension GL_OES_standard_derivatives : enable
 
 uniform vec4 color;
 uniform float cellAlpha;

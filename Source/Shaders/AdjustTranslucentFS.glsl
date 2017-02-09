@@ -11,7 +11,7 @@ void main()
 {
     if (texture2D(u_depthTexture, v_textureCoordinates).r < 1.0)
     {
-#ifdef MRT
+#ifdef GL_EXT_draw_buffers
         gl_FragData[0] = u_bgColor;
         gl_FragData[1] = vec4(u_bgColor.a);
 #else
@@ -19,6 +19,6 @@ void main()
 #endif
         return;
     }
-    
+
     discard;
 }

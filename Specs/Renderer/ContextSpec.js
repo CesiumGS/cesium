@@ -126,13 +126,13 @@ defineSuite([
         fs +=
             'void main()\n' +
             '{\n';
-         
+
         if (context.standardDerivatives) {
             fs += '  gl_FragColor = vec4(dFdx(1.0), dFdy(1.0), 1.0, 1.0);\n';
         } else {
             fs += '  gl_FragColor = vec4(1.0);\n';
         }
-         
+
          fs += '}';
 
         var expected = context.standardDerivatives ? [0, 0, 255, 255] : [255, 255, 255, 255];
@@ -202,16 +202,16 @@ defineSuite([
         }).contextToRender([255, 0, 0, 255]);
 
         var fsFragDepth = '';
-        
+
         if (context.fragmentDepth && !context.webgl2) {
             fsFragDepth += '#extension GL_EXT_frag_depth : enable\n';
         }
-        
+
         fsFragDepth +=
             'void main()\n' +
             '{\n' +
             '    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n';
-        
+
         if (context.fragmentDepth) {
             fsFragDepth += '    gl_FragDepth';
             if (!context.webgl2) {
@@ -219,7 +219,7 @@ defineSuite([
             }
             fsFragDepth += ' = 0.0;\n';
         }
-        
+
         fsFragDepth += '}\n';
 
         var expected = context.fragmentDepth ? [0, 255, 0, 255] : [255, 0, 0, 255];

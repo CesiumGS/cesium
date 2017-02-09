@@ -1,6 +1,4 @@
-#ifdef GL_EXT_frag_depth
 #extension GL_EXT_frag_depth : enable
-#endif
 
 // emulated noperspective
 varying float v_WindowZ;
