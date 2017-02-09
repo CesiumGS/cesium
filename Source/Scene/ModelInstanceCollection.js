@@ -376,7 +376,7 @@ define([
             // Use the vertex shader that was generated earlier
             vs = vertexShaderCached;
             var usesBatchTable = defined(collection._batchTable);
-            var allowPicking = defined(collection._allowPicking);
+            var allowPicking = collection._allowPicking;
             if (usesBatchTable) {
                 vs = collection._batchTable.getPickVertexShaderCallback('a_batchId')(vs);
             } else if (allowPicking) {
@@ -389,7 +389,7 @@ define([
     function getPickFragmentShaderCallback(collection) {
         return function(fs) {
             var usesBatchTable = defined(collection._batchTable);
-            var allowPicking = defined(collection._allowPicking);
+            var allowPicking = collection._allowPicking;
             if (usesBatchTable) {
                 fs = collection._batchTable.getPickFragmentShaderCallback()(fs);
             } else if (allowPicking) {
@@ -469,7 +469,7 @@ define([
     function getPickFragmentShaderNonInstancedCallback(collection) {
         return function(fs) {
             var usesBatchTable = defined(collection._batchTable);
-            var allowPicking = defined(collection._allowPicking);
+            var allowPicking = collection._allowPicking;
             if (usesBatchTable) {
                 fs = collection._batchTable.getPickFragmentShaderCallback()(fs);
             } else if (allowPicking) {
