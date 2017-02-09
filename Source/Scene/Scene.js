@@ -100,7 +100,7 @@ define([
         Matrix4,
         mergeSort,
         Occluder,
-	PixelFormat,
+        PixelFormat,
         ShowGeometryInstanceAttribute,
         Transforms,
         ClearCommand,
@@ -108,13 +108,13 @@ define([
         Context,
         ContextLimits,
         DrawCommand,
-	Framebuffer,
+        Framebuffer,
         Pass,
         PassState,
-	PixelDatatype,
+        PixelDatatype,
         ShaderProgram,
         ShaderSource,
-	Texture,
+        Texture,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -556,7 +556,7 @@ define([
          */
         this.useDepthPicking = true;
 
-	this.pickTranslucentDepth = true;
+        this.pickTranslucentDepth = true;
 
         /**
          * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
@@ -2709,9 +2709,9 @@ define([
     var scratchPickDepthPassState;
 
     function renderForPickDepth(scene, drawingBufferPosition) {
-	var context = scene._context;
+        var context = scene._context;
         var us = context.uniformState;
-	var frameState = scene._frameState;
+        var frameState = scene._frameState;
 
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(scene, frameState.frameNumber, frameState.time);
@@ -2720,50 +2720,49 @@ define([
 
         us.update(frameState);
 
-	var passState = scratchPickDepthPassState;
-	if (!defined(passState)) {
-	    passState = scratchPickDepthPassState = new PassState(context);
+        var passState = scratchPickDepthPassState;
+        if (!defined(passState)) {
+            passState = scratchPickDepthPassState = new PassState(context);
             passState.scissorTest = {
-		enabled : true,
-		rectangle : new BoundingRectangle()
+                enabled : true,
+                rectangle : new BoundingRectangle()
             };
             passState.viewport = new BoundingRectangle();
-	    passState.depthMask = true;
-	}
+            passState.depthMask = true;
+        }
 
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 	
-	var framebuffer = scene._pickDepthFramebuffer;
-	var pickDepthFBWidth = scene._pickDepthFramebufferWidth;
-	var pickDepthFBHeight = scene._pickDepthFramebufferHeight;
-	if (!defined(framebuffer) || pickDepthFBWidth !== width || pickDepthFBHeight !== height) {
-	    scene._pickDepthFramebuffer = scene._pickDepthFramebuffer && scene._pickDepthFramebuffer.destroy();
-	    framebuffer = scene._pickDepthFramebuffer = new Framebuffer({
-		context : context,
-		depthStencilTexture : new Texture({
-		    context : context,
-		    width : width,
-		    height : height,
-		    pixelFormat : PixelFormat.DEPTH_STENCIL,
-		    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
-		})
-	    });
+        var framebuffer = scene._pickDepthFramebuffer;
+        var pickDepthFBWidth = scene._pickDepthFramebufferWidth;
+        var pickDepthFBHeight = scene._pickDepthFramebufferHeight;
+        if (!defined(framebuffer) || pickDepthFBWidth !== width || pickDepthFBHeight !== height) {
+            scene._pickDepthFramebuffer = scene._pickDepthFramebuffer && scene._pickDepthFramebuffer.destroy();
+            framebuffer = scene._pickDepthFramebuffer = new Framebuffer({
+                context : context,
+                depthStencilTexture : new Texture({
+                    context : context,
+                    width : width,
+                    height : height,
+                    pixelFormat : PixelFormat.DEPTH_STENCIL,
+                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
+                })
+            });
 
-	    scene._pickDepthFramebufferWidth = width;
-	    scene._pickDepthFramebufferHeight = height;
-	}
+            scene._pickDepthFramebufferWidth = width;
+            scene._pickDepthFramebufferHeight = height;
+        }
 
-
-	passState.framebuffer = framebuffer;
+        passState.framebuffer = framebuffer;
         passState.viewport.width = width;
         passState.viewport.height = height;
-	passState.scissorTest.rectangle.x = drawingBufferPosition.x;
-	passState.scissorTest.rectangle.y = height - drawingBufferPosition.y;
-	passState.scissorTest.rectangle.width = 1;
-	passState.scissorTest.rectangle.height = 1;
+        passState.scissorTest.rectangle.x = drawingBufferPosition.x;
+        passState.scissorTest.rectangle.y = height - drawingBufferPosition.y;
+        passState.scissorTest.rectangle.width = 1;
+        passState.scissorTest.rectangle.height = 1;
 	
-	updateAndExecuteCommands(scene, passState, scratchColorZero);
+        updateAndExecuteCommands(scene, passState, scratchColorZero);
         resolveFramebuffers(scene, passState);
 
         context.endFrame();
@@ -2800,9 +2799,9 @@ define([
         var uniformState = context.uniformState;
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
-	if (this.pickTranslucentDepth) {
-	    renderForPickDepth(this, drawingBufferPosition);
-	}
+        if (this.pickTranslucentDepth) {
+            renderForPickDepth(this, drawingBufferPosition);
+        }
         drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
 
         var camera = this._camera;

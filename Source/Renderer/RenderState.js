@@ -550,7 +550,7 @@ define([
     }
 
     function applyDepthMask(gl, renderState, passState) {
-	var mask = defined(passState.depthMask) ? passState.depthMask : renderState.depthMask;
+        var mask = defined(passState.depthMask) ? passState.depthMask : renderState.depthMask;
         gl.depthMask(mask);
     }
 
@@ -645,7 +645,7 @@ define([
         applyStencilMask(gl, renderState);
         applyStencilTest(gl, renderState);
         applySampleCoverage(gl, renderState);
-	applyDepthMask(gl, renderState, passState);
+        applyDepthMask(gl, renderState, passState);
         applyScissorTest(gl, renderState, passState);
         applyBlending(gl, renderState, passState);
         applyViewport(gl, renderState, passState);
@@ -753,9 +753,9 @@ define([
             applyViewport(gl, renderState, passState);
         }
 
-	if (previousRenderState !== renderState || previousPassState !== passState || previousPassState.context !== passState.context) {
-	    applyDepthMask(gl, renderState, passState);
-	}
+        if (previousRenderState !== renderState || previousPassState !== passState || previousPassState.context !== passState.context) {
+            applyDepthMask(gl, renderState, passState);
+        }
     };
 
     RenderState.getState = function(renderState) {
