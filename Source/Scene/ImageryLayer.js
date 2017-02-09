@@ -757,7 +757,7 @@ define([
         }
 
         if(defined(imagery.imageryLayer.colorPalette) &&
-            imagery.imageryLayer.colorPalette != ImageryLayer.DEFAULT_COLOR_PALETTE &&
+            imagery.imageryLayer.colorPalette !== ImageryLayer.DEFAULT_COLOR_PALETTE &&
             !(imagery.imageryLayer.colorPalette instanceof Texture)
         ) {
             imagery.imageryLayer.colorPalette = new Texture({
