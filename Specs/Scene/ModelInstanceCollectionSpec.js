@@ -186,6 +186,28 @@ defineSuite([
         }
     }
 
+    function verifyPickedInstance(collection, instanceId) {
+        return function(result) {
+            expect(result.primitive).toBe(collection);
+            expect(result.modelMatrix).toBeDefined();
+            expect(result.instanceId).toBe(instanceId);
+            expect(result.model).toBe(collection._model);
+        };
+    }
+
+    function expectPick(collection) {
+        collection.show = false;
+        expect(scene).notToPick();
+        collection.show = true;
+
+        // Verify each instance
+        var length = collection.length;
+        for (var i = 0; i < length; ++i) {
+            zoomTo(collection, i);
+            expect(scene).toPickAndCall(verifyPickedInstance(collection, i));
+        }
+    }
+
     it('throws if neither options.gltf nor options.url are provided', function() {
         expect(function() {
             return new ModelInstanceCollection();
@@ -533,6 +555,69 @@ defineSuite([
             expect(drawCommand.receiveShadows).toBe(false);
         });
     });
+
+    it('picks', function() {
+        return loadCollection({
+            gltf : boxGltf,
+            instances : createInstances(4)
+        }).then(function(collection) {
+            expectPick(collection);
+        });
+    });
+
+    it('picks when instancing is disabled', function() {
+        // Disable extension
+        var instancedArrays = scene.context._instancedArrays;
+        scene.context._instancedArrays = undefined;
+
+        return loadCollection({
+            gltf : boxGltf,
+            instances : createInstances(4)
+        }).then(function(collection) {
+            expectPick(collection);
+            // Re-enable extension
+            scene.context._instancedArrays = instancedArrays;
+        });
+    });
+
+    it('moves instance', function() {
+        return loadCollection({
+            gltf : boxGltf,
+            instances : createInstances(4)
+        }).then(function(collection) {
+            zoomTo(collection, 1);
+            expect(scene).toPickAndCall(function(result) {
+                var originalMatrix = result.modelMatrix;
+                result.modelMatrix = Matrix4.IDENTITY;
+                expect(scene).notToPick();
+                result.modelMatrix = originalMatrix;
+                expect(scene).toPickPrimitive(collection);
+            });
+        });
+    });
+
+    it('moves instance when instancing is disabled', function() {
+        // Disable extension
+        var instancedArrays = scene.context._instancedArrays;
+        scene.context._instancedArrays = undefined;
+
+        return loadCollection({
+            gltf : boxGltf,
+            instances : createInstances(4)
+        }).then(function(collection) {
+            zoomTo(collection, 1);
+            expect(scene).toPickAndCall(function(result) {
+                var originalMatrix = result.modelMatrix;
+                result.modelMatrix = Matrix4.IDENTITY;
+                expect(scene).notToPick();
+                result.modelMatrix = originalMatrix;
+                expect(scene).toPickPrimitive(collection);
+            });
+            // Re-enable extension
+            scene.context._instancedArrays = instancedArrays;
+        });
+    });
+
 
     it('destroys', function() {
         return loadCollection({
