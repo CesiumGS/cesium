@@ -436,7 +436,7 @@ define([
         var levelZeroTiles = primitive._levelZeroTiles;
 
         // Sort the level zero tiles by the distance from the center to the camera.
-        // The level zero tiles aren't necessarily a nice neat quad, so we can use the
+        // The level zero tiles aren't necessarily a nice neat quad, so we can't use the
         // quadtree ordering we use elsewhere in the tree
         comparisonPoint = frameState.camera.positionCartographic;
         levelZeroTiles.sort(compareDistanceToPoint);
@@ -653,6 +653,13 @@ define([
         } else {
             ++primitive._debug.tilesCulled;
             primitive._tileReplacementQueue.markTileRendered(tile);
+
+            // We've decided this tile is not visible, but if it's not fully loaded yet, we've made
+            // this determination based on possibly-incorrect information.  We need to load this
+            // culled tile with low priority just in case it turns out to be visible after all.
+            if (tile.needsLoading) {
+                primitive._tileLoadQueueLow.push(tile);
+            }
         }
     }
     /**
