@@ -41,27 +41,27 @@ function startup(Cesium) {
 
     var layers = viewer.imageryLayers;
 
-    var rawPalette = `-60	0	0	0	0
--50	45	0	45
--50	53	0	53
--40	46	0	91
--30	68	0	136
--20	163	70	255
--10	213	170	255
-0	255	255	255
-10	255	10	190
-20	72	0	83
-32	0	253	253
-35	88	177	164
-40	0	95	0
-50	0	197	5
-60	180	255	0
-65	255	250	78
-70	255	194	14
-80	255	126	10
-90	237	28	36
-100	107	0	0
-120	97	3	38`;
+    var rawPalette = '-60	0	0	0	0\n\
+-50	45	0	4\n\
+-50	53	0	53\n\
+-40	46	0	91\n\
+-30	68	0	136\n\
+-20	163	70	255\n\
+-10	213	170	255\n\
+0	255	255	255\n\
+10	255	10	190\n\
+20	72	0	83\n\
+32	0	253	253\n\
+35	88	177	164\n\
+40	0	95	0\n\
+50	0	197	5\n\
+60	180	255	0\n\
+65	255	250	78\n\
+70	255	194	14\n\
+80	255	126	10\n\
+90	237	28	36\n\
+100	107	0	0\n\
+120	97	3	38';
 
     var lines = rawPalette.split('\n');
     var unsortedColors = {};
@@ -73,13 +73,13 @@ function startup(Cesium) {
             unsortedColors[key][0] = parseInt(values[1]);
             unsortedColors[key][1] = parseInt(values[2]);
             unsortedColors[key][2] = parseInt(values[3]);
-            unsortedColors[key][3] = (typeof(values[4]) !== 'undefined' && values[4] != '' ? parseInt(values[4]) : 255);
+            unsortedColors[key][3] = (typeof(values[4]) !== 'undefined' && values[4] !== '' ? parseInt(values[4]) : 255);
             return true;
         }
     });
 
     var sortedColors = [];
-    for (i in unsortedColors) {
+    for (var i in unsortedColors) {
         sortedColors.push([i, unsortedColors[i]]);
     }
     sortedColors.sort(function(a, b) {
