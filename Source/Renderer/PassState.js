@@ -56,6 +56,8 @@ define([], function() {
          * @default undefined
          */
         this.viewport = undefined;
+
+	this.depthMask = undefined;
     }
 
     return PassState;

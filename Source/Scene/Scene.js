@@ -28,6 +28,7 @@ define([
         '../Core/Matrix4',
         '../Core/mergeSort',
         '../Core/Occluder',
+        '../Core/PixelFormat',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/Transforms',
         '../Renderer/ClearCommand',
@@ -35,10 +36,13 @@ define([
         '../Renderer/Context',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/Pass',
         '../Renderer/PassState',
+        '../Renderer/PixelDatatype',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -96,6 +100,7 @@ define([
         Matrix4,
         mergeSort,
         Occluder,
+	PixelFormat,
         ShowGeometryInstanceAttribute,
         Transforms,
         ClearCommand,
@@ -103,10 +108,13 @@ define([
         Context,
         ContextLimits,
         DrawCommand,
+	Framebuffer,
         Pass,
         PassState,
+	PixelDatatype,
         ShaderProgram,
         ShaderSource,
+	Texture,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -547,6 +555,8 @@ define([
          * @default true
          */
         this.useDepthPicking = true;
+
+	this.pickTranslucentDepth = true;
 
         /**
          * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
@@ -2696,6 +2706,69 @@ define([
         return object;
     };
 
+    var scratchPickDepthPassState;
+
+    function renderForPickDepth(scene, drawingBufferPosition) {
+	var context = scene._context;
+        var us = context.uniformState;
+	var frameState = scene._frameState;
+
+        // Update with previous frame's number and time, assuming that render is called before picking.
+        updateFrameState(scene, frameState.frameNumber, frameState.time);
+        frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, 1, 1);
+        frameState.passes.render = true;
+
+        us.update(frameState);
+
+	var passState = scratchPickDepthPassState;
+	if (!defined(passState)) {
+	    passState = scratchPickDepthPassState = new PassState(context);
+            passState.scissorTest = {
+		enabled : true,
+		rectangle : new BoundingRectangle()
+            };
+            passState.viewport = new BoundingRectangle();
+	    passState.depthMask = true;
+	}
+
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
+	
+	var framebuffer = scene._pickDepthFramebuffer;
+	var pickDepthFBWidth = scene._pickDepthFramebufferWidth;
+	var pickDepthFBHeight = scene._pickDepthFramebufferHeight;
+	if (!defined(framebuffer) || pickDepthFBWidth !== width || pickDepthFBHeight !== height) {
+	    scene._pickDepthFramebuffer = scene._pickDepthFramebuffer && scene._pickDepthFramebuffer.destroy();
+	    framebuffer = scene._pickDepthFramebuffer = new Framebuffer({
+		context : context,
+		depthStencilTexture : new Texture({
+		    context : context,
+		    width : width,
+		    height : height,
+		    pixelFormat : PixelFormat.DEPTH_STENCIL,
+		    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
+		})
+	    });
+
+	    scene._pickDepthFramebufferWidth = width;
+	    scene._pickDepthFramebufferHeight = height;
+	}
+
+
+	passState.framebuffer = framebuffer;
+        passState.viewport.width = width;
+        passState.viewport.height = height;
+	passState.scissorTest.rectangle.x = drawingBufferPosition.x;
+	passState.scissorTest.rectangle.y = height - drawingBufferPosition.y;
+	passState.scissorTest.rectangle.width = 1;
+	passState.scissorTest.rectangle.height = 1;
+	
+	updateAndExecuteCommands(scene, passState, scratchColorZero);
+        resolveFramebuffers(scene, passState);
+
+        context.endFrame();
+    }
+	
     var scratchPackedDepth = new Cartesian4();
     var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
 
@@ -2727,6 +2800,9 @@ define([
         var uniformState = context.uniformState;
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
+	if (this.pickTranslucentDepth) {
+	    renderForPickDepth(this, drawingBufferPosition);
+	}
         drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
 
         var camera = this._camera;

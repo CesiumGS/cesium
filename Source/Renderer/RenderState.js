@@ -549,8 +549,9 @@ define([
         gl.colorMask(colorMask.red, colorMask.green, colorMask.blue, colorMask.alpha);
     }
 
-    function applyDepthMask(gl, renderState) {
-        gl.depthMask(renderState.depthMask);
+    function applyDepthMask(gl, renderState, passState) {
+	var mask = defined(passState.depthMask) ? passState.depthMask : renderState.depthMask;
+        gl.depthMask(mask);
     }
 
     function applyStencilMask(gl, renderState) {
@@ -641,10 +642,10 @@ define([
         applyDepthRange(gl, renderState);
         applyDepthTest(gl, renderState);
         applyColorMask(gl, renderState);
-        applyDepthMask(gl, renderState);
         applyStencilMask(gl, renderState);
         applyStencilTest(gl, renderState);
         applySampleCoverage(gl, renderState);
+	applyDepthMask(gl, renderState, passState);
         applyScissorTest(gl, renderState, passState);
         applyBlending(gl, renderState, passState);
         applyViewport(gl, renderState, passState);
@@ -686,9 +687,11 @@ define([
             funcs.push(applyColorMask);
         }
 
+	/*
         if (previousState.depthMask !== nextState.depthMask) {
             funcs.push(applyDepthMask);
         }
+*/
 
         if (previousState.stencilMask !== nextState.stencilMask) {
             funcs.push(applyStencilMask);
@@ -755,6 +758,10 @@ define([
         if (previousRenderState !== renderState || previousPassState !== passState || previousPassState.context !== passState.context) {
             applyViewport(gl, renderState, passState);
         }
+
+	if (previousRenderState !== renderState || previousPassState !== passState || previousPassState.context !== passState.context) {
+	    applyDepthMask(gl, renderState, passState);
+	}
     };
 
     RenderState.getState = function(renderState) {
