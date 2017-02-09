@@ -125,3 +125,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Chris Grant](https://github.com/cwgrant)
 * [Aristeidis Bampakos](https://github.com/bampakoa)
 * [Jane Minghui Guo] (https://github.com/Jane-Of-Art)
+* [Joseph Klinger](https://github.com/klingerj)
