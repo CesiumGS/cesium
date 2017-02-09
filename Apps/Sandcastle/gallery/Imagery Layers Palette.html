@@ -113,20 +113,20 @@ function startup(Cesium) {
         var i = palette.length;
 
         palette[i] = [];
-        palette[i]['takeoff'] = [];
-        palette[i]['approach'] = [];
-        palette[i]['value'] = parseFloat(index);
+        palette[i].takeoff = [];
+        palette[i].approach = [];
+        palette[i].value = parseFloat(index);
 
-        palette[i]['takeoff']['red'] = r;
-        palette[i]['takeoff']['green'] = g;
-        palette[i]['takeoff']['blue'] = b;
-        palette[i]['takeoff']['alpha'] = a;
+        palette[i].takeoff.red = r;
+        palette[i].takeoff.green = g;
+        palette[i].takeoff.blue = b;
+        palette[i].takeoff.alpha = a;
 
         if(i > 0) {
-            palette[i]['approach']['red'] = r;
-            palette[i]['approach']['green'] = g;
-            palette[i]['approach']['blue'] = b;
-            palette[i]['approach']['alpha'] = a;
+            palette[i].approach.red = r;
+            palette[i].approach.green = g;
+            palette[i].approach.blue = b;
+            palette[i].approach.alpha = a;
         }
 
         if(index < min || min === null) {
@@ -148,31 +148,31 @@ function startup(Cesium) {
     var stepSize = diff / 1024;
 
     for(var i = 16; i < 4096; i += 4) {
-        while (currentVal >= palette[currentValI]['value'] && (currentValI+1) < palette.length) {
-          prevColor[0] = palette[currentValI]['takeoff']['red'];
-          prevColor[1] = palette[currentValI]['takeoff']['green'];
-          prevColor[2] = palette[currentValI]['takeoff']['blue'];
-          prevColor[3] = palette[currentValI]['takeoff']['alpha'];
-          prevVal = palette[currentValI]['value'];
+        while (currentVal >= palette[currentValI].value && (currentValI+1) < palette.length) {
+          prevColor[0] = palette[currentValI].takeoff.red;
+          prevColor[1] = palette[currentValI].takeoff.green;
+          prevColor[2] = palette[currentValI].takeoff.blue;
+          prevColor[3] = palette[currentValI].takeoff.alpha;
+          prevVal = palette[currentValI].value;
           currentValI++;
-          diffVal = palette[currentValI]['value'] - prevVal;
-          nextColor[0] = palette[currentValI]['approach']['red'];
-          nextColor[1] = palette[currentValI]['approach']['green'];
-          nextColor[2] = palette[currentValI]['approach']['blue'];
-          nextColor[3] = palette[currentValI]['approach']['alpha'];
+          diffVal = palette[currentValI].value - prevVal;
+          nextColor[0] = palette[currentValI].approach.red;
+          nextColor[1] = palette[currentValI].approach.green;
+          nextColor[2] = palette[currentValI].approach.blue;
+          nextColor[3] = palette[currentValI].approach.alpha;
         }
-        if (currentVal >= palette[currentValI]['value'] && (currentValI+1) >= palette.length) {
-            prevColor[0] = palette[currentValI]['approach']['red'];
-            prevColor[1] = palette[currentValI]['approach']['green'];
-            prevColor[2] = palette[currentValI]['approach']['blue'];
-            prevColor[3] = palette[currentValI]['approach']['alpha'];
+        if (currentVal >= palette[currentValI].value && (currentValI+1) >= palette.length) {
+            prevColor[0] = palette[currentValI].approach.red;
+            prevColor[1] = palette[currentValI].approach.green;
+            prevColor[2] = palette[currentValI].approach.blue;
+            prevColor[3] = palette[currentValI].approach.alpha;
             prevVal = max;
             currentVal = max;
             diffVal = 1.0;
-            nextColor[0] = palette[currentValI]['approach']['red'];
-            nextColor[1] = palette[currentValI]['approach']['green'];
-            nextColor[2] = palette[currentValI]['approach']['blue'];
-            nextColor[3] = palette[currentValI]['approach']['alpha'];
+            nextColor[0] = palette[currentValI].approach.red;
+            nextColor[1] = palette[currentValI].approach.green;
+            nextColor[2] = palette[currentValI].approach.blue;
+            nextColor[3] = palette[currentValI].approach.alpha;
         }
         colorTableData[i] = parseFloat(currentVal-prevVal) * (parseFloat(nextColor[0] - prevColor[0]) / diffVal) + prevColor[0];
         colorTableData[i+1] = parseFloat(currentVal-prevVal) * parseFloat(nextColor[1] - prevColor[1]) / diffVal + prevColor[1];
