@@ -92,7 +92,6 @@ define([
          */
         Y_UP_TO_X_UP : Matrix4.fromRotationTranslation(Matrix3.fromRotationZ(-CesiumMath.PI_OVER_TWO)),
 
-
         /**
          * Gets the axis by name
          *
