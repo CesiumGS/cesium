@@ -53,3 +53,18 @@ offer the list of npm tasks for you to run.
 
 You can also jump to any source file with the same CTRL-P keypress
 followed by the name of the file.
+
+## Building Cesium
+
+Cesium has a number of GLSL shaders and auto-generated files that must be
+built before Cesium can be used.  The simplest way in VSCode is to type
+`CTRL-P` `task build` to trigger a build.
+
+There is also a `task build-watch`, but this leaves a little spinner running
+in the status bar at the bottom, so is not recommended.  Instead, you can use
+the integrated shell (CTRL-backtick) and type `npm run build-watch` to start
+the build watcher task, then use CTRL-SHIFT-backtick to open up an additional
+integrated shell that is available for separate commands while the build watcher
+task is still running.  Keep in mind that this will quietly terminate when
+you quit VSCode, so should be restarted manually on next launch.
+
