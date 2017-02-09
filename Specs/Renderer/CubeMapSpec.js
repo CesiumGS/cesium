@@ -82,7 +82,8 @@ defineSuite([
             expect({
                 context : context,
                 fragmentShader : fs,
-                uniformMap : uniformMap
+                uniformMap : uniformMap,
+                epsilon : options.epsilon
             }).contextToRender(expectedColors[i]);
         }
     }
@@ -239,6 +240,7 @@ defineSuite([
 
         expectCubeMapFaces({
             cubeMap : cubeMap,
+            epsilon : 1,
             expectedColors : [
                 [0, 0, 127, 255], // +X
                 [0, 0, 127, 255], // -X

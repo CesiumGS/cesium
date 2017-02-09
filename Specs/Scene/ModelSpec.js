@@ -28,6 +28,7 @@ defineSuite([
         'Renderer/Pass',
         'Renderer/RenderState',
         'Renderer/ShaderSource',
+        'Scene/Axis',
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
@@ -63,6 +64,7 @@ defineSuite([
         Pass,
         RenderState,
         ShaderSource,
+        Axis,
         ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
@@ -85,7 +87,8 @@ defineSuite([
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
-    var boxesEcefUrl = './Data/Models/Boxes-ECEF/ecef.glb';
+    var boxEcefUrl = './Data/Models/Box-ECEF/ecef.gltf';
+
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
@@ -286,7 +289,7 @@ defineSuite([
     });
 
     it('renders ECEF in 2D', function() {
-        return loadModel(boxesEcefUrl, {
+        return loadModel(boxEcefUrl, {
             modelMatrix : Matrix4.IDENTITY,
             minimumPixelSize : undefined
         }).then(function(m) {
@@ -308,13 +311,61 @@ defineSuite([
     });
 
     it('renders ECEF in CV', function() {
-        return loadModel(boxesEcefUrl, {
+        return loadModel(boxEcefUrl, {
             modelMatrix : Matrix4.IDENTITY,
             minimumPixelSize : undefined
         }).then(function(m) {
             scene.morphToColumbusView(0.0);
             verifyRender(m);
             primitives.remove(m);
+        });
+    });
+
+    it('Renders x-up model', function() {
+        return loadJson(boxEcefUrl).then(function(gltf) {
+            // Model data is z-up. Edit the transform to be z-up to x-up.
+            gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_X_UP, new Array(16));
+
+            return loadModelJson(gltf, {
+                modelMatrix : Matrix4.IDENTITY,
+                upAxis : Axis.X
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.upAxis).toBe(Axis.X);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('Renders y-up model', function() {
+        return loadJson(boxEcefUrl).then(function(gltf) {
+            // Model data is z-up. Edit the transform to be z-up to y-up.
+            gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_Y_UP, new Array(16));
+
+            return loadModelJson(gltf, {
+                modelMatrix : Matrix4.IDENTITY,
+                upAxis : Axis.Y
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.upAxis).toBe(Axis.Y);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('Renders z-up model', function() {
+        return loadJson(boxEcefUrl).then(function(gltf) {
+            // Model data is z-up. Edit the transform to be the identity.
+            gltf.nodes.node_transform.matrix = Matrix4.pack(Matrix4.IDENTITY, new Array(16));
+
+            return loadModelJson(gltf, {
+                modelMatrix : Matrix4.IDENTITY,
+                upAxis : Axis.Z
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.upAxis).toBe(Axis.Z);
+                primitives.remove(m);
+            });
         });
     });
 
