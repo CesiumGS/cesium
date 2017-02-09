@@ -1651,7 +1651,7 @@ define([
 
                 var opaqueCommand = opaque || (opaqueAndTranslucent && j % 2 === 0);
 
-                command.pass = opaqueCommand || !opaqueAndTranslucent ? Pass.OPAQUE : Pass.TRANSLUCENT;
+                command.pass = opaqueCommand || !opaqueAndTranslucent ? Pass.BILLBOARD_OPAQUE : Pass.BILLBOARD_TRANSLUCENT;
                 command.owner = this;
 
                 var index = opaqueAndTranslucent ? Math.floor(j / 2.0) : j;

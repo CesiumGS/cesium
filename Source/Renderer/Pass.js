@@ -24,8 +24,10 @@ define([
         GROUND : 3,
         OPAQUE : 4,
         TRANSLUCENT : 5,
-        OVERLAY : 6,
-        NUMBER_OF_PASSES : 7
+	BILLBOARD_OPAQUE : 6,
+	BILLBOARD_TRANSLUCENT : 7,
+        OVERLAY : 8,
+        NUMBER_OF_PASSES : 9
     };
 
     return freezeObject(Pass);

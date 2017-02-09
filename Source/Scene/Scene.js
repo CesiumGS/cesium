@@ -1883,6 +1883,62 @@ define([
                 pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
             }
+
+	    var originalFramebuffer = passState.framebuffer;
+	    
+	    //var context = scene._context;
+            var environmentState = scene._environmentState;
+	    
+            var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
+	    /*
+	    if (scene.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
+		var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
+		gd.executeDebugGlobeDepth(context, passState);
+            }
+	    
+            if (scene.debugShowPickDepth && useGlobeDepthFramebuffer) {
+		var pd = getPickDepth(scene, scene.debugShowDepthFrustum - 1);
+		pd.executeDebugPickDepth(context, passState);
+            }
+	    */
+	    
+            var useOIT = environmentState.useOIT;
+            var useFXAA = environmentState.useFXAA;
+	    
+            if (useOIT) {
+		passState.framebuffer = useFXAA ? scene._fxaa.getColorFramebuffer() : undefined;
+		scene._oit.execute(context, passState);
+            }
+	    
+            if (useFXAA) {
+		if (!useOIT && useGlobeDepthFramebuffer) {
+                    passState.framebuffer = scene._fxaa.getColorFramebuffer();
+                    scene._globeDepth.executeCopyColor(context, passState);
+		}
+		
+		passState.framebuffer = environmentState.originalFramebuffer;
+		scene._fxaa.execute(context, passState);
+            }
+
+	    /*
+            if (!useOIT && !useFXAA && useGlobeDepthFramebuffer) {
+		passState.framebuffer = environmentState.originalFramebuffer;
+		scene._globeDepth.executeCopyColor(context, passState);
+            }
+	    */
+
+	    var startPass = Pass.BILLBOARD_OPAQUE;
+            var endPass = Pass.BILLBOARD_TRANSLUCENT + 1;
+            for (var pass = startPass; pass < endPass; ++pass) {
+                us.updatePass(pass);
+                commands = frustumCommands.commands[pass];
+                length = frustumCommands.indices[pass];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
+            }
+	    
+	    passState.framebuffer = originalFramebuffer;
         }
     }
 
@@ -2380,6 +2436,7 @@ define([
     }
 
     function resolveFramebuffers(scene, passState) {
+	    /*
         var context = scene._context;
         var environmentState = scene._environmentState;
 
@@ -2416,6 +2473,7 @@ define([
             passState.framebuffer = environmentState.originalFramebuffer;
             scene._globeDepth.executeCopyColor(context, passState);
         }
+*/
     }
 
     function callAfterRenderFunctions(frameState) {
