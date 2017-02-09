@@ -854,7 +854,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    vec2 st = computeSt(' + batchIdAttributeName + '); \n' +
+                    '    vec2 st = computeSt(' + (batchIdAttributeName ? batchIdAttributeName : '0.0') + '); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
                     '    float show = ceil(featureProperties.a); \n' +      // 0 - false, non-zeo - true
                     '    gl_Position *= show; \n';                          // Per-feature show/hide
@@ -887,7 +887,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
+                    '    tile_featureSt = computeSt(' + (batchIdAttributeName ? batchIdAttributeName : '0.0') + '); \n' +
                     '}';
             }
 
@@ -1088,7 +1088,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    vec2 st = computeSt(' + batchIdAttributeName + '); \n' +
+                    '    vec2 st = computeSt(' + (batchIdAttributeName ? batchIdAttributeName : '0.0') + '); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
                     '    float show = ceil(featureProperties.a); \n' +    // 0 - false, non-zero - true
                     '    gl_Position *= show; \n' +                       // Per-feature show/hide
@@ -1100,7 +1100,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
+                    '    tile_featureSt = computeSt(' + (batchIdAttributeName ? batchIdAttributeName : '0.0') + '); \n' +
                     '}';
             }
 
