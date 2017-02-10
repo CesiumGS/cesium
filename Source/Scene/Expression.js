@@ -774,20 +774,27 @@ define([
         var evaluate = unaryFunctions[call];
         return function(feature) {
             var left = this._left.evaluate(feature);
-            if (call === 'noise' && left instanceof Cartesian3) {
-                return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
-            } else if (typeof left === 'number') {
-                return evaluate(left);
-            } else if (left instanceof Cartesian2) {
-                return Cartesian2.fromElements(evaluate(left.x), evaluate(left.y), ScratchStorage.getCartesian2());
-            } else if (left instanceof Cartesian3) {
-                return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
-            } else if (left instanceof Cartesian4) {
-                return Cartesian4.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), evaluate(left.w), ScratchStorage.getCartesian4());
+            if (call === 'noise') {
+                if (left instanceof Cartesian3) {
+                    return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
+                }
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Noise requires a vec3. Argument is ' + left + '.');
+                //>>includeEnd('debug');
+            } else {
+                if (typeof left === 'number') {
+                    return evaluate(left);
+                } else if (left instanceof Cartesian2) {
+                    return Cartesian2.fromElements(evaluate(left.x), evaluate(left.y), ScratchStorage.getCartesian2());
+                } else if (left instanceof Cartesian3) {
+                    return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
+                } else if (left instanceof Cartesian4) {
+                    return Cartesian4.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), evaluate(left.w), ScratchStorage.getCartesian4());
+                }
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
+                //>>includeEnd('debug');
             }
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
-            //>>includeEnd('debug');
             return evaluate(left); // jshint ignore:line
         };
     }
