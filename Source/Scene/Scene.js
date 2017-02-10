@@ -2243,7 +2243,7 @@ define([
 
         if (defined(scene._debugFrustumPlanes)) {
             scene._debugFrustumPlanes.update(frameState);
-        } 
+        }
     }
 
     function updateShadowMaps(scene) {
@@ -2699,17 +2699,7 @@ define([
     var scratchPackedDepth = new Cartesian4();
     var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
 
-    /**
-     * Returns the cartesian position reconstructed from the depth buffer and window position.
-     *
-     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
-     * @param {Cartesian3} [result] The object on which to restore the result.
-     * @returns {Cartesian3} The cartesian position.
-     *
-     * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
-     * @exception {DeveloperError} 2D is not supported. An orthographic projection matrix is not invertible.
-     */
-    Scene.prototype.pickPosition = function(windowPosition, result) {
+    Scene.prototype._pickPosition = function(windowPosition, result) {
         if (!this.useDepthPicking) {
             return undefined;
         }
@@ -2769,6 +2759,32 @@ define([
         }
 
         return undefined;
+    };
+
+    var scratchPickPositionCartographic = new Cartographic();
+
+    /**
+     * Returns the cartesian position reconstructed from the depth buffer and window position.
+     *
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Cartesian3} [result] The object on which to restore the result.
+     * @returns {Cartesian3} The cartesian position.
+     *
+     * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
+     * @exception {DeveloperError} 2D is not supported. An orthographic projection matrix is not invertible.
+     */
+    Scene.prototype.pickPosition = function(windowPosition, result) {
+        result = this._pickPosition(windowPosition, result);
+        if (defined(result) && this.mode !== SceneMode.SCENE3D) {
+            Cartesian3.fromElements(result.y, result.z, result.x, result);
+
+            var projection = this.mapProjection;
+            var ellipsoid = projection.ellipsoid;
+
+            var cart = projection.unproject(result, scratchPickPositionCartographic);
+            ellipsoid.cartographicToCartesian(cart, result);
+        }
+        return result;
     };
 
     /**

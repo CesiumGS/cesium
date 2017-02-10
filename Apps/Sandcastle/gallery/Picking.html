@@ -184,7 +184,7 @@ Sandcastle.addToolbarButton('Pick position', function() {
         var scene = viewer.scene;
         var pickedObject = scene.pick(movement.endPosition);
         if (scene.pickPositionSupported && Cesium.defined(pickedObject) && pickedObject.id === modelEntity) {
-            if (scene.mode === Cesium.SceneMode.SCENE3D) {
+            if (scene.mode !== Cesium.SceneMode.SCENE2D || scene.mode !== Cesium.SceneMode.MORPHING) {
                 var cartesian = viewer.scene.pickPosition(movement.endPosition);
 
                 if (Cesium.defined(cartesian)) {
@@ -200,8 +200,7 @@ Sandcastle.addToolbarButton('Pick position', function() {
                         '\nLat: ' + ('   ' + latitudeString).slice(-7) + '\u00B0' +
                         '\nAlt: ' + ('   ' + heightString).slice(-7) + 'm';
 
-                    var camera = scene.camera;
-                    labelEntity.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, camera.frustum.near * 1.5 - Cesium.Cartesian3.distance(cartesian, camera.position));
+                    labelEntity.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, -cartographic.height);
 
                     foundPosition = true;
                 }

@@ -806,7 +806,7 @@ define([
 
         var depthIntersection;
         if (scene.pickPositionSupported) {
-            depthIntersection = scene.pickPosition(mousePosition, scratchDepthIntersection);
+            depthIntersection = scene._pickPosition(mousePosition, scratchDepthIntersection);
         }
 
         var ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
