@@ -297,7 +297,8 @@ defineSuite([
         expect({
             context : cxt,
             fragmentShader : fs,
-            uniformMap : uniformMap
+            uniformMap : uniformMap,
+            epsilon : 1
         }).contextToRender([0, 0, 127, 127]);
 
         texture.destroy();
