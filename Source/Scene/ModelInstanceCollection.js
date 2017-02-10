@@ -2,6 +2,8 @@
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/clone',
         '../Core/Color',
         '../Core/ComponentDatatype',
@@ -11,9 +13,11 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
         '../Core/PrimitiveType',
+        '../Core/Transforms',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -27,6 +31,8 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
+        Cartesian4,
+        Cartographic,
         clone,
         Color,
         ComponentDatatype,
@@ -36,9 +42,11 @@ define([
         destroyObject,
         DeveloperError,
         CesiumMath,
+        Matrix3,
         Matrix4,
         oneTimeWarning,
         PrimitiveType,
+        Transforms,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -68,9 +76,6 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Object[]} [options.instances] An array of instances, where each instance contains a modelMatrix and optional batchId when options.batchTable is defined.
      * @param {Cesium3DTileBatchTable} [options.batchTable] The batch table of the instanced 3D Tile.
-     * @param {Object} [options.boundingVolume] The bounding volume, typically the bounding volume of the instanced 3D Tile.
-     * @param {Cartesian3} [options.center] The center point of the instances, typically only passed in by the instanced 3D Tile.
-     * @param {Matrix4} [options.transform=Matrix4.IDENTITY] An additional transform to apply to all instances, typically the transform of the 3D Tile.
      * @param {String} [options.url] The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
      * @param {Object} [options.requestType] The request type, used for budget scheduling in {@link RequestScheduler}.
@@ -130,12 +135,15 @@ define([
         this._pickCommands = [];
         this._modelCommands = undefined;
 
-        this._boundingVolume = defined(options.boundingVolume) ? options.boundingVolume : createBoundingSphere(this);
-        this._boundingVolumeExpand = !defined(options.boundingVolume); // Expand the bounding volume by the radius of the loaded model
+        this._boundingSphere = createBoundingSphere(this);
+        this._center = Cartesian3.clone(this._boundingSphere.center);
+        this._rtcTransform = new Matrix4();
+        this._rtcModelView = new Matrix4(); // Holds onto uniform
 
-        this._center = defaultValue(options.center, this._boundingVolume.center);
-        this.transform = defined(options.transform) ? options.transform : Matrix4.clone(Matrix4.IDENTITY);
-        this._rtcViewTransform = new Matrix4(); // Holds onto uniform
+        this._mode = undefined;
+
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
         // Passed on to Model
         this._url = options.url;
@@ -207,13 +215,9 @@ define([
         return BoundingSphere.fromPoints(points);
     }
 
-    var scratchCartesian = new Cartesian3();
-
     ModelInstanceCollection.prototype.expandBoundingSphere = function(instanceModelMatrix) {
-        if (this._boundingVolumeExpand) {
-            var translation = Matrix4.getTranslation(instanceModelMatrix, scratchCartesian);
-            BoundingSphere.expand(this._boundingVolume, translation, this._boundingVolume);
-        }
+        var translation = Matrix4.getTranslation(instanceModelMatrix, scratchCartesian);
+        BoundingSphere.expand(this._boundingSphere, translation, this._boundingSphere);
     };
 
     function getInstancedUniforms(collection, programName) {
@@ -384,8 +388,7 @@ define([
 
     function createModifiedModelView(collection, context) {
         return function() {
-            var rtcTransform = Matrix4.multiplyByTranslation(collection.transform, collection._center, scratchMatrix);
-            return Matrix4.multiply(context.uniformState.view, rtcTransform, collection._rtcViewTransform);
+            return Matrix4.multiply(context.uniformState.view, collection._rtcTransform, collection._rtcModelView);
         };
     }
 
@@ -471,8 +474,6 @@ define([
             return uniformMap;
         };
     }
-
-    var scratchMatrix = new Matrix4();
 
     function getVertexBufferData(collection, context) {
         var instances = collection._instances;
@@ -736,20 +737,20 @@ define([
         var commandsLength = drawCommands.length;
         var instancesLength = collection.length;
         var allowPicking = collection.allowPicking;
-        var boundingVolume = collection._boundingVolume;
+        var boundingSphere = collection._boundingSphere;
         var cull = collection._cull;
 
         for (var i = 0; i < commandsLength; ++i) {
             var drawCommand = DrawCommand.shallowClone(drawCommands[i]);
             drawCommand.instanceCount = instancesLength;
-            drawCommand.boundingVolume = boundingVolume;
+            drawCommand.boundingVolume = boundingSphere;
             drawCommand.cull = cull;
             collection._drawCommands.push(drawCommand);
 
             if (allowPicking) {
                 var pickCommand = DrawCommand.shallowClone(pickCommands[i]);
                 pickCommand.instanceCount = instancesLength;
-                pickCommand.boundingVolume = boundingVolume;
+                pickCommand.boundingVolume = boundingSphere;
                 pickCommand.cull = cull;
                 collection._pickCommands.push(pickCommand);
             }
@@ -812,14 +813,18 @@ define([
         var commandsLength = modelCommands.length;
         var instancesLength = collection.length;
         var allowPicking = collection.allowPicking;
+        var collectionTransform = collection._rtcTransform;
+        var collectionCenter = collection._center;
 
         for (var i = 0; i < commandsLength; ++i) {
             var modelCommand = modelCommands[i];
             for (var j = 0; j < instancesLength; ++j) {
                 var commandIndex = i * instancesLength + j;
                 var drawCommand = collection._drawCommands[commandIndex];
-                var collectionTransform = collection.transform;
-                var instanceMatrix = collection._instances[j]._modelMatrix;
+                var instanceMatrix = Matrix4.clone(collection._instances[j]._modelMatrix, scratchMatrix);
+                instanceMatrix[12] -= collectionCenter.x;
+                instanceMatrix[13] -= collectionCenter.y;
+                instanceMatrix[14] -= collectionCenter.z;
                 instanceMatrix = Matrix4.multiply(collectionTransform, instanceMatrix, scratchMatrix);
                 var nodeMatrix = modelCommand.modelMatrix;
                 var modelMatrix = drawCommand.modelMatrix;
@@ -876,12 +881,42 @@ define([
         }
     }
 
-    ModelInstanceCollection.prototype.update = function(frameState) {
-        if (frameState.mode !== SceneMode.SCENE3D) {
-            oneTimeWarning('Instanced models in 2D', 'Instanced models are only supported in 3D.');
-            return;
-        }
+    var swizzleMatrix = new Matrix4(
+        0.0, 0.0, 1.0, 0.0,
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    );
 
+    var scratchCartographic = new Cartographic();
+    var scratchCartesian = new Cartesian3();
+    var scratchCenter = new Cartesian3();
+    var scratchMatrix = new Matrix4();
+    var scratchRotation = new Matrix3();
+
+    function getRtcTransform2D(frameState, rtcTransform, result) {
+        var rtcCenter = Matrix4.getTranslation(rtcTransform, scratchCenter);
+
+        var projection = frameState.mapProjection;
+        var ellipsoid = projection.ellipsoid;
+
+        // Get the 2D Center
+        var cartographic = ellipsoid.cartesianToCartographic(rtcCenter, scratchCartographic);
+        var projectedPosition = projection.project(cartographic, scratchCartesian);
+        Cartesian3.fromElements(projectedPosition.z, projectedPosition.x, projectedPosition.y, projectedPosition);
+
+        // Assuming the instance are positioned in WGS84, invert the WGS84 transform to get the local transform and then convert to 2D
+        var fromENU = Transforms.eastNorthUpToFixedFrame(rtcCenter, ellipsoid, scratchMatrix);
+        var toENU = Matrix4.inverseTransformation(fromENU, scratchMatrix);
+        var rotation = Matrix4.getRotation(rtcTransform, scratchRotation);
+        var local = Matrix4.multiplyByMatrix3(toENU, rotation, scratchMatrix);
+        Matrix4.multiply(swizzleMatrix, local, result); // Swap x, y, z for 2D
+        Matrix4.setTranslation(result, projectedPosition, result); // Use the projected center
+
+        return result;
+    }
+
+    ModelInstanceCollection.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -912,9 +947,7 @@ define([
             this._ready = true;
 
             // Expand bounding volume to fit the radius of the loaded model
-            if (this._boundingVolumeExpand) {
-                this._boundingVolume.radius += model.boundingSphere.radius;
-            }
+            this._boundingSphere.radius += model.boundingSphere.radius;
 
             var modelCommands = getModelCommands(model);
             this._modelCommands = modelCommands.draw;
@@ -934,11 +967,18 @@ define([
             return;
         }
 
-        // If any node changes due to an animation, update the commands. This could be inefficient if the model is
-        // composed of many nodes and only one changes, however it is probably fine in the general use case.
-        // Only applies when instancing is disabled. The instanced shader automatically handles node transformations.
-        if (!instancingSupported && (model.dirty || this._dirty)) {
-            updateCommandsNonInstanced(this);
+        var modeChanged = (frameState.mode !== this._mode);
+        var modelMatrix = this.modelMatrix;
+        var modelMatrixChanged = !Matrix4.equals(this._modelMatrix, modelMatrix);
+
+        if (modeChanged || modelMatrixChanged) {
+            this._mode = frameState.mode;
+            Matrix4.clone(modelMatrix, this._modelMatrix);
+            var rtcTransform = Matrix4.multiplyByTranslation(this._modelMatrix, this._center, this._rtcTransform);
+            if (this._mode !== SceneMode.SCENE3D) {
+                rtcTransform = getRtcTransform2D(frameState, rtcTransform, rtcTransform);
+            }
+            Matrix4.getTranslation(rtcTransform, this._boundingSphere.center);
         }
 
         if (instancingSupported && this._dirty) {
@@ -948,6 +988,13 @@ define([
 
             // PERFORMANCE_IDEA: only update dirty sub-sections instead of the whole collection
             updateVertexBuffer(this, context);
+        }
+
+        // If any node changes due to an animation, update the commands. This could be inefficient if the model is
+        // composed of many nodes and only one changes, however it is probably fine in the general use case.
+        // Only applies when instancing is disabled. The instanced shader automatically handles node transformations.
+        if (!instancingSupported && (model.dirty || this._dirty || modeChanged || modelMatrixChanged)) {
+            updateCommandsNonInstanced(this);
         }
 
         updateShadows(this);

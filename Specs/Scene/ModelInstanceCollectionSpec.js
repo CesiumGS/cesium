@@ -80,6 +80,10 @@ defineSuite([
         return when.all(modelPromises);
     });
 
+    beforeEach(function() {
+        scene.morphTo3D(0.0);
+    });
+
     afterAll(function() {
         scene.destroyForSpecs();
     });
@@ -139,7 +143,7 @@ defineSuite([
         return instances;
     }
 
-    function getBoundingVolume(instances, modelRadius) {
+    function getBoundingSphere(instances, modelRadius) {
         var length = instances.length;
         var points = new Array(length);
         for (var i = 0; i < length; ++i) {
@@ -373,9 +377,9 @@ defineSuite([
             gltf : boxGltf,
             instances : instances
         }).then(function(collection) {
-            var boundingVolume = getBoundingVolume(instances, boxRadius);
-            expect(collection._boundingVolume.center).toEqual(boundingVolume.center);
-            expect(collection._boundingVolume.radius).toEqual(boundingVolume.radius);
+            var boundingSphere = getBoundingSphere(instances, boxRadius);
+            expect(collection._boundingSphere.center).toEqual(boundingSphere.center);
+            expect(collection._boundingSphere.radius).toEqual(boundingSphere.radius);
         });
     });
 
@@ -442,18 +446,6 @@ defineSuite([
 
             // Re-enable extension
             scene.context._instancedArrays = instancedArrays;
-        });
-    });
-
-    it('only renders when mode is SCENE3D', function() {
-        return loadCollection({
-            gltf : boxGltf,
-            instances : createInstances(4)
-        }).then(function(collection) {
-            expectRender(collection);
-            scene.mode = SceneMode.SCENE2D;
-            expectRender(collection, false);
-            scene.mode = SceneMode.SCENE3D;
         });
     });
 
@@ -608,10 +600,10 @@ defineSuite([
             zoomTo(collection, 1);
             expect(scene).toPickAndCall(function(result) {
                 var originalMatrix = result.modelMatrix;
-                var originalRadius = collection._boundingVolume.radius;
+                var originalRadius = collection._boundingSphere.radius;
                 result.modelMatrix = Matrix4.IDENTITY;
                 expect(scene).notToPick();
-                expect(collection._boundingVolume.radius).toBeGreaterThan(originalRadius);
+                expect(collection._boundingSphere.radius).toBeGreaterThan(originalRadius);
                 result.modelMatrix = originalMatrix;
                 expect(scene).toPickPrimitive(collection);
             });
@@ -620,6 +612,63 @@ defineSuite([
         });
     });
 
+    it('renders in 2D', function() {
+        return loadCollection({
+            gltf : boxGltf,
+            instances : createInstances(4)
+        }).then(function(collection) {
+            expectRender(collection);
+            scene.morphTo2D(0.0);
+            expectRender(collection);
+        });
+    });
+
+    it('renders in 2D when instancing is disabled', function() {
+        // Disable extension
+        var instancedArrays = scene.context._instancedArrays;
+        scene.context._instancedArrays = undefined;
+
+        return loadCollection({
+            gltf : boxGltf,
+            instances : createInstances(4)
+        }).then(function(collection) {
+            expectRender(collection);
+            scene.morphTo2D(0.0);
+            expectRender(collection);
+
+            // Re-enable extension
+            scene.context._instancedArrays = instancedArrays;
+        });
+    });
+
+    it('renders in CV', function() {
+        return loadCollection({
+            gltf : boxGltf,
+            instances : createInstances(4)
+        }).then(function(collection) {
+            expectRender(collection);
+            scene.morphToColumbusView(0.0);
+            expectRender(collection);
+        });
+    });
+
+    it('renders in CV when instancing is disabled', function() {
+        // Disable extension
+        var instancedArrays = scene.context._instancedArrays;
+        scene.context._instancedArrays = undefined;
+
+        return loadCollection({
+            gltf : boxGltf,
+            instances : createInstances(4)
+        }).then(function(collection) {
+            expectRender(collection);
+            scene.morphToColumbusView(0.0);
+            expectRender(collection);
+
+            // Re-enable extension
+            scene.context._instancedArrays = instancedArrays;
+        });
+    });
 
     it('destroys', function() {
         return loadCollection({
