@@ -2307,21 +2307,32 @@ define([
         // Retrieve the compiled shader program to assign index values to attributes
         var attributeLocations = {};
 
+        var index;
         var technique = techniques[materials[primitive.material].technique];
         var parameters = technique.parameters;
         var attributes = technique.attributes;
-        var programAttributeLocations = model._rendererResources.programs[technique.program].vertexAttributes;
+        var program = model._rendererResources.programs[technique.program];
+        var programVertexAttributes = program.vertexAttributes;
+        var programAttributeLocations = program._attributeLocations;
 
         // Note: WebGL shader compiler may have optimized and removed some attributes from programAttributeLocations
         for (var location in programAttributeLocations){
             if (programAttributeLocations.hasOwnProperty(location)) {
                 var attribute = attributes[location];
-                var index = programAttributeLocations[location].index;
                 if (defined(attribute)) {
-                    var parameter = parameters[attribute];
-                    attributeLocations[parameter.semantic] = index;
+                    var vertexAttribute = programVertexAttributes[location];
+                    if (defined(vertexAttribute)) {
+                        index = vertexAttribute.index;
+                        var parameter = parameters[attribute];
+                        attributeLocations[parameter.semantic] = index;
+                    }
                 } else {
-                    // Pre-created attributes
+                    // Pre-created attributes.
+                    // Some pre-created attributes, like per-instance pickIds, may be compiled out of the draw program
+                    // but should be included in the list of attribute locations for the pick program.
+                    // This is safe to do since programVertexAttributes and programAttributeLocations are equivalent except
+                    // that programVertexAttributes optimizes out unused attributes.
+                    index = programAttributeLocations[location];
                     attributeLocations[location] = index;
                 }
             }

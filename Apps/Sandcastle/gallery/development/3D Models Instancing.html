@@ -46,7 +46,6 @@ var instancedArraysExtension = context._instancedArrays;
 var count = 1024;
 var spacing = 0.0002;
 var url = '../../SampleData/models/CesiumAir/Cesium_Air.gltf';
-var dynamic = false;
 var useCollection = true;
 
 var centerLongitude = -123.0744619;
@@ -67,7 +66,6 @@ function createCollection(instances) {
     var collection = scene.primitives.add(new Cesium.ModelInstanceCollection({
         url : url,
         instances : instances,
-        dynamic : dynamic,
         debugShowBoundingVolume : debugShowBoundingVolume,
         debugWireframe : debugWireframe
     }));
@@ -148,6 +146,19 @@ function reset() {
 
     useCollection ? createCollection(instances) : createModels(instances);
 }
+
+// Scale picked instances
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+handler.setInputAction(function(movement) {
+    var pickedInstance = scene.pick(movement.position);
+    if (Cesium.defined(pickedInstance)) {
+        console.log(pickedInstance);
+        var instance = useCollection ? pickedInstance : pickedInstance.primitive;
+        var scaleMatrix = Cesium.Matrix4.fromUniformScale(1.1);
+        var modelMatrix = Cesium.Matrix4.multiply(instance.modelMatrix, scaleMatrix, new Cesium.Matrix4());
+        instance.modelMatrix = modelMatrix;
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 Sandcastle.addToolbarMenu([ {
     text : '1024 instances',
@@ -230,20 +241,6 @@ Sandcastle.addToolbarMenu([ {
     text : 'Individual models',
     onselect : function() {
         useCollection = false;
-        reset();
-    }
-}]);
-
-Sandcastle.addToolbarMenu([ {
-    text : 'Static',
-    onselect : function() {
-        dynamic = false;
-        reset();
-    }
-}, {
-    text : 'Dynamic',
-    onselect : function() {
-        dynamic = true;
         reset();
     }
 }]);
