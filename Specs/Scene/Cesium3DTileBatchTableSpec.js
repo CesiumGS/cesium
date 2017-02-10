@@ -37,7 +37,7 @@ defineSuite([
 
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
-    var batchLengthZeroUrl = './Data/Cesium3DTiles/Batched/BatchedNoBuildings/';
+    var batchLengthZeroUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
     var batchTableHierarchyUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/';
     var batchTableHierarchyBinaryUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyBinary/';
     var batchTableHierarchyMultipleParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents/';

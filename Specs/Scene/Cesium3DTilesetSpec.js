@@ -500,15 +500,15 @@ defineSuite([
     });
 
     it('uses dynamic screen space error for tileset with bounding sphere', function() {
-        return testDynamicScreenSpaceError(withBoundingSphereUrl, 144.0);
+        return testDynamicScreenSpaceError(withBoundingSphereUrl, 137.0);
     });
 
     it('uses dynamic screen space error for local tileset with box', function() {
-        return testDynamicScreenSpaceError(withTransformBoxUrl, 193.0);
+        return testDynamicScreenSpaceError(withTransformBoxUrl, 103.0);
     });
 
     it('uses dynamic screen space error for local tileset with sphere', function() {
-        return testDynamicScreenSpaceError(withTransformSphereUrl, 145.0);
+        return testDynamicScreenSpaceError(withTransformSphereUrl, 144.0);
     });
 
     it('additive refinement - selects root when sse is met', function() {
@@ -769,7 +769,7 @@ defineSuite([
 
         viewRootOnly();
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement2Url).then(function(tileset) {
-            viewAllTiles();
+            setZoom(30.0);
             scene.renderForSpecs();
 
             var stats = tileset._statistics;
@@ -1456,7 +1456,8 @@ defineSuite([
                 replaceGreen = rgba[1];
                 expect(rgba[0]).toBeGreaterThan(0);
                 expect(rgba[0]).toBeLessThan(255);
-                expect(rgba[1]).toEqual(rgba[0]);
+                expect(rgba[1]).toBeGreaterThan(0);
+                expect(rgba[1]).toBeLessThan(255);
                 expect(rgba[2]).toEqual(0);
                 expect(rgba[3]).toEqual(255);
             });
@@ -1468,7 +1469,8 @@ defineSuite([
             expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toBeGreaterThan(0);
                 expect(rgba[0]).toBeLessThan(255);
-                expect(rgba[1]).toEqual(rgba[0]);
+                expect(rgba[1]).toBeGreaterThan(0);
+                expect(rgba[1]).toBeLessThan(255);
                 expect(rgba[2]).toEqual(0);
                 expect(rgba[3]).toEqual(255);
             });
@@ -1557,7 +1559,7 @@ defineSuite([
 
     it('sets colorBlendMode for instanced tileset', function() {
         var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 36.0));
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 30.0));
         return testColorBlendMode(instancedRedMaterialUrl);
     });
 

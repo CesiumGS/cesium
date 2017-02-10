@@ -431,7 +431,7 @@ define([
                             if (defined(current) && defined(current._batchTable) && !current._batchTable.isDestroyed()) {
                                 // Restore original color to feature that is no longer selected
                                 var frameState = that._scene.frameState;
-                                if (!that._colorOverriden) {
+                                if (!that._colorOverriden && defined(that._style)) {
                                     current.color = that._style.color.evaluateColor(frameState, current, scratchColor);
                                 } else {
                                     current.color = oldColor;
@@ -586,7 +586,7 @@ define([
 
                     // set feature again so pick coloring is set
                     var temp = this._feature;
-                    this._feature = undefined; 
+                    this._feature = undefined;
                     this._feature = temp;
                 }
             }

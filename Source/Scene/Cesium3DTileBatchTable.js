@@ -74,6 +74,7 @@ define([
          * @private
          */
         this.batchTableJson = batchTableJson;
+
         /**
          * @private
          */

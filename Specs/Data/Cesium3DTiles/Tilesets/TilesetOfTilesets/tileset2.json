@@ -15,6 +15,7 @@
       ]
     },
     "geometricError": 70,
+    "refine": "add",
     "content": {
       "url": "parent.b3dm"
     },
@@ -31,7 +32,6 @@
           ]
         },
         "geometricError": 0,
-        "refine": "add",
         "content": {
           "url": "tileset3/tileset3.json"
         }
