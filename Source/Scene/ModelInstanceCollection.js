@@ -21,6 +21,7 @@ define([
         '../ThirdParty/when',
         './getAttributeOrUniformBySemantic',
         './Model',
+        './ModelInstance',
         './SceneMode',
         './ShadowMode'
     ], function(
@@ -45,6 +46,7 @@ define([
         when,
         getAttributeOrUniformBySemantic,
         Model,
+        ModelInstance,
         SceneMode,
         ShadowMode) {
     'use strict';
@@ -55,34 +57,6 @@ define([
         LOADED : 2,
         FAILED : 3
     };
-
-    function ModelInstance(collection, modelMatrix, instanceId) {
-        this.primitive = collection;
-        this._modelMatrix = Matrix4.clone(modelMatrix);
-        this._instanceId = instanceId;
-    }
-
-    defineProperties(ModelInstance.prototype, {
-        instanceId : {
-            get : function() {
-                return this._instanceId;
-            }
-        },
-        model : {
-            get : function() {
-                return this.primitive._model;
-            }
-        },
-        modelMatrix : {
-            get : function() {
-                return Matrix4.clone(this._modelMatrix);
-            },
-            set : function(value) {
-                Matrix4.clone(value, this._modelMatrix);
-                this.primitive._dirty = true;
-            }
-        }
-    });
 
     /**
      * A 3D model instance collection. All instances reference the same underlying model, but have unique
@@ -232,6 +206,15 @@ define([
 
         return BoundingSphere.fromPoints(points);
     }
+
+    var scratchCartesian = new Cartesian3();
+
+    ModelInstanceCollection.prototype.expandBoundingSphere = function(instanceModelMatrix) {
+        if (this._boundingVolumeExpand) {
+            var translation = Matrix4.getTranslation(instanceModelMatrix, scratchCartesian);
+            BoundingSphere.expand(this._boundingVolume, translation, this._boundingVolume);
+        }
+    };
 
     function getInstancedUniforms(collection, programName) {
         if (defined(collection._instancedUniformsByProgram)) {

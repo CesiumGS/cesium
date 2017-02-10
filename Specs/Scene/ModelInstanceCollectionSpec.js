@@ -608,8 +608,10 @@ defineSuite([
             zoomTo(collection, 1);
             expect(scene).toPickAndCall(function(result) {
                 var originalMatrix = result.modelMatrix;
+                var originalRadius = collection._boundingVolume.radius;
                 result.modelMatrix = Matrix4.IDENTITY;
                 expect(scene).notToPick();
+                expect(collection._boundingVolume.radius).toBeGreaterThan(originalRadius);
                 result.modelMatrix = originalMatrix;
                 expect(scene).toPickPrimitive(collection);
             });
