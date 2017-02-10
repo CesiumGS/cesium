@@ -2,12 +2,14 @@ Change Log
 ==========
 
 ### 1.31 - 2017-03-01
+
 * Deprecated
-  * The function `Quaternion.fromHeadingPitchRoll(heading, pitch, roll,result)` will be removed in 1.33. Use `Quaternion.fromHeadingPitchRoll(hpr,result)` instead  where hpr is a HeadingPitchRoll.
-  * The function `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)` will be removed in 1.33. Use `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator).
-  * The function `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)` will be removed in 1.33. Use `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator).
+   * The function `Quaternion.fromHeadingPitchRoll(heading, pitch, roll,result)` will be removed in 1.33. Use `Quaternion.fromHeadingPitchRoll(hpr,result)` instead  where hpr is a HeadingPitchRoll.
+   * The function `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)` will be removed in 1.33. Use `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator).
+   * The function `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)` will be removed in 1.33. Use `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator).
+   * `ArcGisImageServerTerrainProvider` will be removed in 1.32 due to missing TIFF support in web browsers.
 * Breaking changes
-  * Corrected spelling of `Color.FUCHSIA` from `Color.FUSCHIA`
+   * Corrected spelling of `Color.FUCHSIA` from `Color.FUSCHIA`. [#4977](https://github.com/AnalyticalGraphicsInc/cesium/pull/4977)
 * Added support to `DebugCameraPrimitive` to draw multifrustum planes. The attribute `debugShowFrustumPlanes` of `Scene` and `frustumPlanes` of `CesiumInspector` toggles this. `FrameState` has been augmented to include `frustumSplits` which is a `Number[]` of the near/far planes of the camera frustums.
 * Enable rendering `GroundPrimitives` on hardware without the `EXT_frag_depth` extension; however, this could cause artifacts for certain viewing angles.
 * Added compressed texture support. [#4758](https://github.com/AnalyticalGraphicsInc/cesium/pull/4758)
@@ -16,7 +18,8 @@ Change Log
    * Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_s3tc`, `WEBGL_compressed_texture_pvrtc`, and `WEBGL_compressed_texture_etc1`.
    * Added `CompressedTextureBuffer`.
 * Improved `RectangleGeometry` by skipping unecessary logic in the code [#4948](https://github.com/AnalyticalGraphicsInc/cesium/pull/4948)
-* * Added `Transforms.localFrameToFixedFrameGenerator` to generate a function that computes a 4x4 transformation matrix from a local reference frame to fixed reference frame.
+* Added `Transforms.localFrameToFixedFrameGenerator` to generate a function that computes a 4x4 transformation matrix from a local reference frame to fixed reference frame.
+* Fixed an issue where the camera would zoom past an object and flip to the other side of the globe. [#4967](https://github.com/AnalyticalGraphicsInc/cesium/pull/4967) and [#4982](https://github.com/AnalyticalGraphicsInc/cesium/pull/4982)
 
 ### 1.30 - 2017-02-01
 

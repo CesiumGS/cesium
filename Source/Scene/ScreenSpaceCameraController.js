@@ -576,6 +576,9 @@ define([
 
                         var alphaDot = Cartesian3.dot(cameraPositionNormal, positionToTargetNormal);
                         if (alphaDot >= 0.0) {
+                            // We zoomed past the target, and this zoom is not valid anymore.
+                            // This line causes the next zoom movement to pick a new starting point.
+                            object._zoomMouseStart.x = -1;
                             return;
                         }
                         var alpha = Math.acos(-alphaDot);
