@@ -2728,9 +2728,7 @@ define([
         } else if (defined(camera.frustum.infiniteProjectionMatrix)){
             frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
         } else {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('2D is not supported. An orthographic projection matrix is not invertible.');
-            //>>includeEnd('debug');
+            frustum = camera.frustum.clone(scratchOrthographicFrustum);
         }
 
         var numFrustums = this.numberOfFrustums;
@@ -2750,7 +2748,7 @@ define([
 
             if (depth > 0.0 && depth < 1.0) {
                 var renderedFrustum = this._frustumCommandsList[i];
-                frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
+                frustum.near = renderedFrustum.near * (i !== 0 && this._mode !== SceneMode.SCENE2D ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
                 frustum.far = renderedFrustum.far;
                 uniformState.updateFrustum(frustum);
 
