@@ -232,147 +232,148 @@ defineSuite([
     });
 
     it('normal use of localFrameToFixedFrameGenerator', function() {
-      var cartesianTab = [
-        new Cartesian3(0.0, 0.0, 1.0),
-        new Cartesian3(0.0, 0.0, -1.0),
-        new Cartesian3(10.0, 20.0, 30.0),
-        new Cartesian3(-10.0, -20.0, -30.0),
-        new Cartesian3(-25.0, 60.0, -1.0),
-        new Cartesian3(9.0, 0.0, -7.0)
-      ];
+        var cartesianTab = [
+            new Cartesian3(0.0, 0.0, 1.0),
+            new Cartesian3(0.0, 0.0, -1.0),
+            new Cartesian3(10.0, 20.0, 30.0),
+            new Cartesian3(-10.0, -20.0, -30.0),
+            new Cartesian3(-25.0, 60.0, -1.0),
+            new Cartesian3(9.0, 0.0, -7.0)
+        ];
 
-      var converterTab = [
-        {
-          converter: Transforms.localFrameToFixedFrameGenerator('north', 'east'),
-          order: ['north', 'east', 'down']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('north', 'west'),
-          order: ['north', 'west', 'up']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('north', 'up'),
-          order: ['north', 'up', 'east']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('north', 'down'),
-          order: ['north', 'down', 'west']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('south', 'east'),
-          order: ['south', 'east', 'up']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('south', 'west'),
-          order: ['south', 'west', 'down']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('south', 'up'),
-          order: ['south', 'up', 'west']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('south', 'down'),
-          order: ['south', 'down', 'east']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('east', 'north'),
-          order: ['east', 'north', 'up']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('east', 'south'),
-          order: ['east', 'south', 'down']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('east', 'up'),
-          order: ['east', 'up', 'south']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('east', 'down'),
-          order: ['east', 'down', 'north']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('west', 'north'),
-          order: ['west', 'north', 'down']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('west', 'south'),
-          order: ['west', 'south', 'up']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('west', 'up'),
-          order: ['west', 'up', 'north']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('west', 'down'),
-          order: ['west', 'down', 'south']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('up', 'north'),
-          order: ['up', 'north', 'west']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('up', 'south'),
-          order: ['up', 'south', 'east']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('up', 'east'),
-          order: ['up', 'east', 'north']
-        }, {
-          converter: Transforms.localFrameToFixedFrameGenerator('up', 'west'),
-          order: ['up', 'west', 'south']
-        }
-      ];
-
-      function testAllLocalFrame(classicalENUMatrix, position) {
-        var ENUColumn = new Cartesian4();
-        var converterColumn = new Cartesian4();
-        for (var i = 0; i < converterTab.length; i++) {
-          var converterMatrix = (converterTab[i].converter)(position, Ellipsoid.UNIT_SPHERE);
-          var order = converterTab[i].order;
-          // check translation
-          Matrix4.getColumn(classicalENUMatrix, 3, ENUColumn);
-          Matrix4.getColumn(converterMatrix, 3, converterColumn);
-          expect(ENUColumn).toEqual(converterColumn);
-          // check axis
-          for (var j = 0; j < 3; j++) {
-            Matrix4.getColumn(converterMatrix, j, converterColumn);
-            var axisName = order[j];
-            if (axisName === 'east') {
-              Matrix4.getColumn(classicalENUMatrix, 0, ENUColumn);
-            } else if (axisName === 'west') {
-              Matrix4.getColumn(classicalENUMatrix, 0, ENUColumn);
-              Cartesian4.negate(ENUColumn, ENUColumn);
-            } else if (axisName === 'north') {
-              Matrix4.getColumn(classicalENUMatrix, 1, ENUColumn);
-            } else if (axisName === 'south') {
-              Matrix4.getColumn(classicalENUMatrix, 1, ENUColumn);
-              Cartesian4.negate(ENUColumn, ENUColumn);
-            } else if (axisName === 'up') {
-              Matrix4.getColumn(classicalENUMatrix, 2, ENUColumn);
-            } else if (axisName === 'down') {
-              Matrix4.getColumn(classicalENUMatrix, 2, ENUColumn);
-              Cartesian4.negate(ENUColumn, ENUColumn);
+        var converterTab = [
+            {
+                converter : Transforms.localFrameToFixedFrameGenerator('north', 'east'),
+                order : ['north', 'east', 'down']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('north', 'west'),
+                order : ['north', 'west', 'up']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('north', 'up'),
+                order : ['north', 'up', 'east']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('north', 'down'),
+                order : ['north', 'down', 'west']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('south', 'east'),
+                order : ['south', 'east', 'up']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('south', 'west'),
+                order : ['south', 'west', 'down']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('south', 'up'),
+                order : ['south', 'up', 'west']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('south', 'down'),
+                order : ['south', 'down', 'east']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('east', 'north'),
+                order : ['east', 'north', 'up']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('east', 'south'),
+                order : ['east', 'south', 'down']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('east', 'up'),
+                order : ['east', 'up', 'south']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('east', 'down'),
+                order : ['east', 'down', 'north']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('west', 'north'),
+                order : ['west', 'north', 'down']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('west', 'south'),
+                order : ['west', 'south', 'up']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('west', 'up'),
+                order : ['west', 'up', 'north']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('west', 'down'),
+                order : ['west', 'down', 'south']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('up', 'north'),
+                order : ['up', 'north', 'west']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('up', 'south'),
+                order : ['up', 'south', 'east']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('up', 'east'),
+                order : ['up', 'east', 'north']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('up', 'west'),
+                order : ['up', 'west', 'south']
             }
-            expect(ENUColumn).toEqual(converterColumn);
-          }
-        }
-      }
+        ];
 
-      for (var i = 0; i < cartesianTab.length; i++) {
-        var cartesian = cartesianTab[i];
-        var classicalEastNorthUpReferential = Transforms.eastNorthUpToFixedFrame(cartesian, Ellipsoid.UNIT_SPHERE);
-        testAllLocalFrame(classicalEastNorthUpReferential,cartesian);
-      }
+        function testAllLocalFrame(classicalENUMatrix, position) {
+            var ENUColumn = new Cartesian4();
+            var converterColumn = new Cartesian4();
+            for (var i = 0; i < converterTab.length; i++) {
+                var converterMatrix = (converterTab[i].converter)(position, Ellipsoid.UNIT_SPHERE);
+                var order = converterTab[i].order;
+                // check translation
+                Matrix4.getColumn(classicalENUMatrix, 3, ENUColumn);
+                Matrix4.getColumn(converterMatrix, 3, converterColumn);
+                expect(ENUColumn).toEqual(converterColumn);
+                // check axis
+                for (var j = 0; j < 3; j++) {
+                    Matrix4.getColumn(converterMatrix, j, converterColumn);
+                    var axisName = order[j];
+                    if (axisName === 'east') {
+                        Matrix4.getColumn(classicalENUMatrix, 0, ENUColumn);
+                    } else if (axisName === 'west') {
+                        Matrix4.getColumn(classicalENUMatrix, 0, ENUColumn);
+                        Cartesian4.negate(ENUColumn, ENUColumn);
+                    } else if (axisName === 'north') {
+                        Matrix4.getColumn(classicalENUMatrix, 1, ENUColumn);
+                    } else if (axisName === 'south') {
+                        Matrix4.getColumn(classicalENUMatrix, 1, ENUColumn);
+                        Cartesian4.negate(ENUColumn, ENUColumn);
+                    } else if (axisName === 'up') {
+                        Matrix4.getColumn(classicalENUMatrix, 2, ENUColumn);
+                    } else if (axisName === 'down') {
+                        Matrix4.getColumn(classicalENUMatrix, 2, ENUColumn);
+                        Cartesian4.negate(ENUColumn, ENUColumn);
+                    }
+                    expect(ENUColumn).toEqual(converterColumn);
+                }
+            }
+        }
+
+        for (var i = 0; i < cartesianTab.length; i++) {
+            var cartesian = cartesianTab[i];
+            var classicalEastNorthUpReferential = Transforms.eastNorthUpToFixedFrame(cartesian, Ellipsoid.UNIT_SPHERE);
+            testAllLocalFrame(classicalEastNorthUpReferential, cartesian);
+        }
     });
 
     it('abnormal use of localFrameToFixedFrameGenerator', function() {
-      function checkDeveloperError(firstAxis,secondAxis){
-        expect(function() {
-            Transforms.localFrameToFixedFrameGenerator(firstAxis, secondAxis);
-        }).toThrowDeveloperError();
-      }
-      checkDeveloperError(undefined,undefined);
-      checkDeveloperError('north',undefined);
-      checkDeveloperError(undefined,'north');
-      checkDeveloperError('south',undefined);
-      checkDeveloperError('northe','southe');
+        function checkDeveloperError(firstAxis, secondAxis) {
+            expect(function() {
+                Transforms.localFrameToFixedFrameGenerator(firstAxis, secondAxis);
+            }).toThrowDeveloperError();
+        }
 
-      checkDeveloperError('north','north');
-      checkDeveloperError('north','south');
-      checkDeveloperError('south','north');
-      checkDeveloperError('south','south');
+        checkDeveloperError(undefined, undefined);
+        checkDeveloperError('north', undefined);
+        checkDeveloperError(undefined, 'north');
+        checkDeveloperError('south', undefined);
+        checkDeveloperError('northe', 'southe');
 
-      checkDeveloperError('up','up');
-      checkDeveloperError('up','down');
-      checkDeveloperError('down','up');
-      checkDeveloperError('down','down');
+        checkDeveloperError('north', 'north');
+        checkDeveloperError('north', 'south');
+        checkDeveloperError('south', 'north');
+        checkDeveloperError('south', 'south');
 
-      checkDeveloperError('east','east');
-      checkDeveloperError('east','west');
-      checkDeveloperError('west','east');
-      checkDeveloperError('west','west');
+        checkDeveloperError('up', 'up');
+        checkDeveloperError('up', 'down');
+        checkDeveloperError('down', 'up');
+        checkDeveloperError('down', 'down');
+
+        checkDeveloperError('east', 'east');
+        checkDeveloperError('east', 'west');
+        checkDeveloperError('west', 'east');
+        checkDeveloperError('west', 'west');
     });
 
     it('headingPitchRollToFixedFrame works without a result parameter', function() {
@@ -517,7 +518,6 @@ defineSuite([
         expect(actualNorth).toEqual(expectedNorth);
         expect(actualUp).toEqual(expectedUp);
         expect(actualTranslation).toEqual(origin);
-
 
         var UNEFixedFrameConverter = Transforms.localFrameToFixedFrameGenerator('west','south'); // up north east
         returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, UNEFixedFrameConverter, result);

@@ -58,8 +58,8 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 var canvas = viewer.canvas;
 canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
-canvas.addEventListener('click',function(){
-  canvas.focus();
+canvas.addEventListener('click', function() {
+    canvas.focus();
 });
 canvas.focus();
 
@@ -74,69 +74,69 @@ var hpRange = new Cesium.HeadingPitchRange();
 var deltaRadians = Cesium.Math.toRadians(1.0);
 
 var localFrames = [
-  {
-    pos: Cesium.Cartesian3.fromDegrees(-123.075, 44.045000, 5000.0),
-    converter: Cesium.Transforms.eastNorthUpToFixedFrame ,
-    comments: 'Classical East North Up\nlocal Frame'
-  },
-  {
-    pos: Cesium.Cartesian3.fromDegrees(-123.075, 44.050000, 5500.0),
-    converter: Cesium.Transforms.localFrameToFixedFrameGenerator('north','west'),
-    comments: 'North West Up\nlocal Frame'
-  },
-  {
-    pos: Cesium.Cartesian3.fromDegrees(-123.075, 44.040000, 4500.0),
-    converter: Cesium.Transforms.localFrameToFixedFrameGenerator('south','up'),
-    comments: 'South Up West\nlocal Frame'
-  },
-  {
-    pos: Cesium.Cartesian3.fromDegrees(-123.075, 44.050000, 4500.0),
-    converter: Cesium.Transforms.localFrameToFixedFrameGenerator('up','east'),
-    comments: 'Up East North\nlocal Frame'
-  },
-  {
-    pos: Cesium.Cartesian3.fromDegrees(-123.075, 44.040000, 5500.0),
-    converter: Cesium.Transforms.localFrameToFixedFrameGenerator('down','east'),
-    comments: 'Down East South\nlocal Frame'
-  },
+    {
+        pos : Cesium.Cartesian3.fromDegrees(-123.075, 44.045000, 5000.0),
+        converter : Cesium.Transforms.eastNorthUpToFixedFrame,
+        comments : 'Classical East North Up\nlocal Frame'
+    },
+    {
+        pos : Cesium.Cartesian3.fromDegrees(-123.075, 44.050000, 5500.0),
+        converter : Cesium.Transforms.localFrameToFixedFrameGenerator('north', 'west'),
+        comments : 'North West Up\nlocal Frame'
+    },
+    {
+        pos : Cesium.Cartesian3.fromDegrees(-123.075, 44.040000, 4500.0),
+        converter : Cesium.Transforms.localFrameToFixedFrameGenerator('south', 'up'),
+        comments : 'South Up West\nlocal Frame'
+    },
+    {
+        pos : Cesium.Cartesian3.fromDegrees(-123.075, 44.050000, 4500.0),
+        converter : Cesium.Transforms.localFrameToFixedFrameGenerator('up', 'east'),
+        comments : 'Up East North\nlocal Frame'
+    },
+    {
+        pos : Cesium.Cartesian3.fromDegrees(-123.075, 44.040000, 5500.0),
+        converter : Cesium.Transforms.localFrameToFixedFrameGenerator('down', 'east'),
+        comments : 'Down East South\nlocal Frame'
+    },
 ];
 
-var primitives= [];
+var primitives = [];
 var hprRollZero = new Cesium.HeadingPitchRoll();
 
-for( var i = 0; i < localFrames.length; i++){
-  var position = localFrames[i].pos;
-  var converter = localFrames[i].converter;
-  var comments = localFrames[i].comments;
-  var planePrimitive = scene.primitives.add(Cesium.Model.fromGltf({
-      url : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
-      modelMatrix : Cesium.Transforms.headingPitchRollToFixedFrame(position, hpRoll, Cesium.Ellipsoid.WGS84, converter),
-      minimumPixelSize : 128
-  }));
+for (var i = 0; i < localFrames.length; i++) {
+    var position = localFrames[i].pos;
+    var converter = localFrames[i].converter;
+    var comments = localFrames[i].comments;
+    var planePrimitive = scene.primitives.add(Cesium.Model.fromGltf({
+        url : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
+        modelMatrix : Cesium.Transforms.headingPitchRollToFixedFrame(position, hpRoll, Cesium.Ellipsoid.WGS84, converter),
+        minimumPixelSize : 128
+    }));
 
-  primitives.push({primitive: planePrimitive, converter: converter, position: position });
-  var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(position, hprRollZero, Cesium.Ellipsoid.WGS84, converter);
-  scene.primitives.add(new Cesium.DebugModelMatrixPrimitive({
-    modelMatrix : modelMatrix,
-    length : 300.0,
-    width : 10.0
-  }));
+    primitives.push({primitive : planePrimitive, converter : converter, position : position});
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(position, hprRollZero, Cesium.Ellipsoid.WGS84, converter);
+    scene.primitives.add(new Cesium.DebugModelMatrixPrimitive({
+        modelMatrix : modelMatrix,
+        length : 300.0,
+        width : 10.0
+    }));
 
-  var positionLabel = position.clone();
-  positionLabel.z = position.z + 300.0;
-  viewer.entities.add({
-          position : positionLabel,
-          label : {
-              text : comments,
-              font : '24px Helvetica',
-              fillColor : Cesium.Color.SKYBLUE,
-              outlineColor : Cesium.Color.BLACK,
-              outlineWidth : 2,
-              style : Cesium.LabelStyle.FILL_AND_OUTLINE,
-              verticalOrigin : Cesium.VerticalOrigin.CENTER,
-              HorizontalOrigin : Cesium.HorizontalOrigin.RIGHT
-          }
-      });
+    var positionLabel = position.clone();
+    positionLabel.z = position.z + 300.0;
+    viewer.entities.add({
+        position : positionLabel,
+        label : {
+            text : comments,
+            font : '24px Helvetica',
+            fillColor : Cesium.Color.SKYBLUE,
+            outlineColor : Cesium.Color.BLACK,
+            outlineWidth : 2,
+            style : Cesium.LabelStyle.FILL_AND_OUTLINE,
+            verticalOrigin : Cesium.VerticalOrigin.CENTER,
+            HorizontalOrigin : Cesium.HorizontalOrigin.RIGHT
+        }
+    });
 }
 
 primitives[0].primitive.readyPromise.then(function(model) {
@@ -161,18 +161,18 @@ primitives[0].primitive.readyPromise.then(function(model) {
 document.addEventListener('keydown', function(e) {
     switch (e.keyCode) {
         case 40:
-                // pitch down
-                hpRoll.pitch -= deltaRadians;
-                if (hpRoll.pitch < -Cesium.Math.TWO_PI) {
-                    hpRoll.pitch += Cesium.Math.TWO_PI;
-                }
+            // pitch down
+            hpRoll.pitch -= deltaRadians;
+            if (hpRoll.pitch < -Cesium.Math.TWO_PI) {
+                hpRoll.pitch += Cesium.Math.TWO_PI;
+            }
             break;
         case 38:
-                // pitch up
-                hpRoll.pitch += deltaRadians;
-                if (hpRoll.pitch > Cesium.Math.TWO_PI) {
-                    hpRoll.pitch -= Cesium.Math.TWO_PI;
-                }
+            // pitch up
+            hpRoll.pitch += deltaRadians;
+            if (hpRoll.pitch > Cesium.Math.TWO_PI) {
+                hpRoll.pitch -= Cesium.Math.TWO_PI;
+            }
             break;
         case 39:
             if (e.shiftKey) {
@@ -217,13 +217,14 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
     pitchSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.pitch).toFixed(1);
     rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
 
-    for( var i = 0; i < primitives.length; i++){
-      var primitive = primitives[i].primitive;
-      var converter = primitives[i].converter;
-      var position = primitives[i].position;
-      Cesium.Transforms.headingPitchRollToFixedFrame(position, hpRoll, Cesium.Ellipsoid.WGS84, converter, primitive.modelMatrix);
+    for (var i = 0; i < primitives.length; i++) {
+        var primitive = primitives[i].primitive;
+        var converter = primitives[i].converter;
+        var position = primitives[i].position;
+        Cesium.Transforms.headingPitchRollToFixedFrame(position, hpRoll, Cesium.Ellipsoid.WGS84, converter, primitive.modelMatrix);
     }
-});//Sandcastle_End
+});
+//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {

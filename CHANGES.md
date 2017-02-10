@@ -25,7 +25,6 @@ Change Log
 
 * Deprecated
     * The properties `url` and `key` will be removed from `GeocoderViewModel` in 1.31. These properties will be available on geocoder services that support them, like `BingMapsGeocoderService`.
-    * The function `createBinormalAndBitangent` of `GeometryPipeline` will be removed in 1.31. Use the function `createTangentAndBitangent` instead. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
     * The function `GeometryPipeline.computeBinormalAndTangent` will be removed in 1.31. Use `GeometryPipeline.createTangentAndBitangent` instead. [#4856](https://github.com/AnalyticalGraphicsInc/cesium/pull/4856)
     * The enums `MIDDLE_DOUBLE_CLICK` and `RIGHT_DOUBLE_CLICK` from `ScreenSpaceEventType` have been deprecated and will be removed in 1.31. [#4910](https://github.com/AnalyticalGraphicsInc/cesium/pull/4910)
 * Breaking changes
@@ -48,8 +47,6 @@ Change Log
 * Fixed a bug that affected dynamic graphics with time-dynamic modelMatrix. [#4907](https://github.com/AnalyticalGraphicsInc/cesium/pull/4907)
 * Fixed `Geocoder` autocomplete drop down visibility in Firefox. [#4916](https://github.com/AnalyticalGraphicsInc/cesium/issues/4916)
 * Added `Rectangle.fromRadians`.
-* `TerrainProvider` now optionally exposes an `availability` property that can be used to query the terrain level that is available at a location or in a rectangle.  Currently only `CesiumTerrainProvider` exposes this property.
-* Added `sampleTerrainMostDetailed` to sample the height of an array of positions using the best available terrain data at each point.  This requires a `TerrainProvider` with the `availability` property.
 * Updated the morph so the default view in Columbus View is now angled. [#3878](https://github.com/AnalyticalGraphicsInc/cesium/issues/3878)
 * Added 2D and Columbus View support for models using the RTC extension or whose vertices are in WGS84 coordinates. [#4922](https://github.com/AnalyticalGraphicsInc/cesium/pull/4922)
 * The attribute `perInstanceAttribute` of `DebugAppearance` has been made optional and defaults to `false`.

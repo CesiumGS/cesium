@@ -53,73 +53,64 @@ define([
      * @exports Transforms
      */
     var Transforms = {};
+
     var vectorProductLocalFrame = {
-      up: {
-        south: 'east',
-        north: 'west',
-        west: 'south',
-        east: 'north'
-      },
-      down: {
-        south: 'west',
-        north: 'east',
-        west: 'north',
-        east: 'south'
-      },
-      south: {
-        up: 'west',
-        down: 'east',
-        west: 'down',
-        east: 'up'
-      },
-      north: {
-        up: 'east',
-        down: 'west',
-        west: 'up',
-        east: 'down'
-      },
-      west: {
-        up: 'north',
-        down: 'south',
-        north: 'down',
-        south: 'up'
-      },
-      east: {
-        up: 'south',
-        down: 'north',
-        north: 'up',
-        south: 'down'
-      }
+        up : {
+            south : 'east',
+            north : 'west',
+            west : 'south',
+            east : 'north'
+        },
+        down : {
+            south : 'west',
+            north : 'east',
+            west : 'north',
+            east : 'south'
+        },
+        south : {
+            up : 'west',
+            down : 'east',
+            west : 'down',
+            east : 'up'
+        },
+        north : {
+            up : 'east',
+            down : 'west',
+            west : 'up',
+            east : 'down'
+        },
+        west : {
+            up : 'north',
+            down : 'south',
+            north : 'down',
+            south : 'up'
+        },
+        east : {
+            up : 'south',
+            down : 'north',
+            north : 'up',
+            south : 'down'
+        }
     };
 
     var degeneratePositionLocalFrame = {
-      north: [
-        -1, 0, 0
-      ],
-      east: [
-        0, 1, 0
-      ],
-      up: [
-        0, 0, 1
-      ],
-      south: [
-        1, 0, 0
-      ],
-      west: [
-        0, -1, 0
-      ],
-      down: [0, 0, -1]
+        north : [-1, 0, 0],
+        east : [0, 1, 0],
+        up : [0, 0, 1],
+        south : [1, 0, 0],
+        west : [0, -1, 0],
+        down : [0, 0, -1]
     };
 
     var localFrameToFixedFrameCache = {};
 
     var scratchCalculateCartesian = {
-      east: new Cartesian3(),
-      north: new Cartesian3(),
-      up: new Cartesian3(),
-      west: new Cartesian3(),
-      south: new Cartesian3(),
-      down: new Cartesian3()
+        east : new Cartesian3(),
+        north : new Cartesian3(),
+        up : new Cartesian3(),
+        west : new Cartesian3(),
+        south : new Cartesian3(),
+        down : new Cartesian3()
     };
     var scratchFirstCartesian = new Cartesian3();
     var scratchSecondCartesian = new Cartesian3();
@@ -139,7 +130,6 @@ define([
           throw new DeveloperError('firstAxis and secondAxis must be east, north, up, west, south or down.');
       }
       var thirdAxis = vectorProductLocalFrame[firstAxis][secondAxis];
-
 
       /**
        * Computes a 4x4 transformation matrix from a reference frame
@@ -349,8 +339,7 @@ define([
         if(fixedFrameTransformOrResult instanceof Matrix4){
             result = fixedFrameTransformOrResult;
             fixedFrameTransformOrResult = undefined;
-            deprecationWarning('Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)', 'The method was deprecated in Cesium 1.31 and will be removed in version 1.33. ' +
-            'Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator)');
+            deprecationWarning('Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)', 'The method was deprecated in Cesium 1.31 and will be removed in version 1.33. Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator)');
         }
         fixedFrameTransformOrResult = defaultValue(fixedFrameTransformOrResult,Transforms.eastNorthUpToFixedFrame);
         var hprQuaternion = Quaternion.fromHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion);
@@ -389,11 +378,10 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        if(fixedFrameTransformOrResult instanceof Quaternion){
-          result = fixedFrameTransformOrResult;
-          fixedFrameTransformOrResult = undefined;
-          deprecationWarning('Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)', 'The method was deprecated in Cesium 1.31 and will be removed in version 1.33. ' +
-          'Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator)');
+        if (fixedFrameTransformOrResult instanceof Quaternion) {
+            result = fixedFrameTransformOrResult;
+            fixedFrameTransformOrResult = undefined;
+            deprecationWarning('Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)', 'The method was deprecated in Cesium 1.31 and will be removed in version 1.33. Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator)');
         }
         var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid,fixedFrameTransformOrResult, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
