@@ -21,7 +21,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 #ifdef GL_OES_standard_derivatives
     float base = 1.0 - abs(fwidth(st.s)) * 10.0;
 #else
-    float base = 1.0;  // FIXME
+    float base = 0.99; // 1% of the line will be the arrow head
 #endif
 
     vec2 center = vec2(1.0, 0.5);
