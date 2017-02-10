@@ -1372,7 +1372,9 @@ define([
                     }
 
                     if (!allChildrenLoaded) {
-                        childrenVisibility = computeChildrenVisibility(t, frameState, false);
+                        if (useChildrenBoundUnion) {
+                            childrenVisibility = computeChildrenVisibility(t, frameState, false);
+                        }
                         if (!useChildrenBoundUnion || (childrenVisibility & ChildrenVisibilityFlags.VISIBLE) || childrenLength === 0) {
                             // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
                             selectTile(tileset, t, fullyVisible, frameState);
