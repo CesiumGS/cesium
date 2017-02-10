@@ -2748,11 +2748,28 @@ define([
 
             if (depth > 0.0 && depth < 1.0) {
                 var renderedFrustum = this._frustumCommandsList[i];
-                frustum.near = renderedFrustum.near * (i !== 0 && this._mode !== SceneMode.SCENE2D ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
-                frustum.far = renderedFrustum.far;
-                uniformState.updateFrustum(frustum);
+                var height2D;
+                if (this.mode === SceneMode.SCENE2D) {
+                    height2D = camera.position.z;
+                    camera.position.z = height2D - renderedFrustum.near + 1.0;
+                    frustum.far = Math.max(1.0, renderedFrustum.far - renderedFrustum.near);
+                    frustum.near = 1.0;
+                    uniformState.update(this.frameState);
+                    uniformState.updateFrustum(frustum);
+                } else {
+                    frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
+                    frustum.far = renderedFrustum.far;
+                    uniformState.updateFrustum(frustum);
+                }
 
-                return SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, result);
+                result = SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, result);
+
+                if (this.mode === SceneMode.SCENE2D) {
+                    camera.position.z = height2D;
+                    uniformState.update(this.frameState);
+                }
+
+                return result;
             }
         }
 
