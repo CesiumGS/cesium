@@ -71,8 +71,6 @@ define([
      *
      * @param {Scene} scene The scene instance to use.
      * @param {PerformanceContainer} performanceContainer The instance to use for performance container.
-     *
-     * @exception {DeveloperError} scene is required.
      */
     function CesiumInspectorViewModel(scene, performanceContainer) {
         //>>includeStart('debug', pragmas.debug);
@@ -106,6 +104,13 @@ define([
          * @default false
          */
         this.frustums = false;
+
+        /**
+         * Gets or sets the show frustum planes state.  This property is observable.
+         * @type {Boolean}
+         * @default false
+         */
+        this.frustumPlanes = false;
 
         /**
          * Gets or sets the show performance display state.  This property is observable.
@@ -305,6 +310,7 @@ define([
 
         knockout.track(this, [
             'frustums',
+            'frustumPlanes',
             'performance',
             'shaderCacheText',
             'primitiveBoundingSphere',
@@ -349,6 +355,10 @@ define([
 
         this._frustumsSubscription = knockout.getObservable(this, 'frustums').subscribe(function(val) {
             that._scene.debugShowFrustums = val;
+        });
+
+        this._frustumPlanesSubscription = knockout.getObservable(this, 'frustumPlanes').subscribe(function(val) {
+            that._scene.debugShowFrustumPlanes = val;
         });
 
         this._performanceSubscription = knockout.getObservable(this, 'performance').subscribe(function(val) {
@@ -940,6 +950,7 @@ define([
     CesiumInspectorViewModel.prototype.destroy = function() {
         this._eventHandler.destroy();
         this._frustumsSubscription.dispose();
+        this._frustumPlanesSubscription.dispose();
         this._performanceSubscription.dispose();
         this._primitiveBoundingSphereSubscription.dispose();
         this._primitiveReferenceFrameSubscription.dispose();

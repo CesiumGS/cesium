@@ -39,7 +39,6 @@ defineSuite([
 
     function expectRenderComposite(tileset) {
         expect(scene).toPickAndCall(function(result) {
-            console.log(result);
             // Pick a building
             var pickedBuilding = result;
             expect(pickedBuilding).toBeDefined();

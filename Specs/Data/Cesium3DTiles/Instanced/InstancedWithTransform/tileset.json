@@ -2,6 +2,12 @@
   "asset": {
     "version": "0.0"
   },
+  "properties": {
+    "Height": {
+      "minimum": 20,
+      "maximum": 20
+    }
+  },
   "geometricError": 70,
   "root": {
     "transform": [

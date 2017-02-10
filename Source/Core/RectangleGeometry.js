@@ -1,58 +1,58 @@
 /*global define*/
 define([
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryInstance',
-        './GeometryPipeline',
-        './IndexDatatype',
-        './Math',
-        './Matrix2',
-        './Matrix3',
-        './PolygonPipeline',
-        './PrimitiveType',
-        './Quaternion',
-        './Rectangle',
-        './RectangleGeometryLibrary',
-        './VertexFormat'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryInstance,
-        GeometryPipeline,
-        IndexDatatype,
-        CesiumMath,
-        Matrix2,
-        Matrix3,
-        PolygonPipeline,
-        PrimitiveType,
-        Quaternion,
-        Rectangle,
-        RectangleGeometryLibrary,
-        VertexFormat) {
+    './BoundingSphere',
+    './Cartesian2',
+    './Cartesian3',
+    './Cartographic',
+    './Check',
+    './ComponentDatatype',
+    './defaultValue',
+    './defined',
+    './defineProperties',
+    './DeveloperError',
+    './Ellipsoid',
+    './Geometry',
+    './GeometryAttribute',
+    './GeometryAttributes',
+    './GeometryInstance',
+    './GeometryPipeline',
+    './IndexDatatype',
+    './Math',
+    './Matrix2',
+    './Matrix3',
+    './PolygonPipeline',
+    './PrimitiveType',
+    './Quaternion',
+    './Rectangle',
+    './RectangleGeometryLibrary',
+    './VertexFormat'
+], function(
+    BoundingSphere,
+    Cartesian2,
+    Cartesian3,
+    Cartographic,
+    Check,
+    ComponentDatatype,
+    defaultValue,
+    defined,
+    defineProperties,
+    DeveloperError,
+    Ellipsoid,
+    Geometry,
+    GeometryAttribute,
+    GeometryAttributes,
+    GeometryInstance,
+    GeometryPipeline,
+    IndexDatatype,
+    CesiumMath,
+    Matrix2,
+    Matrix3,
+    PolygonPipeline,
+    PrimitiveType,
+    Quaternion,
+    Rectangle,
+    RectangleGeometryLibrary,
+    VertexFormat) {
     'use strict';
 
     var positionScratch = new Cartesian3();
@@ -110,12 +110,12 @@ define([
         var bitangent = bitangentScratch;
         var tangent = tangentScratch;
         var normal = normalScratch;
-        for (var i = 0; i < length; i += 3) {
-            var p = Cartesian3.fromArray(positions, i, positionScratch);
-            var attrIndex1 = attrIndex + 1;
-            var attrIndex2 = attrIndex + 2;
+        if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
+            for (var i = 0; i < length; i += 3) {
+                var p = Cartesian3.fromArray(positions, i, positionScratch);
+                var attrIndex1 = attrIndex + 1;
+                var attrIndex2 = attrIndex + 2;
 
-            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
                 normal = ellipsoid.geodeticSurfaceNormal(p, normal);
                 if (vertexFormat.tangent || vertexFormat.bitangent) {
                     Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
@@ -142,8 +142,8 @@ define([
                     bitangents[attrIndex1] = bitangent.y;
                     bitangents[attrIndex2] = bitangent.z;
                 }
+                attrIndex += 3;
             }
-            attrIndex += 3;
         }
         return createAttributes(vertexFormat, {
             positions : positions,
@@ -155,6 +155,7 @@ define([
 
     var v1Scratch = new Cartesian3();
     var v2Scratch = new Cartesian3();
+
     function calculateAttributesWall(positions, vertexFormat, ellipsoid) {
         var length = positions.length;
 
@@ -170,10 +171,9 @@ define([
         var bitangent = bitangentScratch;
         var tangent = tangentScratch;
         var normal = normalScratch;
-        for (var i = 0; i < length; i += 6) {
-            var p = Cartesian3.fromArray(positions, i, positionScratch);
-
-            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
+        if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
+            for (var i = 0; i < length; i += 6) {
+                var p = Cartesian3.fromArray(positions, i, positionScratch);
                 var p1 = Cartesian3.fromArray(positions, (i + 6) % length, v1Scratch);
                 if (recomputeNormal) {
                     var p2 = Cartesian3.fromArray(positions, (i + 3) % length, v2Scratch);
@@ -333,6 +333,7 @@ define([
     }
 
     var scratchVertexFormat = new VertexFormat();
+
     function constructExtrudedRectangle(options) {
         var shadowVolume = options.shadowVolume;
         var vertexFormat = options.vertexFormat;
@@ -358,7 +359,7 @@ define([
         var topPositions = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo.attributes.position.values, maxHeight, ellipsoid, false);
         topPositions = new Float64Array(topPositions);
         var length = topPositions.length;
-        var newLength = length*2;
+        var newLength = length * 2;
         var positions = new Float64Array(newLength);
         positions.set(topPositions);
         var bottomPositions = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo.attributes.position.values, minHeight, ellipsoid);
@@ -368,13 +369,13 @@ define([
         var normals = (vertexFormat.normal) ? new Float32Array(newLength) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(newLength) : undefined;
         var bitangents = (vertexFormat.bitangent) ? new Float32Array(newLength) : undefined;
-        var textures = (vertexFormat.st) ? new Float32Array(newLength/3*2) : undefined;
+        var textures = (vertexFormat.st) ? new Float32Array(newLength / 3 * 2) : undefined;
         var topSt;
         var topNormals;
         if (vertexFormat.normal) {
             topNormals = topBottomGeo.attributes.normal.values;
             normals.set(topNormals);
-            for (i = 0; i < length; i ++) {
+            for (i = 0; i < length; i++) {
                 topNormals[i] = -topNormals[i];
             }
             normals.set(topNormals, length);
@@ -386,7 +387,7 @@ define([
                 topBottomGeo.attributes.normal = undefined;
             }
             var extrudeNormals = new Float32Array(newLength);
-            for (i = 0; i < length; i ++) {
+            for (i = 0; i < length; i++) {
                 topNormals[i] = -topNormals[i];
             }
             extrudeNormals.set(topNormals, length); //only get normals for bottom layer that's going to be pushed down
@@ -400,7 +401,7 @@ define([
         if (vertexFormat.tangent) {
             var topTangents = topBottomGeo.attributes.tangent.values;
             tangents.set(topTangents);
-            for (i = 0; i < length; i ++) {
+            for (i = 0; i < length; i++) {
                 topTangents[i] = -topTangents[i];
             }
             tangents.set(topTangents, length);
@@ -415,14 +416,14 @@ define([
         if (vertexFormat.st) {
             topSt = topBottomGeo.attributes.st.values;
             textures.set(topSt);
-            textures.set(topSt, length/3*2);
+            textures.set(topSt, length / 3 * 2);
             topBottomGeo.attributes.st.values = textures;
         }
 
         var indices = topBottomGeo.indices;
         var indicesLength = indices.length;
         var posLength = length / 3;
-        var newIndices = IndexDatatype.createTypedArray(newLength/3, indicesLength*2);
+        var newIndices = IndexDatatype.createTypedArray(newLength / 3, indicesLength * 2);
         newIndices.set(indices);
         for (i = 0; i < indicesLength; i += 3) {
             newIndices[i + indicesLength] = indices[i + 2] + posLength;
@@ -443,12 +444,12 @@ define([
         var extrudeNormalIndex = 0;
         var area = width * height;
         var threeI;
-        for (i = 0; i < area; i+=width) {
+        for (i = 0; i < area; i += width) {
             threeI = i * 3;
             wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
-                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
+                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i * 2, topSt);
                 stIndex += 4;
             }
             if (shadowVolume) {
@@ -459,12 +460,12 @@ define([
             }
         }
 
-        for (i = area-width; i < area; i++) {
+        for (i = area - width; i < area; i++) {
             threeI = i * 3;
             wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
-                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
+                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i * 2, topSt);
                 stIndex += 4;
             }
             if (shadowVolume) {
@@ -475,12 +476,12 @@ define([
             }
         }
 
-        for (i = area-1; i > 0; i-=width) {
+        for (i = area - 1; i > 0; i -= width) {
             threeI = i * 3;
             wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
-                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
+                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i * 2, topSt);
                 stIndex += 4;
             }
             if (shadowVolume) {
@@ -491,12 +492,12 @@ define([
             }
         }
 
-        for (i = width-1; i >= 0; i--) {
+        for (i = width - 1; i >= 0; i--) {
             threeI = i * 3;
             wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
-                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
+                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i * 2, topSt);
                 stIndex += 4;
             }
             if (shadowVolume) {
@@ -532,7 +533,7 @@ define([
         var upperRight;
         length = wallPositions.length / 3;
         var index = 0;
-        for (i = 0; i < length - 1; i+=2) {
+        for (i = 0; i < length - 1; i += 2) {
             upperLeft = i;
             upperRight = (upperLeft + 2) % length;
             var p1 = Cartesian3.fromArray(wallPositions, upperLeft * 3, v1Scratch);
@@ -735,7 +736,7 @@ define([
         extrudedHeight : undefined,
         closeTop : undefined,
         closeBottom : undefined,
-        shadowVolume: undefined
+        shadowVolume : undefined
     };
 
     /**
@@ -901,7 +902,7 @@ define([
             closeTop : true,
             closeBottom : true,
             vertexFormat : VertexFormat.POSITION_ONLY,
-            shadowVolume: true
+            shadowVolume : true
         });
     };
 
