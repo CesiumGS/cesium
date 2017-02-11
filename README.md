@@ -46,6 +46,10 @@ We appreciate attribution by including the Cesium logo and link in your app.
 ### Demos ###
 
 <p align="center">
+<a href="http://cesiumjs.org/demos/Swisstopo.html"><img src="http://cesiumjs.org/demos/images/Swisstopo.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/Stratalogica.html"><img src="http://cesiumjs.org/demos/images/Stratalogica.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/CommercialPlanet.html"><img src="http://cesiumjs.org/demos/images/Commercial.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/STKCZML.html"><img src="http://cesiumjs.org/demos/images/STKCZML.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/STI.html"><img src="http://cesiumjs.org/demos/images/STI.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/TexasGroundwater.html"><img src="http://cesiumjs.org/demos/images/TXgroundwater.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/PearlHarbor.html"><img src="http://cesiumjs.org/demos/images/PearlHarbor.png" height="150" /></a>&nbsp;
