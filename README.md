@@ -94,7 +94,6 @@ We appreciate attribution by including the Cesium logo and link in your app.
 <a href="http://cesiumjs.org/demos/GeoglyphRail.html"><img src="http://cesiumjs.org/demos/images/GeoglyphRail.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/ParaglidingLogbook.html"><img src="http://cesiumjs.org/demos/images/ParaglidingLogbook.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/EarthClock.html"><img src="http://cesiumjs.org/demos/images/EarthClock.jpg" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/Quadrodynamics.html"><img src="http://cesiumjs.org/demos/images/quadrodynamics.jpg" height="150" /></a>&nbsp;
 <a href="http://apps.agi.com/SatelliteViewer/?Status=Operational"><img src="http://cesiumjs.org/demos/images/SatelliteViewer.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/WAVE.html"><img src="http://cesiumjs.org/demos/images/WAVE.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/Nanaimo.html"><img src="http://cesiumjs.org/demos/images/Nanaimo.png" height="150" /></a>&nbsp;
@@ -134,7 +133,6 @@ We appreciate attribution by including the Cesium logo and link in your app.
 <a href="http://cesiumjs.org/demos/bhuvan.html"><img src="http://cesiumjs.org/demos/images/bhuvan.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/nationalmap.html"><img src="http://cesiumjs.org/demos/images/nationalMapThumb.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/gplates.html"><img src="http://cesiumjs.org/demos/images/GPlates.jpg" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/youbeq.html"><img src="http://cesiumjs.org/demos/images/youbeq.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/ign.html"><img src="http://cesiumjs.org/demos/images/ign.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/atovisualizer.html"><img src="http://cesiumjs.org/demos/images/atovisualizer.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/sunshine.html"><img src="http://cesiumjs.org/demos/images/sunshine.jpg" height="150" /></a>&nbsp;
@@ -143,7 +141,6 @@ We appreciate attribution by including the Cesium logo and link in your app.
 <a href="http://cesiumjs.org/demos/powdertracks.html"><img src="http://cesiumjs.org/demos/images/powdertracks.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/earthkamexplorer.html"><img src="http://cesiumjs.org/demos/images/earthkamexplorer.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/d3.html"><img src="http://cesiumjs.org/demos/images/d3.png" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/koansys.html"><img src="http://cesiumjs.org/demos/images/koansys.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/subspace.html"><img src="http://cesiumjs.org/demos/images/subspace.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/agsattrack.html"><img src="http://cesiumjs.org/demos/images/agsattrack.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/weblvcsimulationviewer.html"><img src="http://cesiumjs.org/demos/images/weblvcsimulationviewer.png" height="150" /></a>&nbsp;
