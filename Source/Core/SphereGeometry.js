@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
@@ -8,6 +9,7 @@ define([
         './VertexFormat'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         DeveloperError,
@@ -70,9 +72,7 @@ define([
      */
     SphereGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
+        Check.typeOf.object('value', value);
         //>>includeEnd('debug');
 
         return EllipsoidGeometry.pack(value._ellipsoidGeometry, array, startingIndex);

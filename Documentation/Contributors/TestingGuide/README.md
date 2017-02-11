@@ -7,13 +7,15 @@ As of Cesium 1.15, Cesium has over 7,000 tests with 93% code coverage.  Cesium h
 All new code should have 100% code coverage and should pass all tests.  Always run the tests before opening a pull request.
 
 * [Running the Tests](#running-the-tests)
-   * [Run All Tests (Run with WebGL Validation)](#run-all-tests-run-with-webgl-validation)
+   * [Run All Tests](#run-all-tests)
+      * [Run with WebGL validation](#run-with-webgl-validation)
+      * [Run with WebGL stub](#run-with-webgl-stub)
    * [Select a Test to Run](#select-a-test-to-run)
    * [Run Only WebGL Tests](#run-only-webgl-tests)
    * [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
    * [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)]()
    * [Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
-   * [Run All Tests on the Command Line with Karma](#run-all-tests-on-the-command-line-with-karma)
+   * [Running Tests on the Command Line with Karma](#run-all-tests-on-the-command-line-with-karma)
 * [Testing Previous Versions of Cesium](#testing-previous-versions-of-cesium)
 * [`testfailure` Label for Issues](#testfailure-label-for-issues)
 * [Writing Tests](#writing-tests)
@@ -44,7 +46,7 @@ The Cesium tests are written in JavaScript and use [Jasmine](http://jasmine.gith
 
 When running Cesium locally, browse to [http://localhost:8080/](http://localhost:8080/) and there are several test options:
 
-### Run All Tests (Run with WebGL Validation)
+### Run All Tests
 
 Runs all the tests.  As of Cesium 1.15, on a decent laptop, they run in about a minute in Chrome.  It is important that the tests run quickly so we run them often.
 
@@ -62,7 +64,13 @@ In this case, the number of failing tests is listed at the top, and details on e
 ```
 Click on the failed test to rerun just that test.  This is useful for saving time when fixing an issue as it avoids rerunning all the tests.  Always rerun _all_ the tests before opening a pull request.
 
+#### Run with WebGL validation
+
 The link to **Run with WebGL validation** passes a query parameter to the tests to enable extra low-level WebGL validation such as calling `gl.getError()` after each WebGL call.  We use this when doing the monthly Cesium release and when making changes to Cesium's renderer.
+
+#### Run with WebGL stub
+
+The **Run with WebGL stub** link passes a query parameter to the tests to use Cesium's WebGL stub.  This makes all WebGL calls a noop and ignores test expectations that rely on reading back from WebGL.  This allows running the tests on CI where a reasonable WebGL implementation is not available and still getting full code coverage albeit not all verification.
 
 ### Select a Test to Run
 
@@ -140,7 +148,7 @@ It is possible to have 100% code coverage with two tests: one test where `a` and
 
 The number of linearly independent paths (four in this case) is called the **cyclomatic complexity**.  Be mindful of this when writing tests.  On one extreme, 100% code coverage is the least amount of testing, on the other extreme is covering the cyclomatic complexity, which quickly becomes unreasonable.  Use your knowledge of the implementation to devise the best strategy.
 
-### Run All Tests on the Command Line with Karma
+### Running Tests on the Command Line with Karma
 
 [Karma](http://karma-runner.github.io/0.13/index.html) is a tool which spawns a browser window, runs tests against that browser, and displays the results on the command line.
 
@@ -156,15 +164,19 @@ When one or more tests fail, output looks like this:
 
 The failed tests will be listed by name, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack.
 
-It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, IE, and Safari.
+It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, Edge, IE, and Safari.
 
 #### Run Tests with a Specific Browser or Browsers
 
-`npm run test -- --browsers Firefox,Chrome`
+`npm run test -- --browsers Firefox,Chrome,Edge`
 
 #### Run All Tests with WebGL Validation
 
 `npm run test-webgl-validation`
+
+#### Run All Tests with WebGL Stub
+
+`npm run test-webgl-stub`
 
 #### Run Only WebGL Tests with Karma
 
@@ -317,7 +329,7 @@ Above, `scene` is scoped at the suite-level, so all tests in the file have acces
 ```javascript
 it('renders', function() {
     var p = scene.primitives.add(new DebugModelMatrixPrimitive());
-    expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+    expect(scene).notToRender([0, 0, 0, 255]);
 });
 ```
 
@@ -331,40 +343,119 @@ The tests in the `'WebGL'` category do not strictly follow this pattern.  Creati
 
 Unlike the `Cartesian3` tests we first saw, many tests need to construct the main Cesium `Viewer` widget or one of its major components.  Low-level renderer tests construct just `Context` (which, itself, has a canvas and WebGL context), and primitive tests construct a `Scene` (which contains a `Context`).
 
-As shown above, these tests use Cesium test utility functions: `createViewer`, `createScene`, or `createContext`.  These functions honor query parameters passed to the tests (e.g., enabling WebGL validation) and add extra test functions to the returned object.
+As shown above, these tests use Cesium test utility functions: `createViewer`, `createScene`, or `createContext`.  These functions honor query parameters passed to the tests (e.g., enabling WebGL validation or the WebGL stub) and add a few utility functions to the returned object.  For example, `createScene` creates a 1x1 pixel canvas with a Cesium Scene and adds `renderForSpecs` (to initialize and render a frame) and `destroyForSpecs` to the returned `Scene` object.
 
-For example, `createScene` creates a 1x1 pixel canvas with a Cesium Scene and adds `renderForSpecs` and `pickForSpecs` to the returned `Scene` object:
+> Most Cesium apps do not render the scene directly; instead, the `Viewer` object's default render loop renders the scene implicit to the user.  The tests are an exception; most tests explicitly render the scene.
+
+Cesium adds several custom Jasmine matchers to make the rendering tests more concise and to support running tests with the WebGL stub.  When using the WebGL stub, the WebGL implementation is a noop, and test expectations that rely on reading back from WebGL are ignored.  The rendering custom matchers are:
+
+* `toRender`
+* `notToRender`
+* `toRenderAndCall`
+* `toPickPrimitive`
+* `notToPick`
+* `toPickAndCall`
+* `toDrillPickAndCall`
+* `toReadPixels`
+* `notToReadPixels`
+* `contextToRender`
+* `notContextToRender`
+
+`toRender` and `notToRender` clear a 1x1 viewport to black, renders the scene into it, and verifies the RGBA value of the pixel, e.g.:
 
 ```javascript
 it('renders', function() {
     var p = scene.primitives.add(new DebugModelMatrixPrimitive());
-    expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+    expect(scene).notToRender([0, 0, 0, 255]);
 });
 
 it('does not render when show is false', function() {
     scene.primitives.add(new DebugModelMatrixPrimitive({
         show : false
     }));
-    expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-});
-
-it('is picked', function() {
-    var p = scene.primitives.add(new DebugModelMatrixPrimitive({
-        id : 'id'
-    }));
-
-    var pick = scene.pickForSpecs();
-    expect(pick.primitive).toEqual(p);
-    expect(pick.id).toEqual('id');
+    expect(scene).toRender([0, 0, 0, 255]);
 });
 ```
-In the first test, `renderForSpecs` initializes the frame, renders the scene into the 1x1 canvas, and then returns the RGBA value of the rendered pixel.  Like most rendering tests, this uses a coarse-grained expectation to check that the pixel is not the default value of black.  Although an expectation this coarse-grained may not catch all subtle errors, it is reliable across platforms, and we rarely have bugs a more fine-grained test would have caught, especially with some manual testing (see below).
 
-In the second test, `renderForSpecs` is used again, but this time it is to verify that the pixel value is the same as the default background color since the primitive's `show` property is `false`.
+Like most rendering tests, the first example uses a coarse-grained expectation to check that the pixel is not the default value of black.  Although an expectation this coarse-grained may not catch all subtle errors, it is reliable across platforms, and we rarely have bugs a more fine-grained test would have caught, especially with some manual testing (see below).
 
-> Most Cesium apps do not render the scene directly; instead, the `Viewer` object's default render loop renders the scene implicit to the user.  The tests are an exception; most tests explicitly render the scene.
+The second test verifies that the pixel value is the same as the default background color since the primitive's `show` property is `false`.
 
-In the final test, `pickForSpecs` executes a `Scene.pick` for the one-pixel canvas.  A typical follow-up expectation verifies that the primitive of interest was picked and its `id` is the expected value.
+`toRender` and `notToRender` can also render the scene at a given Cesium simulation time, e.g.,:
+
+```javascript
+expect({
+    scene : scene,
+    time : t
+}).toRender([0, 0, 0, 255]);
+```
+
+For more complicated expectations, which will still be ignored with the WebGL stub, `toRenderAndCall` takes a callback function:
+
+```javascript
+expect(scene).toRenderAndCall(function(rgba) {
+    expect(rgba[0]).not.toEqual(0);
+    expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
+    expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+    expect(rgba[3]).toEqual(255);
+});
+```
+
+For reliability across WebGL implementations, use complex expectations in `toRenderAndCall` sparingly.
+
+Similar custom matchers are used for picking tests:
+
+```javascript
+var b = billboards.add(/* ... */);
+expect(scene).toPickPrimitive(b);  // Can also use toPickAndCall() and toDrillPickAndCall()
+
+b.show = false;
+expect(scene).notToPick();
+```
+
+For tests that render the scene themselves, `toReadPixels` and `notToReadPixels` are used to verify the RGBA value.  In the simplest case, pass an RGBA array, e.g.:
+
+```javascript
+expect(context).toReadPixels([0, 0, 0, 255]);
+
+expect(context).notToReadPixels([0, 0, 0, 255]);
+```
+
+`toReadPixels` can also read from a given framebuffer and use an epsilon for the RGBA comparison test, e.g.:
+
+```javascript
+expect({
+    context : context,
+    framebuffer : framebuffer,
+    epsilon : 1
+}).toReadPixels([0, 0, 0, 255]);
+```
+
+Low-level Cesium renderer tests use just a `Context` without a Cesium `Scene`, and use the `contextToRender` and `notContextToRender` custom matchers to render a WebGL point primitive to the context's 1x1 viewport and verify the RGBA value, e.g.:
+
+```javascript
+expect({
+    context : context,
+    shaderProgram : sp,
+}).contextToRender(expected);
+
+expect(/* ... */).notContextToRender();
+```
+
+Uniforms, the model matrix, and various depth options can be provided.  In addition, instead of providing a full shader program, just the fragment shader's source can be provided, e.g.,
+
+```javascript
+it('can declare automatic uniforms', function() {
+    var fs =
+        'void main() { ' +
+        '  gl_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); ' +
+        '}';
+    expect({
+        context : context,
+        fragmentShader : fs
+    }).contextToRender();
+});
+```
 
 ### GLSL
 

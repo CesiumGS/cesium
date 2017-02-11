@@ -36,7 +36,7 @@ define([
     var scratchPosition = new Cartesian3();
     var scratchNormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
-    var scratchBinormal = new Cartesian3();
+    var scratchBitangent = new Cartesian3();
     var scratchNormalST = new Cartesian3();
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
 
@@ -209,7 +209,7 @@ define([
 
         var normals = (vertexFormat.normal) ? new Float32Array(vertexCount * 3) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(vertexCount * 3) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Float32Array(vertexCount * 3) : undefined;
+        var bitangents = (vertexFormat.bitangent) ? new Float32Array(vertexCount * 3) : undefined;
         var st = (vertexFormat.st) ? new Float32Array(vertexCount * 2) : undefined;
 
         var cosTheta = new Array(slicePartitions);
@@ -267,9 +267,9 @@ define([
         var stIndex = 0;
         var normalIndex = 0;
         var tangentIndex = 0;
-        var binormalIndex = 0;
+        var bitangentIndex = 0;
 
-        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
             for( i = 0; i < vertexCount; i++) {
                 var position = Cartesian3.fromArray(positions, i * 3, scratchPosition);
                 var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
@@ -299,7 +299,7 @@ define([
                     normals[normalIndex++] = normal.z;
                 }
 
-                if (vertexFormat.tangent || vertexFormat.binormal) {
+                if (vertexFormat.tangent || vertexFormat.bitangent) {
                     var tangent = scratchTangent;
                     if (i < slicePartitions || i > vertexCount - slicePartitions - 1) {
                         Cartesian3.cross(Cartesian3.UNIT_X, normal, tangent);
@@ -315,13 +315,13 @@ define([
                         tangents[tangentIndex++] = tangent.z;
                     }
 
-                    if (vertexFormat.binormal) {
-                        var binormal = Cartesian3.cross(normal, tangent, scratchBinormal);
-                        Cartesian3.normalize(binormal, binormal);
+                    if (vertexFormat.bitangent) {
+                        var bitangent = Cartesian3.cross(normal, tangent, scratchBitangent);
+                        Cartesian3.normalize(bitangent, bitangent);
 
-                        binormals[binormalIndex++] = binormal.x;
-                        binormals[binormalIndex++] = binormal.y;
-                        binormals[binormalIndex++] = binormal.z;
+                        bitangents[bitangentIndex++] = bitangent.x;
+                        bitangents[bitangentIndex++] = bitangent.y;
+                        bitangents[bitangentIndex++] = bitangent.z;
                     }
                 }
             }
@@ -350,11 +350,11 @@ define([
                 });
             }
 
-            if (vertexFormat.binormal) {
-                attributes.binormal = new GeometryAttribute({
+            if (vertexFormat.bitangent) {
+                attributes.bitangent = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
-                    values : binormals
+                    values : bitangents
                 });
             }
         }

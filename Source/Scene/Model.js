@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/clone',
+        '../Core/Color',
         '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
@@ -20,21 +21,26 @@ define([
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
         '../Core/loadArrayBuffer',
+        '../Core/loadCRN',
         '../Core/loadImage',
         '../Core/loadImageFromTypedArray',
+        '../Core/loadKTX',
         '../Core/loadText',
         '../Core/Math',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/PixelFormat',
         '../Core/PrimitiveType',
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
         '../Core/Transforms',
+        '../Core/WebGLConstants',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
@@ -43,10 +49,13 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Renderer/VertexArray',
-        '../Renderer/WebGLConstants',
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './Axis',
+        './BlendingState',
+        './ColorBlendMode',
+        './getAttributeOrUniformBySemantic',
         './getBinaryAccessor',
         './HeightReference',
         './ModelAnimationCache',
@@ -55,7 +64,6 @@ define([
         './modelMaterialsCommon',
         './ModelMesh',
         './ModelNode',
-        './Pass',
         './SceneMode',
         './ShadowMode'
     ], function(
@@ -65,6 +73,7 @@ define([
         Cartesian4,
         Cartographic,
         clone,
+        Color,
         combine,
         defaultValue,
         defined,
@@ -79,21 +88,26 @@ define([
         getStringFromTypedArray,
         IndexDatatype,
         loadArrayBuffer,
+        loadCRN,
         loadImage,
         loadImageFromTypedArray,
+        loadKTX,
         loadText,
         CesiumMath,
         Matrix2,
         Matrix3,
         Matrix4,
+        PixelFormat,
         PrimitiveType,
         Quaternion,
         Queue,
         RuntimeError,
         Transforms,
+        WebGLConstants,
         Buffer,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         Sampler,
         ShaderProgram,
@@ -102,10 +116,13 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         VertexArray,
-        WebGLConstants,
         gltfDefaults,
         Uri,
         when,
+        Axis,
+        BlendingState,
+        ColorBlendMode,
+        getAttributeOrUniformBySemantic,
         getBinaryAccessor,
         HeightReference,
         ModelAnimationCache,
@@ -114,7 +131,6 @@ define([
         modelMaterialsCommon,
         ModelMesh,
         ModelNode,
-        Pass,
         SceneMode,
         ShadowMode) {
     'use strict';
@@ -125,7 +141,6 @@ define([
         return {};
     }
 
-    var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = {
@@ -318,7 +333,12 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
-     * @param {DistanceDisplayCondition} [options.istanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
+     * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
+     * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
+     * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+     * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+     * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
+     * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -395,6 +415,27 @@ define([
          * @default true
          */
         this.show = defaultValue(options.show, true);
+
+        /**
+         * The silhouette color.
+         *
+         * @type {Color}
+         *
+         * @default Color.RED
+         */
+        this.silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
+        this._silhouetteColor = new Color();
+        this._silhouetteColorPreviousAlpha = 1.0;
+        this._normalAttributeName = undefined;
+
+        /**
+         * The size of the silhouette in pixels.
+         *
+         * @type {Number}
+         *
+         * @default 0.0
+         */
+        this.silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
 
         /**
          * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -515,6 +556,37 @@ define([
         this._shadows = this.shadows;
 
         /**
+         * A color that blends with the model's rendered color.
+         *
+         * @type {Color}
+         *
+         * @default Color.WHITE
+         */
+        this.color = defaultValue(options.color, Color.WHITE);
+        this._color = new Color();
+        this._colorPreviousAlpha = 1.0;
+
+        /**
+         * Defines how the color blends with the model.
+         *
+         * @type {ColorBlendMode}
+         *
+         * @default ColorBlendMode.HIGHLIGHT
+         */
+        this.colorBlendMode = defaultValue(options.colorBlendMode, ColorBlendMode.HIGHLIGHT);
+
+        /**
+         * Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>.
+         * A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with
+         * any value in-between resulting in a mix of the two.
+         *
+         * @type {Number}
+         *
+         * @default 0.5
+         */
+        this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
+
+        /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
          * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
@@ -552,6 +624,7 @@ define([
         this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
         this._pickUniformMapLoaded = options.pickUniformMapLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
+        this._upAxis = defaultValue(options.upAxis, Axis.Y);
 
         /**
          * @private
@@ -593,6 +666,7 @@ define([
             vertexArrays : {},
             programs : {},
             pickPrograms : {},
+            silhouettePrograms: {},
             textures : {},
 
             samplers : {},
@@ -605,8 +679,10 @@ define([
         this._pickIds = [];
 
         // CESIUM_RTC extension
-        this._rtcCenter = undefined;    // in world coordinates
+        this._rtcCenter = undefined;    // reference to either 3D or 2D
         this._rtcCenterEye = undefined; // in eye coordinates
+        this._rtcCenter3D = undefined;  // in world coordinates
+        this._rtcCenter2D = undefined;  // in projected world coordinates
     }
 
     defineProperties(Model.prototype, {
@@ -882,10 +958,42 @@ define([
                 //>>includeEnd('debug');
                 this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
             }
+        },
+
+        /**
+         * Gets the model's up-axis.
+         * By default models are y-up according to the glTF spec, however geo-referenced models will typically be z-up.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Number}
+         * @default Axis.Y
+         * @readonly
+         *
+         * @private
+         */
+        upAxis : {
+            get : function() {
+                return this._upAxis;
+            }
         }
     });
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+
+    function silhouetteSupported(context) {
+        return context.stencilBuffer;
+    }
+
+    /**
+     * Determines if silhouettes are supported.
+     *
+     * @param {Scene} scene The scene.
+     * @returns {Boolean} <code>true</code> if silhouettes are supported; otherwise, returns <code>false</code>
+     */
+    Model.silhouetteSupported = function(scene) {
+        return silhouetteSupported(scene.context);
+    };
 
     /**
      * This function differs from the normal subarray function
@@ -1145,7 +1253,7 @@ define([
         };
     }
 
-    function computeBoundingSphere(gltf) {
+    function computeBoundingSphere(model, gltf) {
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
         var rootNodes = gltf.scenes[gltf.scene].nodes;
@@ -1201,7 +1309,12 @@ define([
         }
 
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-        return BoundingSphere.transformWithoutScale(boundingSphere, yUpToZUp, boundingSphere);
+        if (model._upAxis === Axis.Y) {
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Y_UP_TO_Z_UP, boundingSphere);
+        } else if (model._upAxis === Axis.X) {
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.X_UP_TO_Z_UP, boundingSphere);
+        }
+        return boundingSphere;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1312,21 +1425,73 @@ define([
             loadResources.texturesToCreate.enqueue({
                 id : id,
                 image : image,
-                bufferView : undefined
+                bufferView : image.bufferView,
+                width : image.width,
+                height : image.height,
+                internalFormat : image.internalFormat
             });
         };
     }
 
-    function parseTextures(model) {
+    var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
+    var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
+
+    function parseTextures(model, context) {
         var images = model.gltf.images;
         var textures = model.gltf.textures;
         for (var id in textures) {
             if (textures.hasOwnProperty(id)) {
                 var gltfImage = images[textures[id].source];
+                var extras = gltfImage.extras;
+
+                var binary = undefined;
+                var uri = undefined;
+
+                // First check for a compressed texture
+                if (defined(extras) && defined(extras.compressedImage3DTiles)) {
+                    var crunch = extras.compressedImage3DTiles.crunch;
+                    var s3tc = extras.compressedImage3DTiles.s3tc;
+                    var pvrtc = extras.compressedImage3DTiles.pvrtc1;
+                    var etc1 = extras.compressedImage3DTiles.etc1;
+
+                    if (context.s3tc && defined(crunch)) {
+                        if (defined(crunch.extensions)&& defined(crunch.extensions.KHR_binary_glTF)) {
+                            binary = crunch.extensions.KHR_binary_glTF;
+                        } else {
+                            uri = crunch.uri;
+                        }
+                    } else if (context.s3tc && defined(s3tc)) {
+                        if (defined(s3tc.extensions)&& defined(s3tc.extensions.KHR_binary_glTF)) {
+                            binary = s3tc.extensions.KHR_binary_glTF;
+                        } else {
+                            uri = s3tc.uri;
+                        }
+                    } else if (context.pvrtc && defined(pvrtc)) {
+                        if (defined(pvrtc.extensions)&& defined(pvrtc.extensions.KHR_binary_glTF)) {
+                            binary = pvrtc.extensions.KHR_binary_glTF;
+                        } else {
+                            uri = pvrtc.uri;
+                        }
+                    } else if (context.etc1 && defined(etc1)) {
+                        if (defined(etc1.extensions)&& defined(etc1.extensions.KHR_binary_glTF)) {
+                            binary = etc1.extensions.KHR_binary_glTF;
+                        } else {
+                            uri = etc1.uri;
+                        }
+                    }
+                }
+
+                // No compressed texture, so image references either uri (external or base64-encoded) or bufferView
+                if (!defined(binary) && !defined(uri)) {
+                    if (defined(gltfImage.extensions) && defined(gltfImage.extensions.KHR_binary_glTF)) {
+                        binary = gltfImage.extensions.KHR_binary_glTF;
+                    } else {
+                        uri = new Uri(gltfImage.uri);
+                    }
+                }
 
                 // Image references either uri (external or base64-encoded) or bufferView
-                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.KHR_binary_glTF)) {
-                    var binary = gltfImage.extensions.KHR_binary_glTF;
+                if (defined(binary)) {
                     model._loadResources.texturesToCreateFromBufferView.enqueue({
                         id : id,
                         image : undefined,
@@ -1335,9 +1500,16 @@ define([
                     });
                 } else {
                     ++model._loadResources.pendingTextureLoads;
-                    var uri = new Uri(gltfImage.uri);
+                    uri = new Uri(uri);
                     var imagePath = uri.resolve(model._baseUri).toString();
-                    loadImage(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+
+                    if (ktxRegex.test(imagePath)) {
+                        loadKTX(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                    } else if (crnRegex.test(imagePath)) {
+                        loadCRN(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                    } else {
+                        loadImage(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                    }
                 }
             }
         }
@@ -1478,13 +1650,13 @@ define([
         model._runtime.meshesByName = runtimeMeshesByName;
     }
 
-    function parse(model) {
+    function parse(model, context) {
         if (!model._loadRendererResourcesFromCache) {
             parseBuffers(model);
             parseBufferViews(model);
             parseShaders(model);
             parsePrograms(model);
-            parseTextures(model);
+            parseTextures(model, context);
         }
         parseMaterials(model);
         parseMeshes(model);
@@ -1655,7 +1827,7 @@ define([
             if (getProgramForPrimitive(model, primitive) === programName) {
                 for (var attributeSemantic in primitive.attributes) {
                     if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
-                        var decodeUniformVarName = 'czm_u_dec_' + attributeSemantic.toLowerCase();
+                        var decodeUniformVarName = 'gltf_u_dec_' + attributeSemantic.toLowerCase();
                         var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
                         var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
                         if (!defined(quantizedUniforms[decodeUniformVarName]) && !defined(quantizedUniforms[decodeUniformVarNameScale])) {
@@ -1664,8 +1836,8 @@ define([
                             if (defined(quantizedAttributes)) {
                                 var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
                                 var decodeMatrix = quantizedAttributes.decodeMatrix;
-                                var newMain = 'czm_decoded_' + attributeSemantic;
-                                var decodedAttributeVarName = attributeVarName.replace('a_', 'czm_a_dec_');
+                                var newMain = 'gltf_decoded_' + attributeSemantic;
+                                var decodedAttributeVarName = attributeVarName.replace('a_', 'gltf_a_dec_');
                                 var size = Math.floor(Math.sqrt(decodeMatrix.length));
 
                                 // replace usages of the original attribute with the decoded version, but not the declaration
@@ -1717,6 +1889,44 @@ define([
         return shader;
     }
 
+    function hasPremultipliedAlpha(model) {
+        var gltf = model.gltf;
+        return defined(gltf.asset) ? defaultValue(gltf.asset.premultipliedAlpha, false) : false;
+    }
+
+    function modifyShaderForColor(shader, premultipliedAlpha) {
+        shader = ShaderSource.replaceMain(shader, 'gltf_blend_main');
+        shader +=
+            'uniform vec4 gltf_color; \n' +
+            'uniform float gltf_colorBlend; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    gltf_blend_main(); \n';
+
+        // Un-premultiply the alpha so that blending is correct.
+
+        // Avoid divide-by-zero. The code below is equivalent to:
+        // if (gl_FragColor.a > 0.0)
+        // {
+        //     gl_FragColor.rgb /= gl_FragColor.a;
+        // }
+
+        if (premultipliedAlpha) {
+            shader +=
+                '    float alpha = 1.0 - ceil(gl_FragColor.a) + gl_FragColor.a; \n' +
+                '    gl_FragColor.rgb /= alpha; \n';
+        }
+
+        shader +=
+            '    gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_color.rgb, gltf_colorBlend); \n' +
+            '    float highlight = ceil(gltf_colorBlend); \n' +
+            '    gl_FragColor.rgb *= mix(gltf_color.rgb, vec3(1.0), highlight); \n' +
+            '    gl_FragColor.a *= gltf_color.a; \n' +
+            '} \n';
+
+        return shader;
+    }
+
     function modifyShader(shader, programName, callback) {
         if (defined(callback)) {
             shader = callback(shader, programName);
@@ -1748,8 +1958,11 @@ define([
             vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
         }
 
+        var premultipliedAlpha = hasPremultipliedAlpha(model);
+        var blendFS = modifyShaderForColor(fs, premultipliedAlpha);
+
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
+        var drawFS = modifyShader(blendFS, id, model._fragmentShaderLoaded);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -1830,12 +2043,20 @@ define([
             var gltf = model.gltf;
             var bufferView = gltf.bufferViews[gltfTexture.bufferView];
 
-            var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
             var onerror = getFailedLoadFunction(model, 'image', 'id: ' + gltfTexture.id + ', bufferView: ' + gltfTexture.bufferView);
-            loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType).
-                then(onload).otherwise(onerror);
 
-            ++loadResources.pendingBufferViewToImage;
+            if (gltfTexture.mimeType === 'image/ktx') {
+                loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id)).otherwise(onerror);
+                ++model._loadResources.pendingTextureLoads;
+            } else if (gltfTexture.mimeType === 'image/crn') {
+                loadCRN(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id)).otherwise(onerror);
+                ++model._loadResources.pendingTextureLoads;
+            } else {
+                var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
+                loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType)
+                    .then(onload).otherwise(onerror);
+                ++loadResources.pendingBufferViewToImage;
+            }
         }
     }
 
@@ -1869,46 +2090,62 @@ define([
         var rendererSamplers = model._rendererResources.samplers;
         var sampler = rendererSamplers[texture.sampler];
 
+        var internalFormat = gltfTexture.internalFormat;
+
         var mipmap =
-            (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
-            (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
-            (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
-            (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+            (!(defined(internalFormat) && PixelFormat.isCompressedFormat(internalFormat))) &&
+            ((sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+             (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+             (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+             (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
         var requiresNpot = mipmap ||
             (sampler.wrapS === TextureWrap.REPEAT) ||
             (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
             (sampler.wrapT === TextureWrap.REPEAT) ||
             (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
 
-        var source = gltfTexture.image;
-        var npot = !CesiumMath.isPowerOfTwo(source.width) || !CesiumMath.isPowerOfTwo(source.height);
-
-        if (requiresNpot && npot) {
-            // WebGL requires power-of-two texture dimensions for mipmapping and REPEAT/MIRRORED_REPEAT wrap modes.
-            var canvas = document.createElement('canvas');
-            canvas.width = CesiumMath.nextPowerOfTwo(source.width);
-            canvas.height = CesiumMath.nextPowerOfTwo(source.height);
-            var canvasContext = canvas.getContext('2d');
-            canvasContext.drawImage(source, 0, 0, source.width, source.height, 0, 0, canvas.width, canvas.height);
-            source = canvas;
-        }
-
         var tx;
+        var source = gltfTexture.image;
 
-        if (texture.target === WebGLConstants.TEXTURE_2D) {
+        if (defined(internalFormat) && texture.target === WebGLConstants.TEXTURE_2D) {
             tx = new Texture({
                 context : context,
-                source : source,
-                pixelFormat : texture.internalFormat,
-                pixelDatatype : texture.type,
-                sampler : sampler,
-                flipY : false
+                source : {
+                    arrayBufferView : gltfTexture.bufferView
+                },
+                width : gltfTexture.width,
+                height : gltfTexture.height,
+                pixelFormat : internalFormat,
+                sampler : sampler
             });
-        }
-        // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
+        } else if (defined(source)) {
+            var npot = !CesiumMath.isPowerOfTwo(source.width) || !CesiumMath.isPowerOfTwo(source.height);
 
-        if (mipmap) {
-            tx.generateMipmap();
+            if (requiresNpot && npot) {
+                // WebGL requires power-of-two texture dimensions for mipmapping and REPEAT/MIRRORED_REPEAT wrap modes.
+                var canvas = document.createElement('canvas');
+                canvas.width = CesiumMath.nextPowerOfTwo(source.width);
+                canvas.height = CesiumMath.nextPowerOfTwo(source.height);
+                var canvasContext = canvas.getContext('2d');
+                canvasContext.drawImage(source, 0, 0, source.width, source.height, 0, 0, canvas.width, canvas.height);
+                source = canvas;
+            }
+
+            if (texture.target === WebGLConstants.TEXTURE_2D) {
+                tx = new Texture({
+                    context : context,
+                    source : source,
+                    pixelFormat : texture.internalFormat,
+                    pixelDatatype : texture.type,
+                    sampler : sampler,
+                    flipY : false
+                });
+            }
+            // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
+
+            if (mipmap) {
+                tx.generateMipmap();
+            }
         }
 
         model._rendererResources.textures[gltfTexture.id] = tx;
@@ -2282,6 +2519,16 @@ define([
         var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
         var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
 
+        // Change the render state to use traditional alpha blending instead of premultiplied alpha blending
+        if (booleanStates[WebGLConstants.BLEND] && hasPremultipliedAlpha(model)) {
+            if ((blendFuncSeparate[0] === WebGLConstants.ONE) && (blendFuncSeparate[1] === WebGLConstants.ONE_MINUS_SRC_ALPHA)) {
+                blendFuncSeparate[0] = WebGLConstants.SRC_ALPHA;
+                blendFuncSeparate[1] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
+                blendFuncSeparate[2] = WebGLConstants.SRC_ALPHA;
+                blendFuncSeparate[3] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
+            }
+        }
+
         rendererRenderStates[id] = RenderState.fromCache({
             frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
             cull : {
@@ -2363,10 +2610,13 @@ define([
             // CESIUM_RTC extension
             var mvRtc = new Matrix4();
             return function() {
-                Matrix4.getTranslation(uniformState.model, scratchTranslationRtc);
-                Cartesian3.add(scratchTranslationRtc, model._rtcCenter, scratchTranslationRtc);
-                Matrix4.multiplyByPoint(uniformState.view, scratchTranslationRtc, scratchTranslationRtc);
-                return Matrix4.setTranslation(uniformState.modelView, scratchTranslationRtc, mvRtc);
+                if (defined(model._rtcCenter)) {
+                    Matrix4.getTranslation(uniformState.model, scratchTranslationRtc);
+                    Cartesian3.add(scratchTranslationRtc, model._rtcCenter, scratchTranslationRtc);
+                    Matrix4.multiplyByPoint(uniformState.view, scratchTranslationRtc, scratchTranslationRtc);
+                    return Matrix4.setTranslation(uniformState.modelView, scratchTranslationRtc, mvRtc);
+                }
+                return uniformState.modelView;
             };
         },
         MODELVIEWPROJECTION : function(uniformState, model) {
@@ -2772,7 +3022,7 @@ define([
                     var quantizedAttributes = extensions.WEB3D_quantized_attributes;
                     if (defined(quantizedAttributes)) {
                         var decodeMatrix = quantizedAttributes.decodeMatrix;
-                        var uniformVariable = 'czm_u_dec_' + attribute.toLowerCase();
+                        var uniformVariable = 'gltf_u_dec_' + attribute.toLowerCase();
 
                         switch (a.type) {
                             case 'SCALAR':
@@ -2836,6 +3086,30 @@ define([
     function createJointMatricesFunction(runtimeNode) {
         return function() {
             return runtimeNode.computedJointMatrices;
+        };
+    }
+
+    function createSilhouetteColorFunction(model) {
+        return function() {
+            return model.silhouetteColor;
+        };
+    }
+
+    function createSilhouetteSizeFunction(model) {
+        return function() {
+            return model.silhouetteSize;
+        };
+    }
+
+    function createColorFunction(model) {
+        return function() {
+            return model.color;
+        };
+    }
+
+    function createColorBlendFunction(model) {
+        return function() {
+            return ColorBlendMode.getColorBlend(model.colorBlendMode, model.colorBlendAmount);
         };
     }
 
@@ -2907,6 +3181,11 @@ define([
                     uniformMap = combine(uniformMap, jointUniformMap);
                 }
 
+                uniformMap = combine(uniformMap, {
+                    gltf_color : createColorFunction(model),
+                    gltf_colorBlend : createColorBlendFunction(model)
+                });
+
                 // Allow callback to modify the uniformMap
                 if (defined(model._uniformMapLoaded)) {
                     uniformMap = model._uniformMapLoaded(uniformMap, programId, runtimeNode);
@@ -2931,7 +3210,7 @@ define([
 
                 var castShadows = ShadowMode.castShadows(model._shadows);
                 var receiveShadows = ShadowMode.receiveShadows(model._shadows);
-                
+
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     cull : model.cull,
@@ -2993,13 +3272,13 @@ define([
                 var pickCommand2D;
                 if (!scene3DOnly) {
                     command2D = DrawCommand.shallowClone(command);
-                    command2D.boundingVolume = new BoundingSphere();
-                    command2D.modelMatrix = new Matrix4();
+                    command2D.boundingVolume = new BoundingSphere(); // updated in update()
+                    command2D.modelMatrix = new Matrix4();           // updated in update()
 
                     if (allowPicking) {
                         pickCommand2D = DrawCommand.shallowClone(pickCommand);
-                        pickCommand2D.boundingVolume = new BoundingSphere();
-                        pickCommand2D.modelMatrix = new Matrix4();
+                        pickCommand2D.boundingVolume = new BoundingSphere(); // updated in update()
+                        pickCommand2D.modelMatrix = new Matrix4();           // updated in update()
                     }
                 }
 
@@ -3009,7 +3288,15 @@ define([
                     command : command,
                     pickCommand : pickCommand,
                     command2D : command2D,
-                    pickCommand2D : pickCommand2D
+                    pickCommand2D : pickCommand2D,
+                    // Generated on demand when silhouette size is greater than 0.0 and silhouette alpha is greater than 0.0
+                    silhouetteModelCommand : undefined,
+                    silhouetteModelCommand2D : undefined,
+                    silhouetteColorCommand : undefined,
+                    silhouetteColorCommand2D : undefined,
+                    // Generated on demand when color alpha is less than 1.0
+                    translucentCommand : undefined,
+                    translucentCommand2D : undefined
                 };
                 runtimeNode.commands.push(nodeCommand);
                 nodeCommands.push(nodeCommand);
@@ -3106,6 +3393,7 @@ define([
             resources.vertexArrays = cachedResources.vertexArrays;
             resources.programs = cachedResources.programs;
             resources.pickPrograms = cachedResources.pickPrograms;
+            resources.silhouettePrograms = cachedResources.silhouettePrograms;
             resources.textures = cachedResources.textures;
             resources.samplers = cachedResources.samplers;
             resources.renderStates = cachedResources.renderStates;
@@ -3156,6 +3444,7 @@ define([
     }
 
     var scratchNodeStack = [];
+    var scratchComputedTranslation = new Cartesian4();
     var scratchComputedMatrixIn2D = new Matrix4();
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
@@ -3169,7 +3458,20 @@ define([
         var computedModelMatrix = model._computedModelMatrix;
 
         if (model._mode !== SceneMode.SCENE3D) {
-            computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
+            var translation = Matrix4.getColumn(computedModelMatrix, 3, scratchComputedTranslation);
+            if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
+                computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
+                model._rtcCenter = model._rtcCenter3D;
+            } else {
+                var center = model.boundingSphere.center;
+                var to2D = Transforms.wgs84To2DModelMatrix(projection, center, scratchComputedMatrixIn2D);
+                computedModelMatrix = Matrix4.multiply(to2D, computedModelMatrix, scratchComputedMatrixIn2D);
+
+                if (defined(model._rtcCenter)) {
+                    Matrix4.setTranslation(computedModelMatrix, Cartesian4.UNIT_W, computedModelMatrix);
+                    model._rtcCenter = model._rtcCenter2D;
+                }
+            }
         }
 
         for (var i = 0; i < length; ++i) {
@@ -3386,6 +3688,265 @@ define([
         }
     }
 
+    function getTranslucentRenderState(renderState) {
+        var rs = clone(renderState, true);
+        rs.cull.enabled = false;
+        rs.depthTest.enabled = true;
+        rs.depthMask = false;
+        rs.blending = BlendingState.ALPHA_BLEND;
+
+        return RenderState.fromCache(rs);
+    }
+
+    function deriveTranslucentCommand(command) {
+        var translucentCommand = DrawCommand.shallowClone(command);
+        translucentCommand.pass = Pass.TRANSLUCENT;
+        translucentCommand.renderState = getTranslucentRenderState(command.renderState);
+        return translucentCommand;
+    }
+
+    function updateColor(model, frameState) {
+        // Generate translucent commands when the blend color has an alpha in the range (0.0, 1.0) exclusive
+        var scene3DOnly = frameState.scene3DOnly;
+        var alpha = model.color.alpha;
+        if ((alpha > 0.0) && (alpha < 1.0)) {
+            var nodeCommands = model._nodeCommands;
+            var length = nodeCommands.length;
+            if (!defined(nodeCommands[0].translucentCommand)) {
+                for (var i = 0; i < length; ++i) {
+                    var nodeCommand = nodeCommands[i];
+                    var command = nodeCommand.command;
+                    nodeCommand.translucentCommand = deriveTranslucentCommand(command);
+                    if (!scene3DOnly) {
+                        var command2D = nodeCommand.command2D;
+                        nodeCommand.translucentCommand2D = deriveTranslucentCommand(command2D);
+                    }
+                }
+            }
+        }
+    }
+
+    function getProgramId(model, program) {
+        var programs = model._rendererResources.programs;
+        for (var id in programs) {
+            if (programs.hasOwnProperty(id)) {
+                if (programs[id] === program) {
+                    return id;
+                }
+            }
+        }
+    }
+
+    function createSilhouetteProgram(model, program, frameState) {
+        var vs = program.vertexShaderSource.sources[0];
+        var attributeLocations = program._attributeLocations;
+        var normalAttributeName = model._normalAttributeName;
+
+        // Modified from http://forum.unity3d.com/threads/toon-outline-but-with-diffuse-surface.24668/
+        vs = ShaderSource.replaceMain(vs, 'gltf_silhouette_main');
+        vs +=
+            'uniform float gltf_silhouetteSize; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    gltf_silhouette_main(); \n' +
+            '    vec3 n = normalize(czm_normal3D * ' + normalAttributeName + '); \n' +
+            '    n.x *= czm_projection[0][0]; \n' +
+            '    n.y *= czm_projection[1][1]; \n' +
+            '    vec4 clip = gl_Position; \n' +
+            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize / czm_viewport.z; \n' +
+            '    gl_Position = clip; \n' +
+            '}';
+
+        var fs =
+            'uniform vec4 gltf_silhouetteColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    gl_FragColor = gltf_silhouetteColor; \n' +
+            '}';
+
+        return ShaderProgram.fromCache({
+            context : frameState.context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+    }
+
+    function hasSilhouette(model, frameState) {
+        return silhouetteSupported(frameState.context) && (model.silhouetteSize > 0.0) && (model.silhouetteColor.alpha > 0.0) && defined(model._normalAttributeName);
+    }
+
+    function hasTranslucentCommands(model) {
+        var nodeCommands = model._nodeCommands;
+        var length = nodeCommands.length;
+        for (var i = 0; i < length; ++i) {
+            var nodeCommand = nodeCommands[i];
+            var command = nodeCommand.command;
+            if (command.pass === Pass.TRANSLUCENT) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function isTranslucent(model) {
+        return (model.color.alpha > 0.0) && (model.color.alpha < 1.0);
+    }
+
+    function isInvisible(model) {
+        return (model.color.alpha === 0.0);
+    }
+
+    function alphaDirty(currAlpha, prevAlpha) {
+        // Returns whether the alpha state has changed between invisible, translucent, or opaque
+        return (Math.floor(currAlpha) !== Math.floor(prevAlpha)) || (Math.ceil(currAlpha) !== Math.ceil(prevAlpha));
+    }
+
+    var silhouettesLength = 0;
+
+    function createSilhouetteCommands(model, frameState) {
+        // Wrap around after exceeding the 8-bit stencil limit.
+        // The reference is unique to each model until this point.
+        var stencilReference = (++silhouettesLength) % 255;
+
+        // If the model is translucent the silhouette needs to be in the translucent pass.
+        // Otherwise the silhouette would be rendered before the model.
+        var silhouetteTranslucent = hasTranslucentCommands(model) || isTranslucent(model) || (model.silhouetteColor.alpha < 1.0);
+        var silhouettePrograms = model._rendererResources.silhouettePrograms;
+        var scene3DOnly = frameState.scene3DOnly;
+        var nodeCommands = model._nodeCommands;
+        var length = nodeCommands.length;
+        for (var i = 0; i < length; ++i) {
+            var nodeCommand = nodeCommands[i];
+            var command = nodeCommand.command;
+
+            // Create model command
+            var modelCommand = isTranslucent(model) ? nodeCommand.translucentCommand : command;
+            var silhouetteModelCommand = DrawCommand.shallowClone(modelCommand);
+            var renderState = clone(modelCommand.renderState);
+
+            // Write the reference value into the stencil buffer.
+            renderState.stencilTest = {
+                enabled : true,
+                frontFunction : WebGLConstants.ALWAYS,
+                backFunction : WebGLConstants.ALWAYS,
+                reference : stencilReference,
+                mask : ~0,
+                frontOperation : {
+                    fail : WebGLConstants.KEEP,
+                    zFail : WebGLConstants.KEEP,
+                    zPass : WebGLConstants.REPLACE
+                },
+                backOperation : {
+                    fail : WebGLConstants.KEEP,
+                    zFail : WebGLConstants.KEEP,
+                    zPass : WebGLConstants.REPLACE
+                }
+            };
+
+            if (isInvisible(model)) {
+                // When the model is invisible disable color and depth writes but still write into the stencil buffer
+                renderState.colorMask = {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                };
+                renderState.depthMask = false;
+            }
+            renderState = RenderState.fromCache(renderState);
+            silhouetteModelCommand.renderState = renderState;
+            nodeCommand.silhouetteModelCommand = silhouetteModelCommand;
+
+            // Create color command
+            var silhouetteColorCommand = DrawCommand.shallowClone(command);
+            renderState = clone(command.renderState, true);
+            renderState.depthTest.enabled = true;
+            renderState.cull.enabled = false;
+            if (silhouetteTranslucent) {
+                silhouetteColorCommand.pass = Pass.TRANSLUCENT;
+                renderState.depthMask = false;
+                renderState.blending = BlendingState.ALPHA_BLEND;
+            }
+
+            // Only render silhouette if the value in the stencil buffer equals the reference
+            renderState.stencilTest = {
+                enabled : true,
+                frontFunction : WebGLConstants.NOTEQUAL,
+                backFunction : WebGLConstants.NOTEQUAL,
+                reference : stencilReference,
+                mask : ~0,
+                frontOperation : {
+                    fail : WebGLConstants.KEEP,
+                    zFail : WebGLConstants.KEEP,
+                    zPass : WebGLConstants.KEEP
+                },
+                backOperation : {
+                    fail : WebGLConstants.KEEP,
+                    zFail : WebGLConstants.KEEP,
+                    zPass : WebGLConstants.KEEP
+                }
+            };
+            renderState = RenderState.fromCache(renderState);
+
+            // If the silhouette program has already been cached use it
+            var program = command.shaderProgram;
+            var id = getProgramId(model, program);
+            var silhouetteProgram = silhouettePrograms[id];
+            if (!defined(silhouetteProgram)) {
+                silhouetteProgram = createSilhouetteProgram(model, program, frameState);
+                silhouettePrograms[id] = silhouetteProgram;
+            }
+
+            var silhouetteUniformMap = combine(command.uniformMap, {
+                gltf_silhouetteColor : createSilhouetteColorFunction(model),
+                gltf_silhouetteSize : createSilhouetteSizeFunction(model)
+            });
+
+            silhouetteColorCommand.renderState = renderState;
+            silhouetteColorCommand.shaderProgram = silhouetteProgram;
+            silhouetteColorCommand.uniformMap = silhouetteUniformMap;
+            silhouetteColorCommand.castShadows = false;
+            silhouetteColorCommand.receiveShadows = false;
+            nodeCommand.silhouetteColorCommand = silhouetteColorCommand;
+
+            if (!scene3DOnly) {
+                var command2D = nodeCommand.command2D;
+                var silhouetteModelCommand2D = DrawCommand.shallowClone(silhouetteModelCommand);
+                silhouetteModelCommand2D.boundingVolume = command2D.boundingVolume;
+                silhouetteModelCommand2D.modelMatrix = command2D.modelMatrix;
+                nodeCommand.silhouetteModelCommand2D = silhouetteModelCommand2D;
+
+                var silhouetteColorCommand2D = DrawCommand.shallowClone(silhouetteColorCommand);
+                silhouetteModelCommand2D.boundingVolume = command2D.boundingVolume;
+                silhouetteModelCommand2D.modelMatrix = command2D.modelMatrix;
+                nodeCommand.silhouetteColorCommand2D = silhouetteColorCommand2D;
+            }
+        }
+    }
+
+    function updateSilhouette(model, frameState) {
+        // Generate silhouette commands when the silhouette size is greater than 0.0 and the alpha is greater than 0.0
+        // There are two silhouette commands:
+        //     1. silhouetteModelCommand : render model normally while enabling stencil mask
+        //     2. silhouetteColorCommand : render enlarged model with a solid color while enabling stencil tests
+        if (!hasSilhouette(model, frameState)) {
+            return;
+        }
+
+        var nodeCommands = model._nodeCommands;
+        var dirty = alphaDirty(model.color.alpha, model._colorPreviousAlpha) ||
+                    alphaDirty(model.silhouetteColor.alpha, model._silhouetteColorPreviousAlpha) ||
+                    !defined(nodeCommands[0].silhouetteModelCommand);
+
+        model._colorPreviousAlpha = model.color.alpha;
+        model._silhouetteColorPreviousAlpha = model.silhouetteColor.alpha;
+
+        if (dirty) {
+            createSilhouetteCommands(model, frameState);
+        }
+    }
+
     var scratchBoundingSphere = new BoundingSphere();
 
     function scaleInPixels(positionWC, radius, frameState) {
@@ -3465,6 +4026,7 @@ define([
         this.vertexArrays = undefined;
         this.programs = undefined;
         this.pickPrograms = undefined;
+        this.silhouettePrograms = undefined;
         this.textures = undefined;
         this.samplers = undefined;
         this.renderStates = undefined;
@@ -3488,6 +4050,7 @@ define([
         destroy(resources.vertexArrays);
         destroy(resources.programs);
         destroy(resources.pickPrograms);
+        destroy(resources.silhouettePrograms);
         destroy(resources.textures);
     }
 
@@ -3654,19 +4217,31 @@ define([
 
             this._state = ModelState.LOADING;
 
-            this._boundingSphere = computeBoundingSphere(this.gltf);
+            this._boundingSphere = computeBoundingSphere(this, this.gltf);
             this._initialRadius = this._boundingSphere.radius;
 
             checkSupportedExtensions(this);
             if (this._state !== ModelState.FAILED) {
                 var extensions = this.gltf.extensions;
                 if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
-                    this._rtcCenter = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
-                    this._rtcCenterEye = new Cartesian3();
+                    var center = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
+                    if (!Cartesian3.equals(center, Cartesian3.ZERO)) {
+                        this._rtcCenter3D = center;
+
+                        var projection = frameState.mapProjection;
+                        var ellipsoid = projection.ellipsoid;
+                        var cartographic = ellipsoid.cartesianToCartographic(this._rtcCenter3D);
+                        var projectedCart = projection.project(cartographic);
+                        Cartesian3.fromElements(projectedCart.z, projectedCart.x, projectedCart.y, projectedCart);
+                        this._rtcCenter2D = projectedCart;
+
+                        this._rtcCenterEye = new Cartesian3();
+                        this._rtcCenter = this._rtcCenter3D;
+                    }
                 }
 
                 this._loadResources = new LoadResources();
-                parse(this);
+                parse(this, context);
             }
         }
 
@@ -3704,10 +4279,14 @@ define([
                 cachedResources.vertexArrays = resources.vertexArrays;
                 cachedResources.programs = resources.programs;
                 cachedResources.pickPrograms = resources.pickPrograms;
+                cachedResources.silhouettePrograms = resources.silhouettePrograms;
                 cachedResources.textures = resources.textures;
                 cachedResources.samplers = resources.samplers;
                 cachedResources.renderStates = resources.renderStates;
                 cachedResources.ready = true;
+
+                // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
+                this._normalAttributeName = getAttributeOrUniformBySemantic(this.gltf, 'NORMAL');
 
                 // Vertex arrays are unique to this model, do not store in cache.
                 if (defined(this._precreatedAttributes)) {
@@ -3720,8 +4299,11 @@ define([
             }
         }
 
+        var silhouette = hasSilhouette(this, frameState);
+        var translucent = isTranslucent(this);
+        var invisible = isInvisible(this);
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
-        var show = this.show && displayConditionPassed && (this.scale !== 0.0);
+        var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (!invisible || silhouette);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
@@ -3758,7 +4340,11 @@ define([
                 var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
                 Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
-                Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
+                if (this._upAxis === Axis.Y) {
+                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
+                } else if (this._upAxis === Axis.X) {
+                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
+                }
             }
 
             // Update modelMatrix throughout the graph as needed
@@ -3780,6 +4366,8 @@ define([
             updateWireframe(this);
             updateShowBoundingVolume(this);
             updateShadows(this);
+            updateColor(this, frameState);
+            updateSilhouette(this, frameState);
         }
 
         if (justLoaded) {
@@ -3811,13 +4399,30 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        var command = nc.command;
+                        var command = translucent ? nc.translucentCommand : nc.command;
+                        command = silhouette ? nc.silhouetteModelCommand : command;
                         commandList.push(command);
-
-                        boundingVolume = command.boundingVolume;
+                        boundingVolume = nc.command.boundingVolume;
                         if (frameState.mode === SceneMode.SCENE2D &&
                             (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            commandList.push(nc.command2D);
+                            var command2D = translucent ? nc.translucentCommand2D : nc.command2D;
+                            command2D = silhouette ? nc.silhouetteModelCommand2D : command2D;
+                            commandList.push(command2D);
+                        }
+                    }
+                }
+
+                if (silhouette) {
+                    // Render second silhouette pass
+                    for (i = 0; i < length; ++i) {
+                        nc = nodeCommands[i];
+                        if (nc.show) {
+                            commandList.push(nc.silhouetteColorCommand);
+                            boundingVolume = nc.command.boundingVolume;
+                            if (frameState.mode === SceneMode.SCENE2D &&
+                                (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                                commandList.push(nc.silhouetteColorCommand2D);
+                            }
                         }
                     }
                 }

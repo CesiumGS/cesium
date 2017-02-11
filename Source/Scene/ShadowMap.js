@@ -24,11 +24,13 @@ define([
         '../Core/PixelFormat',
         '../Core/Quaternion',
         '../Core/SphereOutlineGeometry',
+        '../Core/WebGLConstants',
         '../Renderer/ClearCommand',
         '../Renderer/ContextLimits',
         '../Renderer/CubeMap',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/Renderbuffer',
@@ -40,13 +42,11 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        '../Renderer/WebGLConstants',
         './Camera',
         './CullFace',
         './CullingVolume',
         './DebugCameraPrimitive',
         './OrthographicFrustum',
-        './Pass',
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
         './Primitive',
@@ -76,11 +76,13 @@ define([
         PixelFormat,
         Quaternion,
         SphereOutlineGeometry,
+        WebGLConstants,
         ClearCommand,
         ContextLimits,
         CubeMap,
         DrawCommand,
         Framebuffer,
+        Pass,
         PassState,
         PixelDatatype,
         Renderbuffer,
@@ -92,13 +94,11 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
-        WebGLConstants,
         Camera,
         CullFace,
         CullingVolume,
         DebugCameraPrimitive,
         OrthographicFrustum,
-        Pass,
         PerInstanceColorAppearance,
         PerspectiveFrustum,
         Primitive,
@@ -106,16 +106,17 @@ define([
     'use strict';
 
     /**
-     * Creates a shadow map from the provided light camera.
+     * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. Do not construct this directly.
      *
+     * <p>
      * The normalOffset bias pushes the shadows forward slightly, and may be disabled
      * for applications that require ultra precise shadows.
+     * </p>
      *
      * @alias ShadowMap
-     * @constructor
+     * @internalConstructor
      *
      * @param {Object} options An object containing the following properties:
-     * @param {Context} options.context The context in which to create the shadow map.
      * @param {Camera} options.lightCamera A camera representing the light source.
      * @param {Boolean} [options.enabled=true] Whether the shadow map is enabled.
      * @param {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
@@ -126,6 +127,7 @@ define([
      * @param {Number} [options.size=2048] The width and height, in pixels, of each shadow map.
      * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
      * @param {Number} [options.darkness=0.3] The shadow darkness.
+     * @param {Boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
      *
      * @exception {DeveloperError} Only one or four cascades are supported.
      *
@@ -133,6 +135,7 @@ define([
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        // options.context is an undocumented option
         var context = options.context;
 
         //>>includeStart('debug', pragmas.debug);
@@ -149,6 +152,7 @@ define([
 
         this._enabled = defaultValue(options.enabled, true);
         this._softShadows = defaultValue(options.softShadows, false);
+        this._normalOffset = defaultValue(options.normalOffset, true);
         this.dirty = true;
 
         /**
@@ -193,7 +197,7 @@ define([
             polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : true,
+            normalOffset : this._normalOffset,
             normalOffsetScale : 0.5,
             normalShading : true,
             normalShadingSmooth : 0.3,
@@ -204,7 +208,7 @@ define([
             polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : true,
+            normalOffset : this._normalOffset,
             normalOffsetScale : 0.1,
             normalShading : true,
             normalShadingSmooth : 0.05,
@@ -215,7 +219,7 @@ define([
             polygonOffset : false,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : false,
+            normalOffset : this._normalOffset,
             normalOffsetScale : 0.0,
             normalShading : true,
             normalShadingSmooth : 0.1,
@@ -381,6 +385,26 @@ define([
             set : function(value) {
                 this.dirty = this._enabled !== value;
                 this._enabled = value;
+            }
+        },
+
+        /**
+         * Determines if a normal bias will be applied to shadows.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        normalOffset : {
+            get : function() {
+                return this._normalOffset;
+            },
+            set : function(value) {
+                this.dirty = this._normalOffset !== value;
+                this._normalOffset = value;
+                this._terrainBias.normalOffset = value;
+                this._primitiveBias.normalOffset = value;
+                this._pointBias.normalOffset = value;
             }
         },
 

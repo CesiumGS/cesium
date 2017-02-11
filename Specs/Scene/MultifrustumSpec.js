@@ -14,6 +14,7 @@ defineSuite([
         'Core/Matrix4',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/Pass',
         'Renderer/RenderState',
         'Renderer/Sampler',
         'Renderer/ShaderProgram',
@@ -22,7 +23,6 @@ defineSuite([
         'Renderer/VertexArray',
         'Scene/BillboardCollection',
         'Scene/BlendingState',
-        'Scene/Pass',
         'Scene/TextureAtlas',
         'Specs/createScene',
         'ThirdParty/when'
@@ -41,6 +41,7 @@ defineSuite([
         Matrix4,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         Sampler,
         ShaderProgram,
@@ -49,7 +50,6 @@ defineSuite([
         VertexArray,
         BillboardCollection,
         BlendingState,
-        Pass,
         TextureAtlas,
         createScene,
         when) {
@@ -149,25 +149,27 @@ defineSuite([
     it('renders primitive in closest frustum', function() {
         createBillboards();
 
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).toEqual(0);
-        expect(pixels[1]).not.toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toEqual(0);
+            expect(rgba[1]).not.toEqual(0);
+            expect(rgba[2]).toEqual(0);
+            expect(rgba[3]).toEqual(255);
+        });
 
-        pixels = scene.renderForSpecs();
-        expect(pixels[0]).toEqual(0);
-        expect(pixels[1]).not.toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toEqual(0);
+            expect(rgba[1]).not.toEqual(0);
+            expect(rgba[2]).toEqual(0);
+            expect(rgba[3]).toEqual(255);
+        });
     });
 
     it('renders primitive in middle frustum', function() {
         createBillboards();
         billboard0.color = new Color(1.0, 1.0, 1.0, 0.0);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it('renders primitive in last frustum', function() {
@@ -176,8 +178,8 @@ defineSuite([
         billboard0.color = color;
         billboard1.color = color;
 
-        expect(scene.renderForSpecs()).toEqual([255, 255, 255, 255]);
-        expect(scene.renderForSpecs()).toEqual([255, 255, 255, 255]);
+        expect(scene).toRender([255, 255, 255, 255]);
+        expect(scene).toRender([255, 255, 255, 255]);
     });
 
     it('renders primitive in last frustum with debugShowFrustums', function() {
@@ -297,8 +299,8 @@ defineSuite([
         var primitive = createPrimitive(false);
         primitives.add(primitive);
 
-        expect(scene.renderForSpecs()).toEqual([255, 255, 0, 255]);
-        expect(scene.renderForSpecs()).toEqual([255, 255, 0, 255]);
+        expect(scene).toRender([255, 255, 0, 255]);
+        expect(scene).toRender([255, 255, 0, 255]);
     });
 
     it('renders only in the closest frustum', function() {
@@ -312,17 +314,19 @@ defineSuite([
         primitive.color = new Color(1.0, 1.0, 0.0, 0.5);
         primitives.add(primitive);
 
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).not.toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).not.toEqual(0);
+            expect(rgba[2]).toEqual(0);
+            expect(rgba[3]).toEqual(255);
+        });
 
-        pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).not.toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).not.toEqual(0);
+            expect(rgba[2]).toEqual(0);
+            expect(rgba[3]).toEqual(255);
+        });
     });
 
     it('render without a central body or any primitives', function() {

@@ -46,9 +46,47 @@ defineSuite([
     'use strict';
 
     var context;
-    var sp;
-    var va;
     var cubeMap;
+
+    function expectCubeMapFaces(options) {
+        var cubeMap = options.cubeMap;
+        var expectedColors = options.expectedColors;
+
+        var fs =
+            'uniform samplerCube u_texture;' +
+            'uniform mediump vec3 u_direction;' +
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
+
+        var faceDirections = [
+            new Cartesian3(1.0, 0.0, 0.0),  // +X
+            new Cartesian3(-1.0, 0.0, 0.0), // -X
+            new Cartesian3(0.0, 1.0, 0.0),  // +Y
+            new Cartesian3(0.0, -1.0, 0.0), // -Y
+            new Cartesian3(0.0, 0.0, 1.0),  // +Z
+            new Cartesian3(0.0, 0.0, -1.0)  // -Z
+        ];
+
+        var uniformMap = {
+            direction : undefined,
+
+            u_texture : function() {
+                return cubeMap;
+            },
+            u_direction : function() {
+                return this.direction;
+            }
+        };
+
+        for (var i = 0; i < 6; ++i) {
+            uniformMap.direction = faceDirections[i];
+            expect({
+                context : context,
+                fragmentShader : fs,
+                uniformMap : uniformMap,
+                epsilon : options.epsilon
+            }).contextToRender(expectedColors[i]);
+        }
+    }
 
     var greenImage;
     var blueImage;
@@ -80,8 +118,6 @@ defineSuite([
     });
 
     afterEach(function() {
-        sp = sp && sp.destroy();
-        va = va && va.destroy();
         cubeMap = cubeMap && cubeMap.destroy();
     });
 
@@ -174,70 +210,17 @@ defineSuite([
             }
         });
 
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var fs =
-            'uniform samplerCube u_texture;' +
-            'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
-            }
+        expectCubeMapFaces({
+            cubeMap : cubeMap,
+            expectedColors : [
+                [0, 0, 255, 255], // +X is blue
+                [0, 255, 0, 255], // -X is green
+                [0, 0, 255, 255], // +Y is blue
+                [0, 255, 0, 255], // -Y is green
+                [0, 0, 255, 255], // +Z is blue
+                [0, 255, 0, 255]  // -Z is green
+            ]
         });
-
-        sp.allUniforms.u_texture.value = cubeMap;
-
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-
-        // +X is blue
-        sp.allUniforms.u_direction.value = new Cartesian3(1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-
-        // -X is green
-        sp.allUniforms.u_direction.value = new Cartesian3(-1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-
-        // +Y is blue
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-
-        // -Y is green
-        sp.allUniforms.u_direction.value = new Cartesian3(0, -1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-
-        // +Z is blue
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, 1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-
-        // -Z is green
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, -1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
     it('draws with a cube map with premultiplied alpha', function() {
@@ -255,131 +238,32 @@ defineSuite([
         });
         expect(cubeMap.preMultiplyAlpha).toEqual(true);
 
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var fs =
-            'uniform samplerCube u_texture;' +
-            'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
-            }
+        expectCubeMapFaces({
+            cubeMap : cubeMap,
+            epsilon : 1,
+            expectedColors : [
+                [0, 0, 127, 255], // +X
+                [0, 0, 127, 255], // -X
+                [0, 0, 127, 255], // +Y
+                [0, 0, 127, 255], // -Y
+                [0, 0, 127, 255], // +Z
+                [0, 0, 127, 255]  // -Z
+            ]
         });
-
-        sp.allUniforms.u_texture.value = cubeMap;
-
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-
-        // +X is blue
-        sp.allUniforms.u_direction.value = new Cartesian3(1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 127, 127]);
-
-        // -X is green
-        sp.allUniforms.u_direction.value = new Cartesian3(-1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 127, 127]);
-
-        // +Y is blue
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 127, 127]);
-
-        // -Y is green
-        sp.allUniforms.u_direction.value = new Cartesian3(0, -1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 127, 127]);
-
-        // +Z is blue
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, 1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 127, 127]);
-
-        // -Z is green
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, -1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 127, 127]);
     });
 
     it('draws the context default cube map', function() {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var fs =
-            'uniform samplerCube u_texture;' +
-            'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
-            }
+        expectCubeMapFaces({
+            cubeMap : context.defaultCubeMap,
+            expectedColors : [
+                [255, 255, 255, 255], // +X
+                [255, 255, 255, 255], // -X
+                [255, 255, 255, 255], // +Y
+                [255, 255, 255, 255], // -Y
+                [255, 255, 255, 255], // +Z
+                [255, 255, 255, 255]  // -Z
+            ]
         });
-
-        sp.allUniforms.u_texture.value = context.defaultCubeMap;
-
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-
-        sp.allUniforms.u_direction.value = new Cartesian3(1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(-1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, -1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, 1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, -1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
     it('creates a cube map with typed arrays', function() {
@@ -389,201 +273,109 @@ defineSuite([
                 positiveX : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([0, 0, 0, 255])
+                    arrayBufferView : new Uint8Array([0, 255, 255, 255])
                 },
                 negativeX : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([0, 0, 255, 0])
+                    arrayBufferView : new Uint8Array([0, 0, 255, 255])
                 },
                 positiveY : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([0, 255, 0, 0])
+                    arrayBufferView : new Uint8Array([0, 255, 0, 255])
                 },
                 negativeY : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([255, 0, 0, 0])
+                    arrayBufferView : new Uint8Array([255, 0, 0, 255])
                 },
                 positiveZ : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([0, 0, 255, 255])
+                    arrayBufferView : new Uint8Array([255, 0, 255, 255])
                 },
                 negativeZ : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([255, 255, 0, 0])
+                    arrayBufferView : new Uint8Array([255, 255, 0, 255])
                 }
             }
         });
 
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var fs =
-            'uniform samplerCube u_texture;' +
-            'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
-            }
+        expectCubeMapFaces({
+            cubeMap : cubeMap,
+            expectedColors : [
+                [0, 255, 255, 255], // +X
+                [0, 0, 255, 255],   // -X
+                [0, 255, 0, 255],   // +Y
+                [255, 0, 0, 255],   // -Y
+                [255, 0, 255, 255], // +Z
+                [255, 255, 0, 255]  // -Z
+            ]
         });
-
-        sp.allUniforms.u_texture.value = cubeMap;
-
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-
-        sp.allUniforms.u_direction.value = new Cartesian3(1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 255]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(-1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 0]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 0]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, -1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 0, 0]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, 1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, -1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 0, 0]);
     });
 
     it('creates a cube map with floating-point textures', function() {
-        if (context.floatingPointTexture) {
-            var positiveXColor = new Color(0.0, 0.0, 0.0, 1.0);
-            var negativeXColor = new Color(0.0, 0.0, 1.0, 0.0);
-            var positiveYColor = new Color(0.0, 1.0, 0.0, 0.0);
-            var negativeYColor = new Color(1.0, 0.0, 0.0, 0.0);
-            var positiveZColor = new Color(0.0, 0.0, 1.0, 1.0);
-            var negativeZColor = new Color(1.0, 1.0, 0.0, 0.0);
-
-            cubeMap = new CubeMap({
-                context : context,
-                source : {
-                    positiveX : {
-                        width : 1,
-                        height : 1,
-                        arrayBufferView : new Float32Array([positiveXColor.red, positiveXColor.green, positiveXColor.blue, positiveXColor.alpha])
-                    },
-                    negativeX : {
-                        width : 1,
-                        height : 1,
-                        arrayBufferView : new Float32Array([negativeXColor.red, negativeXColor.green, negativeXColor.blue, negativeXColor.alpha])
-                    },
-                    positiveY : {
-                        width : 1,
-                        height : 1,
-                        arrayBufferView : new Float32Array([positiveYColor.red, positiveYColor.green, positiveYColor.blue, positiveYColor.alpha])
-                    },
-                    negativeY : {
-                        width : 1,
-                        height : 1,
-                        arrayBufferView : new Float32Array([negativeYColor.red, negativeYColor.green, negativeYColor.blue, negativeYColor.alpha])
-                    },
-                    positiveZ : {
-                        width : 1,
-                        height : 1,
-                        arrayBufferView : new Float32Array([positiveZColor.red, positiveZColor.green, positiveZColor.blue, positiveZColor.alpha])
-                    },
-                    negativeZ : {
-                        width : 1,
-                        height : 1,
-                        arrayBufferView : new Float32Array([negativeZColor.red, negativeZColor.green, negativeZColor.blue, negativeZColor.alpha])
-                    }
-                },
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-            var fs =
-                'uniform samplerCube u_texture;' +
-                'uniform mediump vec3 u_direction;' +
-                'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-
-            sp = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : vs,
-                fragmentShaderSource : fs,
-                attributeLocations : {
-                    position : 0
-                }
-            });
-
-            sp.allUniforms.u_texture.value = cubeMap;
-
-            va = new VertexArray({
-                context : context,
-                attributes : [{
-                    vertexBuffer : Buffer.createVertexBuffer({
-                        context : context,
-                        typedArray : new Float32Array([0, 0, 0, 1]),
-                        usage : BufferUsage.STATIC_DRAW
-                    }),
-                    componentsPerAttribute : 4
-                }]
-            });
-
-            var command = new DrawCommand({
-                primitiveType : PrimitiveType.POINTS,
-                shaderProgram : sp,
-                vertexArray : va
-            });
-
-            sp.allUniforms.u_direction.value = new Cartesian3(1, 0, 0);
-            command.execute(context);
-            expect(context.readPixels()).toEqual(positiveXColor.toBytes());
-
-            sp.allUniforms.u_direction.value = new Cartesian3(-1, 0, 0);
-            command.execute(context);
-            expect(context.readPixels()).toEqual(negativeXColor.toBytes());
-
-            sp.allUniforms.u_direction.value = new Cartesian3(0, 1, 0);
-            command.execute(context);
-            expect(context.readPixels()).toEqual(positiveYColor.toBytes());
-
-            sp.allUniforms.u_direction.value = new Cartesian3(0, -1, 0);
-            command.execute(context);
-            expect(context.readPixels()).toEqual(negativeYColor.toBytes());
-
-            sp.allUniforms.u_direction.value = new Cartesian3(0, 0, 1);
-            command.execute(context);
-            expect(context.readPixels()).toEqual(positiveZColor.toBytes());
-
-            sp.allUniforms.u_direction.value = new Cartesian3(0, 0, -1);
-            command.execute(context);
-            expect(context.readPixels()).toEqual(negativeZColor.toBytes());
+        if (!context.floatingPointTexture) {
+            return;
         }
+
+        var positiveXColor = new Color(0.0, 1.0, 1.0, 1.0);
+        var negativeXColor = new Color(0.0, 0.0, 1.0, 1.0);
+        var positiveYColor = new Color(0.0, 1.0, 0.0, 1.0);
+        var negativeYColor = new Color(1.0, 0.0, 0.0, 1.0);
+        var positiveZColor = new Color(1.0, 0.0, 1.0, 1.0);
+        var negativeZColor = new Color(1.0, 1.0, 0.0, 1.0);
+
+        cubeMap = new CubeMap({
+            context : context,
+            source : {
+                positiveX : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Float32Array([positiveXColor.red, positiveXColor.green, positiveXColor.blue, positiveXColor.alpha])
+                },
+                negativeX : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Float32Array([negativeXColor.red, negativeXColor.green, negativeXColor.blue, negativeXColor.alpha])
+                },
+                positiveY : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Float32Array([positiveYColor.red, positiveYColor.green, positiveYColor.blue, positiveYColor.alpha])
+                },
+                negativeY : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Float32Array([negativeYColor.red, negativeYColor.green, negativeYColor.blue, negativeYColor.alpha])
+                },
+                positiveZ : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Float32Array([positiveZColor.red, positiveZColor.green, positiveZColor.blue, positiveZColor.alpha])
+                },
+                negativeZ : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Float32Array([negativeZColor.red, negativeZColor.green, negativeZColor.blue, negativeZColor.alpha])
+                }
+            },
+            pixelDatatype : PixelDatatype.FLOAT
+        });
+
+        expectCubeMapFaces({
+            cubeMap : cubeMap,
+            expectedColors : [
+                [0, 255, 255, 255], // +X
+                [0, 0, 255, 255],   // -X
+                [0, 255, 0, 255],   // +Y
+                [255, 0, 0, 255],   // -Y
+                [255, 0, 255, 255], // +Z
+                [255, 255, 0, 255]  // -Z
+            ]
+        });
     });
 
     it('creates a cube map with typed arrays and images', function() {
@@ -595,12 +387,12 @@ defineSuite([
                 positiveY : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([0, 255, 0, 0])
+                    arrayBufferView : new Uint8Array([0, 255, 0, 255])
                 },
                 negativeY : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([255, 0, 0, 0])
+                    arrayBufferView : new Uint8Array([255, 0, 0, 255])
                 },
                 positiveZ : {
                     width : 1,
@@ -610,69 +402,22 @@ defineSuite([
                 negativeZ : {
                     width : 1,
                     height : 1,
-                    arrayBufferView : new Uint8Array([255, 255, 0, 0])
+                    arrayBufferView : new Uint8Array([255, 255, 0, 255])
                 }
             }
         });
 
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var fs =
-            'uniform samplerCube u_texture;' +
-            'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
-            }
+        expectCubeMapFaces({
+            cubeMap : cubeMap,
+            expectedColors : [
+                [0, 0, 255, 255],   // +X
+                [0, 255, 0, 255],   // -X
+                [0, 255, 0, 255],   // +Y
+                [255, 0, 0, 255],   // -Y
+                [0, 0, 255, 255],   // +Z
+                [255, 255, 0, 255]  // -Z
+            ]
         });
-
-        sp.allUniforms.u_texture.value = cubeMap;
-
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-
-        sp.allUniforms.u_direction.value = new Cartesian3(1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(-1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 0]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, -1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 0, 0]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, 1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, -1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 0, 0]);
     });
 
     it('copies to a cube map', function() {
@@ -688,70 +433,17 @@ defineSuite([
         cubeMap.positiveZ.copyFrom(blueImage);
         cubeMap.negativeZ.copyFrom(greenImage);
 
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var fs =
-            'uniform samplerCube u_cubeMap;' +
-            'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_cubeMap, normalize(u_direction)); }';
-
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
-            }
+        expectCubeMapFaces({
+            cubeMap : cubeMap,
+            expectedColors : [
+                [0, 0, 255, 255], // +X
+                [0, 255, 0, 255], // -X
+                [0, 0, 255, 255], // +Y
+                [0, 255, 0, 255], // -Y
+                [0, 0, 255, 255], // +Z
+                [0, 255, 0, 255]  // -Z
+            ]
         });
-
-        sp.allUniforms.u_cubeMap.value = cubeMap;
-
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-
-        // +X is blue
-        sp.allUniforms.u_direction.value = new Cartesian3(1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-
-        // -X is green
-        sp.allUniforms.u_direction.value = new Cartesian3(-1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-
-        // +Y is blue
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-
-        // -Y is green
-        sp.allUniforms.u_direction.value = new Cartesian3(0, -1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-
-        // +Z is blue
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, 1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-
-        // -Z is green
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, -1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
     it('copies from a typed array', function() {
@@ -763,155 +455,98 @@ defineSuite([
         cubeMap.positiveX.copyFrom({
             width : 1,
             height : 1,
-            arrayBufferView : new Uint8Array([0, 0, 0, 255])
+            arrayBufferView : new Uint8Array([0, 255, 255, 255])
         });
         cubeMap.negativeX.copyFrom({
             width : 1,
             height : 1,
-            arrayBufferView : new Uint8Array([0, 0, 255, 0])
+            arrayBufferView : new Uint8Array([0, 0, 255, 255])
         });
         cubeMap.positiveY.copyFrom({
             width : 1,
             height : 1,
-            arrayBufferView : new Uint8Array([0, 255, 0, 0])
+            arrayBufferView : new Uint8Array([0, 255, 0, 255])
         });
         cubeMap.negativeY.copyFrom({
             width : 1,
             height : 1,
-            arrayBufferView : new Uint8Array([255, 0, 0, 0])
+            arrayBufferView : new Uint8Array([255, 0, 0, 255])
         });
         cubeMap.positiveZ.copyFrom({
             width : 1,
             height : 1,
-            arrayBufferView : new Uint8Array([0, 0, 255, 255])
+            arrayBufferView : new Uint8Array([255, 0, 255, 255])
         });
         cubeMap.negativeZ.copyFrom({
             width : 1,
             height : 1,
-            arrayBufferView : new Uint8Array([255, 255, 0, 0])
+            arrayBufferView : new Uint8Array([255, 255, 0, 255])
         });
 
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var fs =
-            'uniform samplerCube u_cubeMap;' +
-            'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_cubeMap, normalize(u_direction)); }';
-
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
-            }
+        expectCubeMapFaces({
+            cubeMap : cubeMap,
+            expectedColors : [
+                [0, 255, 255, 255], // +X
+                [0, 0, 255, 255],   // -X
+                [0, 255, 0, 255],   // +Y
+                [255, 0, 0, 255],   // -Y
+                [255, 0, 255, 255], // +Z
+                [255, 255, 0, 255]  // -Z
+            ]
         });
-
-        sp.allUniforms.u_cubeMap.value = cubeMap;
-
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-
-        sp.allUniforms.u_direction.value = new Cartesian3(1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 255]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(-1, 0, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 0]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 0]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, -1, 0);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 0, 0]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, 1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-
-        sp.allUniforms.u_direction.value = new Cartesian3(0, 0, -1);
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 0, 0]);
     });
 
     it('copies from the framebuffer', function() {
+        var cxt = createContext({
+            webgl : {
+                alpha : true // Seems to be required for copyFromFramebuffer()
+            }
+        });
+
         cubeMap = new CubeMap({
-            context : context,
+            context : cxt,
             width : 1,
             height : 1
         });
         cubeMap.positiveX.copyFrom(blueImage);
 
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'uniform samplerCube u_cubeMap;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }';
 
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
+        var uniformMap = {
+            u_cubeMap : function() {
+                return cubeMap;
             }
-        });
-
-        sp.allUniforms.u_cubeMap.value = cubeMap;
-
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
+        };
 
         // +X is blue
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+        expect({
+            context : cxt,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender([0, 0, 255, 255]);
 
         // Clear framebuffer to red and copy to +X face
         var clearCommand = new ClearCommand({
             color : new Color (1.0, 0.0, 0.0, 1.0)
         });
 
-        clearCommand.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        clearCommand.execute(cxt);
+        expect(cxt).toReadPixels([255, 0, 0, 255]);
         cubeMap.positiveX.copyFromFramebuffer();
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(cxt);
+        expect(cxt).toReadPixels([0, 0, 0, 0]);
 
         // +X is red now
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        expect({
+            context : cxt,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender([255, 0, 0, 255]);
+
+        cxt.destroyForSpecs();
     });
 
     it('draws with a cube map and a texture', function() {
@@ -932,43 +567,25 @@ defineSuite([
             source : blueImage
         });
 
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'uniform samplerCube u_cubeMap;' +
             'uniform sampler2D u_texture;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)) + texture2D(u_texture, vec2(0.0)); }';
 
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
+        var uniformMap = {
+            u_cubeMap : function() {
+                return cubeMap;
+            },
+            u_texture : function() {
+                return texture;
             }
-        });
+        };
 
-        sp.allUniforms.u_cubeMap.value = cubeMap;
-        sp.allUniforms.u_texture.value = texture;
-
-        va = new VertexArray({
+        expect({
             context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 255, 255]);
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender([0, 255, 255, 255]);
 
         texture = texture.destroy();
     });
@@ -991,41 +608,21 @@ defineSuite([
             minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
         });
 
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'uniform samplerCube u_cubeMap;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }';
 
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : {
-                position : 0
+        var uniformMap = {
+            u_cubeMap : function() {
+                return cubeMap;
             }
-        });
+        };
 
-        sp.allUniforms.u_cubeMap.value = cubeMap;
-
-        va = new VertexArray({
+        expect({
             context : context,
-            attributes : [{
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender([0, 0, 255, 255]);
     });
 
     it('destroys', function() {

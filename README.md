@@ -46,6 +46,11 @@ We appreciate attribution by including the Cesium logo and link in your app.
 ### Demos ###
 
 <p align="center">
+<a href="http://cesiumjs.org/demos/STI.html"><img src="http://cesiumjs.org/demos/images/STI.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/TexasGroundwater.html"><img src="http://cesiumjs.org/demos/images/TXgroundwater.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/PearlHarbor.html"><img src="http://cesiumjs.org/demos/images/PearlHarbor.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/JumpLog.html"><img src="http://cesiumjs.org/demos/images/JumpLog.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/Soarer.html"><img src="http://cesiumjs.org/demos/images/Soarer.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/IMERG.html"><img src="http://cesiumjs.org/demos/images/IMERG.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/OrbitLogic.html"><img src="http://cesiumjs.org/demos/images/OrbitLogic.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/nextPlace.html"><img src="http://cesiumjs.org/demos/images/nextPlace.jpg" height="150" /></a>&nbsp;
@@ -54,7 +59,7 @@ We appreciate attribution by including the Cesium logo and link in your app.
 <a href="http://cesiumjs.org/demos/NYPLphotographers.html"><img src="http://cesiumjs.org/demos/images/NYPLphotographers.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/RiftVelocity.html"><img src="http://cesiumjs.org/demos/images/RiftVelocity.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/ContextCapture.html"><img src="http://cesiumjs.org/demos/images/ContextCapture.jpg" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/VolumeRaycast.html"><img src="http://cesiumjs.org/demos/images/VolumeRaycast.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/VolumeRaycasting.html"><img src="http://cesiumjs.org/demos/images/VolumeRaycast.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/TXGeothermal.html"><img src="http://cesiumjs.org/demos/images/TXGeothermal.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/LiquidGalaxy.html"><img src="http://cesiumjs.org/demos/images/LiquidGalaxy.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/KansasAviation.html"><img src="http://cesiumjs.org/demos/images/Kansas.jpg" height="150" /></a>&nbsp;

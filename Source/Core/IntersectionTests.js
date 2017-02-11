@@ -5,6 +5,7 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
+        './Interval',
         './Math',
         './Matrix3',
         './QuadraticRealPolynomial',
@@ -16,6 +17,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        Interval,
         CesiumMath,
         Matrix3,
         QuadraticRealPolynomial,
@@ -80,6 +82,10 @@ define([
 
     /**
      * Computes the intersection of a ray and a triangle as a parametric distance along the input ray.
+     *
+     * Implements {@link https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf|
+     * Fast Minimum Storage Ray/Triangle Intersection} by Tomas Moller and Ben Trumbore.
+     *
      * @memberof IntersectionTests
      *
      * @param {Ray} ray The ray.
@@ -170,6 +176,10 @@ define([
 
     /**
      * Computes the intersection of a ray and a triangle as a Cartesian3 coordinate.
+     *
+     * Implements {@link https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf|
+     * Fast Minimum Storage Ray/Triangle Intersection} by Tomas Moller and Ben Trumbore.
+     *
      * @memberof IntersectionTests
      *
      * @param {Ray} ray The ray.
@@ -285,7 +295,7 @@ define([
 
     function raySphere(ray, sphere, result) {
         if (!defined(result)) {
-            result = {};
+            result = new Interval();
         }
 
         var origin = ray.origin;
@@ -316,8 +326,8 @@ define([
      *
      * @param {Ray} ray The ray.
      * @param {BoundingSphere} sphere The sphere.
-     * @param {Object} [result] The result onto which to store the result.
-     * @returns {Object} An object with the first (<code>start</code>) and the second (<code>stop</code>) intersection scalars for points along the ray or undefined if there are no intersections.
+     * @param {Interval} [result] The result onto which to store the result.
+     * @returns {Interval} The interval containing scalar points along the ray or undefined if there are no intersections.
      */
     IntersectionTests.raySphere = function(ray, sphere, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -347,8 +357,8 @@ define([
      * @param {Cartesian3} p0 An end point of the line segment.
      * @param {Cartesian3} p1 The other end point of the line segment.
      * @param {BoundingSphere} sphere The sphere.
-     * @param {Object} [result] The result onto which to store the result.
-     * @returns {Object} An object with the first (<code>start</code>) and the second (<code>stop</code>) intersection scalars for points along the line segment or undefined if there are no intersections.
+     * @param {Interval} [result] The result onto which to store the result.
+     * @returns {Interval} The interval containing scalar points along the ray or undefined if there are no intersections.
      */
     IntersectionTests.lineSegmentSphere = function(p0, p1, sphere, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -388,7 +398,7 @@ define([
      *
      * @param {Ray} ray The ray.
      * @param {Ellipsoid} ellipsoid The ellipsoid.
-     * @returns {Object} An object with the first (<code>start</code>) and the second (<code>stop</code>) intersection scalars for points along the ray or undefined if there are no intersections.
+     * @returns {Interval} The interval containing scalar points along the ray or undefined if there are no intersections.
      */
     IntersectionTests.rayEllipsoid = function(ray, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
@@ -432,10 +442,7 @@ define([
                 var root0 = temp / w2;
                 var root1 = difference / temp;
                 if (root0 < root1) {
-                    return {
-                        start : root0,
-                        stop : root1
-                    };
+                    return new Interval(root0, root1);
                 }
 
                 return {
@@ -445,10 +452,7 @@ define([
             } else {
                 // qw2 == product.  Repeated roots (2 intersections).
                 var root = Math.sqrt(difference / w2);
-                return {
-                    start : root,
-                    stop : root
-                };
+                return new Interval(root, root);
             }
         } else if (q2 < 1.0) {
             // Inside ellipsoid (2 intersections).
@@ -458,19 +462,13 @@ define([
 
             discriminant = qw * qw - product;
             temp = -qw + Math.sqrt(discriminant); // Positively valued.
-            return {
-                start : 0.0,
-                stop : temp / w2
-            };
+            return new Interval(0.0, temp / w2);
         } else {
             // q2 == 1.0. On ellipsoid.
             if (qw < 0.0) {
                 // Looking inward.
                 w2 = Cartesian3.magnitudeSquared(w);
-                return {
-                    start : 0.0,
-                    stop : -qw / w2
-                };
+                return new Interval(0.0, -qw / w2);
             }
 
             // qw >= 0.0.  Looking outward or tangent.

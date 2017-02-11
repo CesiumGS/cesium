@@ -4,10 +4,13 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/defaultValue',
+        'Core/defined',
         'Core/Ellipsoid',
         'Core/GeometryInstance',
+        'Core/loadImage',
         'Core/Rectangle',
         'Core/RectangleGeometry',
+        'Renderer/Texture',
         'Scene/MaterialAppearance',
         'Scene/PolylineCollection',
         'Scene/Primitive',
@@ -18,10 +21,13 @@ defineSuite([
         Cartesian3,
         Color,
         defaultValue,
+        defined,
         Ellipsoid,
         GeometryInstance,
+        loadImage,
         Rectangle,
         RectangleGeometry,
+        Texture,
         MaterialAppearance,
         PolylineCollection,
         Primitive,
@@ -83,26 +89,32 @@ defineSuite([
         polylines = polylines && polylines.destroy();
     });
 
-    function renderMaterial(material, ignoreBackground) {
+    function renderMaterial(material, ignoreBackground, callback) {
         ignoreBackground = defaultValue(ignoreBackground, false);
         polygon.appearance.material = material;
         if (!ignoreBackground) {
-            expect(scene.renderForSpecs()).toEqual(backgroundColor);
+            expect(scene).toRender(backgroundColor);
         }
 
         scene.primitives.add(polygon);
-        var result = scene.renderForSpecs();
-        expect(result).not.toEqual(backgroundColor);
-        return result;
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba).not.toEqual(backgroundColor);
+            if (defined(callback)) {
+                callback(rgba);
+            }
+        });
     }
 
     function renderPolylineMaterial(material) {
         polyline.material = material;
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
 
         scene.primitives.add(polylines);
-        var result = scene.renderForSpecs();
-        expect(result).not.toEqual(backgroundColor);
+        var result;
+        expect(scene).toRenderAndCall(function(rgba) {
+            result = rgba;
+            expect(rgba).not.toEqual(backgroundColor);
+        });
         return result;
     }
 
@@ -344,6 +356,50 @@ defineSuite([
         renderMaterial(material);
     });
 
+    it('creates a material with an ktx compressed image uniform', function () {
+        var compressedUrl;
+        var context = scene.context;
+        if (context.s3tc) {
+            compressedUrl = './Data/Images/Green4x4DXT1.ktx';
+        } else if (context.etc1) {
+            compressedUrl = './Data/Images/Green4x4ETC1.ktx';
+        } else if (context.pvrtc) {
+            compressedUrl = './Data/Images/Green4x4PVR.ktx';
+        } else {
+            return;
+        }
+
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image :  compressedUrl
+                }
+            }
+        });
+        renderMaterial(material);
+    });
+
+    it('creates a material with an crn compressed image uniform', function () {
+        var context = scene.context;
+        if (!context.s3tc) {
+            return;
+        }
+
+        var compressedUrl = './Data/Images/Green4x4.crn';
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image :  compressedUrl
+                }
+            }
+        });
+        renderMaterial(material);
+    });
+
     it('creates a material with a cube map uniform', function() {
         var material = new Material({
             strict : true,
@@ -489,8 +545,9 @@ defineSuite([
             color : new Color(0.0, 1.0, 0.0, 1.0)
         });
 
-        var pixel = renderMaterial(material1);
-        expect(pixel).toEqual([0, 255, 0, 255]);
+        renderMaterial(material1, false, function(rgba) {
+            expect(rgba).toEqual([0, 255, 0, 255]);
+        });
     });
 
     it('create multiple materials from the same type', function() {
@@ -504,10 +561,12 @@ defineSuite([
 
         expect(material1.shaderSource).toEqual(material2.shaderSource);
 
-        var pixel = renderMaterial(material2);
-        expect(pixel).toEqual([255, 0, 0, 255]);
-        pixel = renderMaterial(material1, true);
-        expect(pixel).toEqual([0, 255, 0, 255]);
+        renderMaterial(material2, false, function(rgba) {
+            expect(rgba).toEqual([255, 0, 0, 255]);
+        });
+        renderMaterial(material1, true, function(rgba) {
+            expect(rgba).toEqual([0, 255, 0, 255]);
+        });
     });
 
     it('create material with sub-materials of the same type', function() {
@@ -533,8 +592,9 @@ defineSuite([
             }
         });
 
-        var pixel = renderMaterial(material);
-        expect(pixel).toEqual([0, 255, 255, 255]);
+        renderMaterial(material, false, function(rgba) {
+            expect(rgba).toEqual([0, 255, 255, 255]);
+        });
     });
 
     it('throws with source and components in same template', function () {

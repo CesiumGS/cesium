@@ -2,7 +2,7 @@
 define([
         '../Core/Cartesian3',
         '../Core/Matrix4',
-        './WebGLConstants'
+        '../Core/WebGLConstants'
     ], function(
         Cartesian3,
         Matrix4,
@@ -75,7 +75,7 @@ define([
          * // Scale the window coordinate components to [0, 1] by dividing
          * // by the viewport's width and height.
          * vec2 v = gl_FragCoord.xy / czm_viewport.zw;
-         * 
+         *
          * @see Context#getViewport
          */
         czm_viewport : new AutomaticUniform({
@@ -108,7 +108,7 @@ define([
          *
          * // Example
          * gl_Position = czm_viewportOrthographic * vec4(windowPosition, 0.0, 1.0);
-         * 
+         *
          * @see UniformState#viewportOrthographic
          * @see czm_viewport
          * @see czm_viewportTransformation
@@ -150,7 +150,7 @@ define([
          * vec4 q = czm_modelViewProjection * positionMC;               // model to clip coordinates
          * q.xyz /= q.w;                                                // clip to normalized device coordinates (ndc)
          * q.xyz = (czm_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // ndc to window coordinates
-         * 
+         *
          * @see UniformState#viewportTransformation
          * @see czm_viewport
          * @see czm_viewportOrthographic
@@ -204,7 +204,7 @@ define([
          *
          * // Example
          * vec4 worldPosition = czm_model * modelPosition;
-         * 
+         *
          * @see UniformState#model
          * @see czm_inverseModel
          * @see czm_modelView
@@ -232,7 +232,7 @@ define([
          *
          * // Example
          * vec4 modelPosition = czm_inverseModel * worldPosition;
-         * 
+         *
          * @see UniformState#inverseModel
          * @see czm_model
          * @see czm_inverseModelView
@@ -259,7 +259,7 @@ define([
          *
          * // Example
          * vec4 eyePosition = czm_view * worldPosition;
-         * 
+         *
          * @see UniformState#view
          * @see czm_viewRotation
          * @see czm_modelView
@@ -292,7 +292,7 @@ define([
          *
          * // Example
          * vec4 eyePosition3D = czm_view3D * worldPosition3D;
-         * 
+         *
          * @see UniformState#view3D
          * @see czm_view
          */
@@ -318,7 +318,7 @@ define([
          *
          * // Example
          * vec3 eyeVector = czm_viewRotation * worldVector;
-         * 
+         *
          * @see UniformState#viewRotation
          * @see czm_view
          * @see czm_inverseView
@@ -349,7 +349,7 @@ define([
          *
          * // Example
          * vec3 eyeVector = czm_viewRotation3D * worldVector;
-         * 
+         *
          * @see UniformState#viewRotation3D
          * @see czm_viewRotation
          */
@@ -375,7 +375,7 @@ define([
          *
          * // Example
          * vec4 worldPosition = czm_inverseView * eyePosition;
-         * 
+         *
          * @see UniformState#inverseView
          * @see czm_view
          * @see czm_inverseNormal
@@ -405,7 +405,7 @@ define([
          *
          * // Example
          * vec4 worldPosition = czm_inverseView3D * eyePosition;
-         * 
+         *
          * @see UniformState#inverseView3D
          * @see czm_inverseView
          */
@@ -431,7 +431,7 @@ define([
          *
          * // Example
          * vec4 worldVector = czm_inverseViewRotation * eyeVector;
-         * 
+         *
          * @see UniformState#inverseView
          * @see czm_view
          * @see czm_viewRotation
@@ -462,7 +462,7 @@ define([
          *
          * // Example
          * vec4 worldVector = czm_inverseViewRotation3D * eyeVector;
-         * 
+         *
          * @see UniformState#inverseView3D
          * @see czm_inverseViewRotation
          */
@@ -489,7 +489,7 @@ define([
          *
          * // Example
          * gl_Position = czm_projection * eyePosition;
-         * 
+         *
          * @see UniformState#projection
          * @see czm_viewProjection
          * @see czm_modelViewProjection
@@ -518,7 +518,7 @@ define([
          *
          * // Example
          * vec4 eyePosition = czm_inverseProjection * clipPosition;
-         * 
+         *
          * @see UniformState#inverseProjection
          * @see czm_projection
          */
@@ -558,7 +558,7 @@ define([
          *
          * // Example
          * gl_Position = czm_infiniteProjection * eyePosition;
-         * 
+         *
          * @see UniformState#infiniteProjection
          * @see czm_projection
          * @see czm_modelViewInfiniteProjection
@@ -591,7 +591,7 @@ define([
          *
          * // The above is equivalent to, but more efficient than:
          * vec4 eyePosition = czm_view * czm_model * modelPosition;
-         * 
+         *
          * @see UniformState#modelView
          * @see czm_model
          * @see czm_view
@@ -629,7 +629,7 @@ define([
          *
          * // The above is equivalent to, but more efficient than:
          * vec4 eyePosition = czm_view3D * czm_model * modelPosition;
-         * 
+         *
          * @see UniformState#modelView3D
          * @see czm_modelView
          */
@@ -689,7 +689,7 @@ define([
          *
          * // Example
          * vec4 modelPosition = czm_inverseModelView * eyePosition;
-         * 
+         *
          * @see UniformState#inverseModelView
          * @see czm_modelView
          */
@@ -718,7 +718,7 @@ define([
          *
          * // Example
          * vec4 modelPosition = czm_inverseModelView3D * eyePosition;
-         * 
+         *
          * @see UniformState#inverseModelView
          * @see czm_inverseModelView
          * @see czm_modelView3D
@@ -749,7 +749,7 @@ define([
          *
          * // The above is equivalent to, but more efficient than:
          * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
-         * 
+         *
          * @see UniformState#viewProjection
          * @see czm_view
          * @see czm_projection
@@ -779,7 +779,7 @@ define([
          *
          * // Example
          * vec4 worldPosition = czm_inverseViewProjection * clipPosition;
-         * 
+         *
          * @see UniformState#inverseViewProjection
          * @see czm_viewProjection
          */
@@ -809,7 +809,7 @@ define([
          *
          * // The above is equivalent to, but more efficient than:
          * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
-         * 
+         *
          * @see UniformState#modelViewProjection
          * @see czm_model
          * @see czm_view
@@ -842,7 +842,7 @@ define([
          *
          * // Example
          * vec4 modelPosition = czm_inverseModelViewProjection * clipPosition;
-         * 
+         *
          * @see UniformState#modelViewProjection
          * @see czm_modelViewProjection
          */
@@ -909,7 +909,7 @@ define([
          *
          * // The above is equivalent to, but more efficient than:
          * gl_Position = czm_infiniteProjection * czm_view * czm_model * modelPosition;
-         * 
+         *
          * @see UniformState#modelViewInfiniteProjection
          * @see czm_model
          * @see czm_view
@@ -941,7 +941,7 @@ define([
          *
          * // Example
          * vec3 eyeNormal = czm_normal * normal;
-         * 
+         *
          * @see UniformState#normal
          * @see czm_inverseNormal
          * @see czm_modelView
@@ -975,7 +975,7 @@ define([
          *
          * // Example
          * vec3 eyeNormal = czm_normal3D * normal;
-         * 
+         *
          * @see UniformState#normal3D
          * @see czm_normal
          */
@@ -1002,7 +1002,7 @@ define([
          *
          * // Example
          * vec3 normalMC = czm_inverseNormal * normalEC;
-         * 
+         *
          * @see UniformState#inverseNormal
          * @see czm_normal
          * @see czm_modelView
@@ -1035,7 +1035,7 @@ define([
          *
          * // Example
          * vec3 normalMC = czm_inverseNormal3D * normalEC;
-         * 
+         *
          * @see UniformState#inverseNormal3D
          * @see czm_inverseNormal
          */
@@ -1079,7 +1079,7 @@ define([
          *
          * // Example
          * float frustumLength = czm_entireFrustum.y - czm_entireFrustum.x;
-         * 
+         *
          * @see UniformState#entireFrustum
          * @see czm_currentFrustum
          */
@@ -1106,7 +1106,7 @@ define([
          *
          * // Example
          * float frustumLength = czm_currentFrustum.y - czm_currentFrustum.x;
-         * 
+         *
          * @see UniformState#currentFrustum
          * @see czm_entireFrustum
          */
@@ -1143,7 +1143,7 @@ define([
          * @example
          * // GLSL declaration
          * uniform vec3 czm_sunPositionWC;
-         * 
+         *
          * @see UniformState#sunPositionWC
          * @see czm_sunPositionColumbusView
          * @see czm_sunDirectionWC
@@ -1166,7 +1166,7 @@ define([
          * @example
          * // GLSL declaration
          * uniform vec3 czm_sunPositionColumbusView;
-         * 
+         *
          * @see UniformState#sunPositionColumbusView
          * @see czm_sunPositionWC
          */
@@ -1192,7 +1192,7 @@ define([
          *
          * // Example
          * float diffuse = max(dot(czm_sunDirectionEC, normalEC), 0.0);
-         * 
+         *
          * @see UniformState#sunDirectionEC
          * @see czm_moonDirectionEC
          * @see czm_sunDirectionWC
@@ -1216,7 +1216,7 @@ define([
          * @example
          * // GLSL declaration
          * uniform vec3 czm_sunDirectionWC;
-         * 
+         *
          * @see UniformState#sunDirectionWC
          * @see czm_sunPositionWC
          * @see czm_sunDirectionEC
@@ -1243,7 +1243,7 @@ define([
          *
          * // Example
          * float diffuse = max(dot(czm_moonDirectionEC, normalEC), 0.0);
-         * 
+         *
          * @see UniformState#moonDirectionEC
          * @see czm_sunDirectionEC
          */
@@ -1267,7 +1267,7 @@ define([
          * @example
          * // GLSL declaration
          * uniform vec3 czm_encodedCameraPositionMCHigh;
-         * 
+         *
          * @see czm_encodedCameraPositionMCLow
          * @see czm_modelViewRelativeToEye
          * @see czm_modelViewProjectionRelativeToEye
@@ -1292,7 +1292,7 @@ define([
          * @example
          * // GLSL declaration
          * uniform vec3 czm_encodedCameraPositionMCLow;
-         * 
+         *
          * @see czm_encodedCameraPositionMCHigh
          * @see czm_modelViewRelativeToEye
          * @see czm_modelViewProjectionRelativeToEye
@@ -1381,7 +1381,7 @@ define([
          * {
          *     eyeHeightSq = czm_eyeHeight2D.y;
          * }
-         * 
+         *
          * @see czm_sceneMode2D
          * @see czm_sceneModeColumbusView
          * @see czm_sceneMode3D
@@ -1433,7 +1433,7 @@ define([
          *
          * // Example
          * vec3 pseudoFixed = czm_temeToPseudoFixed * teme;
-         * 
+         *
          * @see UniformState#temeToPseudoFixedMatrix
          * @see Transforms.computeTemeToPseudoFixedMatrix
          */
@@ -1475,6 +1475,40 @@ define([
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.fogDensity;
+            }
+        }),
+
+         /**
+         * An automatic GLSL uniform representing the splitter position to use when rendering imagery layers with a splitter.
+         * This will be in the range 0.0 to 1.0 with 0.0 being the far left of the viewport and 1.0 being the far right of the viewport.
+         *
+         * @alias czm_imagerySplitPosition
+         * @glslUniform
+         *
+         *
+         * @example
+         * // GLSL declaration
+         * uniform float czm_imagerySplitPosition;
+         */
+        czm_imagerySplitPosition : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.imagerySplitPosition;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform scalar representing the geometric tolerance per meter
+         *
+         * @alias czm_geometricToleranceOverMeter
+         * @glslUniform
+         */
+        czm_geometricToleranceOverMeter : new AutomaticUniform({
+            size: 1,
+            datatype: WebGLConstants.FLOAT,
+            getValue: function(uniformState) {
+                return uniformState.geometricToleranceOverMeter;
             }
         })
     };

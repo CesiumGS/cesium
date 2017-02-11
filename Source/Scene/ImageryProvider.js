@@ -3,15 +3,19 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/loadCRN',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
+        '../Core/loadKTX',
         '../Core/throttleRequestByServer'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
+        loadCRN,
         loadImage,
         loadImageViaBlob,
+        loadKTX,
         throttleRequestByServer) {
     'use strict';
 
@@ -294,11 +298,15 @@ define([
      */
     ImageryProvider.prototype.pickFeatures = DeveloperError.throwInstantiationError;
 
+    var ktxRegex = /\.ktx$/i;
+    var crnRegex = /\.crn$/i;
+
     /**
      * Loads an image from a given URL.  If the server referenced by the URL already has
      * too many requests pending, this function will instead return undefined, indicating
      * that the request should be retried later.
      *
+     * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
      * @param {String} url The URL of the image.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
@@ -306,7 +314,11 @@ define([
      *          Image or a Canvas DOM object.
      */
     ImageryProvider.loadImage = function(imageryProvider, url) {
-        if (defined(imageryProvider.tileDiscardPolicy)) {
+        if (ktxRegex.test(url)) {
+            return throttleRequestByServer(url, loadKTX);
+        } else if (crnRegex.test(url)) {
+            return throttleRequestByServer(url, loadCRN);
+        } else if (defined(imageryProvider.tileDiscardPolicy)) {
             return throttleRequestByServer(url, loadImageViaBlob);
         }
         return throttleRequestByServer(url, loadImage);

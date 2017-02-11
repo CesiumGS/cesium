@@ -27,6 +27,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -34,7 +35,6 @@ define([
         '../ThirdParty/when',
         './BatchTable',
         './CullFace',
-        './Pass',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
@@ -67,6 +67,7 @@ define([
         BufferUsage,
         ContextLimits,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -74,7 +75,6 @@ define([
         when,
         BatchTable,
         CullFace,
-        Pass,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
@@ -608,7 +608,7 @@ define([
         }
 
         var attributesLength = attributes.length;
-        var batchTable = new BatchTable(attributes, numberOfInstances);
+        var batchTable = new BatchTable(context, attributes, numberOfInstances);
 
         for (i = 0; i < numberOfInstances; ++i) {
             var instance = instances[i];
@@ -889,10 +889,10 @@ define([
         }
 
         var containsTangent = vertexShaderSource.search(/attribute\s+vec3\s+tangent;/g) !== -1;
-        var containsBinormal = vertexShaderSource.search(/attribute\s+vec3\s+binormal;/g) !== -1;
+        var containsBitangent = vertexShaderSource.search(/attribute\s+vec3\s+bitangent;/g) !== -1;
 
         var numComponents = containsSt && containsNormal ? 2.0 : 1.0;
-        numComponents += containsTangent || containsBinormal ? 1 : 0;
+        numComponents += containsTangent || containsBitangent ? 1 : 0;
 
         var type = (numComponents > 1) ? 'vec' + numComponents : 'float';
 
@@ -908,12 +908,12 @@ define([
             decode += '    st = czm_decompressTextureCoordinates(' + stComponent + ');\n';
         }
 
-        if (containsNormal && containsTangent && containsBinormal) {
+        if (containsNormal && containsTangent && containsBitangent) {
             globalDecl +=
                 'vec3 normal;\n' +
                 'vec3 tangent;\n' +
-                'vec3 binormal;\n';
-            decode += '    czm_octDecode(' + attributeName + '.' + (containsSt ? 'yz' : 'xy') + ', normal, tangent, binormal);\n';
+                'vec3 bitangent;\n';
+            decode += '    czm_octDecode(' + attributeName + '.' + (containsSt ? 'yz' : 'xy') + ', normal, tangent, bitangent);\n';
         } else {
             if (containsNormal) {
                 globalDecl += 'vec3 normal;\n';
@@ -925,9 +925,9 @@ define([
                 decode += '    tangent = czm_octDecode(' + attributeName + '.' + (containsSt && containsNormal ? 'z' : 'y') + ');\n';
             }
 
-            if (containsBinormal) {
-                globalDecl += 'vec3 binormal;\n';
-                decode += '    binormal = czm_octDecode(' + attributeName + '.' + (containsSt && containsNormal ? 'z' : 'y') + ');\n';
+            if (containsBitangent) {
+                globalDecl += 'vec3 bitangent;\n';
+                decode += '    bitangent = czm_octDecode(' + attributeName + '.' + (containsSt && containsNormal ? 'z' : 'y') + ');\n';
             }
         }
 
@@ -935,7 +935,7 @@ define([
         modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+normal;/g, '');
         modifiedVS = modifiedVS.replace(/attribute\s+vec2\s+st;/g, '');
         modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, '');
-        modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+binormal;/g, '');
+        modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+bitangent;/g, '');
         modifiedVS = ShaderSource.replaceMain(modifiedVS, 'czm_non_compressed_main');
         var compressedMain =
             'void main() \n' +

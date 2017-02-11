@@ -72,6 +72,8 @@ define([
          *
          * @type {Number}
          * @constant
+         *
+         * @deprecated
          */
         RIGHT_DOUBLE_CLICK : 8,
 
@@ -104,6 +106,8 @@ define([
          *
          * @type {Number}
          * @constant
+         *
+         * @deprecated
          */
         MIDDLE_DOUBLE_CLICK : 13,
 
