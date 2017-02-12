@@ -1156,14 +1156,16 @@ define([
 
             if (defined(polygon)) {
                 wall.fill = polygon.fill;
-                wall.outline = polygon.outline;
                 wall.material = polygon.material;
             }
 
+            //Always outline walls so they show up in 2D.
+            wall.outline = true;
             if (defined(polyline)) {
-                wall.outline = true;
                 wall.outlineColor = defined(polyline.material) ? polyline.material.color : Color.WHITE;
                 wall.outlineWidth = polyline.width;
+            } else if (defined(polygon)) {
+                wall.outlineColor = defined(polygon.material) ? polygon.material.color : Color.WHITE;
             }
         } else {
             if (dataSource._clampToGround && !canExtrude && tessellate) {
