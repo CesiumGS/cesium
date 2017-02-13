@@ -2,7 +2,6 @@
 define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
-        '../Core/defineProperties',
         '../Core/freezeObject',
         './Cesium3DTileOptimizationHint',
         './TileOrientedBoundingBox',
@@ -10,7 +9,6 @@ define([
     ], function(
         Cartesian3,
         defaultValue,
-        defineProperties,
         freezeObject,
         Cesium3DTileOptimizationHint,
         TileOrientedBoundingBox,
