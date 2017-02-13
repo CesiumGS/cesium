@@ -20,6 +20,7 @@ Change Log
 * Improved `RectangleGeometry` by skipping unecessary logic in the code [#4948](https://github.com/AnalyticalGraphicsInc/cesium/pull/4948)
 * Added `Transforms.localFrameToFixedFrameGenerator` to generate a function that computes a 4x4 transformation matrix from a local reference frame to fixed reference frame.
 * Fixed an issue where the camera would zoom past an object and flip to the other side of the globe. [#4967](https://github.com/AnalyticalGraphicsInc/cesium/pull/4967) and [#4982](https://github.com/AnalyticalGraphicsInc/cesium/pull/4982)
+* Add support for `Scene.pickPosition` in Columbus view and 2D. [#4990](https://github.com/AnalyticalGraphicsInc/cesium/pull/4990)
 
 ### 1.30 - 2017-02-01
 
