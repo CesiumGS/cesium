@@ -49,6 +49,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Ákos Maróy](https://github.com/akosmaroy)
 * [Raytheon Intelligence and Information Systems](http://www.raytheon.com/)
    * [David Hudlow](https://github.com/DavidHudlow)
+   * [Ashley Mort](https://github.com/mortac8)
 * [Evax Software](http://www.evax.fr)
    * [Evax Software](https://github.com/evax)
 * [Aviture](http://aviture.us.com)
