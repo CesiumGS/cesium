@@ -23,8 +23,10 @@ define([
         '../Core/RequestScheduler',
         '../Core/SphereOutlineGeometry',
         '../ThirdParty/Uri',
+        './Cesium3DTileChildrenVisibility',
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
+        './Cesium3DTileOptimizations',
         './Cesium3DTileRefine',
         './Empty3DTileContent',
         './PerInstanceColorAppearance',
@@ -57,8 +59,10 @@ define([
         RequestScheduler,
         SphereOutlineGeometry,
         Uri,
+        Cesium3DTileChildrenVisibility,
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
+        Cesium3DTileOptimizations,
         Cesium3DTileRefine,
         Empty3DTileContent,
         PerInstanceColorAppearance,
@@ -311,9 +315,11 @@ define([
         /**
          * Flag to mark children visibility
          *
+         * @type {Cesium3DTileChildrenVisibility}
+         * 
          * @private
          */
-        this.childrenVisibility = 1;
+        this.childrenVisibility = Cesium3DTileChildrenVisibility.VISIBLE;
 
         /**
          * The last frame number the tile was selected in.
@@ -339,7 +345,7 @@ define([
         this._debugColor = new Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
 
-        this._optimizations = clone(tileset._optimizations);
+        this._optimizations = new Cesium3DTileOptimizations();
     }
 
     defineProperties(Cesium3DTile.prototype, {
