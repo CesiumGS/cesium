@@ -2,7 +2,13 @@
 
 1. Install [VSCode](https://code.visualstudio.com/).
 
-2. Click `File -> Open Folder...` and open the Cesium root folder.
+2. If you haven't already, install `gulp-cli` globally, with
+`npm install -g gulp-cli` from a bash prompt.  This does not require
+administrative rights, and places a `gulp` shim into your path that will
+invoke a copy of gulp from the local project folder.  This is needed for
+VSCode's build tasks to work with Cesium.
+
+3. Click `File -> Open Folder...` and open the Cesium root folder.
 
 ## Shell Integration (optional)
 
@@ -49,7 +55,8 @@ syntax highlighting for Cesium's shader code.
 
 You can launch any of Cesium's npm tasks from within VSCode by pressing
 CTRL-P and typing `task ` (with a trailing space).  Autocomplete will
-offer the list of npm tasks for you to run.
+offer the list of npm tasks for you to run.  The first time you do this,
+allow a moment for it to read the available tasks from the gulpfile.
 
 You can also jump to any source file with the same CTRL-P keypress
 followed by the name of the file.
@@ -58,13 +65,12 @@ followed by the name of the file.
 
 Cesium has a number of GLSL shaders and auto-generated files that must be
 built before Cesium can be used.  The simplest way in VSCode is to type
-`CTRL-P` `task build` to trigger a build.
+`CTRL-P` `task build` to trigger a single build.
 
-There is also a `task build-watch`, but this leaves a little spinner running
-in the status bar at the bottom, so is not recommended.  Instead, you can use
-the integrated shell (CTRL-backtick) and type `npm run build-watch` to start
-the build watcher task, then use CTRL-SHIFT-backtick to open up an additional
-integrated shell that is available for separate commands while the build watcher
-task is still running.  Keep in mind that this will quietly terminate when
+You can also start the build watcher with `CTRL-P` `task build-watch`.  This
+leaves a watcher running until you exit VSCode, that will automatically
+update any shaders or auto-generated files to reflect changes to Cesium as
+you save them.
+
+Keep in mind that `build-watch` will quietly terminate when
 you quit VSCode, so should be restarted manually on next launch.
-
