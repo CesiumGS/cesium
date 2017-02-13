@@ -1,131 +1,32 @@
 {
-    // To launch one of these tasks in Visual Studio Code,
-    // press CTRL+P and type "task ", then select a task
-    // from the auto-complete list.
-    //
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "0.1.0",
-    "command": "npm",
+    "command": "gulp",
     "isShellCommand": true,
-    "showOutput": "always",
-    "suppressTaskName": true,
+    "args": [
+        "--no-color"
+    ],
     "tasks": [
         {
-            "taskName": "start",
-            "args": ["run", "start"]
-        },
-        {
-            "taskName": "startPublic",
-            "args": ["run", "startPublic"]
-        },
-        {
             "taskName": "build",
-            "args": ["run", "build"]
-        },
-        {
-            "taskName": "build-watch",
-            "args": ["run", "build-watch"]
-        },
-        {
-            "taskName": "buildApps",
-            "args": ["run", "buildApps"]
-        },
-        {
-            "taskName": "clean",
-            "args": ["run", "clean"]
-        },
-        {
-            "taskName": "cloc",
-            "args": ["run", "cloc"]
-        },
-        {
-            "taskName": "combine",
-            "args": ["run", "combine"]
-        },
-        {
-            "taskName": "combineRelease",
-            "args": ["run", "combineRelease"]
-        },
-        {
-            "taskName": "requirejs",
-            "args": ["run", "requirejs"]
-        },
-        {
-            "taskName": "generateDocumentation",
-            "args": ["run", "generateDocumentation"]
-        },
-        {
-            "taskName": "instrumentForCoverage",
-            "args": ["run", "instrumentForCoverage"]
-        },
-        {
-            "taskName": "jsHint",
-            "args": ["run", "jsHint"]
-        },
-        {
-            "taskName": "jsHint-watch",
-            "args": ["run", "jsHint-watch"]
-        },
-        {
-            "taskName": "makeZipFile",
-            "args": ["run", "makeZipFile"]
-        },
-        {
-            "taskName": "minify",
-            "args": ["run", "minify"]
-        },
-        {
-            "taskName": "minifyRelease",
-            "args": ["run", "minifyRelease"]
-        },
-        {
-            "taskName": "release",
-            "args": ["run", "release"]
+            "args": [],
+            "isBuildCommand": true,
+            "isWatching": false,
+            "problemMatcher": [
+                "$lessCompile",
+                "$tsc",
+                "$jshint"
+            ]
         },
         {
             "taskName": "test",
-            "args": ["run", "test"]
+            "args": [],
+            "isTestCommand": true
         },
         {
-            "taskName": "test-all",
-            "args": ["run", "test-all"]
-        },
-        {
-            "taskName": "test-webgl",
-            "args": ["run", "test-webgl"]
-        },
-        {
-            "taskName": "test-non-webgl",
-            "args": ["run", "test-non-webgl"]
-        },
-        {
-            "taskName": "test-webgl-validation",
-            "args": ["run", "test-webgl-validation"]
-        },
-        {
-            "taskName": "test-release",
-            "args": ["run", "test-release"]
-        },
-        {
-            "taskName": "generateStubs",
-            "args": ["run", "generateStubs"]
-        },
-        {
-            "taskName": "sortRequires",
-            "args": ["run", "sortRequires"]
-        },
-        {
-            "taskName": "deploy-s3",
-            "args": ["run", "deploy-s3"]
-        },
-        {
-            "taskName": "deploy-status",
-            "args": ["run", "deploy-status"]
-        },
-        {
-            "taskName": "deploy-set-version",
-            "args": ["run", "deploy-set-version"]
+            "taskName": "build-watch",
+            "isWatching": true
         }
     ]
 }
