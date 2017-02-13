@@ -307,11 +307,9 @@ define([
         for (i = 0; i < length; ++i) {
             if (vaAttributes[i].instanceDivisor > 0) {
                 hasInstancedAttributes = true;
-                break;
             }
             if (defined(vaAttributes[i].value)) {
                 hasConstantAttributes = true;
-                break;
             }
         }
 
