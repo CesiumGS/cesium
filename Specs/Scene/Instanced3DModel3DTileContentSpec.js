@@ -49,6 +49,7 @@ defineSuite([
     });
 
     beforeEach(function() {
+        scene.morphTo3D(0.0);
         setCamera(centerLongitude, centerLatitude);
     });
 
@@ -211,10 +212,43 @@ defineSuite([
 
             // Update tile transform
             tileset._root.transform = newTransform;
-            scene.renderForSpecs();
 
             // Move the camera to the new location
             setCamera(newLongitude, newLatitude);
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders in 2D', function() {
+        return Cesium3DTilesTester.loadTileset(scene, gltfExternalUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+            tileset.maximumScreenSpaceError = 2.0;
+            scene.morphTo2D(0.0);
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders in 2D with tile transform', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withTransformUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+            tileset.maximumScreenSpaceError = 2.0;
+            scene.morphTo2D(0.0);
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders in CV', function() {
+        return Cesium3DTilesTester.loadTileset(scene, gltfExternalUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+            scene.morphToColumbusView(0.0);
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders in CV with tile transform', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withTransformUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+            scene.morphToColumbusView(0.0);
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });

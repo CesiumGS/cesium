@@ -243,7 +243,7 @@ define([
 
         var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
-        
+
         var gltfFormat = view.getUint32(byteOffset, true);
         //>>includeStart('debug', pragmas.debug);
         if (gltfFormat !== 1 && gltfFormat !== 0) {
@@ -300,9 +300,6 @@ define([
         var collectionOptions = {
             instances : new Array(instancesLength),
             batchTable : this.batchTable,
-            boundingVolume : this._tile.contentBoundingVolume.boundingVolume,
-            center : undefined,
-            transform : this._tile.computedTransform,
             cull : false, // Already culled by 3D Tiles
             url : undefined,
             requestType : RequestType.TILES3D,
@@ -321,8 +318,6 @@ define([
         }
 
         var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');
-
-        var center = new Cartesian3();
 
         var instances = collectionOptions.instances;
         var instancePosition = new Cartesian3();
@@ -364,7 +359,6 @@ define([
             }
             Cartesian3.unpack(position, 0, instancePosition);
             instanceTranslationRotationScale.translation = instancePosition;
-            Cartesian3.add(center, instancePosition, center);
 
             // Get the instance rotation
             var normalUp = featureTable.getProperty('NORMAL_UP', i, ComponentDatatype.FLOAT, 3);
@@ -443,9 +437,6 @@ define([
             };
         }
 
-        center = Cartesian3.divideByScalar(center, instancesLength, center);
-        collectionOptions.center = center;
-
         var modelInstanceCollection = new ModelInstanceCollection(collectionOptions);
         this._modelInstanceCollection = modelInstanceCollection;
         this.state = Cesium3DTileContentState.PROCESSING;
@@ -490,7 +481,7 @@ define([
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
         this.batchTable.update(tileset, frameState);
-        this._modelInstanceCollection.transform = this._tile.computedTransform;
+        this._modelInstanceCollection.modelMatrix = this._tile.computedTransform;
         this._modelInstanceCollection.shadows = this._tileset.shadows;
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
         this._modelInstanceCollection.update(frameState);
