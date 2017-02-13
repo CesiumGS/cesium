@@ -2699,7 +2699,20 @@ define([
     var scratchPackedDepth = new Cartesian4();
     var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
 
-    Scene.prototype._pickPosition = function(windowPosition, result) {
+    /**
+     * Returns the cartesian position reconstructed from the depth buffer and window position.
+     * The returned position is in world coordinates. Used internally by camera functions to
+     * prevent conversion to projected 2D coordinates and then back.
+     *
+     * @private
+     *
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Cartesian3} [result] The object on which to restore the result.
+     * @returns {Cartesian3} The cartesian position in world coordinates.
+     *
+     * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
+     */
+    Scene.prototype.pickPositionWorldCoordinates = function(windowPosition, result) {
         if (!this.useDepthPicking) {
             return undefined;
         }
@@ -2780,16 +2793,20 @@ define([
 
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
+     * <p>
+     * The position reconstructed from the depth buffer in 2D may be slightly different from those
+     * reconstructed in 3D and Columbus view. This is caused by the difference in the distribution
+     * of depth values of perspective and orthographic projection.
+     * </p>
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      * @param {Cartesian3} [result] The object on which to restore the result.
      * @returns {Cartesian3} The cartesian position.
      *
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
-     * @exception {DeveloperError} 2D is not supported. An orthographic projection matrix is not invertible.
      */
     Scene.prototype.pickPosition = function(windowPosition, result) {
-        result = this._pickPosition(windowPosition, result);
+        result = this.pickPositionWorldCoordinates(windowPosition, result);
         if (defined(result) && this.mode !== SceneMode.SCENE3D) {
             Cartesian3.fromElements(result.y, result.z, result.x, result);
 
