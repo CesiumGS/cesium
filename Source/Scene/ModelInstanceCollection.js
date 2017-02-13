@@ -69,6 +69,9 @@ define([
     /**
      * A 3D model instance collection. All instances reference the same underlying model, but have unique
      * per-instance properties like model matrix, pick id, etc.
+     * 
+     * Instances are rendered relative-to-center and for best results instances should be positioned close to one another.
+     * Otherwise there may be precision issues if, for example, instances are placed on opposite sides of the globe.
      *
      * @alias ModelInstanceCollection
      * @constructor
