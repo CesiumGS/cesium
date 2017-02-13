@@ -302,6 +302,9 @@ define([
         this._pickDepths = [];
         this._debugGlobeDepths = [];
 
+        this._pickDepthPassState = undefined;
+        this._pickDepthFramebuffer = undefined;
+
         this._transitioner = new SceneTransitioner(this);
 
         this._renderError = new Event();
@@ -2706,9 +2709,8 @@ define([
         return object;
     };
 
-    var scratchPickDepthPassState;
-
-    function renderForPickDepth(scene, drawingBufferPosition) {
+    function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
+        // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
         var context = scene._context;
         var us = context.uniformState;
         var frameState = scene._frameState;
@@ -2720,9 +2722,9 @@ define([
 
         us.update(frameState);
 
-        var passState = scratchPickDepthPassState;
+        var passState = scene._pickDepthPassState;
         if (!defined(passState)) {
-            passState = scratchPickDepthPassState = new PassState(context);
+            passState = scene._pickDepthPassState = new PassState(context);
             passState.scissorTest = {
                 enabled : true,
                 rectangle : new BoundingRectangle()
@@ -2733,7 +2735,7 @@ define([
 
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
-	
+
         var framebuffer = scene._pickDepthFramebuffer;
         var pickDepthFBWidth = scene._pickDepthFramebufferWidth;
         var pickDepthFBHeight = scene._pickDepthFramebufferHeight;
@@ -2761,13 +2763,13 @@ define([
         passState.scissorTest.rectangle.y = height - drawingBufferPosition.y;
         passState.scissorTest.rectangle.width = 1;
         passState.scissorTest.rectangle.height = 1;
-	
+
         updateAndExecuteCommands(scene, passState, scratchColorZero);
         resolveFramebuffers(scene, passState);
 
         context.endFrame();
     }
-	
+
     var scratchPackedDepth = new Cartesian4();
     var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
 
@@ -2800,7 +2802,7 @@ define([
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
         if (this.pickTranslucentDepth) {
-            renderForPickDepth(this, drawingBufferPosition);
+            renderTranslucentDepthForPick(this, drawingBufferPosition);
         }
         drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
 
