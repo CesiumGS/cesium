@@ -864,12 +864,6 @@ defineSuite([
 
                 scene.renderForSpecs();
 
-                expect(root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
-
-                expect(wrapperTile.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(wrapperTile.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
-
                 expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
                 
@@ -878,7 +872,6 @@ defineSuite([
                 expect(child_root.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(child_root.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
 
-                expect(stats.visited).toEqual(3);
                 expect(tileset._selectedTiles.length).toEqual(0);
                 expect(child_root.selected).toBe(false);
             });
@@ -890,6 +883,7 @@ defineSuite([
                 var root = tileset._root;
                 var wrapperTile = root.children[0];
                 var child_root = wrapperTile.children[0];
+                child_root.geometricError = 240;
 
                 scene.camera.setView({
                     destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 50),
@@ -902,12 +896,6 @@ defineSuite([
                 
                 scene.renderForSpecs();
 
-                expect(root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
-
-                expect(wrapperTile.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(wrapperTile.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
-
                 expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
                 
@@ -916,7 +904,6 @@ defineSuite([
                 expect(child_root.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(child_root.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
 
-                expect(stats.visited).toEqual(7);
                 expect(child_root.selected).toBe(false);
                 expect(child_root.replaced).toBe(true);
             });
@@ -940,12 +927,6 @@ defineSuite([
                 
                 child_root.geometricError = 0;
                 scene.renderForSpecs();
-                
-                expect(root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
-
-                expect(wrapperTile.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(wrapperTile.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
 
                 expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
@@ -955,13 +936,12 @@ defineSuite([
                 expect(child_root.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(child_root.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 
-                expect(stats.visited).toEqual(3);
                 expect(child_root.selected).toBe(true);
                 expect(child_root.replaced).toBe(false);
             });
         });
 
-        it('does not select visibile tiles with visible children failing request volumes', function() {
+        it('does select visibile tiles with visible children failing request volumes', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 scene.camera.setView({
                     destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 100),
@@ -972,11 +952,23 @@ defineSuite([
                     }
                 });
 
+                var stats = tileset._statistics;
+                var root = tileset._root;
+                var child_root = root.children[0];
+                child_root.geometricError = 0;
+
                 scene.renderForSpecs();
 
-                var stats = tileset._statistics;
-                expect(stats.visited).toEqual(2);
+                expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
+                
+                expect(child_root.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(child_root.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(child_root.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(child_root.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+
                 expect(tileset._selectedTiles.length).toEqual(1);
+                expect(child_root.selected).toBe(true);
             });
         });
 
@@ -991,11 +983,29 @@ defineSuite([
                     }
                 });
 
+                var stats = tileset._statistics;
+                var root = tileset._root;
+                var child_root = root.children[0];
+                child_root.geometricError = 0;
+
                 scene.renderForSpecs();
 
-                var stats = tileset._statistics;
-                expect(stats.visited).toEqual(6);
+                expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
+                
+                expect(child_root.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(child_root.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(child_root.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(child_root.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+
+                expect(tileset._selectedTiles.length).toEqual(1);
+                expect(child_root.selected).toBe(true);
+
+                child_root.geometricError = 200;
+                scene.renderForSpecs();
                 expect(tileset._selectedTiles.length).toEqual(4);
+                expect(child_root.selected).toBe(false);
+                expect(child_root.replaced).toBe(true);
             });
         });
     });
