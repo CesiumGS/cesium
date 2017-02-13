@@ -55,7 +55,6 @@ var height = 50.0;
 function orientCamera(center, radius) {
     var controller = scene.screenSpaceCameraController;
     var r = Math.max(radius, camera.frustum.near);
-    controller.minimumZoomDistance = r * 0.5;
 
     var heading = Cesium.Math.toRadians(230.0);
     var pitch = Cesium.Math.toRadians(-20.0);

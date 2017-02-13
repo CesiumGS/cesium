@@ -69,7 +69,7 @@ define([
     /**
      * A 3D model instance collection. All instances reference the same underlying model, but have unique
      * per-instance properties like model matrix, pick id, etc.
-     * 
+     *
      * Instances are rendered relative-to-center and for best results instances should be positioned close to one another.
      * Otherwise there may be precision issues if, for example, instances are placed on opposite sides of the globe.
      *
@@ -217,6 +217,9 @@ define([
 
         return BoundingSphere.fromPoints(points);
     }
+
+    var scratchCartesian = new Cartesian3();
+    var scratchMatrix = new Matrix4();
 
     ModelInstanceCollection.prototype.expandBoundingSphere = function(instanceModelMatrix) {
         var translation = Matrix4.getTranslation(instanceModelMatrix, scratchCartesian);
@@ -884,41 +887,6 @@ define([
         }
     }
 
-    var swizzleMatrix = new Matrix4(
-        0.0, 0.0, 1.0, 0.0,
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    );
-
-    var scratchCartographic = new Cartographic();
-    var scratchCartesian = new Cartesian3();
-    var scratchCenter = new Cartesian3();
-    var scratchMatrix = new Matrix4();
-    var scratchRotation = new Matrix3();
-
-    function getRtcTransform2D(frameState, rtcTransform, result) {
-        var rtcCenter = Matrix4.getTranslation(rtcTransform, scratchCenter);
-
-        var projection = frameState.mapProjection;
-        var ellipsoid = projection.ellipsoid;
-
-        // Get the 2D Center
-        var cartographic = ellipsoid.cartesianToCartographic(rtcCenter, scratchCartographic);
-        var projectedPosition = projection.project(cartographic, scratchCartesian);
-        Cartesian3.fromElements(projectedPosition.z, projectedPosition.x, projectedPosition.y, projectedPosition);
-
-        // Assuming the instance are positioned in WGS84, invert the WGS84 transform to get the local transform and then convert to 2D
-        var fromENU = Transforms.eastNorthUpToFixedFrame(rtcCenter, ellipsoid, scratchMatrix);
-        var toENU = Matrix4.inverseTransformation(fromENU, scratchMatrix);
-        var rotation = Matrix4.getRotation(rtcTransform, scratchRotation);
-        var local = Matrix4.multiplyByMatrix3(toENU, rotation, scratchMatrix);
-        Matrix4.multiply(swizzleMatrix, local, result); // Swap x, y, z for 2D
-        Matrix4.setTranslation(result, projectedPosition, result); // Use the projected center
-
-        return result;
-    }
-
     ModelInstanceCollection.prototype.update = function(frameState) {
         if (!this.show) {
             return;
@@ -979,7 +947,7 @@ define([
             Matrix4.clone(modelMatrix, this._modelMatrix);
             var rtcTransform = Matrix4.multiplyByTranslation(this._modelMatrix, this._center, this._rtcTransform);
             if (this._mode !== SceneMode.SCENE3D) {
-                rtcTransform = getRtcTransform2D(frameState, rtcTransform, rtcTransform);
+                rtcTransform = Transforms.basisTo2D(frameState.mapProjection, rtcTransform, rtcTransform);
             }
             Matrix4.getTranslation(rtcTransform, this._boundingSphere.center);
         }
