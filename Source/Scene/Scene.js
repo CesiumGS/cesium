@@ -1459,7 +1459,7 @@ define([
         }
 
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
-                (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
+                (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8)))))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             createPotentiallyVisibleSet(scene);
         }
@@ -2248,7 +2248,7 @@ define([
 
         if (defined(scene._debugFrustumPlanes)) {
             scene._debugFrustumPlanes.update(frameState);
-        } 
+        }
     }
 
     function updateShadowMaps(scene) {

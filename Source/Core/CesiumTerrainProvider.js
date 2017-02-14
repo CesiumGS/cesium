@@ -531,10 +531,10 @@ define([
 
         var extensionList = [];
         if (this._requestVertexNormals && this._hasVertexNormals) {
-            extensionList.push(this._littleEndianExtensionSize ? "octvertexnormals" : "vertexnormals");
+            extensionList.push(this._littleEndianExtensionSize ? 'octvertexnormals' : 'vertexnormals');
         }
         if (this._requestWaterMask && this._hasWaterMask) {
-            extensionList.push("watermask");
+            extensionList.push('watermask');
         }
 
         function tileLoader(tileUrl) {
