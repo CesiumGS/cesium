@@ -74,6 +74,7 @@ define([
          * @private
          */
         this.batchTableJson = batchTableJson;
+
         /**
          * @private
          */
@@ -280,7 +281,7 @@ define([
                         }
 
                         // Store any information needed to access the binary data, including the typed array,
-                        // componentCount (e.g. a MAT4 would be 16), and the type used to pack and unpack (e.g. Matrix4).
+                        // componentCount (e.g. a VEC4 would be 4), and the type used to pack and unpack (e.g. Cartesian4).
                         binaryProperties[name] = {
                             typedArray : typedArray,
                             componentCount : componentCount,

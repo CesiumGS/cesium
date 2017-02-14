@@ -134,7 +134,7 @@ define([
         var backgroundEnabledExpression = defaultValue(styleJson.backgroundEnabled, DEFAULT_BACKGROUND_ENABLED);
 
         var color;
-        if (typeof(colorExpression) === 'string') {
+        if (typeof colorExpression === 'string') {
             color = new Expression(colorExpression);
         } else if (defined(colorExpression.conditions)) {
             color = new ConditionsExpression(colorExpression);
@@ -143,9 +143,9 @@ define([
         that._color = color;
 
         var show;
-        if (typeof(showExpression) === 'boolean') {
+        if (typeof showExpression === 'boolean') {
             show = new Expression(String(showExpression));
-        } else if (typeof(showExpression) === 'string') {
+        } else if (typeof showExpression === 'string') {
             show = new Expression(showExpression);
         } else if (defined(showExpression.conditions)) {
             show = new ConditionsExpression(showExpression);
@@ -154,9 +154,9 @@ define([
         that._show = show;
 
         var pointSize;
-        if (typeof(pointSizeExpression) === 'number') {
+        if (typeof pointSizeExpression === 'number') {
             pointSize = new Expression(String(pointSizeExpression));
-        } else if (typeof(pointSizeExpression) === 'string') {
+        } else if (typeof pointSizeExpression === 'string') {
             pointSize = new Expression(pointSizeExpression);
         } else if (defined(pointSizeExpression.conditions)) {
             pointSize = new ConditionsExpression(pointSizeExpression);

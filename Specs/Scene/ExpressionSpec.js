@@ -251,11 +251,13 @@ defineSuite([
 
         expression = new Expression('Infinity');
         expect(expression.evaluate(frameState, undefined)).toEqual(Infinity);
+    });
 
-        expression = new Expression('PI');
+    it('evaluates math constants', function() {
+        var expression = new Expression('Math.PI');
         expect(expression.evaluate(frameState, undefined)).toEqual(Math.PI);
 
-        expression = new Expression('E');
+        expression = new Expression('Math.E');
         expect(expression.evaluate(frameState, undefined)).toEqual(Math.E);
     });
 
@@ -595,6 +597,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws if vec2 has invalid argument', function() {
+        var expression = new Expression('vec2("1")');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates vec3', function() {
         var expression = new Expression('vec3(2.0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(2.0, 2.0, 2.0));
@@ -637,6 +646,13 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expression = new Expression('vec3(vec4(3.0, 4.0, 5.0, 6.0), 1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if vec3 has invalid argument', function() {
+        var expression = new Expression('vec3(1.0, "1.0", 2.0)');
         expect(function() {
             expression.evaluate(frameState, undefined);
         }).toThrowDeveloperError();
@@ -695,6 +711,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws if vec4 has invalid argument', function() {
+        var expression = new Expression('vec4(1.0, "2.0", 3.0, 4.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates vector with expressions as arguments', function() {
         var feature = new MockFeature();
         feature.addProperty('height', 2);
@@ -722,6 +745,20 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(3.0);
 
         expression = new Expression('vec4(1.0, 2.0, 3.0, 4.0).w');
+        expect(expression.evaluate(frameState, undefined)).toEqual(4.0);
+    });
+
+    it('evaluates vector properties (r, g, b, a)', function() {
+        var expression = new Expression('vec4(1.0, 2.0, 3.0, 4.0).r');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('vec4(1.0, 2.0, 3.0, 4.0).g');
+        expect(expression.evaluate(frameState, undefined)).toEqual(2.0);
+
+        expression = new Expression('vec4(1.0, 2.0, 3.0, 4.0).b');
+        expect(expression.evaluate(frameState, undefined)).toEqual(3.0);
+
+        expression = new Expression('vec4(1.0, 2.0, 3.0, 4.0).a');
         expect(expression.evaluate(frameState, undefined)).toEqual(4.0);
     });
 
@@ -753,12 +790,33 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(4.0);
     });
 
+    it('evaluates vector properties (["r"], ["g"], ["b"]. ["a"])', function() {
+        var expression = new Expression('vec4(1.0, 2.0, 3.0, 4.0)["r"]');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('vec4(1.0, 2.0, 3.0, 4.0)["g"]');
+        expect(expression.evaluate(frameState, undefined)).toEqual(2.0);
+
+        expression = new Expression('vec4(1.0, 2.0, 3.0, 4.0)["b"]');
+        expect(expression.evaluate(frameState, undefined)).toEqual(3.0);
+
+        expression = new Expression('vec4(1.0, 2.0, 3.0, 4.0)["a"]');
+        expect(expression.evaluate(frameState, undefined)).toEqual(4.0);
+    });
+
     it('evaluates unary not', function() {
         var expression = new Expression('!true');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
 
         expression = new Expression('!!true');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
+    });
+
+    it('throws if unary not takes invalid argument', function() {
+        var expression = new Expression('!"true"');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates unary negative', function() {
@@ -769,18 +827,23 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(5);
     });
 
+    it('throws if unary negative takes invalid argument', function() {
+        var expression = new Expression('-"56"');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates unary positive', function() {
         var expression = new Expression('+5');
         expect(expression.evaluate(frameState, undefined)).toEqual(5);
+    });
 
-        expression = new Expression('+"5"');
-        expect(expression.evaluate(frameState, undefined)).toEqual(5);
-
-        expression = new Expression('+true');
-        expect(expression.evaluate(frameState, undefined)).toEqual(1);
-
-        expression = new Expression('+null');
-        expect(expression.evaluate(frameState, undefined)).toEqual(0);
+    it('throws if unary positive takes invalid argument', function() {
+        var expression = new Expression('+"56"');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates binary addition', function() {
@@ -791,6 +854,50 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(10);
     });
 
+    it('evaluates binary addition with strings', function() {
+        var expression = new Expression('1 + "10"');
+        expect(expression.evaluate(frameState, undefined)).toEqual('110');
+
+        expression = new Expression('"10" + 1');
+        expect(expression.evaluate(frameState, undefined)).toEqual('101');
+
+        expression = new Expression('"name_" + "building"');
+        expect(expression.evaluate(frameState, undefined)).toEqual('name_building');
+
+        expression = new Expression('"name_" + true');
+        expect(expression.evaluate(frameState, undefined)).toEqual('name_true');
+
+        expression = new Expression('"name_" + null');
+        expect(expression.evaluate(frameState, undefined)).toEqual('name_null');
+
+        expression = new Expression('"name_" + undefined');
+        expect(expression.evaluate(frameState, undefined)).toEqual('name_undefined');
+
+        expression = new Expression('"name_" + vec2(1.1)');
+        expect(expression.evaluate(frameState, undefined)).toEqual('name_(1.1, 1.1)');
+
+        expression = new Expression('"name_" + vec3(1.1)');
+        expect(expression.evaluate(frameState, undefined)).toEqual('name_(1.1, 1.1, 1.1)');
+
+        expression = new Expression('"name_" + vec4(1.1)');
+        expect(expression.evaluate(frameState, undefined)).toEqual('name_(1.1, 1.1, 1.1, 1.1)');
+
+        expression = new Expression('"name_" + regExp("a")');
+        expect(expression.evaluate(frameState, undefined)).toEqual('name_/a/');
+    });
+
+    it('throws if binary addition takes invalid arguments', function() {
+        var expression = new Expression('vec2(1.0) + vec3(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1.0 + vec3(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates binary subtraction', function() {
         var expression = new Expression('2 - 1');
         expect(expression.evaluate(frameState, undefined)).toEqual(1);
@@ -799,12 +906,41 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(-2);
     });
 
+    it('throws if binary subtraction takes invalid arguments', function() {
+        var expression = new Expression('vec2(1.0) - vec3(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1.0 - vec3(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('"name1" - "name2"');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates binary multiplication', function() {
         var expression = new Expression('1 * 2');
         expect(expression.evaluate(frameState, undefined)).toEqual(2);
 
         expression = new Expression('1 * 2 * 3 * 4');
         expect(expression.evaluate(frameState, undefined)).toEqual(24);
+    });
+
+    it('throws if binary multiplication takes invalid arguments', function() {
+        var expression = new Expression('vec2(1.0) * vec3(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('vec2(1.0) * "name"');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates binary division', function() {
@@ -818,12 +954,46 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(-3);
     });
 
+    it('throws if binary division takes invalid arguments', function() {
+        var expression = new Expression('vec2(1.0) / vec3(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('vec2(1.0) / "2.0"');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1.0 / vec4(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates binary modulus', function() {
         var expression = new Expression('2 % 1');
         expect(expression.evaluate(frameState, undefined)).toEqual(0);
 
         expression = new Expression('6 % 4 % 3');
         expect(expression.evaluate(frameState, undefined)).toEqual(2);
+    });
+
+    it('throws if binary modulus takes invalid arguments', function() {
+        var expression = new Expression('vec2(1.0) % vec3(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('vec2(1.0) % "2.0"');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1.0 % vec4(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates binary equals strict', function() {
@@ -840,20 +1010,6 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
     });
 
-    it('evaluates binary equals', function() {
-        var expression = new Expression('\'hello\' == \'hello\'');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('1 == 2');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
-        expression = new Expression('false == true == false');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('1 == "1"');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-    });
-
     it('evaluates binary not equals strict', function() {
         var expression = new Expression('\'hello\' !== \'hello\'');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
@@ -868,20 +1024,6 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
     });
 
-    it('evaluates binary not equals', function() {
-        var expression = new Expression('\'hello\' != \'hello\'');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
-        expression = new Expression('1 != 2');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('false != true != false');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('1 != "1"');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-    });
-
     it('evaluates binary less than', function() {
         var expression = new Expression('2 < 3');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
@@ -891,12 +1033,28 @@ defineSuite([
 
         expression = new Expression('3 < 2');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
+    });
+
+    it('throws if binary less than takes invalid arguments', function() {
+        var expression = new Expression('vec2(1.0) < vec2(2.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1 < vec3(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
 
         expression = new Expression('true < false');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
 
         expression = new Expression('color(\'blue\') < 10');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates binary less than or equals', function() {
@@ -908,12 +1066,33 @@ defineSuite([
 
         expression = new Expression('3 <= 2');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
+    });
+
+    it('throws if binary less than or equals takes invalid arguments', function() {
+        var expression = new Expression('vec2(1.0) <= vec2(2.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1 <= vec3(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1.0 <= "5"');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
 
         expression = new Expression('true <= false');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
 
         expression = new Expression('color(\'blue\') <= 10');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates binary greater than', function() {
@@ -925,12 +1104,33 @@ defineSuite([
 
         expression = new Expression('3 > 2');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
+    });
+
+    it('throws if binary greater than takes invalid arguments', function() {
+        var expression = new Expression('vec2(1.0) > vec2(2.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1 > vec3(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1.0 > "5"');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
 
         expression = new Expression('true > false');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
 
         expression = new Expression('color(\'blue\') > 10');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates binary greater than or equals', function() {
@@ -942,12 +1142,33 @@ defineSuite([
 
         expression = new Expression('3 >= 2');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
+    });
+
+    it('throws if binary greater than or equals takes invalid arguments', function() {
+        var expression = new Expression('vec2(1.0) >= vec2(2.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1 >= vec3(1.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1.0 >= "5"');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
 
         expression = new Expression('true >= false');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
 
         expression = new Expression('color(\'blue\') >= 10');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates logical and', function() {
@@ -1029,17 +1250,8 @@ defineSuite([
         expression = new Expression('rgba(255, 255, 255, 1.0) % rgba(255, 255, 255, 1.0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(Cartesian4.fromColor(new Color(0, 0, 0, 0)));
 
-        expression = new Expression('color(\'green\') == color(\'green\')');
+        expression = new Expression('color(\'green\') === color(\'green\')');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('color() == color()');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('!!color() == true');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('color(\'green\') != color(\'green\')');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
 
         expression = new Expression('color(\'green\') !== color(\'green\')');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
@@ -1136,15 +1348,6 @@ defineSuite([
         expression = new Expression('vec4(2, 3, 4, 5) % vec4(3, 3, 3, 2)');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(2, 0, 1, 1));
 
-        expression = new Expression('vec2(1, 3) == vec2(1, 3)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('vec3(1, 3, 4) == vec3(1, 3, 4)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('vec4(1, 3, 4, 6) == vec4(1, 3, 4, 6)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
         expression = new Expression('vec2(1, 2) === vec2(1, 2)');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
 
@@ -1153,18 +1356,6 @@ defineSuite([
 
         expression = new Expression('vec4(1, 2, 3, 4) === vec4(1, 2, 3, 4)');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('!!vec4(1.0) == true');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('vec2(1, 2) != vec2(1, 2)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
-        expression = new Expression('vec3(1, 2, 3) != vec3(1, 2, 3)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
-        expression = new Expression('vec4(1, 2, 3, 4) != vec4(1, 2, 3, 4)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
 
         expression = new Expression('vec2(1, 2) !== vec2(1, 2)');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
@@ -1307,6 +1498,14 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws if built-in unary function is given an invalid argument', function() {
+        // Argument must be a number or vector
+        var expression = new Expression('abs("-1")');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates abs function', function() {
         var expression = new Expression('abs(-1)');
         expect(expression.evaluate(frameState, undefined)).toEqual(1);
@@ -1338,13 +1537,13 @@ defineSuite([
         var expression = new Expression('cos(0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
 
-        expression = new Expression('cos(vec2(0, PI))');
+        expression = new Expression('cos(vec2(0, Math.PI))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(1.0, -1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('cos(vec3(0, PI, -PI)');
+        expression = new Expression('cos(vec3(0, Math.PI, -Math.PI)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(1.0, -1.0, -1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('cos(vec4(0, PI, -PI, 0)');
+        expression = new Expression('cos(vec4(0, Math.PI, -Math.PI, 0)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(1.0, -1.0, -1.0, 1.0), CesiumMath.EPSILON7);
     });
 
@@ -1362,13 +1561,13 @@ defineSuite([
         var expression = new Expression('sin(0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(0);
 
-        expression = new Expression('sin(vec2(0, PI/2))');
+        expression = new Expression('sin(vec2(0, Math.PI/2))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, 1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('sin(vec3(0, PI/2, -PI/2)');
+        expression = new Expression('sin(vec3(0, Math.PI/2, -Math.PI/2)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, 1.0, -1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('sin(vec4(0, PI/2, -PI/2, 0)');
+        expression = new Expression('sin(vec4(0, Math.PI/2, -Math.PI/2, 0)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, 1.0, -1.0, 0.0), CesiumMath.EPSILON7);
     });
 
@@ -1386,13 +1585,13 @@ defineSuite([
         var expression = new Expression('tan(0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(0);
 
-        expression = new Expression('tan(vec2(0, PI/4))');
+        expression = new Expression('tan(vec2(0, Math.PI/4))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, 1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('tan(vec3(0, PI/4, PI)');
+        expression = new Expression('tan(vec3(0, Math.PI/4, Math.PI)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('tan(vec4(0, PI/4, PI, -PI/4)');
+        expression = new Expression('tan(vec4(0, Math.PI/4, Math.PI, -Math.PI/4)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, 1.0, 0.0, -1.0), CesiumMath.EPSILON7);
     });
 
@@ -1503,16 +1702,16 @@ defineSuite([
     });
 
     it('evaluates degrees function', function() {
-        var expression = new Expression('degrees(2 * PI)');
+        var expression = new Expression('degrees(2 * Math.PI)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(360, CesiumMath.EPSILON10);
 
-        expression = new Expression('degrees(vec2(2 * PI, PI))');
+        expression = new Expression('degrees(vec2(2 * Math.PI, Math.PI))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(360, 180), CesiumMath.EPSILON7);
 
-        expression = new Expression('degrees(vec3(2 * PI, PI, 2 * PI))');
+        expression = new Expression('degrees(vec3(2 * Math.PI, Math.PI, 2 * Math.PI))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(360, 180, 360), CesiumMath.EPSILON7);
 
-        expression = new Expression('degrees(vec4(2 * PI, PI, 2 * PI, PI)');
+        expression = new Expression('degrees(vec4(2 * Math.PI, Math.PI, 2 * Math.PI, Math.PI)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(360, 180, 360, 180), CesiumMath.EPSILON7);
     });
 
@@ -1740,13 +1939,13 @@ defineSuite([
         expression = new Expression('log(10.0)');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(2.302585092994046, CesiumMath.EPSILON7);
 
-        expression = new Expression('log(vec2(1.0, E))');
+        expression = new Expression('log(vec2(1.0, Math.E))');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(0.0, 1.0));
 
-        expression = new Expression('log(vec3(1.0, E, 1.0))');
+        expression = new Expression('log(vec3(1.0, Math.E, 1.0))');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(0.0, 1.0, 0.0));
 
-        expression = new Expression('log(vec4(1.0, E, 1.0, E))');
+        expression = new Expression('log(vec4(1.0, Math.E, 1.0, Math.E))');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0.0, 1.0, 0.0, 1.0));
     });
 
@@ -1877,7 +2076,7 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.0, CesiumMath.EPSILON10);
 
         expression = new Expression('atan2(1,0)');
-        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.5*Math.PI, CesiumMath.EPSILON10);
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.5 * Math.PI, CesiumMath.EPSILON10);
     });
 
     it('throws if atan2 function takes an invalid number of arguments', function() {
@@ -2107,7 +2306,7 @@ defineSuite([
             vector : Cartesian4.UNIT_X
         });
 
-        expression = new Expression('${feature} == ${feature.feature}');
+        expression = new Expression('${feature} === ${feature.feature}');
         expect(expression.evaluate(frameState, feature)).toEqual(true);
     });
 
@@ -2192,6 +2391,18 @@ defineSuite([
         expect(expression.evaluate(frameState, feature)).toEqual(true);
     });
 
+    it('throws if regex test function has invalid arguments', function() {
+        var expression = new Expression('regExp("1").test(1)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('regExp("a").test(regExp("b"))');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates regex exec function', function() {
         var feature = new MockFeature();
         feature.addProperty('property', 'abc');
@@ -2216,6 +2427,18 @@ defineSuite([
         expect(expression.evaluate(frameState, feature)).toEqual('1');
     });
 
+    it('throws if regex exec function has invalid arguments', function() {
+        var expression = new Expression('regExp("1").exec(1)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('regExp("a").exec(regExp("b"))');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates regex match operator', function() {
         var feature = new MockFeature();
         feature.addProperty('property', 'abc');
@@ -2235,17 +2458,28 @@ defineSuite([
         expression = new Expression('regExp("quick\\s(brown).+?(jumps)", "ig") =~ "The Quick Brown Fox Jumps Over The Lazy Dog"');
         expect(expression.evaluate(frameState, undefined)).toEqual(true);
 
-        expression = new Expression('regExp("a") =~ 1');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
-        expression = new Expression('1 =~ regExp("a")');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
-        expression = new Expression('1 =~ 1');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
         expression = new Expression('regExp(${property}) =~ ${property}');
         expect(expression.evaluate(frameState, feature)).toEqual(true);
+    });
+
+    it('throws if regex match operator has invalid arguments', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
+        var expression = new Expression('regExp("a") =~ 1');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1 =~ regExp("a")');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1 =~ 1');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates regex not match operator', function() {
@@ -2267,17 +2501,25 @@ defineSuite([
         expression = new Expression('regExp("quick\\s(brown).+?(jumps)", "ig") !~ "The Quick Brown Fox Jumps Over The Lazy Dog"');
         expect(expression.evaluate(frameState, undefined)).toEqual(false);
 
-        expression = new Expression('regExp("a") !~ 1');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('1 !~ regExp("a")');
-        expect(expression.evaluate(frameState, undefined)).toEqual(true);
-
-        expression = new Expression('1 !~ 1');
-        expect(expression.evaluate(frameState, undefined)).toEqual(false);
-
         expression = new Expression('regExp(${property}) !~ ${property}');
         expect(expression.evaluate(frameState, feature)).toEqual(false);
+    });
+
+    it('throws if regex not match operator has invalid arguments', function() {
+        var expression = new Expression('regExp("a") !~ 1');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1 !~ regExp("a")');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('1 !~ 1');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('throws if test is not called with a RegExp', function() {
@@ -2336,12 +2578,6 @@ defineSuite([
         expression = new Expression('[1+2, "hello", 2 < 3, color("blue"), ${property}]');
         expect(expression.evaluate(frameState, feature)).toEqual([3, 'hello', true, Cartesian4.fromColor(Color.BLUE), 'value']);
 
-        expression = new Expression('[1, 2, 3] * 4');
-        expect(expression.evaluate(frameState, undefined)).toEqual(NaN);
-
-        expression = new Expression('-[1, 2, 3]');
-        expect(expression.evaluate(frameState, undefined)).toEqual(NaN);
-
         expression = new Expression('${array[1]}');
         expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.UNIT_Y);
 
@@ -2361,9 +2597,9 @@ defineSuite([
         expect(expression.evaluate(frameState, feature)).toEqual(70);
     });
 
-    it('evaluates TILES3D_TILESET_TIME expression', function() {
+    it('evaluates tiles3d_tileset_time expression', function() {
         var feature = new MockFeature();
-        var expression = new Expression('TILES3D_TILESET_TIME');
+        var expression = new Expression('${tiles3d_tileset_time}');
         expect(expression.evaluate(frameState, feature)).toEqual(0.0);
         feature._content._tileset.timeSinceLoad = 1.0;
         expect(expression.evaluate(frameState, feature)).toEqual(1.0);
@@ -2463,22 +2699,8 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
-    it('gets shader expression for binary equals', function() {
-        var expression = new Expression('1.0 == 2.0');
-        var shaderExpression = expression.getShaderExpression('', {});
-        var expected = '(1.0 == 2.0)';
-        expect(shaderExpression).toEqual(expected);
-    });
-
     it('gets shader expression for binary not equals strict', function() {
         var expression = new Expression('1.0 !== 2.0');
-        var shaderExpression = expression.getShaderExpression('', {});
-        var expected = '(1.0 != 2.0)';
-        expect(shaderExpression).toEqual(expected);
-    });
-
-    it('gets shader expression for binary not equals', function() {
-        var expression = new Expression('1.0 != 2.0');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = '(1.0 != 2.0)';
         expect(shaderExpression).toEqual(expected);
@@ -2749,8 +2971,8 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
-    it('gets shader expression for TILES3D_TILESET_TIME', function() {
-        var expression = new Expression('TILES3D_TILESET_TIME');
+    it('gets shader expression for tiles3d_tileset_time', function() {
+        var expression = new Expression('${tiles3d_tileset_time}');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'u_tilesetTime';
         expect(shaderExpression).toEqual(expected);

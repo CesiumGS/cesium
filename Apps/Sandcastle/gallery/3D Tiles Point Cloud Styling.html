@@ -29,9 +29,9 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    scene3DOnly : true
-});
+var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
+var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
 
 var scene = viewer.scene;
 var url = '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/';
@@ -39,14 +39,20 @@ var url = '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointPr
 var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
     url : url
 }));
+inspectorViewModel.tileset = tileset;
 
-tileset.readyPromise.then(function(tileset) {
+function zoomToTileset() {
     var boundingSphere = tileset.boundingSphere;
     viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
-});
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+}
+
+tileset.readyPromise.then(zoomToTileset);
+scene.morphComplete.addEventListener(zoomToTileset);
 
 var styles = [];
 function addStyle(name, style) {
+    style.pointSize = Cesium.defaultValue(style.pointSize, 5.0);
     styles.push({
         name : name,
         style : style
@@ -98,11 +104,11 @@ addStyle('Hide Low Temperature', {
 });
 
 addStyle('Show Subsections', {
-    show : "${id} == 1 || ${id} > 250 && ${id} < 300"
+    show : "${id} === 1 || ${id} > 250 && ${id} < 300"
 });
 
 addStyle('Mod', {
-    show : "${id} % 2 == 0"
+    show : "${id} % 2 === 0"
 });
 
 addStyle('Abs', {
@@ -115,48 +121,39 @@ addStyle('Trigonometric Functions', {
 });
 
 addStyle('Arc Trigonometric Functions', {
-    color : "color() * acos(degrees(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature}) + color() * atan2(${POSITION}[0],${temperature})",
-    pointSize : "5"
+    color : "color() * acos(degrees(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature}) + color() * atan2(${POSITION}[0],${temperature})"
 });
 
 addStyle('Sqrt', {
-    color : "color() * sqrt(${temperature})",
-    pointSize : "5"
+    color : "color() * sqrt(${temperature})"
 });
 
 addStyle('Sign', {
-    color : "rgb(sign(${POSITION}[0]) * 255, sign(${POSITION}[1]) * 255, sign(${POSITION}[2]) * 255)",
-    pointSize : "5"
+    color : "rgb(sign(${POSITION}[0]) * 255, sign(${POSITION}[1]) * 255, sign(${POSITION}[2]) * 255)"
 });
 
 addStyle('Rounding Functions', {
-    color : "rgb(floor(${POSITION}[0]) * 255, ceil(${POSITION}[1]) * 255, round(${POSITION}[2]) * 255)",
-    pointSize : "5"
+    color : "rgb(floor(${POSITION}[0]) * 255, ceil(${POSITION}[1]) * 255, round(${POSITION}[2]) * 255)"
 });
 
 addStyle('Exp and Log Functions', {
-    color : "rgb(log(${POSITION}[0]) * 255, log2(${POSITION}[1]) * 255 + exp2(${POSITION}[1]) * 255, exp(${POSITION}[2]) * 255)",
-    pointSize : "5"
+    color : "rgb(log(${POSITION}[0]) * 255, log2(${POSITION}[1]) * 255 + exp2(${POSITION}[1]) * 255, exp(${POSITION}[2]) * 255)"
 });
 
 addStyle('Fractional Part', {
-    color : "rgb(fract(${POSITION}[0]) * 255, fract(${POSITION}[1]) * 255, fract(${POSITION}[2]) * 255)",
-    pointSize : "5"
+    color : "rgb(fract(${POSITION}[0]) * 255, fract(${POSITION}[1]) * 255, fract(${POSITION}[2]) * 255)"
 });
 
 addStyle('Pow', {
-    color : "color() * pow(${temperature}, 3)",
-    pointSize : "5"
+    color : "color() * pow(${temperature}, 3)"
 });
 
 addStyle('Min and Max', {
-    color : "rgb(min(${POSITION}.x, 0.75) * 255, max(${POSITION}.z, 0.25) * 255, 255)",
-    pointSize : "5"
+    color : "rgb(min(${POSITION}.x, 0.75) * 255, max(${POSITION}.z, 0.25) * 255, 255)"
 });
 
 addStyle('Clamp and Mix', {
-    color : "color() * clamp(${temperature}, 0.1, 0.2)",
-    pointSize : "mix(${temperature}, 2.0, 0.5) * 0.2"
+    color : "color() * clamp(${temperature}, 0.1, 0.2)"
 });
 
 addStyle('Secondary Color', {

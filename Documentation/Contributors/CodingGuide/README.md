@@ -389,7 +389,7 @@ Use the functions of Cesium's [Check](https://github.com/AnalyticalGraphicsInc/c
 ```javascript
 Cartesian3.maximumComponent = function(cartesian) {
     //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.object(cartesian, 'cartesian');
+    Check.typeOf.object('cartesian', cartesian);
     //>>includeEnd('debug');
 
     return Math.max(cartesian.x, cartesian.y, cartesian.z);
@@ -400,8 +400,8 @@ Cartesian3.maximumComponent = function(cartesian) {
 ```javascript
 Cartesian3.unpackArray = function(array, result) {
     //>>includeStart('debug', pragmas.debug);
-    Check.defined(array, 'array');
-    Check.numeric.minimum(array.length, 3);
+    Check.defined('array', array);
+    Check.typeOf.number.greaterThanOrEquals('array.length', array.length, 3);
     if (array.length % 3 !== 0) {
         throw new DeveloperError('array length must be a multiple of 3.');
     }
@@ -416,7 +416,7 @@ Cartesian3.unpackArray = function(array, result) {
 Cartesian3.maximumComponent = function(cartesian) {
     //>>includeStart('debug', pragmas.debug);
     var c = cartesian;
-    Check.typeOf.object(cartesian, 'cartesian');
+    Check.typeOf.object('cartesian', cartesian);
     //>>includeEnd('debug');
 
     // Works in debug. Fails in release since c is optimized out!

@@ -6,7 +6,7 @@ define([
         'Core/defined',
         'Scene/Scene',
         'Specs/createCanvas',
-        'Specs/destroyCanvas'
+        'Specs/getWebGLStub'
     ], function(
         Cartesian2,
         clone,
@@ -14,7 +14,7 @@ define([
         defined,
         Scene,
         createCanvas,
-        destroyCanvas) {
+        getWebGLStub) {
     'use strict';
 
     function createScene(options) {
@@ -33,10 +33,13 @@ define([
         contextOptions.webgl = defaultValue(contextOptions.webgl, {});
         contextOptions.webgl.antialias = defaultValue(contextOptions.webgl.antialias, false);
         contextOptions.webgl.stencil = defaultValue(contextOptions.webgl.stencil, true);
+        if (!!window.webglStub) {
+            contextOptions.getWebGLStub = getWebGLStub;
+        }
 
         var scene = new Scene(options);
 
-        if (window.webglValidation) {
+        if (!!window.webglValidation) {
             var context = scene.context;
             context.validateShaderProgram = true;
             context.validateFramebuffer = true;
@@ -46,19 +49,18 @@ define([
 
         // Add functions for test
         scene.destroyForSpecs = function() {
-            var canvas = scene.canvas;
-            scene.destroy();
-            destroyCanvas(canvas);
+            var canvas = this.canvas;
+            this.destroy();
+            document.body.removeChild(canvas);
         };
 
         scene.renderForSpecs = function(time) {
-            scene.initializeFrame();
-            scene.render(time);
-            return scene.context.readPixels();
+            this.initializeFrame();
+            this.render(time);
         };
 
         scene.pickForSpecs = function() {
-            return scene.pick(new Cartesian2(0, 0));
+            this.pick(new Cartesian2(0, 0));
         };
 
         scene.rethrowRenderErrors = defaultValue(options.rethrowRenderErrors, true);

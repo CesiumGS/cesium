@@ -55,6 +55,7 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './Axis',
         './BlendingState',
         './ColorBlendMode',
         './getAttributeOrUniformBySemantic',
@@ -125,6 +126,7 @@ define([
         gltfDefaults,
         Uri,
         when,
+        Axis,
         BlendingState,
         ColorBlendMode,
         getAttributeOrUniformBySemantic,
@@ -147,7 +149,6 @@ define([
         return {};
     }
 
-    var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = {
@@ -639,6 +640,7 @@ define([
         this._pickUniformMapLoaded = options.pickUniformMapLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._requestType = options.requestType;
+        this._upAxis = defaultValue(options.upAxis, Axis.Y);
 
         /**
          * @private
@@ -692,8 +694,10 @@ define([
         this._pickIds = [];
 
         // CESIUM_RTC extension
-        this._rtcCenter = undefined;    // in world coordinates
+        this._rtcCenter = undefined;    // reference to either 3D or 2D
         this._rtcCenterEye = undefined; // in eye coordinates
+        this._rtcCenter3D = undefined;  // in world coordinates
+        this._rtcCenter2D = undefined;  // in projected world coordinates
     }
 
     defineProperties(Model.prototype, {
@@ -968,6 +972,24 @@ define([
                 }
                 //>>includeEnd('debug');
                 this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
+            }
+        },
+
+        /**
+         * Gets the model's up-axis.
+         * By default models are y-up according to the glTF spec, however geo-referenced models will typically be z-up.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Number}
+         * @default Axis.Y
+         * @readonly
+         *
+         * @private
+         */
+        upAxis : {
+            get : function() {
+                return this._upAxis;
             }
         }
     });
@@ -1246,7 +1268,7 @@ define([
         };
     }
 
-    function computeBoundingSphere(gltf) {
+    function computeBoundingSphere(model, gltf) {
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
         var rootNodes = gltf.scenes[gltf.scene].nodes;
@@ -1302,7 +1324,12 @@ define([
         }
 
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-        return BoundingSphere.transformWithoutScale(boundingSphere, yUpToZUp, boundingSphere);
+        if (model._upAxis === Axis.Y) {
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Y_UP_TO_Z_UP, boundingSphere);
+        } else if (model._upAxis === Axis.X) {
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.X_UP_TO_Z_UP, boundingSphere);
+        }
+        return boundingSphere;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1456,16 +1483,62 @@ define([
     var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
     var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
 
-    function parseTextures(model) {
+    function parseTextures(model, context) {
         var images = model.gltf.images;
         var textures = model.gltf.textures;
         for (var id in textures) {
             if (textures.hasOwnProperty(id)) {
                 var gltfImage = images[textures[id].source];
+                var extras = gltfImage.extras;
+
+                var binary = undefined;
+                var uri = undefined;
+
+                // First check for a compressed texture
+                if (defined(extras) && defined(extras.compressedImage3DTiles)) {
+                    var crunch = extras.compressedImage3DTiles.crunch;
+                    var s3tc = extras.compressedImage3DTiles.s3tc;
+                    var pvrtc = extras.compressedImage3DTiles.pvrtc1;
+                    var etc1 = extras.compressedImage3DTiles.etc1;
+
+                    if (context.s3tc && defined(crunch)) {
+                        if (defined(crunch.extensions)&& defined(crunch.extensions.KHR_binary_glTF)) {
+                            binary = crunch.extensions.KHR_binary_glTF;
+                        } else {
+                            uri = crunch.uri;
+                        }
+                    } else if (context.s3tc && defined(s3tc)) {
+                        if (defined(s3tc.extensions)&& defined(s3tc.extensions.KHR_binary_glTF)) {
+                            binary = s3tc.extensions.KHR_binary_glTF;
+                        } else {
+                            uri = s3tc.uri;
+                        }
+                    } else if (context.pvrtc && defined(pvrtc)) {
+                        if (defined(pvrtc.extensions)&& defined(pvrtc.extensions.KHR_binary_glTF)) {
+                            binary = pvrtc.extensions.KHR_binary_glTF;
+                        } else {
+                            uri = pvrtc.uri;
+                        }
+                    } else if (context.etc1 && defined(etc1)) {
+                        if (defined(etc1.extensions)&& defined(etc1.extensions.KHR_binary_glTF)) {
+                            binary = etc1.extensions.KHR_binary_glTF;
+                        } else {
+                            uri = etc1.uri;
+                        }
+                    }
+                }
+
+                // No compressed texture, so image references either uri (external or base64-encoded) or bufferView
+                if (!defined(binary) && !defined(uri)) {
+                    if (defined(gltfImage.extensions) && defined(gltfImage.extensions.KHR_binary_glTF)) {
+                        binary = gltfImage.extensions.KHR_binary_glTF;
+                    } else {
+                        uri = new Uri(gltfImage.uri);
+                    }
+                }
 
                 // Image references either uri (external or base64-encoded) or bufferView
-                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.KHR_binary_glTF)) {
-                    var binary = gltfImage.extensions.KHR_binary_glTF;
+                if (defined(binary)) {
                     model._loadResources.texturesToCreateFromBufferView.enqueue({
                         id : id,
                         image : undefined,
@@ -1623,13 +1696,13 @@ define([
         model._runtime.meshesByName = runtimeMeshesByName;
     }
 
-    function parse(model) {
+    function parse(model, context) {
         if (!model._loadRendererResourcesFromCache) {
             parseBuffers(model);
             parseBufferViews(model);
             parseShaders(model);
             parsePrograms(model);
-            parseTextures(model);
+            parseTextures(model, context);
         }
         parseMaterials(model);
         parseMeshes(model);
@@ -2259,21 +2332,32 @@ define([
         // Retrieve the compiled shader program to assign index values to attributes
         var attributeLocations = {};
 
+        var index;
         var technique = techniques[materials[primitive.material].technique];
         var parameters = technique.parameters;
         var attributes = technique.attributes;
-        var programAttributeLocations = model._rendererResources.programs[technique.program].vertexAttributes;
+        var program = model._rendererResources.programs[technique.program];
+        var programVertexAttributes = program.vertexAttributes;
+        var programAttributeLocations = program._attributeLocations;
 
         // Note: WebGL shader compiler may have optimized and removed some attributes from programAttributeLocations
         for (var location in programAttributeLocations){
             if (programAttributeLocations.hasOwnProperty(location)) {
                 var attribute = attributes[location];
-                var index = programAttributeLocations[location].index;
                 if (defined(attribute)) {
-                    var parameter = parameters[attribute];
-                    attributeLocations[parameter.semantic] = index;
+                    var vertexAttribute = programVertexAttributes[location];
+                    if (defined(vertexAttribute)) {
+                        index = vertexAttribute.index;
+                        var parameter = parameters[attribute];
+                        attributeLocations[parameter.semantic] = index;
+                    }
                 } else {
-                    // Pre-created attributes
+                    // Pre-created attributes.
+                    // Some pre-created attributes, like per-instance pickIds, may be compiled out of the draw program
+                    // but should be included in the list of attribute locations for the pick program.
+                    // This is safe to do since programVertexAttributes and programAttributeLocations are equivalent except
+                    // that programVertexAttributes optimizes out unused attributes.
+                    index = programAttributeLocations[location];
                     attributeLocations[location] = index;
                 }
             }
@@ -2696,10 +2780,13 @@ define([
             // CESIUM_RTC extension
             var mvRtc = new Matrix4();
             return function() {
-                Matrix4.getTranslation(uniformState.model, scratchTranslationRtc);
-                Cartesian3.add(scratchTranslationRtc, model._rtcCenter, scratchTranslationRtc);
-                Matrix4.multiplyByPoint(uniformState.view, scratchTranslationRtc, scratchTranslationRtc);
-                return Matrix4.setTranslation(uniformState.modelView, scratchTranslationRtc, mvRtc);
+                if (defined(model._rtcCenter)) {
+                    Matrix4.getTranslation(uniformState.model, scratchTranslationRtc);
+                    Cartesian3.add(scratchTranslationRtc, model._rtcCenter, scratchTranslationRtc);
+                    Matrix4.multiplyByPoint(uniformState.view, scratchTranslationRtc, scratchTranslationRtc);
+                    return Matrix4.setTranslation(uniformState.modelView, scratchTranslationRtc, mvRtc);
+                }
+                return uniformState.modelView;
             };
         },
         MODELVIEWPROJECTION : function(uniformState, model) {
@@ -3527,6 +3614,7 @@ define([
     }
 
     var scratchNodeStack = [];
+    var scratchComputedTranslation = new Cartesian4();
     var scratchComputedMatrixIn2D = new Matrix4();
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
@@ -3539,8 +3627,21 @@ define([
         var nodeStack = scratchNodeStack;
         var computedModelMatrix = model._computedModelMatrix;
 
-        if (model._mode !== SceneMode.SCENE3D) {
-            computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
+        if ((model._mode !== SceneMode.SCENE3D) && !model._ignoreCommands) {
+            var translation = Matrix4.getColumn(computedModelMatrix, 3, scratchComputedTranslation);
+            if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
+                computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
+                model._rtcCenter = model._rtcCenter3D;
+            } else {
+                var center = model.boundingSphere.center;
+                var to2D = Transforms.wgs84To2DModelMatrix(projection, center, scratchComputedMatrixIn2D);
+                computedModelMatrix = Matrix4.multiply(to2D, computedModelMatrix, scratchComputedMatrixIn2D);
+
+                if (defined(model._rtcCenter)) {
+                    Matrix4.setTranslation(computedModelMatrix, Cartesian4.UNIT_W, computedModelMatrix);
+                    model._rtcCenter = model._rtcCenter2D;
+                }
+            }
         }
 
         for (var i = 0; i < length; ++i) {
@@ -4286,19 +4387,31 @@ define([
 
             this._state = ModelState.LOADING;
 
-            this._boundingSphere = computeBoundingSphere(this.gltf);
+            this._boundingSphere = computeBoundingSphere(this, this.gltf);
             this._initialRadius = this._boundingSphere.radius;
 
             checkSupportedExtensions(this);
             if (this._state !== ModelState.FAILED) {
                 var extensions = this.gltf.extensions;
                 if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
-                    this._rtcCenter = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
-                    this._rtcCenterEye = new Cartesian3();
+                    var center = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
+                    if (!Cartesian3.equals(center, Cartesian3.ZERO)) {
+                        this._rtcCenter3D = center;
+
+                        var projection = frameState.mapProjection;
+                        var ellipsoid = projection.ellipsoid;
+                        var cartographic = ellipsoid.cartesianToCartographic(this._rtcCenter3D);
+                        var projectedCart = projection.project(cartographic);
+                        Cartesian3.fromElements(projectedCart.z, projectedCart.x, projectedCart.y, projectedCart);
+                        this._rtcCenter2D = projectedCart;
+
+                        this._rtcCenterEye = new Cartesian3();
+                        this._rtcCenter = this._rtcCenter3D;
+                    }
                 }
 
                 this._loadResources = new LoadResources();
-                parse(this);
+                parse(this, context);
             }
         }
 
@@ -4397,7 +4510,11 @@ define([
                 var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
                 Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
-                Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
+                if (this._upAxis === Axis.Y) {
+                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
+                } else if (this._upAxis === Axis.X) {
+                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
+                }
             }
 
             // Update modelMatrix throughout the graph as needed

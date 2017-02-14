@@ -46,28 +46,26 @@ var instancedArraysExtension = context._instancedArrays;
 var count = 1024;
 var spacing = 0.0002;
 var url = '../../SampleData/models/CesiumAir/Cesium_Air.gltf';
-var dynamic = false;
 var useCollection = true;
 
-var centerLongitude = -123.0744619;
-var centerLatitude = 44.0503706;
-var height = 5000.0;
+var centerLongitude = -75.61209431;
+var centerLatitude = 40.042530612;
+var height = 50.0;
 
 function orientCamera(center, radius) {
     var controller = scene.screenSpaceCameraController;
     var r = Math.max(radius, camera.frustum.near);
-    controller.minimumZoomDistance = r * 0.5;
 
     var heading = Cesium.Math.toRadians(230.0);
     var pitch = Cesium.Math.toRadians(-20.0);
     camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
+    camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 }
 
 function createCollection(instances) {
     var collection = scene.primitives.add(new Cesium.ModelInstanceCollection({
         url : url,
         instances : instances,
-        dynamic : dynamic,
         debugShowBoundingVolume : debugShowBoundingVolume,
         debugWireframe : debugWireframe
     }));
@@ -78,7 +76,7 @@ function createCollection(instances) {
             speedup : 0.5,
             loop : Cesium.ModelAnimationLoop.REPEAT
         });
-        orientCamera(collection._boundingVolume.center, collection._boundingVolume.radius);
+        orientCamera(collection._boundingSphere.center, collection._boundingSphere.radius);
     }).otherwise(function(error){
         window.alert(error);
     });
@@ -137,7 +135,7 @@ function reset() {
             var roll = Math.random();
             var scale = (Math.random() + 1.0)/2.0;
 
-            var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(position, heading, pitch, roll);
+            var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(position, new Cesium.HeadingPitchRoll(heading, pitch, roll));
             Cesium.Matrix4.multiplyByUniformScale(modelMatrix, scale, modelMatrix);
 
             instances.push({
@@ -148,6 +146,19 @@ function reset() {
 
     useCollection ? createCollection(instances) : createModels(instances);
 }
+
+// Scale picked instances
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+handler.setInputAction(function(movement) {
+    var pickedInstance = scene.pick(movement.position);
+    if (Cesium.defined(pickedInstance)) {
+        console.log(pickedInstance);
+        var instance = useCollection ? pickedInstance : pickedInstance.primitive;
+        var scaleMatrix = Cesium.Matrix4.fromUniformScale(1.1);
+        var modelMatrix = Cesium.Matrix4.multiply(instance.modelMatrix, scaleMatrix, new Cesium.Matrix4());
+        instance.modelMatrix = modelMatrix;
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 Sandcastle.addToolbarMenu([ {
     text : '1024 instances',
@@ -211,7 +222,6 @@ Sandcastle.addToolbarMenu([ {
     }
 }]);
 
-
 Sandcastle.addToolbarMenu([ {
     text : 'Instancing Enabled',
     onselect : function() {
@@ -234,19 +244,17 @@ Sandcastle.addToolbarMenu([ {
     }
 }]);
 
-Sandcastle.addToolbarMenu([ {
-    text : 'Static',
-    onselect : function() {
-        dynamic = false;
-        reset();
-    }
-}, {
-    text : 'Dynamic',
-    onselect : function() {
-        dynamic = true;
-        reset();
-    }
-}]);
+Sandcastle.addToolbarButton('2D', function() {
+    scene.morphTo2D(0.0);
+});
+
+Sandcastle.addToolbarButton('CV', function() {
+    scene.morphToColumbusView(0.0);
+});
+
+Sandcastle.addToolbarButton('3D', function() {
+    scene.morphTo3D(0.0);
+});
 
 //Sandcastle_End
 Sandcastle.finishedLoading();

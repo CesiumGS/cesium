@@ -26,7 +26,7 @@ define([
     "use strict";
 
     var unaryOperators = ['!', '-', '+'];
-    var binaryOperators = ['+', '-', '*', '/', '%', '===', '==', '!==', '!=', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
+    var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
 
     var variableRegex = /\${(.*?)}/g;
     var backslashRegex = /\\/g;
@@ -148,7 +148,7 @@ define([
      */
     function Expression(expression) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof(expression) !== 'string') {
+        if (typeof expression !== 'string') {
             throw new DeveloperError('expression must be a string.');
         }
         //>>includeEnd('debug');
@@ -292,7 +292,7 @@ define([
         var result = '';
         var i = exp.indexOf('${');
         while (i >= 0) {
-            // check if string is inside quotes
+            // Check if string is inside quotes
             var openSingleQuote = exp.indexOf('\'');
             var openDoubleQuote = exp.indexOf('"');
             var closeQuote;
@@ -311,7 +311,7 @@ define([
                 var j = exp.indexOf('}');
                 //>>includeStart('debug', pragmas.debug);
                 if (j < 0) {
-                    throw new DeveloperError('Error: unmatched {.');
+                    throw new DeveloperError('Unmatched {.');
                 }
                 //>>includeEnd('debug');
                 result += "czm_" + exp.substr(i + 2, j - (i + 2));
@@ -324,7 +324,7 @@ define([
     }
 
     function parseLiteral(ast) {
-        var type = typeof(ast.value);
+        var type = typeof ast.value;
         if (ast.value === null) {
             return new Node(ExpressionNodeType.LITERAL_NULL, null);
         } else if (type === 'boolean') {
@@ -353,7 +353,7 @@ define([
                 // Make sure this is called on a valid type
                 //>>includeStart('debug', pragmas.debug);
                 if (object.callee.name !== 'regExp') {
-                    throw new DeveloperError('Error: ' + call + ' is not a function.');
+                    throw new DeveloperError(call + ' is not a function.');
                 }
                 //>>includeEnd('debug');
                 if (argsLength === 0) {
@@ -372,7 +372,7 @@ define([
             }
 
             //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Error: Unexpected function call "' + call + '".');
+            throw new DeveloperError('Unexpected function call "' + call + '".');
             //>>includeEnd('debug');
         }
 
@@ -391,7 +391,7 @@ define([
         } else if (call === 'rgb' || call === 'hsl') {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength < 3) {
-                throw new DeveloperError('Error: ' + call + ' requires three arguments.');
+                throw new DeveloperError(call + ' requires three arguments.');
             }
             //>>includeEnd('debug');
             val = [
@@ -403,7 +403,7 @@ define([
         } else if (call === 'rgba' || call === 'hsla') {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength < 4) {
-                throw new DeveloperError('Error: ' + call + ' requires four arguments.');
+                throw new DeveloperError(call + ' requires four arguments.');
             }
             //>>includeEnd('debug');
             val = [
@@ -433,7 +433,7 @@ define([
         } else if (call === 'isExactClass' || call === 'isClass') {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength < 1 || argsLength > 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+                throw new DeveloperError(call + ' requires exactly one argument.');
             }
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
@@ -441,14 +441,14 @@ define([
         } else if (call === 'getExactClassName') {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength > 0) {
-                throw new DeveloperError('Error: ' + call + ' does not take any argument.');
+                throw new DeveloperError(call + ' does not take any argument.');
             }
             //>>includeEnd('debug');
             return new Node(ExpressionNodeType.UNARY, call);
         } else if (defined(unaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength !== 1) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly one argument.');
+                throw new DeveloperError(call + ' requires exactly one argument.');
             }
             //>>includeEnd('debug');
             val = createRuntimeAst(expression, args[0]);
@@ -456,7 +456,7 @@ define([
         } else if (defined(binaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength !== 2) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly two arguments.');
+                throw new DeveloperError(call + ' requires exactly two arguments.');
             }
             //>>includeEnd('debug');
             left = createRuntimeAst(expression, args[0]);
@@ -465,7 +465,7 @@ define([
         } else if (defined(ternaryFunctions[call])) {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength !== 3) {
-                throw new DeveloperError('Error: ' + call + ' requires exactly three arguments.');
+                throw new DeveloperError(call + ' requires exactly three arguments.');
             }
             //>>includeEnd('debug');
             left = createRuntimeAst(expression, args[0]);
@@ -495,7 +495,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('Error: Unexpected function call "' + call + '".');
+        throw new DeveloperError('Unexpected function call "' + call + '".');
         //>>includeEnd('debug');
     }
 
@@ -541,27 +541,39 @@ define([
 
     function parseKeywordsAndVariables(ast) {
         if (isVariable(ast.name)) {
-            return new Node(ExpressionNodeType.VARIABLE, getPropertyName(ast.name));
+            var name = getPropertyName(ast.name);
+            if (name.substr(0, 8) === 'tiles3d_') {
+                return new Node(ExpressionNodeType.BUILTIN_VARIABLE, name);
+            } else {
+                return new Node(ExpressionNodeType.VARIABLE, name);
+            }
         } else if (ast.name === 'NaN') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, NaN);
         } else if (ast.name === 'Infinity') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, Infinity);
         } else if (ast.name === 'undefined') {
             return new Node(ExpressionNodeType.LITERAL_UNDEFINED, undefined);
-        } else if (ast.name === 'PI') {
-            return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.PI);
-        } else if (ast.name === 'E') {
-            return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.E);
-        } else if (ast.name === 'TILES3D_TILESET_TIME') {
-            return new Node(ExpressionNodeType.LITERAL_GLOBAL, ast.name);
         }
 
         //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('Error: ' + ast.name + ' is not defined.');
+        throw new DeveloperError(ast.name + ' is not defined.');
         //>>includeEnd('debug');
     }
 
+    function parseMathConstant(ast) {
+        var name = ast.property.name;
+        if (name === 'PI') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.PI);
+        } else if (name === 'E') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.E);
+        }
+    }
+
     function parseMemberExpression(expression, ast) {
+        if (ast.object.name === 'Math') {
+            return parseMathConstant(ast);
+        }
+
         var val;
         var obj = createRuntimeAst(expression, ast.object);
         if (ast.computed) {
@@ -604,7 +616,7 @@ define([
                 node = new Node(ExpressionNodeType.UNARY, op, child);
             } else {
                 //>>includeStart('debug', pragmas.debug);
-                throw new DeveloperError('Error: Unexpected operator "' + op + '".');
+                throw new DeveloperError('Unexpected operator "' + op + '".');
                 //>>includeEnd('debug');
             }
         } else if (ast.type === 'BinaryExpression') {
@@ -615,7 +627,7 @@ define([
                 node = new Node(ExpressionNodeType.BINARY, op, left, right);
             } else {
                 //>>includeStart('debug', pragmas.debug);
-                throw new DeveloperError('Error: Unexpected operator "' + op + '".');
+                throw new DeveloperError('Unexpected operator "' + op + '".');
                 //>>includeEnd('debug');
             }
         } else if (ast.type === 'LogicalExpression') {
@@ -642,9 +654,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         else if (ast.type === 'Compound') {
             // empty expression or multiple expressions
-            throw new DeveloperError('Error: Provide exactly one expression.');
+            throw new DeveloperError('Provide exactly one expression.');
         }  else {
-            throw new DeveloperError('Error: Cannot parse expression.');
+            throw new DeveloperError('Cannot parse expression.');
         }
         //>>includeEnd('debug');
 
@@ -701,12 +713,8 @@ define([
                 node.evaluate = node._evaluateMod;
             } else if (node._value === '===') {
                 node.evaluate = node._evaluateEqualsStrict;
-            } else if (node._value === '==') {
-                node.evaluate = node._evaluateEquals;
             } else if (node._value === '!==') {
                 node.evaluate = node._evaluateNotEqualsStrict;
-            } else if (node._value === '!=') {
-                node.evaluate = node._evaluateNotEquals;
             } else if (node._value === '<') {
                 node.evaluate = node._evaluateLessThan;
             } else if (node._value === '<=') {
@@ -748,16 +756,16 @@ define([
             node.evaluate = node._evaluateLiteralString;
         } else if (node._type === ExpressionNodeType.REGEX) {
             node.evaluate = node._evaluateRegExp;
-        } else if (node._type === ExpressionNodeType.LITERAL_GLOBAL) {
-            if (node._value === 'TILES3D_TILESET_TIME') {
-                node.evaluate = evaluateTime;
+        } else if (node._type === ExpressionNodeType.BUILTIN_VARIABLE) {
+            if (node._value === 'tiles3d_tileset_time') {
+                node.evaluate = evaluateTilesetTime;
             }
         } else {
             node.evaluate = node._evaluateLiteral;
         }
     }
 
-    function evaluateTime(frameState, feature) {
+    function evaluateTilesetTime(frameState, feature) {
         return feature._content._tileset.timeSinceLoad;
     }
 
@@ -765,7 +773,7 @@ define([
         var evaluate = unaryFunctions[call];
         return function(feature) {
             var left = this._left.evaluate(feature);
-            if (typeof(left) === 'number') {
+            if (typeof left === 'number') {
                 return evaluate(left);
             } else if (left instanceof Cartesian2) {
                 return Cartesian2.fromElements(evaluate(left.x), evaluate(left.y), ScratchStorage.getCartesian2());
@@ -774,7 +782,10 @@ define([
             } else if (left instanceof Cartesian4) {
                 return Cartesian4.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), evaluate(left.w), ScratchStorage.getCartesian4());
             }
-            return evaluate(left);
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
+            //>>includeEnd('debug');
+            return evaluate(left); // jshint ignore:line
         };
     }
 
@@ -854,11 +865,12 @@ define([
         // vec2(vec4(1), 1)  // too many components
 
         var components = ScratchStorage.getArray();
+        var call = this._value;
         var args = this._left;
         var argsLength = args.length;
         for (var i = 0; i < argsLength; ++i) {
             var value = args[i].evaluate(frameState, feature);
-            if (typeof(value) === 'number') {
+            if (typeof value === 'number') {
                 components.push(value);
             } else if (value instanceof Cartesian2) {
                 components.push(value.x, value.y);
@@ -867,19 +879,23 @@ define([
             } else if (value instanceof Cartesian4) {
                 components.push(value.x, value.y, value.z, value.w);
             }
+            //>>includeStart('debug', pragmas.debug);
+            else {
+                throw new DeveloperError(call + ' argument must be a vector or number. Argument is ' + value + '.');
+            }
+            //>>includeEnd('debug');
         }
 
         var componentsLength = components.length;
-        var call = this._value;
         var vectorLength = parseInt(call.charAt(3));
 
         //>>includeStart('debug', pragmas.debug);
         if (componentsLength === 0) {
-            throw new DeveloperError('Error: Invalid ' + call + ' constructor. No valid arguments.');
+            throw new DeveloperError('Invalid ' + call + ' constructor. No valid arguments.');
         } else if ((componentsLength < vectorLength) && (componentsLength > 1)) {
-            throw new DeveloperError('Error: Invalid ' + call + ' constructor. Not enough arguments.');
+            throw new DeveloperError('Invalid ' + call + ' constructor. Not enough arguments.');
         } else if ((componentsLength > vectorLength) && (argsLength > 1)) {
-            throw new DeveloperError('Error: Invalid ' + call + ' constructor. Too many arguments.');
+            throw new DeveloperError('Invalid ' + call + ' constructor. Too many arguments.');
         }
         //>>includeEnd('debug');
 
@@ -991,7 +1007,13 @@ define([
     // that we can assign if we know the types before runtime
 
     Node.prototype._evaluateNot = function(frameState, feature) {
-        return !(this._left.evaluate(frameState, feature));
+        var left = this._left.evaluate(frameState, feature);
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof left !== 'boolean') {
+            throw new DeveloperError('Operator "!" requires a boolean argument. Argument is ' + left + '.');
+        }
+        //>>includeEnd('debug');
+        return !left;
     };
 
     Node.prototype._evaluateNegative = function(frameState, feature) {
@@ -1002,47 +1024,85 @@ define([
             return Cartesian3.negate(left, ScratchStorage.getCartesian3());
         } else if (left instanceof Cartesian4) {
             return Cartesian4.negate(left, ScratchStorage.getCartesian4());
+        } else if (typeof left === 'number') {
+            return -left;
         }
-        return -left;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "-" requires a vector or number argument. Argument is ' + left + '.');
+        //>>includeEnd('debug');
+        return -left; // jshint ignore:line
     };
 
     Node.prototype._evaluatePositive = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
-        if ((left instanceof Cartesian2) || (left instanceof Cartesian3) || (left instanceof Cartesian4)) {
-            return left;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!((left instanceof Cartesian2) || (left instanceof Cartesian3) || (left instanceof Cartesian4) || (typeof left === 'number'))) {
+            throw new DeveloperError('Operator "+" requires a vector or number argument. Argument is ' + left + '.');
         }
-        return +left;
+        //>>includeEnd('debug');
+
+        return left;
     };
 
     Node.prototype._evaluateLessThan = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((typeof left !== 'number') || (typeof right !== 'number')) {
+            throw new DeveloperError('Operator "<" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
+        }
+        //>>includeEnd('debug');
+
         return left < right;
     };
 
     Node.prototype._evaluateLessThanOrEquals = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((typeof left !== 'number') || (typeof right !== 'number')) {
+            throw new DeveloperError('Operator "<=" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
+        }
+        //>>includeEnd('debug');
+
         return left <= right;
     };
 
     Node.prototype._evaluateGreaterThan = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((typeof left !== 'number') || (typeof right !== 'number')) {
+            throw new DeveloperError('Operator ">" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
+        }
+        //>>includeEnd('debug');
+
         return left > right;
     };
 
     Node.prototype._evaluateGreaterThanOrEquals = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((typeof left !== 'number') || (typeof right !== 'number')) {
+            throw new DeveloperError('Operator ">=" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
+        }
+        //>>includeEnd('debug');
+
         return left >= right;
     };
 
     Node.prototype._evaluateOr = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined.');
+        if (typeof left !== 'boolean') {
+            throw new DeveloperError('Operator "||" requires boolean arguments. First argument is ' + left + '.');
         }
         //>>includeEnd('debug');
 
@@ -1053,8 +1113,8 @@ define([
 
         var right = this._right.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
-        if (typeof(right) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined.');
+        if (typeof right !== 'boolean') {
+            throw new DeveloperError('Operator "||" requires boolean arguments. Second argument is ' + right + '.');
         }
         //>>includeEnd('debug');
         return left || right;
@@ -1063,8 +1123,8 @@ define([
     Node.prototype._evaluateAnd = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
-        if (typeof(left) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined.');
+        if (typeof left !== 'boolean') {
+            throw new DeveloperError('Operator "&&" requires boolean arguments. First argument is ' + left + '.');
         }
         //>>includeEnd('debug');
 
@@ -1075,8 +1135,8 @@ define([
 
         var right = this._right.evaluate(frameState, feature);
         //>>includeStart('debug', pragmas.debug);
-        if (typeof(right) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined.');
+        if (typeof right !== 'boolean') {
+            throw new DeveloperError('Operator "&&" requires boolean arguments. Second argument is ' + right + '.');
         }
         //>>includeEnd('debug');
         return left && right;
@@ -1091,8 +1151,18 @@ define([
             return Cartesian3.add(left, right, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.add(left, right, ScratchStorage.getCartesian4());
+        } else if ((typeof left === 'string') || (typeof right === 'string')) {
+            // If only one argument is a string the other argument calls its toString function.
+            return left + right;
+        } else if ((typeof left === 'number') && (typeof right === 'number')) {
+            return left + right;
         }
-        return left + right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "+" requires vector or number arguments of matching types, or at least one string argument. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return left + right; // jshint ignore:line
     };
 
     Node.prototype._evaluateMinus = function(frameState, feature) {
@@ -1104,8 +1174,15 @@ define([
             return Cartesian3.subtract(left, right, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.subtract(left, right, ScratchStorage.getCartesian4());
+        } else if ((typeof left === 'number') && (typeof right === 'number')) {
+            return left - right;
         }
-        return left - right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "-" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return left - right; // jshint ignore:line
     };
 
     Node.prototype._evaluateTimes = function(frameState, feature) {
@@ -1113,24 +1190,31 @@ define([
         var right = this._right.evaluate(frameState, feature);
         if ((right instanceof Cartesian2) && (left instanceof Cartesian2)) {
             return Cartesian2.multiplyComponents(left, right, ScratchStorage.getCartesian2());
-        } else if ((right instanceof Cartesian2) && (typeof(left) === 'number')) {
+        } else if ((right instanceof Cartesian2) && (typeof left === 'number')) {
             return Cartesian2.multiplyByScalar(right, left, ScratchStorage.getCartesian2());
-        } else if ((left instanceof Cartesian2) && (typeof(right) === 'number')) {
+        } else if ((left instanceof Cartesian2) && (typeof right === 'number')) {
             return Cartesian2.multiplyByScalar(left, right, ScratchStorage.getCartesian2());
         } else if ((right instanceof Cartesian3) && (left instanceof Cartesian3)) {
             return Cartesian3.multiplyComponents(left, right, ScratchStorage.getCartesian3());
-        } else if ((right instanceof Cartesian3) && (typeof(left) === 'number')) {
+        } else if ((right instanceof Cartesian3) && (typeof left === 'number')) {
             return Cartesian3.multiplyByScalar(right, left, ScratchStorage.getCartesian3());
-        } else if ((left instanceof Cartesian3) && (typeof(right) === 'number')) {
+        } else if ((left instanceof Cartesian3) && (typeof right === 'number')) {
             return Cartesian3.multiplyByScalar(left, right, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.multiplyComponents(left, right, ScratchStorage.getCartesian4());
-        } else if ((right instanceof Cartesian4) && (typeof(left) === 'number')) {
+        } else if ((right instanceof Cartesian4) && (typeof left === 'number')) {
             return Cartesian4.multiplyByScalar(right, left, ScratchStorage.getCartesian4());
-        } else if ((left instanceof Cartesian4) && (typeof(right) === 'number')) {
+        } else if ((left instanceof Cartesian4) && (typeof right === 'number')) {
             return Cartesian4.multiplyByScalar(left, right, ScratchStorage.getCartesian4());
+        } else if ((typeof left === 'number') && (typeof right === 'number')) {
+            return left * right;
         }
-        return left * right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "*" requires vector or number arguments. If both arguments are vectors they must be matching types. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return left * right; // jshint ignore:line
     };
 
     Node.prototype._evaluateDivide = function(frameState, feature) {
@@ -1138,18 +1222,25 @@ define([
         var right = this._right.evaluate(frameState, feature);
         if ((right instanceof Cartesian2) && (left instanceof Cartesian2)) {
             return Cartesian2.divideComponents(left, right, ScratchStorage.getCartesian2());
-        } else if ((left instanceof Cartesian2) && (typeof(right) === 'number')) {
+        } else if ((left instanceof Cartesian2) && (typeof right === 'number')) {
             return Cartesian2.divideByScalar(left, right, ScratchStorage.getCartesian2());
         } else if ((right instanceof Cartesian3) && (left instanceof Cartesian3)) {
             return Cartesian3.divideComponents(left, right, ScratchStorage.getCartesian3());
-        } else if ((left instanceof Cartesian3) && (typeof(right) === 'number')) {
+        } else if ((left instanceof Cartesian3) && (typeof right === 'number')) {
             return Cartesian3.divideByScalar(left, right, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.divideComponents(left, right, ScratchStorage.getCartesian4());
-        } else if ((left instanceof Cartesian4) && (typeof(right) === 'number')) {
+        } else if ((left instanceof Cartesian4) && (typeof right === 'number')) {
             return Cartesian4.divideByScalar(left, right, ScratchStorage.getCartesian4());
+        } else if ((typeof left === 'number') && (typeof right === 'number')) {
+            return left / right;
         }
-        return left / right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "/" requires vector or number arguments of matching types, or a number as the second argument. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return left / right; // jshint ignore:line
     };
 
     Node.prototype._evaluateMod = function(frameState, feature) {
@@ -1161,8 +1252,15 @@ define([
             return Cartesian3.fromElements(left.x % right.x, left.y % right.y, left.z % right.z, ScratchStorage.getCartesian3());
         } else if ((right instanceof Cartesian4) && (left instanceof Cartesian4)) {
             return Cartesian4.fromElements(left.x % right.x, left.y % right.y, left.z % right.z, left.w % right.w, ScratchStorage.getCartesian4());
+        } else if ((typeof left === 'number') && (typeof right === 'number')) {
+            return left % right;
         }
-        return left % right;
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "%" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return left % right; // jshint ignore:line
     };
 
     Node.prototype._evaluateEqualsStrict = function(frameState, feature) {
@@ -1176,20 +1274,6 @@ define([
         return left === right;
     };
 
-    Node.prototype._evaluateEquals = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
-        if ((right instanceof Cartesian2) && (left instanceof Cartesian2) ||
-            (right instanceof Cartesian3) && (left instanceof Cartesian3) ||
-            (right instanceof Cartesian4) && (left instanceof Cartesian4)) {
-            return left.equals(right);
-        }
-
-        // Specifically want to do an abstract equality comparison (==) instead of a strict equality comparison (===)
-        // so that cases like "5 == '5'" return true. Tell jsHint to ignore this line.
-        return left == right; // jshint ignore:line
-    };
-
     Node.prototype._evaluateNotEqualsStrict = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
@@ -1201,21 +1285,16 @@ define([
         return left !== right;
     };
 
-    Node.prototype._evaluateNotEquals = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
-        if ((right instanceof Cartesian2) && (left instanceof Cartesian2) ||
-            (right instanceof Cartesian3) && (left instanceof Cartesian3) ||
-            (right instanceof Cartesian4) && (left instanceof Cartesian4)) {
-            return !left.equals(right);
-        }
-        // Specifically want to do an abstract inequality comparison (!=) instead of a strict inequality comparison (!==)
-        // so that cases like "5 != '5'" return false. Tell jsHint to ignore this line.
-        return left != right; // jshint ignore:line
-    };
-
     Node.prototype._evaluateConditional = function(frameState, feature) {
-        if (this._test.evaluate(frameState, feature)) {
+        var test = this._test.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof test !== 'boolean') {
+            throw new DeveloperError('Conditional argument of conditional expression must be a boolean. Argument is ' + test + '.');
+        }
+        //>>includeEnd('debug');
+
+        if (test) {
             return this._left.evaluate(frameState, feature);
         }
         return this._right.evaluate(frameState, feature);
@@ -1273,35 +1352,63 @@ define([
     };
 
     Node.prototype._evaluateRegExpTest = function(frameState, feature) {
-        return this._left.evaluate(frameState, feature).test(this._right.evaluate(frameState, feature));
+        var left = this._left.evaluate(frameState, feature);
+        var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!((left instanceof RegExp) && (typeof right === 'string'))) {
+            throw new DeveloperError('RegExp.test requires the first argument to be a RegExp and the second argument to be a string. Arguments are ' + left + ' and ' + right + '.');
+        }
+        //>>includeEnd('debug');
+
+        return left.test(right);
     };
 
     Node.prototype._evaluateRegExpMatch = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
-        if (left instanceof RegExp) {
+
+        if ((left instanceof RegExp) && (typeof right === 'string')) {
             return left.test(right);
-        } else if (right instanceof RegExp) {
+        } else if ((right instanceof RegExp) && (typeof left === 'string')) {
             return right.test(left);
-        } else {
-            return false;
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "=~" requires one RegExp argument and one string argument. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return false; // jshint ignore:line
     };
 
     Node.prototype._evaluateRegExpNotMatch = function(frameState, feature) {
         var left = this._left.evaluate(frameState, feature);
         var right = this._right.evaluate(frameState, feature);
-        if (left instanceof RegExp) {
+
+        if ((left instanceof RegExp) && (typeof right === 'string')) {
             return !(left.test(right));
-        } else if (right instanceof RegExp) {
+        } else if ((right instanceof RegExp) && (typeof left === 'string')) {
             return !(right.test(left));
-        } else {
-            return false;
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Operator "!~" requires one RegExp argument and one string argument. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+
+        return false; // jshint ignore:line
     };
 
     Node.prototype._evaluateRegExpExec = function(frameState, feature) {
-        var exec = this._left.evaluate(frameState, feature).exec(this._right.evaluate(frameState, feature));
+        var left = this._left.evaluate(frameState, feature);
+        var right = this._right.evaluate(frameState, feature);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!((left instanceof RegExp) && (typeof right === 'string'))) {
+            throw new DeveloperError('RegExp.exec requires the first argument to be a RegExp and the second argument to be a string. Arguments are ' + left + ' and ' + right + '.');
+        }
+        //>>includeEnd('debug');
+
+        var exec = left.exec(right);
         if (!defined(exec)) {
             return null;
         }
@@ -1315,7 +1422,7 @@ define([
         }
         //>>includeStart('debug', pragmas.debug);
         else {
-            throw new DeveloperError('Error: Unexpected function call "' + this._value + '".');
+            throw new DeveloperError('Unexpected function call "' + this._value + '".');
         }
         //>>includeEnd('debug');
     };
@@ -1464,7 +1571,7 @@ define([
                 }
                 return value + left;
             case ExpressionNodeType.BINARY:
-                // Supported types: ||, &&, ===, ==, !==, !=, <, >, <=, >=, +, -, *, /, %
+                // Supported types: ||, &&, ===, !==, <, >, <=, >=, +, -, *, /, %
                 if (value === '%') {
                     return 'mod(' + left + ', ' + right + ')';
                 } else if (value === '===') {
@@ -1619,8 +1726,8 @@ define([
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: undefined is not supported.');
                 //>>includeEnd('debug');
-            case ExpressionNodeType.LITERAL_GLOBAL:
-                if (value === 'TILES3D_TILESET_TIME') {
+            case ExpressionNodeType.BUILTIN_VARIABLE:
+                if (value === 'tiles3d_tileset_time') {
                     return 'u_tilesetTime';
                 }
         }

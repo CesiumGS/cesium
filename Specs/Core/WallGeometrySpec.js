@@ -228,7 +228,7 @@ defineSuite([
         expect(w.attributes.position.values.length).toEqual(numPositions * 3);
         expect(w.attributes.normal.values.length).toEqual(numPositions * 3);
         expect(w.attributes.tangent.values.length).toEqual(numPositions * 3);
-        expect(w.attributes.binormal.values.length).toEqual(numPositions * 3);
+        expect(w.attributes.bitangent.values.length).toEqual(numPositions * 3);
         expect(w.attributes.st.values.length).toEqual(numPositions * 2);
         expect(w.indices.length).toEqual(numTriangles * 3);
     });
