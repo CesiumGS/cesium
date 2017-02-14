@@ -847,9 +847,9 @@ defineSuite([
 
     describe('children bound union optimization', function() {
         it ('does not select visible tiles with invisible children', function() {
-            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 scene.camera.setView({
-                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 22), // just above the child tiles
+                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 22),
                     orientation: {
                         heading: 0,
                         pitch:  1.57,
@@ -859,13 +859,11 @@ defineSuite([
 
                 var stats = tileset._statistics;
                 var root = tileset._root;
-                var wrapperTile = root.children[0];
-                var child_root = wrapperTile.children[0];
-
+                var child_root = root.children[0];
+                
                 scene.renderForSpecs();
 
                 expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
                 
                 expect(child_root.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(child_root.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
@@ -878,15 +876,14 @@ defineSuite([
         });
 
         it ('does not select visible tiles not meeting SSE with visible children', function() {
-            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 var stats = tileset._statistics;
                 var root = tileset._root;
-                var wrapperTile = root.children[0];
-                var child_root = wrapperTile.children[0];
+                var child_root = root.children[0];
                 child_root.geometricError = 240;
 
                 scene.camera.setView({
-                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 50),
+                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
                     orientation: {
                         heading: 0,
                         pitch:  -1.57,
@@ -897,7 +894,6 @@ defineSuite([
                 scene.renderForSpecs();
 
                 expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
                 
                 expect(child_root.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(child_root.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
@@ -910,14 +906,13 @@ defineSuite([
         });
 
         it ('does select visible tiles meeting SSE with visible children', function() {
-            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 var stats = tileset._statistics;
                 var root = tileset._root;
-                var wrapperTile = root.children[0];
-                var child_root = wrapperTile.children[0];
+                var child_root = root.children[0];
 
                 scene.camera.setView({
-                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 50),
+                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
                     orientation: {
                         heading: 0,
                         pitch:  -1.57,
@@ -929,7 +924,6 @@ defineSuite([
                 scene.renderForSpecs();
 
                 expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
                 
                 expect(child_root.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(child_root.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
@@ -960,7 +954,6 @@ defineSuite([
                 scene.renderForSpecs();
 
                 expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
                 
                 expect(child_root.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(child_root.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
@@ -991,7 +984,6 @@ defineSuite([
                 scene.renderForSpecs();
 
                 expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(child_root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_INSIDE);
                 
                 expect(child_root.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(child_root.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
