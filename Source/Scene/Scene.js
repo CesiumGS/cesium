@@ -559,6 +559,16 @@ define([
          */
         this.useDepthPicking = true;
 
+        /**
+         * When <code>true</code>, enables picking translucent geometry using the depth buffer.
+         * <code>useDepthPicking</code> must also be true to enable picking the depth buffer.
+         * <p>
+         * There is a decrease in performance when enabled. There are extra draw calls to write depth for
+         * translucent geometry.
+         * </p>
+         * @type {Boolean}
+         * @default false
+         */
         this.pickTranslucentDepth = true;
 
         /**
