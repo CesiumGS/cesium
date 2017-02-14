@@ -65,8 +65,10 @@ defineSuite([
 
     describe('logging', function() {
         var widget;
+        var container;
+        
         beforeAll(function() {
-            var container = document.createElement('div');
+            container = document.createElement('div');
             container.id = 'testContainer';
             document.body.appendChild(container);
             widget = new Cesium3DTilesInspector('testContainer', scene);
@@ -75,15 +77,12 @@ defineSuite([
             viewModel.tileset = new Cesium3DTileset({
                 url: tilesetUrl
             });
-            var done = when.defer();
-            viewModel._tilesetLoaded.then(function() {
-                done.resolve();
-            });
-            return done;
+            return viewModel._tilesetLoaded;
         });
 
         afterAll(function() {
             widget.destroy();
+            document.body.removeChild(container);
         });
 
         it ('shows performance', function() {
