@@ -72,7 +72,7 @@ var viewModel = {
             url: '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/'
         }, {
             name: 'Instanced/Orientation',
-            url: '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientationWithBatchTable/'
+            url: '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientation/'
         }, {
             name: 'Composite',
             url: '../../../Specs/Data/Cesium3DTiles/Composite/Composite/'
@@ -170,8 +170,10 @@ handler.setInputAction(function(movement) {
         }
 
         // evaluate feature description
-        if (Cesium.defined(tileset.style.meta.description)) {
-            console.log("Description : " + tileset.style.meta.description.evaluate(scene.frameState, feature));
+        if (Cesium.defined(tileset.style)) {
+            if (Cesium.defined(tileset.style.meta.description)) {
+                console.log('Description : ' + tileset.style.meta.description.evaluate(scene.frameState, feature));
+            }
         }
     }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);

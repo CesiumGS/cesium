@@ -847,7 +847,9 @@ define([
             colorStyleFunction = style.getColorShaderFunction('getColorFromStyle', 'czm_tiles3d_style_', shaderState);
             showStyleFunction = style.getShowShaderFunction('getShowFromStyle', 'czm_tiles3d_style_', shaderState);
             pointSizeStyleFunction = style.getPointSizeShaderFunction('getPointSizeFromStyle', 'czm_tiles3d_style_', shaderState);
-            styleTranslucent = shaderState.translucent;
+            if (defined(colorStyleFunction) && shaderState.translucent) {
+                styleTranslucent = true;
+            }
         }
 
         content._styleTranslucent = styleTranslucent;

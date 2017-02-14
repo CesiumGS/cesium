@@ -5,6 +5,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './Event',
@@ -23,6 +24,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -66,6 +68,8 @@ define([
      * viewer.terrainProvider = terrainProvider;
      *
      *  @see TerrainProvider
+     *
+     *  @deprecated
      */
     function ArcGisImageServerTerrainProvider(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -73,6 +77,8 @@ define([
             throw new DeveloperError('options.url is required.');
         }
         //>>includeEnd('debug');
+
+        deprecationWarning('ArcGisImageServerTerrainProvider', 'ArcGisImageServerTerrainProvider was deprecated in Cesium 1.31.  It will be removed in 1.32.');
 
         this._url = options.url;
         this._token = options.token;

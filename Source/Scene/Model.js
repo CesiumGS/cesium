@@ -55,6 +55,7 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './Axis',
         './BlendingState',
         './ColorBlendMode',
         './getAttributeOrUniformBySemantic',
@@ -125,6 +126,7 @@ define([
         gltfDefaults,
         Uri,
         when,
+        Axis,
         BlendingState,
         ColorBlendMode,
         getAttributeOrUniformBySemantic,
@@ -147,7 +149,6 @@ define([
         return {};
     }
 
-    var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = {
@@ -639,6 +640,7 @@ define([
         this._pickUniformMapLoaded = options.pickUniformMapLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._requestType = options.requestType;
+        this._upAxis = defaultValue(options.upAxis, Axis.Y);
 
         /**
          * @private
@@ -971,6 +973,24 @@ define([
                 //>>includeEnd('debug');
                 this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
             }
+        },
+
+        /**
+         * Gets the model's up-axis.
+         * By default models are y-up according to the glTF spec, however geo-referenced models will typically be z-up.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Number}
+         * @default Axis.Y
+         * @readonly
+         *
+         * @private
+         */
+        upAxis : {
+            get : function() {
+                return this._upAxis;
+            }
         }
     });
 
@@ -1248,7 +1268,7 @@ define([
         };
     }
 
-    function computeBoundingSphere(gltf) {
+    function computeBoundingSphere(model, gltf) {
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
         var rootNodes = gltf.scenes[gltf.scene].nodes;
@@ -1304,7 +1324,12 @@ define([
         }
 
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-        return BoundingSphere.transformWithoutScale(boundingSphere, yUpToZUp, boundingSphere);
+        if (model._upAxis === Axis.Y) {
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Y_UP_TO_Z_UP, boundingSphere);
+        } else if (model._upAxis === Axis.X) {
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.X_UP_TO_Z_UP, boundingSphere);
+        }
+        return boundingSphere;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2307,21 +2332,32 @@ define([
         // Retrieve the compiled shader program to assign index values to attributes
         var attributeLocations = {};
 
+        var index;
         var technique = techniques[materials[primitive.material].technique];
         var parameters = technique.parameters;
         var attributes = technique.attributes;
-        var programAttributeLocations = model._rendererResources.programs[technique.program].vertexAttributes;
+        var program = model._rendererResources.programs[technique.program];
+        var programVertexAttributes = program.vertexAttributes;
+        var programAttributeLocations = program._attributeLocations;
 
         // Note: WebGL shader compiler may have optimized and removed some attributes from programAttributeLocations
         for (var location in programAttributeLocations){
             if (programAttributeLocations.hasOwnProperty(location)) {
                 var attribute = attributes[location];
-                var index = programAttributeLocations[location].index;
                 if (defined(attribute)) {
-                    var parameter = parameters[attribute];
-                    attributeLocations[parameter.semantic] = index;
+                    var vertexAttribute = programVertexAttributes[location];
+                    if (defined(vertexAttribute)) {
+                        index = vertexAttribute.index;
+                        var parameter = parameters[attribute];
+                        attributeLocations[parameter.semantic] = index;
+                    }
                 } else {
-                    // Pre-created attributes
+                    // Pre-created attributes.
+                    // Some pre-created attributes, like per-instance pickIds, may be compiled out of the draw program
+                    // but should be included in the list of attribute locations for the pick program.
+                    // This is safe to do since programVertexAttributes and programAttributeLocations are equivalent except
+                    // that programVertexAttributes optimizes out unused attributes.
+                    index = programAttributeLocations[location];
                     attributeLocations[location] = index;
                 }
             }
@@ -3591,7 +3627,7 @@ define([
         var nodeStack = scratchNodeStack;
         var computedModelMatrix = model._computedModelMatrix;
 
-        if (model._mode !== SceneMode.SCENE3D) {
+        if ((model._mode !== SceneMode.SCENE3D) && !model._ignoreCommands) {
             var translation = Matrix4.getColumn(computedModelMatrix, 3, scratchComputedTranslation);
             if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
                 computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
@@ -4351,7 +4387,7 @@ define([
 
             this._state = ModelState.LOADING;
 
-            this._boundingSphere = computeBoundingSphere(this.gltf);
+            this._boundingSphere = computeBoundingSphere(this, this.gltf);
             this._initialRadius = this._boundingSphere.radius;
 
             checkSupportedExtensions(this);
@@ -4474,7 +4510,11 @@ define([
                 var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
                 Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
-                Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
+                if (this._upAxis === Axis.Y) {
+                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
+                } else if (this._upAxis === Axis.X) {
+                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
+                }
             }
 
             // Update modelMatrix throughout the graph as needed

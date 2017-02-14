@@ -73,6 +73,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Guillaume Beraudo](https://github.com/gberaudo)
 * [Safe Software](https://www.safe.com)
    * [Joel Depooter](https://github.com/JDepooter)
+* [Bentley Systems, Inc.](https://www.bentley.com)
+   * [Paul Connelly](https://github.com/pmconne)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -126,3 +128,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Zsolt Simon](https://github.com/szsolt)
 * [Chris Grant](https://github.com/cwgrant)
 * [Aristeidis Bampakos](https://github.com/bampakoa)
+* [Jane Minghui Guo](https://github.com/Jane-Of-Art)
+* [Prasanna Natarajan](https://github.com/PrasannaNatarajan)
+* [Joseph Klinger](https://github.com/klingerj)
