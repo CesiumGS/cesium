@@ -159,6 +159,8 @@ define([
                                 if (picked instanceof Cesium3DTileFeature) {
                                     that._feature = picked;
                                     that._updateStats(true);
+                                } else {
+                                    that._feature = undefined;
                                 }
                             }, ScreenSpaceEventType.MOUSE_MOVE);
                         } else {

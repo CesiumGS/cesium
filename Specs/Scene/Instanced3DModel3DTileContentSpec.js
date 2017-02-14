@@ -37,6 +37,7 @@ defineSuite([
     var quantizedOct32POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedOct32POrientation/';
     var withTransformUrl = './Data/Cesium3DTiles/Instanced/InstancedWithTransform/';
     var withBatchIdsUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchIds/';
+    var gltfZUpUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfZUp';
 
     function setCamera(longitude, latitude) {
         // One instance is located at the center, point the camera there
@@ -197,6 +198,12 @@ defineSuite([
 
     it('renders with batch ids', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchIdsUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with a gltf z-up axis', function() {
+        return Cesium3DTilesTester.loadTileset(scene, gltfZUpUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
