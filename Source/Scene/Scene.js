@@ -1717,7 +1717,7 @@ define([
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
 
-    function executeCommands(scene, passState, picking) {
+    function executeCommands(scene, passState) {
         var camera = scene._camera;
         var context = scene.context;
         var us = context.uniformState;
@@ -1742,6 +1742,7 @@ define([
         us.updatePass(Pass.ENVIRONMENT);
 
         var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
+        var picking = scene._frameState.passes.pick;
         var environmentState = scene._environmentState;
 
         // Do not render environment primitives during a pick pass since they do not generate picking commands.
@@ -2012,7 +2013,7 @@ define([
         }
     }
 
-    function updateAndExecuteCommands(scene, passState, backgroundColor, picking) {
+    function updateAndExecuteCommands(scene, passState, backgroundColor) {
         var context = scene._context;
 
         var viewport = passState.viewport;
@@ -2024,7 +2025,7 @@ define([
         if (scene._useWebVR && mode !== SceneMode.SCENE2D) {
             updatePrimitives(scene);
             createPotentiallyVisibleSet(scene);
-            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
+            updateAndClearFramebuffers(scene, passState, backgroundColor);
             executeComputeCommands(scene);
             executeShadowMapCastCommands(scene);
 
@@ -2050,14 +2051,14 @@ define([
             Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
             camera.frustum.xOffset = offset;
 
-            executeCommands(scene, passState, picking);
+            executeCommands(scene, passState);
 
             viewport.x = passState.viewport.width;
 
             Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
             camera.frustum.xOffset = -offset;
 
-            executeCommands(scene, passState, picking);
+            executeCommands(scene, passState);
 
             Camera.clone(savedCamera, camera);
         } else {
@@ -2067,9 +2068,9 @@ define([
             viewport.height = context.drawingBufferHeight;
 
             if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
-                executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
+                executeCommandsInViewport(true, scene, passState, backgroundColor);
             } else {
-                execute2DViewportCommands(scene, passState, backgroundColor, picking);
+                execute2DViewportCommands(scene, passState, backgroundColor);
             }
         }
     }
@@ -2082,7 +2083,7 @@ define([
     var scratch2DViewportEyePoint = new Cartesian3();
     var scratch2DViewportWindowCoords = new Cartesian3();
 
-    function execute2DViewportCommands(scene, passState, backgroundColor, picking) {
+    function execute2DViewportCommands(scene, passState, backgroundColor) {
         var context = scene.context;
         var frameState = scene.frameState;
         var camera = scene.camera;
@@ -2113,7 +2114,7 @@ define([
         var viewportWidth = viewport.width;
 
         if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= context.drawingBufferWidth) {
-            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
+            executeCommandsInViewport(true, scene, passState, backgroundColor);
         } else if (Math.abs(context.drawingBufferWidth * 0.5 - windowCoordinates.x) < 1.0) {
             viewport.width = windowCoordinates.x;
 
@@ -2124,7 +2125,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
+            executeCommandsInViewport(true, scene, passState, backgroundColor);
 
             viewport.x = viewport.width;
 
@@ -2136,7 +2137,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
+            executeCommandsInViewport(false, scene, passState, backgroundColor);
         } else if (windowCoordinates.x > context.drawingBufferWidth * 0.5) {
             viewport.width = windowCoordinates.x;
 
@@ -2146,7 +2147,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
+            executeCommandsInViewport(true, scene, passState, backgroundColor);
 
             viewport.x += windowCoordinates.x;
             viewport.width = context.drawingBufferWidth - windowCoordinates.x;
@@ -2159,7 +2160,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
+            executeCommandsInViewport(false, scene, passState, backgroundColor);
         } else {
             viewport.x = windowCoordinates.x;
             viewport.width = context.drawingBufferWidth - windowCoordinates.x;
@@ -2170,7 +2171,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
+            executeCommandsInViewport(true, scene, passState, backgroundColor);
 
             viewport.x = 0;
             viewport.width = windowCoordinates.x;
@@ -2183,7 +2184,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
+            executeCommandsInViewport(false, scene, passState, backgroundColor);
         }
 
         camera._setTransform(transform);
@@ -2194,7 +2195,7 @@ define([
         viewport.width = viewportWidth;
     }
 
-    function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor, picking) {
+    function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor) {
         if (!firstViewport) {
             scene.frameState.commandList.length = 0;
         }
@@ -2203,12 +2204,12 @@ define([
         createPotentiallyVisibleSet(scene);
 
         if (firstViewport) {
-            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
+            updateAndClearFramebuffers(scene, passState, backgroundColor);
             executeComputeCommands(scene);
             executeShadowMapCastCommands(scene);
         }
 
-        executeCommands(scene, passState, picking);
+        executeCommands(scene, passState);
     }
 
     function updateEnvironment(scene) {
@@ -2318,10 +2319,13 @@ define([
         }
     }
 
-    function updateAndClearFramebuffers(scene, passState, clearColor, picking) {
+    function updateAndClearFramebuffers(scene, passState, clearColor) {
         var context = scene._context;
         var environmentState = scene._environmentState;
 
+        var passes = scene._frameState.passes;
+        var picking = passes.pick;
+        var pickDepth = passes.depth;
         var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
 
         // Preserve the reference to the original framebuffer.
@@ -2347,7 +2351,7 @@ define([
         clear.execute(context, passState);
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = (!picking || pickDepth) && defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
             scene._globeDepth.update(context);
             scene._globeDepth.clear(context, passState, clearColor);
@@ -2700,7 +2704,7 @@ define([
 
         var passState = this._pickFramebuffer.begin(scratchRectangle);
 
-        updateAndExecuteCommands(this, passState, scratchColorZero, true);
+        updateAndExecuteCommands(this, passState, scratchColorZero);
         resolveFramebuffers(this, passState);
 
         var object = this._pickFramebuffer.end(scratchRectangle);
@@ -2718,7 +2722,8 @@ define([
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(scene, frameState.frameNumber, frameState.time);
         frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, 1, 1);
-        frameState.passes.render = true;
+        frameState.passes.pick = true;
+        frameState.passes.depth = true;
 
         us.update(frameState);
 

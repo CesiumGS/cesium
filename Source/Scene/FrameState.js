@@ -117,7 +117,14 @@ define([
              * @type {Boolean}
              * @default false
              */
-            pick : false
+            pick : false,
+
+            /**
+             * <code>true</code> if the primitive should update for a depth only pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            depth : false
         };
 
         /**
