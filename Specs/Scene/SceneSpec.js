@@ -657,7 +657,7 @@ defineSuite([
 
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
-            expect(position).toEqualEpsilon(pickedPosition3D, CesiumMath.EPSILON7);
+            expect(position).toEqualEpsilon(pickedPosition3D, CesiumMath.EPSILON6);
         });
     });
 
@@ -687,7 +687,7 @@ defineSuite([
 
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
-            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON7);
+            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON6);
         });
     });
 
@@ -717,7 +717,7 @@ defineSuite([
 
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
-            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON7);
+            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON6);
         });
     });
 
