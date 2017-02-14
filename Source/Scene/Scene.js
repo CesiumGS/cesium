@@ -569,7 +569,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.pickTranslucentDepth = true;
+        this.pickTranslucentDepth = false;
 
         /**
          * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.

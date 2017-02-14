@@ -688,6 +688,38 @@ defineSuite([
         });
     });
 
+    it('pickPosition picks translucent geometry when pickTranslucentDepth is true', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({
+            destination : rectangle
+        });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        var rectanglePrimitive = createRectangle(rectangle);
+        rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive);
+
+        scene.useDepthPicking = true;
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+        });
+
+        scene.pickTranslucentDepth = true;
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toBeDefined();
+        });
+    });
+
     it('pickPosition throws without windowPosition', function() {
         expect(function() {
             scene.pickPosition();
