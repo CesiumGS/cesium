@@ -8,7 +8,7 @@ define([
     /**
      * @private
      * 
-     * @alias Cesium3DTileOptimizationHint
+     * @exports Cesium3DTileOptimizationHint
      * 
      * Hint defining optimization support for a 3D tile
      */

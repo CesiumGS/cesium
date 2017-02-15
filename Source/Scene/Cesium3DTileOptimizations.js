@@ -16,31 +16,18 @@ define([
     'use strict';
 
     /**
-     * Defines optional optimization hints for a {@link Cesium3DTileset}.
-     * Optimizations marked as {@link Cesium3DTileOptimizationHint.USE_OPTIMIZATION} or {@link Cesium3DTileOptimizationHint.SKIP_OPTIMIZATION}
-     * will not be evaluated at runtime
-     *
+     * Utiility functions for computing optimization hints for a {@link Cesium3DTileset}.
+     * 
      * @private
      * 
-     * @alias Cesium3DTileOptimizations
-     * @constructor
+     * @exports Cesium3DTileOptimizations
      */
-    function Cesium3DTileOptimizations(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        /**
-         * Denotes support for if the childrenWithinParent optimization is supported. This is used to more tightly cull tilesets if children bounds are
-         * fully contained within the parent.
-         *
-         * @type {Cesium3DTileOptimizationHint}
-         */
-        this.childrenWithinParent = defaultValue(options.childrenWithinParent, Cesium3DTileOptimizationHint.NOT_COMPUTED);
-    }
+    var Cesium3DTileOptimizations = {};
 
     var scratchAxis = new Cartesian3();
 
     /**
-     * Checks and optionnally evaluates support for the childrenWithinParent optimization. This is used to more tightly cull tilesets if children bounds are
+     * Checks and optionally evaluates support for the childrenWithinParent optimization. This is used to more tightly cull tilesets if children bounds are
      * fully contained within the parent. Currently, support for the optimization only works for oriented bounding boxes, so both the child and parent tile 
      * must be either a {@link TileOrientedBoundingBox} or {@link TileBoundingRegion}. The purpose of this check is to prevent use of a culling optimization
      * when the child bounds exceed those of the parent. If the child bounds are greater, it is more likely that the optimization will waste CPU cycles. Bounding
@@ -51,11 +38,11 @@ define([
      * @param {Boolean} [force=false] Whether to always evaluate support for the childrenWithinParent optimization
      * @returns {Boolean} Whether the childrenWithinParent optimization is supported.
      */
-    Cesium3DTileOptimizations.prototype.checkChildrenWithinParent = function(tile, evaluate, force) {
+    Cesium3DTileOptimizations.checkChildrenWithinParent = function(tile, evaluate, force) {
         evaluate = defaultValue(evaluate, false);
         force = defaultValue(force, false);
 
-        if ((this.childrenWithinParent === Cesium3DTileOptimizationHint.NOT_COMPUTED && evaluate) || force) {
+        if ((tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.NOT_COMPUTED && evaluate) || force) {
             var children = tile.children;
             var length = children.length;
 
@@ -63,7 +50,7 @@ define([
             var boundingVolume = tile._boundingVolume;
             if (boundingVolume instanceof TileOrientedBoundingBox || boundingVolume instanceof TileBoundingRegion) {
                 var orientedBoundingBox = boundingVolume._orientedBoundingBox;
-                this.childrenWithinParent = Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
+                tile._optimChildrenWithinParent = Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
                 for (var i = 0; i < length; ++i) {
                     var child = children[i];
 
@@ -103,20 +90,20 @@ define([
                         
                         // If the child extends the parent's bounds, the optimization is not valid and we skip it.
                         if (proj1 <= proj2 + axisLength) {
-                            this.childrenWithinParent = Cesium3DTileOptimizationHint.SKIP_OPTIMIZATION;
+                            tile._optimChildrenWithinParent = Cesium3DTileOptimizationHint.SKIP_OPTIMIZATION;
                             break;
                         }
 
                     } else {
                         // Do not support if the parent and child both do not have oriented bounding boxes.
-                        this.childrenWithinParent = Cesium3DTileOptimizationHint.SKIP_OPTIMIZATION;
+                        tile._optimChildrenWithinParent = Cesium3DTileOptimizationHint.SKIP_OPTIMIZATION;
                         break;
                     }
                 }
             }
         }
 
-        return this.childrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION ? true : false;
+        return tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION ? true : false;
     }
 
     return Cesium3DTileOptimizations;

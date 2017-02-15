@@ -28,6 +28,7 @@ define([
         './Cesium3DTile',
         './Cesium3DTileChildrenVisibility',
         './Cesium3DTileColorBlendMode',
+        './Cesium3DTileOptimizations',
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
         './Cesium3DTileStyleEngine',
@@ -67,6 +68,7 @@ define([
         Cesium3DTile,
         Cesium3DTileChildrenVisibility,
         Cesium3DTileColorBlendMode,
+        Cesium3DTileOptimizations,
         Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
         Cesium3DTileStyleEngine,
@@ -278,7 +280,7 @@ define([
             lastColor : new Cesium3DTilesetStatistics(),
             lastPick : new Cesium3DTilesetStatistics()
         };
-        
+
         this._tilesLoaded = false;
 
         /**
@@ -923,7 +925,7 @@ define([
                         }
                     }
                 }
-                tile3D._optimizations.checkChildrenWithinParent(tile3D, true);
+                Cesium3DTileOptimizations.checkChildrenWithinParent(tile3D, true);
                 if (tile3D.hasContent && hasEmptyChild && (tile3D.refine === Cesium3DTileRefine.REPLACE)) {
                     // Tiles that use replacement refinement and have empty child tiles need to keep track of
                     // descendants with content in order to refine correctly.
@@ -1334,7 +1336,7 @@ define([
                 // With replacement refinement, if the tile's SSE
                 // is not sufficient, its children (or ancestors) are
                 // rendered instead
-                var useChildrenBoundUnion = t._optimizations.childrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
+                var useChildrenBoundUnion = t._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
 
                 var childrenVisibility;
                 

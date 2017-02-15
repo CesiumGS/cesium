@@ -27,6 +27,7 @@ define([
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileOptimizations',
+        './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
         './Empty3DTileContent',
         './PerInstanceColorAppearance',
@@ -63,6 +64,7 @@ define([
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
         Cesium3DTileOptimizations,
+        Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
         Empty3DTileContent,
         PerInstanceColorAppearance,
@@ -345,7 +347,12 @@ define([
         this._debugColor = new Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
 
-        this._optimizations = new Cesium3DTileOptimizations();
+        /**
+         * Marks whether the tile's children bounds are fully contained within the tile's bounds
+         * 
+         * @type {Cesium3DTileOptimizationHint}
+         */
+        this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
     }
 
     defineProperties(Cesium3DTile.prototype, {
