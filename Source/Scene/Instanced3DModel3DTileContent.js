@@ -490,7 +490,9 @@ define([
         this._modelInstanceCollection.shadows = this._tileset.shadows;
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
         this._modelInstanceCollection.update(frameState);
-        tileset._statistics.numberOfFeaturesSelected += this.featuresLength;
+        if (defined(tileset._statistics)) {
+            tileset._statistics.numberOfFeaturesSelected += this.featuresLength;
+        }
 
         frameState.addCommand = oldAddCommand;
     };
