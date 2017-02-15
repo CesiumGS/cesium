@@ -23,6 +23,7 @@ Change Log
 * Fixed an issue where the camera would zoom past an object and flip to the other side of the globe. [#4967](https://github.com/AnalyticalGraphicsInc/cesium/pull/4967) and [#4982](https://github.com/AnalyticalGraphicsInc/cesium/pull/4982)
 * Fixed exception in 2D in certain cases with polylines when rotating the map. [#4619](https://github.com/AnalyticalGraphicsInc/cesium/issues/4619)
 * Fixed an issue with constant `VertexArray` attributes not being set correctly. [#4995](https://github.com/AnalyticalGraphicsInc/cesium/pull/4995)
+* Add support for depth picking translucent primitives when `Scene.pickTranslucentDepth` is `true`. [#4979](https://github.com/AnalyticalGraphicsInc/cesium/pull/4979)
 
 ### 1.30 - 2017-02-01
 
