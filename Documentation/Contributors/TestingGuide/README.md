@@ -164,11 +164,11 @@ When one or more tests fail, output looks like this:
 
 The failed tests will be listed by name, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack.
 
-It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, IE, and Safari.
+It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, Edge, IE, and Safari.
 
 #### Run Tests with a Specific Browser or Browsers
 
-`npm run test -- --browsers Firefox,Chrome`
+`npm run test -- --browsers Firefox,Chrome,Edge`
 
 #### Run All Tests with WebGL Validation
 
