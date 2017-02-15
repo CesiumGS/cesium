@@ -2894,6 +2894,10 @@ define([
      * reconstructed in 3D and Columbus view. This is caused by the difference in the distribution
      * of depth values of perspective and orthographic projection.
      * </p>
+     * <p>
+     * Set {@link Scene#pickTranslucentDepth} to <code>true</code> to include the depth of
+     * translucent primitives; otherwise, this essentially picks through translucent primitives.
+     * </p>
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      * @param {Cartesian3} [result] The object on which to restore the result.
