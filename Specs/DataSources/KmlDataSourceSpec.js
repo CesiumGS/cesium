@@ -1142,7 +1142,7 @@ defineSuite([
             expect(entity.wall.material).toBeInstanceOf(ColorMaterialProperty);
             expect(entity.wall.material.color.getValue()).toEqual(uberPolyColor);
             expect(entity.wall.fill.getValue()).toEqual(uberPolyFill);
-            expect(entity.wall.outline.getValue()).toEqual(uberPolyOutline);
+            expect(entity.wall.outline.getValue()).toEqual(true);
             expect(entity.wall.outlineColor.getValue()).toEqual(uberLineColor);
             expect(entity.wall.outlineWidth.getValue()).toEqual(uberLineWidth);
 

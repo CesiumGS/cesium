@@ -493,6 +493,10 @@ defineSuite([
     });
 
     it('renders with distance display condition per instance attribute', function() {
+        if (!context.floatingPointTexture) {
+            return;
+        }
+
         if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
