@@ -561,7 +561,7 @@ define([
 
         /**
          * When <code>true</code>, enables picking translucent geometry using the depth buffer.
-         * <code>useDepthPicking</code> must also be true to enable picking the depth buffer.
+         * {@link Scene#useDepthPicking} must also be true to enable picking the depth buffer.
          * <p>
          * There is a decrease in performance when enabled. There are extra draw calls to write depth for
          * translucent geometry.
@@ -2790,6 +2790,10 @@ define([
 
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
+     * <p>
+     * Set {@link Scene#pickTranslucentDepth} to <code>true</code> to include the depth of
+     * translucent primitives; otherwise, this essentially picks through translucent primitives.
+     * </p>
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      * @param {Cartesian3} [result] The object on which to restore the result.
