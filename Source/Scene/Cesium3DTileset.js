@@ -272,6 +272,8 @@ define([
             // Styling stats
             numberOfTilesStyled : 0,
             numberOfFeaturesStyled : 0,
+            // Optimization stats
+            numberOfTilesCulledWithChildrenUnion : 0,
 
             lastColor : new Cesium3DTilesetStatistics(),
             lastPick : new Cesium3DTilesetStatistics()
@@ -471,6 +473,7 @@ define([
         this.numberTotal = 0;
         this.numberOfTilesStyled = 0;
         this.numberOfFeaturesStyled = 0;
+        this.numberOfTilesCulledWithChildrenUnion = 0;
     }
 
     defineProperties(Cesium3DTileset.prototype, {
@@ -1342,6 +1345,8 @@ define([
                         childrenVisibility = computeChildrenVisibility(t, frameState, false);
                         if ((childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE) || childrenLength === 0) {
                             selectTile(tileset, t, fullyVisible, frameState);
+                        } else {
+                            ++stats.numberOfTilesCulledWithChildrenUnion;
                         }
                     } else {
                         selectTile(tileset, t, fullyVisible, frameState);
@@ -1388,6 +1393,8 @@ define([
                                     }
                                 }
                             }
+                        } else if (useChildrenBoundUnion) {
+                            ++stats.numberOfTilesCulledWithChildrenUnion;
                         }
                     } else {
                         // Tile does not meet SSE and its children are loaded.  Refine to them in front-to-back order.
@@ -1413,6 +1420,8 @@ define([
                             // Even though the children are all loaded they may not be visible if the camera
                             // is not inside their request volumes.
                             selectTile(tileset, t, fullyVisible, frameState);
+                        } else if (useChildrenBoundUnion) {
+                            ++stats.numberOfTilesCulledWithChildrenUnion;
                         }
                     }
                 } else {
@@ -1423,10 +1432,6 @@ define([
                     // PERFORMANCE_IDEA: exploit temporal coherence to avoid checking visibility every frame
                     updateTransforms(children, t.computedTransform);
                     childrenVisibility = computeChildrenVisibility(t, frameState, true);
-
-                    if (useChildrenBoundUnion && childrenVisibility === Cesium3DTileChildrenVisibility.NONE && childrenLength !== 0) {
-                        continue;
-                    }
 
                     var allVisibleChildrenLoaded = true;
                     var someVisibleChildrenLoaded = false;
@@ -1439,6 +1444,13 @@ define([
                                 allVisibleChildrenLoaded = false;
                             }
                         }
+                    }
+
+                    if (useChildrenBoundUnion && childrenVisibility === Cesium3DTileChildrenVisibility.NONE && childrenLength !== 0) {
+                        if (allVisibleChildrenLoaded && !someVisibleChildrenLoaded) {
+                            ++stats.numberOfTilesCulledWithChildrenUnion;
+                        }
+                        continue;
                     }
 
                     if (allVisibleChildrenLoaded && !someVisibleChildrenLoaded) {
@@ -1585,6 +1597,7 @@ define([
         stats.numberOfAttemptedRequests = 0;
         stats.numberOfTilesStyled = 0;
         stats.numberOfFeaturesStyled = 0;
+        stats.numberOfTilesCulledWithChildrenUnion = 0;
     }
 
     function updateLastStats(tileset, isPick) {
@@ -1601,6 +1614,7 @@ define([
         last.numberTotal = stats.numberTotal;
         last.numberOfTilesStyled = stats.numberOfTilesStyled;
         last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
+        last.numberOfTilesCulledWithChildrenUnion = stats.numberOfTilesCulledWithChildrenUnion;
     }
 
     function updateTiles(tileset, frameState) {
