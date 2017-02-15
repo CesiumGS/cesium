@@ -2701,15 +2701,18 @@ define([
 
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
+     * The returned position is in world coordinates. Used internally by camera functions to
+     * prevent conversion to projected 2D coordinates and then back.
+     *
+     * @private
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      * @param {Cartesian3} [result] The object on which to restore the result.
-     * @returns {Cartesian3} The cartesian position.
+     * @returns {Cartesian3} The cartesian position in world coordinates.
      *
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
-     * @exception {DeveloperError} 2D is not supported. An orthographic projection matrix is not invertible.
      */
-    Scene.prototype.pickPosition = function(windowPosition, result) {
+    Scene.prototype.pickPositionWorldCoordinates = function(windowPosition, result) {
         if (!this.useDepthPicking) {
             return undefined;
         }
@@ -2738,9 +2741,7 @@ define([
         } else if (defined(camera.frustum.infiniteProjectionMatrix)){
             frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
         } else {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('2D is not supported. An orthographic projection matrix is not invertible.');
-            //>>includeEnd('debug');
+            frustum = camera.frustum.clone(scratchOrthographicFrustum);
         }
 
         var numFrustums = this.numberOfFrustums;
@@ -2760,15 +2761,62 @@ define([
 
             if (depth > 0.0 && depth < 1.0) {
                 var renderedFrustum = this._frustumCommandsList[i];
-                frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
-                frustum.far = renderedFrustum.far;
-                uniformState.updateFrustum(frustum);
+                var height2D;
+                if (this.mode === SceneMode.SCENE2D) {
+                    height2D = camera.position.z;
+                    camera.position.z = height2D - renderedFrustum.near + 1.0;
+                    frustum.far = Math.max(1.0, renderedFrustum.far - renderedFrustum.near);
+                    frustum.near = 1.0;
+                    uniformState.update(this.frameState);
+                    uniformState.updateFrustum(frustum);
+                } else {
+                    frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
+                    frustum.far = renderedFrustum.far;
+                    uniformState.updateFrustum(frustum);
+                }
 
-                return SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, result);
+                result = SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, result);
+
+                if (this.mode === SceneMode.SCENE2D) {
+                    camera.position.z = height2D;
+                    uniformState.update(this.frameState);
+                }
+
+                return result;
             }
         }
 
         return undefined;
+    };
+
+    var scratchPickPositionCartographic = new Cartographic();
+
+    /**
+     * Returns the cartesian position reconstructed from the depth buffer and window position.
+     * <p>
+     * The position reconstructed from the depth buffer in 2D may be slightly different from those
+     * reconstructed in 3D and Columbus view. This is caused by the difference in the distribution
+     * of depth values of perspective and orthographic projection.
+     * </p>
+     *
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Cartesian3} [result] The object on which to restore the result.
+     * @returns {Cartesian3} The cartesian position.
+     *
+     * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
+     */
+    Scene.prototype.pickPosition = function(windowPosition, result) {
+        result = this.pickPositionWorldCoordinates(windowPosition, result);
+        if (defined(result) && this.mode !== SceneMode.SCENE3D) {
+            Cartesian3.fromElements(result.y, result.z, result.x, result);
+
+            var projection = this.mapProjection;
+            var ellipsoid = projection.ellipsoid;
+
+            var cart = projection.unproject(result, scratchPickPositionCartographic);
+            ellipsoid.cartographicToCartesian(cart, result);
+        }
+        return result;
     };
 
     /**
