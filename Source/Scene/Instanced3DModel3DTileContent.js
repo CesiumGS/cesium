@@ -101,7 +101,11 @@ define([
          */
         featuresLength : {
             get : function() {
-                return this._modelInstanceCollection.length;
+                if (defined(this._modelInstanceCollection)) {
+                    return this._modelInstanceCollection.length;
+                } else {
+                    return 0;
+                }
             }
         },
 
