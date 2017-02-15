@@ -8,6 +8,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/GeometryInstance',
+        'Core/Math',
         'Core/PixelFormat',
         'Core/Rectangle',
         'Core/RectangleGeometry',
@@ -43,6 +44,7 @@ defineSuite([
         Ellipsoid,
         GeographicProjection,
         GeometryInstance,
+        CesiumMath,
         PixelFormat,
         Rectangle,
         RectangleGeometry,
@@ -82,7 +84,7 @@ defineSuite([
         scene.debugCommandFilter = undefined;
         scene.fxaa = false;
         scene.primitives.removeAll();
-        scene.morphTo3D();
+        scene.morphTo3D(0.0);
     });
 
     afterAll(function() {
@@ -227,12 +229,13 @@ defineSuite([
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
-        var radius = Cartesian3.magnitude(scene.camera.position) - 10.0;
+        var radius = 10.0;
+        var center = Cartesian3.add(scene.camera.position, scene.camera.direction, new Cartesian3());
 
         var c = new DrawCommand({
             pass : Pass.OPAQUE,
             debugShowBoundingVolume : true,
-            boundingVolume : new BoundingSphere(Cartesian3.ZERO, radius)
+            boundingVolume : new BoundingSphere(center, radius)
         });
         c.execute = function() {};
 
@@ -627,6 +630,9 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    var pickedPosition3D = new Cartesian3(-455845.46867895435, -5210337.548977215, 3637549.8562320103);
+    var pickedPosition2D = new Cartesian3(-455861.7055871038, -5210523.137686572, 3637866.6638769475);
+
     it('pickPosition', function() {
         if (!scene.pickPositionSupported) {
             return;
@@ -651,7 +657,67 @@ defineSuite([
 
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
-            expect(position).toBeDefined();
+            expect(position).toEqualEpsilon(pickedPosition3D, CesiumMath.EPSILON6);
+        });
+    });
+
+    it('pickPosition in CV', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        scene.morphToColumbusView(0.0);
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({ destination : rectangle });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON6);
+        });
+    });
+
+    it('pickPosition in 2D', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        scene.morphTo2D(0.0);
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({ destination : rectangle });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON6);
         });
     });
 
@@ -905,7 +971,7 @@ defineSuite([
         }
         s.destroyForSpecs();
     });
-    
+
     it('does not throw with debugShowFrustums', function() {
         var s = createScene();
         if (s.context.drawBuffers) {

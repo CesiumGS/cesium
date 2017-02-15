@@ -324,7 +324,7 @@ define([
 
         var worldCoords;
         var frustum = scene.camera.frustum;
-        if (!defined(frustum.inverseProjection)) {
+        if (!defined(frustum.fovy)) {
             if (!defined(frustum.top)) {
                 frustum = frustum._offCenterFrustum;
             }

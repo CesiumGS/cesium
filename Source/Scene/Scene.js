@@ -42,6 +42,7 @@ define([
         './Camera',
         './CreditDisplay',
         './CullingVolume',
+        './DebugCameraPrimitive',
         './DepthPlane',
         './DeviceOrientationCameraController',
         './Fog',
@@ -110,6 +111,7 @@ define([
         Camera,
         CreditDisplay,
         CullingVolume,
+        DebugCameraPrimitive,
         DepthPlane,
         DeviceOrientationCameraController,
         Fog,
@@ -516,6 +518,20 @@ define([
          * @default 1
          */
         this.debugShowDepthFrustum = 1;
+
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * When <code>true</code>, draws outlines to show the boundaries of the camera frustums
+         * </p>
+         *
+         * @type Boolean
+         *
+         * @default false
+         */
+        this.debugShowFrustumPlanes = false;
+        this._debugShowFrustumPlanes = false;
+        this._debugFrustumPlanes = undefined;
 
         /**
          * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
@@ -1084,7 +1100,7 @@ define([
 
          /**
          * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
-         * @memberof Scene.prototype.
+         * @memberof Scene.prototype
          *
          * @type {Number}
          */
@@ -1098,6 +1114,18 @@ define([
             }
         }
     });
+
+    /**
+     * Determines if a compressed texture format is supported.
+     * @param {String} format The texture format. May be the name of the format or the WebGL extension name, e.g. s3tc or WEBGL_compressed_texture_s3tc.
+     * @return {boolean} Whether or not the format is supported.
+     */
+    Scene.prototype.getCompressedTextureFormatSupported = function(format) {
+        var context = this.context;
+        return ((format === 'WEBGL_compressed_texture_s3tc' || format === 's3tc') && context.s3tc) ||
+               ((format === 'WEBGL_compressed_texture_pvrtc' || format === 'pvrtc') && context.pvrtc) ||
+               ((format === 'WEBGL_compressed_texture_etc1' || format === 'etc1') && context.etc1);
+    };
 
     var scratchPosition0 = new Cartesian3();
     var scratchPosition1 = new Cartesian3();
@@ -1428,9 +1456,18 @@ define([
         }
 
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
-                (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
+                (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8)))))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             createPotentiallyVisibleSet(scene);
+        }
+
+        var frustumSplits = frameState.frustumSplits;
+        frustumSplits.length = numFrustums + 1;
+        for (var j = 0; j < numFrustums; ++j) {
+            frustumSplits[j] = frustumCommandsList[j].near;
+            if (j === numFrustums - 1) {
+                frustumSplits[j + 1] = frustumCommandsList[j].far;
+            }
         }
     }
 
@@ -2204,6 +2241,25 @@ define([
         }
     }
 
+    function updateDebugFrustumPlanes(scene) {
+        var frameState = scene._frameState;
+        if (scene.debugShowFrustumPlanes !== scene._debugShowFrustumPlanes) {
+            if (scene.debugShowFrustumPlanes) {
+                scene._debugFrustumPlanes = new DebugCameraPrimitive({
+                    camera: scene.camera,
+                    updateOnChange: false
+                });
+            } else {
+                scene._debugFrustumPlanes = scene._debugFrustumPlanes && scene._debugFrustumPlanes.destroy();
+            }
+            scene._debugShowFrustumPlanes = scene.debugShowFrustumPlanes;
+        }
+
+        if (defined(scene._debugFrustumPlanes)) {
+            scene._debugFrustumPlanes.update(frameState);
+        }
+    }
+
     function updateShadowMaps(scene) {
         var frameState = scene._frameState;
         var shadowMaps = frameState.shadowMaps;
@@ -2255,6 +2311,7 @@ define([
         scene._groundPrimitives.update(frameState);
         scene._primitives.update(frameState);
 
+        updateDebugFrustumPlanes(scene);
         updateShadowMaps(scene);
 
         if (scene._globe) {
@@ -2664,15 +2721,18 @@ define([
 
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
+     * The returned position is in world coordinates. Used internally by camera functions to
+     * prevent conversion to projected 2D coordinates and then back.
+     *
+     * @private
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      * @param {Cartesian3} [result] The object on which to restore the result.
-     * @returns {Cartesian3} The cartesian position.
+     * @returns {Cartesian3} The cartesian position in world coordinates.
      *
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
-     * @exception {DeveloperError} 2D is not supported. An orthographic projection matrix is not invertible.
      */
-    Scene.prototype.pickPosition = function(windowPosition, result) {
+    Scene.prototype.pickPositionWorldCoordinates = function(windowPosition, result) {
         if (!this.useDepthPicking) {
             return undefined;
         }
@@ -2723,15 +2783,62 @@ define([
 
             if (depth > 0.0 && depth < 1.0) {
                 var renderedFrustum = this._frustumCommandsList[i];
-                frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
-                frustum.far = renderedFrustum.far;
-                uniformState.updateFrustum(frustum);
+                var height2D;
+                if (this.mode === SceneMode.SCENE2D) {
+                    height2D = camera.position.z;
+                    camera.position.z = height2D - renderedFrustum.near + 1.0;
+                    frustum.far = Math.max(1.0, renderedFrustum.far - renderedFrustum.near);
+                    frustum.near = 1.0;
+                    uniformState.update(this.frameState);
+                    uniformState.updateFrustum(frustum);
+                } else {
+                    frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
+                    frustum.far = renderedFrustum.far;
+                    uniformState.updateFrustum(frustum);
+                }
 
-                return SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, result);
+                result = SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, result);
+
+                if (this.mode === SceneMode.SCENE2D) {
+                    camera.position.z = height2D;
+                    uniformState.update(this.frameState);
+                }
+
+                return result;
             }
         }
 
         return undefined;
+    };
+
+    var scratchPickPositionCartographic = new Cartographic();
+
+    /**
+     * Returns the cartesian position reconstructed from the depth buffer and window position.
+     * <p>
+     * The position reconstructed from the depth buffer in 2D may be slightly different from those
+     * reconstructed in 3D and Columbus view. This is caused by the difference in the distribution
+     * of depth values of perspective and orthographic projection.
+     * </p>
+     *
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Cartesian3} [result] The object on which to restore the result.
+     * @returns {Cartesian3} The cartesian position.
+     *
+     * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
+     */
+    Scene.prototype.pickPosition = function(windowPosition, result) {
+        result = this.pickPositionWorldCoordinates(windowPosition, result);
+        if (defined(result) && this.mode !== SceneMode.SCENE3D) {
+            Cartesian3.fromElements(result.y, result.z, result.x, result);
+
+            var projection = this.mapProjection;
+            var ellipsoid = projection.ellipsoid;
+
+            var cart = projection.unproject(result, scratchPickPositionCartographic);
+            ellipsoid.cartographicToCartesian(cart, result);
+        }
+        return result;
     };
 
     /**
@@ -2916,6 +3023,7 @@ define([
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
         this._transitioner.destroy();
+        this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
 
         if (defined(this._globeDepth)) {
             this._globeDepth.destroy();
