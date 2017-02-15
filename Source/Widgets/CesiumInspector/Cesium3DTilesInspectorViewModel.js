@@ -633,6 +633,14 @@ define([
                 s += '</ul>';
                 s += '<ul class="cesium-cesiumInspector-stats">';
                 s +=
+                    // --- Features stats
+                    '<li><strong>Features Selected: </strong>' + stats.numberOfFeaturesSelected + '</li>' +
+                    '<li><strong>Features Loaded: </strong>' + stats.numberOfFeaturesLoaded + '</li>' +
+                    '<li><strong>Points Selected: </strong>' + stats.numberOfPointFeaturesSelected + '</li>' +
+                    '<li><strong>Points Loaded: </strong>' + stats.numberOfPointFeaturesLoaded + '</li>';
+                s += '</ul>';
+                s += '<ul class="cesium-cesiumInspector-stats">';
+                s +=
                     // --- Styling stats
                     '<li><strong>Tiles styled: </strong>' + stats.numberOfTilesStyled + '</li>' +
                     '<li><strong>Features styled: </strong>' + stats.numberOfFeaturesStyled + '</li>';

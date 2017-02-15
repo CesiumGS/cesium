@@ -263,6 +263,11 @@ define([
             numberProcessing : 0,
             numberContentReady : 0, // Number of tiles with content loaded, does not include empty tiles
             numberTotal : 0, // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
+            // Features stats
+            numberOfFeaturesSelected : 0,       // number of features rendered
+            numberOfFeaturesLoaded : 0,  // number of features in memory
+            numberOfPointFeaturesSelected: 0,
+            numberOfPointFeaturesLoaded: 0,
             // Styling stats
             numberOfTilesStyled : 0,
             numberOfFeaturesStyled : 0,
@@ -463,6 +468,8 @@ define([
         this.numberProcessing = 0;
         this.numberContentReady = 0;
         this.numberTotal = 0;
+        this.numberOfFeaturesSelected = 0;
+        this.numberOfFeaturesLoaded = 0;
         this.numberOfTilesStyled = 0;
         this.numberOfFeaturesStyled = 0;
     }
@@ -1528,6 +1535,8 @@ define([
         stats.numberOfAttemptedRequests = 0;
         stats.numberOfTilesStyled = 0;
         stats.numberOfFeaturesStyled = 0;
+        stats.numberOfFeaturesSelected = 0;
+        stats.numberOfPointFeaturesSelected = 0;
     }
 
     function updateLastStats(tileset, isPick) {
@@ -1542,6 +1551,10 @@ define([
         last.numberProcessing = stats.numberProcessing;
         last.numberContentReady = stats.numberContentReady;
         last.numberTotal = stats.numberTotal;
+        last.numberOfFeaturesSelected = stats.numberOfFeaturesSelected;
+        last.numberOfFeaturesLoaded = stats.numberOfFeaturesLoaded;
+        last.numberOfPointFeaturesSelected = stats.numberOfPointFeaturesSelected;
+        last.numberOfPointFeaturesLoaded = stats.numberOfPointFeaturesLoaded;
         last.numberOfTilesStyled = stats.numberOfTilesStyled;
         last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
     }

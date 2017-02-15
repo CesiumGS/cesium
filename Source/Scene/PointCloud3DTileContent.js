@@ -1168,6 +1168,7 @@ define([
 
             // Set state to ready
             this.state = Cesium3DTileContentState.READY;
+            tileset._statistics.numberOfPointFeaturesLoaded += this.featuresLength;
             this._readyPromise.resolve(this);
             this._parsedContent = undefined; // Unload
         }
@@ -1228,6 +1229,8 @@ define([
         if (passes.pick) {
             frameState.addCommand(this._pickCommand);
         }
+
+        tileset._statistics.numberOfPointFeaturesSelected += this.featuresLength;
     };
 
     /**
@@ -1241,6 +1244,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     PointCloud3DTileContent.prototype.destroy = function() {
+        this._tileset._statistics.numberOfPointFeaturesLoaded -= this.featuresLength;
         var command = this._drawCommand;
         var pickCommand = this._pickCommand;
         if (defined(command)) {
