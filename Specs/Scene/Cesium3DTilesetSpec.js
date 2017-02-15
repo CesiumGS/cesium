@@ -857,7 +857,6 @@ defineSuite([
                     }
                 });
 
-                var stats = tileset._statistics;
                 var root = tileset._root;
                 var child_root = root.children[0];
                 
@@ -877,7 +876,6 @@ defineSuite([
 
         it ('does not select visible tiles not meeting SSE with visible children', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
-                var stats = tileset._statistics;
                 var root = tileset._root;
                 var child_root = root.children[0];
                 child_root.geometricError = 240;
@@ -907,7 +905,6 @@ defineSuite([
 
         it ('does select visible tiles meeting SSE with visible children', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
-                var stats = tileset._statistics;
                 var root = tileset._root;
                 var child_root = root.children[0];
 
@@ -946,7 +943,6 @@ defineSuite([
                     }
                 });
 
-                var stats = tileset._statistics;
                 var root = tileset._root;
                 var child_root = root.children[0];
                 child_root.geometricError = 0;
@@ -976,7 +972,6 @@ defineSuite([
                     }
                 });
 
-                var stats = tileset._statistics;
                 var root = tileset._root;
                 var child_root = root.children[0];
                 child_root.geometricError = 0;

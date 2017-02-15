@@ -104,7 +104,7 @@ define([
         }
 
         return tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION ? true : false;
-    }
+    };
 
     return Cesium3DTileOptimizations;
 });

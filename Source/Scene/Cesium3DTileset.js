@@ -1197,7 +1197,7 @@ define([
                 }
             }
 
-            child.visibilityPlaneMask = visibilityMask
+            child.visibilityPlaneMask = visibilityMask;
         }
 
         tile.childrenVisibility = flag;
