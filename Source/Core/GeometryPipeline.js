@@ -1178,7 +1178,13 @@ define([
                 for (j = 0; j < vertexNormalData.count; j++) {
                     Cartesian3.add(normal, normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
                 }
-                Cartesian3.normalize(normal, normal);
+
+                if (Cartesian3.equalsEpsilon(normal, Cartesian3.ZERO, CesiumMath.EPSILON7)) {
+                    Cartesian3.clone(Cartesian3.UNIT_X, normal);
+                } else {
+                    Cartesian3.normalize(normal, normal);
+                }
+
                 normalValues[i3] = normal.x;
                 normalValues[i3 + 1] = normal.y;
                 normalValues[i3 + 2] = normal.z;
