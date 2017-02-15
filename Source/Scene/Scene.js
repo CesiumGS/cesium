@@ -569,7 +569,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.pickTranslucentDepth = false;
+        this.pickTranslucentDepth = true;//false;
 
         /**
          * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
@@ -1226,6 +1226,7 @@ define([
     function clearPasses(passes) {
         passes.render = false;
         passes.pick = false;
+        passes.depth = false;
     }
 
     function updateFrameState(scene, frameNumber, time) {
@@ -1752,7 +1753,9 @@ define([
         us.updatePass(Pass.ENVIRONMENT);
 
         var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
-        var picking = scene._frameState.passes.pick;
+        var passes = scene._frameState.passes;
+        var picking = passes.pick;
+        var depthOnly = passes.depth;
         var environmentState = scene._environmentState;
 
         // Do not render environment primitives during a pick pass since they do not generate picking commands.
@@ -1901,10 +1904,11 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
 
-            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && scene.useDepthPicking) {
+            if (defined(globeDepth) && (environmentState.useGlobeDepthFramebuffer || depthOnly) && scene.useDepthPicking) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
+                var depthStencilTexture = depthOnly ? passState.framebuffer.depthStencilTexture : globeDepth.framebuffer.depthStencilTexture;
                 var pickDepth = getPickDepth(scene, index);
-                pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
+                pickDepth.update(context, depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
             }
         }
@@ -2031,13 +2035,20 @@ define([
         var frameState = scene._frameState;
         var camera = frameState.camera;
         var mode = frameState.mode;
+        var depthOnly = frameState.passes.depth;
 
         if (scene._useWebVR && mode !== SceneMode.SCENE2D) {
-            updatePrimitives(scene);
+            if (!depthOnly) {
+                updatePrimitives(scene);
+            }
+
             createPotentiallyVisibleSet(scene);
             updateAndClearFramebuffers(scene, passState, backgroundColor);
-            executeComputeCommands(scene);
-            executeShadowMapCastCommands(scene);
+
+            if (!depthOnly) {
+                executeComputeCommands(scene);
+                executeShadowMapCastCommands(scene);
+            }
 
             // Based on Calculating Stereo pairs by Paul Bourke
             // http://paulbourke.net/stereographics/stereorender/
@@ -2206,17 +2217,24 @@ define([
     }
 
     function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor) {
-        if (!firstViewport) {
+        var depthOnly = scene.frameState.passes.depth;
+
+        if (!firstViewport && !depthOnly) {
             scene.frameState.commandList.length = 0;
         }
 
-        updatePrimitives(scene);
+        if (!depthOnly) {
+            updatePrimitives(scene);
+        }
+
         createPotentiallyVisibleSet(scene);
 
         if (firstViewport) {
             updateAndClearFramebuffers(scene, passState, backgroundColor);
-            executeComputeCommands(scene);
-            executeShadowMapCastCommands(scene);
+            if (!depthOnly) {
+                executeComputeCommands(scene);
+                executeShadowMapCastCommands(scene);
+            }
         }
 
         executeCommands(scene, passState);
@@ -2335,7 +2353,6 @@ define([
 
         var passes = scene._frameState.passes;
         var picking = passes.pick;
-        var pickDepth = passes.depth;
         var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
 
         // Preserve the reference to the original framebuffer.
@@ -2361,7 +2378,7 @@ define([
         clear.execute(context, passState);
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = (!picking || pickDepth) && defined(scene._globeDepth);
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
             scene._globeDepth.update(context);
             scene._globeDepth.clear(context, passState, clearColor);
@@ -2726,16 +2743,12 @@ define([
     function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
         // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
         var context = scene._context;
-        var us = context.uniformState;
         var frameState = scene._frameState;
 
-        // Update with previous frame's number and time, assuming that render is called before picking.
-        updateFrameState(scene, frameState.frameNumber, frameState.time);
-        frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, 1, 1);
+        clearPasses(frameState.passes);
         frameState.passes.pick = true;
         frameState.passes.depth = true;
-
-        us.update(frameState);
+        frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, 1, 1);
 
         var passState = scene._pickDepthPassState;
         if (!defined(passState)) {
