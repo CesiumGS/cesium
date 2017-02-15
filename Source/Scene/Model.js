@@ -1848,7 +1848,7 @@ define([
         // the normal attribute.
         for (i = 1; i < length; ++i) {
             var attribute = attributes[i];
-            if (/position/i.test(attribute)) {
+            if (/pos/i.test(attribute)) {
                 attributes[i] = attributes[0];
                 attributes[0] = attribute;
                 break;
@@ -2332,6 +2332,7 @@ define([
         // Retrieve the compiled shader program to assign index values to attributes
         var attributeLocations = {};
 
+        var location;
         var index;
         var technique = techniques[materials[primitive.material].technique];
         var parameters = technique.parameters;
@@ -2340,23 +2341,27 @@ define([
         var programVertexAttributes = program.vertexAttributes;
         var programAttributeLocations = program._attributeLocations;
 
-        // Note: WebGL shader compiler may have optimized and removed some attributes from programAttributeLocations
-        for (var location in programAttributeLocations){
-            if (programAttributeLocations.hasOwnProperty(location)) {
+        // Note: WebGL shader compiler may have optimized and removed some attributes from programVertexAttributes
+        for (location in programVertexAttributes){
+            if (programVertexAttributes.hasOwnProperty(location)) {
                 var attribute = attributes[location];
+                index = programVertexAttributes[location].index;
                 if (defined(attribute)) {
-                    var vertexAttribute = programVertexAttributes[location];
-                    if (defined(vertexAttribute)) {
-                        index = vertexAttribute.index;
-                        var parameter = parameters[attribute];
-                        attributeLocations[parameter.semantic] = index;
-                    }
-                } else {
-                    // Pre-created attributes.
-                    // Some pre-created attributes, like per-instance pickIds, may be compiled out of the draw program
-                    // but should be included in the list of attribute locations for the pick program.
-                    // This is safe to do since programVertexAttributes and programAttributeLocations are equivalent except
-                    // that programVertexAttributes optimizes out unused attributes.
+                    var parameter = parameters[attribute];
+                    attributeLocations[parameter.semantic] = index;
+                }
+            }
+        }
+
+        // Always add pre-created attributes.
+        // Some pre-created attributes, like per-instance pickIds, may be compiled out of the draw program
+        // but should be included in the list of attribute locations for the pick program.
+        // This is safe to do since programVertexAttributes and programAttributeLocations are equivalent except
+        // that programVertexAttributes optimizes out unused attributes.
+        var precreatedAttributes = model._precreatedAttributes;
+        if (defined(precreatedAttributes)) {
+            for (location in precreatedAttributes) {
+                if (precreatedAttributes.hasOwnProperty(location)) {
                     index = programAttributeLocations[location];
                     attributeLocations[location] = index;
                 }
