@@ -19,7 +19,9 @@ defineSuite([
         'Renderer/Framebuffer',
         'Renderer/Pass',
         'Renderer/PixelDatatype',
+        'Renderer/RenderState',
         'Renderer/ShaderProgram',
+        'Renderer/ShaderSource',
         'Renderer/Texture',
         'Scene/Camera',
         'Scene/EllipsoidSurfaceAppearance',
@@ -55,7 +57,9 @@ defineSuite([
         Framebuffer,
         Pass,
         PixelDatatype,
+        RenderState,
         ShaderProgram,
+        ShaderSource,
         Texture,
         Camera,
         EllipsoidSurfaceAppearance,
@@ -74,9 +78,21 @@ defineSuite([
     'use strict';
 
     var scene;
+    var simpleShaderProgram;
+    var simpleRenderState;
 
     beforeAll(function() {
         scene = createScene();
+        simpleShaderProgram = ShaderProgram.fromCache({
+            context : scene.context,
+            vertexShaderSource : new ShaderSource({
+                sources : ['void main() { gl_Position = vec4(1.0); }']
+            }),
+            fragmentShaderSource : new ShaderSource({
+                sources : ['void main() { gl_FragColor = vec4(1.0); }']
+            })
+        });
+        simpleRenderState = new RenderState();
     });
 
     afterEach(function() {
@@ -199,6 +215,8 @@ defineSuite([
 
     it('debugCommandFilter filters commands', function() {
         var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
             pass : Pass.OPAQUE
         });
         c.execute = function() {};
@@ -216,6 +234,8 @@ defineSuite([
 
     it('debugCommandFilter does not filter commands', function() {
         var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
             pass : Pass.OPAQUE
         });
         c.execute = function() {};
@@ -233,6 +253,8 @@ defineSuite([
         var center = Cartesian3.add(scene.camera.position, scene.camera.direction, new Cartesian3());
 
         var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
             pass : Pass.OPAQUE,
             debugShowBoundingVolume : true,
             boundingVolume : new BoundingSphere(center, radius)
@@ -249,13 +271,9 @@ defineSuite([
 
     it('debugShowCommands tints commands', function() {
         var c = new DrawCommand({
-            pass : Pass.OPAQUE,
-
-            shaderProgram : ShaderProgram.fromCache({
-                context : scene.context,
-                vertexShaderSource : 'void main() { gl_Position = vec4(1.0); }',
-                fragmentShaderSource : 'void main() { gl_FragColor = vec4(1.0); }'
-            })
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
+            pass : Pass.OPAQUE
         });
         c.execute = function() {};
 
@@ -773,6 +791,7 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.useDepthPicking = true;
+        scene.pickTranslucentDepth = false;
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
             expect(position).not.toBeDefined();

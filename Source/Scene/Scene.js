@@ -306,6 +306,10 @@ define([
 
         this._pickDepthPassState = undefined;
         this._pickDepthFramebuffer = undefined;
+        this._pickDepthFramebufferWidth = undefined;
+        this._pickDepthFramebufferHeight = undefined;
+        this._depthOnlyShaderProgramCache = {};
+        this._depthOnlyRenderStateCache = {};
 
         this._transitioner = new SceneTransitioner(this);
 
@@ -571,7 +575,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.pickTranslucentDepth = true;//false;
+        this.pickTranslucentDepth = false;
 
         /**
          * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
@@ -1206,7 +1210,7 @@ define([
                 }
             }
 
-            derivedCommands.depth = createDepthOnlyDerivedCommand(command, context, derivedCommands.depth);
+            derivedCommands.depth = createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
         }
     }
 
@@ -2746,15 +2750,13 @@ define([
         return object;
     };
 
-    var depthOnlyShaderProgramCache = {};
-    var depthOnlyRenderStateCache = {};
-
     var fragDepthRegex = /\bgl_FragDepthEXT\b/;
     var discardRegex = /\bdiscard\b/;
 
-    function getDepthOnlyShaderProgram(context, shaderProgram) {
+    function getDepthOnlyShaderProgram(scene, context, shaderProgram) {
         var id = shaderProgram.id;
-        var shader = depthOnlyShaderProgramCache[id];
+        var cache = scene._depthOnlyShaderProgramCache;
+        var shader = cache[id];
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
             var fs = shaderProgram.fragmentShaderSource;
@@ -2788,14 +2790,15 @@ define([
                 attributeLocations : attributeLocations
             });
 
-            depthOnlyShaderProgramCache[id] = shader;
+            cache[id] = shader;
         }
 
         return shader;
     }
 
-    function getDepthOnlyRenderState(context, renderState) {
-        var depthOnlyState = depthOnlyRenderStateCache[renderState.id];
+    function getDepthOnlyRenderState(scene, renderState) {
+        var cache = scene._depthOnlyRenderStateCache;
+        var depthOnlyState = cache[renderState.id];
         if (!defined(depthOnlyState)) {
             var rs = RenderState.getState(renderState);
             rs.depthMask = true;
@@ -2807,13 +2810,13 @@ define([
             };
 
             depthOnlyState = RenderState.fromCache(rs);
-            depthOnlyRenderStateCache[renderState.id] = depthOnlyState;
+            cache[renderState.id] = depthOnlyState;
         }
 
         return depthOnlyState;
     }
 
-    function createDepthOnlyDerivedCommand(command, context, result) {
+    function createDepthOnlyDerivedCommand(scene, command, context, result) {
         if (!defined(result)) {
             result = {};
         }
@@ -2828,8 +2831,8 @@ define([
         result.depthOnlyCommand = DrawCommand.shallowClone(command, result.depthOnlyCommand);
 
         if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
-            result.depthOnlyCommand.shaderProgram = getDepthOnlyShaderProgram(context, command.shaderProgram);
-            result.depthOnlyCommand.renderState = getDepthOnlyRenderState(context, command.renderState);
+            result.depthOnlyCommand.shaderProgram = getDepthOnlyShaderProgram(scene, context, command.shaderProgram);
+            result.depthOnlyCommand.renderState = getDepthOnlyRenderState(scene, command.renderState);
             result.shaderProgramId = command.shaderProgram.id;
         } else {
             result.depthOnlyCommand.shaderProgram = shader;
@@ -3202,6 +3205,7 @@ define([
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
+        this._pickDepthFramebuffer = this._pickDepthFramebuffer && this._pickDepthFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
         this._groundPrimitives = this._groundPrimitives && this._groundPrimitives.destroy();
         this._globe = this._globe && this._globe.destroy();
@@ -3222,6 +3226,14 @@ define([
             this._oit.destroy();
         }
         this._fxaa.destroy();
+
+        var cache = this._depthOnlyShaderProgramCache;
+        for (var name in cache) {
+            if (cache.hasOwnProperty(name) && defined(cache[name])) {
+                cache[name].destroy();
+            }
+        }
+        this._depthOnlyShaderProgramCache = {};
 
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();
