@@ -40,6 +40,7 @@ define([
         '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
@@ -112,6 +113,7 @@ define([
         Pass,
         PassState,
         PixelDatatype,
+        RenderState,
         ShaderProgram,
         ShaderSource,
         Texture,
@@ -1203,6 +1205,8 @@ define([
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
                 }
             }
+
+            derivedCommands.depth = createDepthOnlyDerivedCommand(command, context, derivedCommands.depth);
         }
     }
 
@@ -1601,6 +1605,8 @@ define([
             // Some commands, such as OIT derived commands, do not have derived shadow commands themselves
             // and instead shadowing is built-in. In this case execute the command regularly below.
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
+        } else if (scene.frameState.passes.depth && defined(command.derivedCommands.depth)) {
+            command.derivedCommands.depth.depthOnlyCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
         }
@@ -2740,6 +2746,99 @@ define([
         return object;
     };
 
+    var depthOnlyShaderProgramCache = {};
+    var depthOnlyRenderStateCache = {};
+
+    var fragDepthRegex = /\bgl_FragDepthEXT\b/;
+    var discardRegex = /\bdiscard\b/;
+
+    function getDepthOnlyShaderProgram(context, shaderProgram) {
+        var id = shaderProgram.id;
+        var shader = depthOnlyShaderProgramCache[id];
+        if (!defined(shader)) {
+            var attributeLocations = shaderProgram._attributeLocations;
+            var fs = shaderProgram.fragmentShaderSource;
+
+            var writesFragDepth = false;
+            var discards = false;
+
+            var sources = fs.sources;
+            var length = sources.length;
+            for (var i = 0; i < length; ++i) {
+                if (fragDepthRegex.test(sources[i])) {
+                    writesFragDepth = true;
+                    break;
+                }
+                if (discardRegex.test(sources[i])) {
+                    discards = true;
+                    break;
+                }
+            }
+
+            if (!writesFragDepth && !discards) {
+                fs = new ShaderSource({
+                    sources : ['void main() { gl_FragColor = vec4(1.0); }']
+                });
+            }
+
+            shader = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : shaderProgram.vertexShaderSource,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+
+            depthOnlyShaderProgramCache[id] = shader;
+        }
+
+        return shader;
+    }
+
+    function getDepthOnlyRenderState(context, renderState) {
+        var depthOnlyState = depthOnlyRenderStateCache[renderState.id];
+        if (!defined(depthOnlyState)) {
+            var rs = RenderState.getState(renderState);
+            rs.depthMask = true;
+            rs.colorMask = {
+                red : false,
+                green : false,
+                blue : false,
+                alpha : false
+            };
+
+            depthOnlyState = RenderState.fromCache(rs);
+            depthOnlyRenderStateCache[renderState.id] = depthOnlyState;
+        }
+
+        return depthOnlyState;
+    }
+
+    function createDepthOnlyDerivedCommand(command, context, result) {
+        if (!defined(result)) {
+            result = {};
+        }
+
+        var shader;
+        var renderState;
+        if (defined(result.depthOnlyCommand)) {
+            shader = result.depthOnlyCommand.shaderProgram;
+            renderState = result.depthOnlyCommand.renderState;
+        }
+
+        result.depthOnlyCommand = DrawCommand.shallowClone(command, result.depthOnlyCommand);
+
+        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+            result.depthOnlyCommand.shaderProgram = getDepthOnlyShaderProgram(context, command.shaderProgram);
+            result.depthOnlyCommand.renderState = getDepthOnlyRenderState(context, command.renderState);
+            result.shaderProgramId = command.shaderProgram.id;
+        } else {
+            result.depthOnlyCommand.shaderProgram = shader;
+            result.depthOnlyCommand.renderState = renderState;
+        }
+
+        return result;
+    }
+
     function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
         // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
         var context = scene._context;
@@ -2758,7 +2857,6 @@ define([
                 rectangle : new BoundingRectangle()
             };
             passState.viewport = new BoundingRectangle();
-            passState.depthMask = true;
         }
 
         var width = context.drawingBufferWidth;

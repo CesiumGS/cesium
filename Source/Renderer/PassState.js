@@ -56,19 +56,6 @@ define([], function() {
          * @default undefined
          */
         this.viewport = undefined;
-
-        /**
-         * When defined, this overrides the depth mask property of a {@link DrawCommand}'s render state.
-         * This is used to, for example, to allow the renderer to enable depth writes for picking translucent
-         * geometry.
-         * <p>
-         * When this is <code>undefined</code>, the {@link DrawCommand}'s property is used.
-         * <p>
-         *
-         * @type {Boolean}
-         * @default undefined
-         */
-        this.depthMask = undefined;
     }
 
     return PassState;
