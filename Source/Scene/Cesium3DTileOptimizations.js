@@ -43,7 +43,8 @@ define([
      * Checks and optionnally evaluates support for the childrenWithinParent optimization. This is used to more tightly cull tilesets if children bounds are
      * fully contained within the parent. Currently, support for the optimization only works for oriented bounding boxes, so both the child and parent tile 
      * must be either a {@link TileOrientedBoundingBox} or {@link TileBoundingRegion}. The purpose of this check is to prevent use of a culling optimization
-     * when the child bounds exceed those of the parent.
+     * when the child bounds exceed those of the parent. If the child bounds are greater, it is more likely that the optimization will waste CPU cycles. Bounding
+     * spheres are not supported for the reason that the child bounds can very often be partially outside of the parent bounds.
      *
      * @param {Cesium3DTile} tile The tile to check.
      * @param {Boolean} [evaluate=false] Whether to evaluate support if support for the childrenWithinParent optimization is Cesium3DTileOptimizations.Hints.NOT_COMPUTED
