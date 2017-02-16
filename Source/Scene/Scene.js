@@ -308,7 +308,6 @@ define([
         this._pickDepthFramebuffer = undefined;
         this._pickDepthFramebufferWidth = undefined;
         this._pickDepthFramebufferHeight = undefined;
-        this._depthOnlyShaderProgramCache = {};
         this._depthOnlyRenderStateCache = {};
 
         this._transitioner = new SceneTransitioner(this);
@@ -1191,10 +1190,9 @@ define([
             shadowsDirty = true;
         }
 
-        if (command.dirty) {
+        var derivedCommands = command.derivedCommands;
+        if (command.dirty && defined(derivedCommands)) {
             command.dirty = false;
-
-            var derivedCommands = command.derivedCommands;
 
             if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
                 derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
@@ -2753,10 +2751,8 @@ define([
     var fragDepthRegex = /\bgl_FragDepthEXT\b/;
     var discardRegex = /\bdiscard\b/;
 
-    function getDepthOnlyShaderProgram(scene, context, shaderProgram) {
-        var id = shaderProgram.id;
-        var cache = scene._depthOnlyShaderProgramCache;
-        var shader = cache[id];
+    function getDepthOnlyShaderProgram(context, shaderProgram) {
+        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'depthOnly');
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
             var fs = shaderProgram.fragmentShaderSource;
@@ -2777,14 +2773,11 @@ define([
                 });
             }
 
-            shader = ShaderProgram.fromCache({
-                context : context,
+            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'depthOnly', {
                 vertexShaderSource : shaderProgram.vertexShaderSource,
                 fragmentShaderSource : fs,
                 attributeLocations : attributeLocations
             });
-
-            cache[id] = shader;
         }
 
         return shader;
@@ -2830,7 +2823,7 @@ define([
         result.depthOnlyCommand = DrawCommand.shallowClone(command, result.depthOnlyCommand);
 
         if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
-            result.depthOnlyCommand.shaderProgram = getDepthOnlyShaderProgram(scene, context, command.shaderProgram);
+            result.depthOnlyCommand.shaderProgram = getDepthOnlyShaderProgram(context, command.shaderProgram);
             result.depthOnlyCommand.renderState = getDepthOnlyRenderState(scene, command.renderState);
             result.shaderProgramId = command.shaderProgram.id;
         } else {
@@ -3225,14 +3218,6 @@ define([
             this._oit.destroy();
         }
         this._fxaa.destroy();
-
-        var cache = this._depthOnlyShaderProgramCache;
-        for (var name in cache) {
-            if (cache.hasOwnProperty(name) && defined(cache[name])) {
-                cache[name].destroy();
-            }
-        }
-        this._depthOnlyShaderProgramCache = {};
 
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();

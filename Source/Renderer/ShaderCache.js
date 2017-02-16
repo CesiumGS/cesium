@@ -19,6 +19,7 @@ define([
     function ShaderCache(context) {
         this._context = context;
         this._shaders = {};
+        this._derivedShaders = {};
         this._numberOfShaders = 0;
         this._shadersToRelease = {};
     }
@@ -55,7 +56,7 @@ define([
      *     fragmentShaderSource : fs,
      *     attributeLocations : attributeLocations
      * });
-     * 
+     *
      * @see ShaderCache#getShaderProgram
      */
     ShaderCache.prototype.replaceShaderProgram = function(options) {
@@ -103,7 +104,7 @@ define([
         var keyword = vertexShaderText + fragmentShaderText + JSON.stringify(attributeLocations);
         var cachedShader;
 
-        if (this._shaders[keyword]) {
+        if (defined(this._shaders[keyword])) {
             cachedShader = this._shaders[keyword];
 
             // No longer want to release this if it was previously released.
@@ -138,6 +139,58 @@ define([
         return cachedShader.shaderProgram;
     };
 
+    ShaderCache.prototype.getDerivedShaderProgram = function(shaderProgram, keyword) {
+        var cachedShader = shaderProgram._cachedShader;
+        var derivedShaders = this._derivedShaders[cachedShader.keyword];
+        if (!defined(derivedShaders)) {
+            return undefined;
+        }
+
+        return derivedShaders[keyword];
+    };
+
+    ShaderCache.prototype.createDerivedShaderProgram = function(shaderProgram, keyword, options) {
+        var cachedShader = shaderProgram._cachedShader;
+        var derivedShaders = this._derivedShaders[cachedShader.keyword];
+        if (!defined(derivedShaders)) {
+            derivedShaders = this._derivedShaders[cachedShader.keyword] = {};
+        }
+
+        var vertexShaderSource = options.vertexShaderSource;
+        var fragmentShaderSource = options.fragmentShaderSource;
+        var attributeLocations = options.attributeLocations;
+
+        if (typeof vertexShaderSource === 'string') {
+            vertexShaderSource = new ShaderSource({
+                sources : [vertexShaderSource]
+            });
+        }
+
+        if (typeof fragmentShaderSource === 'string') {
+            fragmentShaderSource = new ShaderSource({
+                sources : [fragmentShaderSource]
+            });
+        }
+
+        var vertexShaderText = vertexShaderSource.createCombinedVertexShader();
+        var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader();
+
+        var context = this._context;
+        var derivedShaderProgram = new ShaderProgram({
+            gl : context._gl,
+            logShaderCompilation : context.logShaderCompilation,
+            debugShaders : context.debugShaders,
+            vertexShaderSource : vertexShaderSource,
+            vertexShaderText : vertexShaderText,
+            fragmentShaderSource : fragmentShaderSource,
+            fragmentShaderText : fragmentShaderText,
+            attributeLocations : attributeLocations
+        });
+
+        derivedShaders[keyword] = derivedShaderProgram;
+        return derivedShaderProgram;
+    };
+
     ShaderCache.prototype.destroyReleasedShaderPrograms = function() {
         var shadersToRelease = this._shadersToRelease;
 
@@ -146,6 +199,17 @@ define([
                 var cachedShader = shadersToRelease[keyword];
                 delete this._shaders[cachedShader.keyword];
                 cachedShader.shaderProgram.finalDestroy();
+
+                var derivedShaders = this._derivedShaders[cachedShader.keyword];
+                if (defined(derivedShaders)) {
+                    for (var derivedKeyword in derivedShaders) {
+                        if (derivedShaders.hasOwnProperty(derivedKeyword)) {
+                            derivedShaders[derivedKeyword].finalDestroy();
+                        }
+                    }
+                    delete this._derivedShaders[cachedShader.keyword];
+                }
+
                 --this._numberOfShaders;
             }
         }
@@ -167,11 +231,22 @@ define([
     };
 
     ShaderCache.prototype.destroy = function() {
+        var keyword;
         var shaders = this._shaders;
-
-        for ( var keyword in shaders) {
+        for (keyword in shaders) {
             if (shaders.hasOwnProperty(keyword)) {
                 shaders[keyword].shaderProgram.finalDestroy();
+            }
+        }
+
+        var derivedShaders = this._derivedShaders;
+        for (keyword in derivedShaders) {
+            if (derivedShaders.hasOwnProperty(keyword)) {
+                for (var derivedKeyword in derivedShaders[keyword]) {
+                    if (derivedShaders[keyword].hasOwnProperty(derivedKeyword)) {
+                        derivedShaders[keyword][derivedKeyword].finalDestroy();
+                    }
+                }
             }
         }
 
