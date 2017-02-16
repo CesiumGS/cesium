@@ -1315,7 +1315,7 @@ define([
                         selectTile(tileset, t, fullyVisible, frameState);
 
                         if (outOfCore) {
-                            for (k = 0; (k < childrenLength) && t.canRequestContent(); ++k) {
+                            for (k = 0; k < childrenLength; ++k) {
                                 child = children[k];
                                 // PERFORMANCE_IDEA: we could spin a bit less CPU here by keeping separate lists for unloaded/ready children.
                                 if (child.contentUnloaded) {
