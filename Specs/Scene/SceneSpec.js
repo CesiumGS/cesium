@@ -802,6 +802,33 @@ defineSuite([
             var position = scene.pickPosition(windowPosition);
             expect(position).toBeDefined();
         });
+
+        var rectanglePrimitive2 = createRectangle(rectangle);
+        rectanglePrimitive2.appearance.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
+        primitives.add(rectanglePrimitive2);
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toBeDefined();
+
+            var commandList = scene.frameState.commandList;
+            expect(commandList.length).toEqual(2);
+
+            var command1 = commandList[0];
+            var command2 = commandList[1];
+
+            expect(command1.derivedCommands).toBeDefined();
+            expect(command2.derivedCommands).toBeDefined();
+
+            expect(command1.derivedCommands.depth).toBeDefined();
+            expect(command2.derivedCommands.depth).toBeDefined();
+
+            expect(command1.derivedCommands.depth.depthOnlyCommand).toBeDefined();
+            expect(command2.derivedCommands.depth.depthOnlyCommand).toBeDefined();
+
+            expect(command1.derivedCommands.depth.depthOnlyCommand.shaderProgram).toEqual(command2.derivedCommands.depth.depthOnlyCommand.shaderProgram);
+            expect(command1.derivedCommands.depth.depthOnlyCommand.renderState).toEqual(command2.derivedCommands.depth.depthOnlyCommand.renderState);
+        });
     });
 
     it('pickPosition throws without windowPosition', function() {
