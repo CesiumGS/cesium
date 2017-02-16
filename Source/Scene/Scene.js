@@ -2761,23 +2761,17 @@ define([
             var attributeLocations = shaderProgram._attributeLocations;
             var fs = shaderProgram.fragmentShaderSource;
 
-            var writesFragDepth = false;
-            var discards = false;
-
+            var writesDepthOrDiscards = false;
             var sources = fs.sources;
             var length = sources.length;
             for (var i = 0; i < length; ++i) {
-                if (fragDepthRegex.test(sources[i])) {
-                    writesFragDepth = true;
-                    break;
-                }
-                if (discardRegex.test(sources[i])) {
-                    discards = true;
+                if (fragDepthRegex.test(sources[i]) || discardRegex.test(sources[i])) {
+                    writesDepthOrDiscards = true;
                     break;
                 }
             }
 
-            if (!writesFragDepth && !discards) {
+            if (!writesDepthOrDiscards) {
                 fs = new ShaderSource({
                     sources : ['void main() { gl_FragColor = vec4(1.0); }']
                 });
@@ -2817,6 +2811,11 @@ define([
     }
 
     function createDepthOnlyDerivedCommand(scene, command, context, result) {
+        // For a depth only pass, we bind a framebuffer with only a depth attachment (no color attachments),
+        // do not write color, and write depth. If the fragment shader doesn't modify the fragment depth
+        // or discard, the driver can replace the fragment shader with a pass-through shader. We're unsure if this
+        // actually happens so we modify the shader to use a pass-through fragment shader.
+
         if (!defined(result)) {
             result = {};
         }
