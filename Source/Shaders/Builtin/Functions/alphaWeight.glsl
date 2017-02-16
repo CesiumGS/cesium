@@ -4,7 +4,12 @@
 float czm_alphaWeight(float a)
 {
     float z;
-    if (all(equal(czm_inverseProjectionOIT, mat4(0.0))))
+    bool mode2D = all(equal(czm_inverseProjectionOIT[0], vec4(0.0))) &&
+                  all(equal(czm_inverseProjectionOIT[1], vec4(0.0))) &&
+                  all(equal(czm_inverseProjectionOIT[2], vec4(0.0))) &&
+                  all(equal(czm_inverseProjectionOIT[3], vec4(0.0)));
+
+    if (!mode2D)
     {
         float x = 2.0 * (gl_FragCoord.x - czm_viewport.x) / czm_viewport.z - 1.0;
         float y = 2.0 * (gl_FragCoord.y - czm_viewport.y) / czm_viewport.w - 1.0;
