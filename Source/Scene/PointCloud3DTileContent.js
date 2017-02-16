@@ -139,6 +139,7 @@ define([
         this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
         this._features = undefined;
+        this._pointsLength = 0;
     }
 
     defineProperties(PointCloud3DTileContent.prototype, {
@@ -466,6 +467,7 @@ define([
             batchIds : batchIds,
             styleableProperties : styleableProperties
         };
+        this._pointsLength = pointsLength;
 
         this._isQuantized = isQuantized;
         this._isOctEncoded16P = isOctEncoded16P;
@@ -1169,7 +1171,7 @@ define([
             // Set state to ready
             this.state = Cesium3DTileContentState.READY;
             if (defined(tileset._statistics)) {
-                tileset._statistics.numberOfPointFeaturesLoaded += this.featuresLength;
+                tileset._statistics.numberOfPointsLoaded += this._pointsLength;
             }
             this._readyPromise.resolve(this);
             this._parsedContent = undefined; // Unload
@@ -1233,7 +1235,7 @@ define([
         }
 
         if (defined(tileset._statistics)) {
-            tileset._statistics.numberOfPointFeaturesSelected += this.featuresLength;   
+            tileset._statistics.numberOfPointsSelected += this._pointsLength;   
         }
     };
 
@@ -1248,7 +1250,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     PointCloud3DTileContent.prototype.destroy = function() {
-        this._tileset._statistics.numberOfPointFeaturesLoaded -= this.featuresLength;
+        this._tileset._statistics.numberOfPointsLoaded -= this._pointsLength;
         var command = this._drawCommand;
         var pickCommand = this._pickCommand;
         if (defined(command)) {

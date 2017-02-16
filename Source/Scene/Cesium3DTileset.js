@@ -266,8 +266,8 @@ define([
             // Features stats
             numberOfFeaturesSelected : 0,       // number of features rendered
             numberOfFeaturesLoaded : 0,  // number of features in memory
-            numberOfPointFeaturesSelected: 0,
-            numberOfPointFeaturesLoaded: 0,
+            numberOfPointsSelected: 0,
+            numberOfPointsLoaded: 0,
             // Styling stats
             numberOfTilesStyled : 0,
             numberOfFeaturesStyled : 0,
@@ -1536,7 +1536,7 @@ define([
         stats.numberOfTilesStyled = 0;
         stats.numberOfFeaturesStyled = 0;
         stats.numberOfFeaturesSelected = 0;
-        stats.numberOfPointFeaturesSelected = 0;
+        stats.numberOfPointsSelected = 0;
     }
 
     function updateLastStats(tileset, isPick) {
@@ -1553,8 +1553,8 @@ define([
         last.numberTotal = stats.numberTotal;
         last.numberOfFeaturesSelected = stats.numberOfFeaturesSelected;
         last.numberOfFeaturesLoaded = stats.numberOfFeaturesLoaded;
-        last.numberOfPointFeaturesSelected = stats.numberOfPointFeaturesSelected;
-        last.numberOfPointFeaturesLoaded = stats.numberOfPointFeaturesLoaded;
+        last.numberOfPointsSelected = stats.numberOfPointsSelected;
+        last.numberOfPointsLoaded = stats.numberOfPointsLoaded;
         last.numberOfTilesStyled = stats.numberOfTilesStyled;
         last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
     }

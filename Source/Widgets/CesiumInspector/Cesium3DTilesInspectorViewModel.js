@@ -636,8 +636,8 @@ define([
                     // --- Features stats
                     '<li><strong>Features Selected: </strong>' + stats.numberOfFeaturesSelected + '</li>' +
                     '<li><strong>Features Loaded: </strong>' + stats.numberOfFeaturesLoaded + '</li>' +
-                    '<li><strong>Points Selected: </strong>' + stats.numberOfPointFeaturesSelected + '</li>' +
-                    '<li><strong>Points Loaded: </strong>' + stats.numberOfPointFeaturesLoaded + '</li>';
+                    '<li><strong>Points Selected: </strong>' + stats.numberOfPointsSelected + '</li>' +
+                    '<li><strong>Points Loaded: </strong>' + stats.numberOfPointsLoaded + '</li>';
                 s += '</ul>';
                 s += '<ul class="cesium-cesiumInspector-stats">';
                 s +=
