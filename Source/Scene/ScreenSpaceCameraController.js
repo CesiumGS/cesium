@@ -22,6 +22,7 @@ define([
         './CameraEventAggregator',
         './CameraEventType',
         './MapMode2D',
+        './OrthographicFrustum',
         './SceneMode',
         './SceneTransforms',
         './TweenCollection'
@@ -48,6 +49,7 @@ define([
         CameraEventAggregator,
         CameraEventType,
         MapMode2D,
+        OrthographicFrustum,
         SceneMode,
         SceneTransforms,
         TweenCollection) {
@@ -483,6 +485,12 @@ define([
         var scene = object._scene;
         var camera = scene.camera;
         var mode = scene.mode;
+
+        if (camera.frustum instanceof OrthographicFrustum) {
+            camera.zoomIn(distance);
+            camera.frustum.width = Math.max(1.0, camera.frustum.width - distance);
+            return;
+        }
 
         var sameStartPosition = Cartesian2.equals(startPosition, object._zoomMouseStart);
         var zoomingOnVector = object._zoomingOnVector;

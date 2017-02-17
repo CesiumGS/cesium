@@ -938,8 +938,6 @@ define([
         frustum = this.frustum;
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, this.position);
-        } else if (frustum instanceof OrthographicFrustum) {
-            frustum.width = Matrix4.equals(Matrix4.IDENTITY, this._transform) ? this.positionCartographic.height : Cartesian3.magnitude(this.position);
         }
     };
 
@@ -965,6 +963,13 @@ define([
         updateMembers(this);
     };
 
+    function adjustOrthographicFrustum(camera) {
+        if (!(camera.frustum instanceof OrthographicFrustum)) {
+            return;
+        }
+        camera.frustum.width = Matrix4.equals(Matrix4.IDENTITY, camera.transform) ? camera.positionCartographic.height : Cartesian3.magnitude(camera.position);
+    }
+
     var scratchSetViewCartesian = new Cartesian3();
     var scratchSetViewTransform1 = new Matrix4();
     var scratchSetViewTransform2 = new Matrix4();
@@ -988,6 +993,8 @@ define([
         Cartesian3.cross(camera.direction, camera.up, camera.right);
 
         camera._setTransform(currentTransform);
+
+        adjustOrthographicFrustum(camera);
     }
 
     function setViewCV(camera, position,hpr, convert) {
@@ -1980,6 +1987,8 @@ define([
         Cartesian3.normalize(this.right, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
         Cartesian3.normalize(this.up, this.up);
+
+        adjustOrthographicFrustum(this);
     };
 
     var viewRectangle3DCartographic1 = new Cartographic();
