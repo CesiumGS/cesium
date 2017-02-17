@@ -833,12 +833,6 @@ define([
             get : function() {
                 return this._statistics;
             }
-        },
-
-        optimizations : {
-            get : function() {
-                return this._optimizations;
-            }
         }
     });
 
