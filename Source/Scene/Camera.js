@@ -2096,45 +2096,58 @@ define([
         Cartesian3.normalize(right, right);
         var up = Cartesian3.cross(right, direction, cameraRF.up);
 
-        var tanPhi;
-        var tanTheta;
+        var d;
         if (camera.frustum instanceof OrthographicFrustum) {
-            // TODO ORTHO
-            tanPhi = tanTheta = 0.5;
+            var width = Math.max(Cartesian3.distance(northEast, northWest), Cartesian3.distance(southEast, southWest));
+            var height = Math.max(Cartesian3.distance(northEast, southEast), Cartesian3.distance(northWest, southWest));
+
+            var rightScalar;
+            var topScalar;
+            var ratio = camera.frustum._offCenterFrustum.right / camera.frustum._offCenterFrustum.top;
+            var heightRatio = height * ratio;
+            if (width > heightRatio) {
+                rightScalar = width;
+                topScalar = rightScalar / ratio;
+            } else {
+                topScalar = height;
+                rightScalar = heightRatio;
+            }
+
+            d = Math.max(rightScalar, topScalar);
         } else {
-            tanPhi = Math.tan(camera.frustum.fovy * 0.5);
-            tanTheta = camera.frustum.aspectRatio * tanPhi;
-        }
+            var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
+            var tanTheta = camera.frustum.aspectRatio * tanPhi;
 
-        var d = Math.max(
-            computeD(direction, up, northWest, tanPhi),
-            computeD(direction, up, southEast, tanPhi),
-            computeD(direction, up, northEast, tanPhi),
-            computeD(direction, up, southWest, tanPhi),
-            computeD(direction, up, northCenter, tanPhi),
-            computeD(direction, up, southCenter, tanPhi),
-            computeD(direction, right, northWest, tanTheta),
-            computeD(direction, right, southEast, tanTheta),
-            computeD(direction, right, northEast, tanTheta),
-            computeD(direction, right, southWest, tanTheta),
-            computeD(direction, right, northCenter, tanTheta),
-            computeD(direction, right, southCenter, tanTheta));
+            d = Math.max(
+                computeD(direction, up, northWest, tanPhi),
+                computeD(direction, up, southEast, tanPhi),
+                computeD(direction, up, northEast, tanPhi),
+                computeD(direction, up, southWest, tanPhi),
+                computeD(direction, up, northCenter, tanPhi),
+                computeD(direction, up, southCenter, tanPhi),
+                computeD(direction, right, northWest, tanTheta),
+                computeD(direction, right, southEast, tanTheta),
+                computeD(direction, right, northEast, tanTheta),
+                computeD(direction, right, southWest, tanTheta),
+                computeD(direction, right, northCenter, tanTheta),
+                computeD(direction, right, southCenter, tanTheta));
 
-        // If the rectangle crosses the equator, compute D at the equator, too, because that's the
-        // widest part of the rectangle when projected onto the globe.
-        if (south < 0 && north > 0) {
-            var equatorCartographic = viewRectangle3DCartographic1;
-            equatorCartographic.longitude = west;
-            equatorCartographic.latitude = 0.0;
-            equatorCartographic.height = 0.0;
-            var equatorPosition = ellipsoid.cartographicToCartesian(equatorCartographic, viewRectangle3DEquator);
-            Cartesian3.subtract(equatorPosition, center, equatorPosition);
-            d = Math.max(d, computeD(direction, up, equatorPosition, tanPhi), computeD(direction, right, equatorPosition, tanTheta));
+            // If the rectangle crosses the equator, compute D at the equator, too, because that's the
+            // widest part of the rectangle when projected onto the globe.
+            if (south < 0 && north > 0) {
+                var equatorCartographic = viewRectangle3DCartographic1;
+                equatorCartographic.longitude = west;
+                equatorCartographic.latitude = 0.0;
+                equatorCartographic.height = 0.0;
+                var equatorPosition = ellipsoid.cartographicToCartesian(equatorCartographic, viewRectangle3DEquator);
+                Cartesian3.subtract(equatorPosition, center, equatorPosition);
+                d = Math.max(d, computeD(direction, up, equatorPosition, tanPhi), computeD(direction, right, equatorPosition, tanTheta));
 
-            equatorCartographic.longitude = east;
-            equatorPosition = ellipsoid.cartographicToCartesian(equatorCartographic, viewRectangle3DEquator);
-            Cartesian3.subtract(equatorPosition, center, equatorPosition);
-            d = Math.max(d, computeD(direction, up, equatorPosition, tanPhi), computeD(direction, right, equatorPosition, tanTheta));
+                equatorCartographic.longitude = east;
+                equatorPosition = ellipsoid.cartographicToCartesian(equatorCartographic, viewRectangle3DEquator);
+                Cartesian3.subtract(equatorPosition, center, equatorPosition);
+                d = Math.max(d, computeD(direction, up, equatorPosition, tanPhi), computeD(direction, right, equatorPosition, tanTheta));
+            }
         }
 
         return Cartesian3.add(center, Cartesian3.multiplyByScalar(direction, -d, viewRectangle3DEquator), result);
