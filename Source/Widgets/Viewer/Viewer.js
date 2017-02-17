@@ -36,6 +36,7 @@ define([
         '../HomeButton/HomeButton',
         '../InfoBox/InfoBox',
         '../NavigationHelpButton/NavigationHelpButton',
+        '../ProjectionPicker/ProjectionPicker',
         '../SceneModePicker/SceneModePicker',
         '../SelectionIndicator/SelectionIndicator',
         '../subscribeAndEvaluate',
@@ -78,6 +79,7 @@ define([
         HomeButton,
         InfoBox,
         NavigationHelpButton,
+        ProjectionPicker,
         SceneModePicker,
         SelectionIndicator,
         subscribeAndEvaluate,
@@ -184,6 +186,7 @@ define([
         var geocoder = viewer._geocoder;
         var homeButton = viewer._homeButton;
         var sceneModePicker = viewer._sceneModePicker;
+        var projectionPicker = viewer._projectionPicker;
         var baseLayerPicker = viewer._baseLayerPicker;
         var animation = viewer._animation;
         var timeline = viewer._timeline;
@@ -201,6 +204,9 @@ define([
         }
         if(defined(sceneModePicker)) {
             sceneModePicker.container.style.visibility = visibility;
+        }
+        if(defined(projectionPicker)) {
+            projectionPicker.container.style.visibility = visibility;
         }
         if(defined(baseLayerPicker)) {
             baseLayerPicker.container.style.visibility = visibility;
@@ -507,6 +513,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             sceneModePicker = new SceneModePicker(toolbar, cesiumWidget.scene);
         }
 
+        var projectionPicker;
+        if (!defined(options.projectionPicker) || options.projectionPicker !== false) {
+            projectionPicker = new ProjectionPicker(toolbar, cesiumWidget.scene);
+        }
+
         // BaseLayerPicker
         var baseLayerPicker;
         var baseLayerPickerDropDown;
@@ -638,6 +649,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._toolbar = toolbar;
         this._homeButton = homeButton;
         this._sceneModePicker = sceneModePicker;
+        this._projectionPicker = projectionPicker;
         this._baseLayerPicker = baseLayerPicker;
         this._navigationHelpButton = navigationHelpButton;
         this._animation = animation;
@@ -801,6 +813,18 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         sceneModePicker : {
             get : function() {
                 return this._sceneModePicker;
+            }
+        },
+
+        /**
+         * Gets the ProjectionPicker.
+         * @memberof Viewer.prototype
+         * @type {ProjectionPicker}
+         * @readonly
+         */
+        projectionPicker : {
+            get : function() {
+                return this._projectionPicker;
             }
         },
 
@@ -1395,6 +1419,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (defined(this._sceneModePicker)) {
             this._sceneModePicker = this._sceneModePicker.destroy();
+        }
+
+        if (defined(this._projectionPicker)) {
+            this._projectionPicker = this._projectionPicker.destroy();
         }
 
         if (defined(this._baseLayerPicker)) {

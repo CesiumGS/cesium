@@ -909,10 +909,8 @@ define([
             updateFrustum = this._mode === SceneMode.SCENE2D;
         }
 
-        var frustum;
-        var ratio;
         if (updateFrustum) {
-            frustum = this._max2Dfrustum = this.frustum.clone();
+            var frustum = this._max2Dfrustum = this.frustum.clone();
 
             //>>includeStart('debug', pragmas.debug);
             if (!defined(frustum.left) || !defined(frustum.right) || !defined(frustum.top) || !defined(frustum.bottom)) {
@@ -921,11 +919,15 @@ define([
             //>>includeEnd('debug');
 
             var maxZoomOut = 2.0;
-            ratio = frustum.top / frustum.right;
+            var ratio = frustum.top / frustum.right;
             frustum.right = this._maxCoord.x * maxZoomOut;
             frustum.left = -frustum.right;
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
+        }
+
+        if (this._mode === SceneMode.SCENE2D) {
+            clampMove2D(this, this.position);
         }
 
         var globe = this._scene.globe;
@@ -934,11 +936,6 @@ define([
             this._suspendTerrainAdjustment = !globeFinishedUpdating;
         }
         this._adjustHeightForTerrain();
-
-        frustum = this.frustum;
-        if (this._mode === SceneMode.SCENE2D) {
-            clampMove2D(this, this.position);
-        }
     };
 
     var setTransformPosition = new Cartesian3();

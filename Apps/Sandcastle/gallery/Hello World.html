@@ -28,27 +28,6 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-
-var camera = viewer.camera;
-
-camera.position = new Cesium.Cartesian3(1841647.0762382608, -6783164.237195379, 2471753.1074874406);
-camera.direction = new Cesium.Cartesian3(-0.30125208680184823, 0.7555331113434306, 0.5817361067195737);
-camera.up = new Cesium.Cartesian3(0.10227563420000141, -0.5809561222843004, 0.8074835469713154);
-camera.right = new Cesium.Cartesian3(0.9480437093544365, 0.3027535328350511, 0.09774161605670559);
-
-var frustum = camera.frustum = new Cesium.OrthographicFrustum();
-frustum.width = camera.positionCartographic.height;
-frustum.aspectRatio = viewer.canvas.clientWidth / viewer.canvas.clientHeight *0.3;
-
-var modelEntity = viewer.entities.add({
-    name : 'milktruck',
-    position : Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706),
-    model : {
-        uri : '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck-kmc.gltf'
-    }
-});
-viewer.zoomTo(modelEntity);
-
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
