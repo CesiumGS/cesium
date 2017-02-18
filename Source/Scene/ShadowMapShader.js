@@ -121,7 +121,6 @@ define([
 
         return 'receiveShadow ' + usesDepthTexture + polygonOffsetSupported + isPointLight + isSpotLight +
                hasCascades + debugCascadeColors + softShadows + castShadows + isTerrain + hasTerrainNormal;
-
     };
 
     ShadowMapShader.createShadowReceiveVertexShader = function(vs, isTerrain, hasTerrainNormal) {
