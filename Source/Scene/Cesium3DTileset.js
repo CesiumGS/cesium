@@ -1330,13 +1330,21 @@ define([
                 // With replacement refinement, if the tile's SSE
                 // is not sufficient, its children (or ancestors) are
                 // rendered instead
+
+                // This optimization may cause issues if the parent's content exceeds the bounds of the childrens` content.
+                // In these case nothing will be selected to fill the empty space. This is possible if occlusion-preserving
+                // decimation is not used, but it is arguably better to cull in this way because in the cases where we cull
+                // when the parent content is visible, if the object were to be drawn at full resolution, the geometry would
+                // not be visible.
                 var useChildrenBoundUnion = t._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
 
                 var childrenVisibility;
                 
-                if ((sse <= maximumScreenSpaceError) || (childrenLength === 0)) {
-                    // This tile meets the SSE so add its commands.
+                if (childrenLength === 0) {
                     // Select tile if it's a leaf (childrenLength === 0)
+                    selectTile(tileset, t, fullyVisible, frameState);
+                } else if (sse <= maximumScreenSpaceError) {
+                    // This tile meets the SSE so add its commands.
                     if (useChildrenBoundUnion) {
                         childrenVisibility = computeChildrenVisibility(t, frameState, false);
                         if ((childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE) || childrenLength === 0) {
@@ -1371,7 +1379,7 @@ define([
                         if (useChildrenBoundUnion) {
                             childrenVisibility = computeChildrenVisibility(t, frameState, false);
                         }
-                        if (!useChildrenBoundUnion || (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE) || childrenLength === 0) {
+                        if (!useChildrenBoundUnion || (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE)) {
                             // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
                             selectTile(tileset, t, fullyVisible, frameState);
 
@@ -1412,7 +1420,7 @@ define([
                             if (defined(t.descendantsWithContent)) {
                                 scratchRefiningTiles.push(t);
                             }
-                        } else if (!useChildrenBoundUnion || (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE) || childrenLength === 0) {
+                        } else if (!useChildrenBoundUnion || (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE)) {
                             // Even though the children are all loaded they may not be visible if the camera
                             // is not inside their request volumes.
                             selectTile(tileset, t, fullyVisible, frameState);
@@ -1442,7 +1450,7 @@ define([
                         }
                     }
 
-                    if (useChildrenBoundUnion && childrenVisibility === Cesium3DTileChildrenVisibility.NONE && childrenLength !== 0) {
+                    if (useChildrenBoundUnion && childrenVisibility === Cesium3DTileChildrenVisibility.NONE) {
                         if (allVisibleChildrenLoaded && !someVisibleChildrenLoaded) {
                             ++stats.numberOfTilesCulledWithChildrenUnion;
                         }

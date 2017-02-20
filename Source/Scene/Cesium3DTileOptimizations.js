@@ -1,22 +1,24 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/freezeObject',
         './Cesium3DTileOptimizationHint',
-        './TileOrientedBoundingBox',
-        './TileBoundingRegion'
+        './TileBoundingRegion',
+        './TileOrientedBoundingBox'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         freezeObject,
         Cesium3DTileOptimizationHint,
-        TileOrientedBoundingBox,
-        TileBoundingRegion) {
+        TileBoundingRegion,
+        TileOrientedBoundingBox) {
     'use strict';
 
     /**
-     * Utiility functions for computing optimization hints for a {@link Cesium3DTileset}.
+     * Utility functions for computing optimization hints for a {@link Cesium3DTileset}.
      * 
      * @private
      * 
@@ -34,11 +36,15 @@ define([
      * spheres are not supported for the reason that the child bounds can very often be partially outside of the parent bounds.
      *
      * @param {Cesium3DTile} tile The tile to check.
-     * @param {Boolean} [evaluate=false] Whether to evaluate support if support for the childrenWithinParent optimization is Cesium3DTileOptimizations.Hints.NOT_COMPUTED
+     * @param {Boolean} [evaluate=false] Whether to evaluate support if support for the childrenWithinParent optimization is Cesium3DTileOptimizationHints.NOT_COMPUTED
      * @param {Boolean} [force=false] Whether to always evaluate support for the childrenWithinParent optimization
      * @returns {Boolean} Whether the childrenWithinParent optimization is supported.
      */
     Cesium3DTileOptimizations.checkChildrenWithinParent = function(tile, evaluate, force) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('tile', tile);
+        //>>includeEnd('debug');
+
         evaluate = defaultValue(evaluate, false);
         force = defaultValue(force, false);
 
@@ -103,7 +109,7 @@ define([
             }
         }
 
-        return tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION ? true : false;
+        return tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
     };
 
     return Cesium3DTileOptimizations;
