@@ -470,6 +470,8 @@ define([
         this.numberTotal = 0;
         this.numberOfFeaturesSelected = 0;
         this.numberOfFeaturesLoaded = 0;
+        this.numberOfPointsSelected = 0;
+        this.numberOfPointsLoaded = 0;
         this.numberOfTilesStyled = 0;
         this.numberOfFeaturesStyled = 0;
     }
@@ -1505,6 +1507,7 @@ define([
                     // RESEARCH_IDEA: ability to unload tiles (without content) for an
                     // external tileset when all the tiles are unloaded.
                     ++tileset._statistics.numberContentReady;
+                    incrementPointAndFeatureLoadCounts(tileset, tile.content);
                     tile.replacementNode = tileset._replacementList.add(tile);
                 }
             } else {
@@ -1559,6 +1562,49 @@ define([
         last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
     }
 
+    function updatePointAndFeatureCounts(tileset, content, decrement, loaded) {
+        var stats = tileset._statistics;
+        var contents = content.innerContents;
+        var pointsLength = content._pointsLength;
+        var featuresLength = content.featuresLength;
+
+        if (defined(contents)) {
+            var length = contents.length;
+            for (var i = 0; i < length; ++i) {
+                updatePointAndFeatureCounts(tileset, contents[i], decrement, loaded);
+            }
+        } else {
+            if (defined(pointsLength)) {
+                if (loaded) {
+                    stats.numberOfPointsLoaded += decrement ? -pointsLength : pointsLength;
+                } else {
+                    stats.numberOfPointsSelected += decrement ? -pointsLength : pointsLength;
+                }
+            }
+            if (loaded) {
+                    stats.numberOfFeaturesLoaded += decrement ? -featuresLength : featuresLength;
+            } else {
+                stats.numberOfFeaturesSelected += decrement ? -featuresLength : featuresLength;
+            }
+        }
+    }
+
+    function incrementPointAndFeatureSelectionCounts(tileset, content) {
+        updatePointAndFeatureCounts(tileset, content, false, false);
+    }
+
+    function decrementPointAndFeatureSelectionCounts(tileset, content) {
+        updatePointAndFeatureCounts(tileset, content, true, false);
+    }
+
+    function incrementPointAndFeatureLoadCounts(tileset, content) {
+        updatePointAndFeatureCounts(tileset, content, false, true);
+    }
+
+    function decrementPointAndFeatureLoadCounts(tileset, content) {
+        updatePointAndFeatureCounts(tileset, content, true, true);
+    }
+
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
@@ -1574,6 +1620,7 @@ define([
                 // makes changes that update needs to apply to WebGL resources
                 tileVisible.raiseEvent(tile);
                 tile.update(tileset, frameState);
+                updatePointAndFeatureCounts(tileset, tile.content, false, false);
             }
         }
 
@@ -1599,6 +1646,7 @@ define([
         while ((node !== sentinel) && ((replacementList.length > maximumNumberOfLoadedTiles) || trimTiles)) {
             var tile = node.item;
 
+            decrementPointAndFeatureLoadCounts(tileset, tile.content);
             tileUnload.raiseEvent(tile);
             tile.unloadContent();
 

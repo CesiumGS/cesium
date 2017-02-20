@@ -460,7 +460,6 @@ define([
         }
 
         this._parsedContent = {
-            pointsLength : pointsLength,
             positions : positions,
             colors : colors,
             normals : normals,
@@ -489,7 +488,7 @@ define([
     function createResources(content, frameState) {
         var context = frameState.context;
         var parsedContent = content._parsedContent;
-        var pointsLength = parsedContent.pointsLength;
+        var pointsLength = content._pointsLength;
         var positions = parsedContent.positions;
         var colors = parsedContent.colors;
         var normals = parsedContent.normals;
@@ -1170,9 +1169,6 @@ define([
 
             // Set state to ready
             this.state = Cesium3DTileContentState.READY;
-            if (defined(tileset._statistics)) {
-                tileset._statistics.numberOfPointsLoaded += this._pointsLength;
-            }
             this._readyPromise.resolve(this);
             this._parsedContent = undefined; // Unload
         }
@@ -1233,10 +1229,6 @@ define([
         if (passes.pick) {
             frameState.addCommand(this._pickCommand);
         }
-
-        if (defined(tileset._statistics)) {
-            tileset._statistics.numberOfPointsSelected += this._pointsLength;   
-        }
     };
 
     /**
@@ -1250,7 +1242,6 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     PointCloud3DTileContent.prototype.destroy = function() {
-        this._tileset._statistics.numberOfPointsLoaded -= this._pointsLength;
         var command = this._drawCommand;
         var pickCommand = this._pickCommand;
         if (defined(command)) {

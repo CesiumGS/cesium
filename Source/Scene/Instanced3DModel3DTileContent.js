@@ -450,7 +450,6 @@ define([
 
         modelInstanceCollection.readyPromise.then(function(modelInstanceCollection) {
             that.state = Cesium3DTileContentState.READY;
-            that._tileset._statistics.numberOfFeaturesLoaded += that.featuresLength;
             that._readyPromise.resolve(that);
         }).otherwise(function(error) {
             that.state = Cesium3DTileContentState.FAILED;
@@ -490,9 +489,6 @@ define([
         this._modelInstanceCollection.shadows = this._tileset.shadows;
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
         this._modelInstanceCollection.update(frameState);
-        if (defined(tileset._statistics)) {
-            tileset._statistics.numberOfFeaturesSelected += this.featuresLength;
-        }
 
         frameState.addCommand = oldAddCommand;
     };
@@ -508,7 +504,6 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Instanced3DModel3DTileContent.prototype.destroy = function() {
-        this._tileset._statistics.numberOfFeaturesLoaded -= this.featuresLength;
         this._modelInstanceCollection = this._modelInstanceCollection && this._modelInstanceCollection.destroy();
         this.batchTable = this.batchTable && this.batchTable.destroy();
 
