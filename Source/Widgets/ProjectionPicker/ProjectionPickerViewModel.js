@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -8,11 +9,13 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Math',
         '../../Core/Matrix4',
+        '../../Core/Ray',
         '../../Scene/OrthographicFrustum',
         '../../Scene/PerspectiveFrustum',
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
+        Cartesian2,
         Cartesian3,
         defaultValue,
         defined,
@@ -21,6 +24,7 @@ define([
         DeveloperError,
         CesiumMath,
         Matrix4,
+        Ray,
         OrthographicFrustum,
         PerspectiveFrustum,
         knockout,
@@ -94,13 +98,47 @@ define([
             that._orthographic = false;
         });
 
+        var scratchAdjustOrtghographicFrustumMousePosition = new Cartesian2();
+        var scratchDepthIntersection = new Cartesian3();
+        var pickGlobeScratchRay = new Ray();
+        var scratchRayIntersection = new Cartesian3();
+
         this._switchToOrthographic = createCommand(function() {
-            // TODO: set width based on distance in depth buffer
             var scene = that._scene;
             var camera = that._scene.camera;
+            var globe = scene._globe;
+
+            var distance;
+            if (!Matrix4.equals(Matrix4.IDENTITY, camera.transform)) {
+                distance = Cartesian3.magnitude(camera.position);
+            } else if (defined(globe)) {
+                var depthIntersection;
+                var rayIntersection;
+
+                var mousePosition = scratchAdjustOrtghographicFrustumMousePosition;
+                mousePosition.x = scene.drawingBufferWidth / 2.0;
+                mousePosition.y = scene.drawingBufferHeight / 2.0;
+
+                if (scene.pickPositionSupported) {
+                    depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
+                }
+
+                var ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
+                rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
+
+                var pickDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
+                var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
+
+                distance = pickDistance < rayDistance ? pickDistance : rayDistance;
+            }
+
+            if (!defined(distance)) {
+                distance = camera.positionCartographic.height;
+            }
+
             camera.frustum = new OrthographicFrustum();
             camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight * 0.3;
-            camera.frustum.width = Matrix4.equals(Matrix4.IDENTITY, camera.transform) ? camera.positionCartographic.height : Cartesian3.magnitude(camera.position);
+            camera.frustum.width = distance;
             that._orthographic = true;
         });
     }
