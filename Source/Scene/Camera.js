@@ -971,7 +971,7 @@ define([
         }
 
         if (!Matrix4.equals(Matrix4.IDENTITY, this.transform)) {
-            this.frustum.width = this.positionCartographic.height;
+            this.frustum.width = Cartesian3.magnitude(this.position);
             return;
         }
 
@@ -1000,7 +1000,7 @@ define([
         }
 
         if (!defined(globe) || (!defined(depthIntersection) && !defined(rayIntersection))) {
-            this.frustum.width = Cartesian3.magnitude(this.position);
+            this.frustum.width = this.positionCartographic.height;
         }
     };
 

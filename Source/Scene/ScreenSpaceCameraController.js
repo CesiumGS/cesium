@@ -487,8 +487,10 @@ define([
         var mode = scene.mode;
 
         if (camera.frustum instanceof OrthographicFrustum) {
-            camera.zoomIn(distance);
-            camera.frustum.width = Math.max(1.0, camera.frustum.width - distance);
+            if (Math.abs(distance) > 0.0) {
+                camera.zoomIn(distance);
+                camera._adjustOrthographicFrustum();
+            }
             return;
         }
 
