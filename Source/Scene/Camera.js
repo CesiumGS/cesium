@@ -960,12 +960,49 @@ define([
         updateMembers(this);
     };
 
-    function adjustOrthographicFrustum(camera) {
-        if (!(camera.frustum instanceof OrthographicFrustum)) {
+    var scratchDepthIntersection = new Cartesian3();
+    var scratchAdjustOrtghographicFrustumMousePosition = new Cartesian2();
+    var pickGlobeScratchRay = new Ray();
+    var scratchRayIntersection = new Cartesian3();
+
+    Camera.prototype._adjustOrthographicFrustum = function() {
+        if (!(this.frustum instanceof OrthographicFrustum)) {
             return;
         }
-        camera.frustum.width = Matrix4.equals(Matrix4.IDENTITY, camera.transform) ? camera.positionCartographic.height : Cartesian3.magnitude(camera.position);
-    }
+
+        if (!Matrix4.equals(Matrix4.IDENTITY, this.transform)) {
+            this.frustum.width = this.positionCartographic.height;
+            return;
+        }
+
+        var scene = this._scene;
+        var globe = scene._globe;
+
+        var depthIntersection;
+        var rayIntersection;
+
+        if (defined(globe)) {
+            var mousePosition = scratchAdjustOrtghographicFrustumMousePosition;
+            mousePosition.x = scene.drawingBufferWidth / 2.0;
+            mousePosition.y = scene.drawingBufferHeight / 2.0;
+
+            if (scene.pickPositionSupported) {
+                depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
+            }
+
+            var ray = this.getPickRay(mousePosition, pickGlobeScratchRay);
+            rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
+
+            var pickDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, this.positionWC) : Number.POSITIVE_INFINITY;
+            var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, this.positionWC) : Number.POSITIVE_INFINITY;
+
+            this.frustum.width = pickDistance < rayDistance ? pickDistance : rayDistance;
+        }
+
+        if (!defined(globe) || (!defined(depthIntersection) && !defined(rayIntersection))) {
+            this.frustum.width = Cartesian3.magnitude(this.position);
+        }
+    };
 
     var scratchSetViewCartesian = new Cartesian3();
     var scratchSetViewTransform1 = new Matrix4();
@@ -991,7 +1028,7 @@ define([
 
         camera._setTransform(currentTransform);
 
-        adjustOrthographicFrustum(camera);
+        camera._adjustOrthographicFrustum();
     }
 
     function setViewCV(camera, position,hpr, convert) {
@@ -1016,6 +1053,8 @@ define([
         Cartesian3.cross(camera.direction, camera.up, camera.right);
 
         camera._setTransform(currentTransform);
+
+        camera._adjustOrthographicFrustum();
     }
 
     function setView2D(camera, position, hpr, convert) {
@@ -1985,7 +2024,7 @@ define([
         Cartesian3.cross(this.right, this.direction, this.up);
         Cartesian3.normalize(this.up, this.up);
 
-        adjustOrthographicFrustum(this);
+        this._adjustOrthographicFrustum();
     };
 
     var viewRectangle3DCartographic1 = new Cartographic();
@@ -2174,12 +2213,18 @@ define([
         Matrix4.multiplyByPoint(transform, southWest, southWest);
         Matrix4.multiplyByPoint(invTransform, southWest, southWest);
 
-        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
-        var tanTheta = camera.frustum.aspectRatio * tanPhi;
-
         result.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
         result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
-        result.z = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
+
+        if (defined(camera.frustum.fovy)) {
+            var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
+            var tanTheta = camera.frustum.aspectRatio * tanPhi;
+            result.z = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
+        } else {
+            var width = northEast.x - southWest.x;
+            var height = northEast.y - southWest.y;
+            result.z = Math.max(width, height);
+        }
 
         return result;
     }

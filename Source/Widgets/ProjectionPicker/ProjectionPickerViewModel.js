@@ -95,6 +95,7 @@ define([
         });
 
         this._switchToOrthographic = createCommand(function() {
+            // TODO: set width based on distance in depth buffer
             var scene = that._scene;
             var camera = that._scene.camera;
             camera.frustum = new OrthographicFrustum();
