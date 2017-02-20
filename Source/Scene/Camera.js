@@ -2391,6 +2391,10 @@ define([
 
         Cartesian3.clone(camera.directionWC, result.direction);
 
+        if (camera._mode === SceneMode.COLUMBUS_VIEW) {
+            Cartesian3.fromElements(result.origin.z, result.origin.x, result.origin.y, result.origin);
+        }
+
         return result;
     }
 
