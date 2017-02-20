@@ -1593,10 +1593,6 @@ define([
         updatePointAndFeatureCounts(tileset, content, false, false);
     }
 
-    function decrementPointAndFeatureSelectionCounts(tileset, content) {
-        updatePointAndFeatureCounts(tileset, content, true, false);
-    }
-
     function incrementPointAndFeatureLoadCounts(tileset, content) {
         updatePointAndFeatureCounts(tileset, content, false, true);
     }
@@ -1620,7 +1616,7 @@ define([
                 // makes changes that update needs to apply to WebGL resources
                 tileVisible.raiseEvent(tile);
                 tile.update(tileset, frameState);
-                updatePointAndFeatureCounts(tileset, tile.content, false, false);
+                incrementPointAndFeatureSelectionCounts(tileset, tile.content);
             }
         }
 
