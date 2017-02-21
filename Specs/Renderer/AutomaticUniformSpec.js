@@ -6,7 +6,7 @@ defineSuite([
         'Core/Matrix4',
         'Renderer/Pass',
         'Renderer/Texture',
-        'Scene/OrthographicFrustum',
+        'Scene/OrthographicOffCenterFrustum',
         'Scene/SceneMode',
         'Specs/createCamera',
         'Specs/createContext',
@@ -18,7 +18,7 @@ defineSuite([
         Matrix4,
         Pass,
         Texture,
-        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         SceneMode,
         createCamera,
         createContext,
@@ -444,10 +444,10 @@ defineSuite([
 
         var fs =
             'void main() { ' +
-            '  bool b0 = (czm_inverseProjectionOIT[0][0] == 1.0) && (czm_inverseProjectionOIT[1][0] == 0.0) && (czm_inverseProjectionOIT[2][0] == 0.0) && (czm_inverseProjectionOIT[3][0] == 0.0); ' +
-            '  bool b1 = (czm_inverseProjectionOIT[0][1] == 0.0) && (czm_inverseProjectionOIT[1][1] == 1.0) && (czm_inverseProjectionOIT[2][1] == 0.0) && (czm_inverseProjectionOIT[3][1] == 0.0); ' +
-            '  bool b2 = (czm_inverseProjectionOIT[0][2] == 0.0) && (czm_inverseProjectionOIT[1][2] == 0.0) && (czm_inverseProjectionOIT[2][2] == 1.0) && (czm_inverseProjectionOIT[3][2] == 0.0); ' +
-            '  bool b3 = (czm_inverseProjectionOIT[0][3] == 0.0) && (czm_inverseProjectionOIT[1][3] == 0.0) && (czm_inverseProjectionOIT[2][3] == 0.0) && (czm_inverseProjectionOIT[3][3] == 1.0); ' +
+            '  bool b0 = (czm_inverseProjectionOIT[0][0] == 0.0) && (czm_inverseProjectionOIT[1][0] == 0.0) && (czm_inverseProjectionOIT[2][0] == 0.0) && (czm_inverseProjectionOIT[3][0] == 0.0); ' +
+            '  bool b1 = (czm_inverseProjectionOIT[0][1] == 0.0) && (czm_inverseProjectionOIT[1][1] == 0.0) && (czm_inverseProjectionOIT[2][1] == 0.0) && (czm_inverseProjectionOIT[3][1] == 0.0); ' +
+            '  bool b2 = (czm_inverseProjectionOIT[0][2] == 0.0) && (czm_inverseProjectionOIT[1][2] == 0.0) && (czm_inverseProjectionOIT[2][2] == 0.0) && (czm_inverseProjectionOIT[3][2] == 0.0); ' +
+            '  bool b3 = (czm_inverseProjectionOIT[0][3] == 0.0) && (czm_inverseProjectionOIT[1][3] == 0.0) && (czm_inverseProjectionOIT[2][3] == 0.0) && (czm_inverseProjectionOIT[3][3] == 0.0); ' +
             '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
             '}';
         expect({
@@ -1195,7 +1195,7 @@ defineSuite([
     it('has czm_eyeHeight2D in Scene2D', function() {
         var us = context.uniformState;
         var camera = createCamera();
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
         frustum.left = -2.0;

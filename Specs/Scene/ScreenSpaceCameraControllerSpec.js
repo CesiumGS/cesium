@@ -14,7 +14,7 @@ defineSuite([
         'Core/Transforms',
         'Scene/CameraEventType',
         'Scene/MapMode2D',
-        'Scene/OrthographicFrustum',
+        'Scene/OrthographicOffCenterFrustum',
         'Scene/SceneMode',
         'Specs/createCamera',
         'Specs/createCanvas',
@@ -34,7 +34,7 @@ defineSuite([
         Transforms,
         CameraEventType,
         MapMode2D,
-        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         SceneMode,
         createCamera,
         createCanvas,
@@ -183,7 +183,7 @@ defineSuite([
         };
 
         var maxRadii = ellipsoid.maximumRadius;
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
         frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);

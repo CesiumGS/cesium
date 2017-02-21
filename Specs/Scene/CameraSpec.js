@@ -18,7 +18,7 @@ defineSuite([
         'Core/WebMercatorProjection',
         'Scene/CameraFlightPath',
         'Scene/MapMode2D',
-        'Scene/OrthographicFrustum',
+        'Scene/OrthographicOffCenterFrustum',
         'Scene/PerspectiveFrustum',
         'Scene/SceneMode',
         'Scene/TweenCollection'
@@ -41,7 +41,7 @@ defineSuite([
         WebMercatorProjection,
         CameraFlightPath,
         MapMode2D,
-        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         PerspectiveFrustum,
         SceneMode,
         TweenCollection) {
@@ -570,7 +570,7 @@ defineSuite([
         camera._mode = SceneMode.SCENE2D;
         camera._projection = projection;
 
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
         frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
@@ -930,7 +930,7 @@ defineSuite([
     });
 
     it('move clamps position in 2D', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
         frustum.left = -2.0;
@@ -1140,7 +1140,7 @@ defineSuite([
     });
 
     it('zooms out 2D', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
         frustum.left = -2.0;
@@ -1159,7 +1159,7 @@ defineSuite([
     });
 
     it('zooms in 2D', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
         frustum.left = -2.0;
@@ -1178,7 +1178,7 @@ defineSuite([
     });
 
     it('clamps zoom out in 2D', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
         frustum.left = -2.0;
@@ -1202,7 +1202,7 @@ defineSuite([
     });
 
     it('clamps zoom in in 2D', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
         frustum.left = -2.0;
@@ -1240,7 +1240,7 @@ defineSuite([
 
     it('zooms in throws with undefined OrthogrphicFrustum properties 2D', function() {
         camera._mode = SceneMode.SCENE2D;
-        camera.frustum = new OrthographicFrustum();
+        camera.frustum = new OrthographicOffCenterFrustum();
         expect(function () {
             camera.zoomIn(zoomAmount);
         }).toThrowDeveloperError();
@@ -1296,7 +1296,7 @@ defineSuite([
     });
 
     it('lookAt in 2D mode', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
         frustum.left = -2.0;
@@ -1321,7 +1321,7 @@ defineSuite([
     });
 
     it('lookAt in 2D mode with heading, pitch and range', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
         frustum.left = -2.0;
@@ -1425,7 +1425,7 @@ defineSuite([
     });
 
     it('lookAtTransform in 2D mode', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
         frustum.left = -2.0;
@@ -1450,7 +1450,7 @@ defineSuite([
     });
 
     it('lookAtTransform in 2D mode with heading, pitch and range', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
         frustum.left = -2.0;
@@ -1553,7 +1553,7 @@ defineSuite([
     });
 
     it('setView rectangle in 2D with larger longitude', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.left = -10.0;
         frustum.right = 10.0;
         frustum.bottom = -10.0;
@@ -1584,7 +1584,7 @@ defineSuite([
     });
 
     it('setView rectangle in 2D with larger latitude', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.left = -10.0;
         frustum.right = 10.0;
         frustum.bottom = -10.0;
@@ -1680,7 +1680,7 @@ defineSuite([
             CesiumMath.PI_OVER_TWO);
         var projection = new GeographicProjection();
         var cam = new Camera(scene);
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.right = 1.0;
         frustum.left = -1.0;
         frustum.top = 1.0;
@@ -1797,7 +1797,7 @@ defineSuite([
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
 
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
         frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
@@ -1824,7 +1824,7 @@ defineSuite([
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
 
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
         frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
@@ -1918,7 +1918,7 @@ defineSuite([
     });
 
     it('get pick ray orthographic', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.left = -10.0;
         frustum.right = 10.0;
         frustum.bottom = -10.0;
@@ -1944,7 +1944,7 @@ defineSuite([
         camera._mode = SceneMode.SCENE2D;
         camera._projection = projection;
 
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
         frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
@@ -1976,7 +1976,7 @@ defineSuite([
     });
 
     it('does not animate in 2D', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
         frustum.left = -2.0;
@@ -2452,7 +2452,7 @@ defineSuite([
 
         camera._mode = SceneMode.SCENE2D;
 
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.left = -10.0;
         frustum.right = 10.0;
         frustum.bottom = -10.0;

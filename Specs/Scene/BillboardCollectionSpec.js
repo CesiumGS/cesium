@@ -16,7 +16,7 @@ defineSuite([
         'Scene/BlendOption',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
-        'Scene/OrthographicFrustum',
+        'Scene/OrthographicOffCenterFrustum',
         'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
         'Specs/createGlobe',
@@ -40,7 +40,7 @@ defineSuite([
         BlendOption,
         HeightReference,
         HorizontalOrigin,
-        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         TextureAtlas,
         VerticalOrigin,
         createGlobe,
@@ -1357,7 +1357,7 @@ defineSuite([
         });
 
         var maxRadii = ellipsoid.maximumRadius;
-        var orthoFrustum = new OrthographicFrustum();
+        var orthoFrustum = new OrthographicOffCenterFrustum();
         orthoFrustum.right = maxRadii * Math.PI;
         orthoFrustum.left = -orthoFrustum.right;
         orthoFrustum.top = orthoFrustum.right;

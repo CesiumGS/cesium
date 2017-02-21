@@ -3,14 +3,14 @@ defineSuite([
         'Scene/CameraFlightPath',
         'Core/Cartesian3',
         'Core/Math',
-        'Scene/OrthographicFrustum',
+        'Scene/OrthographicOffCenterFrustum',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
         CameraFlightPath,
         Cartesian3,
         CesiumMath,
-        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         SceneMode,
         createScene) {
     'use strict';
@@ -27,7 +27,7 @@ defineSuite([
 
     function createOrthographicFrustum() {
         var current = scene.camera.frustum;
-        var f = new OrthographicFrustum();
+        var f = new OrthographicOffCenterFrustum();
         f.near = current.near;
         f.far = current.far;
 

@@ -25,7 +25,7 @@ defineSuite([
         'Scene/Camera',
         'Scene/Globe',
         'Scene/Model',
-        'Scene/OrthographicFrustum',
+        'Scene/OrthographicOffCenterFrustum',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Scene/ShadowMode',
@@ -58,7 +58,7 @@ defineSuite([
         Camera,
         Globe,
         Model,
-        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         PerInstanceColorAppearance,
         Primitive,
         ShadowMode,
@@ -299,7 +299,7 @@ defineSuite([
         var center = new Cartesian3.fromRadians(longitude, latitude, height);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0));
 
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.left = -50.0;
         frustum.right = 50.0;
         frustum.bottom = -50.0;
