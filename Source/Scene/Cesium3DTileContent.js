@@ -79,6 +79,20 @@ define([
         },
 
         /**
+         * Gets the number of points in the tile.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        pointsLength : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
          * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content a composite's inner tiles, which can also be composites.
          *

@@ -263,6 +263,11 @@ define([
             numberProcessing : 0,
             numberContentReady : 0, // Number of tiles with content loaded, does not include empty tiles
             numberTotal : 0, // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
+            // Features stats
+            numberOfFeaturesSelected : 0,       // number of features rendered
+            numberOfFeaturesLoaded : 0,  // number of features in memory
+            numberOfPointsSelected: 0,
+            numberOfPointsLoaded: 0,
             // Styling stats
             numberOfTilesStyled : 0,
             numberOfFeaturesStyled : 0,
@@ -463,6 +468,10 @@ define([
         this.numberProcessing = 0;
         this.numberContentReady = 0;
         this.numberTotal = 0;
+        this.numberOfFeaturesSelected = 0;
+        this.numberOfFeaturesLoaded = 0;
+        this.numberOfPointsSelected = 0;
+        this.numberOfPointsLoaded = 0;
         this.numberOfTilesStyled = 0;
         this.numberOfFeaturesStyled = 0;
     }
@@ -1498,6 +1507,7 @@ define([
                     // RESEARCH_IDEA: ability to unload tiles (without content) for an
                     // external tileset when all the tiles are unloaded.
                     ++tileset._statistics.numberContentReady;
+                    incrementPointAndFeatureLoadCounts(tileset, tile.content);
                     tile.replacementNode = tileset._replacementList.add(tile);
                 }
             } else {
@@ -1528,6 +1538,8 @@ define([
         stats.numberOfAttemptedRequests = 0;
         stats.numberOfTilesStyled = 0;
         stats.numberOfFeaturesStyled = 0;
+        stats.numberOfFeaturesSelected = 0;
+        stats.numberOfPointsSelected = 0;
     }
 
     function updateLastStats(tileset, isPick) {
@@ -1542,8 +1554,46 @@ define([
         last.numberProcessing = stats.numberProcessing;
         last.numberContentReady = stats.numberContentReady;
         last.numberTotal = stats.numberTotal;
+        last.numberOfFeaturesSelected = stats.numberOfFeaturesSelected;
+        last.numberOfFeaturesLoaded = stats.numberOfFeaturesLoaded;
+        last.numberOfPointsSelected = stats.numberOfPointsSelected;
+        last.numberOfPointsLoaded = stats.numberOfPointsLoaded;
         last.numberOfTilesStyled = stats.numberOfTilesStyled;
         last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
+    }
+
+    function updatePointAndFeatureCounts(tileset, content, decrement, load) {
+        var stats = tileset._statistics;
+        var contents = content.innerContents;
+        var pointsLength = content.pointsLength;
+        var featuresLength = content.featuresLength;
+
+        if (load) {
+            stats.numberOfFeaturesLoaded += decrement ? -featuresLength : featuresLength;
+            stats.numberOfPointsLoaded += decrement ? -pointsLength : pointsLength;
+        } else {
+            stats.numberOfFeaturesSelected += decrement ? -featuresLength : featuresLength;
+            stats.numberOfPointsSelected += decrement ? -pointsLength : pointsLength;
+        }
+
+        if (defined(contents)) {
+            var length = contents.length;
+            for (var i = 0; i < length; ++i) {
+                updatePointAndFeatureCounts(tileset, contents[i], decrement, load);
+            }
+        }
+    }
+
+    function incrementPointAndFeatureSelectionCounts(tileset, content) {
+        updatePointAndFeatureCounts(tileset, content, false, false);
+    }
+
+    function incrementPointAndFeatureLoadCounts(tileset, content) {
+        updatePointAndFeatureCounts(tileset, content, false, true);
+    }
+
+    function decrementPointAndFeatureLoadCounts(tileset, content) {
+        updatePointAndFeatureCounts(tileset, content, true, true);
     }
 
     function updateTiles(tileset, frameState) {
@@ -1561,6 +1611,7 @@ define([
                 // makes changes that update needs to apply to WebGL resources
                 tileVisible.raiseEvent(tile);
                 tile.update(tileset, frameState);
+                incrementPointAndFeatureSelectionCounts(tileset, tile.content);
             }
         }
 
@@ -1586,6 +1637,7 @@ define([
         while ((node !== sentinel) && ((replacementList.length > maximumNumberOfLoadedTiles) || trimTiles)) {
             var tile = node.item;
 
+            decrementPointAndFeatureLoadCounts(tileset, tile.content);
             tileUnload.raiseEvent(tile);
             tile.unloadContent();
 
