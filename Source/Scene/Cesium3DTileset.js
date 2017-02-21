@@ -30,6 +30,7 @@ define([
         './Cesium3DTileStyleEngine',
         './CullingVolume',
         './DebugCameraPrimitive',
+        './LabelCollection',
         './SceneMode',
         './ShadowMode',
         './TileBoundingRegion',
@@ -66,6 +67,7 @@ define([
         Cesium3DTileStyleEngine,
         CullingVolume,
         DebugCameraPrimitive,
+        LabelCollection,
         SceneMode,
         ShadowMode,
         TileBoundingRegion,
@@ -96,6 +98,7 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
      * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
+     * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      *
      * @example
@@ -344,6 +347,18 @@ define([
          * @default false
          */
         this.debugShowViewerRequestVolume = defaultValue(options.debugShowViewerRequestVolume, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the geometric error of each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
+        this._geometricErrorLabels = new LabelCollection();
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -1554,8 +1569,9 @@ define([
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
         var tileVisible = tileset.tileVisible;
-        for (var i = 0; i < length; ++i) {
-            var tile = selectedTiles[i];
+        var i, tile;
+        for (i = 0; i < length; ++i) {
+            tile = selectedTiles[i];
             if (tile.selected) {
                 // Raise visible event before update in case the visible event
                 // makes changes that update needs to apply to WebGL resources
@@ -1566,6 +1582,20 @@ define([
 
         // Number of commands added by each update above
         tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+
+        if (tileset.debugShowGeometricError) {
+            tileset._geometricErrorLabels.removeAll();
+            for (i = 0; i < length; ++i) {
+                tile = selectedTiles[i];
+                if (tile.selected) {
+                    tileset._geometricErrorLabels.add({
+                        text: tile.geometricError.toString(),
+                        position: tile.boundingSphere.center
+                    });
+                }
+            }
+            tileset._geometricErrorLabels.update(frameState);
+        }
     }
 
     function unloadTiles(tileset, frameState) {
@@ -1742,7 +1772,6 @@ define([
         }
 
         this._root = undefined;
-        this._debugCameraFrustum = this._debugCameraFrustum && this._debugCameraFrustum.destroy();
         return destroyObject(this);
     };
 
