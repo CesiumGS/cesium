@@ -70,6 +70,7 @@ defineSuite([
 
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
+    var noBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
 
     var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
     var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
@@ -385,7 +386,6 @@ defineSuite([
         expect(stats.numberOfPointsLoaded).toEqual(0);
 
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-
             scene.renderForSpecs();
             expect(stats.numberOfFeaturesSelected).toEqual(features);
             expect(stats.numberOfFeaturesLoaded).toEqual(features);
@@ -400,7 +400,7 @@ defineSuite([
             expect(stats.numberOfPointsSelected).toEqual(0);
             expect(stats.numberOfPointsLoaded).toEqual(points);
 
-            tileset._trimTiles = true;
+            tileset.trimLoadedTiles();
 
             scene.renderForSpecs();
 
@@ -419,12 +419,12 @@ defineSuite([
         return checkPointAndFeatureCounts(tileset, 10, 0);
     });
 
-    it('verify unbatched features statistics', function() {
+    it('verify no batch table features statistics', function() {
         var tileset = scene.primitives.add(new Cesium3DTileset({
-            url : withoutBatchTableUrl
+            url : noBatchTableUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 10, 0);
+        return checkPointAndFeatureCounts(tileset, 0, 0);
     });
 
     it('verify instanced features statistics', function() {
@@ -453,7 +453,6 @@ defineSuite([
 
     it('verify points statistics', function() {
         scene.camera.lookAt(Cartesian3.fromRadians(-1.31968, 0.698874, 5.0), new HeadingPitchRange(0.0, -1.57, 5.0));
-        scene.frameState.passes.render = true;
 
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : pointCloudUrl
@@ -464,7 +463,6 @@ defineSuite([
 
     it('verify batched points statistics', function() {
         scene.camera.lookAt(Cartesian3.fromRadians(-1.31968, 0.698874, 5.0), new HeadingPitchRange(0.0, -1.57, 5.0));
-        scene.frameState.passes.render = true;
 
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : pointCloudBatchedUrl
