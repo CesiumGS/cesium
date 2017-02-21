@@ -1173,9 +1173,9 @@ define([
         var visibilityPlaneMask = tile.visibilityPlaneMask;
         for (var k = 0; k < childrenLength; ++k) {
             var child = children[k];
-            
+
             var visibilityMask = child.visibility(frameState, visibilityPlaneMask);
-            
+
             if (isVisible(visibilityMask)) {
                 flag |= Cesium3DTileChildrenVisibility.VISIBLE;
             }
@@ -1195,7 +1195,7 @@ define([
         }
 
         tile.childrenVisibility = flag;
-        
+
         return flag;
     }
 
@@ -1339,7 +1339,7 @@ define([
                 var useChildrenBoundUnion = t._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
 
                 var childrenVisibility;
-                
+
                 if (childrenLength === 0) {
                     // Select tile if it's a leaf (childrenLength === 0)
                     selectTile(tileset, t, fullyVisible, frameState);
@@ -1347,7 +1347,7 @@ define([
                     // This tile meets the SSE so add its commands.
                     if (useChildrenBoundUnion) {
                         childrenVisibility = computeChildrenVisibility(t, frameState, false);
-                        if ((childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE) || childrenLength === 0) {
+                        if (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE) {
                             selectTile(tileset, t, fullyVisible, frameState);
                         } else {
                             ++stats.numberOfTilesCulledWithChildrenUnion;
@@ -1384,7 +1384,7 @@ define([
                             selectTile(tileset, t, fullyVisible, frameState);
 
                             if (outOfCore) {
-                                for (k = 0; (k < childrenLength) && t.canRequestContent(); ++k) {
+                                for (k = 0; k < childrenLength; ++k) {
                                     child = children[k];
                                     // PERFORMANCE_IDEA: we could spin a bit less CPU here by keeping separate lists for unloaded/ready children.
                                     if (child.contentUnloaded) {
