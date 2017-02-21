@@ -72,6 +72,7 @@ defineSuite([
 
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
+    var noBatchIdsUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
 
     var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
     var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
@@ -103,6 +104,9 @@ defineSuite([
     var tilesetReplacementWithViewerRequestVolumeUrl = './Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume';
 
     var styleUrl = './Data/Cesium3DTiles/Style/style.json';
+
+    var pointCloudUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB';
+    var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
 
     var originalMaximumRequests;
 
@@ -376,6 +380,100 @@ defineSuite([
                 expect(stats.numberProcessing).toEqual(0);
             });
         });
+    });
+
+    function checkPointAndFeatureCounts(tileset, features, points) {
+        var stats = tileset._statistics;
+
+        expect(stats.numberOfFeaturesSelected).toEqual(0);
+        expect(stats.numberOfFeaturesLoaded).toEqual(0);
+        expect(stats.numberOfPointsSelected).toEqual(0);
+        expect(stats.numberOfPointsLoaded).toEqual(0);
+
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+            scene.renderForSpecs();
+            expect(stats.numberOfFeaturesSelected).toEqual(features);
+            expect(stats.numberOfFeaturesLoaded).toEqual(features);
+            expect(stats.numberOfPointsSelected).toEqual(points);
+            expect(stats.numberOfPointsLoaded).toEqual(points);
+
+            viewNothing();
+            scene.renderForSpecs();
+
+            expect(stats.numberOfFeaturesSelected).toEqual(0);
+            expect(stats.numberOfFeaturesLoaded).toEqual(features);
+            expect(stats.numberOfPointsSelected).toEqual(0);
+            expect(stats.numberOfPointsLoaded).toEqual(points);
+
+            tileset.trimLoadedTiles();
+
+            scene.renderForSpecs();
+
+            expect(stats.numberOfFeaturesSelected).toEqual(0);
+            expect(stats.numberOfFeaturesLoaded).toEqual(0);
+            expect(stats.numberOfPointsSelected).toEqual(0);
+            expect(stats.numberOfPointsLoaded).toEqual(0);
+        });
+    }
+
+    it('verify batched features statistics', function() {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : withBatchTableUrl
+        }));
+
+        return checkPointAndFeatureCounts(tileset, 10, 0);
+    });
+
+    it('verify no batch table features statistics', function() {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : noBatchIdsUrl
+        }));
+
+        return checkPointAndFeatureCounts(tileset, 0, 0);
+    });
+
+    it('verify instanced features statistics', function() {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : instancedRedMaterialUrl
+        }));
+
+        return checkPointAndFeatureCounts(tileset, 25, 0);
+    });
+
+    it('verify composite features statistics', function() {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : compositeUrl
+        }));
+
+        return checkPointAndFeatureCounts(tileset, 35, 0);
+    });
+
+    it('verify tileset of tilesets features statistics', function() {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : tilesetOfTilesetsUrl
+        }));
+
+        return checkPointAndFeatureCounts(tileset, 50, 0);
+    });
+
+    it('verify points statistics', function() {
+        scene.camera.lookAt(Cartesian3.fromRadians(-1.31968, 0.698874, 5.0), new HeadingPitchRange(0.0, -1.57, 5.0));
+
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : pointCloudUrl
+        }));
+
+        return checkPointAndFeatureCounts(tileset, 0, 1000);
+    });
+
+    it('verify batched points statistics', function() {
+        scene.camera.lookAt(Cartesian3.fromRadians(-1.31968, 0.698874, 5.0), new HeadingPitchRange(0.0, -1.57, 5.0));
+
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : pointCloudBatchedUrl
+        }));
+
+        return checkPointAndFeatureCounts(tileset, 8, 1000);
     });
 
     it('does not process tileset when screen space error is not met', function() {
