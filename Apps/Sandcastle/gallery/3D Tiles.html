@@ -164,7 +164,11 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
             "outlineWidth" : "10",
             "labelStyle" : "2",
             "font" : "'50px cursive'",
-            "backgroundEnabled" : "true"
+            "backgroundEnabled" : "true",
+            "scaleByDistanceNearRange" : "1000.0",
+            "scaleByDistanceNearValue" : "2.0",
+            "scaleByDistanceFarRange" : " 10000.0",
+            "scaleByDistanceFarValue" : "0.5"
         });
     });
 });
