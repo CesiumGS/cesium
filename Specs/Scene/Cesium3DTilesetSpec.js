@@ -70,7 +70,7 @@ defineSuite([
 
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
-    var noBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
+    var noBatchIdsUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
 
     var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
     var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
@@ -421,7 +421,7 @@ defineSuite([
 
     it('verify no batch table features statistics', function() {
         var tileset = scene.primitives.add(new Cesium3DTileset({
-            url : noBatchTableUrl
+            url : noBatchIdsUrl
         }));
 
         return checkPointAndFeatureCounts(tileset, 0, 0);
