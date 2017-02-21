@@ -1561,6 +1561,7 @@ define([
         last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
     }
 
+    var scratchCartesian = new Cartesian3();
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
@@ -1588,9 +1589,23 @@ define([
             for (i = 0; i < length; ++i) {
                 tile = selectedTiles[i];
                 if (tile.selected) {
+                    var boundingVolume = tile._boundingVolume.boundingVolume;
+                    var halfAxes = boundingVolume.halfAxes;
+                    var radius = boundingVolume.radius;
+
+                    var position = Cartesian3.clone(boundingVolume.center, scratchCartesian);
+                    if (defined(halfAxes)) {
+                        position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
+                        position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
+                        position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
+                    } else if (defined(radius)) {
+                        var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian);
+                        normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian);
+                        position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian);
+                    }
                     tileset._geometricErrorLabels.add({
                         text: tile.geometricError.toString(),
-                        position: tile.boundingSphere.center
+                        position: position
                     });
                 }
             }
