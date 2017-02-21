@@ -158,6 +158,15 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
+        pointsLength : {
+            get : function() {
+                return this._pointsLength;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
         innerContents : {
             get : function() {
                 return undefined;

@@ -90,6 +90,16 @@ define([
         },
 
         /**
+         * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+         * always returns <code>0</code>.  Instead call <code>pointsLength</code> for a tile in the composite.
+         */
+        pointsLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
          * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content of the composite's inner tiles, which can also be composites.
          */

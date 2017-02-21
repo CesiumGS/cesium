@@ -1562,29 +1562,24 @@ define([
         last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
     }
 
-    function updatePointAndFeatureCounts(tileset, content, decrement, loaded) {
+    function updatePointAndFeatureCounts(tileset, content, decrement, load) {
         var stats = tileset._statistics;
         var contents = content.innerContents;
-        var pointsLength = content._pointsLength;
+        var pointsLength = content.pointsLength;
         var featuresLength = content.featuresLength;
+
+        if (load) {
+            stats.numberOfFeaturesLoaded += decrement ? -featuresLength : featuresLength;
+            stats.numberOfPointsLoaded += decrement ? -pointsLength : pointsLength;
+        } else {
+            stats.numberOfFeaturesSelected += decrement ? -featuresLength : featuresLength;
+            stats.numberOfPointsSelected += decrement ? -pointsLength : pointsLength;
+        }
 
         if (defined(contents)) {
             var length = contents.length;
             for (var i = 0; i < length; ++i) {
-                updatePointAndFeatureCounts(tileset, contents[i], decrement, loaded);
-            }
-        } else {
-            if (defined(pointsLength)) {
-                if (loaded) {
-                    stats.numberOfPointsLoaded += decrement ? -pointsLength : pointsLength;
-                } else {
-                    stats.numberOfPointsSelected += decrement ? -pointsLength : pointsLength;
-                }
-            }
-            if (loaded) {
-                    stats.numberOfFeaturesLoaded += decrement ? -featuresLength : featuresLength;
-            } else {
-                stats.numberOfFeaturesSelected += decrement ? -featuresLength : featuresLength;
+                updatePointAndFeatureCounts(tileset, contents[i], decrement, load);
             }
         }
     }
