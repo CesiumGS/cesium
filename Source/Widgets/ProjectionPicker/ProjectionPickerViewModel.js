@@ -95,7 +95,9 @@ define([
             camera.frustum = new PerspectiveFrustum();
             camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
             camera.frustum.fov = CesiumMath.toRadians(60.0);
+
             that._orthographic = false;
+            that.dropDownVisible = false;
         });
 
         var scratchAdjustOrtghographicFrustumMousePosition = new Cartesian2();
@@ -137,9 +139,11 @@ define([
             }
 
             camera.frustum = new OrthographicFrustum();
-            camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight * 0.3;
+            camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
             camera.frustum.width = distance;
+
             that._orthographic = true;
+            that.dropDownVisible = false;
         });
     }
 

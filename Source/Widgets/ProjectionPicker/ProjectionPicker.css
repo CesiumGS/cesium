@@ -24,14 +24,6 @@ span.cesium-projectionPicker-wrapper {
     display: none;
 }
 
-.cesium-projectionPicker-slide-svg {
-    -webkit-transition: left 2s;
-    -moz-transition: left 2s;
-    transition: left 2s;
-    top: 0;
-    left: 0;
-}
-
 .cesium-projectionPicker-wrapper .cesium-projectionPicker-dropDown-icon {
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;

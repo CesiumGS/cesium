@@ -71,8 +71,8 @@ css: { "cesium-projectionPicker-buttonPerspective": !_orthographic,\
 attr: { title: selectedTooltip },\
 click: toggleDropDown');
         button.innerHTML = '\
-<!-- ko cesiumSvgPath: { path: _perspectivePath, width: 64, height: 64, css: "cesium-projectionPicker-slide-svg cesium-projectionPicker-iconPerspective" } --><!-- /ko -->\
-<!-- ko cesiumSvgPath: { path: _orthographicPath, width: 64, height: 64, css: "cesium-projectionPicker-slide-svg cesium-projectionPicker-iconOrthographic" } --><!-- /ko -->';
+<!-- ko cesiumSvgPath: { path: _perspectivePath, width: 64, height: 64, css: "cesium-projectionPicker-iconPerspective" } --><!-- /ko -->\
+<!-- ko cesiumSvgPath: { path: _orthographicPath, width: 64, height: 64, css: "cesium-projectionPicker-iconOrthographic" } --><!-- /ko -->';
         wrapper.appendChild(button);
 
         var perspectiveButton = document.createElement('button');
