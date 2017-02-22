@@ -1098,6 +1098,24 @@ defineSuite([
         });
     });
 
+    it ('debugShowGeometricError', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            tileset.debugShowGeometricError = true;
+            scene.renderForSpecs();
+            expect(tileset._geometricErrorLabels).toBeDefined();
+            expect(tileset._geometricErrorLabels.length).toEqual(5);
+            expect(tileset._geometricErrorLabels._labels[0].text).toEqual("70");
+            expect(tileset._geometricErrorLabels._labels[1].text).toEqual("0");
+            expect(tileset._geometricErrorLabels._labels[2].text).toEqual("0");
+            expect(tileset._geometricErrorLabels._labels[3].text).toEqual("0");
+            expect(tileset._geometricErrorLabels._labels[4].text).toEqual("0");
+
+            tileset.debugShowGeometricError = false;
+            scene.renderForSpecs();
+            expect(tileset._geometricErrorLabels).not.toBeDefined();
+        });
+    });
+
     it('does not request tiles when picking', function() {
         viewNothing();
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
