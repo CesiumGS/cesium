@@ -1346,7 +1346,7 @@ define([
         while (defined(tile) && (!tile.hasContent || !tile.contentReady)) {
             tile = tile.parent;
             if (tile.geometricError >= 4 * geometricError) {
-                break;
+                return undefined;
             }
         }
         return tile;
