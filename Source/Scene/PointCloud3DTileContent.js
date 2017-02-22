@@ -139,6 +139,7 @@ define([
         this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
         this._features = undefined;
+        this._pointsLength = 0;
     }
 
     defineProperties(PointCloud3DTileContent.prototype, {
@@ -151,6 +152,15 @@ define([
                     return this.batchTable.featuresLength;
                 }
                 return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        pointsLength : {
+            get : function() {
+                return this._pointsLength;
             }
         },
 
@@ -459,13 +469,13 @@ define([
         }
 
         this._parsedContent = {
-            pointsLength : pointsLength,
             positions : positions,
             colors : colors,
             normals : normals,
             batchIds : batchIds,
             styleableProperties : styleableProperties
         };
+        this._pointsLength = pointsLength;
 
         this._isQuantized = isQuantized;
         this._isOctEncoded16P = isOctEncoded16P;
@@ -487,7 +497,7 @@ define([
     function createResources(content, frameState) {
         var context = frameState.context;
         var parsedContent = content._parsedContent;
-        var pointsLength = parsedContent.pointsLength;
+        var pointsLength = content._pointsLength;
         var positions = parsedContent.positions;
         var colors = parsedContent.colors;
         var normals = parsedContent.normals;

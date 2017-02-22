@@ -101,7 +101,20 @@ define([
          */
         featuresLength : {
             get : function() {
-                return this._modelInstanceCollection.length;
+                if (defined(this._modelInstanceCollection)) {
+                    return this._modelInstanceCollection.length;
+                } else {
+                    return 0;
+                }
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        pointsLength : {
+            get : function() {
+                return 0;
             }
         },
 
