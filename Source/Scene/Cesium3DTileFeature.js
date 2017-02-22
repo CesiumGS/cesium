@@ -250,6 +250,22 @@ define([
                     label.showBackground = value;
                 }
             }
+        },
+
+        scaleByDistance : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.scaleByDistance;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.scaleByDistance = value;
+                }
+            }
         }
     });
 

@@ -3,11 +3,13 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/NearFarScalar',
         './LabelStyle'
     ], function(
         Color,
         defined,
         defineProperties,
+        NearFarScalar,
         LabelStyle) {
     'use strict';
 
@@ -131,6 +133,15 @@ define([
             feature.backgroundXPadding = style.backgroundXPadding.evaluate(frameState, feature);
             feature.backgroundYPadding = style.backgroundYPadding.evaluate(frameState, feature);
             feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
+
+            var nearRange = style.scaleByDistanceNearRange.evaluate(frameState, feature);
+            var nearValue = style.scaleByDistanceNearValue.evaluate(frameState, feature);
+            var farRange = style.scaleByDistanceFarRange.evaluate(frameState, feature);
+            var farValue = style.scaleByDistanceFarValue.evaluate(frameState, feature);
+
+            if (defined(nearRange) && defined(nearValue) && defined(farRange) && defined(farValue)) {
+                feature.scaleByDistance = new NearFarScalar(nearRange, nearValue, farRange, farValue);
+            }
         }
     }
 
@@ -148,6 +159,7 @@ define([
             feature.backgroundXPadding = 7.0;
             feature.backgroundYPadding = 5.0;
             feature.backgroundEnabled = false;
+            feature.scaleByDistance = undefined;
         }
     }
 

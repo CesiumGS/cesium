@@ -79,6 +79,10 @@ define([
         this._backgroundXPadding = undefined;
         this._backgroundYPadding = undefined;
         this._backgroundEnabled = undefined;
+        this._scaleByDistanceNearRange = undefined;
+        this._scaleByDistanceNearValue = undefined;
+        this._scaleByDistanceFarRange = undefined;
+        this._scaleByDistanceFarValue = undefined;
         this._meta = undefined;
 
         this._colorShaderFunction = undefined;
@@ -132,6 +136,10 @@ define([
         var backgroundXPaddingExpression = defaultValue(styleJson.backgroundXPadding, DEFAULT_BACKGROUND_X_PADDING_EXPRESSION);
         var backgroundYPaddingExpression = defaultValue(styleJson.backgroundYPadding, DEFAULT_BACKGROUND_Y_PADDING_EXPRESSION);
         var backgroundEnabledExpression = defaultValue(styleJson.backgroundEnabled, DEFAULT_BACKGROUND_ENABLED);
+        var scaleByDistanceNearRangeExpression = styleJson.scaleByDistanceNearRange;
+        var scaleByDistanceNearValueExpression = styleJson.scaleByDistanceNearValue;
+        var scaleByDistanceFarRangeExpression = styleJson.scaleByDistanceFarRange;
+        var scaleByDistanceFarValueExpression = styleJson.scaleByDistanceFarValue;
 
         var color;
         if (typeof colorExpression === 'string') {
@@ -165,7 +173,7 @@ define([
         that._pointSize = pointSize;
 
         var outlineColor;
-        if (typeof(outlineColorExpression) === 'string') {
+        if (typeof outlineColorExpression === 'string') {
             outlineColor = new Expression(outlineColorExpression);
         } else if (defined(outlineColorExpression.conditions)) {
             outlineColor = new ConditionsExpression(outlineColorExpression);
@@ -174,9 +182,9 @@ define([
         that._outlineColor = outlineColor;
 
         var outlineWidth;
-        if (typeof(outlineWidthExpression) === 'number') {
+        if (typeof outlineWidthExpression === 'number') {
             outlineWidth = new Expression(String(outlineWidthExpression));
-        } else if (typeof(outlineWidthExpression) === 'string') {
+        } else if (typeof outlineWidthExpression === 'string') {
             outlineWidth = new Expression(outlineWidthExpression);
         } else if (defined(outlineWidthExpression.conditions)) {
             outlineWidth = new ConditionsExpression(outlineWidthExpression);
@@ -185,9 +193,9 @@ define([
         that._outlineWidth = outlineWidth;
 
         var labelStyle;
-        if (typeof(labelStyleExpression) === 'number') {
+        if (typeof labelStyleExpression === 'number') {
             labelStyle = new Expression(String(labelStyleExpression));
-        } else if (typeof(labelStyleExpression) === 'string') {
+        } else if (typeof labelStyleExpression === 'string') {
             labelStyle = new Expression(labelStyleExpression);
         } else if (defined(labelStyleExpression.conditions)) {
             labelStyle = new ConditionsExpression(labelStyleExpression);
@@ -196,7 +204,7 @@ define([
         that._labelStyle = labelStyle;
 
         var font;
-        if (typeof(fontExpression) === 'string') {
+        if (typeof fontExpression === 'string') {
             font = new Expression(fontExpression);
         } else if (defined(fontExpression.conditions)) {
             font = new ConditionsExpression(fontExpression);
@@ -205,7 +213,7 @@ define([
         that._font = font;
 
         var backgroundColor;
-        if (typeof(backgroundColorExpression) === 'string') {
+        if (typeof backgroundColorExpression === 'string') {
             backgroundColor = new Expression(backgroundColorExpression);
         } else if (defined(backgroundColorExpression.conditions)) {
             backgroundColor = new ConditionsExpression(backgroundColorExpression);
@@ -214,9 +222,9 @@ define([
         that._backgroundColor = backgroundColor;
 
         var backgroundXPadding;
-        if (typeof(backgroundXPaddingExpression) === 'number') {
+        if (typeof backgroundXPaddingExpression === 'number') {
             backgroundXPadding = new Expression(String(backgroundXPaddingExpression));
-        } else if (typeof(backgroundXPaddingExpression) === 'string') {
+        } else if (typeof backgroundXPaddingExpression === 'string') {
             backgroundXPadding = new Expression(backgroundXPaddingExpression);
         } else if (defined(backgroundXPaddingExpression.conditions)) {
             backgroundXPadding = new ConditionsExpression(backgroundXPaddingExpression);
@@ -225,9 +233,9 @@ define([
         that._backgroundXPadding = backgroundXPadding;
 
         var backgroundYPadding;
-        if (typeof(backgroundYPaddingExpression) === 'number') {
+        if (typeof backgroundYPaddingExpression === 'number') {
             backgroundYPadding = new Expression(String(backgroundYPaddingExpression));
-        } else if (typeof(backgroundYPaddingExpression) === 'string') {
+        } else if (typeof backgroundYPaddingExpression === 'string') {
             backgroundYPadding = new Expression(backgroundYPaddingExpression);
         } else if (defined(backgroundYPaddingExpression.conditions)) {
             backgroundYPadding = new ConditionsExpression(backgroundYPaddingExpression);
@@ -236,15 +244,59 @@ define([
         that._backgroundYPadding = backgroundYPadding;
 
         var backgroundEnabled;
-        if (typeof(backgroundEnabledExpression) === 'boolean') {
+        if (typeof backgroundEnabledExpression === 'boolean') {
             backgroundEnabled = new Expression(String(backgroundEnabledExpression));
-        } else if (typeof(backgroundEnabledExpression) === 'string') {
+        } else if (typeof backgroundEnabledExpression === 'string') {
             backgroundEnabled = new Expression(backgroundEnabledExpression);
         } else if (defined(backgroundEnabledExpression.conditions)) {
             backgroundEnabled = new ConditionsExpression(backgroundEnabledExpression);
         }
 
         that._backgroundEnabled = backgroundEnabled;
+
+        var scaleByDistanceNearRange;
+        if (typeof scaleByDistanceNearRangeExpression === 'number') {
+            scaleByDistanceNearRange = new Expression(String(scaleByDistanceNearRangeExpression));
+        } else if (typeof scaleByDistanceNearRangeExpression === 'string') {
+            scaleByDistanceNearRange = new Expression(scaleByDistanceNearRangeExpression);
+        } else if (defined(scaleByDistanceNearRangeExpression) && defined(scaleByDistanceNearRangeExpression.conditions)) {
+            scaleByDistanceNearRange = new ConditionsExpression(scaleByDistanceNearRangeExpression);
+        }
+
+        that._scaleByDistanceNearRange = scaleByDistanceNearRange;
+
+        var scaleByDistanceNearValue;
+        if (typeof scaleByDistanceNearValueExpression === 'number') {
+            scaleByDistanceNearValue = new Expression(String(scaleByDistanceNearValueExpression));
+        } else if (typeof scaleByDistanceNearValueExpression === 'string') {
+            scaleByDistanceNearValue = new Expression(scaleByDistanceNearValueExpression);
+        } else if (defined(scaleByDistanceNearValueExpression) && defined(scaleByDistanceNearValueExpression.conditions)) {
+            scaleByDistanceNearValue = new ConditionsExpression(scaleByDistanceNearValueExpression);
+        }
+
+        that._scaleByDistanceNearValue = scaleByDistanceNearValue;
+
+        var scaleByDistanceFarRange;
+        if (typeof scaleByDistanceFarRangeExpression === 'number') {
+            scaleByDistanceFarRange = new Expression(String(scaleByDistanceFarRangeExpression));
+        } else if (typeof scaleByDistanceFarRangeExpression === 'string') {
+            scaleByDistanceFarRange = new Expression(scaleByDistanceFarRangeExpression);
+        } else if (defined(scaleByDistanceFarRangeExpression) && defined(scaleByDistanceFarRangeExpression.conditions)) {
+            scaleByDistanceFarRange = new ConditionsExpression(scaleByDistanceFarRangeExpression);
+        }
+
+        that._scaleByDistanceFarRange = scaleByDistanceFarRange;
+
+        var scaleByDistanceFarValue;
+        if (typeof scaleByDistanceFarValueExpression === 'number') {
+            scaleByDistanceFarValue = new Expression(String(scaleByDistanceFarValueExpression));
+        } else if (typeof scaleByDistanceFarValueExpression === 'string') {
+            scaleByDistanceFarValue = new Expression(scaleByDistanceFarValueExpression);
+        } else if (defined(scaleByDistanceFarValueExpression) && defined(scaleByDistanceFarValueExpression.conditions)) {
+            scaleByDistanceFarValue = new ConditionsExpression(scaleByDistanceFarValueExpression);
+        }
+
+        that._scaleByDistanceFarValue = scaleByDistanceFarValue;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -570,6 +622,66 @@ define([
             },
             set : function(value) {
                 this._backgroundEnabled = value;
+            }
+        },
+
+        scaleByDistanceNearRange : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._scaleByDistanceNearRange;
+            },
+            set : function(value) {
+                this._scaleByDistanceNearRange = value;
+            }
+        },
+
+        scaleByDistanceNearValue : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._scaleByDistanceNearValue;
+            },
+            set : function(value) {
+                this._scaleByDistanceNearValue = value;
+            }
+        },
+
+        scaleByDistanceFarRange : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._scaleByDistanceFarRange;
+            },
+            set : function(value) {
+                this._scaleByDistanceFarRange = value;
+            }
+        },
+
+        scaleByDistanceFarValue : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._scaleByDistanceFarValue;
+            },
+            set : function(value) {
+                this._scaleByDistanceFarValue = value;
             }
         },
 
