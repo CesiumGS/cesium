@@ -121,13 +121,6 @@ defineSuite([
             viewModel.showRequestVolumes = false;
             expect(viewModel.tileset.debugShowViewerRequestVolume).toBe(false);
         });
-
-        it('showGeometricError', function() {
-            viewModel.showGeometricError = true;
-            expect(viewModel.tileset.debugShowGeometricError).toBe(true);
-            viewModel.showGeometricError = false;
-            expect(viewModel.tileset.debugShowGeometricError).toBe(false);
-        });
     });
 
     describe('update options', function() {

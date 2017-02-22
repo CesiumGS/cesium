@@ -113,7 +113,6 @@ define([
         displayPanel.contents.appendChild(makeCheckbox('showBoundingVolumes', 'Bounding Volumes'));
         displayPanel.contents.appendChild(makeCheckbox('showContentBoundingVolumes', 'Content Volumes'));
         displayPanel.contents.appendChild(makeCheckbox('showRequestVolumes', 'Request Volumes'));
-        displayPanel.contents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
         knockout.applyBindings(viewModel, displayPanel.contents);
 
         updatePanel.contents.appendChild(makeCheckbox('freezeFrame', 'Freeze Frame'));
