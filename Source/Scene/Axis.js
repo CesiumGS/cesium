@@ -50,6 +50,7 @@ define([
          * @type {Matrix4}
          * @constant
          */
+        // Y_UP_TO_Z_UP : Matrix4.IDENTITY,
         Y_UP_TO_Z_UP : Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO)),
 
         /**

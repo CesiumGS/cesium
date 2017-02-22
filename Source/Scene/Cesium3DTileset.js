@@ -1212,7 +1212,6 @@ define([
         while (fullyVisibleStack.length > 0) {
             var t = fullyVisibleStack.pop();
             t.selected = false;
-            t.replaced = false;
             ++stats.visited;
 
             var children = t.children;
@@ -1349,6 +1348,27 @@ define([
         return tile;
     }
 
+    var descendantStack = [];
+
+    function selectNearestLoadedDescendants(parent, tileset, frameState, outOfCore) {
+        descendantStack.push(parent);
+        while (descendantStack.length > 0) {
+            var tile = descendantStack.pop();
+            var children = tile.children;
+            var childrenLength = children.length;
+            var i, child;
+            for (i = 0; i < childrenLength; ++i) {
+                child = children[i];
+                if (child.contentReady) {
+                    touch(tileset, child, outOfCore);
+                    selectTile(tileset, child, child.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
+                } else {
+                    descendantStack.push(child);
+                }
+            }
+        }
+    }
+
     function selectNearestLoadedTiles(finalVisibleSet, tileset, frameState, outOfCore) {
         var length = finalVisibleSet.length;
         for (var i = 0; i < length; ++i) {
@@ -1358,6 +1378,8 @@ define([
                     touch(tileset, tile, outOfCore);
                     selectTile(tileset, tile, tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
                 }
+            } else {
+                selectNearestLoadedDescendants(finalVisibleSet[i], tileset, frameState, outOfCore);
             }
         }
     }
@@ -1370,7 +1392,7 @@ define([
         // queue tiles before parents so they load first
         // TODO: perhaps touch tiles in the reverse order so final tiles are more recent?
         queueRequestFinalTiles(requestSet, finalVisibleSet, tileset, outOfCore);
-        queueRequestParentTiles(requestSet, finalVisibleSet, tileset, outOfCore);
+        // queueRequestParentTiles(requestSet, finalVisibleSet, tileset, outOfCore);
 
         var i;
         var length = requestSet.length;
