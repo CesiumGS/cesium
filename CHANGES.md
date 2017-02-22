@@ -24,6 +24,8 @@ Change Log
 * Fixed exception in 2D in certain cases with polylines when rotating the map. [#4619](https://github.com/AnalyticalGraphicsInc/cesium/issues/4619)
 * Fixed an issue with constant `VertexArray` attributes not being set correctly. [#4995](https://github.com/AnalyticalGraphicsInc/cesium/pull/4995)
 * Add support for `Scene.pickPosition` in Columbus view and 2D. [#4990](https://github.com/AnalyticalGraphicsInc/cesium/pull/4990)
+* Added `Label.scaleByDistance` to control minimum/maximum label size based on distance from the camera. [#5019](https://github.com/AnalyticalGraphicsInc/cesium/pull/5019)
+* Add support for depth picking translucent primitives when `Scene.pickTranslucentDepth` is `true`. [#4979](https://github.com/AnalyticalGraphicsInc/cesium/pull/4979)
 
 ### 1.30 - 2017-02-01
 
