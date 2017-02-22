@@ -363,7 +363,7 @@ define([
          * @default false
          */
         this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
-        this._geometricErrorLabels = new LabelCollection();
+        this._geometricErrorLabels = undefined;
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -1612,6 +1612,37 @@ define([
     }
 
     var scratchCartesian = new Cartesian3();
+
+    function updateGeometricErrorLabels(tileset, frameState) {
+        var selectedTiles = tileset._selectedTiles;
+        var length = selectedTiles.length;
+        tileset._geometricErrorLabels.removeAll();
+        for (var i = 0; i < length; ++i) {
+            var tile = selectedTiles[i];
+            if (tile.selected) {
+                var boundingVolume = tile._boundingVolume.boundingVolume;
+                var halfAxes = boundingVolume.halfAxes;
+                var radius = boundingVolume.radius;
+
+                var position = Cartesian3.clone(boundingVolume.center, scratchCartesian);
+                if (defined(halfAxes)) {
+                    position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
+                    position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
+                    position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
+                } else if (defined(radius)) {
+                    var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian);
+                    normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian);
+                    position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian);
+                }
+                tileset._geometricErrorLabels.add({
+                    text: tile.geometricError.toString(),
+                    position: position
+                });
+            }
+        }
+        tileset._geometricErrorLabels.update(frameState);
+    }
+
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
@@ -1620,9 +1651,8 @@ define([
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
         var tileVisible = tileset.tileVisible;
-        var i, tile;
-        for (i = 0; i < length; ++i) {
-            tile = selectedTiles[i];
+        for (var i = 0; i < length; ++i) {
+            var tile = selectedTiles[i];
             if (tile.selected) {
                 // Raise visible event before update in case the visible event
                 // makes changes that update needs to apply to WebGL resources
@@ -1636,31 +1666,12 @@ define([
         tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
 
         if (tileset.debugShowGeometricError) {
-            tileset._geometricErrorLabels.removeAll();
-            for (i = 0; i < length; ++i) {
-                tile = selectedTiles[i];
-                if (tile.selected) {
-                    var boundingVolume = tile._boundingVolume.boundingVolume;
-                    var halfAxes = boundingVolume.halfAxes;
-                    var radius = boundingVolume.radius;
-
-                    var position = Cartesian3.clone(boundingVolume.center, scratchCartesian);
-                    if (defined(halfAxes)) {
-                        position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
-                        position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
-                        position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
-                    } else if (defined(radius)) {
-                        var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian);
-                        normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian);
-                        position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian);
-                    }
-                    tileset._geometricErrorLabels.add({
-                        text: tile.geometricError.toString(),
-                        position: position
-                    });
-                }
+            if (!defined(tileset._geometricErrorLabels)) {
+                tileset._geometricErrorLabels = new LabelCollection();
             }
-            tileset._geometricErrorLabels.update(frameState);
+            updateGeometricErrorLabels(tileset, frameState);
+        } else {
+            tileset._geometricErrorLabels = tileset._geometricErrorLabels && tileset._geometricErrorLabels.destroy();
         }
     }
 
