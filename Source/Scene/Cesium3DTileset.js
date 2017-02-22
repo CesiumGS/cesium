@@ -1229,7 +1229,7 @@ define([
                     child.updateTransform(t.computedTransform);
                     visibilityStack.push(child);
                 } else {
-                    requestContent(tileset, t, outOfCore);
+                    finalVisibleSet.push(t);
                 }
                 continue;
             }
@@ -1290,8 +1290,7 @@ define([
                     child.updateTransform(t.computedTransform);
                     visibilityStack.push(child);
                 } else {
-                    // TODO: queue these so far tilesets are lower priority than near tiles
-                    requestContent(tileset, t, outOfCore);
+                    finalVisibleSet.push(t);
                 }
                 continue;
             }
