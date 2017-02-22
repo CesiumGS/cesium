@@ -258,6 +258,21 @@ define([
                 }
             },
             /**
+             * Gets or sets the flag to show tile geometric error.  This property is observable.
+             * @memberof Cesium3DTilesInspectorViewModel.prototype
+             *
+             * @type {Boolean}
+             * @default false
+             */
+            showGeometricError: {
+                default: false,
+                subscribe: function(val) {
+                    if (that._tileset) {
+                        that._tileset.debugShowGeometricError = val;
+                    }
+                }
+            },
+            /**
              * Gets or sets the maximum screen space error.  This property is observable.
              * @memberof Cesium3DTilesInspectorViewModel.prototype
              *
@@ -401,6 +416,7 @@ define([
                                         'showBoundingVolumes',
                                         'showContentBoundingVolumes',
                                         'showRequestVolumes',
+                                        'showGeometricError',
                                         'freezeFrame'];
                         var length = settings.length;
                         for (var i = 0; i < length; ++i) {

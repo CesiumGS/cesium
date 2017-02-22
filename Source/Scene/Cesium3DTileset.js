@@ -34,6 +34,7 @@ define([
         './Cesium3DTileStyleEngine',
         './CullingVolume',
         './DebugCameraPrimitive',
+        './LabelCollection',
         './SceneMode',
         './ShadowMode',
         './TileBoundingRegion',
@@ -74,6 +75,7 @@ define([
         Cesium3DTileStyleEngine,
         CullingVolume,
         DebugCameraPrimitive,
+        LabelCollection,
         SceneMode,
         ShadowMode,
         TileBoundingRegion,
@@ -104,6 +106,7 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
      * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
+     * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      *
      * @example
@@ -359,6 +362,18 @@ define([
          * @default false
          */
         this.debugShowViewerRequestVolume = defaultValue(options.debugShowViewerRequestVolume, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the geometric error of each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
+        this._geometricErrorLabels = undefined;
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -1671,6 +1686,38 @@ define([
         updatePointAndFeatureCounts(tileset, content, true, true);
     }
 
+    var scratchCartesian = new Cartesian3();
+
+    function updateGeometricErrorLabels(tileset, frameState) {
+        var selectedTiles = tileset._selectedTiles;
+        var length = selectedTiles.length;
+        tileset._geometricErrorLabels.removeAll();
+        for (var i = 0; i < length; ++i) {
+            var tile = selectedTiles[i];
+            if (tile.selected) {
+                var boundingVolume = tile._boundingVolume.boundingVolume;
+                var halfAxes = boundingVolume.halfAxes;
+                var radius = boundingVolume.radius;
+
+                var position = Cartesian3.clone(boundingVolume.center, scratchCartesian);
+                if (defined(halfAxes)) {
+                    position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
+                    position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
+                    position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
+                } else if (defined(radius)) {
+                    var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian);
+                    normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian);
+                    position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian);
+                }
+                tileset._geometricErrorLabels.add({
+                    text: tile.geometricError.toString(),
+                    position: position
+                });
+            }
+        }
+        tileset._geometricErrorLabels.update(frameState);
+    }
+
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
@@ -1692,6 +1739,15 @@ define([
 
         // Number of commands added by each update above
         tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+
+        if (tileset.debugShowGeometricError) {
+            if (!defined(tileset._geometricErrorLabels)) {
+                tileset._geometricErrorLabels = new LabelCollection();
+            }
+            updateGeometricErrorLabels(tileset, frameState);
+        } else {
+            tileset._geometricErrorLabels = tileset._geometricErrorLabels && tileset._geometricErrorLabels.destroy();
+        }
     }
 
     function unloadTiles(tileset, frameState) {
@@ -1869,7 +1925,6 @@ define([
         }
 
         this._root = undefined;
-        this._debugCameraFrustum = this._debugCameraFrustum && this._debugCameraFrustum.destroy();
         return destroyObject(this);
     };
 
