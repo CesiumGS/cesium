@@ -27,6 +27,7 @@ define([
         './CameraFlightPath',
         './MapMode2D',
         './OrthographicFrustum',
+        './OrthographicOffCenterFrustum',
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
@@ -57,6 +58,7 @@ define([
         CameraFlightPath,
         MapMode2D,
         OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         PerspectiveFrustum,
         SceneMode) {
     'use strict';
@@ -899,6 +901,13 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(mode)) {
             throw new DeveloperError('mode is required.');
+        }
+        if (mode === SceneMode.SCENE2D && !(this.frustum instanceof OrthographicOffCenterFrustum)) {
+            throw new DeveloperError('An OrthographicOffCenterFrustum is required in 2D.');
+        }
+        if ((mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) &&
+            (!(this.frustum instanceof PerspectiveFrustum) && !(this.frustum instanceof OrthographicFrustum))) {
+            throw new DeveloperError('A PerspectiveFrustum or OrthographicFrustum is required in 3D and Columbus view');
         }
         //>>includeEnd('debug');
 

@@ -562,6 +562,21 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('update throws with frustum not supported in given mode', function() {
+        camera.frustum = new PerspectiveFrustum();
+        expect(function() {
+            camera.update(SceneMode.SCENE2D);
+        }).toThrowDeveloperError();
+
+        camera.frustum = new OrthographicOffCenterFrustum();
+        expect(function() {
+            camera.update(SceneMode.SCENE3D);
+        }).toThrowDeveloperError();
+        expect(function() {
+            camera.update(SceneMode.COLUMBUS_VIEW);
+        }).toThrowDeveloperError();
+    });
+
     it('setView with cartesian in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
