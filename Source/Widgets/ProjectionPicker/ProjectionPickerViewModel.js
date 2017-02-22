@@ -7,11 +7,13 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/EventHelper',
         '../../Core/Math',
         '../../Core/Matrix4',
         '../../Core/Ray',
         '../../Scene/OrthographicFrustum',
         '../../Scene/PerspectiveFrustum',
+        '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
@@ -22,11 +24,13 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        EventHelper,
         CesiumMath,
         Matrix4,
         Ray,
         OrthographicFrustum,
         PerspectiveFrustum,
+        SceneMode,
         knockout,
         createCommand) {
     'use strict';
@@ -69,13 +73,19 @@ define([
          */
         this.tooltipOrthographic = 'Orthographic Projection';
 
-        knockout.track(this, ['_orthographic', 'dropDownVisible', 'tooltipPerspective', 'tooltipOrthographic']);
-
         /**
          * Gets the currently active tooltip.  This property is observable.
          * @type {String}
          */
         this.selectedTooltip = undefined;
+
+        /**
+         * Gets or sets the current SceneMode.  This property is observable.
+         * @type {SceneMode}
+         */
+        this.sceneMode = scene.mode;
+
+        knockout.track(this, ['_orthographic', 'sceneMode', 'dropDownVisible', 'tooltipPerspective', 'tooltipOrthographic']);
 
         var that = this;
         knockout.defineProperty(this, 'selectedTooltip', function() {
@@ -89,7 +99,17 @@ define([
             that.dropDownVisible = !that.dropDownVisible;
         });
 
+        var morphStart = function(transitioner, oldMode, newMode, isMorphing) {
+            that.sceneMode = newMode;
+        };
+        this._eventHelper = new EventHelper();
+        this._eventHelper.add(scene.morphStart, morphStart);
+
         this._switchToPerspective = createCommand(function() {
+            if (that.sceneMode === SceneMode.SCENE2D) {
+                return;
+            }
+
             var scene = that._scene;
             var camera = that._scene.camera;
             camera.frustum = new PerspectiveFrustum();
@@ -106,6 +126,10 @@ define([
         var scratchRayIntersection = new Cartesian3();
 
         this._switchToOrthographic = createCommand(function() {
+            if (that.sceneMode === SceneMode.SCENE2D) {
+                return;
+            }
+
             var scene = that._scene;
             var camera = that._scene.camera;
             var globe = scene._globe;
@@ -145,6 +169,9 @@ define([
             that._orthographic = true;
             that.dropDownVisible = false;
         });
+
+        //Used by knockout
+        this._sceneMode = SceneMode;
     }
 
     defineProperties(ProjectionPickerViewModel.prototype, {
