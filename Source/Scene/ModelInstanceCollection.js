@@ -787,8 +787,8 @@ define([
         for (var i = 0; i < commandsLength; ++i) {
             for (var j = 0; j < instancesLength; ++j) {
                 var drawCommand = DrawCommand.shallowClone(drawCommands[i]);
-                drawCommand.modelMatrix = new Matrix4(); // Updated in updateNonInstancedCommands
-                drawCommand.boundingVolume = new BoundingSphere(); // Updated in updateNonInstancedCommands
+                drawCommand.modelMatrix = new Matrix4(); // Updated in updateCommandsNonInstanced
+                drawCommand.boundingVolume = new BoundingSphere(); // Updated in updateCommandsNonInstanced
                 drawCommand.cull = cull;
                 drawCommand.uniformMap = clone(drawCommand.uniformMap);
                 if (usesBatchTable) {
@@ -798,8 +798,8 @@ define([
 
                 if (allowPicking) {
                     var pickCommand = DrawCommand.shallowClone(pickCommands[i]);
-                    pickCommand.modelMatrix = new Matrix4(); // Updated in updateNonInstancedCommands
-                    pickCommand.boundingVolume = new BoundingSphere(); // Updated in updateNonInstancedCommands
+                    pickCommand.modelMatrix = new Matrix4(); // Updated in updateCommandsNonInstanced
+                    pickCommand.boundingVolume = new BoundingSphere(); // Updated in updateCommandsNonInstanced
                     pickCommand.cull = cull;
                     pickCommand.uniformMap = clone(pickCommand.uniformMap);
                     if (usesBatchTable) {
@@ -917,8 +917,9 @@ define([
             this._state = LoadState.LOADED;
             this._ready = true;
 
-            // Expand bounding volume to fit the radius of the loaded model
-            this._boundingSphere.radius += model.boundingSphere.radius;
+            // Expand bounding volume to fit the radius of the loaded model including the model's offset from the center
+            var modelRadius = model.boundingSphere.radius + Cartesian3.magnitude(model.boundingSphere.center);
+            this._boundingSphere.radius += modelRadius;
 
             var modelCommands = getModelCommands(model);
             this._modelCommands = modelCommands.draw;
