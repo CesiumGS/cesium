@@ -645,6 +645,11 @@ define([
                     '<li><strong>Tiles styled: </strong>' + stats.numberOfTilesStyled + '</li>' +
                     '<li><strong>Features styled: </strong>' + stats.numberOfFeaturesStyled + '</li>';
                 s += '</ul>';
+                s += '<ul class="cesium-cesiumInspector-stats">';
+                s +=
+                    // --- Optimization stats
+                    '<li><strong>Children Union Culled: </strong>' + stats.numberOfTilesCulledWithChildrenUnion + '</li>';
+                s += '</ul>';
             }
 
             if (isPick) {

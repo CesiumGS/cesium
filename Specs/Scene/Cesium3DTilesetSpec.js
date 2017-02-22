@@ -13,6 +13,7 @@ defineSuite([
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileColorBlendMode',
         'Scene/Cesium3DTileContentState',
+        'Scene/Cesium3DTileOptimizations',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
         'Scene/CullingVolume',
@@ -34,6 +35,7 @@ defineSuite([
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
+        Cesium3DTileOptimizations,
         Cesium3DTileRefine,
         Cesium3DTileStyle,
         CullingVolume,
@@ -97,6 +99,9 @@ defineSuite([
 
     // Root tile with 4 b3dm children and 1 pnts child with a viewer request volume
     var tilesetWithViewerRequestVolumeUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume';
+
+    // Parent tile with content and four child tiles with content with viewer request volume for each child
+    var tilesetReplacementWithViewerRequestVolumeUrl = './Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume';
 
     var styleUrl = './Data/Cesium3DTiles/Style/style.json';
 
@@ -935,6 +940,158 @@ defineSuite([
             var stats = tileset._statistics;
             expect(stats.visited).toEqual(7);
             expect(stats.numberOfCommands).toEqual(6);
+        });
+    });
+
+    describe('children bound union optimization', function() {
+        it('does not select visible tiles with invisible children', function() {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
+                scene.camera.setView({
+                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 22),
+                    orientation: {
+                        heading: 0,
+                        pitch:  1.57,
+                        roll: 0
+                    }
+                });
+
+                var root = tileset._root;
+                var childRoot = root.children[0];
+                
+                scene.renderForSpecs();
+
+                expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                
+                expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
+
+                expect(tileset._selectedTiles.length).toEqual(0);
+                expect(childRoot.selected).toBe(false);
+            });
+        });
+
+        it('does not select visible tiles not meeting SSE with visible children', function() {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
+                var root = tileset._root;
+                var childRoot = root.children[0];
+                childRoot.geometricError = 240;
+
+                scene.camera.setView({
+                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
+                    orientation: {
+                        heading: 0,
+                        pitch:  -1.57,
+                        roll: 0
+                    }
+                });
+                
+                scene.renderForSpecs();
+
+                expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                
+                expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+
+                expect(childRoot.selected).toBe(false);
+                expect(childRoot.replaced).toBe(true);
+            });
+        });
+
+        it ('does select visible tiles meeting SSE with visible children', function() {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
+                var root = tileset._root;
+                var childRoot = root.children[0];
+
+                scene.camera.setView({
+                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
+                    orientation: {
+                        heading: 0,
+                        pitch:  -1.57,
+                        roll: 0
+                    }
+                });
+                
+                childRoot.geometricError = 0;
+                scene.renderForSpecs();
+
+                expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                
+                expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                
+                expect(childRoot.selected).toBe(true);
+                expect(childRoot.replaced).toBe(false);
+            });
+        });
+
+        it('does select visibile tiles with visible children failing request volumes', function() {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
+                scene.camera.setView({
+                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 100),
+                    orientation: {
+                        heading: 0,
+                        pitch:  -1.57,
+                        roll: 0
+                    }
+                });
+
+                var root = tileset._root;
+                var childRoot = root.children[0];
+                childRoot.geometricError = 0;
+
+                scene.renderForSpecs();
+
+                expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                
+                expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+
+                expect(tileset._selectedTiles.length).toEqual(1);
+                expect(childRoot.selected).toBe(true);
+            });
+        });
+
+        it('does select visibile tiles with visible children passing request volumes', function() {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
+                scene.camera.setView({
+                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 40),
+                    orientation: {
+                        heading: 0,
+                        pitch:  -1.57,
+                        roll: 0
+                    }
+                });
+
+                var root = tileset._root;
+                var childRoot = root.children[0];
+                childRoot.geometricError = 0;
+
+                scene.renderForSpecs();
+
+                expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                
+                expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(childRoot.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+
+                expect(tileset._selectedTiles.length).toEqual(1);
+                expect(childRoot.selected).toBe(true);
+
+                childRoot.geometricError = 200;
+                scene.renderForSpecs();
+                expect(tileset._selectedTiles.length).toEqual(4);
+                expect(childRoot.selected).toBe(false);
+                expect(childRoot.replaced).toBe(true);
+            });
         });
     });
 

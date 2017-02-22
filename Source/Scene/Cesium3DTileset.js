@@ -3,6 +3,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Color',
+        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -25,7 +26,10 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Cesium3DTile',
+        './Cesium3DTileChildrenVisibility',
         './Cesium3DTileColorBlendMode',
+        './Cesium3DTileOptimizations',
+        './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
         './Cesium3DTileStyleEngine',
         './CullingVolume',
@@ -39,6 +43,7 @@ define([
         Cartesian3,
         Cartographic,
         Color,
+        clone,
         defaultValue,
         defined,
         defineProperties,
@@ -61,7 +66,10 @@ define([
         Uri,
         when,
         Cesium3DTile,
+        Cesium3DTileChildrenVisibility,
         Cesium3DTileColorBlendMode,
+        Cesium3DTileOptimizations,
+        Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
         Cesium3DTileStyleEngine,
         CullingVolume,
@@ -271,6 +279,8 @@ define([
             // Styling stats
             numberOfTilesStyled : 0,
             numberOfFeaturesStyled : 0,
+            // Optimization stats
+            numberOfTilesCulledWithChildrenUnion : 0,
 
             lastColor : new Cesium3DTilesetStatistics(),
             lastPick : new Cesium3DTilesetStatistics()
@@ -474,6 +484,7 @@ define([
         this.numberOfPointsLoaded = 0;
         this.numberOfTilesStyled = 0;
         this.numberOfFeaturesStyled = 0;
+        this.numberOfTilesCulledWithChildrenUnion = 0;
     }
 
     defineProperties(Cesium3DTileset.prototype, {
@@ -917,6 +928,7 @@ define([
                         }
                     }
                 }
+                Cesium3DTileOptimizations.checkChildrenWithinParent(tile3D, true);
                 if (tile3D.hasContent && hasEmptyChild && (tile3D.refine === Cesium3DTileRefine.REPLACE)) {
                     // Tiles that use replacement refinement and have empty child tiles need to keep track of
                     // descendants with content in order to refine correctly.
@@ -1163,6 +1175,39 @@ define([
     var scratchStack = [];
     var scratchRefiningTiles = [];
 
+    function computeChildrenVisibility(tile, frameState, checkViewerRequestVolume) {
+        var flag = Cesium3DTileChildrenVisibility.NONE;
+        var children = tile.children;
+        var childrenLength = children.length;
+        var visibilityPlaneMask = tile.visibilityPlaneMask;
+        for (var k = 0; k < childrenLength; ++k) {
+            var child = children[k];
+
+            var visibilityMask = child.visibility(frameState, visibilityPlaneMask);
+
+            if (isVisible(visibilityMask)) {
+                flag |= Cesium3DTileChildrenVisibility.VISIBLE;
+            }
+
+            if (checkViewerRequestVolume) {
+                if (!child.insideViewerRequestVolume(frameState)) {
+                    visibilityMask = CullingVolume.MASK_OUTSIDE;
+                } else {
+                    flag |= Cesium3DTileChildrenVisibility.IN_REQUEST_VOLUME;
+                    if (isVisible(visibilityMask)) {
+                        flag |= Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME;
+                    }
+                }
+            }
+
+            child.visibilityPlaneMask = visibilityMask;
+        }
+
+        tile.childrenVisibility = flag;
+
+        return flag;
+    }
+
     function selectTiles(tileset, frameState, outOfCore) {
         if (tileset.debugFreezeFrame) {
             return;
@@ -1295,10 +1340,30 @@ define([
                 // is not sufficient, its children (or ancestors) are
                 // rendered instead
 
-                if ((sse <= maximumScreenSpaceError) || (childrenLength === 0)) {
-                    // This tile meets the SSE so add its commands.
+                // This optimization may cause issues if the parent's content exceeds the bounds of the childrens` content.
+                // In these case nothing will be selected to fill the empty space. This is possible if occlusion-preserving
+                // decimation is not used, but it is arguably better to cull in this way because in the cases where we cull
+                // when the parent content is visible, if the object were to be drawn at full resolution, the geometry would
+                // not be visible.
+                var useChildrenBoundUnion = t._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
+
+                var childrenVisibility;
+
+                if (childrenLength === 0) {
                     // Select tile if it's a leaf (childrenLength === 0)
                     selectTile(tileset, t, fullyVisible, frameState);
+                } else if (sse <= maximumScreenSpaceError) {
+                    // This tile meets the SSE so add its commands.
+                    if (useChildrenBoundUnion) {
+                        childrenVisibility = computeChildrenVisibility(t, frameState, false);
+                        if (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE) {
+                            selectTile(tileset, t, fullyVisible, frameState);
+                        } else {
+                            ++stats.numberOfTilesCulledWithChildrenUnion;
+                        }
+                    } else {
+                        selectTile(tileset, t, fullyVisible, frameState);
+                    }
                 } else if (!tileset._refineToVisible) {
                     // Tile does not meet SSE.
                     // Refine when all children (visible or not) are loaded.
@@ -1320,37 +1385,38 @@ define([
                     }
 
                     if (!allChildrenLoaded) {
-                        // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
-                        selectTile(tileset, t, fullyVisible, frameState);
+                        if (useChildrenBoundUnion) {
+                            childrenVisibility = computeChildrenVisibility(t, frameState, false);
+                        }
+                        if (!useChildrenBoundUnion || (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE)) {
+                            // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
+                            selectTile(tileset, t, fullyVisible, frameState);
 
-                        if (outOfCore) {
-                            for (k = 0; k < childrenLength; ++k) {
-                                child = children[k];
-                                // PERFORMANCE_IDEA: we could spin a bit less CPU here by keeping separate lists for unloaded/ready children.
-                                if (child.contentUnloaded) {
-                                    requestContent(tileset, child, outOfCore);
-                                } else {
-                                    // Touch loaded child even though it is not selected this frame since
-                                    // we want to keep it in the cache for when all children are loaded
-                                    // and this tile can refine to them.
-                                    touch(tileset, child, outOfCore);
+                            if (outOfCore) {
+                                for (k = 0; k < childrenLength; ++k) {
+                                    child = children[k];
+                                    // PERFORMANCE_IDEA: we could spin a bit less CPU here by keeping separate lists for unloaded/ready children.
+                                    if (child.contentUnloaded) {
+                                        requestContent(tileset, child, outOfCore);
+                                    } else {
+                                        // Touch loaded child even though it is not selected this frame since
+                                        // we want to keep it in the cache for when all children are loaded
+                                        // and this tile can refine to them.
+                                        touch(tileset, child, outOfCore);
+                                    }
                                 }
                             }
+                        } else if (useChildrenBoundUnion) {
+                            ++stats.numberOfTilesCulledWithChildrenUnion;
                         }
                     } else {
                         // Tile does not meet SSE and its children are loaded.  Refine to them in front-to-back order.
-                        var anyChildrenVisible = false;
+                        childrenVisibility = computeChildrenVisibility(t, frameState, true);
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            if (child.insideViewerRequestVolume(frameState)) {
-                                child.visibilityPlaneMask = child.visibility(frameState, visibilityPlaneMask);
-                            } else {
-                                child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
-                            }
 
                             if (isVisible(child.visibilityPlaneMask)) {
                                 stack.push(child);
-                                anyChildrenVisible = true;
                             } else {
                                 // Touch the child tile even if it is not visible. Since replacement refinement
                                 // requires all child tiles to be loaded to refine to them, we want to keep it in the cache.
@@ -1358,15 +1424,17 @@ define([
                             }
                         }
 
-                        if (anyChildrenVisible) {
+                        if (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) {
                             t.replaced = true;
                             if (defined(t.descendantsWithContent)) {
                                 scratchRefiningTiles.push(t);
                             }
-                        } else {
+                        } else if (!useChildrenBoundUnion || (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE)) {
                             // Even though the children are all loaded they may not be visible if the camera
                             // is not inside their request volumes.
                             selectTile(tileset, t, fullyVisible, frameState);
+                        } else if (useChildrenBoundUnion) {
+                            ++stats.numberOfTilesCulledWithChildrenUnion;
                         }
                     }
                 } else {
@@ -1375,16 +1443,13 @@ define([
 
                     // Get visibility for all children. Check if any visible children are not loaded.
                     // PERFORMANCE_IDEA: exploit temporal coherence to avoid checking visibility every frame
+                    updateTransforms(children, t.computedTransform);
+                    childrenVisibility = computeChildrenVisibility(t, frameState, true);
+
                     var allVisibleChildrenLoaded = true;
                     var someVisibleChildrenLoaded = false;
                     for (k = 0; k < childrenLength; ++k) {
                         child = children[k];
-                        child.updateTransform(t.computedTransform);
-                        if (child.insideViewerRequestVolume(frameState)) {
-                            child.visibilityPlaneMask = child.visibility(frameState, visibilityPlaneMask);
-                        } else {
-                            child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
-                        }
                         if (isVisible(child.visibilityPlaneMask)) {
                             if (child.contentReady) {
                                 someVisibleChildrenLoaded = true;
@@ -1392,6 +1457,13 @@ define([
                                 allVisibleChildrenLoaded = false;
                             }
                         }
+                    }
+
+                    if (useChildrenBoundUnion && childrenVisibility === Cesium3DTileChildrenVisibility.NONE) {
+                        if (allVisibleChildrenLoaded && !someVisibleChildrenLoaded) {
+                            ++stats.numberOfTilesCulledWithChildrenUnion;
+                        }
+                        continue;
                     }
 
                     if (allVisibleChildrenLoaded && !someVisibleChildrenLoaded) {
@@ -1470,6 +1542,7 @@ define([
             for (j = 0; j < descendantsLength; ++j) {
                 descendant = refiningTile.descendantsWithContent[j];
                 if (!descendant.selected && !descendant.replaced &&
+                    ((descendant.childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE) || descendant.children.length === 0) &&
                     (frameState.cullingVolume.computeVisibility(descendant.contentBoundingVolume) !== Intersect.OUTSIDE)) {
                         refinable = false;
                         break;
@@ -1538,6 +1611,7 @@ define([
         stats.numberOfAttemptedRequests = 0;
         stats.numberOfTilesStyled = 0;
         stats.numberOfFeaturesStyled = 0;
+        stats.numberOfTilesCulledWithChildrenUnion = 0;
         stats.numberOfFeaturesSelected = 0;
         stats.numberOfPointsSelected = 0;
     }
@@ -1560,6 +1634,7 @@ define([
         last.numberOfPointsLoaded = stats.numberOfPointsLoaded;
         last.numberOfTilesStyled = stats.numberOfTilesStyled;
         last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
+        last.numberOfTilesCulledWithChildrenUnion = stats.numberOfTilesCulledWithChildrenUnion;
     }
 
     function updatePointAndFeatureCounts(tileset, content, decrement, load) {
