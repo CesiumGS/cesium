@@ -132,3 +132,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Jane Minghui Guo](https://github.com/Jane-Of-Art)
 * [Prasanna Natarajan](https://github.com/PrasannaNatarajan)
 * [Joseph Klinger](https://github.com/klingerj)
+* [Grace Lee](https://github.com/glee2244)
