@@ -67,7 +67,7 @@ define([
         button.setAttribute('data-bind', '\
 css: { "cesium-projectionPicker-buttonPerspective": !_orthographic,\
        "cesium-projectionPicker-buttonOrthographic": _orthographic,\
-       "cesium-projectionPicker-grey-out" : sceneMode === _sceneMode.SCENE2D, \
+       "cesium-button-disabled" : sceneMode === _sceneMode.SCENE2D, \
        "cesium-projectionPicker-selected": dropDownVisible },\
 attr: { title: selectedTooltip },\
 click: toggleDropDown');

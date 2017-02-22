@@ -96,11 +96,16 @@ define([
         });
 
         this._toggleDropDown = createCommand(function() {
+            if (that.sceneMode === SceneMode.SCENE2D) {
+                return;
+            }
+
             that.dropDownVisible = !that.dropDownVisible;
         });
 
         var morphStart = function(transitioner, oldMode, newMode, isMorphing) {
             that.sceneMode = newMode;
+            that._orthographic = newMode === SceneMode.SCENE2D;
         };
         this._eventHelper = new EventHelper();
         this._eventHelper.add(scene.morphStart, morphStart);

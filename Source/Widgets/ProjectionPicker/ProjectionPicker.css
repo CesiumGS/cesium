@@ -49,7 +49,3 @@ span.cesium-projectionPicker-wrapper {
     border-color: #2e2;
     box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
-
-.cesium-projectionPicker-wrapper .cesium-projectionPicker-grey-out {
-    opacity: 0.5;
-}
