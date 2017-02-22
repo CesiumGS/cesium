@@ -1342,8 +1342,12 @@ define([
 
 
     function getNearestLoadedAncestor(tile) {
+        var geometricError = tile.geometricError;
         while (defined(tile) && (!tile.hasContent || !tile.contentReady)) {
             tile = tile.parent;
+            if (tile.geometricError >= 4 * geometricError) {
+                break;
+            }
         }
         return tile;
     }
