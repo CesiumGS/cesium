@@ -109,6 +109,18 @@ function fadeByDistance() {
     });
 }
 
+function scaleByDistance() {
+    Sandcastle.declare(scaleByDistance);
+
+    viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+        label : {
+            text : 'Philadelphia',
+            scaleByDistance : new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5)
+        }
+    });
+}
+
 Sandcastle.addToolbarMenu([{
     text : 'Add label',
     onselect : function() {
@@ -138,6 +150,12 @@ Sandcastle.addToolbarMenu([{
     onselect : function() {
         fadeByDistance();
         Sandcastle.highlight(fadeByDistance);
+    }
+}, {
+    text : 'Scale label by distance',
+    onselect : function() {
+        scaleByDistance();
+        Sandcastle.highlight(scaleByDistance);
     }
 }]);
 
