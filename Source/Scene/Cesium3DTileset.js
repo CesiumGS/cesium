@@ -1393,8 +1393,6 @@ define([
     function requestTiles(finalVisibleSet, tileset, frameState, outOfCore) {
         requestStack.length = 0;
 
-        // queue tiles before parents so they load first
-        // TODO: perhaps touch tiles in the reverse order so final tiles are more recent?
         queueRequestFinalTiles(requestStack, finalVisibleSet, tileset, outOfCore);
         // queueRequestParentTiles(requestSet, finalVisibleSet, tileset, outOfCore);
 
