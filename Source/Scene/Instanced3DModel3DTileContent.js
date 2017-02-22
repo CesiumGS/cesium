@@ -323,8 +323,7 @@ define([
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
-            var baseUrl = defaultValue(this._tileset.baseUrl, '');
-            collectionOptions.url = joinUrls(baseUrl, gltfUrl);
+            collectionOptions.url = joinUrls(getBaseUri(this._url), gltfUrl);
         } else {
             collectionOptions.gltf = gltfView;
             collectionOptions.basePath = getBaseUri(this._url);
