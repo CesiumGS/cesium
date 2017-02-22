@@ -305,6 +305,8 @@ define([
          */
         this.replaced = false;
 
+        this._needsRequest = false;
+
         /**
          * The stored plane mask from the visibility check during tree traversal.
          *
@@ -313,12 +315,12 @@ define([
          * @private
          */
         this.visibilityPlaneMask = true;
-        
+
         /**
          * Flag to mark children visibility
          *
          * @type {Cesium3DTileChildrenVisibility}
-         * 
+         *
          * @private
          */
         this.childrenVisibility = Cesium3DTileChildrenVisibility.VISIBLE;
@@ -349,7 +351,7 @@ define([
 
         /**
          * Marks whether the tile's children bounds are fully contained within the tile's bounds
-         * 
+         *
          * @type {Cesium3DTileOptimizationHint}
          */
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
