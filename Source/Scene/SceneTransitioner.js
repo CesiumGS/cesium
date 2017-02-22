@@ -13,6 +13,7 @@ define([
         '../Core/ScreenSpaceEventType',
         '../Core/Transforms',
         './Camera',
+        './OrthographicFrustum',
         './OrthographicOffCenterFrustum',
         './PerspectiveFrustum',
         './SceneMode'
@@ -30,6 +31,7 @@ define([
         ScreenSpaceEventType,
         Transforms,
         Camera,
+        OrthographicFrustum,
         OrthographicOffCenterFrustum,
         PerspectiveFrustum,
         SceneMode) {
@@ -442,6 +444,10 @@ define([
     function morphPerspectiveToOrthographic(transitioner, duration, endCamera, updateHeight, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
+
+        if (camera.frustum instanceof OrthographicFrustum) {
+            return;
+        }
 
         var startFOV = camera.frustum.fov;
         var endFOV = CesiumMath.RADIANS_PER_DEGREE * 0.5;
@@ -859,7 +865,6 @@ define([
             scene.morphTime = SceneMode.getMorphTime(SceneMode.COLUMBUS_VIEW);
 
             destroyMorphHandler(transitioner);
-            scene.camera.frustum = cameraCV.frustum.clone();
 
             if (transitioner._previousModeMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
                 transitioner._morphCancelled = false;

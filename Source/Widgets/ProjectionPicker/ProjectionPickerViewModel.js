@@ -105,7 +105,7 @@ define([
 
         var morphStart = function(transitioner, oldMode, newMode, isMorphing) {
             that.sceneMode = newMode;
-            that._orthographic = newMode === SceneMode.SCENE2D;
+            that._orthographic = newMode === SceneMode.SCENE2D || that._scene.camera.frustum instanceof OrthographicFrustum;
         };
         this._eventHelper = new EventHelper();
         this._eventHelper.add(scene.morphStart, morphStart);
