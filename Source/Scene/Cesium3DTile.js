@@ -357,6 +357,8 @@ define([
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
 
         this._requestTile = undefined;
+        this._sse = 0;
+        this._needsPrefetch = false;
     }
 
     defineProperties(Cesium3DTile.prototype, {
@@ -645,6 +647,7 @@ define([
             center = Matrix4.multiplyByPoint(transform, center, center);
             var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
             halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
+            // Matrix3.multiplyByScalar(halfAxes, 0.5, halfAxes);
 
             if (defined(result)) {
                 result.update(center, halfAxes);
