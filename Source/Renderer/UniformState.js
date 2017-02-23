@@ -82,9 +82,6 @@ define([
         this._inverseProjectionDirty = true;
         this._inverseProjection = new Matrix4();
 
-        this._inverseProjectionOITDirty = true;
-        this._inverseProjectionOIT = new Matrix4();
-
         this._modelViewDirty = true;
         this._modelView = new Matrix4();
 
@@ -393,17 +390,6 @@ define([
             get : function() {
                 cleanInverseProjection(this);
                 return this._inverseProjection;
-            }
-        },
-
-        /**
-         * @memberof UniformState.prototype
-         * @private
-         */
-        inverseProjectionOIT : {
-            get : function() {
-                cleanInverseProjectionOIT(this);
-                return this._inverseProjectionOIT;
             }
         },
 
@@ -837,7 +823,6 @@ define([
         Matrix4.clone(matrix, uniformState._projection);
 
         uniformState._inverseProjectionDirty = true;
-        uniformState._inverseProjectionOITDirty = true;
         uniformState._viewProjectionDirty = true;
         uniformState._inverseViewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
@@ -992,18 +977,10 @@ define([
         if (uniformState._inverseProjectionDirty) {
             uniformState._inverseProjectionDirty = false;
 
-            Matrix4.inverse(uniformState._projection, uniformState._inverseProjection);
-        }
-    }
-
-    function cleanInverseProjectionOIT(uniformState) {
-        if (uniformState._inverseProjectionOITDirty) {
-            uniformState._inverseProjectionOITDirty = false;
-
             if (uniformState._mode !== SceneMode.SCENE2D && uniformState._mode !== SceneMode.MORPHING && !uniformState._orthographicIn3D) {
-                Matrix4.inverse(uniformState._projection, uniformState._inverseProjectionOIT);
+                Matrix4.inverse(uniformState._projection, uniformState._inverseProjection);
             } else {
-                Matrix4.clone(Matrix4.ZERO, uniformState._inverseProjectionOIT);
+                Matrix4.clone(Matrix4.ZERO, uniformState._inverseProjection);
             }
         }
     }

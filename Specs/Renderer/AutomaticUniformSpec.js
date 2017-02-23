@@ -406,56 +406,6 @@ defineSuite([
         }).contextToRender();
     });
 
-    it('has czm_inverseProjectionOIT', function() {
-        var us = context.uniformState;
-        us.update(createFrameState(context, createMockCamera(
-            undefined,
-            new Matrix4(
-               0.0, -1.0, 0.0, 1.0,
-               1.0,  0.0, 0.0, 2.0,
-               0.0,  0.0, 1.0, 0.0,
-               0.0,  0.0, 0.0, 1.0))));
-
-        var fs =
-            'void main() { ' +
-            '  bool b0 = (czm_inverseProjectionOIT[0][0] ==  0.0) && (czm_inverseProjectionOIT[1][0] == 1.0) && (czm_inverseProjectionOIT[2][0] == 0.0) && (czm_inverseProjectionOIT[3][0] == -2.0); ' +
-            '  bool b1 = (czm_inverseProjectionOIT[0][1] == -1.0) && (czm_inverseProjectionOIT[1][1] == 0.0) && (czm_inverseProjectionOIT[2][1] == 0.0) && (czm_inverseProjectionOIT[3][1] ==  1.0); ' +
-            '  bool b2 = (czm_inverseProjectionOIT[0][2] ==  0.0) && (czm_inverseProjectionOIT[1][2] == 0.0) && (czm_inverseProjectionOIT[2][2] == 1.0) && (czm_inverseProjectionOIT[3][2] ==  0.0); ' +
-            '  bool b3 = (czm_inverseProjectionOIT[0][3] ==  0.0) && (czm_inverseProjectionOIT[1][3] == 0.0) && (czm_inverseProjectionOIT[2][3] == 0.0) && (czm_inverseProjectionOIT[3][3] ==  1.0); ' +
-            '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
-            '}';
-        expect({
-            context : context,
-            fragmentShader : fs
-        }).contextToRender();
-    });
-
-    it('has czm_inverseProjectionOIT in 2D', function() {
-        var us = context.uniformState;
-        var frameState = createFrameState(context, createMockCamera(
-            undefined,
-            new Matrix4(
-               0.0, -1.0, 0.0, 1.0,
-               1.0,  0.0, 0.0, 2.0,
-               0.0,  0.0, 1.0, 0.0,
-               0.0,  0.0, 0.0, 1.0)));
-        frameState.mode = SceneMode.SCENE2D;
-        us.update(frameState);
-
-        var fs =
-            'void main() { ' +
-            '  bool b0 = (czm_inverseProjectionOIT[0][0] == 0.0) && (czm_inverseProjectionOIT[1][0] == 0.0) && (czm_inverseProjectionOIT[2][0] == 0.0) && (czm_inverseProjectionOIT[3][0] == 0.0); ' +
-            '  bool b1 = (czm_inverseProjectionOIT[0][1] == 0.0) && (czm_inverseProjectionOIT[1][1] == 0.0) && (czm_inverseProjectionOIT[2][1] == 0.0) && (czm_inverseProjectionOIT[3][1] == 0.0); ' +
-            '  bool b2 = (czm_inverseProjectionOIT[0][2] == 0.0) && (czm_inverseProjectionOIT[1][2] == 0.0) && (czm_inverseProjectionOIT[2][2] == 0.0) && (czm_inverseProjectionOIT[3][2] == 0.0); ' +
-            '  bool b3 = (czm_inverseProjectionOIT[0][3] == 0.0) && (czm_inverseProjectionOIT[1][3] == 0.0) && (czm_inverseProjectionOIT[2][3] == 0.0) && (czm_inverseProjectionOIT[3][3] == 0.0); ' +
-            '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
-            '}';
-        expect({
-            context : context,
-            fragmentShader : fs
-        }).contextToRender();
-    });
-
     it('has czm_infiniteProjection', function() {
         var us = context.uniformState;
         us.update(createFrameState(context, createMockCamera(undefined, undefined,
