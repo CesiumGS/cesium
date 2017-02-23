@@ -355,6 +355,8 @@ define([
          * @type {Cesium3DTileOptimizationHint}
          */
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
+
+        this._requestTile = undefined;
     }
 
     defineProperties(Cesium3DTile.prototype, {

@@ -464,6 +464,7 @@ define([
         });
 
         this.bottomUpTraversal = defaultValue(options.bottomUpTraversal, true);
+        this.skipFactor = defaultValue(options.skipFactor, 2);
     }
 
     function Cesium3DTilesetStatistics() {
@@ -1340,16 +1341,37 @@ define([
         return finalVisibleSet;
     }
 
-
-    function getNearestLoadedAncestor(tile) {
-        var geometricError = tile.geometricError;
-        while (defined(tile) && (!tile.hasContent || !tile.contentReady)) {
+    function getAncestorWithContent(tile) {
+        while (defined(tile) && !tile.hasContent) {
             tile = tile.parent;
-            if (tile.geometricError >= 4 * geometricError) {
-                return undefined;
-            }
         }
         return tile;
+    }
+
+
+    function getNearestLoadedAncestor(tileset, tile) {
+        var geometricError = tile.geometricError;
+        var skipFactor = tileset.skipFactor;
+
+        var requestCandidate = tile;
+        var ancestor = tile;
+        var i = 1;
+        while (defined(ancestor) && !ancestor.contentReady) {
+            ancestor = ancestor.parent;
+
+            if (defined(requestCandidate) && i++ % skipFactor === 0) {
+                requestCandidate = getAncestorWithContent(requestCandidate.parent);
+            }
+            ancestor = getAncestorWithContent(ancestor);
+        }
+
+        if (defined(ancestor) && geometricError > 0 && ancestor.geometricError > 8 * geometricError) {
+            ancestor = undefined;
+        }
+
+        tile._requestTile = requestCandidate;
+
+        return ancestor;
     }
 
     var descendantStack = [];
@@ -1376,7 +1398,7 @@ define([
     function selectNearestLoadedTiles(finalVisibleSet, tileset, frameState, outOfCore) {
         var length = finalVisibleSet.length;
         for (var i = 0; i < length; ++i) {
-            var tile = getNearestLoadedAncestor(finalVisibleSet[i]);
+            var tile = getNearestLoadedAncestor(tileset, finalVisibleSet[i]);
             if (defined(tile)) {
                 if (!tile.selected) {
                     touch(tileset, tile, outOfCore);
@@ -1413,11 +1435,13 @@ define([
     function queueRequestFinalTiles(requestStack, finalVisibleSet, tileset, outOfCore) {
         var length = finalVisibleSet.length;
         for (var i = 0; i < length; ++i) {
-            var tile = finalVisibleSet[i];
-            if (tile.contentUnloaded) {
-                requestStack.push(tile);
-            } else {
-                touch(tileset, tile, outOfCore);
+            var tile = finalVisibleSet[i]._requestTile;
+            if (defined(tile)) {
+                if (tile.contentUnloaded) {
+                    requestStack.push(tile);
+                } else {
+                    touch(tileset, tile, outOfCore);
+                }
             }
         }
     }
