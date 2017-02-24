@@ -1180,7 +1180,7 @@ define([
                 }
 
                 // We can run into an issue where a vertex is used with 2 primitives that have opposite winding order.
-                if (Cartesian3.equals(Cartesian3.ZERO, normal)) {
+                if (Cartesian3.equalsEpsilon(Cartesian3.ZERO, normal, CesiumMath.EPSILON10)) {
                     Cartesian3.clone(normalsPerTriangle[normalIndices[vertexNormalData.indexOffset]], normal);
                 }
             }
