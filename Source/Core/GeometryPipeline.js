@@ -1186,7 +1186,7 @@ define([
             }
 
             // We end up with a zero vector probably because of a degenerate triangle
-            if (Cartesian3.equals(Cartesian3.ZERO, normal)) {
+            if (Cartesian3.equalsEpsilon(Cartesian3.ZERO, normal, CesiumMath.EPSILON10)) {
                 // Default to (0,0,1)
                 normal.z = 1.0;
             }
