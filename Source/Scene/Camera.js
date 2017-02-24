@@ -969,7 +969,6 @@ define([
         updateMembers(this);
     };
 
-    var scratchDepthIntersection = new Cartesian3();
     var scratchAdjustOrtghographicFrustumMousePosition = new Cartesian2();
     var pickGlobeScratchRay = new Ray();
     var scratchRayIntersection = new Cartesian3();
@@ -986,8 +985,6 @@ define([
 
         var scene = this._scene;
         var globe = scene._globe;
-
-        var depthIntersection;
         var rayIntersection;
 
         if (defined(globe)) {
@@ -995,21 +992,16 @@ define([
             mousePosition.x = scene.drawingBufferWidth / 2.0;
             mousePosition.y = scene.drawingBufferHeight / 2.0;
 
-            if (scene.pickPositionSupported) {
-                depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
-            }
-
             var ray = this.getPickRay(mousePosition, pickGlobeScratchRay);
             rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
-
-            var pickDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, this.positionWC) : Number.POSITIVE_INFINITY;
-            var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, this.positionWC) : Number.POSITIVE_INFINITY;
-
-            this.frustum.width = pickDistance < rayDistance ? pickDistance : rayDistance;
+            if (defined(rayIntersection)) {
+                this.frustum.width = Cartesian3.distance(rayIntersection, this.positionWC);
+            }
         }
 
-        if (!defined(globe) || (!defined(depthIntersection) && !defined(rayIntersection))) {
-            this.frustum.width = this.positionCartographic.height;
+        if (!defined(globe) || (!defined(rayIntersection))) {
+            var distance = this.positionCartographic.height;
+            this.frustum.width = distance;
         }
     };
 
