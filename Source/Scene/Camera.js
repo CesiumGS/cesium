@@ -2570,6 +2570,8 @@ define([
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
+     * @param {Number} [options.flyOverLon] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
+     * @param {Number} [options.flyOverLonWeight] Fly over the lon specifyed via flyOverLon only if that way is not longer than short way times flyOverLonWeight.
      * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      *
      * @exception {DeveloperError} If either direction or up is given, then both are required.
@@ -2665,6 +2667,8 @@ define([
         newOptions.endTransform = options.endTransform;
         newOptions.convert = isRectangle ? false : options.convert;
         newOptions.maximumHeight = options.maximumHeight;
+        newOptions.flyOverLon = options.flyOverLon;
+        newOptions.flyOverLonWeight = options.flyOverLonWeight;
         newOptions.easingFunction = options.easingFunction;
 
         var scene = this._scene;
