@@ -140,7 +140,9 @@ define([
     var scratchStartCart = new Cartographic();
     var scratchEndCart = new Cartographic();
 
-    function createUpdate3D(scene, duration, destination, heading, pitch, roll, optionAltitude) {
+    function createUpdate3D(scene, duration, destination, heading, pitch, roll, 
+        optionAltitude, optionFlyOverLon, optionFlyOverLonWeight) {
+
         var camera = scene.camera;
         var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
@@ -154,11 +156,58 @@ define([
         startCart.longitude = CesiumMath.zeroToTwoPi(startCart.longitude);
         destCart.longitude = CesiumMath.zeroToTwoPi(destCart.longitude);
 
-        var diff = startCart.longitude - destCart.longitude;
-        if (diff < -CesiumMath.PI) {
-            startCart.longitude += CesiumMath.TWO_PI;
-        } else if (diff > CesiumMath.PI) {
-            destCart.longitude += CesiumMath.TWO_PI;
+        if (defined(optionFlyOverLon)) {
+            var intrmdtLon = CesiumMath.zeroToTwoPi(optionFlyOverLon);
+
+            var lonMin = Math.min(startCart.longitude, destCart.longitude);
+            var lonMax = Math.max(startCart.longitude, destCart.longitude);
+
+            var intrmdtInside =  (intrmdtLon >= lonMin && intrmdtLon <= lonMax);
+
+            if (defined(optionFlyOverLonWeight)) {
+                // Distance inside  (0...2Pi)
+                var din = Math.abs(startCart.longitude - destCart.longitude);
+                // Distance outside (0...2Pi)
+                var dot = CesiumMath.TWO_PI - din;
+
+                var hitDistance = intrmdtInside ? din : dot;
+                var offDistance = intrmdtInside ? dot : din;
+
+                if (hitDistance < offDistance * optionFlyOverLonWeight) {
+                    if (!intrmdtInside) {
+                        // Adjust start/stop to hit intrmdtLon
+                        flip();
+                    }
+                }
+                else {
+                    useShortest();
+                }
+            }
+            else if (!intrmdtInside) {
+                // Adjust start/stop to hit intrmdtLon
+                flip();
+            }
+        }
+        else {
+            useShortest();
+        }
+
+        function flip() {
+            if (startCart.longitude < destCart.longitude) {
+                startCart.longitude += CesiumMath.TWO_PI
+            }
+            else {
+                destCart.longitude += CesiumMath.TWO_PI
+            }
+        }
+
+        function useShortest() {
+            var diff = startCart.longitude - destCart.longitude;
+            if (diff < -CesiumMath.PI) {
+                startCart.longitude += CesiumMath.TWO_PI;
+            } else if (diff > CesiumMath.PI) {
+                destCart.longitude += CesiumMath.TWO_PI;
+            }
         }
 
         var heightFunction = createHeightFunction(camera, destination, startCart.height, destCart.height, optionAltitude);
@@ -264,6 +313,8 @@ define([
         var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
         var maximumHeight = options.maximumHeight;
+        var flyOverLon = options.flyOverLon;
+        var flyOverLonWeight = options.flyOverLonWeight;
         var easingFunction = options.easingFunction;
 
         if (convert && mode !== SceneMode.SCENE3D) {
@@ -318,7 +369,7 @@ define([
 
         if (duration <= 0.0) {
             var newOnComplete = function() {
-                var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll, maximumHeight);
+                var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll, maximumHeight, flyOverLon, flyOverLonWeight);
                 update({ time: 1.0 });
 
                 if (typeof complete === 'function') {
@@ -328,7 +379,7 @@ define([
             return emptyFlight(newOnComplete, cancel);
         }
 
-        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll, maximumHeight);
+        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll, maximumHeight, flyOverLon, flyOverLonWeight);
 
         if (!defined(easingFunction)) {
             var startHeight = camera.positionCartographic.height;
