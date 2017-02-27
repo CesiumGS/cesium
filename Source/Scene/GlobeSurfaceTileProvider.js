@@ -478,9 +478,7 @@ define([
         var distance = this.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
-        var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
-
-        if (frameState.fog.enabled && !ortho3D) {
+        if (frameState.fog.enabled) {
             if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
                 // Tile is completely in fog so return that it is not visible.
                 return Visibility.NONE;
@@ -506,6 +504,7 @@ define([
             return Visibility.NONE;
         }
 
+        var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
         if (frameState.mode === SceneMode.SCENE3D && !ortho3D) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace)) {

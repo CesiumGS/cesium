@@ -703,7 +703,13 @@ define([
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
-        return maxGeometricError / pixelSize;
+        var error = maxGeometricError / pixelSize;
+
+        if (frameState.fog.enabled && frameState.mode !== SceneMode.SCENE2D) {
+            error = error - CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
+        }
+
+        return error;
     }
 
     function addTileToRenderList(primitive, tile) {

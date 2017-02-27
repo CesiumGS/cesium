@@ -3,13 +3,11 @@ define([
         '../Core/Cartesian3',
         '../Core/defined',
         '../Core/Math',
-        './OrthographicFrustum',
         './SceneMode'
     ], function(
         Cartesian3,
         defined,
         CesiumMath,
-        OrthographicFrustum,
         SceneMode) {
     'use strict';
 
@@ -116,9 +114,7 @@ define([
         var positionCartographic = camera.positionCartographic;
 
         // Turn off fog in space.
-        if (!defined(positionCartographic) || positionCartographic.height > 800000.0 ||
-            frameState.mode !== SceneMode.SCENE3D ||
-            (frameState.mode === SceneMode.SCENE3D && camera.frustum instanceof OrthographicFrustum)) {
+        if (!defined(positionCartographic) || positionCartographic.height > 800000.0 || frameState.mode !== SceneMode.SCENE3D) {
             frameState.fog.enabled = false;
             return;
         }
