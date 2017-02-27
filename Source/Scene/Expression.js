@@ -82,7 +82,8 @@ define([
         atan2 : Math.atan2,
         pow : Math.pow,
         min : Math.min,
-        max : Math.max
+        max : Math.max,
+        distance : Cartesian3.distance()
     };
 
     var unaryFunctions = {

@@ -2143,6 +2143,30 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('evaluates distance function', function() {
+        var expression = new Expression('distance(0,1)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('distance(vec2(1.0, 0.0), vec2(0.0, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('distance(vec3(3.0, 2.0, 1.0), vec3(1.0, 0.0, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(3.0);
+
+        expression = new Expression('distance(vec4(5.0, 5.0, 5.0, 5.0), vec4(0.0, 0.0, 0.0, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(10.0);
+    });
+
+    it('throws if distance function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('distance(0.0)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('distance(1, 2, 0)');
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates ternary conditional', function() {
         var expression = new Expression('true ? "first" : "second"');
         expect(expression.evaluate(frameState, undefined)).toEqual('first');
