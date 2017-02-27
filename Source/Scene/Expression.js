@@ -79,10 +79,10 @@ define([
     };
 
     var binaryFunctions = {
-        atan2 : Math.atan2,
-        pow : Math.pow,
-        min : Math.min,
-        max : Math.max
+        atan2 : { evaluate: Math.atan2, requireTypeMatch: true },
+        pow : { evaluate: Math.pow, requireTypeMatch: true },
+        min : { evaluate: Math.min, requireTypeMatch: false },
+        max : { evaluate: Math.max, requireTypeMatch: false }
     };
 
     var unaryFunctions = {
@@ -806,9 +806,38 @@ define([
     }
 
     function getEvaluateBinaryFunction(call) {
-        var evaluate = binaryFunctions[call];
+        var evaluate = binaryFunctions[call].evaluate;
+        var requireTypeMatch = binaryFunctions[call].requireTypeMatch;
         return function(feature) {
-            return evaluate(this._left.evaluate(feature), this._right.evaluate(feature));
+            var left = this._left.evaluate(feature);
+            var right = this._right.evaluate(feature);
+
+            // Legal Type Mismatch
+            if (!requireTypeMatch && typeof right === 'number') {
+                if (left instanceof Cartesian2) {
+                    return Cartesian2.fromElements(evaluate(left.x, right), evaluate(left.y, right), ScratchStorage.getCartesian2());
+                } else if (left instanceof Cartesian3) {
+                    return Cartesian3.fromElements(evaluate(left.x, right), evaluate(left.y, right), evaluate(left.z, right), ScratchStorage.getCartesian3());
+                } else if (left instanceof Cartesian4) {
+                    return Cartesian4.fromElements(evaluate(left.x, right), evaluate(left.y, right), evaluate(left.z, right), evaluate(left.w, right), ScratchStorage.getCartesian4());
+                }
+            }
+
+            // Arguments match
+            if (typeof left === 'number' && typeof right === 'number') {
+                return evaluate(left, right);
+            } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
+                return Cartesian2.fromElements(evaluate(left.x, right.x), evaluate(left.y, right.y), ScratchStorage.getCartesian2());
+            } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+                return Cartesian3.fromElements(evaluate(left.x, right.x), evaluate(left.y, right.y), evaluate(left.z, right.y), ScratchStorage.getCartesian3());
+            } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
+                return Cartesian4.fromElements(evaluate(left.x, right.x), evaluate(left.y, right.y), evaluate(left.z, right.z), evaluate(left.w, right.w), ScratchStorage.getCartesian4());
+            }
+
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Function ' + call + '\'s type of both arguments must match');
+            //>>includeEnd('debug');
+            return evaluate(left, right); // jshint ignore:line
         };
     }
 
