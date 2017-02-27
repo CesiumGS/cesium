@@ -1822,6 +1822,9 @@ define([
             }
 
             clearDepth.execute(context, passState);
+            if (context.stencilBuffer) {
+                scene._stencilClearCommand.execute(context, passState);
+            }
 
             us.updatePass(Pass.GLOBE);
             var commands = frustumCommands.commands[Pass.GLOBE];

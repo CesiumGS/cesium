@@ -26,7 +26,9 @@ define([
         './BlendingState',
         './Cesium3DTileColorBlendMode',
         './CullFace',
-        './getBinaryAccessor'
+        './getBinaryAccessor',
+        '../Scene/StencilFunction',
+        '../Scene/StencilOperation'
     ], function(
         arrayFill,
         Cartesian2,
@@ -54,7 +56,9 @@ define([
         BlendingState,
         Cesium3DTileColorBlendMode,
         CullFace,
-        getBinaryAccessor) {
+        getBinaryAccessor,
+        StencilFunction,
+        StencilOperation) {
     'use strict';
 
     /**
@@ -1288,6 +1292,7 @@ define([
         var translucentCommand = (derivedCommand.pass === Pass.TRANSLUCENT);
 
         derivedCommand.uniformMap = defined(derivedCommand.uniformMap) ? derivedCommand.uniformMap : {};
+        derivedCommand.renderState = getTranslucentRenderState(command.renderState, undefined);
         derivedCommand.uniformMap.tile_translucentCommand = function() {
             return translucentCommand;
         };
@@ -1299,10 +1304,27 @@ define([
         var rs = clone(renderState, true);
         rs.cull.enabled = true;
         rs.cull.face = cullFace;
+        // rs.depthTest.enabled = false;
         rs.depthTest.enabled = true;
-        rs.depthMask = false;
+        rs.depthMask = true;
+        // rs.depthMask = false;
         rs.blending = BlendingState.ALPHA_BLEND;
+        // rs.cull.face = CullFace.BACK;
+        rs.stencilTest = {
+            enabled: true,
+            frontFunction: StencilFunction.EQUAL,
+            frontOperation : {
+                fail : StencilOperation.KEEP,
+                zPass : StencilOperation.INCREMENT,
+                zFail : StencilOperation.KEEP
+            }
+        };
 
+        return RenderState.fromCache(rs);
+    }
+
+    function getStencilRenderState(renderState) {
+        var rs = clone(renderState, true);
         return RenderState.fromCache(rs);
     }
 

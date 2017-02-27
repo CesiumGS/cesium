@@ -465,6 +465,8 @@ define([
 
         this.bottomUpTraversal = defaultValue(options.bottomUpTraversal, true);
         this.skipFactor = defaultValue(options.skipFactor, 2);
+        this._selectedMaxSSE = -1;
+        this._lastSelectedMaxSSE = -1;
     }
 
     function Cesium3DTilesetStatistics() {
@@ -1156,6 +1158,7 @@ define([
                 // Tile is newly selected; it is selected this frame, but was not selected last frame.
                 tileset._selectedTilesToStyle.push(tile);
             }
+            tileset._selectedMaxSSE = Math.max(tileset._selectedMaxSSE, tile._sse);
             tile.lastSelectedFrameNumber = frameState.frameNumber;
         }
     }
@@ -1210,6 +1213,8 @@ define([
     var finalVisibleSet = [];
     var fullyVisibleStack = [];
     var loadQueue = [];
+    var partialQueue = [];
+    var prefetchQueue = [];
 
     function markFullyVisible(tileset, tile, frameState, outOfCore) {
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
@@ -1220,6 +1225,9 @@ define([
             t.selected = false;
             ++stats.visited;
 
+            t._isNew = t._lastSeenFrameNumber !== frameState.frameNumber - 1;
+            t._lastSeenFrameNumber = frameState.frameNumber;
+
             t._sse = getScreenSpaceError(tileset, t.geometricError, t, frameState);
 
             var children = t.children;
@@ -1227,6 +1235,7 @@ define([
             var additiveRefinement = (t.refine === Cesium3DTileRefine.ADD);
 
             touch(tileset, t, outOfCore);
+            // touchAllChildren(tileset, t, outOfCore);
 
             if (t.hasTilesetContent) {
                 if (t.contentReady) {
@@ -1243,6 +1252,8 @@ define([
 
             if (childrenLength === 0) {
                 finalVisibleSet.push(t);
+                queueSiblingsForPrefetch(prefetchQueue, tileset, t, outOfCore, false);
+                // touchAllChildren(tileset, t.parent, outOfCore);
                 continue;
             }
 
@@ -1251,6 +1262,8 @@ define([
             } else {
                 if (getScreenSpaceError(tileset, t.geometricError, t, frameState) <= maximumScreenSpaceError) {
                     finalVisibleSet.push(t);
+                    queueSiblingsForPrefetch(prefetchQueue, tileset, t, outOfCore, false);
+                    // touchAllChildren(tileset, t.parent, outOfCore);
                 } else {
                     updateTransforms(children, t.computedTransform);
                     computeDistanceToCamera(children, frameState);
@@ -1260,8 +1273,45 @@ define([
         }
     }
 
+    function queueSiblingsForPrefetch(queue, tileset, tile, outOfCore, includeSelf) {
+        var parent = tile.parent;
+        if (defined(parent)) {
+            var children = parent.children;
+            var length = children.length;
+            for (var i = 0; i < length; ++i) {
+                var child = children[i];
+                if ((includeSelf || child !== tile) && child.hasContent && !child._needsPrefetch) {
+                    child._needsPrefetch = true;
+                    if (child.contentUnloaded) {
+                        queue.push(child);
+                    } else {
+                        touch(tileset, child, outOfCore);
+                    }
+                }
+            }
+        }
+    }
+
+    function queueForPrefetch(queue, tileset, tile, outOfCore) {
+        if (tile.hasContent && !tile._needsPrefetch) {
+            tile._needsPrefetch = true;
+            if (tile.contentUnloaded) {
+                queue.push(tile);
+            } else {
+                touch(tileset, tile, outOfCore);
+            }
+        }
+    }
+
+    function touchAllChildren(tileset, tile, outOfCore) {
+        var children = tile.children;
+        var length = children.length;
+        for (var i = 0; i < length; ++i) {
+            touch(tileset, children[i], outOfCore);
+        }
+    }
+
     function computeVisibilityDeep(tileset, frameState, outOfCore) {
-        finalVisibleSet.length = 0;
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
 
         var root = tileset._root;
@@ -1277,8 +1327,13 @@ define([
             t.selected = false;
             ++stats.visited;
 
+            t._isNew = t._lastSeenFrameNumber !== frameState.frameNumber - 1;
+            t._lastSeenFrameNumber = frameState.frameNumber;
+
             var sse = getScreenSpaceError(tileset, t.geometricError, t, frameState);
             t._sse = sse;
+
+            // queueForPrefetch(prefetchQueue, tileset, t, outOfCore);
 
             var children = t.children;
             var childrenLength = children.length;
@@ -1288,6 +1343,7 @@ define([
             var additiveRefinement = (t.refine === Cesium3DTileRefine.ADD);
 
             touch(tileset, t, outOfCore);
+            // touchAllChildren(tileset, t, outOfCore);
 
             if (t.hasTilesetContent) {
                 if (t.contentReady) {
@@ -1304,6 +1360,8 @@ define([
 
             if (childrenLength === 0) {
                 finalVisibleSet.push(t);
+                // touchAllChildren(tileset, t.parent, outOfCore);
+                // queueSiblingsForPrefetch(prefetchQueue, tileset, t, outOfCore, false);
                 continue;
             }
 
@@ -1326,18 +1384,30 @@ define([
             } else {
                 if (sse <= maximumScreenSpaceError) {
                     finalVisibleSet.push(t);
+                    // touchAllChildren(tileset, t.parent, outOfCore);
+                    // queueSiblingsForPrefetch(prefetchQueue, tileset, t, outOfCore, false);
                     continue;
                 }
 
                 childrenVisibility = computeChildrenVisibility(t, frameState, true);
                 for (i = 0; i < childrenLength; ++i) {
                     child = children[i];
+                    touch(tileset, child, outOfCore);
 
                     if (child.visibilityPlaneMask === CullingVolume.MASK_INSIDE) {
+                        // queueSiblingsForPrefetch(prefetchQueue, tileset, child, outOfCore, false);
                         markFullyVisible(tileset, child, frameState, outOfCore);
                     } else if (child.visibilityPlaneMask === CullingVolume.MASK_OUTSIDE) {
 
                     } else {
+                        // queueSiblingsForPrefetch(prefetchQueue, tileset, child, outOfCore, false);
+                        // if (child.hasContent) {
+                        //     if (child.contentUnloaded) {
+                        //         partialQueue.push(child);
+                        //     } else {
+                        //         touch(tileset, child, outOfCore);
+                        //     }
+                        // }
                         visibilityStack.push(child);
                     }
                 }
@@ -1348,7 +1418,7 @@ define([
     }
 
     function getNearestLoadedAncestor(tileset, tile) {
-        var geometricError = tile.geometricError;
+        // var geometricError = tile.geometricError;
         var skipFactor = tileset.skipFactor;
 
         var requestCandidate = tile;
@@ -1410,33 +1480,52 @@ define([
     }
 
     function selectOrQueueTiles(finalVisibleSet, tileset, frameState, outOfCore) {
-        loadQueue.length = 0;
-
         var skipFactor = tileset.skipFactor;
 
         var length = finalVisibleSet.length;
         for (var i = 0; i < length; ++i) {
-            var tile = finalVisibleSet[i];
+            var original = finalVisibleSet[i];
+            var tile = original;
+
+            // while (defined(original.parent) && original._sse === 0) {
+            //     original = original.parent;
+            // }
+
             var requestCandidate = tile;
-            var skips = 0;
-            var j = 0;
+            // var skips = 0;
+            // var j = 0;
             while (defined(tile) && !tile.contentReady) {
-                tile = getAncestorWithContent(tile.parent);
-                if (defined(requestCandidate) && j*j > skipFactor * skips) {
-                    var candidate = getAncestorWithContent(requestCandidate.parent);
-                    if (defined(candidate)) {
-                        requestCandidate = candidate;
-                    }
-                    skips++;
+                if (tile._sse >= skipFactor * requestCandidate._sse) {
+                    requestCandidate = tile;
+                    // if (requestCandidate.contentUnloaded) {
+                    //     loadQueue.push(requestCandidate);
+                    // }
                 }
-                j++;
+
+                // if (tile._sse > 2 * skipFactor * original._sse) {
+                //     break;
+                // }
+
+                tile = getAncestorWithContent(tile.parent);
+                // if (defined(requestCandidate) && j*j > skipFactor * skips) {
+                //     var candidate = getAncestorWithContent(requestCandidate.parent);
+                //     if (defined(candidate)) {
+                //         requestCandidate = candidate;
+                //     }
+                //     skips++;
+                // }
+                // j++;
             }
+
+            // tile = original;
+            // requestCandidate = original;
 
             if (requestCandidate.contentUnloaded) {
                 loadQueue.push(requestCandidate);
             }
 
             if (defined(tile)) {
+                // var shouldSelect = (tile === original || tile._sse <= 8 * tileset._lastSelectedMaxSSE || tileset._lastSelectedMaxSSE < 0);
                 if (!tile.selected) {
                     touch(tileset, tile, outOfCore);
                     selectTile(tileset, tile, tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
@@ -1458,13 +1547,33 @@ define([
                     tile = tile.parent;
                 }
                 var current = tile.parent;
-                while (defined(current)) {
-                    if (current._sse > 4 * tile._sse) {
+                while (defined(current) && current.refine !== Cesium3DTileRefine.ADD) {
+                    if (current._sse > 8 * tile._sse) {
                         current.selected = false;
                     }
                     current = current.parent;
                 }
             }
+        }
+    }
+
+    function deselectUnrefinedAncestors(selectedTiles, tileset) {
+        var length = selectedTiles.length;
+        for (var i = 0; i < length; ++i) {
+            var tile = selectedTiles[i];
+            if (tile.selected) {
+                var current = tile.parent;
+                while (defined(current)) {
+                    if (current._isNew && current._sse > tileset.skipFactor * tile._sse) {
+                        current.selected = false;
+                    }
+                    current = current.parent;
+                }
+            }
+            // if (tile._isNew && tile._sse > tileset.skipFactor * tileset._lastMaxSSE) {
+            //     tile.selected = false;
+            //     tile.lastSelectedFrameNumber = 0;
+            // }
         }
     }
 
@@ -1490,17 +1599,20 @@ define([
         }
     }
 
-
-    function loadTiles(tiles, tileset, outOfCore) {
-        var i;
+    function markTilesForLoad(tiles) {
         var length = tiles.length;
-        for (i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             tiles[i]._needsRequest = true;
         }
-        for (i = 0; i < length; ++i) {
+    }
+
+    function loadTiles(tiles, tileset, outOfCore) {
+        var length = tiles.length;
+        for (var i = 0; i < length; ++i) {
             var tile = tiles[i];
             if (tile._needsRequest) {
                 tile._needsRequest = false;
+                tile._needsPrefetch = false;
                 requestContent(tileset, tile, outOfCore);
             }
         }
@@ -1613,8 +1725,17 @@ define([
             return;
         }
 
+        finalVisibleSet.length = 0;
+        loadQueue.length = 0;
+        prefetchQueue.length = 0;
+
         finalVisibleSet = computeVisibilityDeep(tileset, frameState, outOfCore);
-        finalVisibleSet.sort(sortChildrenByDistanceToCamera);
+        // finalVisibleSet.sort(sortChildrenByDistanceToCamera);
+        finalVisibleSet.sort(function(a, b) {
+            return a.distanceToCamera - b.distanceToCamera;
+        });
+        tileset._lastSelectedMaxSSE = tileset._selectedMaxSSE;
+        tileset._selectedMaxSSE = -1;
         loadQueue = selectOrQueueTiles(finalVisibleSet, tileset, frameState, outOfCore);
         loadQueue.sort(function(a, b) {
             var diff = b._sse - a._sse;
@@ -1624,11 +1745,222 @@ define([
                 return diff;
             }
         });
+        prefetchQueue.sort(function(a, b) {
+            var diff = b._sse - a._sse;
+            if (diff === 0) {
+                return a.distanceToCamera - b.distanceToCamera;
+            } else {
+                return diff;
+            }
+        });
+
+        markTilesForLoad(loadQueue, tileset, outOfCore);
+        // markTilesForLoad(prefetchQueue, tileset, outOfCore);
+
         loadTiles(loadQueue, tileset, outOfCore);
+        // loadTiles(prefetchQueue, tileset, outOfCore);
+        // deselectUnrefinedAncestors(tileset._selectedTiles, tileset);
         // prefetchTiles(tileset._selectedTiles, tileset, outOfCore);
         // selectNearestLoadedTiles(finalVisibleSet, tileset, frameState, outOfCore);
-        deduplicateSelectedAncestors(tileset._selectedTiles);
+        if (!tileset._refineToVisible) {
+            // deduplicateSelectedAncestors(tileset._selectedTiles);
+        }
         // requestTiles(finalVisibleSet, tileset, frameState, outOfCore);
+    }
+
+    var selectionState = {
+        processingQueue: [],
+        nextQueue: [],
+        loadQueue: [],
+        finalQueue: [],
+        done: false
+    };
+
+    function selectTilesSkip(tileset, frameState, outOfCore) {
+        if (tileset.debugFreezeFrame) {
+            return;
+        }
+
+        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+
+        tileset._selectedTiles.length = 0;
+        tileset._selectedTilesToStyle.length = 0;
+
+        // Move sentinel node to the tail so, at the start of the frame, all tiles
+        // may be potentially replaced.  Tiles are moved to the right of the sentinel
+        // when they are selected so they will not be replaced.
+        var replacementList = tileset._replacementList;
+        replacementList.splice(replacementList.tail, tileset._replacementSentinel);
+
+        var root = tileset._root;
+        root.updateTransform(tileset._modelMatrix);
+
+        if (!root.insideViewerRequestVolume(frameState)) {
+            return;
+        }
+
+        root.distanceToCamera = root.distanceToTile(frameState);
+
+        if (getScreenSpaceError(tileset, tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
+            // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
+            return;
+        }
+
+        root.visibilityPlaneMask = root.visibility(frameState, CullingVolume.MASK_INDETERMINATE);
+        if (root.visibilityPlaneMask === CullingVolume.MASK_OUTSIDE) {
+            return;
+        }
+
+        if (root.contentUnloaded) {
+            requestContent(tileset, root, outOfCore);
+            return;
+        }
+
+        selectionState.loadQueue.length = 0;
+        selectionState.finalQueue.length = 0;
+        selectionState.processingQueue.length = 1;
+        selectionState.processingQueue[0] = root;
+        selectionState.done = false;
+
+        root._sse = getScreenSpaceError(tileset, root.geometricError, root, frameState);
+
+        // debugger;
+        while (!selectionState.done) {
+            selectionState.nextQueue.length = 0;
+            processSelectionQueue(tileset, frameState, selectionState, outOfCore);
+            var processingQueue = selectionState.processingQueue;
+            selectionState.processingQueue = selectionState.nextQueue;
+            selectionState.nextQueue = processingQueue;
+        }
+
+        var finalQueue = selectionState.finalQueue;
+        finalQueue.sort(function(a, b) {
+            return a.distanceToCamera - b.distanceToCamera;
+        });
+        selectNearestLoadedTiles(finalQueue, tileset, frameState, outOfCore);
+
+        var loadQueue = selectionState.loadQueue;
+        loadQueue.sort(function(a, b) {
+            var diff = b._sse - a._sse;
+            if (diff === 0) {
+                return a.distanceToCamera - b.distanceToCamera;
+            } else {
+                return diff;
+            }
+        });
+        markTilesForLoad(loadQueue, tileset, outOfCore);
+        loadTiles(loadQueue, tileset, outOfCore);
+    }
+
+    function processSelectionQueue(tileset, frameState, selectionState, outOfCore) {
+        var processingQueue = selectionState.processingQueue;
+        var nextQueue = selectionState.nextQueue;
+        var skipDivisor = 1 / tileset.skipFactor;
+        var length = processingQueue.length;
+        for (var i = 0; i < length; ++i) {
+            var processTile = processingQueue[i];
+
+            queueDescendantsMeetingSSE(tileset, processTile, processTile._sse * skipDivisor, selectionState, frameState, outOfCore);
+        }
+
+        selectionState.done = (nextQueue.length === 0);
+    }
+
+
+    var tempStack = [];
+    function queueDescendantsMeetingSSE(tileset, parent, sse, selectionState, frameState, outOfCore) {
+        var stats = tileset._statistics;
+
+        var loadQueue = selectionState.loadQueue;
+        var nextQueue = selectionState.nextQueue;
+        var finalQueue = selectionState.finalQueue;
+
+        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+
+        var stack = tempStack;
+        stack.push(parent);
+        while (stack.length > 0) {
+            var tile = stack.pop();
+            tile.selected = false;
+            ++stats.visited;
+
+            tile._sse = getScreenSpaceError(tileset, tile.geometricError, tile, frameState);
+
+            touch(tileset, tile, outOfCore);
+
+            var child;
+            if (tile.hasTilesetContent) {
+                if (tile.contentReady) {
+                    child = tile.children[0];
+                    child.visibilityPlaneMask = tile.visibilityPlaneMask;
+                    child.distanceToCamera = tile.distanceToCamera;
+                    child.updateTransform(tile.computedTransform);
+                    if (child.contentUnloaded) {
+                        loadQueue.push(child);
+                    } else {
+                        stack.push(child);
+                    }
+                }
+                continue;
+            }
+
+            var children = tile.children;
+            var childrenLength = children.length;
+
+            if (childrenLength === 0) {
+                finalQueue.push(tile);
+                if (tile.contentUnloaded) {
+                    loadQueue.push(tile);
+                }
+                continue;
+            }
+
+            updateTransforms(children, tile.computedTransform);
+            computeDistanceToCamera(children, frameState);
+
+            var childrenVisibility, i;
+            if (tile.refine === Cesium3DTileRefine.ADD) {
+                finalQueue.push(tile);
+                if (tile.contentUnloaded) {
+                    loadQueue.push(tile);
+                }
+                if (tile._sse > maximumScreenSpaceError) {
+                    childrenVisibility = computeChildrenVisibility(tile, frameState, true);
+                    for (i = 0; i < childrenLength; ++i) {
+                        child = children[i];
+                        if (isVisible(child.visibilityPlaneMask)) {
+                            if (getScreenSpaceError(tileset, tile.geometricError, child, frameState) > maximumScreenSpaceError) {
+                                stack.push(child);
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (tile._sse <= maximumScreenSpaceError) {
+                    finalQueue.push(tile);
+                    if (tile.contentUnloaded) {
+                        loadQueue.push(tile);
+                    }
+                    continue;
+                }
+
+                if (tile._sse <= sse) {
+                    nextQueue.push(tile);
+                    if (tile.contentUnloaded) {
+                        loadQueue.push(tile);
+                    }
+                    continue;
+                }
+
+                childrenVisibility = computeChildrenVisibility(tile, frameState, true);
+                for (i = 0; i < childrenLength; ++i) {
+                    child = children[i];
+                    if (isVisible(child.visibilityPlaneMask)) {
+                        stack.push(child);
+                    }
+                }
+            }
+        }
     }
 
     function selectTiles(tileset, frameState, outOfCore) {
@@ -2183,6 +2515,7 @@ define([
         }
 
         if (this.bottomUpTraversal) {
+            // selectTilesSkip(this, frameState, outOfCore);
             selectTilesBottomUp(this, frameState, outOfCore);
         } else {
             selectTiles(this, frameState, outOfCore);
