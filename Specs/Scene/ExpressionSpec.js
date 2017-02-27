@@ -2171,13 +2171,13 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(-1.0, 0));
 
         expression = new Expression('min(vec2(-1,2),vec2(0,1))');
-        expect(expression.evaluate(frameState, undefined)).toEqual(-1.0, 1.0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(-1.0, 1.0));
 
         expression = new Expression('min(vec3(-1,2,1),vec3(0,1,2))');
-        expect(expression.evaluate(frameState, undefined)).toEqual(-1.0, 1.0, 1.0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(-1.0, 1.0, 1.0));
 
         expression = new Expression('min(vec4(-1,2,1,4),vec4(0,1,2,3))');
-        expect(expression.evaluate(frameState, undefined)).toEqual(-1.0, 1.0, 1.0, 3.0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(-1.0, 1.0, 1.0, 3.0));
     });
 
     it('throws if min function takes an invalid number of arguments', function() {
@@ -2211,13 +2211,13 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(0, 1.0));
 
         expression = new Expression('max(vec2(-1,2),vec2(0,1))');
-        expect(expression.evaluate(frameState, undefined)).toEqual(0, 2.0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(0, 2.0));
 
         expression = new Expression('max(vec3(-1,2,1),vec3(0,1,2))');
-        expect(expression.evaluate(frameState, undefined)).toEqual(0, 2.0, 2.0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(0, 2.0, 2.0));
 
         expression = new Expression('max(vec4(-1,2,1,4),vec4(0,1,2,3))');
-        expect(expression.evaluate(frameState, undefined)).toEqual(0, 2.0, 2.0, 4.0);
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(0, 2.0, 2.0, 4.0));
     });
 
     it('throws if max function takes an invalid number of arguments', function() {

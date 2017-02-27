@@ -829,7 +829,7 @@ define([
             } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
                 return Cartesian2.fromElements(evaluate(left.x, right.x), evaluate(left.y, right.y), ScratchStorage.getCartesian2());
             } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
-                return Cartesian3.fromElements(evaluate(left.x, right.x), evaluate(left.y, right.y), evaluate(left.z, right.y), ScratchStorage.getCartesian3());
+                return Cartesian3.fromElements(evaluate(left.x, right.x), evaluate(left.y, right.y), evaluate(left.z, right.z), ScratchStorage.getCartesian3());
             } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
                 return Cartesian4.fromElements(evaluate(left.x, right.x), evaluate(left.y, right.y), evaluate(left.z, right.z), evaluate(left.w, right.w), ScratchStorage.getCartesian4());
             }
