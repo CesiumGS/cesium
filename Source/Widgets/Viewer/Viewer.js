@@ -7,6 +7,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/Event',
         '../../Core/EventHelper',
         '../../Core/isArray',
         '../../Core/Matrix4',
@@ -49,6 +50,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        Event,
         EventHelper,
         isArray,
         Matrix4,
@@ -661,6 +663,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._zoomTarget = undefined;
         this._zoomPromise = undefined;
         this._zoomOptions = undefined;
+        this._selectedEntityChange = new Event();
 
         knockout.track(this, ['_trackedEntity', '_selectedEntity', '_clockTrackedDataSource']);
 
@@ -1200,7 +1203,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                             selectionIndicatorViewModel.animateDepart();
                         }
                     }
+                    this._selectedEntityChange.raiseEvent(value);
                 }
+            }
+        },
+        /**
+         * Gets the event that is raised when the selected entity chages
+         * @memberof Viewer.prototype
+         * @type {Event}
+         * @readonly
+         */
+        selectedEntityChanged : {
+            get : function() {
+                return this._selectedEntityChanged;
             }
         },
         /**
