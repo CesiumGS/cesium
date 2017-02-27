@@ -11,6 +11,7 @@ define([
         '../Core/Matrix4',
         '../Core/Transforms',
         './OrthographicFrustum',
+        './OrthographicOffCenterFrustum',
         './SceneMode'
     ], function(
         BoundingRectangle,
@@ -24,6 +25,7 @@ define([
         Matrix4,
         Transforms,
         OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         SceneMode) {
     'use strict';
 
@@ -186,7 +188,7 @@ define([
         if (frameState.mode !== SceneMode.SCENE2D || cameraCentered) {
             // View-projection matrix to transform from world coordinates to clip coordinates
             positionCC = worldToClip(actualPosition, eyeOffset, camera, positionCC);
-            if (positionCC.z < 0 && frameState.mode !== SceneMode.SCENE2D) {
+            if (positionCC.z < 0 && !(camera.frustum instanceof OrthographicFrustum) && !(camera.frustum instanceof OrthographicOffCenterFrustum)) {
                 return undefined;
             }
 
