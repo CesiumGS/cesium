@@ -121,6 +121,32 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
+        vertexMemoryInBytes : {
+            get : function() {
+                var collection = this._modelInstanceCollection;
+                if (defined(collection) && defined(collection._model)) {
+                    return collection._model.vertexMemoryInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        textureMemoryInBytes : {
+            get : function() {
+                var collection = this._modelInstanceCollection;
+                if (defined(collection) && defined(collection._model)) {
+                    return collection._model.textureMemoryInBytes + this.batchTable.textureMemoryInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
         innerContents : {
             get : function() {
                 return undefined;

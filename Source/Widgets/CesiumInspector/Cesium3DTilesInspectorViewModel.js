@@ -666,6 +666,12 @@ define([
                     // --- Optimization stats
                     '<li><strong>Children Union Culled: </strong>' + stats.numberOfTilesCulledWithChildrenUnion + '</li>';
                 s += '</ul>';
+                s += '<ul class="cesium-cesiumInspector-stats">';
+                s +=
+                    // --- Memory stats
+                    '<li><strong>Vertex Memory (MB): </strong>' + Math.round(stats.vertexMemoryInBytes / 1024) + '</li>' +
+                    '<li><strong>Texture Memory (MB): </strong>' + Math.round(stats.textureMemoryInBytes / 1024) + '</li>';
+                s += '</ul>';
             }
 
             if (isPick) {

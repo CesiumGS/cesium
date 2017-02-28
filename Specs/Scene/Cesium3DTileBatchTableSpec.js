@@ -44,9 +44,9 @@ defineSuite([
 
     var result = new Color();
 
-    var mockContent = {
-        getFeature : function(batchId) {
-            return {};
+    var mockTileset = {
+        _statistics : {
+            textureMemoryInBytes : 0
         }
     };
 
@@ -67,7 +67,7 @@ defineSuite([
     });
 
     it('setShow throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.setShow();
         }).toThrowDeveloperError();
@@ -80,14 +80,14 @@ defineSuite([
     });
 
     it('setShow throws with undefined value', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.setShow(0);
         }).toThrowDeveloperError();
     });
 
     it('setShow', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
         // Batch table resources are undefined by default
         expect(batchTable._batchValues).toBeUndefined();
@@ -95,7 +95,7 @@ defineSuite([
 
         // Check that batch table resources are still undefined because value is true by default
         batchTable.setShow(0, true);
-        batchTable.update(mockContent, scene.frameState);
+        batchTable.update(mockTileset, scene.frameState);
         expect(batchTable._batchValues).toBeUndefined();
         expect(batchTable._batchTexture).toBeUndefined();
         expect(batchTable.getShow(0)).toEqual(true);
@@ -103,7 +103,7 @@ defineSuite([
         // Check that batch values are dirty and resources are created when value changes
         batchTable.setShow(0, false);
         expect(batchTable._batchValuesDirty).toEqual(true);
-        batchTable.update(mockContent, scene.frameState);
+        batchTable.update(mockTileset, scene.frameState);
         expect(batchTable._batchValues).toBeDefined();
         expect(batchTable._batchTexture).toBeDefined();
         expect(batchTable._batchValuesDirty).toEqual(false);
@@ -116,7 +116,7 @@ defineSuite([
     });
 
     it('getShow throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.getShow();
         }).toThrowDeveloperError();
@@ -129,7 +129,7 @@ defineSuite([
     });
 
     it('getShow', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         // Show is true by default
         expect(batchTable.getShow(0)).toEqual(true);
         batchTable.setShow(0, false);
@@ -137,7 +137,7 @@ defineSuite([
     });
 
     it('setColor throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.setColor();
         }).toThrowDeveloperError();
@@ -150,14 +150,14 @@ defineSuite([
     });
 
     it('setColor throws with undefined value', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.setColor(0);
         }).toThrowDeveloperError();
     });
 
     it('setColor', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
         // Batch table resources are undefined by default
         expect(batchTable._batchValues).toBeUndefined();
@@ -165,7 +165,7 @@ defineSuite([
 
         // Check that batch table resources are still undefined because value is true by default
         batchTable.setColor(0, Color.WHITE);
-        batchTable.update(mockContent, scene.frameState);
+        batchTable.update(mockTileset, scene.frameState);
         expect(batchTable._batchValues).toBeUndefined();
         expect(batchTable._batchTexture).toBeUndefined();
         expect(batchTable.getColor(0, result)).toEqual(Color.WHITE);
@@ -173,7 +173,7 @@ defineSuite([
         // Check that batch values are dirty and resources are created when value changes
         batchTable.setColor(0, Color.YELLOW);
         expect(batchTable._batchValuesDirty).toEqual(true);
-        batchTable.update(mockContent, scene.frameState);
+        batchTable.update(mockTileset, scene.frameState);
         expect(batchTable._batchValues).toBeDefined();
         expect(batchTable._batchTexture).toBeDefined();
         expect(batchTable._batchValuesDirty).toEqual(false);
@@ -186,21 +186,21 @@ defineSuite([
     });
 
     it('setAllColor throws with undefined value', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.setAllColor();
         }).toThrowDeveloperError();
     });
 
     it('setAllColor', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 2);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
         batchTable.setAllColor(Color.YELLOW);
         expect(batchTable.getColor(0, result)).toEqual(Color.YELLOW);
         expect(batchTable.getColor(1, result)).toEqual(Color.YELLOW);
     });
 
     it('getColor throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.getColor();
         }).toThrowDeveloperError();
@@ -213,14 +213,14 @@ defineSuite([
     });
 
     it('getColor throws with undefined result', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.getColor(0);
         }).toThrowDeveloperError();
     });
 
     it('getColor', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         // Color is true by default
         expect(batchTable.getColor(0, result)).toEqual(Color.WHITE);
         batchTable.setColor(0, Color.YELLOW);
@@ -228,7 +228,7 @@ defineSuite([
     });
 
     it('hasProperty throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.hasProperty();
         }).toThrowDeveloperError();
@@ -241,7 +241,7 @@ defineSuite([
     });
 
     it('hasProperty throws with undefined name', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.hasProperty(0);
         }).toThrowDeveloperError();
@@ -251,13 +251,13 @@ defineSuite([
         var batchTableJson = {
             height: [0.0]
         };
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1, batchTableJson);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1, batchTableJson);
         expect(batchTable.hasProperty(0, 'height')).toEqual(true);
         expect(batchTable.hasProperty(0, 'id')).toEqual(false);
     });
 
     it('getPropertyNames throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.getPropertyNames();
         }).toThrowDeveloperError();
@@ -270,19 +270,19 @@ defineSuite([
     });
 
     it('getPropertyNames', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(batchTable.getPropertyNames(0)).toEqual([]);
 
         var batchTableJson = {
             height: [0.0],
             id : [0]
         };
-        batchTable = new Cesium3DTileBatchTable(mockContent, 1, batchTableJson);
+        batchTable = new Cesium3DTileBatchTable(mockTileset, 1, batchTableJson);
         expect(batchTable.getPropertyNames(0)).toEqual(['height', 'id']);
     });
 
     it('getProperty throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.getProperty();
         }).toThrowDeveloperError();
@@ -295,26 +295,26 @@ defineSuite([
     });
 
     it('getProperty throws with undefined name', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.getProperty(0);
         }).toThrowDeveloperError();
     });
 
     it('getProperty', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(batchTable.getProperty(0, 'height')).toBeUndefined();
 
         var batchTableJson = {
             height: [1.0]
         };
-        batchTable = new Cesium3DTileBatchTable(mockContent, 1, batchTableJson);
+        batchTable = new Cesium3DTileBatchTable(mockTileset, 1, batchTableJson);
         expect(batchTable.getProperty(0, 'height')).toEqual(1.0);
         expect(batchTable.getProperty(0, 'id')).toBeUndefined();
     });
 
     it('setProperty throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.setProperty();
         }).toThrowDeveloperError();
@@ -327,7 +327,7 @@ defineSuite([
     });
 
     it('setProperty throws with undefined name', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.setProperty(0);
         }).toThrowDeveloperError();
@@ -335,7 +335,7 @@ defineSuite([
 
     it('setProperty without existing batch table', function() {
         // Check that a batch table is created with a height of 1.0 for the first resource and undefined for the others
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 3);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 3);
         batchTable.setProperty(0, 'height', 1.0);
 
         expect(batchTable.batchTableJson.height.length).toEqual(3);
@@ -348,7 +348,7 @@ defineSuite([
         var batchTableJson = {
             height : [1.0, 2.0]
         };
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 2, batchTableJson);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson);
         batchTable.setProperty(0, 'height', 3.0);
 
         expect(batchTable.getProperty(0, 'height')).toEqual(3.0);
@@ -359,7 +359,7 @@ defineSuite([
         var batchTableJson = {
             info : [{name : 'building0', year : 2000}, {name : 'building1', year : 2001}]
         };
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 2, batchTableJson);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson);
         batchTable.setProperty(0, 'info', {name : 'building0_new', year : 2002});
 
         expect(batchTable.getProperty(0, 'info')).toEqual({name : 'building0_new', year : 2002});
@@ -370,7 +370,7 @@ defineSuite([
         var batchTableJson = {
             rooms : [['room1', 'room2'], ['room3', 'room4']]
         };
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 2, batchTableJson);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson);
         batchTable.setProperty(0, 'rooms', ['room1_new', 'room2']);
 
         expect(batchTable.getProperty(0, 'rooms')).toEqual(['room1_new', 'room2']);
@@ -386,7 +386,7 @@ defineSuite([
         };
         var batchTableBinary = new Float64Array([0, 1]);
         expect(function() {
-            return new Cesium3DTileBatchTable(mockContent, 2, batchTableJson, batchTableBinary);
+            return new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson, batchTableBinary);
         }).toThrowDeveloperError();
     });
 
@@ -399,7 +399,7 @@ defineSuite([
         };
         var batchTableBinary = new Float64Array([0, 1]);
         expect(function() {
-            return new Cesium3DTileBatchTable(mockContent, 2, batchTableJson, batchTableBinary);
+            return new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson, batchTableBinary);
         }).toThrowDeveloperError();
     });
 
@@ -412,7 +412,7 @@ defineSuite([
             }
         };
         expect(function() {
-            return new Cesium3DTileBatchTable(mockContent, 2, batchTableJson);
+            return new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson);
         }).toThrowDeveloperError();
     });
 
@@ -486,7 +486,7 @@ defineSuite([
             }
         };
 
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 2, batchTableJson, batchTableBinary);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson, batchTableBinary);
 
         expect(batchTable.getProperty(1, 'propertyScalar')).toEqual(1);
         expect(batchTable.getProperty(1, 'propertyVec2')).toEqual(new Cartesian2(4, 5));
@@ -650,7 +650,7 @@ defineSuite([
     });
 
     it('isExactClass throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.isExactClass();
         }).toThrowDeveloperError();
@@ -663,14 +663,14 @@ defineSuite([
     });
 
     it('isExactClass throws with undefined className', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.isExactClass(0);
         }).toThrowDeveloperError();
     });
 
     it('isClass throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.isClass();
         }).toThrowDeveloperError();
@@ -683,14 +683,14 @@ defineSuite([
     });
 
     it('isClass throws with undefined className', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.isClass(0);
         }).toThrowDeveloperError();
     });
 
     it('getExactClassName throws with invalid batchId', function() {
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {
             batchTable.getExactClassName();
         }).toThrowDeveloperError();
@@ -866,7 +866,7 @@ defineSuite([
                 }]
             }
         };
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 4, batchTableJson);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 4, batchTableJson);
         expect(batchTable.getPropertyNames(0).sort()).toEqual(['building_name', 'door_name', 'window_name']);
     });
 
@@ -911,7 +911,7 @@ defineSuite([
                 }]
             }
         };
-        var batchTable = new Cesium3DTileBatchTable(mockContent, 5, batchTableJson);
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 5, batchTableJson);
         expect(batchTable.getPropertyNames(0).sort()).toEqual(['building_name', 'door_name', 'window_name', 'zone_name']); // check window
         expect(batchTable.hasProperty(1, 'zone_name')).toEqual(true); // check door0
         expect(batchTable.hasProperty(2, 'zone_name')).toEqual(true); // check door1
@@ -948,7 +948,7 @@ defineSuite([
             }
         };
         expect(function() {
-            return new Cesium3DTileBatchTable(mockContent, 3, batchTableJson);
+            return new Cesium3DTileBatchTable(mockTileset, 3, batchTableJson);
         }).toThrowDeveloperError();
     });
 
@@ -981,7 +981,7 @@ defineSuite([
             }
         };
         expect(function() {
-            return new Cesium3DTileBatchTable(mockContent, 4, batchTableJson);
+            return new Cesium3DTileBatchTable(mockTileset, 4, batchTableJson);
         }).toThrowDeveloperError();
     });
     //>>includeEnd('debug');
@@ -1008,7 +1008,7 @@ defineSuite([
             }
         };
         expect(function() {
-            return new Cesium3DTileBatchTable(mockContent, 2, batchTableJson);
+            return new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson);
         }).toThrowDeveloperError();
     });
 

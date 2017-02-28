@@ -97,6 +97,30 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
+        vertexMemoryInBytes : {
+            get : function() {
+                if (defined(this._model)) {
+                    return this._model.vertexMemoryInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        textureMemoryInBytes : {
+            get : function() {
+                if (defined(this._model)) {
+                    return this._model.textureMemoryInBytes + this.batchTable.textureMemoryInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
         innerContents : {
             get : function() {
                 return undefined;

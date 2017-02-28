@@ -9,6 +9,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
@@ -37,6 +38,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         CesiumMath,
@@ -131,6 +133,21 @@ define([
         this._textureDimensions = textureDimensions;
         this._textureStep = textureStep;
     }
+
+    defineProperties(Cesium3DTileBatchTable.prototype, {
+        textureMemoryInBytes : {
+            get : function() {
+                var memory = 0;
+                if (defined(this._pickTexture)) {
+                    memory += this._pickTexture.sizeInBytes;
+                }
+                if (defined(this._batchTexture)) {
+                    memory += this._batchTexture.sizeInBytes;
+                }
+                return memory;
+            }
+        }
+    });
 
     function initializeHierarchy(json, binary) {
         var i;
@@ -1351,6 +1368,7 @@ define([
             }
 
             batchTable._pickTexture = createTexture(batchTable, context, bytes);
+            content._tileset._statistics.textureMemoryInBytes += batchTable._pickTexture.sizeInBytes;
         }
     }
 
@@ -1381,6 +1399,7 @@ define([
             // Create batch texture on-demand
             if (!defined(this._batchTexture)) {
                 this._batchTexture = createTexture(this, context, this._batchValues);
+                tileset._statistics.textureMemoryInBytes += this._batchTexture.sizeInBytes;
             }
 
             updateBatchTexture(this);  // Apply per-feature show/color updates

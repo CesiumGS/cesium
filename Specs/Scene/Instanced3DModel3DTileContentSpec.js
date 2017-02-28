@@ -2,6 +2,7 @@
 defineSuite([
         'Scene/Instanced3DModel3DTileContent',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Transforms',
@@ -12,6 +13,7 @@ defineSuite([
     ], function(
         Instanced3DModel3DTileContent,
         Cartesian3,
+        Color,
         HeadingPitchRange,
         HeadingPitchRoll,
         Transforms,
@@ -37,6 +39,7 @@ defineSuite([
     var quantizedOct32POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedOct32POrientation/';
     var withTransformUrl = './Data/Cesium3DTiles/Instanced/InstancedWithTransform/';
     var withBatchIdsUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchIds/';
+    var texturedUrl = './Data/Cesium3DTiles/Instanced/InstancedTextured/';
 
     function setCamera(longitude, latitude) {
         // One instance is located at the center, point the camera there
@@ -277,6 +280,36 @@ defineSuite([
             expect(function(){
                 content.getFeature();
             }).toThrowDeveloperError();
+        });
+    });
+
+    it('gets memory usage', function() {
+        return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
+            var content = tileset._root.content;
+
+            // Box model - 32 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) per vertex.
+            // (24 * 8 * 4) + (36 * 2) = 840
+            var modelVertexMemoryInBytes = 840;
+
+            // Texture is 211x211 RGBA bytes, but upsampled to 256x256 because the wrap mode is REPEAT
+            var modelTextureMemoryInBytes = 262144;
+
+            // One RGBA byte pixel per feature
+            var batchTextureMemoryInBytes = content.featuresLength * 4;
+            var pickTextureMemoryInBytes = content.featuresLength * 4;
+
+            // Features have not been picked or colored yet, so the batch table contribution is 0.
+            expect(content.vertexMemoryInBytes).toEqual(modelVertexMemoryInBytes);
+            expect(content.textureMemoryInBytes).toEqual(modelTextureMemoryInBytes);
+
+            // Color a feature and expect the texture memory to increase
+            content.getFeature(0).color = Color.RED;
+            scene.renderForSpecs();
+            expect(content.textureMemoryInBytes).toEqual(modelTextureMemoryInBytes + batchTextureMemoryInBytes);
+
+            // Pick the tile and expect the texture memory to increase
+            scene.pickForSpecs();
+            expect(content.textureMemoryInBytes).toEqual(modelTextureMemoryInBytes + batchTextureMemoryInBytes + pickTextureMemoryInBytes);
         });
     });
 

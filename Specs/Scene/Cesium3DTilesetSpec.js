@@ -476,6 +476,61 @@ defineSuite([
         return checkPointAndFeatureCounts(tileset, 8, 1000);
     });
 
+    it('verify memory usage statistics', function() {
+        // Calculations in Batched3DModel3DTilesContentSpec
+        var singleTileVertexMemory = 8880;
+        var singleTileTextureMemory = 0;
+        var singleTileBatchTextureMemory = 40;
+        var singleTilePickTextureMemory = 40;
+        var tilesLength = 5;
+
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var stats = tileset._statistics;
+
+            // No tiles loaded
+            expect(stats.vertexMemoryInBytes).toEqual(0);
+            expect(stats.textureMemoryInBytes).toEqual(0);
+
+            viewRootOnly();
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                // Root tile loaded
+                expect(stats.vertexMemoryInBytes).toEqual(singleTileVertexMemory);
+                expect(stats.textureMemoryInBytes).toEqual(singleTileTextureMemory);
+
+                viewAllTiles();
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                    // All tiles loaded
+                    expect(stats.vertexMemoryInBytes).toEqual(singleTileVertexMemory * tilesLength);
+                    expect(stats.textureMemoryInBytes).toEqual(singleTileTextureMemory * tilesLength);
+
+                    // One feature colored, the texture memory is now higher
+                    tileset._root.content.getFeature(0).color = Color.RED;
+                    scene.renderForSpecs();
+                    expect(stats.vertexMemoryInBytes).toEqual(singleTileVertexMemory * tilesLength);
+                    expect(stats.textureMemoryInBytes).toEqual(singleTileTextureMemory * tilesLength + singleTileBatchTextureMemory);
+
+                    // All tiles picked, the texture memory is now higher
+                    scene.pickForSpecs();
+                    expect(stats.vertexMemoryInBytes).toEqual(singleTileVertexMemory * tilesLength);
+                    expect(stats.textureMemoryInBytes).toEqual(singleTileTextureMemory * tilesLength + singleTileBatchTextureMemory + singleTilePickTextureMemory * tilesLength);
+
+                    // Tiles are still in memory when zoomed out
+                    viewNothing();
+                    scene.renderForSpecs();
+                    expect(stats.vertexMemoryInBytes).toEqual(singleTileVertexMemory * tilesLength);
+                    expect(stats.textureMemoryInBytes).toEqual(singleTileTextureMemory * tilesLength + singleTileBatchTextureMemory + singleTilePickTextureMemory * tilesLength);
+
+                    // Trim loaded tiles, expect the memory statistics to be 0
+                    tileset.trimLoadedTiles();
+                    scene.renderForSpecs();
+                    expect(stats.vertexMemoryInBytes).toEqual(0);
+                    expect(stats.textureMemoryInBytes).toEqual(0);
+                });
+            });
+        });
+    });
+
     it('does not process tileset when screen space error is not met', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             scene.renderForSpecs();
@@ -957,11 +1012,11 @@ defineSuite([
 
                 var root = tileset._root;
                 var childRoot = root.children[0];
-                
+
                 scene.renderForSpecs();
 
                 expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                
+
                 expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
@@ -986,11 +1041,11 @@ defineSuite([
                         roll: 0
                     }
                 });
-                
+
                 scene.renderForSpecs();
 
                 expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                
+
                 expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
@@ -1014,17 +1069,17 @@ defineSuite([
                         roll: 0
                     }
                 });
-                
+
                 childRoot.geometricError = 0;
                 scene.renderForSpecs();
 
                 expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                
+
                 expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(childRoot.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                
+
                 expect(childRoot.selected).toBe(true);
                 expect(childRoot.replaced).toBe(false);
             });
@@ -1048,7 +1103,7 @@ defineSuite([
                 scene.renderForSpecs();
 
                 expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                
+
                 expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
@@ -1077,7 +1132,7 @@ defineSuite([
                 scene.renderForSpecs();
 
                 expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                
+
                 expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                 expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
