@@ -2234,6 +2234,8 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    var cachedTexturesByContextId = {};
+
     function createTexture(gltfTexture, model, context) {
         var textures = model.gltf.textures;
         var texture = textures[gltfTexture.id];
@@ -2257,6 +2259,24 @@ define([
 
         var tx;
         var source = gltfTexture.image;
+
+        var cachedTextures = cachedTexturesByContextId[context.id];
+        if (!defined(cachedTextures)) {
+            cachedTextures = cachedTexturesByContextId[context.id] = {};
+        }
+
+        if (defined(source)) {
+            var cacheKey = source.src;
+            var cachedTexture = cachedTextures[cacheKey];
+            if (defined(cachedTexture)) {
+                if (!defined(cachedTexture._referenceCount)) {
+                    cachedTexture._referenceCount = 1;
+                } else {
+                    ++cachedTexture._referenceCount;
+                }
+                return cachedTexture;
+            }
+        }
 
         if (defined(internalFormat) && texture.target === WebGLConstants.TEXTURE_2D) {
             tx = new Texture({
@@ -2297,6 +2317,8 @@ define([
             if (mipmap) {
                 tx.generateMipmap();
             }
+
+            cachedTextures[source.src] = tx;
         }
 
         model._rendererResources.textures[gltfTexture.id] = tx;
@@ -4215,7 +4237,15 @@ define([
     function destroy(property) {
         for (var name in property) {
             if (property.hasOwnProperty(name)) {
-                property[name].destroy();
+                var resource = property[name];
+                if (defined(resource._referenceCount)) {
+                    --resource._referenceCount;
+                    if (resource._referenceCount === 0) {
+                        resource.destroy();
+                    }
+                } else {
+                    property[name].destroy();
+                }
             }
         }
     }
