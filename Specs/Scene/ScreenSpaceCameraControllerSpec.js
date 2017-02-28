@@ -12,8 +12,10 @@ defineSuite([
         'Core/Math',
         'Core/Ray',
         'Core/Transforms',
+        'Scene/Camera',
         'Scene/CameraEventType',
         'Scene/MapMode2D',
+        'Scene/OrthographicFrustum',
         'Scene/OrthographicOffCenterFrustum',
         'Scene/SceneMode',
         'Specs/createCamera',
@@ -32,8 +34,10 @@ defineSuite([
         CesiumMath,
         Ray,
         Transforms,
+        Camera,
         CameraEventType,
         MapMode2D,
+        OrthographicFrustum,
         OrthographicOffCenterFrustum,
         SceneMode,
         createCamera,
@@ -859,6 +863,52 @@ defineSuite([
         simulateMouseWheel(-120);
         updateController();
         expect(Cartesian3.magnitude(position)).toBeLessThan(Cartesian3.magnitude(camera.position));
+    });
+
+    it('zoom in 3D with orthographic projection', function() {
+        setUp3D();
+
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 20.0;
+        camera.frustum = frustum;
+
+        expect(frustum.projectionMatrix).toBeDefined();
+
+        camera.setView({ destination : Camera.DEFAULT_VIEW_RECTANGLE });
+
+        var position = Cartesian3.clone(camera.position);
+        var frustumWidth = camera.frustum.width;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController();
+        expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
+        expect(frustumWidth).toBeGreaterThan(camera.frustum.width);
+    });
+
+    it('zoom out in 3D with orthographic projection', function() {
+        setUp3D();
+
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 20.0;
+        camera.frustum = frustum;
+
+        expect(frustum.projectionMatrix).toBeDefined();
+
+        camera.setView({ destination : Camera.DEFAULT_VIEW_RECTANGLE });
+
+        var position = Cartesian3.clone(camera.position);
+        var frustumWidth = camera.frustum.width;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController();
+        expect(Cartesian3.magnitude(position)).toBeLessThan(Cartesian3.magnitude(camera.position));
+        expect(frustumWidth).toBeLessThan(camera.frustum.width);
     });
 
     it('tilts in 3D', function() {
