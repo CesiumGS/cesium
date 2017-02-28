@@ -663,7 +663,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._zoomTarget = undefined;
         this._zoomPromise = undefined;
         this._zoomOptions = undefined;
-        this._selectedEntityChange = new Event();
+        this._selectedEntityChanged = new Event();
 
         knockout.track(this, ['_trackedEntity', '_selectedEntity', '_clockTrackedDataSource']);
 
@@ -1203,7 +1203,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                             selectionIndicatorViewModel.animateDepart();
                         }
                     }
-                    this._selectedEntityChange.raiseEvent(value);
+                    this._selectedEntityChanged.raiseEvent(value);
                 }
             }
         },
