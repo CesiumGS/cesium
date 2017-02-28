@@ -465,6 +465,10 @@ define([
 
         this.bottomUpTraversal = defaultValue(options.bottomUpTraversal, true);
         this.skipFactor = defaultValue(options.skipFactor, 2);
+        this.lowMemory = defaultValue(options.lowMemory, false);
+        this.deduplicateAncestors = defaultValue(options.deduplicateAncestors, false);
+        this.mixLOD = defaultValue(options.mixLOD, true);
+        this.stencilTiles = this.mixLOD && defaultValue(options.stencilTiles, true);
         this._selectedMaxSSE = -1;
         this._lastSelectedMaxSSE = -1;
     }
@@ -1252,7 +1256,7 @@ define([
 
             if (childrenLength === 0) {
                 finalVisibleSet.push(t);
-                queueSiblingsForPrefetch(prefetchQueue, tileset, t, outOfCore, false);
+                // queueSiblingsForPrefetch(prefetchQueue, tileset, t, outOfCore, false);
                 // touchAllChildren(tileset, t.parent, outOfCore);
                 continue;
             }
@@ -1262,7 +1266,7 @@ define([
             } else {
                 if (getScreenSpaceError(tileset, t.geometricError, t, frameState) <= maximumScreenSpaceError) {
                     finalVisibleSet.push(t);
-                    queueSiblingsForPrefetch(prefetchQueue, tileset, t, outOfCore, false);
+                    // queueSiblingsForPrefetch(prefetchQueue, tileset, t, outOfCore, false);
                     // touchAllChildren(tileset, t.parent, outOfCore);
                 } else {
                     updateTransforms(children, t.computedTransform);
@@ -1419,26 +1423,18 @@ define([
 
     function getNearestLoadedAncestor(tileset, tile) {
         // var geometricError = tile.geometricError;
-        var skipFactor = tileset.skipFactor;
+        // var skipFactor = tileset.skipFactor;
 
-        var requestCandidate = tile;
+        // var requestCandidate = tile;
         var ancestor = tile;
-        var i = 0;
-        var skips = 0;
         while (defined(ancestor) && !ancestor.contentReady) {
             ancestor = getAncestorWithContent(ancestor.parent);
-            if (defined(requestCandidate) && i*i > skipFactor * skips) {
-                requestCandidate = getAncestorWithContent(requestCandidate.parent);
-                skips++;
-            }
-            i++;
+            // if (defined(requestCandidate) && i*i > skipFactor * skips) {
+            //     requestCandidate = getAncestorWithContent(requestCandidate.parent);
+            // }
         }
 
-        // if (defined(ancestor) && geometricError > 0 && ancestor.geometricError > 8 * geometricError) {
-        //     ancestor = undefined;
-        // }
-
-        tile._requestTile = requestCandidate;
+        // tile._requestTile = requestCandidate;
 
         return ancestor;
     }
@@ -1455,6 +1451,7 @@ define([
             for (i = 0; i < childrenLength; ++i) {
                 child = children[i];
                 if (child.contentReady) {
+                    child._finalResolution = true;
                     touch(tileset, child, outOfCore);
                     selectTile(tileset, child, child.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
                 } else {
@@ -1470,6 +1467,7 @@ define([
             var tile = getNearestLoadedAncestor(tileset, finalVisibleSet[i]);
             if (defined(tile)) {
                 if (!tile.selected) {
+                    tile._finalResolution = (tile === finalVisibleSet[i]);
                     touch(tileset, tile, outOfCore);
                     selectTile(tileset, tile, tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
                 }
@@ -1481,56 +1479,37 @@ define([
 
     function selectOrQueueTiles(finalVisibleSet, tileset, frameState, outOfCore) {
         var skipFactor = tileset.skipFactor;
+        var lowMemory = tileset.lowMemory;
 
         var length = finalVisibleSet.length;
         for (var i = 0; i < length; ++i) {
             var original = finalVisibleSet[i];
             var tile = original;
 
-            // while (defined(original.parent) && original._sse === 0) {
-            //     original = original.parent;
-            // }
-
             var requestCandidate = tile;
-            // var skips = 0;
-            // var j = 0;
             while (defined(tile) && !tile.contentReady) {
                 if (tile._sse >= skipFactor * requestCandidate._sse) {
                     requestCandidate = tile;
-                    // if (requestCandidate.contentUnloaded) {
-                    //     loadQueue.push(requestCandidate);
-                    // }
                 }
-
-                // if (tile._sse > 2 * skipFactor * original._sse) {
-                //     break;
-                // }
-
                 tile = getAncestorWithContent(tile.parent);
-                // if (defined(requestCandidate) && j*j > skipFactor * skips) {
-                //     var candidate = getAncestorWithContent(requestCandidate.parent);
-                //     if (defined(candidate)) {
-                //         requestCandidate = candidate;
-                //     }
-                //     skips++;
-                // }
-                // j++;
             }
 
-            // tile = original;
-            // requestCandidate = original;
+            if (lowMemory) {
+                requestCandidate = original;
+            }
 
             if (requestCandidate.contentUnloaded) {
                 loadQueue.push(requestCandidate);
             }
 
             if (defined(tile)) {
-                // var shouldSelect = (tile === original || tile._sse <= 8 * tileset._lastSelectedMaxSSE || tileset._lastSelectedMaxSSE < 0);
                 if (!tile.selected) {
                     touch(tileset, tile, outOfCore);
                     selectTile(tileset, tile, tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
                 }
-            } else {
+            }
+
+            if (!defined(tile) || !tile.contentReady) {
                 selectNearestLoadedDescendants(finalVisibleSet[i], tileset, frameState, outOfCore);
             }
         }
@@ -1538,7 +1517,7 @@ define([
         return loadQueue;
     }
 
-    function deduplicateSelectedAncestors(selectedTiles) {
+    function deduplicateSelectedAncestors(tileset, selectedTiles) {
         var length = selectedTiles.length;
         for (var i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
@@ -1548,7 +1527,7 @@ define([
                 }
                 var current = tile.parent;
                 while (defined(current) && current.refine !== Cesium3DTileRefine.ADD) {
-                    if (current._sse > 8 * tile._sse) {
+                    if (current._sse > tileset.skipFactor * tile._sse) {
                         current.selected = false;
                     }
                     current = current.parent;
@@ -1762,9 +1741,11 @@ define([
         // deselectUnrefinedAncestors(tileset._selectedTiles, tileset);
         // prefetchTiles(tileset._selectedTiles, tileset, outOfCore);
         // selectNearestLoadedTiles(finalVisibleSet, tileset, frameState, outOfCore);
-        if (!tileset._refineToVisible) {
-            // deduplicateSelectedAncestors(tileset._selectedTiles);
+
+        if (tileset.deduplicateAncestors) {
+            deduplicateSelectedAncestors(tileset, tileset._selectedTiles);
         }
+
         // requestTiles(finalVisibleSet, tileset, frameState, outOfCore);
     }
 
@@ -1775,6 +1756,72 @@ define([
         finalQueue: [],
         done: false
     };
+
+
+    function insertOrPush(array, index, item) {
+        if (index < array.length) {
+            array[index] = item;
+        } else {
+            array.push(item);
+        }
+    }
+
+    var processStack = [];
+    function processDescendants(tileset, tile, frameState, outOfCore, contentCallback, unloadedCallback) {
+        var stack = processStack;
+
+        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+
+        var count = 0;
+        insertOrPush(stack, count++, tile);
+
+        while (count > 0) {
+            var t = stack[--count];
+            t.selected = false;
+
+            touch(tileset, t, outOfCore);
+
+            // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
+            t._sse = getScreenSpaceError(tileset, t.geometricError, t, frameState);
+            // PERFORMANCE_IDEA: refine also based on (1) occlusion/VMSSE and/or (2) center of viewport
+
+            var children = t.children;
+            var childrenLength = children.length;
+            var child;
+            var i;
+            var additiveRefinement = (t.refine === Cesium3DTileRefine.ADD);
+
+            if (t.hasTilesetContent) {
+                if (t.contentReady) {
+                    child = t.children[0];
+                    child.visibilityPlaneMask = t.visibilityPlaneMask;
+                    child.distanceToCamera = t.distanceToCamera;
+                    child.updateTransform(t.computedTransform);
+                    if (child.contentUnloaded) {
+                        unloadedCallback(child);
+                    } else {
+                        insertOrPush(stack, count++, child);
+                    }
+                }
+                continue;
+            }
+
+            updateTransforms(children, t.computedTransform);
+            computeDistanceToCamera(children, frameState);
+
+            for (i = 0; i < childrenLength; ++i) {
+                child = children[i];
+                if (child.hasContent || child.hasTilesetContent) {
+                    contentCallback(child, additiveRefinement);
+                    if (child.contentUnloaded) {
+                        unloadedCallback(child);
+                    }
+                } else {
+                    insertOrPush(stack, count++, child);
+                }
+            }
+        }
+    }
 
     function selectTilesSkip(tileset, frameState, outOfCore) {
         if (tileset.debugFreezeFrame) {
@@ -1816,15 +1863,17 @@ define([
             return;
         }
 
-        selectionState.loadQueue.length = 0;
-        selectionState.finalQueue.length = 0;
+        var loadQueue = selectionState.loadQueue;
+        var finalQueue = selectionState.finalQueue;
+
+        loadQueue.length = 0;
+        finalQueue.length = 0;
         selectionState.processingQueue.length = 1;
         selectionState.processingQueue[0] = root;
         selectionState.done = false;
 
         root._sse = getScreenSpaceError(tileset, root.geometricError, root, frameState);
 
-        // debugger;
         while (!selectionState.done) {
             selectionState.nextQueue.length = 0;
             processSelectionQueue(tileset, frameState, selectionState, outOfCore);
@@ -1833,13 +1882,11 @@ define([
             selectionState.nextQueue = processingQueue;
         }
 
-        var finalQueue = selectionState.finalQueue;
         finalQueue.sort(function(a, b) {
             return a.distanceToCamera - b.distanceToCamera;
         });
         selectNearestLoadedTiles(finalQueue, tileset, frameState, outOfCore);
 
-        var loadQueue = selectionState.loadQueue;
         loadQueue.sort(function(a, b) {
             var diff = b._sse - a._sse;
             if (diff === 0) {
@@ -1854,15 +1901,27 @@ define([
 
     function processSelectionQueue(tileset, frameState, selectionState, outOfCore) {
         var processingQueue = selectionState.processingQueue;
+        var loadQueue = selectionState.loadQueue;
         var nextQueue = selectionState.nextQueue;
+        var finalQueue = selectionState.finalQueue;
         var skipDivisor = 1 / tileset.skipFactor;
         var length = processingQueue.length;
+
+        var sse = 0;
+
         for (var i = 0; i < length; ++i) {
             var processTile = processingQueue[i];
+            var nextCount = nextQueue.length;
+            var finalCount = finalQueue.length;
 
-            queueDescendantsMeetingSSE(tileset, processTile, processTile._sse * skipDivisor, selectionState, frameState, outOfCore);
+            var refined = queueDescendantsMeetingSSE(tileset, processTile, processTile._sse * skipDivisor, selectionState, frameState, outOfCore);
+            if (!tileset.mixLOD && !refined && !tileset.lowMemory) {
+                // tiles not refined. splice any descendants added
+                finalQueue.length = finalCount;
+                nextQueue.length = nextCount;
+                finalQueue.push(processTile);
+            }
         }
-
         selectionState.done = (nextQueue.length === 0);
     }
 
@@ -1877,8 +1936,20 @@ define([
 
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
 
+        var refined = true;
+
         var stack = tempStack;
-        stack.push(parent);
+
+        touch(tileset, parent, outOfCore);
+
+        updateTransforms(parent.children, parent.computedTransform);
+        computeDistanceToCamera(parent.children, frameState);
+
+        var childrenVisibility = computeChildrenVisibility(parent, frameState, true);
+        if (childrenVisibility) {
+            stack.push.apply(stack, parent.children);
+        }
+
         while (stack.length > 0) {
             var tile = stack.pop();
             tile.selected = false;
@@ -1895,8 +1966,10 @@ define([
                     child.visibilityPlaneMask = tile.visibilityPlaneMask;
                     child.distanceToCamera = tile.distanceToCamera;
                     child.updateTransform(tile.computedTransform);
+
                     if (child.contentUnloaded) {
                         loadQueue.push(child);
+                        refined = false;
                     } else {
                         stack.push(child);
                     }
@@ -1907,23 +1980,19 @@ define([
             var children = tile.children;
             var childrenLength = children.length;
 
-            if (childrenLength === 0) {
-                finalQueue.push(tile);
-                if (tile.contentUnloaded) {
-                    loadQueue.push(tile);
-                }
-                continue;
-            }
-
             updateTransforms(children, tile.computedTransform);
             computeDistanceToCamera(children, frameState);
 
-            var childrenVisibility, i;
+            var i;
             if (tile.refine === Cesium3DTileRefine.ADD) {
-                finalQueue.push(tile);
                 if (tile.contentUnloaded) {
                     loadQueue.push(tile);
                 }
+                if (!tile.contentReady) {
+                    refined = false;
+                }
+                finalQueue.push(tile);
+
                 if (tile._sse > maximumScreenSpaceError) {
                     childrenVisibility = computeChildrenVisibility(tile, frameState, true);
                     for (i = 0; i < childrenLength; ++i) {
@@ -1931,36 +2000,50 @@ define([
                         if (isVisible(child.visibilityPlaneMask)) {
                             if (getScreenSpaceError(tileset, tile.geometricError, child, frameState) > maximumScreenSpaceError) {
                                 stack.push(child);
+                            } else {
+                                touch(tileset, child, outOfCore);
                             }
                         }
                     }
                 }
             } else {
-                if (tile._sse <= maximumScreenSpaceError) {
-                    finalQueue.push(tile);
+                if (tile._sse <= maximumScreenSpaceError || childrenLength === 0) {
+                    if (tile.hasContent) {
+                        if (tile.contentUnloaded) {
+                            loadQueue.push(tile);
+                        }
+                        if (!tile.contentReady) {
+                            refined = false;
+                        }
+                    }
+                    if (isVisible(tile.visibilityPlaneMask)) {
+                        finalQueue.push(tile);
+                    }
+                } else if (tile.hasContent && tile._sse < sse && !tileset.lowMemory) {
                     if (tile.contentUnloaded) {
                         loadQueue.push(tile);
                     }
-                    continue;
-                }
-
-                if (tile._sse <= sse) {
+                    if (!tile.contentReady) {
+                        refined = false;
+                    }
                     nextQueue.push(tile);
-                    if (tile.contentUnloaded) {
-                        loadQueue.push(tile);
-                    }
-                    continue;
-                }
-
-                childrenVisibility = computeChildrenVisibility(tile, frameState, true);
-                for (i = 0; i < childrenLength; ++i) {
-                    child = children[i];
-                    if (isVisible(child.visibilityPlaneMask)) {
-                        stack.push(child);
+                } else {
+                    childrenVisibility = computeChildrenVisibility(tile, frameState, true);
+                    if (childrenVisibility) {
+                        for (i = 0; i < childrenLength; ++i) {
+                            child = children[i];
+                            if (isVisible(child.visibilityPlaneMask)) {
+                                stack.push(child);
+                            } else {
+                                touch(tileset, child, outOfCore);
+                            }
+                        }
                     }
                 }
             }
         }
+
+        return refined;
     }
 
     function selectTiles(tileset, frameState, outOfCore) {
@@ -2515,8 +2598,8 @@ define([
         }
 
         if (this.bottomUpTraversal) {
-            // selectTilesSkip(this, frameState, outOfCore);
-            selectTilesBottomUp(this, frameState, outOfCore);
+            selectTilesSkip(this, frameState, outOfCore);
+            // selectTilesBottomUp(this, frameState, outOfCore);
         } else {
             selectTiles(this, frameState, outOfCore);
         }

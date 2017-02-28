@@ -11,6 +11,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/freezeObject',
         '../Core/Math',
         '../Core/PixelFormat',
         '../Renderer/ContextLimits',
@@ -41,6 +42,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        freezeObject,
         CesiumMath,
         PixelFormat,
         ContextLimits,
@@ -1210,7 +1212,7 @@ define([
 
     Cesium3DTileBatchTable.prototype.getAddCommand = function() {
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
-
+        var that = this;
 // TODO: This function most likely will not get optimized.  Do something like this later in the render loop.
         return function(command) {
             var commandList = this.commandList;
@@ -1220,9 +1222,11 @@ define([
                 derivedCommands = {};
                 command.derivedCommands.tileset = derivedCommands;
 
-                derivedCommands.originalCommand = deriveCommand(command);
-                derivedCommands.back = deriveTranslucentCommand(command, CullFace.FRONT);
-                derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
+                var useStencil = that._content._tileset.stencilTiles;
+                var final = that._content._tile._finalResolution;
+                derivedCommands.originalCommand = deriveCommand(command, useStencil, final);
+                derivedCommands.back = deriveTranslucentCommand(command, CullFace.FRONT, useStencil, final);
+                derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK, useStencil, final);
             }
 
             updateDerivedCommands(derivedCommands, command);
@@ -1276,15 +1280,18 @@ define([
         return StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
     }
 
-    function deriveTranslucentCommand(command, cullFace) {
-        var derivedCommand = deriveCommand(command);
+    function deriveTranslucentCommand(command, cullFace, useStencil, final) {
+        var derivedCommand = deriveCommand(command, useStencil, final);
         derivedCommand.pass = Pass.TRANSLUCENT;
         derivedCommand.renderState = getTranslucentRenderState(command.renderState, cullFace);
         return derivedCommand;
     }
 
-    function deriveCommand(command) {
+    function deriveCommand(command, useStencil, final) {
         var derivedCommand = DrawCommand.shallowClone(command);
+        if (useStencil) {
+            derivedCommand.renderState = getStencilRenderState(command.renderState, final);
+        }
 
         // Add a uniform to indicate if the original command was translucent so
         // the shader knows not to cull vertices that were originally transparent
@@ -1292,7 +1299,6 @@ define([
         var translucentCommand = (derivedCommand.pass === Pass.TRANSLUCENT);
 
         derivedCommand.uniformMap = defined(derivedCommand.uniformMap) ? derivedCommand.uniformMap : {};
-        derivedCommand.renderState = getTranslucentRenderState(command.renderState, undefined);
         derivedCommand.uniformMap.tile_translucentCommand = function() {
             return translucentCommand;
         };
@@ -1304,27 +1310,20 @@ define([
         var rs = clone(renderState, true);
         rs.cull.enabled = true;
         rs.cull.face = cullFace;
-        // rs.depthTest.enabled = false;
         rs.depthTest.enabled = true;
-        rs.depthMask = true;
-        // rs.depthMask = false;
+        rs.depthMask = false;
         rs.blending = BlendingState.ALPHA_BLEND;
-        // rs.cull.face = CullFace.BACK;
-        rs.stencilTest = {
-            enabled: true,
-            frontFunction: StencilFunction.EQUAL,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zPass : StencilOperation.INCREMENT,
-                zFail : StencilOperation.KEEP
-            }
-        };
 
         return RenderState.fromCache(rs);
     }
 
-    function getStencilRenderState(renderState) {
+    function getStencilRenderState(renderState, final) {
         var rs = clone(renderState, true);
+        // rs.depthMask = true;
+        rs.stencilTest.enabled = true;
+        rs.stencilTest.frontFunction = final ? StencilFunction.ALWAYS : StencilFunction.EQUAL;
+        rs.stencilTest.frontOperation.zPass = StencilOperation.INCREMENT;
+
         return RenderState.fromCache(rs);
     }
 

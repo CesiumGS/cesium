@@ -361,6 +361,8 @@ define([
         this._needsPrefetch = false;
         this._isNew = false;
         this._lastSeenFrameNumber = 0;
+        this._contentParent = undefined;
+        this._finalResolution = true;
     }
 
     defineProperties(Cesium3DTile.prototype, {
