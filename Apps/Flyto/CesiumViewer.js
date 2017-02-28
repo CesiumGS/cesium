@@ -23,9 +23,6 @@ define([
         imageryProvider: createOpenStreetMapImageryProvider()
     });
 
-    // 35.6891 139.7899  tokyo
-    // 37.7757 -122.4382 SF
-
     viewer.camera.flyTo({
         duration: 0,
         destination : Cartesian3.fromDegrees(139.7899, 35.6891, 35000.0),
@@ -46,6 +43,7 @@ define([
                 roll : 0.0
             },
             maximumHeight: 1000000,
+            pitchAdjusAltitude: 10000,
             flyOverLon: CesiumMath.toRadians(0),
             flyOverLonWeight: 3
         }); 
@@ -61,15 +59,50 @@ define([
                 roll : 0.0
             },
             maximumHeight: 1000000,
+            pitchAdjusAltitude: 10000,
             flyOverLon: CesiumMath.toRadians(0),
             flyOverLonWeight: 3
         }); 
     };
 
-    setTimeout(function() {
-        flyToSF();
-        setTimeout(flyToTokyo, 10 * 1000)
-    }, 30 * 1000);
+    function Tween() {
+        this.queue = [];
+        this.index = 0;
+        this.next = this.next.bind(this);
+    }
+
+    Tween.prototype.add = function(f) { 
+        this.queue.push(f);
+        return this;
+    };
+
+    Tween.prototype.run = function() { 
+        this.queue[0](this.next);
+    };
+
+    Tween.prototype.next = function() { 
+        var n = this.queue[this.index++];
+        if (n) {
+            n(this.next);
+        }
+    };
+
+    function wrapWait(seconds, callback) {
+        var t = seconds * 1000;
+        return function(next) {
+            setTimeout(function() {
+                callback();
+                if (next) {
+                    next();
+                }
+            }, t);
+        }
+    }
+
+    new Tween()
+        .add(wrapWait(30, flyToSF))
+        .add(wrapWait(10, flyToTokyo))
+        .run();
 
     var loadingIndicator = document.getElementById('loadingIndicator');
     loadingIndicator.style.display = 'none';
