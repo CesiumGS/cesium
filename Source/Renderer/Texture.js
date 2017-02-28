@@ -189,6 +189,13 @@ define([
         }
         gl.bindTexture(textureTarget, null);
 
+        var sizeInBytes;
+        if (isCompressed) {
+            sizeInBytes = PixelFormat.compressedTextureSize(pixelFormat, width, height);
+        } else {
+            sizeInBytes = PixelFormat.textureSize(pixelFormat, pixelDatatype, width, height);
+        }
+
         this._context = context;
         this._textureFilterAnisotropic = context._textureFilterAnisotropic;
         this._textureTarget = textureTarget;
@@ -198,6 +205,7 @@ define([
         this._width = width;
         this._height = height;
         this._dimensions = new Cartesian2(width, height);
+        this._sizeInBytes = sizeInBytes;
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
         this._sampler = undefined;
@@ -380,6 +388,11 @@ define([
                 return this._height;
             }
         },
+        sizeInBytes : {
+            get : function() {
+                return this._sizeInBytes;
+            }
+        },
         _target : {
             get : function() {
                 return this._textureTarget;
@@ -527,6 +540,7 @@ define([
      * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] optional.
      *
      * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
+     * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is a compressed format.
      * @exception {DeveloperError} hint is invalid.
      * @exception {DeveloperError} This texture's width must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This texture's height must be a power of two to call generateMipmap().
@@ -561,6 +575,9 @@ define([
         gl.bindTexture(target, this._texture);
         gl.generateMipmap(target);
         gl.bindTexture(target, null);
+
+        // The mipmap adds approximately 1/3 of the original texture size
+        this._sizeInBytes = Math.floor(this._sizeInBytes * 4 / 3);
     };
 
     Texture.prototype.isDestroyed = function() {

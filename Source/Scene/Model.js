@@ -976,6 +976,42 @@ define([
             get : function() {
                 return this._upAxis;
             }
+        },
+
+        /**
+         * Gets the model's vertex memory in bytes. This includes all vertex and index buffers.
+         *
+         * @private
+         */
+        vertexMemoryInBytes : {
+            get : function() {
+                var memory = 0;
+                var buffers = this._rendererResources.buffers;
+                for (var id in buffers) {
+                    if (buffers.hasOwnProperty(id)) {
+                        memory += buffers[id].sizeInBytes;
+                    }
+                }
+                return memory;
+            }
+        },
+
+        /**
+         * Gets the model's texture memory in bytes.
+         *
+         * @private
+         */
+        textureMemoryInBytes : {
+            get : function() {
+                var memory = 0;
+                var textures = this._rendererResources.textures;
+                for (var id in textures) {
+                    if (textures.hasOwnProperty(id)) {
+                        memory += textures[id].sizeInBytes;
+                    }
+                }
+                return memory;
+            }
         }
     });
 
