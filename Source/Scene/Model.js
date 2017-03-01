@@ -2289,7 +2289,8 @@ define([
                 var cachedTexture = resourcesCachedAcrossModels[cacheKey];
                 if (defined(cachedTexture)) {
                     ++cachedTexture._referenceCount;
-                    return cachedTexture;
+                    model._rendererResources.textures[gltfTexture.id] = cachedTexture;
+                    return;
                 }
             }
 

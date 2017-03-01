@@ -922,6 +922,98 @@ defineSuite([
         });
     });
 
+    it('frees a texture that is only used once', function() {
+        return loadModel(texturedBoxSeparateUrl, { incrementallyLoadTextures : false }).then(function(m) {
+            expect(m._cachedRendererResources).toBeDefined();
+            expect(m._cachedRendererResources.textures).toBeDefined();
+            expect(Object.keys(m._cachedRendererResources.textures).length).toBe(1);
+
+            var texture = m._cachedRendererResources.textures[Object.keys(m._cachedRendererResources.textures)[0]];
+
+            scene.primitives.remove(m);
+            expect(texture.isDestroyed()).toBe(true);
+        });
+    });
+
+    function loadTwoCopiesOfModel(url) {
+        return loadJson(url).then(function(modelJson) {
+            var model1 = primitives.add(new Model({
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+                gltf : modelJson,
+                id : '1',
+                show : false,
+                incrementallyLoadTextures : false,
+                basePath : './Data/Models/Box-Textured-Separate/'
+            }));
+
+            var model2 = primitives.add(new Model({
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(1.0, 0.0, 100.0)),
+                gltf : modelJson,
+                id : '2',
+                show : false,
+                incrementallyLoadTextures : false,
+                basePath : './Data/Models/Box-Textured-Separate/'
+            }));
+
+            return pollToPromise(function() {
+                // Render scene to progressively load the model
+                scene.renderForSpecs();
+                return model1.ready && model2.ready;
+            }, { timeout: 10000 }).then(function() {
+                return {
+                    model1: model1,
+                    model2: model2
+                };
+            });
+        });
+    }
+
+    it('shares common textures between models', function() {
+        return loadTwoCopiesOfModel(texturedBoxSeparateUrl).then(function(models) {
+            var model1 = models.model1;
+            var model2 = models.model2;
+
+            var texture1 = model1._cachedRendererResources.textures[Object.keys(model1._cachedRendererResources.textures)[0]];
+            var texture2 = model2._cachedRendererResources.textures[Object.keys(model2._cachedRendererResources.textures)[0]];
+            expect(texture1).toBe(texture2);
+
+            scene.primitives.remove(model1);
+            scene.primitives.remove(model2);
+        });
+    });
+
+    it('does not destroy shared texture when the first model that uses it is destroyed', function() {
+        return loadTwoCopiesOfModel(texturedBoxSeparateUrl).then(function(models) {
+            var model1 = models.model1;
+            var model2 = models.model2;
+
+            var texture1 = model1._cachedRendererResources.textures[Object.keys(model1._cachedRendererResources.textures)[0]];
+            var texture2 = model1._cachedRendererResources.textures[Object.keys(model1._cachedRendererResources.textures)[0]];
+
+            scene.primitives.remove(model1);
+            expect(texture1.isDestroyed()).toBe(false);
+            expect(texture2.isDestroyed()).toBe(false);
+
+            scene.primitives.remove(model2);
+        });
+    });
+
+    it('destroys shared texture after all models that use it are destroyed', function() {
+        return loadTwoCopiesOfModel(texturedBoxSeparateUrl).then(function(models) {
+            var model1 = models.model1;
+            var model2 = models.model2;
+
+            var texture1 = model1._cachedRendererResources.textures[Object.keys(model1._cachedRendererResources.textures)[0]];
+            var texture2 = model1._cachedRendererResources.textures[Object.keys(model1._cachedRendererResources.textures)[0]];
+
+            scene.primitives.remove(model1);
+            scene.primitives.remove(model2);
+
+            expect(texture1.isDestroyed()).toBe(true);
+            expect(texture2.isDestroyed()).toBe(true);
+        });
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('loads cesiumAir', function() {
