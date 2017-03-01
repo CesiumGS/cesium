@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.32 - 2017-04-03
+
+* Added the event `Viewer.trackedEntityChanged`, which is raised when the value of `viewer.trackedEntity` changes. [#5060](https://github.com/AnalyticalGraphicsInc/cesium/pull/5060)
+
 ### 1.31 - 2017-03-01
 
 * Deprecated
