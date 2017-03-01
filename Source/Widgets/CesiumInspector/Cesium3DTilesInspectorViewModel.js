@@ -669,8 +669,8 @@ define([
                 s += '<ul class="cesium-cesiumInspector-stats">';
                 s +=
                     // --- Memory stats
-                    '<li><strong>Vertex Memory (MB): </strong>' + Math.round(stats.vertexMemoryInBytes / 1024) + '</li>' +
-                    '<li><strong>Texture Memory (MB): </strong>' + Math.round(stats.textureMemoryInBytes / 1024) + '</li>';
+                    '<li><strong>Vertex Memory (MB): </strong>' + Math.round(stats.vertexMemoryInBytes / 1048576).toLocaleString() + '</li>' +
+                    '<li><strong>Texture Memory (MB): </strong>' + Math.round(stats.textureMemoryInBytes / 1048576).toLocaleString() + '</li>';
                 s += '</ul>';
             }
 
