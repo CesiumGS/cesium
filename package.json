@@ -40,7 +40,7 @@
     "compression": "^1.6.2",
     "electron": "^1.4.10",
     "event-stream": "^3.3.4",
-    "express": "^4.14.0",
+    "express": "^4.15.0",
     "globby": "^6.1.0",
     "glsl-strip-comments": "^1.0.0",
     "gulp": "^3.9.1",
