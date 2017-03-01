@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
     'Core/BingMapsGeocoderService',
-    'Core/Cartesian3',
     'Core/loadJsonp',
     'Core/Rectangle'
 ], function(
     BingMapsGeocoderService,
-    Cartesian3,
     loadJsonp,
     Rectangle) {
     'use strict';

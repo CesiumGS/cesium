@@ -2,14 +2,12 @@
 defineSuite([
         'Widgets/Geocoder/GeocoderViewModel',
         'Core/Cartesian3',
-        'Scene/Camera',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         GeocoderViewModel,
         Cartesian3,
-        Camera,
         createScene,
         pollToPromise,
         when) {

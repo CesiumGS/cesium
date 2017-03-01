@@ -4,7 +4,6 @@ define([
         './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './EllipseOutlineGeometry',
         './Ellipsoid'
     ], function(
@@ -12,7 +11,6 @@ define([
         Check,
         defaultValue,
         defined,
-        DeveloperError,
         EllipseOutlineGeometry,
         Ellipsoid) {
     'use strict';

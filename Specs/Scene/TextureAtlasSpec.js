@@ -6,13 +6,6 @@ defineSuite([
         'Core/loadImage',
         'Core/Math',
         'Core/PixelFormat',
-        'Core/PrimitiveType',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
-        'Renderer/ClearCommand',
-        'Renderer/DrawCommand',
-        'Renderer/ShaderProgram',
-        'Renderer/VertexArray',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
@@ -22,13 +15,6 @@ defineSuite([
         loadImage,
         CesiumMath,
         PixelFormat,
-        PrimitiveType,
-        Buffer,
-        BufferUsage,
-        ClearCommand,
-        DrawCommand,
-        ShaderProgram,
-        VertexArray,
         createScene,
         when) {
     'use strict';
@@ -77,7 +63,7 @@ defineSuite([
     function expectToRender(texture, textureCoordinates, expected) {
         var x = textureCoordinates.x + textureCoordinates.width / 2.0;
         var y = textureCoordinates.y + textureCoordinates.height / 2.0;
-        var fs = 
+        var fs =
             'uniform sampler2D u_texture;' +
             'void main() {' +
             '  gl_FragColor = texture2D(u_texture, vec2(' + x + ', ' + y + '));' +
