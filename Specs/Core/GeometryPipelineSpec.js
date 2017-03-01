@@ -1712,45 +1712,6 @@ defineSuite([
         }
     });
 
-    it ('computeBinormalAndTangent computes tangent and binormal for BoxGeometry', function() {
-        // This test is for the deprecated computeBinormalAndTangent API
-        // It tests to assert that the binormal attribute is set correctly and
-        // is a copy of the bitangent attribute
-        var geometry = BoxGeometry.createGeometry(new BoxGeometry({
-            vertexFormat : new VertexFormat({
-                position : true,
-                normal : true,
-                st : true
-            }),
-            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
-        }));
-        geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
-        var actualTangents = geometry.attributes.tangent.values;
-        var actualBinormals = geometry.attributes.binormal.values;
-
-        var expectedGeometry = BoxGeometry.createGeometry(new BoxGeometry({
-            vertexFormat: VertexFormat.ALL,
-            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
-        }));
-        var expectedTangents = expectedGeometry.attributes.tangent.values;
-        var expectedBitangents = expectedGeometry.attributes.bitangent.values;
-
-        expect(actualTangents.length).toEqual(expectedTangents.length);
-        expect(actualBinormals.length).toEqual(expectedBitangents.length);
-
-        for (var i = 0; i < actualTangents.length; i += 3) {
-            var actual = Cartesian3.fromArray(actualTangents, i);
-            var expected = Cartesian3.fromArray(expectedTangents, i);
-            expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
-
-            actual = Cartesian3.fromArray(actualBinormals, i);
-            expected = Cartesian3.fromArray(expectedBitangents, i);
-            expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
-        }
-    });
-
     it('compressVertices throws without geometry', function() {
         expect(function() {
             return GeometryPipeline.compressVertices();

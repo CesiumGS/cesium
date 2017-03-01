@@ -2,7 +2,6 @@
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
-        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -20,7 +19,6 @@ define([
     ], function(
         BoundingRectangle,
         Cartesian2,
-        Color,
         defaultValue,
         defined,
         defineProperties,
