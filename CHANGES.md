@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.32 - 2017-04-03
+
+* Fix crunch compressed textures in IE11. [#5057](https://github.com/AnalyticalGraphicsInc/cesium/pull/5057)
+
 ### 1.31 - 2017-03-01
 
 * Deprecated
