@@ -96,6 +96,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
      * @param {Boolean} [options.refineToVisible=false] Whether replacement refinement should refine when all visible children are ready. An experimental optimization.
+     * @param {Boolean} [options.cullWithChildrenBounds=true] Whether to cull tiles using the union of their children bounding volumes.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
@@ -163,6 +164,8 @@ define([
         this._trimTiles = false;
 
         this._refineToVisible = defaultValue(options.refineToVisible, false);
+
+        this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
 
         /**
          * Whether the tileset should should refine based on a dynamic screen space error. Tiles that are further
@@ -1365,7 +1368,7 @@ define([
                 // decimation is not used, but it is arguably better to cull in this way because in the cases where we cull
                 // when the parent content is visible, if the object were to be drawn at full resolution, the geometry would
                 // not be visible.
-                var useChildrenBoundUnion = t._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
+                var useChildrenBoundUnion = tileset._cullWithChildrenBounds && t._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
 
                 var childrenVisibility;
 
