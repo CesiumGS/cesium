@@ -1319,10 +1319,9 @@ define([
 
     function getStencilRenderState(renderState, final) {
         var rs = clone(renderState, true);
-        // rs.depthMask = true;
         rs.stencilTest.enabled = true;
         rs.stencilTest.frontFunction = final ? StencilFunction.ALWAYS : StencilFunction.EQUAL;
-        rs.stencilTest.frontOperation.zPass = StencilOperation.INCREMENT;
+        rs.stencilTest.frontOperation.zPass = final ? StencilOperation.INCREMENT : StencilOperation.KEEP;
 
         return RenderState.fromCache(rs);
     }

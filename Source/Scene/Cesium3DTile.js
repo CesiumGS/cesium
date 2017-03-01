@@ -363,6 +363,7 @@ define([
         this._lastSeenFrameNumber = 0;
         this._contentParent = undefined;
         this._finalResolution = true;
+        this._targetDistanceToCamera = 0;
     }
 
     defineProperties(Cesium3DTile.prototype, {
@@ -730,7 +731,8 @@ define([
         var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
         if (showVolume) {
             if (!defined(tile._debugBoundingVolume)) {
-                tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(hasContentBoundingVolume ? Color.WHITE : Color.RED);
+                var color = tile._finalResolution ? (hasContentBoundingVolume ? Color.WHITE : Color.RED) : Color.YELLOW;
+                tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(color);
             }
             tile._debugBoundingVolume.update(frameState);
         } else if (!showVolume && defined(tile._debugBoundingVolume)) {
