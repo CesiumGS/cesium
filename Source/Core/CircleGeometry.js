@@ -5,7 +5,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './EllipseGeometry',
         './Ellipsoid',
         './VertexFormat'
@@ -15,7 +14,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         EllipseGeometry,
         Ellipsoid,
         VertexFormat) {

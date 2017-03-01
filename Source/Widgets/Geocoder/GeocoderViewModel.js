@@ -2,7 +2,6 @@
 define([
     '../../Core/BingMapsApi',
     '../../Core/BingMapsGeocoderService',
-    '../../Core/Cartesian3',
     '../../Core/defaultValue',
     '../../Core/defined',
     '../../Core/defineProperties',
@@ -11,7 +10,6 @@ define([
     '../../Core/Event',
     '../../Core/CartographicGeocoderService',
     '../../Core/Matrix4',
-    '../../Core/Rectangle',
     '../../ThirdParty/knockout',
     '../../ThirdParty/when',
     '../createCommand',
@@ -19,7 +17,6 @@ define([
     ], function(
         BingMapsApi,
         BingMapsGeocoderService,
-        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
@@ -28,7 +25,6 @@ define([
         Event,
         CartographicGeocoderService,
         Matrix4,
-        Rectangle,
         knockout,
         when,
         createCommand,

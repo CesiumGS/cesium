@@ -1,17 +1,13 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../Core/Matrix4',
         './BoundingSphereState'
     ], function(
         BoundingSphere,
-        defaultValue,
         defined,
         DeveloperError,
-        Matrix4,
         BoundingSphereState) {
     'use strict';
 
