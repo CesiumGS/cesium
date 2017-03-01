@@ -2,14 +2,31 @@
 defineSuite([
     'Core/BingMapsGeocoderService',
     'Core/loadJsonp',
-    'Core/Rectangle'
+    'Core/Rectangle',
+    'Specs/createScene'
 ], function(
     BingMapsGeocoderService,
     loadJsonp,
-    Rectangle) {
+    Rectangle,
+    createScene) {
     'use strict';
 
-    var service = new BingMapsGeocoderService();
+    var service;
+    var scene;
+    beforeEach(function() {
+        scene = createScene();
+        service = new BingMapsGeocoderService({scene: scene});
+    });
+
+    afterEach(function() {
+        scene.destroyForSpecs();
+    });
+
+    it('constructor throws without scene', function() {
+        expect(function() {
+            return new BingMapsGeocoderService();
+        }).toThrowDeveloperError();
+    });
 
     it('returns geocoder results', function (done) {
         var query = 'some query';
