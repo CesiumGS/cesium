@@ -1,26 +1,24 @@
 /*global define*/
 define([
-    '../../Core/BingMapsApi',
-    '../../Core/BingMapsGeocoderService',
-    '../../Core/defaultValue',
-    '../../Core/defined',
-    '../../Core/defineProperties',
-    '../../Core/deprecationWarning',
-    '../../Core/DeveloperError',
-    '../../Core/Event',
-    '../../Core/CartographicGeocoderService',
-    '../../Core/Matrix4',
-    '../../ThirdParty/knockout',
-    '../../ThirdParty/when',
-    '../createCommand',
-    '../getElement'
+        '../../Core/BingMapsApi',
+        '../../Core/BingMapsGeocoderService',
+        '../../Core/defaultValue',
+        '../../Core/defined',
+        '../../Core/defineProperties',
+        '../../Core/DeveloperError',
+        '../../Core/Event',
+        '../../Core/CartographicGeocoderService',
+        '../../Core/Matrix4',
+        '../../ThirdParty/knockout',
+        '../../ThirdParty/when',
+        '../createCommand',
+        '../getElement'
     ], function(
         BingMapsApi,
         BingMapsGeocoderService,
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         CartographicGeocoderService,
@@ -263,34 +261,6 @@ define([
     }
 
     defineProperties(GeocoderViewModel.prototype, {
-        /**
-         * Gets the Bing maps url.
-         * @deprecated
-         * @memberof GeocoderViewModel.prototype
-         *
-         * @type {String}
-         */
-        url : {
-            get : function() {
-                deprecationWarning('url is deprecated', 'The url property was deprecated in Cesium 1.30 and will be removed in version 1.31.');
-                return this._url;
-            }
-        },
-
-        /**
-         * Gets the Bing maps key.
-         * @deprecated
-         * @memberof GeocoderViewModel.prototype
-         *
-         * @type {String}
-         */
-        key : {
-            get : function() {
-                deprecationWarning('key is deprecated', 'The key property was deprecated in Cesium 1.30 and will be removed in version 1.31.');
-                return this._key;
-            }
-        },
-
         /**
          * Gets the event triggered on flight completion.
          * @memberof GeocoderViewModel.prototype
