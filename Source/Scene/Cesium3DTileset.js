@@ -1224,7 +1224,6 @@ define([
             for (i = 0; i < childrenLength; ++i) {
                 child = children[i];
                 if (child.contentReady) {
-                    child._finalResolution = true;
                     child._targetDistanceToCamera = child.distanceToCamera;
                     touch(tileset, child, outOfCore);
                     selectTile(tileset, child, child.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
@@ -1242,7 +1241,6 @@ define([
             var tile = getNearestLoadedAncestor(original);
             if (defined(tile)) {
                 if (!tile.selected) {
-                    tile._finalResolution = (tile === original);
                     tile._targetDistanceToCamera = original.distanceToCamera;
                     touch(tileset, tile, outOfCore);
                     selectTile(tileset, tile, tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
@@ -1252,7 +1250,6 @@ define([
             }
         }
     }
-
 
     function markTilesForLoad(tiles) {
         var length = tiles.length;
@@ -1268,6 +1265,22 @@ define([
             if (tile._needsRequest && tile.canRequestContent()) {
                 tile._needsRequest = false;
                 requestContent(tileset, tile, outOfCore);
+            }
+        }
+    }
+
+    function markTilesAsFinal(tiles) {
+        var length = tiles.length;
+        var i;
+        for (i = 0; i < length; ++i) {
+            tiles[i]._finalResolution = true;
+        }
+
+        for (i = 0; i < length; ++i) {
+            var parent = tiles[i].parent;
+            while (defined(parent)) {
+                parent._finalResolution = false;
+                parent = parent.parent;
             }
         }
     }
@@ -1291,6 +1304,10 @@ define([
         } else {
             array.push(item);
         }
+    }
+
+    function pop(array) {
+        return array[--array._length];
     }
 
     function selectTilesSkip(tileset, frameState, outOfCore) {
@@ -1369,7 +1386,10 @@ define([
 
         selectNearestLoadedTiles(finalQueue, tileset, frameState, outOfCore);
 
-        tileset._selectedTiles.sort(function(a, b) {
+        var selectedTiles = tileset._selectedTiles;
+        markTilesAsFinal(selectedTiles);
+
+        selectedTiles.sort(function(a, b) {
             if (a._finalResolution !== b._finalResolution) {
                 return b._finalResolution - a._finalResolution;
             }
