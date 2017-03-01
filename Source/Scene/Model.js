@@ -2234,7 +2234,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var cachedTexturesByContextId = {};
+    var resourcesCachedAcrossModels = {};
 
     function createTexture(gltfTexture, model, context) {
         var textures = model.gltf.textures;
@@ -2251,7 +2251,7 @@ define([
              (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
              (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
              (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
-        var requiresNpot = mipmap ||
+        var requiresPowerOfTwo = mipmap ||
             (sampler.wrapS === TextureWrap.REPEAT) ||
             (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
             (sampler.wrapT === TextureWrap.REPEAT) ||
@@ -2259,24 +2259,6 @@ define([
 
         var tx;
         var source = gltfTexture.image;
-
-        var cachedTextures = cachedTexturesByContextId[context.id];
-        if (!defined(cachedTextures)) {
-            cachedTextures = cachedTexturesByContextId[context.id] = {};
-        }
-
-        if (defined(source)) {
-            var cacheKey = source.src;
-            var cachedTexture = cachedTextures[cacheKey];
-            if (defined(cachedTexture)) {
-                if (!defined(cachedTexture._referenceCount)) {
-                    cachedTexture._referenceCount = 1;
-                } else {
-                    ++cachedTexture._referenceCount;
-                }
-                return cachedTexture;
-            }
-        }
 
         if (defined(internalFormat) && texture.target === WebGLConstants.TEXTURE_2D) {
             tx = new Texture({
@@ -2290,9 +2272,30 @@ define([
                 sampler : sampler
             });
         } else if (defined(source)) {
+            var cacheKey;
+
+            // Only try to cache textures created from an image with a reasonably short src URL.
+            // i.e. not data URIs.
+            if (defined(source.src) && source.src.length < 1024) {
+                cacheKey = JSON.stringify([
+                    context.id,
+                    requiresPowerOfTwo,
+                    source.src,
+                    texture.internalFormat,
+                    texture.type,
+                    sampler
+                ]);
+
+                var cachedTexture = resourcesCachedAcrossModels[cacheKey];
+                if (defined(cachedTexture)) {
+                    ++cachedTexture._referenceCount;
+                    return cachedTexture;
+                }
+            }
+
             var npot = !CesiumMath.isPowerOfTwo(source.width) || !CesiumMath.isPowerOfTwo(source.height);
 
-            if (requiresNpot && npot) {
+            if (requiresPowerOfTwo && npot) {
                 // WebGL requires power-of-two texture dimensions for mipmapping and REPEAT/MIRRORED_REPEAT wrap modes.
                 var canvas = document.createElement('canvas');
                 canvas.width = CesiumMath.nextPowerOfTwo(source.width);
@@ -2318,7 +2321,11 @@ define([
                 tx.generateMipmap();
             }
 
-            cachedTextures[source.src] = tx;
+            if (defined(cacheKey)) {
+                tx._referenceCount = 1;
+                tx._cacheKey = cacheKey;
+                resourcesCachedAcrossModels[cacheKey] = tx;
+            }
         }
 
         model._rendererResources.textures[gltfTexture.id] = tx;
@@ -4241,6 +4248,9 @@ define([
                 if (defined(resource._referenceCount)) {
                     --resource._referenceCount;
                     if (resource._referenceCount === 0) {
+                        if (defined(resource._cacheKey)) {
+                            delete resourcesCachedAcrossModels[resource._cacheKey];
+                        }
                         resource.destroy();
                     }
                 } else {
