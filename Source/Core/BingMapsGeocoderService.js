@@ -17,7 +17,7 @@ define([
     Rectangle) {
     'use strict';
 
-   var url = 'https://dev.virtualearth.net/REST/v1/Locations';
+    var url = 'https://dev.virtualearth.net/REST/v1/Locations';
 
     /**
      * Provides geocoding through Bing Maps.
