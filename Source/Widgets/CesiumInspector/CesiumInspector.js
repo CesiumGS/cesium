@@ -80,6 +80,7 @@ define([
         generalSection.className = 'cesium-cesiumInspector-section';
         generalSection.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : generalVisible, "cesium-cesiumInspector-hide" : !generalVisible}');
         panel.appendChild(generalSection);
+
         var debugShowFrustums = document.createElement('div');
         generalSection.appendChild(debugShowFrustums);
         var frustumStats = document.createElement('div');
@@ -91,6 +92,14 @@ define([
         debugShowFrustums.appendChild(frustumsCheckbox);
         debugShowFrustums.appendChild(document.createTextNode('Show Frustums'));
         debugShowFrustums.appendChild(frustumStats);
+
+        var debugShowFrustumPlanes = document.createElement('div');
+        generalSection.appendChild(debugShowFrustumPlanes);
+        var frustumPlanesCheckbox = document.createElement('input');
+        frustumPlanesCheckbox.type = 'checkbox';
+        frustumPlanesCheckbox.setAttribute('data-bind', 'checked: frustumPlanes');
+        debugShowFrustumPlanes.appendChild(frustumPlanesCheckbox);
+        debugShowFrustumPlanes.appendChild(document.createTextNode('Show Frustum Planes'));
 
         var performanceDisplay = document.createElement('div');
         generalSection.appendChild(performanceDisplay);

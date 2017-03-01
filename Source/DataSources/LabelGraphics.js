@@ -45,6 +45,7 @@ define([
      * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      * @param {Property} [options.pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
+     * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to set scale based on distance from the camera.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
      *
@@ -87,6 +88,8 @@ define([
         this._translucencyByDistanceSubscription = undefined;
         this._pixelOffsetScaleByDistance = undefined;
         this._pixelOffsetScaleByDistanceSubscription = undefined;
+        this._scaleByDistance = undefined;
+        this._scaleByDistanceSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
@@ -290,6 +293,18 @@ define([
         pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance'),
 
         /**
+         * Gets or sets near and far scaling properties of a Label based on the label's distance from the camera.
+         * A label's scale will interpolate between the {@link NearFarScalar#nearValue} and
+         * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+         * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+         * Outside of these ranges the label's scale remains clamped to the nearest bound.  If undefined,
+         * scaleByDistance will be disabled.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         */
+        scaleByDistance : createPropertyDescriptor('scaleByDistance'),
+
+        /**
          * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this label will be displayed.
          * @memberof LabelGraphics.prototype
          * @type {Property}
@@ -325,6 +340,7 @@ define([
         result.pixelOffset = this.pixelOffset;
         result.translucencyByDistance = this.translucencyByDistance;
         result.pixelOffsetScaleByDistance = this.pixelOffsetScaleByDistance;
+        result.scaleByDistance = this.scaleByDistance;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
@@ -360,6 +376,7 @@ define([
         this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
         this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
+        this.scaleByDistance = defaultValue(this._scaleByDistance, source.scaleByDistance);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 

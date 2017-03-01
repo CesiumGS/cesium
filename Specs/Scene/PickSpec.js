@@ -1,6 +1,5 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/Cartesian2',
         'Core/FeatureDetection',
         'Core/GeometryInstance',
         'Core/Math',
@@ -13,7 +12,6 @@ defineSuite([
         'Scene/SceneMode',
         'Specs/createScene'
     ], 'Scene/Pick', function(
-        Cartesian2,
         FeatureDetection,
         GeometryInstance,
         CesiumMath,

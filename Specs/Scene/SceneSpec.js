@@ -8,6 +8,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/GeometryInstance',
+        'Core/Math',
         'Core/PixelFormat',
         'Core/Rectangle',
         'Core/RectangleGeometry',
@@ -18,7 +19,9 @@ defineSuite([
         'Renderer/Framebuffer',
         'Renderer/Pass',
         'Renderer/PixelDatatype',
+        'Renderer/RenderState',
         'Renderer/ShaderProgram',
+        'Renderer/ShaderSource',
         'Renderer/Texture',
         'Scene/Camera',
         'Scene/EllipsoidSurfaceAppearance',
@@ -43,6 +46,7 @@ defineSuite([
         Ellipsoid,
         GeographicProjection,
         GeometryInstance,
+        CesiumMath,
         PixelFormat,
         Rectangle,
         RectangleGeometry,
@@ -53,7 +57,9 @@ defineSuite([
         Framebuffer,
         Pass,
         PixelDatatype,
+        RenderState,
         ShaderProgram,
+        ShaderSource,
         Texture,
         Camera,
         EllipsoidSurfaceAppearance,
@@ -72,9 +78,21 @@ defineSuite([
     'use strict';
 
     var scene;
+    var simpleShaderProgram;
+    var simpleRenderState;
 
     beforeAll(function() {
         scene = createScene();
+        simpleShaderProgram = ShaderProgram.fromCache({
+            context : scene.context,
+            vertexShaderSource : new ShaderSource({
+                sources : ['void main() { gl_Position = vec4(1.0); }']
+            }),
+            fragmentShaderSource : new ShaderSource({
+                sources : ['void main() { gl_FragColor = vec4(1.0); }']
+            })
+        });
+        simpleRenderState = new RenderState();
     });
 
     afterEach(function() {
@@ -82,7 +100,7 @@ defineSuite([
         scene.debugCommandFilter = undefined;
         scene.fxaa = false;
         scene.primitives.removeAll();
-        scene.morphTo3D();
+        scene.morphTo3D(0.0);
     });
 
     afterAll(function() {
@@ -197,6 +215,8 @@ defineSuite([
 
     it('debugCommandFilter filters commands', function() {
         var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
             pass : Pass.OPAQUE
         });
         c.execute = function() {};
@@ -214,6 +234,8 @@ defineSuite([
 
     it('debugCommandFilter does not filter commands', function() {
         var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
             pass : Pass.OPAQUE
         });
         c.execute = function() {};
@@ -227,12 +249,15 @@ defineSuite([
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
-        var radius = Cartesian3.magnitude(scene.camera.position) - 10.0;
+        var radius = 10.0;
+        var center = Cartesian3.add(scene.camera.position, scene.camera.direction, new Cartesian3());
 
         var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
             pass : Pass.OPAQUE,
             debugShowBoundingVolume : true,
-            boundingVolume : new BoundingSphere(Cartesian3.ZERO, radius)
+            boundingVolume : new BoundingSphere(center, radius)
         });
         c.execute = function() {};
 
@@ -246,13 +271,9 @@ defineSuite([
 
     it('debugShowCommands tints commands', function() {
         var c = new DrawCommand({
-            pass : Pass.OPAQUE,
-
-            shaderProgram : ShaderProgram.fromCache({
-                context : scene.context,
-                vertexShaderSource : 'void main() { gl_Position = vec4(1.0); }',
-                fragmentShaderSource : 'void main() { gl_FragColor = vec4(1.0); }'
-            })
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
+            pass : Pass.OPAQUE
         });
         c.execute = function() {};
 
@@ -627,6 +648,9 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    var pickedPosition3D = new Cartesian3(-455845.46867895435, -5210337.548977215, 3637549.8562320103);
+    var pickedPosition2D = new Cartesian3(-455861.7055871038, -5210523.137686572, 3637866.6638769475);
+
     it('pickPosition', function() {
         if (!scene.pickPositionSupported) {
             return;
@@ -651,7 +675,67 @@ defineSuite([
 
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
-            expect(position).toBeDefined();
+            expect(position).toEqualEpsilon(pickedPosition3D, CesiumMath.EPSILON6);
+        });
+    });
+
+    it('pickPosition in CV', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        scene.morphToColumbusView(0.0);
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({ destination : rectangle });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON6);
+        });
+    });
+
+    it('pickPosition in 2D', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        scene.morphTo2D(0.0);
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({ destination : rectangle });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON6);
         });
     });
 
@@ -684,6 +768,66 @@ defineSuite([
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
             expect(position).toBeDefined();
+        });
+    });
+
+    it('pickPosition picks translucent geometry when pickTranslucentDepth is true', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({
+            destination : rectangle
+        });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        var rectanglePrimitive = createRectangle(rectangle);
+        rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive);
+
+        scene.useDepthPicking = true;
+        scene.pickTranslucentDepth = false;
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+        });
+
+        scene.pickTranslucentDepth = true;
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toBeDefined();
+        });
+
+        var rectanglePrimitive2 = createRectangle(rectangle);
+        rectanglePrimitive2.appearance.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
+        primitives.add(rectanglePrimitive2);
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toBeDefined();
+
+            var commandList = scene.frameState.commandList;
+            expect(commandList.length).toEqual(2);
+
+            var command1 = commandList[0];
+            var command2 = commandList[1];
+
+            expect(command1.derivedCommands).toBeDefined();
+            expect(command2.derivedCommands).toBeDefined();
+
+            expect(command1.derivedCommands.depth).toBeDefined();
+            expect(command2.derivedCommands.depth).toBeDefined();
+
+            expect(command1.derivedCommands.depth.depthOnlyCommand).toBeDefined();
+            expect(command2.derivedCommands.depth.depthOnlyCommand).toBeDefined();
+
+            expect(command1.derivedCommands.depth.depthOnlyCommand.shaderProgram).toEqual(command2.derivedCommands.depth.depthOnlyCommand.shaderProgram);
+            expect(command1.derivedCommands.depth.depthOnlyCommand.renderState).toEqual(command2.derivedCommands.depth.depthOnlyCommand.renderState);
         });
     });
 
@@ -905,7 +1049,7 @@ defineSuite([
         }
         s.destroyForSpecs();
     });
-    
+
     it('does not throw with debugShowFrustums', function() {
         var s = createScene();
         if (s.context.drawBuffers) {

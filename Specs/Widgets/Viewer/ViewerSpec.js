@@ -826,6 +826,30 @@ defineSuite([
         viewer.destroy();
     });
 
+    it('raises an event when the selected entity changes', function() {
+        var viewer = createViewer(container);
+
+        var dataSource = new MockDataSource();
+        viewer.dataSources.add(dataSource);
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+
+        dataSource.entities.add(entity);
+
+        var myEntity;
+        viewer.selectedEntityChanged.addEventListener(function(newSelection) {
+            myEntity = newSelection;
+        });
+        viewer.selectedEntity = entity;
+        expect(myEntity).toBe(entity);
+
+        viewer.selectedEntity = undefined;
+        expect(myEntity).toBeUndefined();
+
+        viewer.destroy();
+    });
+
     it('selectedEntity sets InfoBox properties', function() {
         var viewer = createViewer(container);
 

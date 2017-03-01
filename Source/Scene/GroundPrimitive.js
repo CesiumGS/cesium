@@ -5,8 +5,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
-        '../Core/clone',
-        '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
@@ -41,8 +39,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
-        clone,
-        Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
@@ -84,9 +80,8 @@ define([
      * is supported at this time.
      * </p>
      * <p>
-     * Because of the cutting edge nature of this feature in WebGL, it requires the EXT_frag_depth extension, which is currently only supported in Chrome,
-     * Firefox, Edge, and Safari 10. It's not yet supported in iOS 10. Android support varies by hardware and IE11 will most likely never support
-     * it. You can use webglreport.com to verify support for your hardware.
+     * For correct rendering, this feature requires the EXT_frag_depth WebGL extension. For hardware that do not support this extension, there
+     * will be rendering artifacts for some viewing angles.
      * </p>
      * <p>
      * Valid geometries are {@link CircleGeometry}, {@link CorridorGeometry}, {@link EllipseGeometry}, {@link PolygonGeometry}, and {@link RectangleGeometry}.
@@ -400,7 +395,7 @@ define([
      * @returns {Boolean} <code>true</code> if GroundPrimitives are supported; otherwise, returns <code>false</code>
      */
     GroundPrimitive.isSupported = function(scene) {
-        return scene.context.fragmentDepth && scene.context.stencilBuffer;
+        return scene.context.stencilBuffer;
     };
 
     GroundPrimitive._defaultMaxTerrainHeight = 9000.0;
@@ -1032,8 +1027,7 @@ define([
      * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     GroundPrimitive.prototype.update = function(frameState) {
-        var context = frameState.context;
-        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
+        if (!this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
             return;
         }
 

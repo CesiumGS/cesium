@@ -527,15 +527,22 @@ defineSuite([
             return;
         }
 
+        var source = new Uint8Array(4);
         var colorTexture0 = new Texture({
             context : context,
-            width : 1,
-            height : 1
+            source : {
+                arrayBufferView : source,
+                width : 1,
+                height : 1
+            }
         });
         var colorTexture1 = new Texture({
             context : context,
-            width : 1,
-            height : 1
+            source : {
+                arrayBufferView : source,
+                width : 1,
+                height : 1
+            }
         });
         framebuffer = new Framebuffer({
             context : context,

@@ -117,7 +117,14 @@ define([
              * @type {Boolean}
              * @default false
              */
-            pick : false
+            pick : false,
+
+            /**
+             * <code>true</code> if the primitive should update for a depth only pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            depth : false
         };
 
         /**
@@ -189,7 +196,7 @@ define([
             /**
              * All shadow maps that are enabled this frame.
              */
-             shadowMaps : [],
+            shadowMaps : [],
 
             /**
              * Shadow maps that originate from light sources. Does not include shadow maps that are used for
@@ -235,6 +242,13 @@ define([
         * @default 0.0
         */
         this.imagerySplitPosition = 0.0;
+
+        /**
+         * Distances to the near and far planes of the camera frustums
+         * @type {Number[]}
+         * @default []
+         */
+        this.frustumSplits = [];
     }
 
     /**

@@ -5,20 +5,14 @@ defineSuite([
         'Core/Color',
         'Core/loadImage',
         'Core/PixelFormat',
-        'Core/PrimitiveType',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
-        'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
         'Renderer/Sampler',
-        'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
-        'Renderer/VertexArray',
         'Specs/createContext',
         'ThirdParty/when'
     ], function(
@@ -27,20 +21,14 @@ defineSuite([
         Color,
         loadImage,
         PixelFormat,
-        PrimitiveType,
-        Buffer,
-        BufferUsage,
         ClearCommand,
         ContextLimits,
-        DrawCommand,
         PixelDatatype,
         Sampler,
-        ShaderProgram,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
-        VertexArray,
         createContext,
         when) {
     'use strict';
@@ -82,7 +70,8 @@ defineSuite([
             expect({
                 context : context,
                 fragmentShader : fs,
-                uniformMap : uniformMap
+                uniformMap : uniformMap,
+                epsilon : options.epsilon
             }).contextToRender(expectedColors[i]);
         }
     }
@@ -239,6 +228,7 @@ defineSuite([
 
         expectCubeMapFaces({
             cubeMap : cubeMap,
+            epsilon : 1,
             expectedColors : [
                 [0, 0, 127, 255], // +X
                 [0, 0, 127, 255], // -X
