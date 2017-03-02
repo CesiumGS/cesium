@@ -56,6 +56,10 @@ define([
             dt = JulianDate.secondsDifference(frameState.time, this._previousTime);
         }
 
+        if (dt < 0.0) {
+            dt = 0.0;
+        }
+
 
         var particles = this.particles;
         var emitter = this.emitter;
