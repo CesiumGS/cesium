@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Particle systems.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+var entityPosition = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 5000.0);
+
+
+function createModel(url) {
+    viewer.entities.removeAll();
+
+    var heading = Cesium.Math.toRadians(135);
+    var pitch = 0;
+    var roll = 0;
+    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(entityPosition, hpr);
+
+    var entity = viewer.entities.add({
+        name : url,
+        position : entityPosition,
+        orientation : orientation,
+        model : {
+            uri : url,
+            minimumPixelSize : 128,
+            maximumScale : 20000
+        }
+    });
+    viewer.trackedEntity = entity;
+    return entity;
+}
+
+var entity = createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb');
+
+// Center gravity around the entity.
+var up = new Cesium.Cartesian3();
+Cesium.Cartesian3.normalize(entityPosition, up);
+var gravity = new Cesium.Cartesian3();
+Cesium.Cartesian3.multiplyByScalar(up, -9.8, gravity);
+
+var scene = viewer.scene;
+scene.debugShowFramesPerSecond = true;
+
+var modelMatrixScratch = new Cesium.Matrix4();
+var modelMatrix = entity._getModelMatrix(viewer.clock.currentTime, modelMatrixScratch);
+
+var numberOfPoints = 1000.0;
+
+var radius = 50.0;
+
+var initialParticles = [];
+
+var particleSize = 50.0;
+
+/*
+for (var i = 0; i < numberOfPoints; i++) {
+
+    var x = -radius + Math.random() * radius * 2.0;
+    var y = -radius + Math.random() * radius * 2.0;
+    var z = -radius + Math.random() * radius * 2.0;
+
+    var position = new Cesium.Cartesian3(x, y, z);
+    // Change the position to be in world coordinates
+    position = Cesium.Matrix4.multiplyByPoint(modelMatrix, position, position);
+
+    var particle = new Cesium.Particle({
+        position: position,
+        image: "https://t6.rbxcdn.com/2ca5ec997e131a94f8d87e2de5d99872",
+        size: new Cesium.Cartesian3(10,10),
+        life: 5.0
+    });
+    initialParticles.push( particle );
+}
+*/
+
+function applyGravity(p, dt) {
+    var vChange = new Cesium.Cartesian3();
+    Cesium.Cartesian3.multiplyByScalar(gravity, dt, vChange);
+    var newV = new Cesium.Cartesian3();
+    p.velocity = Cesium.Cartesian3.add(p.velocity, vChange, newV);
+}
+
+function adjustSize(p, dt) {
+   var normalizedAge = 1.0 - p.normalizedAge;
+   var size = particleSize * normalizedAge;
+   p.size = new Cesium.Cartesian2(size, size);
+}
+
+var emitter = new Cesium.PointEmitter({
+    initialLife: 5.0,
+    lifeVariance: 5.0,
+    initialDirection: up,
+    directionVariance: new Cesium.Cartesian3(5, 5, 5),
+    speedVariance: 50.0,
+    initialSize: new Cesium.Cartesian2(particleSize, particleSize),
+    modelMatrix: modelMatrix,
+    image: "https://t6.rbxcdn.com/2ca5ec997e131a94f8d87e2de5d99872"
+});
+
+var particles = scene.primitives.add(new Cesium.ParticleSystem({
+    particles: initialParticles,
+    emitter: emitter,
+    forces: [applyGravity,
+            adjustSize
+            ]
+}));
+
+
+var previousTime = null;
+
+var frame = 0;
+
+viewer.scene.preRender.addEventListener(function(scene, time) {
+    var dt = 0.0;
+    var i = 0;
+    if (previousTime) {
+        dt = Cesium.JulianDate.secondsDifference(time, previousTime);
+    }
+
+    previousTime = time;
+});
+
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+
+</body>
+</html>
