@@ -1224,6 +1224,7 @@ define([
             for (i = 0; i < childrenLength; ++i) {
                 child = children[i];
                 if (child.contentReady) {
+                    tile._finalResolution = true;
                     child._targetDistanceToCamera = child.distanceToCamera;
                     touch(tileset, child, outOfCore);
                     selectTile(tileset, child, child.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
@@ -1241,6 +1242,7 @@ define([
             var tile = getNearestLoadedAncestor(original);
             if (defined(tile)) {
                 if (!tile.selected) {
+                    tile._finalResolution = (tile === original);
                     tile._targetDistanceToCamera = original.distanceToCamera;
                     touch(tileset, tile, outOfCore);
                     selectTile(tileset, tile, tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
@@ -1306,8 +1308,20 @@ define([
         }
     }
 
-    function pop(array) {
-        return array[--array._length];
+    function sortForSelection(a, b) {
+        if (a._finalResolution !== b._finalResolution) {
+            return b._finalResolution - a._finalResolution;
+        }
+        return a._targetDistanceToCamera - b._targetDistanceToCamera;
+    }
+
+    function sortForLoad(a, b) {
+        var diff = b._sse - a._sse;
+        if (diff === 0) {
+            return a.distanceToCamera - b.distanceToCamera;
+        } else {
+            return diff;
+        }
     }
 
     function selectTilesSkip(tileset, frameState, outOfCore) {
@@ -1389,21 +1403,9 @@ define([
         var selectedTiles = tileset._selectedTiles;
         markTilesAsFinal(selectedTiles);
 
-        selectedTiles.sort(function(a, b) {
-            if (a._finalResolution !== b._finalResolution) {
-                return b._finalResolution - a._finalResolution;
-            }
-            return a._targetDistanceToCamera - b._targetDistanceToCamera;
-        });
+        selectedTiles.sort(sortForSelection);
 
-        loadQueue.sort(function(a, b) {
-            var diff = b._sse - a._sse;
-            if (diff === 0) {
-                return a.distanceToCamera - b.distanceToCamera;
-            } else {
-                return diff;
-            }
-        });
+        loadQueue.sort(sortForLoad);
         markTilesForLoad(loadQueue, tileset, outOfCore);
         loadTiles(loadQueue, tileset, outOfCore);
     }
