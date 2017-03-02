@@ -1453,7 +1453,7 @@ define([
                 this._rsOpaque = RenderState.fromCache({
                     depthTest : {
                         enabled : true,
-                        func : WebGLConstants.LEQUAL  // Allows label glyphs and billboards to overlap.
+                        func : WebGLConstants.LESS
                     },
                     depthMask : true
                 });
@@ -1465,7 +1465,8 @@ define([
                 this._rsTranslucent = RenderState.fromCache({
                     depthTest : {
                         enabled : true,
-                        func : WebGLConstants.LEQUAL  // Allows label glyphs and billboards to overlap.
+                        // Allows label glyphs and billboards to overlap.
+                        func : ((this._blendOption === BlendOption.TRANSLUCENT) ? WebGLConstants.LEQUAL : WebGLConstants.LESS)
                     },
                     depthMask : this._blendOption === BlendOption.TRANSLUCENT,
                     blending : BlendingState.ALPHA_BLEND
