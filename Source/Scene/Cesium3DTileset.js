@@ -1109,11 +1109,18 @@ define([
         return error;
     }
 
+    var scratchCartesian = new Cartesian3();
+
     function computeDistanceToCamera(children, frameState) {
         var length = children.length;
         for (var i = 0; i < length; ++i) {
             var child = children[i];
             child.distanceToCamera = child.distanceToTile(frameState);
+
+            var toBoundingVolume = Cartesian3.subtract(child.boundingSphere.center, frameState.camera.positionWC, scratchCartesian);
+            var distance = Cartesian3.magnitude(toBoundingVolume);
+            Cartesian3.divideByScalar(toBoundingVolume, distance, toBoundingVolume);
+            child._centerDistanceToCamera = distance * Cartesian3.dot(frameState.camera.directionWC, toBoundingVolume);
         }
     }
 
@@ -1276,24 +1283,6 @@ define([
         }
     }
 
-    function markTilesForLoad(tiles) {
-        var length = tiles.length;
-        for (var i = 0; i < length; ++i) {
-            tiles[i]._needsRequest = true;
-        }
-    }
-
-    function loadTiles(tiles, tileset, outOfCore) {
-        var length = tiles.length;
-        for (var i = 0; i < length; ++i) {
-            var tile = tiles[i];
-            if (tile._needsRequest && tile.canRequestContent()) {
-                tile._needsRequest = false;
-                requestContent(tileset, tile, outOfCore);
-            }
-        }
-    }
-
     function markTilesAsFinal(tiles) {
         var length = tiles.length;
         var i;
@@ -1304,7 +1293,8 @@ define([
         for (i = 0; i < length; ++i) {
             var parent = tiles[i].parent;
             while (defined(parent)) {
-                parent._finalResolution = parent.refine === Cesium3DTileRefine.ADD;
+                // tiles using additive refinement are always final
+                parent._finalResolution = (parent.refine === Cesium3DTileRefine.ADD);
                 parent = parent.parent;
             }
         }
@@ -1331,10 +1321,12 @@ define([
     }
 
     function sortForSelection(a, b) {
-        if (a._finalResolution !== b._finalResolution) {
-            return b._finalResolution - a._finalResolution;
-        }
-        return a._targetDistanceToCamera - b._targetDistanceToCamera;
+        // if (a._finalResolution !== b._finalResolution) {
+        //     return b._finalResolution - a._finalResolution;
+        // }
+        // return a._targetDistanceToCamera - b._targetDistanceToCamera;
+        // return a._centerDistanceToCamera - b._centerDistanceToCamera;
+        return Math.min(a._centerDistanceToCamera, a._targetDistanceToCamera) - Math.min(b._centerDistanceToCamera, b._targetDistanceToCamera);
     }
 
     function sortForLoad(a, b) {
@@ -1446,6 +1438,7 @@ define([
         var finalQueue = selectionState.finalQueue;
         var skipDivisor = 1 / tileset.skipFactor;
         var length = processingQueue._length;
+        var mixLOD = tileset.mixLOD;
 
         for (var i = 0; i < length; ++i) {
             var processTile = processingQueue[i];
@@ -1453,7 +1446,7 @@ define([
             var finalCount = finalQueue._length;
 
             var refined = queueDescendantsMeetingSSE(tileset, processTile, processTile._sse * skipDivisor, selectionState, frameState, outOfCore);
-            if (!tileset.mixLOD && !refined && !tileset.lowMemory) {
+            if (!mixLOD && !refined && !tileset.lowMemory) {
                 // tiles not refined. splice any descendants added
                 finalQueue._length = finalCount;
                 nextQueue._length = nextCount;
@@ -1474,6 +1467,7 @@ define([
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
 
         var refined = true;
+        var anyReady = false;
 
         var stack = tempStack;
 
@@ -1537,6 +1531,8 @@ define([
                 }
                 if (!tile.contentReady) {
                     refined = false;
+                } else {
+                    anyReady = true;
                 }
                 push(finalQueue, tile);
 
@@ -1560,6 +1556,8 @@ define([
                     }
                     if (!tile.contentReady) {
                         refined = false;
+                    } else {
+                        anyReady = true;
                     }
                     push(finalQueue, tile);
                 } else if (tile.hasContent && tile._sse < sse && !tileset.lowMemory) {
@@ -1568,6 +1566,8 @@ define([
                     }
                     if (!tile.contentReady) {
                         refined = false;
+                    } else {
+                        anyReady = true;
                     }
                     push(nextQueue, tile);
                 } else {
@@ -1584,6 +1584,10 @@ define([
                     }
                 }
             }
+        }
+
+        if (!anyReady) {
+            push(finalQueue, parent);
         }
 
         return refined;

@@ -364,6 +364,7 @@ define([
         this._contentParent = undefined;
         this._finalResolution = true;
         this._targetDistanceToCamera = 0;
+        this._centerDistanceToCamera = 0;
         this._loadHeap = undefined;
     }
 
