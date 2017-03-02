@@ -13,6 +13,7 @@ define([
         '../Core/Event',
         '../Core/getBaseUri',
         '../Core/getExtensionFromUri',
+        '../Core/Heap',
         '../Core/Intersect',
         '../Core/isDataUri',
         '../Core/joinUrls',
@@ -53,6 +54,7 @@ define([
         Event,
         getBaseUri,
         getExtensionFromUri,
+        Heap,
         Intersect,
         isDataUri,
         joinUrls,
@@ -464,10 +466,11 @@ define([
         });
 
         this.skipLODs = defaultValue(options.skipLODs, true);
-        this.skipFactor = defaultValue(options.skipFactor, 2);
+        this.skipFactor = defaultValue(options.skipFactor, 8);
         this.lowMemory = defaultValue(options.lowMemory, false);
         this.mixLOD = defaultValue(options.mixLOD, true);
-        this.stencilTiles = defaultValue(options.stencilTiles, true);
+        this._stencilTiles = defaultValue(options.stencilTiles, true);
+        this._loadHeaps = {};
     }
 
     function Cesium3DTilesetStatistics() {
@@ -839,6 +842,15 @@ define([
             get : function() {
                 return this._statistics;
             }
+        },
+
+        /**
+         * @private
+         */
+        stencilTiles : {
+            get : function() {
+                return this.skipLODs && this._stencilTiles && this.mixLOD;
+            }
         }
     });
 
@@ -930,6 +942,17 @@ define([
                     // Tiles that use replacement refinement and have empty child tiles need to keep track of
                     // descendants with content in order to refine correctly.
                     refiningTiles.push(tile3D);
+                }
+
+                var requestServer = tile3D.requestServer;
+                if (defined(requestServer)) {
+                    if (!defined(that._loadHeaps[requestServer])) {
+                        var heap = new Heap(sortForLoad);
+                        that._loadHeaps[requestServer] = heap;
+                        heap.maximumSize = RequestScheduler.maximumRequestsPerServer;
+                        heap.reserve(heap.maximumSize);
+                    }
+                    tile3D._loadHeap = that._loadHeaps[requestServer];
                 }
             }
 
@@ -1290,17 +1313,16 @@ define([
     var selectionState = {
         processingQueue: [],
         nextQueue: [],
-        loadQueue: [],
         finalQueue: [],
         done: false
     };
 
     selectionState.processingQueue._length = 0;
     selectionState.nextQueue._length = 0;
-    selectionState.loadQueue._length = 0;
     selectionState.finalQueue._length = 0;
 
-    function insertOrPush(array, index, item) {
+    function push(array, item) {
+        var index = array._length++;
         if (index < array.length) {
             array[index] = item;
         } else {
@@ -1364,20 +1386,18 @@ define([
             return;
         }
 
+        root._sse = getScreenSpaceError(tileset, root.geometricError, root, frameState);
+
         var processingQueue = selectionState.processingQueue;
         var nextQueue = selectionState.nextQueue;
-        var loadQueue = selectionState.loadQueue;
         var finalQueue = selectionState.finalQueue;
 
         processingQueue._length = 0;
         nextQueue._length = 0;
-        loadQueue._length = 0;
         finalQueue._length = 0;
 
-        insertOrPush(processingQueue, processingQueue._length++, root);
+        push(processingQueue, root);
         selectionState.done = false;
-
-        root._sse = getScreenSpaceError(tileset, root.geometricError, root, frameState);
 
         var processLength = 0;
         while (!selectionState.done) {
@@ -1392,22 +1412,32 @@ define([
         }
 
         // on the next frame, we will likely need an array about the same size
+        // this will free up memory if less tiles are processed
         processingQueue.length = processLength;
         nextQueue.length = processLength;
-
-        loadQueue.length = loadQueue._length;
         finalQueue.length = finalQueue._length;
 
         selectNearestLoadedTiles(finalQueue, tileset, frameState, outOfCore);
 
         var selectedTiles = tileset._selectedTiles;
-        markTilesAsFinal(selectedTiles);
+        if (!tileset.lowMemory) {
+            markTilesAsFinal(selectedTiles);
+        }
 
         selectedTiles.sort(sortForSelection);
 
-        loadQueue.sort(sortForLoad);
-        markTilesForLoad(loadQueue, tileset, outOfCore);
-        loadTiles(loadQueue, tileset, outOfCore);
+        var loadHeaps = tileset._loadHeaps;
+        for (var name in loadHeaps) {
+            if (loadHeaps.hasOwnProperty(name)) {
+                var heap = loadHeaps[name];
+                var t;
+                while(defined(t = heap.pop())) {
+                    if (t.canRequestContent()) {
+                        requestContent(tileset, t, outOfCore);
+                    }
+                }
+            }
+        }
     }
 
     function processSelectionQueue(tileset, frameState, selectionState, outOfCore) {
@@ -1427,7 +1457,7 @@ define([
                 // tiles not refined. splice any descendants added
                 finalQueue._length = finalCount;
                 nextQueue._length = nextCount;
-                insertOrPush(finalQueue, finalQueue._length++, processTile);
+                push(finalQueue, processTile);
             }
         }
         selectionState.done = (nextQueue._length === 0);
@@ -1438,7 +1468,6 @@ define([
     function queueDescendantsMeetingSSE(tileset, parent, sse, selectionState, frameState, outOfCore) {
         var stats = tileset._statistics;
 
-        var loadQueue = selectionState.loadQueue;
         var nextQueue = selectionState.nextQueue;
         var finalQueue = selectionState.finalQueue;
 
@@ -1470,11 +1499,11 @@ define([
             var child;
             if (tile.hasTilesetContent) {
                 if (tile.contentUnloaded) {
-                    insertOrPush(loadQueue, loadQueue._length++, tile);
+                    tile._loadHeap.insert(tile);
                 }
                 if (!tile.contentReady) {
                     refined = false;
-                    insertOrPush(finalQueue, finalQueue._length++, tile);
+                    push(finalQueue, tile);
                 } else {
                     child = tile.children[0];
                     child.visibilityPlaneMask = tile.visibilityPlaneMask;
@@ -1494,12 +1523,12 @@ define([
             var i;
             if (tile.refine === Cesium3DTileRefine.ADD) {
                 if (tile.contentUnloaded) {
-                    insertOrPush(loadQueue, loadQueue._length++, tile);
+                    tile._loadHeap.insert(tile);
                 }
                 if (!tile.contentReady) {
                     refined = false;
                 }
-                insertOrPush(finalQueue, finalQueue._length++, tile);
+                push(finalQueue, tile);
 
                 if (tile._sse > maximumScreenSpaceError) {
                     childrenVisibility = computeChildrenVisibility(tile, frameState, true);
@@ -1517,20 +1546,20 @@ define([
             } else {
                 if (tile._sse <= maximumScreenSpaceError || childrenLength === 0) {
                     if (tile.contentUnloaded) {
-                        insertOrPush(loadQueue, loadQueue._length++, tile);
+                        tile._loadHeap.insert(tile);
                     }
                     if (!tile.contentReady) {
                         refined = false;
                     }
-                    insertOrPush(finalQueue, finalQueue._length++, tile);
+                    push(finalQueue, tile);
                 } else if (tile.hasContent && tile._sse < sse && !tileset.lowMemory) {
                     if (tile.contentUnloaded) {
-                        insertOrPush(loadQueue, loadQueue._length++, tile);
+                        tile._loadHeap.insert(tile);
                     }
                     if (!tile.contentReady) {
                         refined = false;
                     }
-                    insertOrPush(nextQueue, nextQueue._length++, tile);
+                    push(nextQueue, tile);
                 } else {
                     childrenVisibility = computeChildrenVisibility(tile, frameState, true);
                     if (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) {
