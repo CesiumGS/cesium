@@ -19,6 +19,8 @@ define([
         this.velocity = Cartesian3.clone(defaultValue(options.velocity, Cartesian3.ZERO));
         this.life = defaultValue(options.life, Number.MAX_VALUE);
         this.image = defaultValue(options.image, null);
+        this.age = 0.0;
+        this.normalizedAge = 0.0;
 
         var size = Cartesian2.clone(options.size);
         if (!defined(size)) {
@@ -30,16 +32,28 @@ define([
 
     Particle.prototype.update = function(forces, dt) {
 
+        // Apply the velocity
         var delta = new Cartesian3();
         Cartesian3.multiplyByScalar(this.velocity, dt, delta);
         Cartesian3.add(this.position, delta, this.position);
 
+        // Update any forces.
         var length = forces.length;
         for (var i = 0; i < length; ++i) {
             forces[i](this, dt);
         }
 
-        return --this.life > 0.0;
+        // Age the particle
+        this.age += dt;
+
+        // Compute the normalized age.
+        this.normalizedAge = this.age / this.life;
+
+        // If this particle is older than it's lifespan then die.
+        if (this.age > this.life) {
+            return false;
+        }
+        return true;
     };
 
     return Particle;

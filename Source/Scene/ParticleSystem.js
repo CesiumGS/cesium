@@ -39,10 +39,9 @@ define([
             billboard = particle._billboard = system._billboardCollection.add({
                 image: particle.image
             });
-            billboard.width = particle.size.x;
-            billboard.height = particle.size.y;
         }
-
+        billboard.width = particle.size.x;
+        billboard.height = particle.size.y;
         billboard.position = particle.position;
     }
 
