@@ -1265,7 +1265,7 @@ define([
             var tile = getNearestLoadedAncestor(original);
             if (defined(tile)) {
                 if (!tile.selected) {
-                    tile._finalResolution = (tile === original);
+                    tile._finalResolution = (tile === original || tile.refine === Cesium3DTileRefine.ADD);
                     tile._targetDistanceToCamera = original.distanceToCamera;
                     touch(tileset, tile, outOfCore);
                     selectTile(tileset, tile, tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
@@ -1304,7 +1304,7 @@ define([
         for (i = 0; i < length; ++i) {
             var parent = tiles[i].parent;
             while (defined(parent)) {
-                parent._finalResolution = false;
+                parent._finalResolution = parent.refine === Cesium3DTileRefine.ADD;
                 parent = parent.parent;
             }
         }
@@ -1479,12 +1479,23 @@ define([
 
         touch(tileset, parent, outOfCore);
 
-        updateTransforms(parent.children, parent.computedTransform);
-        computeDistanceToCamera(parent.children, frameState);
+        var children = parent.children;
+        var childrenLength = children.length;
+        var i;
+
+        updateTransforms(children, parent.computedTransform);
+        computeDistanceToCamera(children, frameState);
 
         var childrenVisibility = computeChildrenVisibility(parent, frameState, true);
         if (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) {
-            stack.push.apply(stack, parent.children);
+            for (i = 0; i < childrenLength; ++i) {
+                child = children[i];
+                if (isVisible(child.visibilityPlaneMask)) {
+                    stack.push(child);
+                } else {
+                    touch(tileset, child, outOfCore);
+                }
+            }
         }
 
         while (stack.length > 0) {
@@ -1514,13 +1525,12 @@ define([
                 continue;
             }
 
-            var children = tile.children;
-            var childrenLength = children.length;
+            children = tile.children;
+            childrenLength = children.length;
 
             updateTransforms(children, tile.computedTransform);
             computeDistanceToCamera(children, frameState);
 
-            var i;
             if (tile.refine === Cesium3DTileRefine.ADD) {
                 if (tile.contentUnloaded) {
                     tile._loadHeap.insert(tile);
