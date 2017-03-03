@@ -1,36 +1,26 @@
 /*global define*/
 define([
-        '../../Core/BingMapsApi',
         '../../Core/BingMapsGeocoderService',
-        '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
-        '../../Core/deprecationWarning',
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/CartographicGeocoderService',
         '../../Core/Matrix4',
-        '../../Core/Rectangle',
-        '../../Core/RequestScheduler',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../createCommand',
         '../getElement'
     ], function(
-        BingMapsApi,
         BingMapsGeocoderService,
-        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         CartographicGeocoderService,
         Matrix4,
-        Rectangle,
-        RequestScheduler,
         knockout,
         when,
         createCommand,
@@ -47,14 +37,6 @@ define([
      * @param {GeocoderService[]} [options.geocoderServices] Geocoder services to use for geocoding queries.
      *        If more than one are supplied, suggestions will be gathered for the geocoders that support it,
      *        and if no suggestion is selected the result from the first geocoder service wil be used.
-     * @param {String} [options.url='https://dev.virtualearth.net'] The base URL of the Bing Maps API.
-     * @param {String} [options.key] The Bing Maps key for your application, which can be
-     *        created at {@link https://www.bingmapsportal.com}.
-     *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
-     *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
-     *        written to the console reminding you that you must create and supply a Bing Maps
-     *        key as soon as possible.  Please do not deploy an application that uses
-     *        this widget without creating a separate key for your application.
      * @param {Number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
      */
     function GeocoderViewModel(options) {
@@ -69,27 +51,8 @@ define([
         } else {
             this._geocoderServices = [
                 new CartographicGeocoderService(),
-                new BingMapsGeocoderService()
+                new BingMapsGeocoderService({scene: options.scene})
             ];
-        }
-
-        var errorCredit;
-        this._url = defaultValue(options.url, 'https://dev.virtualearth.net/');
-        if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
-            this._url += '/';
-        }
-
-        this._key = BingMapsApi.getKey(options.key);
-        this._defaultGeocoderOptions = {
-            url: this._url,
-            key: this._key
-        };
-
-        if (defined(options.key)) {
-            errorCredit = BingMapsApi.getErrorCredit(options.key);
-        }
-        if (defined(errorCredit)) {
-            options.scene._frameState.creditDisplay.addDefaultCredit(errorCredit);
         }
 
         this._viewContainer = options.container;
@@ -269,34 +232,6 @@ define([
     }
 
     defineProperties(GeocoderViewModel.prototype, {
-        /**
-         * Gets the Bing maps url.
-         * @deprecated
-         * @memberof GeocoderViewModel.prototype
-         *
-         * @type {String}
-         */
-        url : {
-            get : function() {
-                deprecationWarning('url is deprecated', 'The url property was deprecated in Cesium 1.30 and will be removed in version 1.31.');
-                return this._url;
-            }
-        },
-
-        /**
-         * Gets the Bing maps key.
-         * @deprecated
-         * @memberof GeocoderViewModel.prototype
-         *
-         * @type {String}
-         */
-        key : {
-            get : function() {
-                deprecationWarning('key is deprecated', 'The key property was deprecated in Cesium 1.30 and will be removed in version 1.31.');
-                return this._key;
-            }
-        },
-
         /**
          * Gets the event triggered on flight completion.
          * @memberof GeocoderViewModel.prototype

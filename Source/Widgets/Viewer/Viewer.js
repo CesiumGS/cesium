@@ -7,6 +7,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/Event',
         '../../Core/EventHelper',
         '../../Core/isArray',
         '../../Core/Matrix4',
@@ -49,6 +50,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        Event,
         EventHelper,
         isArray,
         Matrix4,
@@ -661,6 +663,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._zoomTarget = undefined;
         this._zoomPromise = undefined;
         this._zoomOptions = undefined;
+        this._selectedEntityChanged = new Event();
+        this._trackedEntityChanged = new Event();
 
         knockout.track(this, ['_trackedEntity', '_selectedEntity', '_clockTrackedDataSource']);
 
@@ -1168,12 +1172,13 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
                         this._entityView = undefined;
                         this.camera.lookAtTransform(Matrix4.IDENTITY);
-                        return;
+                    } else {
+                        //We can't start tracking immediately, so we set a flag and start tracking
+                        //when the bounding sphere is ready (most likely next frame).
+                        this._needTrackedEntityUpdate = true;
                     }
 
-                    //We can't start tracking immediately, so we set a flag and start tracking
-                    //when the bounding sphere is ready (most likely next frame).
-                    this._needTrackedEntityUpdate = true;
+                    this._trackedEntityChanged.raiseEvent(value);
                 }
             }
         },
@@ -1200,7 +1205,30 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                             selectionIndicatorViewModel.animateDepart();
                         }
                     }
+                    this._selectedEntityChanged.raiseEvent(value);
                 }
+            }
+        },
+        /**
+         * Gets the event that is raised when the selected entity chages
+         * @memberof Viewer.prototype
+         * @type {Event}
+         * @readonly
+         */
+        selectedEntityChanged : {
+            get : function() {
+                return this._selectedEntityChanged;
+            }
+        },
+        /**
+         * Gets the event that is raised when the tracked entity chages
+         * @memberof Viewer.prototype
+         * @type {Event}
+         * @readonly
+         */
+        trackedEntityChanged : {
+            get : function() {
+                return this._trackedEntityChanged;
             }
         },
         /**
