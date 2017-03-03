@@ -6,6 +6,7 @@ Change Log
 * Added the event `Viewer.trackedEntityChanged`, which is raised when the value of `viewer.trackedEntity` changes. [#5060](https://github.com/AnalyticalGraphicsInc/cesium/pull/5060)
 * Added `Camera.DEFAULT_OFFSET` for default view of objects with bounding spheres [#4936](https://github.com/AnalyticalGraphicsInc/cesium/pull/4936)
 * Fix crunch compressed textures in IE11. [#5057](https://github.com/AnalyticalGraphicsInc/cesium/pull/5057)
+* Fixed a bug in `Quaternion.fromHeadingPitchRoll` that made it erroneously throw an exception for correct inputs in an unminified / debug build.
 
 ### 1.31 - 2017-03-01
 
