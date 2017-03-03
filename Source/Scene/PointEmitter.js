@@ -6,7 +6,8 @@ define([
         '../Core/Cartesian3',
         '../Core/Matrix4',
         '../Core/Math',
-        './Particle'
+        './Particle',
+        './PointPlacer'
     ], function(
         defaultValue,
         defined,
@@ -14,7 +15,9 @@ define([
         Cartesian3,
         Matrix4,
         CesiumMath,
-        Particle) {
+        Particle,
+        PointPlacer
+        ) {
     "use strict";
 
     var PointEmitter = function(options) {
@@ -49,6 +52,8 @@ define([
         this.currentTime = 0.0;
 
         this.bursts = defaultValue(options.bursts, null);
+
+        this.placer = defaultValue(options.placer, new PointPlacer({}));
     };
 
     function random(a, b) {
@@ -101,18 +106,25 @@ define([
             size.x += this.sizeVariance.x * random(0.0, 1.0);
             size.y += this.sizeVariance.y * random(0.0, 1.0);
 
-            var position = Cartesian3.clone( Cartesian3.ZERO );
-            // Change the position to be in world coordinates
-            position = Matrix4.multiplyByPoint(this.modelMatrix, position, position);
 
-            particles.push(new Particle({
-                position: position,
+
+            // Create the new particle.
+            var particle = new Particle({
                 image: this.image,
                 mass : this.initialMass + this.massVariance * random(0.0, 1.0),
                 life : this.initialLife + this.lifeVariance * random(0.0, 1.0),
                 velocity :  velocity,
                 size : size
-            }));
+            })
+
+            // Place the particle with the placer.
+            this.placer.place( particle );
+
+            // Change the position to be in world coordinates
+            particle.position = Matrix4.multiplyByPoint(this.modelMatrix, particle.position, particle.position);
+
+            // Add the particle to the particle system.
+            particles.push(particle);
         }
 
 
