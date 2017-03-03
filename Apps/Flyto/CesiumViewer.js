@@ -42,8 +42,7 @@ define([
                 pitch : CesiumMath.toRadians(-15.0),
                 roll : 0.0
             },
-            maximumHeight: 1000000,
-            pitchAdjusAltitude: 10000,
+            pitchAdjustAltitude: 10000,
             flyOverLon: CesiumMath.toRadians(0),
             flyOverLonWeight: 3
         }); 
@@ -58,8 +57,7 @@ define([
                 pitch : CesiumMath.toRadians(-35.0),
                 roll : 0.0
             },
-            maximumHeight: 1000000,
-            pitchAdjusAltitude: 10000,
+            pitchAdjustAltitude: 10000,
             flyOverLon: CesiumMath.toRadians(0),
             flyOverLonWeight: 3
         }); 

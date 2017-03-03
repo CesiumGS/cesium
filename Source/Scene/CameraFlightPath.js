@@ -58,17 +58,23 @@ define([
     var scratchCart = new Cartesian3();
     var scratchCart2 = new Cartesian3();
 
-    function createPitchFunction(camera, destination, startPitch, pitch, optionPitchAdjusAltitude, heightFunction) {
+    function createPitchFunction(camera, destination, startPitch, endPitch, optionPitchAdjustAltitude, heightFunction) {
+        var startHeight = heightFunction(0.0);
+        var endHeight = heightFunction(1.0);
+        var middleHeight = heightFunction(0.5);
+
+        var d1 = (middleHeight - startHeight) * 1.0;
+        var d2 = (middleHeight - endHeight) * 1.0;
+
         return function(time) {
-            var localTime = time * 3;
-            if (localTime <= 1) {
-                return CesiumMath.lerp(startPitch, -CesiumMath.PI_OVER_TWO, localTime);
-            }
-            else if(localTime >= 2) {
-                return CesiumMath.lerp(-CesiumMath.PI_OVER_TWO, pitch, localTime - 2);
+            var altitude = heightFunction(time);
+            if (time <= 0.5) {
+                var t1 = (altitude - startHeight) * 1.0 / d1;
+                return CesiumMath.lerp(startPitch, -CesiumMath.PI_OVER_TWO, t1);
             }
             else {
-                return -CesiumMath.PI_OVER_TWO;
+                var t2 = (altitude - endHeight) * 1.0 / d2;
+                return CesiumMath.lerp(-CesiumMath.PI_OVER_TWO, endPitch, 1 - t2);
             }
         };
     }
@@ -156,7 +162,7 @@ define([
     var scratchEndCart = new Cartographic();
 
     function createUpdate3D(scene, duration, destination, heading, pitch, roll, 
-        optionAltitude, optionFlyOverLon, optionFlyOverLonWeight, optionPitchAdjusAltitude) {
+        optionAltitude, optionFlyOverLon, optionFlyOverLonWeight, optionPitchAdjustAltitude) {
 
         var camera = scene.camera;
         var projection = scene.mapProjection;
@@ -231,8 +237,8 @@ define([
             return CesiumMath.lerp(startPitch, pitch, time);
         };
 
-        if (defined(optionPitchAdjusAltitude) && heightFunction(0.5) > optionPitchAdjusAltitude) {
-            pitchFunction = createPitchFunction(camera, destination, startPitch, pitch, optionPitchAdjusAltitude, heightFunction);
+        if (defined(optionPitchAdjustAltitude) && heightFunction(0.5) > optionPitchAdjustAltitude) {
+            pitchFunction = createPitchFunction(camera, destination, startPitch, pitch, optionPitchAdjustAltitude, heightFunction);
         }
 
         function update(value) {
@@ -338,7 +344,7 @@ define([
         var maximumHeight = options.maximumHeight;
         var flyOverLon = options.flyOverLon;
         var flyOverLonWeight = options.flyOverLonWeight;
-        var pitchAdjusAltitude = options.pitchAdjusAltitude;
+        var pitchAdjustAltitude = options.pitchAdjustAltitude;
         var easingFunction = options.easingFunction;
 
         if (convert && mode !== SceneMode.SCENE3D) {
@@ -393,7 +399,8 @@ define([
 
         if (duration <= 0.0) {
             var newOnComplete = function() {
-                var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll, maximumHeight, flyOverLon, flyOverLonWeight, pitchAdjusAltitude);
+                var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll, 
+                                                   maximumHeight, flyOverLon, flyOverLonWeight, pitchAdjustAltitude);
                 update({ time: 1.0 });
 
                 if (typeof complete === 'function') {
@@ -403,7 +410,8 @@ define([
             return emptyFlight(newOnComplete, cancel);
         }
 
-        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll, maximumHeight, flyOverLon, flyOverLonWeight, pitchAdjusAltitude);
+        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll, 
+                                           maximumHeight, flyOverLon, flyOverLonWeight, pitchAdjustAltitude);
 
         if (!defined(easingFunction)) {
             var startHeight = camera.positionCartographic.height;
