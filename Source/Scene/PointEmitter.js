@@ -42,11 +42,13 @@ define([
         this.initialSize = initialSize;
         this.sizeVariance = Cartesian2.clone(defaultValue(options.sizeVariance, Cartesian2.ZERO));
 
-        this.maximumToEmit = defaultValue(options.maximumToEmit, Number.MAX_VALUE);
-
         this.rate = defaultValue(options.rate, 5);
 
         this.carryOver = 0.0;
+
+        this.currentTime = 0.0;
+
+        this.bursts = defaultValue(options.bursts, null);
     };
 
     function random(a, b) {
@@ -54,6 +56,8 @@ define([
     }
 
     PointEmitter.prototype.emit = function(system, dt) {
+
+
         var particles = system.particles;
 
 
@@ -65,6 +69,21 @@ define([
         {
             numToEmit++;
             this.carryOver -= 1.0;
+        }
+
+
+        var i = 0;
+
+        // Apply any bursts
+        if (this.bursts) {
+            for (i = 0; i < this.bursts.length; i++) {
+                var burst = this.bursts[i];
+                if ((!defined(burst, "complete") || !burst.complete) && this.currentTime > burst.time) {
+                    var count = burst.min + random(0.0, 1.0) * burst.max;
+                    numToEmit += count;
+                    burst.complete = true;
+                }
+            }
         }
 
 
@@ -95,6 +114,10 @@ define([
                 size : size
             }));
         }
+
+
+        this.currentTime += dt;
+
     };
 
     return PointEmitter;

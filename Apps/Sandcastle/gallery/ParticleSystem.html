@@ -160,8 +160,14 @@ var emitter = new Cesium.PointEmitter({
     speedVariance: 25.0,
     initialSpeed: 0.0,
     initialSize: new Cesium.Cartesian2(particleSize, particleSize),
-    rate: 50,
-    image: "https://t6.rbxcdn.com/2ca5ec997e131a94f8d87e2de5d99872"
+    image: "https://t6.rbxcdn.com/2ca5ec997e131a94f8d87e2de5d99872",
+
+    rate: 10,
+    bursts: [
+        {time: 5.0, min: 300, max: 500},
+        {time: 10.0, min: 50, max: 100},
+        {time: 15.0, min: 200, max: 300}
+    ]
 });
 entity._getModelMatrix(viewer.clock.currentTime, emitter.modelMatrix);
 
