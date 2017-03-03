@@ -3,7 +3,7 @@ Change Log
 
 ### 1.32 - 2017-04-03
 
-* Fixed a bug in `Quaternion.fromHeadingPitchRoll` that made it erroneously throw an exception for correct inputs in an unminified / debug build.
+* Fixed a bug in `Quaternion.fromHeadingPitchRoll` that made it erroneously throw an exception when passed individual angles in an unminified / debug build.
 * Fixed a bug that could cause tiles to be missing from the globe surface, especially when starting with the camera zoomed close to the surface.
 
 ### 1.31 - 2017-03-01
