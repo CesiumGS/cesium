@@ -72,9 +72,8 @@ function computeCirclularFlight(lon, lat, radius) {
 }
 
 //Compute the entity position property.
+/*
 var position = computeCirclularFlight(-112.110693, 36.0994841, 0.03);
-
-//Actually create the entity
 var entity = viewer.entities.add({
 
     //Set the entity availability to the same interval as the simulation time.
@@ -105,6 +104,28 @@ var entity = viewer.entities.add({
         width : 10
     }
 });
+*/
+
+var position = Cesium.Cartesian3.fromDegrees(-112.110693, 36.0994841, 1000);
+var entity = viewer.entities.add({
+
+    //Set the entity availability to the same interval as the simulation time.
+    availability : new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+        start : start,
+        stop : stop
+    })]),
+
+    //Use our computed positions
+    position : position,
+
+    //Load the Cesium plane model to represent the entity
+    model : {
+        uri : '../../SampleData/models/CesiumAir/Cesium_Air.gltf',
+        minimumPixelSize : 64
+    }
+});
+viewer.trackedEntity = entity;
+
 
 var scene = viewer.scene;
 scene.debugShowFramesPerSecond = true;
@@ -136,9 +157,10 @@ var emitter = new Cesium.PointEmitter({
     initialLife: 5.0,
     lifeVariance: 2.0,
     directionVariance: new Cesium.Cartesian3(5, 5, 5),
-    speedVariance: 0.0,
+    speedVariance: 25.0,
     initialSpeed: 0.0,
     initialSize: new Cesium.Cartesian2(particleSize, particleSize),
+    rate: 50,
     image: "https://t6.rbxcdn.com/2ca5ec997e131a94f8d87e2de5d99872"
 });
 entity._getModelMatrix(viewer.clock.currentTime, emitter.modelMatrix);

@@ -82,7 +82,7 @@ define([
         // emit new particles if an emitter is attached.
         // the emission counts as the particle "update"
         if (defined(emitter)) {
-            emitter.emit(this);
+            emitter.emit(this, dt);
         }
 
         this._billboardCollection.modelMatrix = this.modelMatrix;

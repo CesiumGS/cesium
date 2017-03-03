@@ -43,15 +43,30 @@ define([
         this.sizeVariance = Cartesian2.clone(defaultValue(options.sizeVariance, Cartesian2.ZERO));
 
         this.maximumToEmit = defaultValue(options.maximumToEmit, Number.MAX_VALUE);
+
+        this.rate = defaultValue(options.rate, 5);
+
+        this.carryOver = 0.0;
     };
 
     function random(a, b) {
         return CesiumMath.nextRandomNumber() * (b - a) + a;
     }
 
-    PointEmitter.prototype.emit = function(system) {
+    PointEmitter.prototype.emit = function(system, dt) {
         var particles = system.particles;
-        var numToEmit = Math.min(this.maximumToEmit, system.maximumParticles - particles.length);
+
+
+        // Compute the number of particles to emit based on the rate.
+        var v = dt * this.rate;
+        var numToEmit = Math.floor(v);
+        this.carryOver += (v-numToEmit);
+        if (this.carryOver>1.0)
+        {
+            numToEmit++;
+            this.carryOver -= 1.0;
+        }
+
 
         for (var i = 0; i < numToEmit; ++i) {
             var velocity = Cartesian3.clone(this.initialDirection);
