@@ -40,7 +40,16 @@ define([
         // Update any forces.
         var length = forces.length;
         for (var i = 0; i < length; ++i) {
-            forces[i](this, dt);
+            var force = forces[i];
+
+            if (typeof force === 'function') {
+                // Force is just a simle callback function.
+                force(this, dt);
+            }
+            else {
+                // Call the apply function of the force.
+                force.apply(this, dt);
+            }
         }
 
         // Age the particle
