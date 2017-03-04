@@ -305,11 +305,11 @@ define([
         Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
 
-        var cosTheta = Math.cos(-headingPitchRoll.pitch);
-        var cosPsi = Math.cos(-headingPitchRoll.heading);
+        var cosTheta = Math.cos(headingPitchRoll.pitch);
+        var cosPsi = Math.cos(headingPitchRoll.heading);
         var cosPhi = Math.cos(headingPitchRoll.roll);
-        var sinTheta = Math.sin(-headingPitchRoll.pitch);
-        var sinPsi = Math.sin(-headingPitchRoll.heading);
+        var sinTheta = Math.sin(headingPitchRoll.pitch);
+        var sinPsi = Math.sin(headingPitchRoll.heading);
         var sinPhi = Math.sin(headingPitchRoll.roll);
 
         var m00 = cosTheta * cosPsi;
