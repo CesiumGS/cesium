@@ -1549,13 +1549,15 @@ define([
                     ++model._loadResources.pendingTextureLoads;
                     var imagePath = joinUrls(model._baseUri, gltfImage.uri);
 
+                    var promise;
                     if (ktxRegex.test(imagePath)) {
-                        loadKTX(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                        promise = RequestScheduler.request(imagePath, loadKTX, undefined, model._requestType);
                     } else if (crnRegex.test(imagePath)) {
-                        loadCRN(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                        promise = RequestScheduler.request(imagePath, loadCRN, undefined, model._requestType);
                     } else {
-                        loadImage(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                        promise = RequestScheduler.request(imagePath, loadImage, undefined, model._requestType);
                     }
+                    promise.then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
                 }
             }
         }
