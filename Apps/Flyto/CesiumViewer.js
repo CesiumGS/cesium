@@ -16,8 +16,6 @@ define([
         Viewer) {
     'use strict';
 
-    var endUserOptions = queryToObject(window.location.search.substring(1));
-
     var viewer = new Viewer('cesiumContainer', {
         baseLayerPicker: false,
         imageryProvider: createOpenStreetMapImageryProvider()
@@ -45,7 +43,7 @@ define([
             pitchAdjustAltitude: 10000,
             flyOverLon: CesiumMath.toRadians(0),
             flyOverLonWeight: 3
-        }); 
+        });
     };
 
     var flyToTokyo = function(){
@@ -60,7 +58,7 @@ define([
             pitchAdjustAltitude: 10000,
             flyOverLon: CesiumMath.toRadians(0),
             flyOverLonWeight: 3
-        }); 
+        });
     };
 
     function Tween() {
@@ -69,16 +67,16 @@ define([
         this.next = this.next.bind(this);
     }
 
-    Tween.prototype.add = function(f) { 
+    Tween.prototype.add = function(f) {
         this.queue.push(f);
         return this;
     };
 
-    Tween.prototype.run = function() { 
+    Tween.prototype.run = function() {
         this.queue[0](this.next);
     };
 
-    Tween.prototype.next = function() { 
+    Tween.prototype.next = function() {
         var n = this.queue[this.index++];
         if (n) {
             n(this.next);
@@ -94,7 +92,7 @@ define([
                     next();
                 }
             }, t);
-        }
+        };
     }
 
     new Tween()

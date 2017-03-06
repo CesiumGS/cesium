@@ -161,7 +161,7 @@ define([
     var scratchStartCart = new Cartographic();
     var scratchEndCart = new Cartographic();
 
-    function createUpdate3D(scene, duration, destination, heading, pitch, roll, 
+    function createUpdate3D(scene, duration, destination, heading, pitch, roll,
         optionAltitude, optionFlyOverLon, optionFlyOverLonWeight, optionPitchAdjustAltitude) {
 
         var camera = scene.camera;
@@ -215,10 +215,10 @@ define([
 
         function flip() {
             if (startCart.longitude < destCart.longitude) {
-                startCart.longitude += CesiumMath.TWO_PI
+                startCart.longitude += CesiumMath.TWO_PI;
             }
             else {
-                destCart.longitude += CesiumMath.TWO_PI
+                destCart.longitude += CesiumMath.TWO_PI;
             }
         }
 
@@ -399,7 +399,7 @@ define([
 
         if (duration <= 0.0) {
             var newOnComplete = function() {
-                var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll, 
+                var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll,
                                                    maximumHeight, flyOverLon, flyOverLonWeight, pitchAdjustAltitude);
                 update({ time: 1.0 });
 
@@ -410,7 +410,7 @@ define([
             return emptyFlight(newOnComplete, cancel);
         }
 
-        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll, 
+        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll,
                                            maximumHeight, flyOverLon, flyOverLonWeight, pitchAdjustAltitude);
 
         if (!defined(easingFunction)) {
