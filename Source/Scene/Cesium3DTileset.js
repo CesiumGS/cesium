@@ -133,7 +133,7 @@ define([
 
         if (getExtensionFromUri(url) === 'json') {
             tilesetUrl = url;
-            baseUrl = getBaseUri(url);
+            baseUrl = getBaseUri(url, true);
         } else if (isDataUri(url)) {
             tilesetUrl = url;
             baseUrl = '';
