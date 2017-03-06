@@ -321,6 +321,7 @@ define([
             shadows: this._tileset.shadows,
             debugWireframe: this._tileset.debugWireframe,
             incrementallyLoadTextures : false,
+            pickPrimitive : this._tileset,
             vertexShaderLoaded : getVertexShaderCallback(this),
             fragmentShaderLoaded : getFragmentShaderCallback(this),
             uniformMapLoaded : batchTable.getUniformMapCallback(),
