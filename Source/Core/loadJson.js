@@ -3,12 +3,14 @@ define([
         './clone',
         './defined',
         './DeveloperError',
-        './loadText'
+        './loadText',
+        '../ThirdParty/when'
     ], function(
         clone,
         defined,
         DeveloperError,
-        loadText) {
+        loadText,
+        when) {
     'use strict';
 
     var defaultHeaders = {
@@ -70,9 +72,7 @@ define([
         }
 
         if(jsonData){
-            return new Promise(function(resolve, reject){
-                resolve(jsonData);
-            });
+            return when.resolve(jsonData);
         }else{
             return loadText(url, headers).then(function(value) {
                 return JSON.parse(value);
