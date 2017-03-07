@@ -156,18 +156,18 @@ function adjustSize(p, dt) {
 var emitter = new Cesium.PointEmitter({
     initialLife: 5.0,
     lifeVariance: 2.0,
-    directionVariance: new Cesium.Cartesian3(5, 5, 5),
-    speedVariance: 25.0,
-    initialSpeed: 0.0,
+    initialDirection: new Cesium.Cartesian3(0,0,1),
+    directionVariance: new Cesium.Cartesian3(0.1, 0.1, 0),
+    speedVariance: 0.6,
+    initialSpeed: 1.0,
     initialSize: new Cesium.Cartesian2(particleSize, particleSize),
-    image: "https://t6.rbxcdn.com/2ca5ec997e131a94f8d87e2de5d99872",
+    image: '../../SampleData/fire.png',
 
     // Position the particle system on the tail of the plane.
-    /*
-    placer: new Cesium.PointPlacer({
-        position: new Cesium.Cartesian3(-10.0, 0.0, 0.0)
+    placer: new Cesium.CirclePlacer({
+        position: new Cesium.Cartesian3(-10.0, 0.0, 0.0),
+        radius: 0.5
     }),
-*/
 
     // Place particles in a box around the plane.
     /*
@@ -178,9 +178,11 @@ var emitter = new Cesium.PointEmitter({
     }),
     */
 
+/*
     placer: new Cesium.SpherePlacer({
         radius: 25.0
     }),
+*/
 
 
     // 30 particles per second.
@@ -196,9 +198,12 @@ entity._getModelMatrix(viewer.clock.currentTime, emitter.modelMatrix);
 
 var particles = scene.primitives.add(new Cesium.ParticleSystem({
     emitter: emitter,
+    /*
     forces: [applyGravity,
             adjustSize
             ]
+            */
+    forces: [adjustSize]
 }));
 
 
