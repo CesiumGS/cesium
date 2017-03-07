@@ -29,6 +29,9 @@ define([
         this.startColor = defaultValue(options.startColor, Color.WHITE);
         this.endColor = defaultValue(options.endColor, Color.WHITE);
 
+        this.startScale = defaultValue(options.startScale);
+        this.endScale = defaultValue(options.endScale);
+
         this._billboardCollection = undefined;
 
         this._previousTime = null;
@@ -55,6 +58,10 @@ define([
         var b = system.startColor.blue + particle.normalizedAge * (system.endColor.blue - system.startColor.blue);
         var a = system.startColor.alpha + particle.normalizedAge * (system.endColor.alpha - system.startColor.alpha);
         billboard.color = new Color(r,g,b,a);
+
+        // Update the scale
+        var scale = system.startScale + particle.normalizedAge * (system.endScale - system.startScale);
+        billboard.scale = scale;
     }
 
     ParticleSystem.prototype.update = function(frameState) {

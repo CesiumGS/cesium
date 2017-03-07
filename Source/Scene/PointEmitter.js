@@ -106,8 +106,6 @@ define([
             size.x += this.sizeVariance.x * random(0.0, 1.0);
             size.y += this.sizeVariance.y * random(0.0, 1.0);
 
-
-
             // Create the new particle.
             var particle = new Particle({
                 image: this.image,
