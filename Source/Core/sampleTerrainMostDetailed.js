@@ -3,14 +3,12 @@ define([
     '../ThirdParty/when',
     './defined',
     './sampleTerrain',
-    './DeveloperError',
-    './Rectangle'
+    './DeveloperError'
 ], function(
     when,
     defined,
     sampleTerrain,
-    DeveloperError,
-    Rectangle) {
+    DeveloperError) {
     "use strict";
 
     /**

@@ -4,7 +4,6 @@ define([
         './Cartesian2',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './destroyObject',
         './DeveloperError',
         './FeatureDetection',
@@ -16,7 +15,6 @@ define([
         Cartesian2,
         defaultValue,
         defined,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         FeatureDetection,
@@ -272,10 +270,6 @@ define([
         var screenSpaceEventType;
         if (button === MouseButton.LEFT) {
             screenSpaceEventType = ScreenSpaceEventType.LEFT_DOUBLE_CLICK;
-        } else if (button === MouseButton.MIDDLE) {
-            screenSpaceEventType = ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK;
-        } else if (button === MouseButton.RIGHT) {
-            screenSpaceEventType = ScreenSpaceEventType.RIGHT_DOUBLE_CLICK;
         } else {
             return;
         }
@@ -686,14 +680,6 @@ define([
         registerListeners(this);
     }
 
-    function checkForDoubleClick(type) {
-        if (type === ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK) {
-            deprecationWarning('MIDDLE_DOUBLE_CLICK', 'ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK was deprecated in Cesium 1.30.  It will be removed in 1.31.');
-        } else if (type === ScreenSpaceEventType.RIGHT_DOUBLE_CLICK) {
-            deprecationWarning('RIGHT_DOUBLE_CLICK', 'ScreenSpaceEventType.RIGHT_DOUBLE_CLICK was deprecated in Cesium 1.30.  It will be removed in 1.31.');
-        }
-    }
-
     /**
      * Set a function to be executed on an input event.
      *
@@ -714,8 +700,6 @@ define([
             throw new DeveloperError('type is required.');
         }
         //>>includeEnd('debug');
-
-        checkForDoubleClick(type);
 
         var key = getInputEventKey(type, modifier);
         this._inputEvents[key] = action;
@@ -738,8 +722,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        checkForDoubleClick(type);
-
         var key = getInputEventKey(type, modifier);
         return this._inputEvents[key];
     };
@@ -760,8 +742,6 @@ define([
             throw new DeveloperError('type is required.');
         }
         //>>includeEnd('debug');
-
-        checkForDoubleClick(type);
 
         var key = getInputEventKey(type, modifier);
         delete this._inputEvents[key];

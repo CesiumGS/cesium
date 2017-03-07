@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        'Core/Cartesian2',
         'Core/clone',
         'Core/defaultValue',
         'Core/defined',
@@ -8,7 +7,6 @@ define([
         'Specs/createCanvas',
         'Specs/getWebGLStub'
     ], function(
-        Cartesian2,
         clone,
         defaultValue,
         defined,
