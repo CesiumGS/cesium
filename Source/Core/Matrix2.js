@@ -5,7 +5,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './freezeObject'
     ], function(
         Cartesian2,
@@ -13,7 +12,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         freezeObject) {
     'use strict';
 

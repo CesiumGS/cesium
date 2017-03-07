@@ -5,7 +5,6 @@ define([
         './defaultValue',
         './defined',
         './deprecationWarning',
-        './DeveloperError',
         './FeatureDetection',
         './freezeObject',
         './HeadingPitchRoll',
@@ -17,7 +16,6 @@ define([
         defaultValue,
         defined,
         deprecationWarning,
-        DeveloperError,
         FeatureDetection,
         freezeObject,
         HeadingPitchRoll,
@@ -196,9 +194,9 @@ define([
         if (headingOrHeadingPitchRoll instanceof HeadingPitchRoll) {
             Check.typeOf.object('headingPitchRoll', headingOrHeadingPitchRoll);
         } else {
-            Check.typeOf.number(headingOrHeadingPitchRoll, 'heading');
-            Check.typeOf.number(pitchOrResult, 'pitch');
-            Check.typeOf.number(roll, 'roll');
+            Check.typeOf.number('heading', headingOrHeadingPitchRoll);
+            Check.typeOf.number('pitch', pitchOrResult);
+            Check.typeOf.number('roll', roll);
         }
         //>>includeEnd('debug');
         var hpr;

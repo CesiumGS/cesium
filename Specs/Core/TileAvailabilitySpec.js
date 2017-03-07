@@ -2,14 +2,12 @@
 defineSuite([
         'Core/TileAvailability',
         'Core/Cartographic',
-        'Core/CesiumTerrainProvider',
         'Core/GeographicTilingScheme',
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme'
     ], function(
         TileAvailability,
         Cartographic,
-        CesiumTerrainProvider,
         GeographicTilingScheme,
         Rectangle,
         WebMercatorTilingScheme) {
