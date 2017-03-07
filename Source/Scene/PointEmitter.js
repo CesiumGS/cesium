@@ -94,10 +94,13 @@ define([
 
         for (var i = 0; i < numToEmit; ++i) {
             var velocity = Cartesian3.clone(this.initialDirection);
+
             velocity.x += this.directionVariance.x * random(-1.0, 1.0);
             velocity.y += this.directionVariance.y * random(-1.0, 1.0);
             velocity.y += this.directionVariance.z * random(-1.0, 1.0);
+            velocity = Matrix4.multiplyByPoint(this.modelMatrix, velocity, velocity);
             Cartesian3.normalize(velocity, velocity);
+
 
             var speed = this.initialSpeed + this.speedVariance * random(0.0, 1.0);
             Cartesian3.multiplyByScalar(velocity, speed, velocity);
