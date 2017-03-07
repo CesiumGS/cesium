@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/Matrix4',
         '../Core/JulianDate',
+        '../Core/Color',
         './BillboardCollection',
         './Particle'
     ], function(
@@ -11,6 +12,7 @@ define([
         defined,
         Matrix4,
         JulianDate,
+        Color,
         BillboardCollection,
         Particle) {
     "use strict";
@@ -23,6 +25,9 @@ define([
         this.emitter = options.emitter;
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this.maximumParticles = defaultValue(options.maximumParticles, 1000.0);
+
+        this.startColor = defaultValue(options.startColor, Color.WHITE);
+        this.endColor = defaultValue(options.endColor, Color.WHITE);
 
         this._billboardCollection = undefined;
 
@@ -43,6 +48,13 @@ define([
         billboard.width = particle.size.x;
         billboard.height = particle.size.y;
         billboard.position = particle.position;
+
+        // Update the color
+        var r = system.startColor.red + particle.normalizedAge * (system.endColor.red - system.startColor.red);
+        var g = system.startColor.green + particle.normalizedAge * (system.endColor.green - system.startColor.green);
+        var b = system.startColor.blue + particle.normalizedAge * (system.endColor.blue - system.startColor.blue);
+        var a = system.startColor.alpha + particle.normalizedAge * (system.endColor.alpha - system.startColor.alpha);
+        billboard.color = new Color(r,g,b,a);
     }
 
     ParticleSystem.prototype.update = function(frameState) {
