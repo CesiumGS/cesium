@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Event',
         '../Core/Matrix4',
         '../Core/Math',
         './Particle',
@@ -13,6 +14,7 @@ define([
         defined,
         Cartesian2,
         Cartesian3,
+        Event,
         Matrix4,
         CesiumMath,
         Particle,
@@ -56,6 +58,9 @@ define([
         this.placer = defaultValue(options.placer, new PointPlacer({}));
 
         this.lifeTime = defaultValue(options.lifeTime, Number.MAX_VALUE);
+
+        this.complete = new Event();
+        this.isComplete = false;
     };
 
     function random(a, b) {
@@ -65,9 +70,10 @@ define([
     PointEmitter.prototype.emit = function(system, dt) {
 
         // This emitter is finished if it exceeds it's lifetime.
-        if (this.lifeTime !== Number.MAX_VALUE && this.currentTime > this.lifeTime) {
+        if (this.isComplete) {
             return;
         }
+
 
         var particles = system.particles;
 
@@ -136,6 +142,11 @@ define([
 
 
         this.currentTime += dt;
+
+        if (this.lifeTime !== Number.MAX_VALUE && this.currentTime > this.lifeTime) {
+            this.isComplete = true;
+            this.complete.raiseEvent(this);
+        }
 
     };
 
