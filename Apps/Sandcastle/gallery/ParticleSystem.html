@@ -130,11 +130,8 @@ viewer.trackedEntity = entity;
 var scene = viewer.scene;
 scene.debugShowFramesPerSecond = true;
 
-var numberOfPoints = 1000.0;
-var particleSize = 20.0;
-
+var particleSize = 60.0;
 var gravity = -9.8;
-
 var gravityScratch = new Cesium.Cartesian3();
 
 function applyGravity(p, dt) {
@@ -154,18 +151,18 @@ function adjustSize(p, dt) {
 }
 
 var emitter = new Cesium.PointEmitter({
-    initialLife: 5.0,
-    lifeVariance: 2.0,
+    initialLife: 1.0,
+    lifeVariance: 0.2,
     initialDirection: new Cesium.Cartesian3(0,0,1),
     directionVariance: new Cesium.Cartesian3(0.1, 0.1, 0),
     speedVariance: 0.6,
-    initialSpeed: 1.0,
+    initialSpeed: 5.0,
     initialSize: new Cesium.Cartesian2(particleSize, particleSize),
     image: '../../SampleData/fire.png',
 
     // Position the particle system on the tail of the plane.
     placer: new Cesium.CirclePlacer({
-        position: new Cesium.Cartesian3(-10.0, 0.0, 0.0),
+        position: new Cesium.Cartesian3(2.5, 4.0, 1.0),
         radius: 0.5
     }),
 
@@ -185,8 +182,8 @@ var emitter = new Cesium.PointEmitter({
 */
 
 
-    // 30 particles per second.
-    rate: 30,
+    // Particles per second.
+    rate: 100,
 
     bursts: [
         {time: 5.0, min: 300, max: 500},
@@ -203,6 +200,8 @@ var particles = scene.primitives.add(new Cesium.ParticleSystem({
             adjustSize
             ]
             */
+    startColor: Cesium.Color.RED.withAlpha(0.7),
+    endColor: Cesium.Color.YELLOW.withAlpha(0.3),
     forces: [adjustSize]
 }));
 
