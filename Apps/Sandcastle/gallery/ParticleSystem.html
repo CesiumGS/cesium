@@ -170,6 +170,11 @@ var leftEmitter = new Cesium.PointEmitter({
         {time: 15.0, min: 200, max: 300}
     ],
 
+    startColor: Cesium.Color.RED.withAlpha(0.7),
+    endColor: Cesium.Color.YELLOW.withAlpha(0.3),
+
+    startScale: 1.0,
+    endScale: 4.0,
     lifeTime: 16.0
 });
 
@@ -200,22 +205,51 @@ var rightEmitter = new Cesium.PointEmitter({
         {time: 15.0, min: 200, max: 300}
     ],
 
-    lifeTime: 16.0
-});
-
-
-
-var particles = scene.primitives.add(new Cesium.ParticleSystem({
-    emitters: [leftEmitter, rightEmitter],
-
-    //forces: [applyGravity]
     startColor: Cesium.Color.RED.withAlpha(0.7),
     endColor: Cesium.Color.YELLOW.withAlpha(0.3),
 
     startScale: 1.0,
-    endScale: 4.0
+    endScale: 4.0,
+
+    lifeTime: 16.0
+});
+
+var particles = scene.primitives.add(new Cesium.ParticleSystem({
+    emitters: [leftEmitter, rightEmitter]
+    //forces: [applyGravity]
 }));
 entity._getModelMatrix(viewer.clock.currentTime, particles.modelMatrix);
+
+leftEmitter.complete.addEventListener(function(emitter) {
+    var smoke = new Cesium.PointEmitter({
+        initialLife: 30.0,
+        initialSize: new Cesium.Cartesian2(particleSize, particleSize),
+        initialSpeed: 0.0,
+        image: 'http://i.imgur.com/wJxI64w.png',
+
+        // Position the particle system on the tail of the plane.
+        placer: new Cesium.SpherePlacer({
+            radius: 10
+        }),
+
+        // Particles per second.
+        rate: 0,
+
+        bursts: [
+            {time: 0.0, min: 1000, max: 1000}
+        ],
+
+        lifeTime: 1,
+
+        startScale: 1.0,
+        endScale: 6.0
+    });
+
+    particles.emitters.push(smoke);
+
+    // The entity blew up, remove it :)
+    viewer.entities.remove( entity );
+});
 
 
 viewer.scene.preRender.addEventListener(function(scene, time) {

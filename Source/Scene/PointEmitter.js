@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Color',
         '../Core/Event',
         '../Core/Matrix4',
         '../Core/Math',
@@ -14,6 +15,7 @@ define([
         defined,
         Cartesian2,
         Cartesian3,
+        Color,
         Event,
         Matrix4,
         CesiumMath,
@@ -58,6 +60,12 @@ define([
         this.placer = defaultValue(options.placer, new PointPlacer({}));
 
         this.lifeTime = defaultValue(options.lifeTime, Number.MAX_VALUE);
+
+        this.startColor = defaultValue(options.startColor, Color.clone(Color.WHITE));
+        this.endColor = defaultValue(options.endColor, Color.clone(Color.WHITE));
+
+        this.startScale = defaultValue(options.startScale);
+        this.endScale = defaultValue(options.endScale);
 
         this.complete = new Event();
         this.isComplete = false;
@@ -127,7 +135,11 @@ define([
                 mass : this.initialMass + this.massVariance * random(0.0, 1.0),
                 life : this.initialLife + this.lifeVariance * random(0.0, 1.0),
                 velocity :  velocity,
-                size : size
+                size : size,
+                startColor: this.startColor,
+                endColor: this.endColor,
+                startScale: this.startScale,
+                endScale: this.endScale
             })
 
             // Place the particle with the placer.

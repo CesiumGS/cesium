@@ -3,12 +3,14 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/Cartesian2',
-        '../Core/Cartesian3'
+        '../Core/Cartesian3',
+        '../Core/Color'
     ],function(
         defaultValue,
         defined,
         Cartesian2,
-        Cartesian3) {
+        Cartesian3,
+        Color) {
     "use strict";
 
     var Particle = function(options) {
@@ -21,6 +23,12 @@ define([
         this.image = defaultValue(options.image, null);
         this.age = 0.0;
         this.normalizedAge = 0.0;
+
+        this.startColor = defaultValue(options.startColor, Color.clone(Color.WHITE));
+        this.endColor = defaultValue(options.endColor, Color.clone(Color.WHITE));
+
+        this.startScale = defaultValue(options.startScale);
+        this.endScale = defaultValue(options.endScale);
 
         var size = Cartesian2.clone(options.size);
         if (!defined(size)) {

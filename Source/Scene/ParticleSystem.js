@@ -27,12 +27,6 @@ define([
 
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
-        this.startColor = defaultValue(options.startColor, Color.WHITE);
-        this.endColor = defaultValue(options.endColor, Color.WHITE);
-
-        this.startScale = defaultValue(options.startScale);
-        this.endScale = defaultValue(options.endScale);
-
         this._billboardCollection = undefined;
 
         this._previousTime = null;
@@ -54,14 +48,14 @@ define([
         billboard.position = particle.position;
 
         // Update the color
-        var r = system.startColor.red + particle.normalizedAge * (system.endColor.red - system.startColor.red);
-        var g = system.startColor.green + particle.normalizedAge * (system.endColor.green - system.startColor.green);
-        var b = system.startColor.blue + particle.normalizedAge * (system.endColor.blue - system.startColor.blue);
-        var a = system.startColor.alpha + particle.normalizedAge * (system.endColor.alpha - system.startColor.alpha);
+        var r = particle.startColor.red + particle.normalizedAge * (particle.endColor.red - particle.startColor.red);
+        var g = particle.startColor.green + particle.normalizedAge * (particle.endColor.green - particle.startColor.green);
+        var b = particle.startColor.blue + particle.normalizedAge * (particle.endColor.blue - particle.startColor.blue);
+        var a = particle.startColor.alpha + particle.normalizedAge * (particle.endColor.alpha - particle.startColor.alpha);
         billboard.color = new Color(r,g,b,a);
 
         // Update the scale
-        var scale = system.startScale + particle.normalizedAge * (system.endScale - system.startScale);
+        var scale = particle.startScale + particle.normalizedAge * (particle.endScale - particle.startScale);
         billboard.scale = scale;
     }
 
