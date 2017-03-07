@@ -56,7 +56,12 @@ define([
         this.age += dt;
 
         // Compute the normalized age.
-        this.normalizedAge = this.age / this.life;
+        if (this.life === Number.MAX_VALUE) {
+            this.normalizedAge = 0.0;
+        }
+        else {
+            this.normalizedAge = this.age / this.life;
+        }
 
         // If this particle is older than it's lifespan then die.
         if (this.age > this.life) {
