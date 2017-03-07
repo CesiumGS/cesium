@@ -459,7 +459,8 @@ define([
             // Get the batchId
             var batchId;
             if (defined(featureTable.json.BATCH_ID)) {
-                var componentType = defaultValue(featureTable.json.BATCH_ID.componentType, ComponentDatatype.UNSIGNED_SHORT);
+                var componentTypeName = featureTable.json.BATCH_ID.componentType;
+                var componentType = defined(componentTypeName) ? ComponentDatatype.fromName(componentTypeName) : ComponentDatatype.UNSIGNED_SHORT;
                 batchId = featureTable.getProperty('BATCH_ID', i, componentType);
             } else {
                 // If BATCH_ID semantic is undefined, batchId is just the instance number

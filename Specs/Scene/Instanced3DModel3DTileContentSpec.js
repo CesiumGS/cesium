@@ -40,6 +40,7 @@ defineSuite([
     var withTransformUrl = './Data/Cesium3DTiles/Instanced/InstancedWithTransform/';
     var withBatchIdsUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchIds/';
     var texturedUrl = './Data/Cesium3DTiles/Instanced/InstancedTextured/';
+    var compressedTexturesUrl = './Data/Cesium3DTiles/Instanced/InstancedCompressedTextures/';
 
     function setCamera(longitude, latitude) {
         // One instance is located at the center, point the camera there
@@ -218,6 +219,18 @@ defineSuite([
 
             // Move the camera to the new location
             setCamera(newLongitude, newLatitude);
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with textures', function() {
+        return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with compressed textures', function() {
+        return Cesium3DTilesTester.loadTileset(scene, compressedTexturesUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });

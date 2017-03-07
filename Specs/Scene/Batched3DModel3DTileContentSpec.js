@@ -35,6 +35,7 @@ defineSuite([
     var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
     var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
     var texturedUrl = './Data/Cesium3DTiles/Batched/BatchedTextured/';
+    var compressedTexturesUrl = './Data/Cesium3DTiles/Batched/BatchedCompressedTextures/';
     var deprecatedUrl = './Data/Cesium3DTiles/Batched/BatchedDeprecated/';
 
     function setCamera(longitude, latitude) {
@@ -142,6 +143,18 @@ defineSuite([
         // Tests that the batchId attribute and CESIUM_RTC extension are handled correctly
         return Cesium3DTilesTester.loadTileset(scene, withKHRMaterialsCommonUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with textures', function() {
+        return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+    });
+
+    it('renders with compressed textures', function() {
+        return Cesium3DTilesTester.loadTileset(scene, compressedTexturesUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
