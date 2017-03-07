@@ -23,9 +23,11 @@ define([
         var theta = random(0.0, CesiumMath.TWO_PI);
         var phi = random(0.0, CesiumMath.PI);
 
-        var x = this.radius * Math.cos(theta) * Math.sin(phi);
-        var y = this.radius * Math.sin(theta) * Math.sin(phi);
-        var z = this.radius * Math.cos(phi);
+        var rad = random(0.0, this.radius);
+
+        var x = this.position.x + rad * Math.cos(theta) * Math.sin(phi);
+        var y = this.position.y + rad * Math.sin(theta) * Math.sin(phi);
+        var z = this.position.z + rad * Math.cos(phi);
 
         particle.position = new Cartesian3(x, y, z);
     };
