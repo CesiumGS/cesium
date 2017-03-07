@@ -54,6 +54,8 @@ define([
         this.bursts = defaultValue(options.bursts, null);
 
         this.placer = defaultValue(options.placer, new PointPlacer({}));
+
+        this.lifeTime = defaultValue(options.lifeTime, Number.MAX_VALUE);
     };
 
     function random(a, b) {
@@ -62,6 +64,10 @@ define([
 
     PointEmitter.prototype.emit = function(system, dt) {
 
+        // This emitter is finished if it exceeds it's lifetime.
+        if (this.lifeTime !== Number.MAX_VALUE && this.currentTime > this.lifeTime) {
+            return;
+        }
 
         var particles = system.particles;
 
