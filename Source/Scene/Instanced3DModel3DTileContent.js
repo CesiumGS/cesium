@@ -323,10 +323,10 @@ define([
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
-            collectionOptions.url = joinUrls(getBaseUri(this._url), gltfUrl);
+            collectionOptions.url = joinUrls(getBaseUri(this._url, true), gltfUrl);
         } else {
             collectionOptions.gltf = gltfView;
-            collectionOptions.basePath = getBaseUri(this._url);
+            collectionOptions.basePath = getBaseUri(this._url, true);
         }
 
         var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');
