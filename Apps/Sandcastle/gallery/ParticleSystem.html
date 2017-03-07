@@ -144,7 +144,7 @@ function applyGravity(p, dt) {
     p.velocity = Cesium.Cartesian3.add(p.velocity, gravityScratch, p.velocity);
 }
 
-var emitter = new Cesium.PointEmitter({
+var leftEmitter = new Cesium.PointEmitter({
     initialLife: 1.0,
     lifeVariance: 0.2,
     initialDirection: new Cesium.Cartesian3(0,0,1),
@@ -161,21 +161,35 @@ var emitter = new Cesium.PointEmitter({
         radius: 0.5
     }),
 
-    // Place particles in a box around the plane.
-    /*
-    placer: new Cesium.BoxPlacer({
-        width: 50.0,
-        height: 50.0,
-        depth: 50.0
-    }),
-    */
+    // Particles per second.
+    rate: 50,
 
-/*
-    placer: new Cesium.SpherePlacer({
-        radius: 25.0
-    }),
-*/
+    bursts: [
+        {time: 5.0, min: 300, max: 500},
+        {time: 10.0, min: 50, max: 100},
+        {time: 15.0, min: 200, max: 300}
+    ],
 
+    lifeTime: 16.0
+});
+
+var rightEmitter = new Cesium.PointEmitter({
+    initialLife: 1.0,
+    lifeVariance: 0.2,
+    initialDirection: new Cesium.Cartesian3(0,0,1),
+    directionVariance: new Cesium.Cartesian3(0.1, 0.1, 0),
+    speedVariance: 0.6,
+    initialSpeed: 5.0,
+    initialSize: new Cesium.Cartesian2(particleSize, particleSize),
+    sizeVariance: new Cesium.Cartesian2(10.0, 10.0),
+    image: '../../SampleData/fire.png',
+    //image: 'http://i.imgur.com/wJxI64w.png',
+
+    // Position the particle system on the tail of the plane.
+    placer: new Cesium.CirclePlacer({
+        position: new Cesium.Cartesian3(2.5, -4.0, 1.0),
+        radius: 0.5
+    }),
 
     // Particles per second.
     rate: 50,
@@ -184,12 +198,17 @@ var emitter = new Cesium.PointEmitter({
         {time: 5.0, min: 300, max: 500},
         {time: 10.0, min: 50, max: 100},
         {time: 15.0, min: 200, max: 300}
-    ]
+    ],
+
+    lifeTime: 16.0
 });
-entity._getModelMatrix(viewer.clock.currentTime, emitter.modelMatrix);
+
+entity._getModelMatrix(viewer.clock.currentTime, leftEmitter.modelMatrix);
+entity._getModelMatrix(viewer.clock.currentTime, rightEmitter.modelMatrix);
 
 var particles = scene.primitives.add(new Cesium.ParticleSystem({
-    emitter: emitter,
+    emitters: [leftEmitter, rightEmitter],
+
     //forces: [applyGravity]
     startColor: Cesium.Color.RED.withAlpha(0.7),
     endColor: Cesium.Color.YELLOW.withAlpha(0.3),
@@ -201,7 +220,8 @@ var particles = scene.primitives.add(new Cesium.ParticleSystem({
 
 viewer.scene.preRender.addEventListener(function(scene, time) {
     // Sync the emitters modelMatrix with the entities position.
-    entity._getModelMatrix(viewer.clock.currentTime, emitter.modelMatrix);
+    entity._getModelMatrix(viewer.clock.currentTime, leftEmitter.modelMatrix);
+    entity._getModelMatrix(viewer.clock.currentTime, rightEmitter.modelMatrix);
 });
 
 

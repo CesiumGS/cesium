@@ -22,9 +22,10 @@ define([
 
         this.particles = defaultValue(options.particles, []);
         this.forces = defaultValue(options.forces, []);
-        this.emitter = options.emitter;
+
+        this.emitters = defaultValue(options.emitters, []);
+
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-        this.maximumParticles = defaultValue(options.maximumParticles, 1000.0);
 
         this.startColor = defaultValue(options.startColor, Color.WHITE);
         this.endColor = defaultValue(options.endColor, Color.WHITE);
@@ -100,7 +101,8 @@ define([
 
         // emit new particles if an emitter is attached.
         // the emission counts as the particle "update"
-        if (defined(emitter)) {
+        for (i = 0; i < this.emitters.length; i++) {
+            var emitter = this.emitters[i];
             emitter.emit(this, dt);
         }
 
