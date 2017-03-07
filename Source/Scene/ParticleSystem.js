@@ -103,10 +103,10 @@ define([
         // the emission counts as the particle "update"
         for (i = 0; i < this.emitters.length; i++) {
             var emitter = this.emitters[i];
+            emitter.modelMatrix = this.modelMatrix;
             emitter.emit(this, dt);
         }
 
-        this._billboardCollection.modelMatrix = this.modelMatrix;
         this._billboardCollection.update(frameState);
 
         this._previousTime = JulianDate.clone(frameState.time, this._previousTime);

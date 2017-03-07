@@ -203,8 +203,7 @@ var rightEmitter = new Cesium.PointEmitter({
     lifeTime: 16.0
 });
 
-entity._getModelMatrix(viewer.clock.currentTime, leftEmitter.modelMatrix);
-entity._getModelMatrix(viewer.clock.currentTime, rightEmitter.modelMatrix);
+
 
 var particles = scene.primitives.add(new Cesium.ParticleSystem({
     emitters: [leftEmitter, rightEmitter],
@@ -216,12 +215,12 @@ var particles = scene.primitives.add(new Cesium.ParticleSystem({
     startScale: 1.0,
     endScale: 4.0
 }));
+entity._getModelMatrix(viewer.clock.currentTime, particles.modelMatrix);
 
 
 viewer.scene.preRender.addEventListener(function(scene, time) {
-    // Sync the emitters modelMatrix with the entities position.
-    entity._getModelMatrix(viewer.clock.currentTime, leftEmitter.modelMatrix);
-    entity._getModelMatrix(viewer.clock.currentTime, rightEmitter.modelMatrix);
+    // Sync the modelMatrix with the entitys position.
+    entity._getModelMatrix(viewer.clock.currentTime, particles.modelMatrix);
 });
 
 
