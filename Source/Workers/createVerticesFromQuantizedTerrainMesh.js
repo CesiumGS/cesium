@@ -184,7 +184,7 @@ define([
         var indexBuffer = IndexDatatype.createTypedArray(quantizedVertexCount + edgeVertexCount, indexBufferLength);
         indexBuffer.set(parameters.indices, 0);
 
-        var percentage = 0.001;
+        var percentage = 0.0001;
         var lonOffset = (maxLongitude - minLongitude) * percentage;
         var latOffset = (maxLatitude - minLatitude) * percentage;
         var westLongitudeOffset = -lonOffset;
