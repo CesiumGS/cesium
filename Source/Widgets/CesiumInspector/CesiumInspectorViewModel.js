@@ -895,7 +895,7 @@ define([
                         this.tileText += '<br>NE corner: ' + newTile.rectangle.east + ', ' + newTile.rectangle.north;
                         var data = newTile.data;
                         if (defined(data)) {
-                            this.tileText += '<br>Min: ' + newTile.data.minimumHeight + ' Max: ' + newTile.data.maximumHeight;
+                            this.tileText += '<br>Min: ' + data.minimumHeight + ' Max: ' + data.maximumHeight;
                         } else {
                             this.tileText += '<br>(Tile is not loaded)';
                         }
