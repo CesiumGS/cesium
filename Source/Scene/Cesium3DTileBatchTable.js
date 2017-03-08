@@ -575,9 +575,8 @@ define([
             return traverseHierarchyNoParents(hierarchy, instanceIndex, endConditionCallback);
         } else if (defined(parentCounts)) {
             return traverseHierarchyMultipleParents(hierarchy, instanceIndex, endConditionCallback);
-        } else {
-            return traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback);
         }
+        return traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback);
     }
 
     function hasPropertyInHierarchy(batchTable, batchId, name) {
