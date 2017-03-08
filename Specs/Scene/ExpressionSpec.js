@@ -2011,11 +2011,11 @@ defineSuite([
 
     it('throws if fract function takes an invalid number of arguments', function() {
         expect(function() {
-            return new Expression('log2()');
+            return new Expression('fract()');
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('log2(1, 2)');
+            return new Expression('fract(1, 2)');
         }).toThrowDeveloperError();
     });
 

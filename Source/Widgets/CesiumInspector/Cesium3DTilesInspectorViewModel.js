@@ -2,6 +2,7 @@
 define([
         '../../Core/Cartesian3',
         '../../Core/Cartographic',
+        '../../Scene/Cesium3DTileFeature',
         '../../Scene/Cesium3DTileset',
         '../../Scene/Cesium3DTileStyle',
         '../../Scene/Cesium3DTileColorBlendMode',
@@ -19,6 +20,7 @@ define([
     ], function(
         Cartesian3,
         Cartographic,
+        Cesium3DTileFeature,
         Cesium3DTileset,
         Cesium3DTileStyle,
         Cesium3DTileColorBlendMode,
@@ -153,8 +155,11 @@ define([
                     return function(val) {
                         if (val) {
                             that._eventHandler.setInputAction(function(e) {
-                                that._feature = scene.pick(e.endPosition);
-                                that._updateStats(true);
+                                var picked = scene.pick(e.endPosition);
+                                if (picked instanceof Cesium3DTileFeature) {
+                                    that._feature = picked;
+                                    that._updateStats(true);
+                                }
                             }, ScreenSpaceEventType.MOUSE_MOVE);
                         } else {
                             that._feature = undefined;
@@ -254,6 +259,21 @@ define([
                 subscribe: function(val) {
                     if (that._tileset) {
                         that._tileset.debugShowViewerRequestVolume = val;
+                    }
+                }
+            },
+            /**
+             * Gets or sets the flag to show tile geometric error.  This property is observable.
+             * @memberof Cesium3DTilesInspectorViewModel.prototype
+             *
+             * @type {Boolean}
+             * @default false
+             */
+            showGeometricError: {
+                default: false,
+                subscribe: function(val) {
+                    if (that._tileset) {
+                        that._tileset.debugShowGeometricError = val;
                     }
                 }
             },
@@ -401,6 +421,7 @@ define([
                                         'showBoundingVolumes',
                                         'showContentBoundingVolumes',
                                         'showRequestVolumes',
+                                        'showGeometricError',
                                         'freezeFrame'];
                         var length = settings.length;
                         for (var i = 0; i < length; ++i) {
@@ -422,7 +443,6 @@ define([
             _feature: {
                 default: undefined,
                 subscribe: (function() {
-
                     var current;
                     var scratchColor = new Color();
                     var oldColor = new Color();
@@ -611,39 +631,44 @@ define([
             var s = '<ul class="cesium-cesiumInspector-stats">';
             s +=
                 // --- Rendering stats
-                '<li><strong>Visited: </strong>' + stats.visited + '</li>' +
+                '<li><strong>Visited: </strong>' + stats.visited.toLocaleString() + '</li>' +
                 // Number of commands returned is likely to be higher than the number of tiles selected
                 // because of tiles that create multiple commands.
-                '<li><strong>Selected: </strong>' + tileset._selectedTiles.length + '</li>' +
+                '<li><strong>Selected: </strong>' + tileset._selectedTiles.length.toLocaleString() + '</li>' +
                 // Number of commands executed is likely to be higher because of commands overlapping
                 // multiple frustums.
-                '<li><strong>Commands: </strong>' + stats.numberOfCommands + '</li>';
+                '<li><strong>Commands: </strong>' + stats.numberOfCommands.toLocaleString() + '</li>';
             s += '</ul>';
             s += '<ul class="cesium-cesiumInspector-stats">';
             if (!isPick) {
                 s +=
                     // --- Cache/loading stats
-                    '<li><strong>Requests: </strong>' + stats.numberOfPendingRequests + '</li>' +
-                    '<li><strong>Attempted: </strong>' + stats.numberOfAttemptedRequests + '</li>' +
-                    '<li><strong>Processing: </strong>' + stats.numberProcessing + '</li>' +
-                    '<li><strong>Content Ready: </strong>' + stats.numberContentReady + '</li>' +
+                    '<li><strong>Requests: </strong>' + stats.numberOfPendingRequests.toLocaleString() + '</li>' +
+                    '<li><strong>Attempted: </strong>' + stats.numberOfAttemptedRequests.toLocaleString() + '</li>' +
+                    '<li><strong>Processing: </strong>' + stats.numberProcessing.toLocaleString() + '</li>' +
+                    '<li><strong>Content Ready: </strong>' + stats.numberContentReady.toLocaleString() + '</li>' +
                     // Total number of tiles includes tiles without content, so "Ready" may never reach
                     // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
-                    '<li><strong>Total: </strong>' + stats.numberTotal + '</li>';
+                    '<li><strong>Total: </strong>' + stats.numberTotal.toLocaleString() + '</li>';
                 s += '</ul>';
                 s += '<ul class="cesium-cesiumInspector-stats">';
                 s +=
                     // --- Features stats
-                    '<li><strong>Features Selected: </strong>' + stats.numberOfFeaturesSelected + '</li>' +
-                    '<li><strong>Features Loaded: </strong>' + stats.numberOfFeaturesLoaded + '</li>' +
-                    '<li><strong>Points Selected: </strong>' + stats.numberOfPointsSelected + '</li>' +
-                    '<li><strong>Points Loaded: </strong>' + stats.numberOfPointsLoaded + '</li>';
+                    '<li><strong>Features Selected: </strong>' + stats.numberOfFeaturesSelected.toLocaleString() + '</li>' +
+                    '<li><strong>Features Loaded: </strong>' + stats.numberOfFeaturesLoaded.toLocaleString() + '</li>' +
+                    '<li><strong>Points Selected: </strong>' + stats.numberOfPointsSelected.toLocaleString() + '</li>' +
+                    '<li><strong>Points Loaded: </strong>' + stats.numberOfPointsLoaded.toLocaleString() + '</li>';
                 s += '</ul>';
                 s += '<ul class="cesium-cesiumInspector-stats">';
                 s +=
                     // --- Styling stats
-                    '<li><strong>Tiles styled: </strong>' + stats.numberOfTilesStyled + '</li>' +
-                    '<li><strong>Features styled: </strong>' + stats.numberOfFeaturesStyled + '</li>';
+                    '<li><strong>Tiles styled: </strong>' + stats.numberOfTilesStyled.toLocaleString() + '</li>' +
+                    '<li><strong>Features styled: </strong>' + stats.numberOfFeaturesStyled.toLocaleString() + '</li>';
+                s += '</ul>';
+                s += '<ul class="cesium-cesiumInspector-stats">';
+                s +=
+                    // --- Optimization stats
+                    '<li><strong>Children Union Culled: </strong>' + stats.numberOfTilesCulledWithChildrenUnion.toLocaleString() + '</li>';
                 s += '</ul>';
             }
 

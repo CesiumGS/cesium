@@ -37,7 +37,7 @@ defineSuite([
 
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
-    var batchLengthZeroUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
+    var noBatchIdsUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
     var batchTableHierarchyUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/';
     var batchTableHierarchyBinaryUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyBinary/';
     var batchTableHierarchyMultipleParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents/';
@@ -570,12 +570,12 @@ defineSuite([
     });
 
     it('renders with featuresLength of zero', function() {
-        return Cesium3DTilesTester.loadTileset(scene, batchLengthZeroUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, noBatchIdsUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
 
             expect(scene).toPickAndCall(function(result) {
                 expect(result).toBeDefined();
-                expect(result.primitive).toBe(tileset._root.content._model);
+                expect(result.primitive).toBe(tileset);
             });
         });
     });

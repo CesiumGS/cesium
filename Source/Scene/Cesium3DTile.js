@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -22,8 +23,11 @@ define([
         '../Core/RequestScheduler',
         '../Core/SphereOutlineGeometry',
         '../ThirdParty/Uri',
+        './Cesium3DTileChildrenVisibility',
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
+        './Cesium3DTileOptimizations',
+        './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
         './Empty3DTileContent',
         './PerInstanceColorAppearance',
@@ -38,6 +42,7 @@ define([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        clone,
         defaultValue,
         defined,
         defineProperties,
@@ -55,8 +60,11 @@ define([
         RequestScheduler,
         SphereOutlineGeometry,
         Uri,
+        Cesium3DTileChildrenVisibility,
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
+        Cesium3DTileOptimizations,
+        Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
         Empty3DTileContent,
         PerInstanceColorAppearance,
@@ -305,6 +313,15 @@ define([
          * @private
          */
         this.visibilityPlaneMask = true;
+        
+        /**
+         * Flag to mark children visibility
+         *
+         * @type {Cesium3DTileChildrenVisibility}
+         * 
+         * @private
+         */
+        this.childrenVisibility = Cesium3DTileChildrenVisibility.VISIBLE;
 
         /**
          * The last frame number the tile was selected in.
@@ -329,6 +346,13 @@ define([
         this._debugViewerRequestVolume = undefined;
         this._debugColor = new Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
+
+        /**
+         * Marks whether the tile's children bounds are fully contained within the tile's bounds
+         * 
+         * @type {Cesium3DTileOptimizationHint}
+         */
+        this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
     }
 
     defineProperties(Cesium3DTile.prototype, {
