@@ -204,9 +204,6 @@ define([
         if (defined(contentHeader)) {
             var contentUrl = contentHeader.url;
             var url = joinUrls(baseUrl, contentUrl);
-            if (tileset.skipLODs) {
-                // url += '&skipLODs=true';
-            }
             requestServer = RequestScheduler.getRequestServer(url);
             var type = getExtensionFromUri(url);
             var contentFactory = Cesium3DTileContentFactory[type];
@@ -368,11 +365,13 @@ define([
         this._finalResolution = true;
         this._targetDistanceToCamera = 0;
         this._centerDistanceToCamera = 0;
+        this._centerZDistanceToCamera = 0;
         this._loadHeap = undefined;
         this._iteration = 0;
         this._nearestDescendantDistanceToCamera = 0;
         this._farthestDescendantDistanceToCamera = 0;
         this._depth = 0;
+        this._stackLength = 0;
     }
 
     defineProperties(Cesium3DTile.prototype, {
