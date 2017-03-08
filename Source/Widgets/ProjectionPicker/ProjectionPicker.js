@@ -23,7 +23,7 @@ define([
     var orthographicPath = 'm 31.560594,6.5254438 -20.75,12.4687502 0.1875,24.5625 22.28125,11.8125 19.5,-12 0.65625,-0.375 0,-0.75 0.0312,-23.21875 z m 0.0625,3.125 16.65625,9.5000002 -16.125,10.28125 -17.34375,-9.71875 z m 18.96875,11.1875002 0.15625,20.65625 -17.46875,10.59375 0.15625,-20.28125 z m -37.0625,1.25 17.21875,9.625 -0.15625,19.21875 -16.9375,-9 z';
 
     /**
-     * <p>The ProjectionPicker is a single button widget for switching between perspective and orthographic projections.
+     * The ProjectionPicker is a single button widget for switching between perspective and orthographic projections.
      *
      * @alias ProjectionPicker
      * @constructor
@@ -67,7 +67,7 @@ define([
         button.setAttribute('data-bind', '\
 css: { "cesium-projectionPicker-buttonPerspective": !_orthographic,\
        "cesium-projectionPicker-buttonOrthographic": _orthographic,\
-       "cesium-button-disabled" : sceneMode === _sceneMode.SCENE2D, \
+       "cesium-button-disabled" : sceneMode === _sceneMode.SCENE2D || _flightInProgress, \
        "cesium-projectionPicker-selected": dropDownVisible },\
 attr: { title: selectedTooltip },\
 click: toggleDropDown');

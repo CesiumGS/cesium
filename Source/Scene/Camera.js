@@ -265,7 +265,7 @@ define([
     Camera.DEFAULT_VIEW_FACTOR = 0.5;
 
     /**
-     * The default heading/pitch/range that is used when the camera flies to a location that contains a bounding sphere. 
+     * The default heading/pitch/range that is used when the camera flies to a location that contains a bounding sphere.
      * @type HeadingPitchRange
      */
     Camera.DEFAULT_OFFSET = new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_FOUR, 0.0);
@@ -339,7 +339,13 @@ define([
         }
 
         var dirAngle = CesiumMath.acosClamped(Cartesian3.dot(camera.directionWC, camera._changedDirection));
-        var dirPercentage = dirAngle / (camera.frustum.fovy * 0.5);
+
+        var dirPercentage;
+        if (defined(camera.frustum.fovy)) {
+            dirPercentage = dirAngle / (camera.frustum.fovy * 0.5);
+        } else {
+            dirPercentage = dirAngle;
+        }
 
         var distance = Cartesian3.distance(camera.positionWC, camera._changedPosition);
         var heightPercentage = distance / camera.positionCartographic.height;
@@ -1469,6 +1475,7 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, cameraPosition);
         }
+        this._adjustOrthographicFrustum();
     };
 
     /**

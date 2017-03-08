@@ -51,6 +51,7 @@ define([
 
         this._scene = scene;
         this._orthographic = scene.camera.frustum instanceof OrthographicFrustum;
+        this._flightInProgress = false;
 
         /**
          * Gets or sets whether the button drop-down is currently visible.  This property is observable.
@@ -85,7 +86,7 @@ define([
          */
         this.sceneMode = scene.mode;
 
-        knockout.track(this, ['_orthographic', 'sceneMode', 'dropDownVisible', 'tooltipPerspective', 'tooltipOrthographic']);
+        knockout.track(this, ['_orthographic', '_flightInProgress', 'sceneMode', 'dropDownVisible', 'tooltipPerspective', 'tooltipOrthographic']);
 
         var that = this;
         knockout.defineProperty(this, 'selectedTooltip', function() {
@@ -96,19 +97,21 @@ define([
         });
 
         this._toggleDropDown = createCommand(function() {
-            if (that.sceneMode === SceneMode.SCENE2D) {
+            if (that.sceneMode === SceneMode.SCENE2D || that._flightInProgress) {
                 return;
             }
 
             that.dropDownVisible = !that.dropDownVisible;
         });
 
-        var morphComplete = function(transitioner, oldMode, newMode, isMorphing) {
+        this._eventHelper = new EventHelper();
+        this._eventHelper.add(scene.morphComplete, function(transitioner, oldMode, newMode, isMorphing) {
             that.sceneMode = newMode;
             that._orthographic = newMode === SceneMode.SCENE2D || that._scene.camera.frustum instanceof OrthographicFrustum;
-        };
-        this._eventHelper = new EventHelper();
-        this._eventHelper.add(scene.morphComplete, morphComplete);
+        });
+        this._eventHelper.add(scene.preRender, function() {
+            that._flightInProgress = defined(scene.camera._currentFlight);
+        });
 
         this._switchToPerspective = createCommand(function() {
             if (that.sceneMode === SceneMode.SCENE2D) {
@@ -239,6 +242,7 @@ define([
      * Destroys the view model.
      */
     ProjectionPickerViewModel.prototype.destroy = function() {
+        this._eventHelper.removeAll();
         destroyObject(this);
     };
 
