@@ -1395,7 +1395,7 @@ define([
         // return a.distanceToCamera - b.distanceToCamera;
         // return a._centerZDistanceToCamera - b._centerZDistanceToCamera;
         var diff = b._sse - a._sse;
-        if (diff === 0) {
+        if (diff === 0 || a.refine === Cesium3DTileRefine.ADD || b.refine === Cesium3DTileRefine.ADD) {
             return a.distanceToCamera - b.distanceToCamera;
         } else {
             return diff;
@@ -1696,21 +1696,29 @@ define([
 
             var i, child;
 
+            var additive = tile.refine === Cesium3DTileRefine.ADD;
             if (shouldSelect) {
                 if (tile._finalResolution || childrenLength === 0) {
                     selectTile(tileset, tile, tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
-                    continue;
+                    if (!additive) {
+                        continue;
+                    }
                 }
-                selectionStack.push(tile);
-                tile._stackLength = stack.length;
+
+                if (!additive) {
+                    selectionStack.push(tile);
+                    tile._stackLength = stack.length;
+                }
 
                 for (i = childrenLength - 1; i >= 0; --i) {
                     child = children[i];
-                    if (child._centerZDistanceToCamera <= tile._centerZDistanceToCamera || tile.distanceToCamera < 0) {
-                        stack.push(child);
-                    } else if (tileset._refineToVisible) {
-                        stack.push(child);
-                        tile._stackLength = stack.length;
+                    if (isVisible(child.visibilityPlaneMask)) {
+                        if (child._centerZDistanceToCamera <= tile._centerZDistanceToCamera || tile.distanceToCamera < 0 || additive) {
+                            stack.push(child);
+                        } else if (tileset._refineToVisible) {
+                            stack.push(child);
+                            tile._stackLength = stack.length;
+                        }
                     }
                 }
             } else {
