@@ -7,6 +7,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/Event',
         '../../Core/EventHelper',
         '../../Core/isArray',
         '../../Core/Matrix4',
@@ -49,6 +50,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        Event,
         EventHelper,
         isArray,
         Matrix4,
@@ -469,6 +471,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             toolbar.appendChild(geocoderContainer);
             geocoder = new Geocoder({
                 container : geocoderContainer,
+                geocoderServices: defined(options.geocoder) ? (isArray(options.geocoder) ? options.geocoder : [options.geocoder]) : undefined,
                 scene : cesiumWidget.scene
             });
             // Subscribe to search so that we can clear the trackedEntity when it is clicked.
@@ -660,6 +663,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._zoomTarget = undefined;
         this._zoomPromise = undefined;
         this._zoomOptions = undefined;
+        this._selectedEntityChanged = new Event();
 
         knockout.track(this, ['_trackedEntity', '_selectedEntity', '_clockTrackedDataSource']);
 
@@ -1199,7 +1203,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                             selectionIndicatorViewModel.animateDepart();
                         }
                     }
+                    this._selectedEntityChanged.raiseEvent(value);
                 }
+            }
+        },
+        /**
+         * Gets the event that is raised when the selected entity chages
+         * @memberof Viewer.prototype
+         * @type {Event}
+         * @readonly
+         */
+        selectedEntityChanged : {
+            get : function() {
+                return this._selectedEntityChanged;
             }
         },
         /**
@@ -1264,6 +1280,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (defined(baseLayerPickerDropDown)) {
             baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
+        }
+
+        if (defined(this._geocoder)) {
+            var geocoderSuggestions = this._geocoder.searchSuggestionsContainer;
+            geocoderSuggestions.style.maxHeight = panelMaxHeight + 'px';
         }
 
         if (defined(this._infoBox)) {

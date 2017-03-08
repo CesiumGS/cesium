@@ -270,10 +270,6 @@ define([
         var screenSpaceEventType;
         if (button === MouseButton.LEFT) {
             screenSpaceEventType = ScreenSpaceEventType.LEFT_DOUBLE_CLICK;
-        } else if (button === MouseButton.MIDDLE) {
-            screenSpaceEventType = ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK;
-        } else if (button === MouseButton.RIGHT) {
-            screenSpaceEventType = ScreenSpaceEventType.RIGHT_DOUBLE_CLICK;
         } else {
             return;
         }
@@ -483,7 +479,7 @@ define([
 
                 action(touch2StartEvent);
 
-                // Touch-enabled devices, in particular iOS can have many default behaviours for 
+                // Touch-enabled devices, in particular iOS can have many default behaviours for
                 // "pinch" events, which can still be executed unless we prevent them here.
                 event.preventDefault();
             }

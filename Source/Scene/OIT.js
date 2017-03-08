@@ -11,7 +11,6 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Shaders/AdjustTranslucentFS',
@@ -30,7 +29,6 @@ define([
         Framebuffer,
         PixelDatatype,
         RenderState,
-        ShaderProgram,
         ShaderSource,
         Texture,
         AdjustTranslucentFS,
@@ -82,8 +80,6 @@ define([
 
         this._translucentRenderStateCache = {};
         this._alphaRenderStateCache = {};
-        this._translucentShaderCache = {};
-        this._alphaShaderCache = {};
 
         this._compositeCommand = undefined;
         this._adjustTranslucentCommand = undefined;
@@ -411,9 +407,8 @@ define([
         '    float ai = czm_gl_FragColor.a;\n' +
         '    gl_FragColor = vec4(ai);\n';
 
-    function getTranslucentShaderProgram(context, shaderProgram, cache, source) {
-        var id = shaderProgram.id;
-        var shader = cache[id];
+    function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
+        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, keyword);
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
 
@@ -446,29 +441,26 @@ define([
                     source +
                     '}\n');
 
-            shader = ShaderProgram.fromCache({
-                context : context,
+            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, keyword, {
                 vertexShaderSource : shaderProgram.vertexShaderSource,
                 fragmentShaderSource : fs,
                 attributeLocations : attributeLocations
             });
-
-            cache[id] = shader;
         }
 
         return shader;
     }
 
-    function getTranslucentMRTShaderProgram(oit, context, shaderProgram) {
-        return getTranslucentShaderProgram(context, shaderProgram, oit._translucentShaderCache, mrtShaderSource);
+    function getTranslucentMRTShaderProgram(context, shaderProgram) {
+        return getTranslucentShaderProgram(context, shaderProgram, 'translucentMRT', mrtShaderSource);
     }
 
-    function getTranslucentColorShaderProgram(oit, context, shaderProgram) {
-        return getTranslucentShaderProgram(context, shaderProgram, oit._translucentShaderCache, colorShaderSource);
+    function getTranslucentColorShaderProgram(context, shaderProgram) {
+        return getTranslucentShaderProgram(context, shaderProgram, 'translucentMultipass', colorShaderSource);
     }
 
-    function getTranslucentAlphaShaderProgram(oit, context, shaderProgram) {
-        return getTranslucentShaderProgram(context, shaderProgram, oit._alphaShaderCache, alphaShaderSource);
+    function getTranslucentAlphaShaderProgram(context, shaderProgram) {
+        return getTranslucentShaderProgram(context, shaderProgram, 'alphaMultipass', alphaShaderSource);
     }
 
     OIT.prototype.createDerivedCommands = function(command, context, result) {
@@ -487,7 +479,7 @@ define([
             result.translucentCommand = DrawCommand.shallowClone(command, result.translucentCommand);
 
             if (!defined(translucentShader) || result.shaderProgramId !== command.shaderProgram.id) {
-                result.translucentCommand.shaderProgram = getTranslucentMRTShaderProgram(this, context, command.shaderProgram);
+                result.translucentCommand.shaderProgram = getTranslucentMRTShaderProgram(context, command.shaderProgram);
                 result.translucentCommand.renderState = getTranslucentMRTRenderState(this, context, command.renderState);
                 result.shaderProgramId = command.shaderProgram.id;
             } else {
@@ -510,9 +502,9 @@ define([
             result.alphaCommand = DrawCommand.shallowClone(command, result.alphaCommand);
 
             if (!defined(colorShader) || result.shaderProgramId !== command.shaderProgram.id) {
-                result.translucentCommand.shaderProgram = getTranslucentColorShaderProgram(this, context, command.shaderProgram);
+                result.translucentCommand.shaderProgram = getTranslucentColorShaderProgram(context, command.shaderProgram);
                 result.translucentCommand.renderState = getTranslucentColorRenderState(this, context, command.renderState);
-                result.alphaCommand.shaderProgram = getTranslucentAlphaShaderProgram(this, context, command.shaderProgram);
+                result.alphaCommand.shaderProgram = getTranslucentAlphaShaderProgram(context, command.shaderProgram);
                 result.alphaCommand.renderState = getTranslucentAlphaRenderState(this, context, command.renderState);
                 result.shaderProgramId = command.shaderProgram.id;
             } else {
@@ -638,23 +630,6 @@ define([
         if (defined(this._adjustAlphaCommand)) {
             this._adjustAlphaCommand.shaderProgram = this._adjustAlphaCommand.shaderProgram && this._adjustAlphaCommand.shaderProgram.destroy();
         }
-
-        var name;
-        var cache = this._translucentShaderCache;
-        for (name in cache) {
-            if (cache.hasOwnProperty(name) && defined(cache[name])) {
-                cache[name].destroy();
-            }
-        }
-        this._translucentShaderCache = {};
-
-        cache = this._alphaShaderCache;
-        for (name in cache) {
-            if (cache.hasOwnProperty(name) && defined(cache[name])) {
-                cache[name].destroy();
-            }
-        }
-        this._alphaShaderCache = {};
 
         return destroyObject(this);
     };

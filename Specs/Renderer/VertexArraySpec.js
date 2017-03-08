@@ -270,7 +270,7 @@ defineSuite([
         });
         command.execute(context);
 
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -321,7 +321,7 @@ defineSuite([
         });
         command.execute(context);
 
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -372,7 +372,7 @@ defineSuite([
         });
         command.execute(context);
 
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -423,10 +423,86 @@ defineSuite([
         });
         command.execute(context);
 
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
+    });
+
+    it('renders two vertex arrays with constant values', function() {
+        var vs =
+            'attribute float firefoxWorkaround;' +
+            'attribute vec4 attr;' +
+            'varying vec4 v_color;' +
+            'void main() { ' +
+            '  v_color = attr + vec4(firefoxWorkaround);' +
+            '  gl_PointSize = 1.0;' +
+            '  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);' +
+            '}';
+
+        var fs =
+            'varying vec4 v_color;' +
+            'void main() { gl_FragColor = v_color; }';
+
+        var sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                firefoxWorkaround : 0,
+                attr : 1
+            }
+        });
+
+        var vertexBuffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : Float32Array.BYTES_PER_ELEMENT,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        var vaRed = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : vertexBuffer,
+                componentsPerAttribute : 1
+            }, {
+                value : [1, 0, 0, 1]
+            }]
+        });
+
+        var vaGreen = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : vertexBuffer,
+                componentsPerAttribute : 1
+            }, {
+                value : [0, 1, 0, 1]
+            }]
+        });
+
+        var commandRed = new DrawCommand({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : vaRed,
+            count : 1
+        });
+
+        var commandGreen = new DrawCommand({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : vaGreen,
+            count : 1
+        });
+
+        commandRed.execute(context);
+        expect(context).toReadPixels([255, 0, 0, 255]);
+
+        commandGreen.execute(context);
+        expect(context).toReadPixels([0, 255, 0, 255]);
+
+        sp = sp.destroy();
+        vaRed = vaRed.destroy();
+        vaGreen = vaGreen.destroy();
     });
 
     it('destroys', function() {
