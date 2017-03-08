@@ -149,8 +149,10 @@ var leftEmitter = new Cesium.PointEmitter({
     lifeVariance: 0.2,
     initialDirection: new Cesium.Cartesian3(0,0,1),
     directionVariance: new Cesium.Cartesian3(0.1, 0.1, 0),
-    speedVariance: 0.6,
-    initialSpeed: 5.0,
+
+    minSpeed: 5.0,
+    maxSpeed: 8.0,
+
     initialSize: new Cesium.Cartesian2(particleSize, particleSize),
     sizeVariance: new Cesium.Cartesian2(10.0, 10.0),
     image: '../../SampleData/fire.png',
@@ -183,12 +185,13 @@ var rightEmitter = new Cesium.PointEmitter({
     lifeVariance: 0.2,
     initialDirection: new Cesium.Cartesian3(0,0,1),
     directionVariance: new Cesium.Cartesian3(0.1, 0.1, 0),
-    speedVariance: 0.6,
-    initialSpeed: 5.0,
+
+    minSpeed: 5.0,
+    maxSpeed: 8.0,
+
     initialSize: new Cesium.Cartesian2(particleSize, particleSize),
     sizeVariance: new Cesium.Cartesian2(10.0, 10.0),
     image: '../../SampleData/fire.png',
-    //image: 'http://i.imgur.com/wJxI64w.png',
 
     // Position the particle system on the tail of the plane.
     placer: new Cesium.CirclePlacer({
