@@ -41,6 +41,7 @@ defineSuite([
     var batchTableHierarchyUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/';
     var batchTableHierarchyBinaryUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyBinary/';
     var batchTableHierarchyMultipleParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents/';
+    var batchTableHierarchyNoParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyNoParents/';
 
     var result = new Color();
 
@@ -752,6 +753,38 @@ defineSuite([
         });
     }
 
+    function checkHierarchyStylingNoParents(tileset) {
+        // Check that a feature is colored from a generic batch table property.
+        tileset.style = new Cesium3DTileStyle({color : "${height} === 6.0 ? color('red') : color('green')"});
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0); // Expect red
+        });
+
+        // Check that a feature is colored from a class property.
+        tileset.style = new Cesium3DTileStyle({color : "${roof_name} === 'roof2' ? color('red') : color('green')"});
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0); // Expect red
+        });
+
+        // Check isExactClass
+        tileset.style = new Cesium3DTileStyle({color : "isExactClass('roof') ? color('red') : color('green')"});
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0); // Expect red
+        });
+
+        // Check isClass
+        tileset.style = new Cesium3DTileStyle({color : "isClass('roof') ? color('red') : color('green')"});
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0); // Expect red
+        });
+
+        // Check getExactClassName
+        tileset.style = new Cesium3DTileStyle({color : "getExactClassName() === 'roof' ? color('red') : color('green')"});
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0); // Expect red
+        });
+    }
+
     function checkHierarchyProperties(tileset, multipleParents) {
         // Check isExactClass, isClass, and getExactClassName in Cesium3DTileFeature
         var content = tileset._root.content;
@@ -814,10 +847,47 @@ defineSuite([
         batchTable._batchTableHierarchy = hierarchy;
     }
 
+    function checkHierarchyPropertiesNoParents(tileset) {
+        // Check isExactClass, isClass, and getExactClassName in Cesium3DTileFeature
+        var content = tileset._root.content;
+        var doorFeature = content.getFeature(4);
+        expect(doorFeature.isExactClass('door')).toBe(true);
+        expect(doorFeature.isExactClass('doorknob')).toBe(false);
+        expect(doorFeature.isClass('door')).toBe(true);
+        expect(doorFeature.isClass('doorknob')).toBe(false);
+        expect(doorFeature.getExactClassName()).toBe('door');
+        expect(doorFeature.hasProperty('door_name')).toBe(true);
+        expect(doorFeature.hasProperty('height')).toBe(true);
+
+        // Includes batch table properties and hierarchy properties from all inherited classes
+        var expectedPropertyNames = ['height', 'area', 'door_mass', 'door_width', 'door_name'];
+
+        var propertyNames = doorFeature.getPropertyNames();
+        expect(expectedPropertyNames.sort()).toEqual(propertyNames.sort());
+
+        expect(doorFeature.getProperty('height')).toBe(5.0); // Gets generic property
+        expect(doorFeature.getProperty('door_name')).toBe('door0'); // Gets class property
+
+        // Sets generic property
+        doorFeature.setProperty('height', 10.0);
+        expect(doorFeature.getProperty('height')).toBe(10.0);
+
+        // Sets class property
+        doorFeature.setProperty('door_name', 'new_door');
+        expect(doorFeature.getProperty('door_name')).toBe('new_door');
+    }
+
     function checkBatchTableHierarchy(url, multipleParents) {
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
             checkHierarchyStyling(tileset);
             checkHierarchyProperties(tileset, multipleParents);
+        });
+    }
+
+    function checkBatchTableHierarchyNoParents(url) {
+        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+            checkHierarchyStylingNoParents(tileset);
+            checkHierarchyPropertiesNoParents(tileset);
         });
     }
 
@@ -826,11 +896,15 @@ defineSuite([
     });
 
     it('renders tileset with batch table hierarchy using binary properties', function() {
-        return checkBatchTableHierarchy(batchTableHierarchyBinaryUrl, false);
+        return checkBatchTableHierarchy(batchTableHierarchyBinaryUrl, true);
     });
 
     it('renders tileset with batch table hierarchy with multiple parent classes', function() {
         return checkBatchTableHierarchy(batchTableHierarchyMultipleParentsUrl, true);
+    });
+
+    it('renders tileset with batch table hierarchy with no parents', function() {
+        return checkBatchTableHierarchyNoParents(batchTableHierarchyNoParentsUrl);
     });
 
     it('validates hierarchy with multiple parents', function() {

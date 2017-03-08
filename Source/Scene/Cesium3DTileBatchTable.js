@@ -167,11 +167,13 @@ define([
             }
         }
 
-        if (defined(parentIds.byteOffset)) {
-            parentIds.componentType = defaultValue(parentIds.componentType, 'UNSIGNED_SHORT');
-            parentIds.type = 'SCALAR';
-            binaryAccessor = getBinaryAccessor(parentIds);
-            parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, parentIdsLength);
+        if (defined(parentIds)) {
+            if (defined(parentIds.byteOffset)) {
+                parentIds.componentType = defaultValue(parentIds.componentType, 'UNSIGNED_SHORT');
+                parentIds.type = 'SCALAR';
+                binaryAccessor = getBinaryAccessor(parentIds);
+                parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, parentIdsLength);
+            }
         }
 
         var classesLength = classes.length;
@@ -226,6 +228,11 @@ define([
         var parentIndexes = hierarchy.parentIndexes;
         var classIds = hierarchy.classIds;
         var instancesLength = classIds.length;
+
+        if (!defined(parentIds)) {
+            // No need to validate if there are no parents
+            return;
+        }
 
         if (instanceIndex >= instancesLength) {
             throw new DeveloperError('Parent index ' + instanceIndex + ' exceeds the total number of instances: ' + instancesLength);
@@ -555,11 +562,18 @@ define([
         }
     }
 
+    function traverseHierarchyNoParents(hierarchy, instanceIndex, endConditionCallback) {
+        return endConditionCallback(hierarchy, instanceIndex);
+    }
+
     function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
         // Traverse over the hierarchy and process each instance with the endConditionCallback.
         // When the endConditionCallback returns a value, the traversal stops and that value is returned.
         var parentCounts = hierarchy.parentCounts;
-        if (defined(parentCounts)) {
+        var parentIds = hierarchy.parentIds;
+        if (!defined(parentIds)) {
+            return traverseHierarchyNoParents(hierarchy, instanceIndex, endConditionCallback);
+        } else if (defined(parentCounts)) {
             return traverseHierarchyMultipleParents(hierarchy, instanceIndex, endConditionCallback);
         }
         return traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback);
