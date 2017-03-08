@@ -25,7 +25,7 @@ define([
 
     function canTransferArrayBuffer() {
         if (!defined(TaskProcessor._canTransferArrayBuffer)) {
-            var worker = require('worker!../Workers/transferTypedArrayTest')();
+            var worker = require('worker-loader!../Workers/transferTypedArrayTest')();
             worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
             var value = 99;
@@ -122,7 +122,7 @@ define([
 
 
     function createWorker(processor) {
-        var worker = require('worker?name=cesiumWorkers.js!../Workers/bootstrapper/cesiumWorkerBootstrapper')();
+        var worker = require('worker-loader?name=cesiumWorkers.js!../Workers/bootstrapper/cesiumWorkerBootstrapper')();
         worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
         var bootstrapMessage = {
