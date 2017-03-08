@@ -33,6 +33,7 @@ defineSuite([
     var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
     var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
     var deprecatedUrl = './Data/Cesium3DTiles/Batched/BatchedDeprecated/';
+    var gltfZUpUrl = './Data/Cesium3DTiles/Batched/BatchedGltfZUp';
 
     function setCamera(longitude, latitude) {
         // One feature is located at the center, point the camera there
@@ -138,6 +139,12 @@ defineSuite([
     it('renders with KHR_materials_common extension', function() {
         // Tests that the batchId attribute and CESIUM_RTC extension are handled correctly
         return Cesium3DTilesTester.loadTileset(scene, withKHRMaterialsCommonUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with a gltf z-up axis', function() {
+        return Cesium3DTilesTester.loadTileset(scene, gltfZUpUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });

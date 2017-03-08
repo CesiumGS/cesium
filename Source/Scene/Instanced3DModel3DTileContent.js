@@ -318,7 +318,8 @@ define([
             requestType : RequestType.TILES3D,
             gltf : undefined,
             basePath : undefined,
-            incrementallyLoadTextures : false
+            incrementallyLoadTextures : false,
+            upAxis : this._tileset._gltfUpAxis
         };
 
         if (gltfFormat === 0) {
