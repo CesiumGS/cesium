@@ -58,7 +58,7 @@ define([
     var scratchCart = new Cartesian3();
     var scratchCart2 = new Cartesian3();
 
-    function createPitchFunction(camera, destination, startPitch, endPitch, optionPitchAdjustAltitude, heightFunction) {
+    function createPitchFunction(camera, destination, startPitch, endPitch, optionPitchAdjustHeight, heightFunction) {
         var startHeight = heightFunction(0.0);
         var endHeight = heightFunction(1.0);
         var middleHeight = heightFunction(0.5);
@@ -162,7 +162,7 @@ define([
     var scratchEndCart = new Cartographic();
 
     function createUpdate3D(scene, duration, destination, heading, pitch, roll,
-        optionAltitude, optionFlyOverLon, optionFlyOverLonWeight, optionPitchAdjustAltitude) {
+        optionAltitude, optionFlyOverLongitude, optionFlyOverLongitudeWeight, optionPitchAdjustHeight) {
 
         var camera = scene.camera;
         var projection = scene.mapProjection;
@@ -177,15 +177,15 @@ define([
         startCart.longitude = CesiumMath.zeroToTwoPi(startCart.longitude);
         destCart.longitude = CesiumMath.zeroToTwoPi(destCart.longitude);
 
-        if (defined(optionFlyOverLon)) {
-            var intrmdtLon = CesiumMath.zeroToTwoPi(optionFlyOverLon);
+        if (defined(optionFlyOverLongitude)) {
+            var intrmdtLon = CesiumMath.zeroToTwoPi(optionFlyOverLongitude);
 
             var lonMin = Math.min(startCart.longitude, destCart.longitude);
             var lonMax = Math.max(startCart.longitude, destCart.longitude);
 
             var intrmdtInside =  (intrmdtLon >= lonMin && intrmdtLon <= lonMax);
 
-            if (defined(optionFlyOverLonWeight)) {
+            if (defined(optionFlyOverLongitudeWeight)) {
                 // Distance inside  (0...2Pi)
                 var din = Math.abs(startCart.longitude - destCart.longitude);
                 // Distance outside (0...2Pi)
@@ -194,7 +194,7 @@ define([
                 var hitDistance = intrmdtInside ? din : dot;
                 var offDistance = intrmdtInside ? dot : din;
 
-                if (hitDistance < offDistance * optionFlyOverLonWeight) {
+                if (hitDistance < offDistance * optionFlyOverLongitudeWeight) {
                     if (!intrmdtInside) {
                         // Adjust start/stop to hit intrmdtLon
                         flip();
@@ -237,8 +237,8 @@ define([
             return CesiumMath.lerp(startPitch, pitch, time);
         };
 
-        if (defined(optionPitchAdjustAltitude) && heightFunction(0.5) > optionPitchAdjustAltitude) {
-            pitchFunction = createPitchFunction(camera, destination, startPitch, pitch, optionPitchAdjustAltitude, heightFunction);
+        if (defined(optionPitchAdjustHeight) && heightFunction(0.5) > optionPitchAdjustHeight) {
+            pitchFunction = createPitchFunction(camera, destination, startPitch, pitch, optionPitchAdjustHeight, heightFunction);
         }
 
         function update(value) {
@@ -342,9 +342,9 @@ define([
         var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
         var maximumHeight = options.maximumHeight;
-        var flyOverLon = options.flyOverLon;
-        var flyOverLonWeight = options.flyOverLonWeight;
-        var pitchAdjustAltitude = options.pitchAdjustAltitude;
+        var flyOverLongitude = options.flyOverLongitude;
+        var flyOverLongitudeWeight = options.flyOverLongitudeWeight;
+        var pitchAdjustHeight = options.pitchAdjustHeight;
         var easingFunction = options.easingFunction;
 
         if (convert && mode !== SceneMode.SCENE3D) {
@@ -400,7 +400,7 @@ define([
         if (duration <= 0.0) {
             var newOnComplete = function() {
                 var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll,
-                                                   maximumHeight, flyOverLon, flyOverLonWeight, pitchAdjustAltitude);
+                                                   maximumHeight, flyOverLongitude, flyOverLongitudeWeight, pitchAdjustHeight);
                 update({ time: 1.0 });
 
                 if (typeof complete === 'function') {
@@ -411,7 +411,7 @@ define([
         }
 
         var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll,
-                                           maximumHeight, flyOverLon, flyOverLonWeight, pitchAdjustAltitude);
+                                           maximumHeight, flyOverLongitude, flyOverLongitudeWeight, pitchAdjustHeight);
 
         if (!defined(easingFunction)) {
             var startHeight = camera.positionCartographic.height;
