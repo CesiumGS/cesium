@@ -145,8 +145,8 @@ function applyGravity(p, dt) {
 }
 
 var leftEmitter = new Cesium.PointEmitter({
-    initialLife: 1.0,
-    lifeVariance: 0.2,
+    life: 1.0,
+
     initialDirection: new Cesium.Cartesian3(0,0,1),
     directionVariance: new Cesium.Cartesian3(0.1, 0.1, 0),
 
@@ -181,8 +181,8 @@ var leftEmitter = new Cesium.PointEmitter({
 });
 
 var rightEmitter = new Cesium.PointEmitter({
-    initialLife: 1.0,
-    lifeVariance: 0.2,
+    life: 1.0,
+
     initialDirection: new Cesium.Cartesian3(0,0,1),
     directionVariance: new Cesium.Cartesian3(0.1, 0.1, 0),
 

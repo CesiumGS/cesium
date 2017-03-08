@@ -41,8 +41,15 @@ define([
             this.maxSpeed = defaultValue(options.maxSpeed, 1.0);
         }
 
-        this.initialLife = defaultValue(options.initialLife, Number.MAX_VALUE);
-        this.lifeVariance = defaultValue(options.lifeVariance, 0.0);
+        var life = defaultValue(options.life, undefined);
+        if (life) {
+            this.minLife = life;
+            this.maxLife = life;
+        }
+        else {
+            this.minLife = defaultValue(options.minLife, 5.0);
+            this.maxLife = defaultValue(options.maxLife, 5.0);
+        }
 
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
@@ -140,7 +147,7 @@ define([
             var particle = new Particle({
                 image: this.image,
                 mass : this.initialMass + this.massVariance * random(0.0, 1.0),
-                life : this.initialLife + this.lifeVariance * random(0.0, 1.0),
+                life : this.minLife + (this.maxLife - this.minLife) * random(0.0, 1.0),
                 velocity :  velocity,
                 size : size,
                 startColor: this.startColor,
