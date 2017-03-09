@@ -27,14 +27,6 @@ define([
     var PointEmitter = function(options) {
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
-        var initialSize = Cartesian2.clone(options.initialSize);
-        if (!defined(initialSize)) {
-            initialSize = new Cartesian2(1.0, 1.0);
-        }
-
-        this.initialSize = initialSize;
-        this.sizeVariance = Cartesian2.clone(defaultValue(options.sizeVariance, Cartesian2.ZERO));
-
         this.rate = defaultValue(options.rate, 5);
 
         this.carryOver = 0.0;
@@ -90,15 +82,8 @@ define([
 
 
         for (var i = 0; i < numToEmit; ++i) {
-
-            var size = Cartesian2.clone(this.initialSize);
-            size.x += this.sizeVariance.x * random(0.0, 1.0);
-            size.y += this.sizeVariance.y * random(0.0, 1.0);
-
             // Create the new particle.
             var particle = new Particle({
-                image: this.image,
-                size : size
             });
 
             // Place the particle with the placer.

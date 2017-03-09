@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Matrix4',
         '../Core/Math',
@@ -12,6 +13,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        Cartesian2,
         Cartesian3,
         Matrix4,
         CesiumMath,
@@ -69,6 +71,26 @@ define([
 
         this.image = defaultValue(options.image, null);
 
+        var width = defaultValue(options.width, undefined);
+        if (width) {
+            this.minWidth = width;
+            this.maxWidth = width;
+        }
+        else {
+            this.minWidth = defaultValue(options.minWidth, 1.0);
+            this.maxWidth = defaultValue(options.maxWidth, 1.0);
+        }
+
+        var height = defaultValue(options.height, undefined);
+        if (height) {
+            this.minHeight = height;
+            this.maxHeight = height;
+        }
+        else {
+            this.minHeight = defaultValue(options.minHeight, 1.0);
+            this.maxHeight = defaultValue(options.maxHeight, 1.0);
+        }
+
         this._billboardCollection = undefined;
 
         this._previousTime = null;
@@ -111,9 +133,12 @@ define([
         particle.startScale = this.startScale;
         particle.endScale = this.endScale;
         particle.image = this.image;
-        particle.life = this.minLife + (this.maxLife - this.minLife) * random(0.0, 1.0);
-        particle.mass = this.minMass + (this.maxMass - this.minMass) * random(0.0, 1.0);
-        var speed = this.minSpeed + (this.maxSpeed - this.minSpeed) * random(0.0, 1.0);
+        particle.life = random(this.minLife, this.maxLife);
+        particle.mass = random(this.minMass, this.maxMass);
+
+        particle.size = new Cartesian2(random(this.minWidth, this.maxWidth), random(this.minHeight, this.maxHeight));
+
+        var speed = random(this.minSpeed, this.maxSpeed);
         Cartesian3.multiplyByScalar(particle.velocity, speed, particle.velocity);
 
         this.particles.push(particle);

@@ -159,10 +159,10 @@ var particles = scene.primitives.add(new Cesium.ParticleSystem({
     minSpeed: 5.0,
     maxSpeed: 8.0,
 
-    emitter: new Cesium.PointEmitter({
+    width: particleSize,
+    height: particleSize,
 
-        initialSize: new Cesium.Cartesian2(particleSize, particleSize),
-        sizeVariance: new Cesium.Cartesian2(10.0, 10.0),
+    emitter: new Cesium.PointEmitter({
 
         // Position the particle system on the tail of the plane.
         placer: new Cesium.CirclePlacer({
