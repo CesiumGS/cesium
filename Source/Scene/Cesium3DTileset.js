@@ -468,7 +468,8 @@ define([
         });
 
         this.skipLODs = defaultValue(options.skipLODs, true);
-        this.skipFactor = defaultValue(options.skipFactor, 10);
+        this.skipSSEFactor = defaultValue(options.skipSSEFactor, 10);
+        this.skipGeometricFactor = defaultValue(options.skipGeometricFactor, 2);
         this.skipLevels = defaultValue(options.skipLevels, 1);
         this.lowMemory = defaultValue(options.lowMemory, false);
         this.mixLOD = defaultValue(options.mixLOD, true);
@@ -1474,9 +1475,9 @@ define([
     }
 
     function selectionHeuristic(tileset, ancestor, tile) {
-        return (tile._sse < ancestor._sse / tileset.skipFactor) &&
+        return (tile._sse < ancestor._sse / tileset.skipSSEFactor) &&
+               (tile.geometricError < ancestor.geometricError / tileset.skipGeometricFactor) &&
                (tile._depth > ancestor._depth + tileset.skipLevels);
-        // return tile.geometricError < ancestor.geometricError / tileset.skipFactor;
     }
 
     function updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, onlyVisible) {
@@ -1667,7 +1668,7 @@ define([
                 for (i = 0; i < childrenLength; ++i) {
                     child = children[i];
                     if (isVisible(child.visibilityPlaneMask)) {
-                        if (child._centerZDistanceToCamera <= tile._centerZDistanceToCamera || tile.distanceToCamera < 0 || additive || lowMemory) {
+                        if (child._centerZDistanceToCamera <= tile._centerZDistanceToCamera || tile.distanceToCamera <= 0 || additive || lowMemory) {
                             stack.push(child);
                         } else if (tileset._refineToVisible) {
                             stack.push(child);
