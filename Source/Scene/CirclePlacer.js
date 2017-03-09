@@ -28,6 +28,9 @@ define([
         var z = this.position.z;
 
         particle.position = new Cartesian3(x, y, z);
+
+        // Set the velocity to shoot up
+        particle.velocity = Cartesian3.clone(Cartesian3.UNIT_Z);
     };
 
     return CirclePlacer;

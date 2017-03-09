@@ -28,9 +28,6 @@ define([
         this.initialMass = defaultValue(options.initialMass, 1.0);
         this.massVariance = defaultValue(options.massVariance, 0.0);
 
-        this.initialDirection = Cartesian3.clone(defaultValue(options.initialDirection, Cartesian3.UNIT_Z));
-        this.directionVariance = Cartesian3.clone(defaultValue(options.directionVariance, Cartesian3.ZERO));
-
         var speed = defaultValue(options.speed, undefined);
         if (speed) {
             this.minSpeed = speed;
@@ -78,8 +75,8 @@ define([
         this.startColor = defaultValue(options.startColor, Color.clone(Color.WHITE));
         this.endColor = defaultValue(options.endColor, Color.clone(Color.WHITE));
 
-        this.startScale = defaultValue(options.startScale);
-        this.endScale = defaultValue(options.endScale);
+        this.startScale = defaultValue(options.startScale, 1.0);
+        this.endScale = defaultValue(options.endScale, 1.0);
 
         this.complete = new Event();
         this.isComplete = false;
@@ -127,12 +124,6 @@ define([
 
 
         for (var i = 0; i < numToEmit; ++i) {
-            var velocity = Cartesian3.clone(this.initialDirection);
-
-            velocity.x += this.directionVariance.x * random(-1.0, 1.0);
-            velocity.y += this.directionVariance.y * random(-1.0, 1.0);
-            velocity.y += this.directionVariance.z * random(-1.0, 1.0);
-            Cartesian3.normalize(velocity, velocity);
 
             var size = Cartesian2.clone(this.initialSize);
             size.x += this.sizeVariance.x * random(0.0, 1.0);
@@ -143,7 +134,6 @@ define([
                 image: this.image,
                 mass : this.initialMass + this.massVariance * random(0.0, 1.0),
                 life : this.minLife + (this.maxLife - this.minLife) * random(0.0, 1.0),
-                velocity :  velocity,
                 size : size,
                 startColor: this.startColor,
                 endColor: this.endColor,
@@ -155,7 +145,6 @@ define([
             this.placer.place( particle );
 
             //For the velocity we need to add it to the original position and then multiply by point.
-
             var tmp = new Cartesian3();
             Cartesian3.add(particle.position, particle.velocity, tmp);
             Matrix4.multiplyByPoint(this.modelMatrix, tmp, tmp);

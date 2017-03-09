@@ -23,7 +23,7 @@ define([
         this.particles = defaultValue(options.particles, []);
         this.forces = defaultValue(options.forces, []);
 
-        this.emitters = defaultValue(options.emitters, []);
+        this.emitter = defaultValue(options.emitter, undefined);
 
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
@@ -95,11 +95,8 @@ define([
 
         // emit new particles if an emitter is attached.
         // the emission counts as the particle "update"
-        for (i = 0; i < this.emitters.length; i++) {
-            var emitter = this.emitters[i];
-            emitter.modelMatrix = this.modelMatrix;
-            emitter.emit(this, dt);
-        }
+        emitter.modelMatrix = this.modelMatrix;
+        emitter.emit(this, dt);
 
         this._billboardCollection.update(frameState);
 
