@@ -133,7 +133,10 @@ define([
 
         // Mipmaps are unsupported, so copy the level 0 texture
         // When mipmaps are supported, a copy will still be necessary as dxtData is a view on the heap.
-        var level0DXTData = dxtData.slice(0, PixelFormat.compressedTextureSize(format, width, height));
+        var length = PixelFormat.compressedTextureSize(format, width, height);
+        var level0DXTData = new Uint8Array(length);
+        level0DXTData.set(dxtData, 0);
+
         transferableObjects.push(level0DXTData.buffer);
         return new CompressedTextureBuffer(format, width, height, level0DXTData);
     }

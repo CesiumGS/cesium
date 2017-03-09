@@ -340,11 +340,13 @@ define([
             gltf : gltfView,
             cull : false,           // The model is already culled by the 3D tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-            basePath : getBaseUri(this._url),
+            basePath : getBaseUri(this._url, true),
             modelMatrix : this._tile.computedTransform,
+            upAxis : this._tileset._gltfUpAxis,
             shadows: this._tileset.shadows,
             debugWireframe: this._tileset.debugWireframe,
             incrementallyLoadTextures : false,
+            pickPrimitive : this._tileset,
             vertexShaderLoaded : getVertexShaderCallback(this),
             fragmentShaderLoaded : getFragmentShaderCallback(this),
             uniformMapLoaded : batchTable.getUniformMapCallback(),

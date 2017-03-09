@@ -103,6 +103,8 @@ defineSuite([
     // Parent tile with content and four child tiles with content with viewer request volume for each child
     var tilesetReplacementWithViewerRequestVolumeUrl = './Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume';
 
+    var tilesetWithExternalResources = './Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources';
+
     var styleUrl = './Data/Cesium3DTiles/Style/style.json';
 
     var pointCloudUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB';
@@ -191,7 +193,7 @@ defineSuite([
     });
 
     it('url and tilesetUrl set up correctly given tileset.json path', function() {
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset3.json';
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
         var tileset = new Cesium3DTileset({
             url : path
         });
@@ -258,6 +260,30 @@ defineSuite([
     it('passes version in query string to tiles', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             expect(tileset._root.content._url).toEqual(tilesetUrl + 'parent.b3dm?v=1.2.3');
+        });
+    });
+
+    it('passes version in query string to all external resources', function() {
+        //Spy on loadWithXhr so we can verify requested urls
+        spyOn(loadWithXhr, 'load').and.callThrough();
+
+        var queryParams = '?a=1&b=boy';
+        var queryParamsWithVersion = '?a=1&b=boy&v=1.2.3';
+        return Cesium3DTilesTester.loadTileset(scene, tilesetWithExternalResources + queryParams).then(function(tileset) {
+            var calls = loadWithXhr.load.calls.all();
+            var callsLength = calls.length;
+            for (var i = 0; i < callsLength; ++i) {
+                var url = calls[0].args[0];
+                if (url.indexOf(tilesetWithExternalResources) >= 0) {
+                    var query = url.slice(url.indexOf('?'));
+                    if (url.indexOf('tileset.json') >= 0) {
+                        // The initial tileset.json does not have a tileset version parameter
+                        expect(query).toBe(queryParams);
+                    } else {
+                        expect(query).toBe(queryParamsWithVersion);
+                    }
+                }
+            }
         });
     });
 

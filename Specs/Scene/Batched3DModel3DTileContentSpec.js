@@ -37,6 +37,7 @@ defineSuite([
     var texturedUrl = './Data/Cesium3DTiles/Batched/BatchedTextured/';
     var compressedTexturesUrl = './Data/Cesium3DTiles/Batched/BatchedCompressedTextures/';
     var deprecatedUrl = './Data/Cesium3DTiles/Batched/BatchedDeprecated/';
+    var gltfZUpUrl = './Data/Cesium3DTiles/Batched/BatchedGltfZUp';
 
     function setCamera(longitude, latitude) {
         // One feature is located at the center, point the camera there
@@ -155,6 +156,12 @@ defineSuite([
     it('renders with compressed textures', function() {
         return Cesium3DTilesTester.loadTileset(scene, compressedTexturesUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+    });
+
+    it('renders with a gltf z-up axis', function() {
+        return Cesium3DTilesTester.loadTileset(scene, gltfZUpUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 

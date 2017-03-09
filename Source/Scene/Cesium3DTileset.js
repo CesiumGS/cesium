@@ -25,6 +25,7 @@ define([
         '../Core/RequestType',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './Axis',
         './Cesium3DTile',
         './Cesium3DTileChildrenVisibility',
         './Cesium3DTileColorBlendMode',
@@ -66,6 +67,7 @@ define([
         RequestType,
         Uri,
         when,
+        Axis,
         Cesium3DTile,
         Cesium3DTileChildrenVisibility,
         Cesium3DTileColorBlendMode,
@@ -133,7 +135,7 @@ define([
 
         if (getExtensionFromUri(url) === 'json') {
             tilesetUrl = url;
-            baseUrl = getBaseUri(url);
+            baseUrl = getBaseUri(url, true);
         } else if (isDataUri(url)) {
             tilesetUrl = url;
             baseUrl = '';
@@ -149,6 +151,7 @@ define([
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
+        this._gltfUpAxis = undefined;
         this._processingQueue = [];
         this._selectedTiles = [];
         this._selectedTilesToStyle = [];
@@ -480,9 +483,11 @@ define([
         var that = this;
         this.loadTileset(tilesetUrl).then(function(data) {
             var tilesetJson = data.tilesetJson;
+            var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
             that._asset = tilesetJson.asset;
             that._properties = tilesetJson.properties;
             that._geometricError = tilesetJson.geometricError;
+            that._gltfUpAxis = gltfUpAxis;
             that._root = data.root;
             that._readyPromise.resolve(that);
         }).otherwise(function(error) {
@@ -898,13 +903,16 @@ define([
             var stats = that._statistics;
 
             // Append the version to the baseUrl
-            var versionQuery = '?v=' + defaultValue(tilesetJson.asset.tilesetVersion, '0.0');
-            that._baseUrl = joinUrls(that._baseUrl, versionQuery);
+            var hasVersionQuery = /[?&]v=/.test(tilesetUrl);
+            if (!hasVersionQuery) {
+                var versionQuery = '?v=' + defaultValue(tilesetJson.asset.tilesetVersion, '0.0');
+                that._baseUrl = joinUrls(that._baseUrl, versionQuery);
+                tilesetUrl = joinUrls(tilesetUrl, versionQuery, false);
+            }
 
             // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
             // Get the baseUrl relative to the external tileset.
             var baseUrl = getBaseUri(tilesetUrl, true);
-            baseUrl = joinUrls(baseUrl, versionQuery);
             var rootTile = new Cesium3DTile(that, baseUrl, tilesetJson.root, parentTile);
 
             var refiningTiles = [];
