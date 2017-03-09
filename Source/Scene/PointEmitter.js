@@ -2,21 +2,17 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/Matrix4',
-        '../Core/Math',
         './Particle',
         './PointPlacer'
     ], function(
         defaultValue,
         defined,
-        Cartesian2,
         Cartesian3,
         Color,
         Matrix4,
-        CesiumMath,
         Particle,
         PointPlacer
         ) {
@@ -24,13 +20,8 @@ define([
 
     var PointEmitter = function(options) {
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-
         this.placer = defaultValue(options.placer, new PointPlacer({}));
     };
-
-    function random(a, b) {
-        return CesiumMath.nextRandomNumber() * (b - a) + a;
-    }
 
     PointEmitter.prototype.emit = function(system, numToEmit) {
 
