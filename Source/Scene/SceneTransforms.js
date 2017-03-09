@@ -286,20 +286,6 @@ define([
     /**
      * @private
      */
-    SceneTransforms.clipToDrawingBufferCoordinates = function(viewport, position, result) {
-        // Perspective divide to transform from clip coordinates to normalized device coordinates
-        Cartesian3.divideByScalar(position, position.w, positionNDC);
-
-        // Viewport transform to transform from clip coordinates to drawing buffer coordinates
-        Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
-        Matrix4.multiplyByPoint(viewportTransform, positionNDC, positionWC);
-
-        return Cartesian2.fromCartesian3(positionWC, result);
-    };
-
-    /**
-     * @private
-     */
     SceneTransforms.transformWindowToDrawingBuffer = function(scene, windowPosition, result) {
         var canvas = scene.canvas;
         var xScale = scene.drawingBufferWidth / canvas.clientWidth;
