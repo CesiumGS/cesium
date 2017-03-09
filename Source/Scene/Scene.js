@@ -1095,6 +1095,11 @@ define([
                 return this._useWebVR;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (this.camera.frustum instanceof OrthographicFrustum) {
+                    throw new DeveloperError('VR is unsupported with an orthographic projection.');
+                }
+                //>>includeEnd('debug');
                 this._useWebVR = value;
                 if (this._useWebVR) {
                     this._frameState.creditDisplay.container.style.visibility = 'hidden';
@@ -2634,7 +2639,7 @@ define([
     function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
         var camera = scene._camera;
         var frustum = camera.frustum;
-        if (!defined(frustum.top)) {
+        if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
         }
 

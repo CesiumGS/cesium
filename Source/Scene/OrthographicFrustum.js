@@ -2,11 +2,13 @@
 define([
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         './OrthographicOffCenterFrustum'
     ], function(
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         OrthographicOffCenterFrustum) {
     'use strict';
@@ -55,6 +57,8 @@ define([
          */
         this.far = 500000000.0;
         this._far = this.far;
+
+        this._useDeprecated = false;
     }
 
     function update(frustum) {
@@ -82,17 +86,19 @@ define([
             frustum._near = frustum.near;
             frustum._far = frustum.far;
 
-            var ratio = frustum.aspectRatio;
-            if (ratio > 1.0) {
-                ratio = 1.0 / frustum.aspectRatio;
-            }
+            if (!frustum._useDeprecated) {
+                var ratio = frustum.aspectRatio;
+                if (ratio > 1.0) {
+                    ratio = 1.0 / frustum.aspectRatio;
+                }
 
-            f.right = frustum.width * 0.5;
-            f.left = -f.right;
-            f.top = ratio * f.right;
-            f.bottom = -f.top;
-            f.near = frustum.near;
-            f.far = frustum.far;
+                f.right = frustum.width * 0.5;
+                f.left = -f.right;
+                f.top = ratio * f.right;
+                f.bottom = -f.top;
+                f.near = frustum.near;
+                f.far = frustum.far;
+            }
         }
     }
 
@@ -107,6 +113,74 @@ define([
             get : function() {
                 update(this);
                 return this._offCenterFrustum.projectionMatrix;
+            }
+        },
+
+        /**
+         * The left clipping plane.
+         * @type {Number}
+         * @default undefined
+         */
+        left : {
+            get : function() {
+                deprecationWarning('OrthographicFrustum', 'OrthographicFrustum left, right, bottom and top properties were deprecated in 1.32 and will be removed in 1.33.');
+                return this._offCenterFrustum.left;
+            },
+            set : function(value) {
+                deprecationWarning('OrthographicFrustum', 'OrthographicFrustum left, right, bottom and top properties were deprecated in 1.32 and will be removed in 1.33.');
+                this._useDeprecated = true;
+                this._offCenterFrustum.left = value;
+            }
+        },
+
+        /**
+         * The right clipping plane.
+         * @type {Number}
+         * @default undefined
+         */
+        right : {
+            get : function() {
+                deprecationWarning('OrthographicFrustum', 'OrthographicFrustum left, right, bottom and top properties were deprecated in 1.32 and will be removed in 1.33.');
+                return this._offCenterFrustum.right;
+            },
+            set : function(value) {
+                deprecationWarning('OrthographicFrustum', 'OrthographicFrustum left, right, bottom and top properties were deprecated in 1.32 and will be removed in 1.33.');
+                this._useDeprecated = true;
+                this._offCenterFrustum.right = value;
+            }
+        },
+
+        /**
+         * The top clipping plane.
+         * @type {Number}
+         * @default undefined
+         */
+        top : {
+            get : function() {
+                deprecationWarning('OrthographicFrustum', 'OrthographicFrustum left, right, bottom and top properties were deprecated in 1.32 and will be removed in 1.33.');
+                return this._offCenterFrustum.top;
+            },
+            set : function(value) {
+                deprecationWarning('OrthographicFrustum', 'OrthographicFrustum left, right, bottom and top properties were deprecated in 1.32 and will be removed in 1.33.');
+                this._useDeprecated = true;
+                this._offCenterFrustum.top = value;
+            }
+        },
+
+        /**
+         * The bottom clipping plane.
+         * @type {Number}
+         * @default undefined
+         */
+        bottom : {
+            get : function() {
+                deprecationWarning('OrthographicFrustum', 'OrthographicFrustum left, right, bottom and top properties were deprecated in 1.32 and will be removed in 1.33.');
+                return this._offCenterFrustum.bottom;
+            },
+            set : function(value) {
+                deprecationWarning('OrthographicFrustum', 'OrthographicFrustum left, right, bottom and top properties were deprecated in 1.32 and will be removed in 1.33.');
+                this._useDeprecated = true;
+                this._offCenterFrustum.bottom = value;
             }
         }
     });

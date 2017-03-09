@@ -691,7 +691,7 @@ define([
     function screenSpaceError2D(primitive, frameState, tile) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
-        if (!defined(frustum.top)) {
+        if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
         }
 

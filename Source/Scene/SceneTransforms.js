@@ -327,7 +327,7 @@ define([
         var worldCoords;
         var frustum = scene.camera.frustum;
         if (!defined(frustum.fovy)) {
-            if (!defined(frustum.top)) {
+            if (defined(frustum._offCenterFrustum)) {
                 frustum = frustum._offCenterFrustum;
             }
             var currentFrustum = uniformState.currentFrustum;

@@ -934,7 +934,7 @@ define([
             var frustum = this._max2Dfrustum = this.frustum.clone();
 
             //>>includeStart('debug', pragmas.debug);
-            if (!defined(frustum.left) || !defined(frustum.right) || !defined(frustum.top) || !defined(frustum.bottom)) {
+            if (!(frustum instanceof OrthographicOffCenterFrustum)) {
                 throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
             }
             //>>includeEnd('debug');
@@ -1792,7 +1792,8 @@ define([
         var frustum = camera.frustum;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(frustum.left) || !defined(frustum.right) || !defined(frustum.top) || !defined(frustum.bottom)) {
+        if (!(frustum instanceof OrthographicOffCenterFrustum) || !defined(frustum.left) || !defined(frustum.right) ||
+            !defined(frustum.bottom) || !defined(frustum.top)) {
             throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
         }
         //>>includeEnd('debug');
@@ -2432,7 +2433,7 @@ define([
         var height = canvas.clientHeight;
 
         var frustum = camera.frustum;
-        if (!defined(frustum.top)) {
+        if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
         }
         var x = (2.0 / width) * windowPosition.x - 1.0;
@@ -2775,7 +2776,7 @@ define([
 
     function distanceToBoundingSphere2D(camera, radius) {
         var frustum = camera.frustum;
-        if (!defined(frustum.top)) {
+        if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
         }
 

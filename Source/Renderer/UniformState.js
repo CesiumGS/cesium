@@ -903,7 +903,7 @@ define([
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
 
-        if (!defined(frustum.top)) {
+        if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
         }
 
