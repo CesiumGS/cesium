@@ -2,6 +2,7 @@
 defineSuite([
         'Scene/CameraFlightPath',
         'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/Math',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
@@ -9,6 +10,7 @@ defineSuite([
     ], function(
         CameraFlightPath,
         Cartesian3,
+        Cartographic,
         CesiumMath,
         OrthographicFrustum,
         SceneMode,
@@ -377,6 +379,44 @@ defineSuite([
         expect(typeof flight.complete).toEqual('function');
         flight.complete();
         expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
+    });
+
+    it('creates animation to hit flyOverLongitude', function() {
+        var camera = scene.camera;
+        var projection = scene.mapProjection;
+        var position = new Cartographic();
+
+        camera.position = Cartesian3.fromDegrees(10.0, 45.0, 1000.0);
+
+        var endPosition = Cartesian3.fromDegrees(20.0, 45.0, 1000.0);
+
+        var overLonFlight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : 1.0,
+            flyOverLongitude: CesiumMath.toRadians(0.0)
+        });
+
+        var directFlight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : 1.0
+        });
+
+        expect(typeof overLonFlight.update).toEqual('function');
+        expect(typeof directFlight.update).toEqual('function');
+
+        overLonFlight.update({ time : 0.1 });
+        projection.ellipsoid.cartesianToCartographic(camera.position, position);
+        var lon = CesiumMath.toDegrees(position.longitude);
+
+        expect(lon).toBeLessThan(10.0);
+
+        directFlight.update({ time : 0.1 });
+        projection.ellipsoid.cartesianToCartographic(camera.position, position);
+        lon = CesiumMath.toDegrees(position.longitude);
+
+        expect(lon).toBeMoreThan(10.0);
+        expect(lon).toBeLessThan(20.0);
+
     });
 
     it('does not go above the maximum height', function() {
