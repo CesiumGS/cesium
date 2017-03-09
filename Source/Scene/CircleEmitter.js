@@ -2,11 +2,13 @@
 define([
         '../Core/defaultValue',
         '../Core/Cartesian3',
-        '../Core/Math'
+        '../Core/Math',
+        './Particle'
     ], function(
         defaultValue,
         Cartesian3,
-        CesiumMath) {
+        CesiumMath,
+        Particle) {
     "use strict";
 
     var CircleEmitter = function(options) {
@@ -18,7 +20,7 @@ define([
         return CesiumMath.nextRandomNumber() * (b - a) + a;
     }
 
-    CircleEmitter.prototype.emit = function(particle) {
+    CircleEmitter.prototype.emit = function() {
 
         var theta = random(0.0, CesiumMath.TWO_PI);
         var rad = random(0.0, this.radius);
@@ -27,10 +29,14 @@ define([
         var y = this.position.y + rad * Math.sin(theta);
         var z = this.position.z;
 
-        particle.position = new Cartesian3(x, y, z);
+        var position = new Cartesian3(x, y, z);
 
         // Set the velocity to shoot up
-        particle.velocity = Cartesian3.clone(Cartesian3.UNIT_Z);
+        var velocity = Cartesian3.clone(Cartesian3.UNIT_Z);
+        return new Particle({
+            position: position,
+            velocity: velocity
+        });
     };
 
     return CircleEmitter;

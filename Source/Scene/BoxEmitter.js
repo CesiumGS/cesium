@@ -2,11 +2,13 @@
 define([
         '../Core/defaultValue',
         '../Core/Cartesian3',
-        '../Core/Math'
+        '../Core/Math',
+        './Particle'
     ], function(
         defaultValue,
         Cartesian3,
-        CesiumMath) {
+        CesiumMath,
+        Particle) {
     "use strict";
 
     var BoxEmitter = function(options) {
@@ -24,17 +26,21 @@ define([
         return CesiumMath.nextRandomNumber() * (b - a) + a;
     }
 
-    BoxEmitter.prototype.emit = function(particle) {
+    BoxEmitter.prototype.emit = function() {
         var x = this.position.x + random(-this._halfWidth, this._halfWidth);
         var y = this.position.y + random(-this._halfDepth, this._halfDepth);
         var z = this.position.z + random(-this._halfHeight, this._halfHeight);
-        particle.position = new Cartesian3(x, y, z);
+        var position = new Cartesian3(x, y, z);
 
         // Modify the velocity to shoot out from the center
         var velocity = new Cartesian3();
-        Cartesian3.subtract(particle.position, this.position, velocity);
+        Cartesian3.subtract(position, position, velocity);
         Cartesian3.normalize(velocity, velocity);
-        particle.velocity = velocity;
+
+        return new Particle({
+            position: position,
+            velocity: velocity
+        });
     };
 
     return BoxEmitter;

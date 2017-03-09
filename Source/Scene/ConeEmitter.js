@@ -2,14 +2,16 @@
 define([
         '../Core/defaultValue',
         '../Core/Cartesian3',
-        '../Core/Math'
+        '../Core/Math',
+        './Particle'
     ], function(
         defaultValue,
         Cartesian3,
-        CesiumMath) {
+        CesiumMath,
+        Particle) {
     "use strict";
 
-    var ConePlacer = function(options) {
+    var ConeEmitter = function(options) {
         this.height = defaultValue(options.height, 5.0);
         this.angle = defaultValue(options.angle, CesiumMath.toRadians(30.0));
     };
@@ -18,7 +20,7 @@ define([
         return CesiumMath.nextRandomNumber() * (b - a) + a;
     }
 
-    ConePlacer.prototype.emit = function(particle) {
+    ConeEmitter.prototype.emit = function() {
 
         var radius = this.height * Math.tan(this.angle);
 
@@ -34,13 +36,16 @@ define([
 
         //particle.position = circlePosition;
         // Position the point at the tip.
-        particle.position = new Cartesian3();
+        var position = new Cartesian3();
 
         // Also set the velocity vector.
         var velocity = new Cartesian3();
         Cartesian3.normalize(circlePosition, velocity);
-        particle.velocity = velocity;
+        return new Particle({
+            position: position,
+            velocity: velocity
+        });
     };
 
-    return ConePlacer;
+    return ConeEmitter;
 });

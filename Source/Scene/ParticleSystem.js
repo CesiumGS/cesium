@@ -231,28 +231,26 @@ define([
         if (numToEmit > 0 && emitter) {
             for (i = 0; i < numToEmit; i++) {
                 // Create a new particle.
-                var particle = new Particle({
-                });
+                var particle = this.emitter.emit( particle );
+                if (particle) {
 
-                // Initialize the particle.
-                this.emitter.emit( particle );
+                    //For the velocity we need to add it to the original position and then multiply by point.
+                    var tmp = new Cartesian3();
+                    Cartesian3.add(particle.position, particle.velocity, tmp);
+                    Matrix4.multiplyByPoint(this.modelMatrix, tmp, tmp);
 
-                //For the velocity we need to add it to the original position and then multiply by point.
-                var tmp = new Cartesian3();
-                Cartesian3.add(particle.position, particle.velocity, tmp);
-                Matrix4.multiplyByPoint(this.modelMatrix, tmp, tmp);
+                    // Change the position to be in world coordinates
+                    particle.position = Matrix4.multiplyByPoint(this.modelMatrix, particle.position, particle.position);
 
-                // Change the position to be in world coordinates
-                particle.position = Matrix4.multiplyByPoint(this.modelMatrix, particle.position, particle.position);
+                    // Orient the velocity in world space as well.
+                    var worldVelocity = new Cartesian3();
+                    Cartesian3.subtract(tmp, particle.position, worldVelocity);
+                    Cartesian3.normalize(worldVelocity, worldVelocity);
+                    particle.velocity = worldVelocity;
 
-                // Orient the velocity in world space as well.
-                var worldVelocity = new Cartesian3();
-                Cartesian3.subtract(tmp, particle.position, worldVelocity);
-                Cartesian3.normalize(worldVelocity, worldVelocity);
-                particle.velocity = worldVelocity;
-
-                // Add the particle to the system.
-                this.add(particle);
+                    // Add the particle to the system.
+                    this.add(particle);
+                }
             }
         }
 
