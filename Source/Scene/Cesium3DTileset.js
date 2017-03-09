@@ -1,46 +1,46 @@
 /*global define*/
 define([
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Color',
-        '../Core/clone',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/DoublyLinkedList',
-        '../Core/Event',
-        '../Core/freezeObject',
-        '../Core/getBaseUri',
-        '../Core/getExtensionFromUri',
-        '../Core/Heap',
-        '../Core/Intersect',
-        '../Core/isDataUri',
-        '../Core/joinUrls',
-        '../Core/JulianDate',
-        '../Core/loadJson',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/Request',
-        '../Core/RequestScheduler',
-        '../Core/RequestType',
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './Cesium3DTile',
-        './Cesium3DTileChildrenVisibility',
-        './Cesium3DTileColorBlendMode',
-        './Cesium3DTileOptimizations',
-        './Cesium3DTileOptimizationHint',
-        './Cesium3DTileRefine',
-        './Cesium3DTileStyleEngine',
-        './CullingVolume',
-        './DebugCameraPrimitive',
-        './SceneMode',
-        './ShadowMode',
-        './TileBoundingRegion',
-        './TileBoundingSphere',
-        './TileOrientedBoundingBox'
+    '../Core/Cartesian3',
+    '../Core/Cartographic',
+    '../Core/Color',
+    '../Core/clone',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/destroyObject',
+    '../Core/DeveloperError',
+    '../Core/DoublyLinkedList',
+    '../Core/Event',
+    '../Core/freezeObject',
+    '../Core/getBaseUri',
+    '../Core/getExtensionFromUri',
+    '../Core/Heap',
+    '../Core/Intersect',
+    '../Core/isDataUri',
+    '../Core/joinUrls',
+    '../Core/JulianDate',
+    '../Core/loadJson',
+    '../Core/Math',
+    '../Core/Matrix4',
+    '../Core/Request',
+    '../Core/RequestScheduler',
+    '../Core/RequestType',
+    '../ThirdParty/Uri',
+    '../ThirdParty/when',
+    './Cesium3DTile',
+    './Cesium3DTileChildrenVisibility',
+    './Cesium3DTileColorBlendMode',
+    './Cesium3DTileOptimizations',
+    './Cesium3DTileOptimizationHint',
+    './Cesium3DTileRefine',
+    './Cesium3DTileStyleEngine',
+    './CullingVolume',
+    './DebugCameraPrimitive',
+    './SceneMode',
+    './ShadowMode',
+    './TileBoundingRegion',
+    './TileBoundingSphere',
+    './TileOrientedBoundingBox'
     ], function(
         Cartesian3,
         Cartographic,
@@ -468,12 +468,13 @@ define([
         });
 
         this.skipLODs = defaultValue(options.skipLODs, true);
-        this.skipFactor = defaultValue(options.skipFactor, 8);
+        this.skipFactor = defaultValue(options.skipFactor, 10);
+        this.skipLevels = defaultValue(options.skipLevels, 1);
         this.lowMemory = defaultValue(options.lowMemory, false);
         this.mixLOD = defaultValue(options.mixLOD, true);
         this._stencilTiles = defaultValue(options.stencilTiles, true);
         this._loadHeaps = {};
-        this.loadSiblings = defaultValue(options.loadSiblings, false);
+        this.loadSiblings = defaultValue(options.loadSiblings, true);
     }
 
     function Cesium3DTilesetStatistics() {
@@ -1242,41 +1243,7 @@ define([
         return flag;
     }
 
-    function getNearestLoadedAncestor(tile) {
-        while (defined(tile) && !tile.contentReady) {
-            var next = getAncestorWithContent(tile.parent);
-            if (defined(next) && next.refine === Cesium3DTileRefine.ADD) {
-                return tile;
-            }
-            tile = next;
-        }
-        return tile;
-    }
-
     var descendantStack = [];
-
-    function markNearestLoadedDescendantsForSelection(selectionQueue, parent, tileset, frameState, outOfCore) {
-        descendantStack.push(parent);
-        while (descendantStack.length > 0) {
-            var tile = descendantStack.pop();
-            var children = tile.children;
-            var childrenLength = children.length;
-            var i, child;
-            for (i = 0; i < childrenLength; ++i) {
-                child = children[i];
-                if (child.contentReady) {
-                    tile._finalResolution = true;
-                    child._targetDistanceToCamera = child.distanceToCamera;
-                    touch(tileset, child, outOfCore);
-                    child.selected = true;
-                    push(selectionQueue, child);
-                    // selectTile(tileset, child, child.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
-                } else if (tile.refine !== Cesium3DTileRefine.ADD) {
-                    descendantStack.push(child);
-                }
-            }
-        }
-    }
 
     function markNearestLoadedTilesForSelection(selectionState, tileset, frameState, outOfCore) {
         var finalQueue = selectionState.finalQueue;
@@ -1286,23 +1253,46 @@ define([
         var length = finalQueue._length;
         for (var i = 0; i < length; ++i) {
             var original = finalQueue[i];
-            var tile;
-            if (original.refine === Cesium3DTileRefine.ADD) {
-                tile = original;
-            } else {
-                tile = getNearestLoadedAncestor(original);
+            var tile = original;
+            while (defined(tile) && !(tile.hasContent && tile.contentReady)) {
+                if (tile.refine === Cesium3DTileRefine.ADD) {
+                    break;
+                }
+                tile = tile.parent;
             }
+
             if (defined(tile)) {
                 if (!tile.selected) {
                     tile._finalResolution = (tile === original || tile.refine === Cesium3DTileRefine.ADD);
                     tile._targetDistanceToCamera = original.distanceToCamera;
-                    touch(tileset, tile, outOfCore);
-                    tile.selected = true;
+                    // tile.selected = true;
+                    tile._selectedFrame = frameState.frameNumber;
                     push(selectionQueue, tile);
-                    // selectTile(tileset, tile, tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
                 }
             } else {
-                markNearestLoadedDescendantsForSelection(selectionQueue, original, tileset, frameState, outOfCore);
+                descendantStack.push(original);
+                while (descendantStack.length > 0) {
+                    tile = descendantStack.pop();
+                    var children = tile.children;
+                    var childrenLength = children.length;
+                    var j, child;
+                    for (j = 0; j < childrenLength; ++j) {
+                        child = children[j];
+                        if (child.contentReady) {
+                            if (!child.selected) {
+                                child._finalResolution = true;
+                                child._targetDistanceToCamera = child.distanceToCamera;
+                                // child.selected = true;
+                                child._selectedFrame = frameState.frameNumber;
+                                touch(tileset, child, outOfCore);
+                                selectionQueue.push(child);
+                            }
+                        }
+                        if (!child.contentReady || child.refine === Cesium3DTileRefine.ADD) {
+                            descendantStack.push(child);
+                        }
+                    }
+                }
             }
         }
 
@@ -1351,44 +1341,6 @@ define([
     function pop(array) {
         var index = --array._length;
         return array[index];
-    }
-
-    function isDescendantOf(a, b) {
-        while(defined(a)) {
-            if (a.parent === b) {
-                return true;
-            }
-            a = a.parent;
-        }
-        return false;
-    }
-
-    function sortForSelection(a, b) {
-
-        // if (a._finalResolution !== b._finalResolution) {
-        //     return b._finalResolution - a._finalResolution;
-        // }
-
-        var err = a.geometricError + b.geometricError + 1;
-
-        var aDist = a.distanceToCamera;
-        var bDist = b.distanceToCamera;
-
-        // if (a._finalResolution && a._depth > b._depth) {
-        //     aDist -= err;
-        // } else if (b._finalResolution && b._depth > a._depth) {
-        //     bDist -= err;
-        // }
-
-        if (a._finalResolution === b._finalResolution) {
-            return aDist - bDist;
-        } else if (a._finalResolution && a._depth > b._depth) {
-            aDist -= err;
-        } else if (b._finalResolution && b._depth > a._depth) {
-            bDist -= err;
-        }
-
-        return aDist - bDist;
     }
 
     function sortForLoad(a, b) {
@@ -1482,8 +1434,6 @@ define([
 
         traverseAndSelect(tileset, root, frameState);
 
-        // selectedTiles.sort(sortForSelection);
-
         requestTiles(tileset, tileset._loadHeaps, outOfCore);
     }
 
@@ -1513,7 +1463,7 @@ define([
             var finalCount = finalQueue._length;
 
             var refined = queueDescendants(tileset, processTile, selectionState, frameState, outOfCore, iteration);
-            if (!refined && !tileset.lowMemory) {
+            if (!refined && !tileset.lowMemory) {   // in low memory mode, we don't wait for refinement
                 // tiles not refined. splice any descendants added
                 finalQueue._length = finalCount;
                 nextQueue._length = nextCount;
@@ -1524,7 +1474,8 @@ define([
     }
 
     function selectionHeuristic(tileset, ancestor, tile) {
-        return tile._sse < ancestor._sse / tileset.skipFactor;
+        return (tile._sse < ancestor._sse / tileset.skipFactor) &&
+               (tile._depth > ancestor._depth + tileset.skipLevels);
         // return tile.geometricError < ancestor.geometricError / tileset.skipFactor;
     }
 
@@ -1625,7 +1576,7 @@ define([
                 }
                 if (!tile.contentReady) {
                     state &= ~ProcessingState.REFINED;
-                    // push(finalQueue, tile);
+                    push(finalQueue, tile);
                 } else {
                     var child = tile.children[0];
                     child.visibilityPlaneMask = tile.visibilityPlaneMask;
@@ -1642,8 +1593,17 @@ define([
                 state = loadAndAddToQueue(tileset, tile, finalQueue, state);
                 updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, !siblings);
             } else {
-                if (tile._sse <= maximumScreenSpaceError || childrenLength === 0) {
+                if (childrenLength === 0) {
                     state = loadAndAddToQueue(tileset, tile, finalQueue, state);
+                } else if (tile._sse <= maximumScreenSpaceError) {
+                    var useChildrenBoundUnion = tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
+                    if (useChildrenBoundUnion) {
+                        if (computeChildrenVisibility(tile, frameState, false) & Cesium3DTileChildrenVisibility.VISIBLE) {
+                            state = loadAndAddToQueue(tileset, tile, finalQueue, state);
+                        }
+                    } else {
+                        state = loadAndAddToQueue(tileset, tile, finalQueue, state);
+                    }
                 } else if (tile.hasContent && selectionHeuristic(tileset, start, tile) && !tileset.lowMemory) {
                     state = loadAndAddToQueue(tileset, tile, nextQueue, state);
                 } else {
@@ -1652,25 +1612,19 @@ define([
             }
         }
 
-        var noneReady = (state & ProcessingState.ANY_READY) === 0;
-        var allReady = (state & ProcessingState.REFINED) !== 0;
-        var refined = tileset.mixLOD || allReady;
-
-        if (noneReady) {
-            push(finalQueue, start);
-        }
-
-        return refined;
+        // always refined if mixLOD enabled
+        return tileset.mixLOD || (state & ProcessingState.REFINED) !== 0;
     }
 
     function sortByZDepth(a, b) {
-        return (a._centerZDistanceToCamera) - (b._centerZDistanceToCamera);
+        return b._centerZDistanceToCamera - a._centerZDistanceToCamera;
     }
 
     var tempStack2 = [];
     function traverseAndSelect(tileset, root, frameState) {
         var stack = tempStack;
         var selectionStack = tempStack2;
+        var lowMemory = tileset.lowMemory;
         stack.push(root);
 
         while(stack.length > 0 || selectionStack.length > 0) {
@@ -1688,7 +1642,7 @@ define([
                 continue;
             }
 
-            var shouldSelect = tile._finalResolution || tile.selected;
+            var shouldSelect = tile._selectedFrame === frameState.frameNumber;
 
             var children = tile.children;
             var childrenLength = children.length;
@@ -1710,10 +1664,10 @@ define([
                     tile._stackLength = stack.length;
                 }
 
-                for (i = childrenLength - 1; i >= 0; --i) {
+                for (i = 0; i < childrenLength; ++i) {
                     child = children[i];
                     if (isVisible(child.visibilityPlaneMask)) {
-                        if (child._centerZDistanceToCamera <= tile._centerZDistanceToCamera || tile.distanceToCamera < 0 || additive) {
+                        if (child._centerZDistanceToCamera <= tile._centerZDistanceToCamera || tile.distanceToCamera < 0 || additive || lowMemory) {
                             stack.push(child);
                         } else if (tileset._refineToVisible) {
                             stack.push(child);
@@ -1722,7 +1676,7 @@ define([
                     }
                 }
             } else {
-                for (i = childrenLength - 1; i >= 0; --i) {
+                for (i = 0; i < childrenLength; ++i) {
                     child = children[i];
                     if (isVisible(child.visibilityPlaneMask)) {
                         stack.push(child);

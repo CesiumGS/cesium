@@ -356,22 +356,15 @@ define([
          */
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
 
-        this._requestTile = undefined;
         this._sse = 0;
-        this._needsPrefetch = false;
-        this._isNew = false;
-        this._lastSeenFrameNumber = 0;
-        this._contentParent = undefined;
         this._finalResolution = true;
         this._targetDistanceToCamera = 0;
         this._centerDistanceToCamera = 0;
         this._centerZDistanceToCamera = 0;
         this._loadHeap = undefined;
-        this._iteration = 0;
-        this._nearestDescendantDistanceToCamera = 0;
-        this._farthestDescendantDistanceToCamera = 0;
         this._depth = 0;
         this._stackLength = 0;
+        this._selectedFrame = -1;
     }
 
     defineProperties(Cesium3DTile.prototype, {
