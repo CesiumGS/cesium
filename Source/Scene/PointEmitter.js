@@ -132,12 +132,7 @@ define([
             velocity.x += this.directionVariance.x * random(-1.0, 1.0);
             velocity.y += this.directionVariance.y * random(-1.0, 1.0);
             velocity.y += this.directionVariance.z * random(-1.0, 1.0);
-            velocity = Matrix4.multiplyByPoint(this.modelMatrix, velocity, velocity);
             Cartesian3.normalize(velocity, velocity);
-
-
-            var speed = this.minSpeed + (this.maxSpeed - this.minSpeed) * random(0.0, 1.0);
-            Cartesian3.multiplyByScalar(velocity, speed, velocity);
 
             var size = Cartesian2.clone(this.initialSize);
             size.x += this.sizeVariance.x * random(0.0, 1.0);
@@ -159,8 +154,23 @@ define([
             // Place the particle with the placer.
             this.placer.place( particle );
 
+            //For the velocity we need to add it to the original position and then multiply by point.
+
+            var tmp = new Cartesian3();
+            Cartesian3.add(particle.position, particle.velocity, tmp);
+            Matrix4.multiplyByPoint(this.modelMatrix, tmp, tmp);
+
             // Change the position to be in world coordinates
             particle.position = Matrix4.multiplyByPoint(this.modelMatrix, particle.position, particle.position);
+
+            var worldVelocity = new Cartesian3();
+            Cartesian3.subtract(tmp, particle.position, worldVelocity);
+            Cartesian3.normalize(worldVelocity, worldVelocity);
+
+            var speed = this.minSpeed + (this.maxSpeed - this.minSpeed) * random(0.0, 1.0);
+            Cartesian3.multiplyByScalar(worldVelocity, speed, worldVelocity);
+
+            particle.velocity = worldVelocity;
 
             // Add the particle to the particle system.
             particles.push(particle);
