@@ -419,8 +419,9 @@ define([
             instanceScale.x = 1.0;
             instanceScale.y = 1.0;
             instanceScale.z = 1.0;
-            var scale = featureTable.getProperty('SCALE', i, ComponentDatatype.FLOAT);
+            var scale = featureTable.getProperty('SCALE', i, ComponentDatatype.FLOAT, 1);
             if (defined(scale)) {
+                if (Array.isArray(scale)) scale = scale[0];
                 Cartesian3.multiplyByScalar(instanceScale, scale, instanceScale);
             }
             var nonUniformScale = featureTable.getProperty('SCALE_NON_UNIFORM', i, ComponentDatatype.FLOAT, 3);
