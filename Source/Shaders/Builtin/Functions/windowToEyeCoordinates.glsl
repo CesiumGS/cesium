@@ -31,11 +31,7 @@ vec4 czm_windowToEyeCoordinates(vec4 fragmentCoordinate)
     vec4 q = vec4(x, y, z, 1.0);
     q /= fragmentCoordinate.w;
 
-    bool usingOrthographic = all(equal(czm_inverseProjection[0], vec4(0.0))) &&
-                             all(equal(czm_inverseProjection[1], vec4(0.0))) &&
-                             all(equal(czm_inverseProjection[2], vec4(0.0))) &&
-                             all(equal(czm_inverseProjection[3], vec4(0.0)));
-    if (!usingOrthographic) {
+    if (czm_inverseProjection != mat4(0.0)) {
         q = czm_inverseProjection * q;
     } else {
         float top = czm_frustumPlanes.x;

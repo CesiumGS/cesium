@@ -207,7 +207,7 @@ define([
         if(defined(sceneModePicker)) {
             sceneModePicker.container.style.visibility = visibility;
         }
-        if(defined(projectionPicker)) {
+        if (defined(projectionPicker)) {
             projectionPicker.container.style.visibility = visibility;
         }
         if(defined(baseLayerPicker)) {
