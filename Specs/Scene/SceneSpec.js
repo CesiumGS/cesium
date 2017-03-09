@@ -27,6 +27,7 @@ defineSuite([
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/FrameState',
         'Scene/Globe',
+        'Scene/PerspectiveFrustum',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
         'Scene/Scene',
@@ -65,6 +66,7 @@ defineSuite([
         EllipsoidSurfaceAppearance,
         FrameState,
         Globe,
+        PerspectiveFrustum,
         Primitive,
         PrimitiveCollection,
         Scene,
@@ -101,6 +103,11 @@ defineSuite([
         scene.fxaa = false;
         scene.primitives.removeAll();
         scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
     });
 
     afterAll(function() {

@@ -309,7 +309,6 @@ defineSuite([
         var rectangle = createRectangle();
         scene.initializeFrame();
         expect(scene).toPickPrimitive(rectangle);
-        scene.morphTo3D(0.0);
     });
 
     it('picks in 3D with orthographic projection', function() {
@@ -325,6 +324,5 @@ defineSuite([
         var rectangle = createRectangle();
         scene.initializeFrame();
         expect(scene).toPickPrimitive(rectangle);
-        scene.morphTo3D(0.0);
     });
 }, 'WebGL');

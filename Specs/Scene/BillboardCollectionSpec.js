@@ -17,6 +17,7 @@ defineSuite([
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/OrthographicOffCenterFrustum',
+        'Scene/PerspectiveFrustum',
         'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
         'Specs/createGlobe',
@@ -41,6 +42,7 @@ defineSuite([
         HeightReference,
         HorizontalOrigin,
         OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
         TextureAtlas,
         VerticalOrigin,
         createGlobe,
@@ -89,6 +91,10 @@ defineSuite([
         camera.position = new Cartesian3(10.0, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
 
         billboards = new BillboardCollection();
         scene.primitives.add(billboards);
