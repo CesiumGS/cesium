@@ -2,7 +2,9 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/Cartesian3',
         '../Core/Matrix4',
+        '../Core/Math',
         '../Core/JulianDate',
         '../Core/Color',
         './BillboardCollection',
@@ -10,7 +12,9 @@ define([
     ], function(
         defaultValue,
         defined,
+        Cartesian3,
         Matrix4,
+        CesiumMath,
         JulianDate,
         Color,
         BillboardCollection,
@@ -27,6 +31,34 @@ define([
 
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
+        this.startColor = defaultValue(options.startColor, Color.clone(Color.WHITE));
+        this.endColor = defaultValue(options.endColor, Color.clone(Color.WHITE));
+
+        this.startScale = defaultValue(options.startScale, 1.0);
+        this.endScale = defaultValue(options.endScale, 1.0);
+
+        var speed = defaultValue(options.speed, undefined);
+        if (speed) {
+            this.minSpeed = speed;
+            this.maxSpeed = speed;
+        }
+        else {
+            this.minSpeed = defaultValue(options.minSpeed, 1.0);
+            this.maxSpeed = defaultValue(options.maxSpeed, 1.0);
+        }
+
+        var life = defaultValue(options.life, undefined);
+        if (life) {
+            this.minLife = life;
+            this.maxLife = life;
+        }
+        else {
+            this.minLife = defaultValue(options.minLife, 5.0);
+            this.maxLife = defaultValue(options.maxLife, 5.0);
+        }
+
+        this.image = defaultValue(options.image, null);
+
         this._billboardCollection = undefined;
 
         this._previousTime = null;
@@ -34,6 +66,10 @@ define([
 
     function removeBillboard(system, particle) {
         system._billboardCollection.remove(particle._billboard);
+    }
+
+    function random(a, b) {
+        return CesiumMath.nextRandomNumber() * (b - a) + a;
     }
 
     function updateBillboard(system, particle) {
@@ -58,6 +94,19 @@ define([
         var scale = particle.startScale + particle.normalizedAge * (particle.endScale - particle.startScale);
         billboard.scale = scale;
     }
+
+    ParticleSystem.prototype.add = function(particle) {
+        particle.startColor = Color.clone(this.startColor);
+        particle.endColor = Color.clone(this.endColor);
+        particle.startScale = this.startScale;
+        particle.endScale = this.endScale;
+        particle.image = this.image;
+        particle.life = this.minLife + (this.maxLife - this.minLife) * random(0.0, 1.0);
+        var speed = this.minSpeed + (this.maxSpeed - this.minSpeed) * random(0.0, 1.0);
+        Cartesian3.multiplyByScalar(particle.velocity, speed, particle.velocity);
+
+        this.particles.push(particle);
+    };
 
     ParticleSystem.prototype.update = function(frameState) {
         if (!defined(this._billboardCollection)) {

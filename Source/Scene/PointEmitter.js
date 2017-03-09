@@ -28,29 +28,7 @@ define([
         this.initialMass = defaultValue(options.initialMass, 1.0);
         this.massVariance = defaultValue(options.massVariance, 0.0);
 
-        var speed = defaultValue(options.speed, undefined);
-        if (speed) {
-            this.minSpeed = speed;
-            this.maxSpeed = speed;
-        }
-        else {
-            this.minSpeed = defaultValue(options.minSpeed, 1.0);
-            this.maxSpeed = defaultValue(options.maxSpeed, 1.0);
-        }
-
-        var life = defaultValue(options.life, undefined);
-        if (life) {
-            this.minLife = life;
-            this.maxLife = life;
-        }
-        else {
-            this.minLife = defaultValue(options.minLife, 5.0);
-            this.maxLife = defaultValue(options.maxLife, 5.0);
-        }
-
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-
-        this.image = defaultValue(options.image, null);
 
         var initialSize = Cartesian2.clone(options.initialSize);
         if (!defined(initialSize)) {
@@ -72,12 +50,6 @@ define([
 
         this.lifeTime = defaultValue(options.lifeTime, Number.MAX_VALUE);
 
-        this.startColor = defaultValue(options.startColor, Color.clone(Color.WHITE));
-        this.endColor = defaultValue(options.endColor, Color.clone(Color.WHITE));
-
-        this.startScale = defaultValue(options.startScale, 1.0);
-        this.endScale = defaultValue(options.endScale, 1.0);
-
         this.complete = new Event();
         this.isComplete = false;
     };
@@ -92,9 +64,6 @@ define([
         if (this.isComplete) {
             return;
         }
-
-
-        var particles = system.particles;
 
 
         // Compute the number of particles to emit based on the rate.
@@ -133,13 +102,8 @@ define([
             var particle = new Particle({
                 image: this.image,
                 mass : this.initialMass + this.massVariance * random(0.0, 1.0),
-                life : this.minLife + (this.maxLife - this.minLife) * random(0.0, 1.0),
-                size : size,
-                startColor: this.startColor,
-                endColor: this.endColor,
-                startScale: this.startScale,
-                endScale: this.endScale
-            })
+                size : size
+            });
 
             // Place the particle with the placer.
             this.placer.place( particle );
@@ -155,14 +119,10 @@ define([
             var worldVelocity = new Cartesian3();
             Cartesian3.subtract(tmp, particle.position, worldVelocity);
             Cartesian3.normalize(worldVelocity, worldVelocity);
-
-            var speed = this.minSpeed + (this.maxSpeed - this.minSpeed) * random(0.0, 1.0);
-            Cartesian3.multiplyByScalar(worldVelocity, speed, worldVelocity);
-
             particle.velocity = worldVelocity;
 
             // Add the particle to the particle system.
-            particles.push(particle);
+            system.add(particle);
         }
 
 
