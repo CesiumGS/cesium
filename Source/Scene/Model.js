@@ -690,6 +690,11 @@ define([
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
 
+        this._cachedVertexMemorySizeInBytes = 0;
+        this._cachedTextureMemorySizeInBytes = 0;
+        this._vertexMemorySizeInBytes = 0;
+        this._textureMemorySizeInBytes = 0;
+
         this._nodeCommands = [];
         this._pickIds = [];
 
@@ -998,16 +1003,9 @@ define([
          *
          * @private
          */
-        vertexMemoryInBytes : {
+        vertexMemorySizeInBytes : {
             get : function() {
-                var memory = 0;
-                var buffers = this._rendererResources.buffers;
-                for (var id in buffers) {
-                    if (buffers.hasOwnProperty(id)) {
-                        memory += buffers[id].sizeInBytes;
-                    }
-                }
-                return memory;
+                return this._vertexMemorySizeInBytes;
             }
         },
 
@@ -1016,16 +1014,31 @@ define([
          *
          * @private
          */
-        textureMemoryInBytes : {
+        textureMemorySizeInBytes : {
             get : function() {
-                var memory = 0;
-                var textures = this._rendererResources.textures;
-                for (var id in textures) {
-                    if (textures.hasOwnProperty(id)) {
-                        memory += textures[id].sizeInBytes;
-                    }
-                }
-                return memory;
+                return this._textureMemorySizeInBytes;
+            }
+        },
+
+        /**
+         * Gets the model's cached vertex memory in bytes. This includes all vertex and index buffers.
+         *
+         * @private
+         */
+        cachedVertexMemorySizeInBytes : {
+            get : function() {
+                return this._cachedVertexMemorySizeInBytes;
+            }
+        },
+
+        /**
+         * Gets the model's cached texture memory in bytes.
+         *
+         * @private
+         */
+        cachedTextureMemorySizeInBytes : {
+            get : function() {
+                return this._cachedTextureMemorySizeInBytes;
             }
         }
     });
@@ -1792,6 +1805,7 @@ define([
         });
         vertexBuffer.vertexArrayDestroyable = false;
         model._rendererResources.buffers[bufferViewId] = vertexBuffer;
+        model._vertexMemorySizeInBytes += vertexBuffer.sizeInBytes;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1829,6 +1843,7 @@ define([
         });
         indexBuffer.vertexArrayDestroyable = false;
         model._rendererResources.buffers[bufferViewId] = indexBuffer;
+        model._vertexMemorySizeInBytes += indexBuffer.sizeInBytes;
     }
 
     var scratchVertexBufferJob = new CreateVertexBufferJob();
@@ -2338,6 +2353,7 @@ define([
         }
 
         model._rendererResources.textures[gltfTexture.id] = tx;
+        model._textureMemorySizeInBytes += tx.sizeInBytes;
     }
 
     var scratchCreateTextureJob = new CreateTextureJob();
@@ -3594,6 +3610,26 @@ define([
         model._runtime.nodes = runtimeNodes;
     }
 
+    function getVertexMemorySizeInBytes(buffers) {
+        var memory = 0;
+        for (var id in buffers) {
+            if (buffers.hasOwnProperty(id)) {
+                memory += buffers[id].sizeInBytes;
+            }
+        }
+        return memory;
+    }
+
+    function getTextureMemorySizeInBytes(textures) {
+        var memory = 0;
+        for (var id in textures) {
+            if (textures.hasOwnProperty(id)) {
+                memory += textures[id].sizeInBytes;
+            }
+        }
+        return memory;
+    }
+
     function createResources(model, frameState) {
         var context = frameState.context;
         var scene3DOnly = frameState.scene3DOnly;
@@ -3615,6 +3651,9 @@ define([
             if (defined(model._precreatedAttributes)) {
                 createVertexArrays(model, context);
             }
+
+            model._cachedVertexMemorySizeInBytes += getVertexMemorySizeInBytes(cachedResources.buffers);
+            model._cachedTextureMemorySizeInBytes += getTextureMemorySizeInBytes(cachedResources.textures);
         } else {
             createBuffers(model, frameState); // using glTF bufferViews
             createPrograms(model, frameState);
@@ -3802,7 +3841,6 @@ define([
             }
         }
     }
-
 
     function updatePerNodeShow(model) {
         // Totally not worth it, but we could optimize this:

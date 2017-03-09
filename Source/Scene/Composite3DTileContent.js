@@ -102,7 +102,7 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        vertexMemoryInBytes : {
+        vertexMemorySizeInBytes : {
             get : function() {
                 return 0;
             }
@@ -111,7 +111,16 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        textureMemoryInBytes : {
+        textureMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
             get : function() {
                 return 0;
             }

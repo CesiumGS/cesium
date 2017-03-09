@@ -139,7 +139,7 @@ define([
                 throw new DeveloperError('When options.pixelFormat is ETC1 compressed, this WebGL implementation must support the WEBGL_texture_compression_etc1 extension. Check context.etc1.');
             }
 
-            if (PixelFormat.compressedTextureSize(internalFormat, width, height) !== source.arrayBufferView.byteLength) {
+            if (PixelFormat.compressedTextureSizeInBytes(internalFormat, width, height) !== source.arrayBufferView.byteLength) {
                 throw new DeveloperError('The byte length of the array buffer is invalid for the compressed texture with the given width and height.');
             }
         }
@@ -191,9 +191,9 @@ define([
 
         var sizeInBytes;
         if (isCompressed) {
-            sizeInBytes = PixelFormat.compressedTextureSize(pixelFormat, width, height);
+            sizeInBytes = PixelFormat.compressedTextureSizeInBytes(pixelFormat, width, height);
         } else {
-            sizeInBytes = PixelFormat.textureSize(pixelFormat, pixelDatatype, width, height);
+            sizeInBytes = PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, height);
         }
 
         this._context = context;
@@ -205,6 +205,7 @@ define([
         this._width = width;
         this._height = height;
         this._dimensions = new Cartesian2(width, height);
+        this._hasMipmap = false;
         this._sizeInBytes = sizeInBytes;
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
@@ -390,6 +391,9 @@ define([
         },
         sizeInBytes : {
             get : function() {
+                if (this._hasMipmap) {
+                    return Math.floor(this._sizeInBytes * 4 / 3);
+                }
                 return this._sizeInBytes;
             }
         },
@@ -567,6 +571,8 @@ define([
         }
         //>>includeEnd('debug');
 
+        this._hasMipmap = true;
+
         var gl = this._context._gl;
         var target = this._textureTarget;
 
@@ -575,9 +581,6 @@ define([
         gl.bindTexture(target, this._texture);
         gl.generateMipmap(target);
         gl.bindTexture(target, null);
-
-        // The mipmap adds approximately 1/3 of the original texture size
-        this._sizeInBytes = Math.floor(this._sizeInBytes * 4 / 3);
     };
 
     Texture.prototype.isDestroyed = function() {

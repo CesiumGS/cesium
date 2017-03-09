@@ -230,27 +230,32 @@ defineSuite([
 
             // 10 buildings, 32 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) and 1 ushort component (batchId) per vertex.
             // 10 * ((24 * (8 * 4 + 1 * 2)) + (36 * 2)) = 8880
-            var modelVertexMemoryInBytes = 8880;
+            var vertexMemorySizeInBytes = 8880;
 
             // Texture is 128x128 RGBA bytes, not mipmapped
-            var modelTextureMemoryInBytes = 65536;
+            var textureMemorySizeInBytes = 65536;
 
             // One RGBA byte pixel per feature
-            var batchTextureMemoryInBytes = content.featuresLength * 4;
-            var pickTextureMemoryInBytes = content.featuresLength * 4;
+            var batchTextureMemorySizeInBytes = content.featuresLength * 4;
+            var pickTextureMemorySizeInBytes = content.featuresLength * 4;
 
             // Features have not been picked or colored yet, so the batch table contribution is 0.
-            expect(content.vertexMemoryInBytes).toEqual(modelVertexMemoryInBytes);
-            expect(content.textureMemoryInBytes).toEqual(modelTextureMemoryInBytes);
+            expect(content.vertexMemorySizeInBytes).toEqual(vertexMemorySizeInBytes);
+            expect(content.textureMemorySizeInBytes).toEqual(textureMemorySizeInBytes);
+            expect(content.batchTableMemorySizeInBytes).toEqual(0);
 
             // Color a feature and expect the texture memory to increase
             content.getFeature(0).color = Color.RED;
             scene.renderForSpecs();
-            expect(content.textureMemoryInBytes).toEqual(modelTextureMemoryInBytes + batchTextureMemoryInBytes);
+            expect(content.vertexMemorySizeInBytes).toEqual(vertexMemorySizeInBytes);
+            expect(content.textureMemorySizeInBytes).toEqual(textureMemorySizeInBytes);
+            expect(content.batchTableMemorySizeInBytes).toEqual(batchTextureMemorySizeInBytes);
 
             // Pick the tile and expect the texture memory to increase
             scene.pickForSpecs();
-            expect(content.textureMemoryInBytes).toEqual(modelTextureMemoryInBytes + batchTextureMemoryInBytes + pickTextureMemoryInBytes);
+            expect(content.vertexMemorySizeInBytes).toEqual(vertexMemorySizeInBytes);
+            expect(content.textureMemorySizeInBytes).toEqual(textureMemorySizeInBytes);
+            expect(content.batchTableMemorySizeInBytes).toEqual(batchTextureMemorySizeInBytes + pickTextureMemorySizeInBytes);
         });
     });
 

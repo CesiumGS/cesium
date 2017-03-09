@@ -7,6 +7,7 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
@@ -28,6 +29,7 @@ define([
         deprecationWarning,
         destroyObject,
         DeveloperError,
+        getAbsoluteUri,
         getBaseUri,
         getMagic,
         getStringFromTypedArray,
@@ -97,10 +99,10 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        vertexMemoryInBytes : {
+        vertexMemorySizeInBytes : {
             get : function() {
                 if (defined(this._model)) {
-                    return this._model.vertexMemoryInBytes;
+                    return this._model.vertexMemorySizeInBytes;
                 }
                 return 0;
             }
@@ -109,10 +111,22 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        textureMemoryInBytes : {
+        textureMemorySizeInBytes : {
             get : function() {
                 if (defined(this._model)) {
-                    return this._model.textureMemoryInBytes + this.batchTable.textureMemoryInBytes;
+                    return this._model.textureMemorySizeInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                if (defined(this.batchTable)) {
+                    return this.batchTable.memorySizeInBytes;
                 }
                 return 0;
             }
@@ -340,7 +354,7 @@ define([
             gltf : gltfView,
             cull : false,           // The model is already culled by the 3D tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-            basePath : getBaseUri(this._url, true),
+            basePath : getAbsoluteUri(getBaseUri(this._url, true)),
             modelMatrix : this._tile.computedTransform,
             upAxis : this._tileset._gltfUpAxis,
             shadows: this._tileset.shadows,

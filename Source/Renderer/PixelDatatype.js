@@ -20,7 +20,7 @@ define([
         UNSIGNED_SHORT_5_5_5_1 : WebGLConstants.UNSIGNED_SHORT_5_5_5_1,
         UNSIGNED_SHORT_5_6_5 : WebGLConstants.UNSIGNED_SHORT_5_6_5,
 
-        isPackedDatatype : function(pixelDatatype) {
+        isPacked : function(pixelDatatype) {
             return pixelDatatype === PixelDatatype.UNSIGNED_INT_24_8 ||
                    pixelDatatype === PixelDatatype.UNSIGNED_SHORT_4_4_4_4 ||
                    pixelDatatype === PixelDatatype.UNSIGNED_SHORT_5_5_5_1 ||

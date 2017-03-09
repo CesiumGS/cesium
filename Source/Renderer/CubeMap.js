@@ -108,7 +108,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var sizeInBytes = PixelFormat.textureSize(pixelFormat, pixelDatatype, size, size) * 6;
+        var sizeInBytes = PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, size, size) * 6;
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
@@ -158,6 +158,7 @@ define([
         this._pixelFormat = pixelFormat;
         this._pixelDatatype = pixelDatatype;
         this._size = size;
+        this._hasMipmap = false;
         this._sizeInBytes = sizeInBytes;
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
@@ -263,6 +264,9 @@ define([
         },
         sizeInBytes : {
             get : function() {
+                if (this._hasMipmap) {
+                    return Math.floor(this._sizeInBytes * 4 / 3);
+                }
                 return this._sizeInBytes;
             }
         },
@@ -314,6 +318,8 @@ define([
         }
         //>>includeEnd('debug');
 
+        this._hasMipmap = true;
+
         var gl = this._gl;
         var target = this._textureTarget;
         gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
@@ -321,9 +327,6 @@ define([
         gl.bindTexture(target, this._texture);
         gl.generateMipmap(target);
         gl.bindTexture(target, null);
-
-        // The mipmap adds approximately 1/3 of the original texture size
-        this._sizeInBytes = Math.floor(this._sizeInBytes * 4 / 3);
     };
 
     CubeMap.prototype.isDestroyed = function() {

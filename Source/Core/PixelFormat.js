@@ -146,7 +146,7 @@ define([
         /**
          * @private
          */
-        componentLength : function(pixelFormat) {
+        componentsLength : function(pixelFormat) {
             switch (pixelFormat) {
                 case PixelFormat.RGB:
                     // Many GPUs store RGB as RGBA internally
@@ -251,7 +251,7 @@ define([
         /**
          * @private
          */
-        compressedTextureSize : function(pixelFormat, width, height) {
+        compressedTextureSizeInBytes : function(pixelFormat, width, height) {
             switch (pixelFormat) {
                 case PixelFormat.RGB_DXT1:
                 case PixelFormat.RGBA_DXT1:
@@ -278,12 +278,12 @@ define([
         /**
          * @private
          */
-        textureSize : function(pixelFormat, pixelDatatype, width, height) {
-            var componentLength = PixelFormat.componentLength(pixelFormat);
-            if (PixelDatatype.isPackedDatatype(pixelDatatype)) {
-                componentLength = 1;
+        textureSizeInBytes : function(pixelFormat, pixelDatatype, width, height) {
+            var componentsLength = PixelFormat.componentsLength(pixelFormat);
+            if (PixelDatatype.isPacked(pixelDatatype)) {
+                componentsLength = 1;
             }
-            return componentLength * PixelDatatype.sizeInBytes(pixelDatatype) * width * height;
+            return componentsLength * PixelDatatype.sizeInBytes(pixelDatatype) * width * height;
         }
     };
 

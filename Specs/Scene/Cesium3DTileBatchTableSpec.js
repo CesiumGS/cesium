@@ -47,7 +47,7 @@ defineSuite([
 
     var mockTileset = {
         _statistics : {
-            textureMemoryInBytes : 0
+            textureMemorySizeInBytes : 0
         }
     };
 

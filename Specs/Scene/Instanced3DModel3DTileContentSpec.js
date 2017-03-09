@@ -9,7 +9,8 @@ defineSuite([
         'Scene/Cesium3DTileContentState',
         'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
+        'Specs/createScene',
+        'ThirdParty/when'
     ], function(
         Instanced3DModel3DTileContent,
         Cartesian3,
@@ -20,7 +21,8 @@ defineSuite([
         Cesium3DTileContentState,
         TileBoundingSphere,
         Cesium3DTilesTester,
-        createScene) {
+        createScene,
+        when) {
     'use strict';
 
     var scene;
@@ -309,27 +311,32 @@ defineSuite([
 
             // Box model - 32 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) per vertex.
             // (24 * 8 * 4) + (36 * 2) = 840
-            var modelVertexMemoryInBytes = 840;
+            var vertexMemorySizeInBytes = 840;
 
             // Texture is 211x211 RGBA bytes, but upsampled to 256x256 because the wrap mode is REPEAT
-            var modelTextureMemoryInBytes = 262144;
+            var textureMemorySizeInBytes = 262144;
 
             // One RGBA byte pixel per feature
-            var batchTextureMemoryInBytes = content.featuresLength * 4;
-            var pickTextureMemoryInBytes = content.featuresLength * 4;
+            var batchTextureMemorySizeInBytes = content.featuresLength * 4;
+            var pickTextureMemorySizeInBytes = content.featuresLength * 4;
 
             // Features have not been picked or colored yet, so the batch table contribution is 0.
-            expect(content.vertexMemoryInBytes).toEqual(modelVertexMemoryInBytes);
-            expect(content.textureMemoryInBytes).toEqual(modelTextureMemoryInBytes);
+            expect(content.vertexMemorySizeInBytes).toEqual(vertexMemorySizeInBytes);
+            expect(content.textureMemorySizeInBytes).toEqual(textureMemorySizeInBytes);
+            expect(content.batchTableMemorySizeInBytes).toEqual(0);
 
             // Color a feature and expect the texture memory to increase
             content.getFeature(0).color = Color.RED;
             scene.renderForSpecs();
-            expect(content.textureMemoryInBytes).toEqual(modelTextureMemoryInBytes + batchTextureMemoryInBytes);
+            expect(content.vertexMemorySizeInBytes).toEqual(vertexMemorySizeInBytes);
+            expect(content.textureMemorySizeInBytes).toEqual(textureMemorySizeInBytes);
+            expect(content.batchTableMemorySizeInBytes).toEqual(batchTextureMemorySizeInBytes);
 
             // Pick the tile and expect the texture memory to increase
             scene.pickForSpecs();
-            expect(content.textureMemoryInBytes).toEqual(modelTextureMemoryInBytes + batchTextureMemoryInBytes + pickTextureMemoryInBytes);
+            expect(content.vertexMemorySizeInBytes).toEqual(vertexMemorySizeInBytes);
+            expect(content.textureMemorySizeInBytes).toEqual(textureMemorySizeInBytes);
+            expect(content.batchTableMemorySizeInBytes).toEqual(batchTextureMemorySizeInBytes + pickTextureMemorySizeInBytes);
         });
     });
 

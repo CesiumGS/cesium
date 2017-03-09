@@ -11,6 +11,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
@@ -44,6 +45,7 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        getAbsoluteUri,
         getBaseUri,
         getMagic,
         getStringFromTypedArray,
@@ -121,11 +123,11 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        vertexMemoryInBytes : {
+        vertexMemorySizeInBytes : {
             get : function() {
                 var collection = this._modelInstanceCollection;
                 if (defined(collection) && defined(collection._model)) {
-                    return collection._model.vertexMemoryInBytes;
+                    return collection._model.vertexMemorySizeInBytes;
                 }
                 return 0;
             }
@@ -134,11 +136,23 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        textureMemoryInBytes : {
+        textureMemorySizeInBytes : {
             get : function() {
                 var collection = this._modelInstanceCollection;
                 if (defined(collection) && defined(collection._model)) {
-                    return collection._model.textureMemoryInBytes + this.batchTable.textureMemoryInBytes;
+                    return collection._model.textureMemorySizeInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                if (defined(this.batchTable)) {
+                    return this.batchTable.memorySizeInBytes;
                 }
                 return 0;
             }
@@ -350,7 +364,7 @@ define([
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
-            collectionOptions.url = joinUrls(getBaseUri(this._url, true), gltfUrl);
+            collectionOptions.url = getAbsoluteUri(joinUrls(getBaseUri(this._url, true), gltfUrl));
         } else {
             collectionOptions.gltf = gltfView;
             collectionOptions.basePath = getBaseUri(this._url, true);

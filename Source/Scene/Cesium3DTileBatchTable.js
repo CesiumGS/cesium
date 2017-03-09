@@ -135,7 +135,7 @@ define([
     }
 
     defineProperties(Cesium3DTileBatchTable.prototype, {
-        textureMemoryInBytes : {
+        memorySizeInBytes : {
             get : function() {
                 var memory = 0;
                 if (defined(this._pickTexture)) {
@@ -1382,7 +1382,7 @@ define([
             }
 
             batchTable._pickTexture = createTexture(batchTable, context, bytes);
-            content._tileset._statistics.textureMemoryInBytes += batchTable._pickTexture.sizeInBytes;
+            content._tileset._statistics.batchTableMemorySizeInBytes += batchTable._pickTexture.sizeInBytes;
         }
     }
 
@@ -1413,7 +1413,7 @@ define([
             // Create batch texture on-demand
             if (!defined(this._batchTexture)) {
                 this._batchTexture = createTexture(this, context, this._batchValues);
-                tileset._statistics.textureMemoryInBytes += this._batchTexture.sizeInBytes;
+                tileset._statistics.batchTableMemorySizeInBytes += this._batchTexture.sizeInBytes;
             }
 
             updateBatchTexture(this);  // Apply per-feature show/color updates

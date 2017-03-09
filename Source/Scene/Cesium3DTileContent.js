@@ -100,7 +100,21 @@ define([
          * @type {Number}
          * @readonly
          */
-        vertexMemoryInBytes : {
+        vertexMemorySizeInBytes : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
+         * Gets the tile's batch table memory in bytes.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        batchTableMemorySizeInBytes : {
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
@@ -114,7 +128,7 @@ define([
          * @type {Number}
          * @readonly
          */
-        textureMemoryInBytes : {
+        textureMemorySizeInBytes : {
             get : function() {
                 DeveloperError.throwInstantiationError();
             }

@@ -649,8 +649,8 @@ defineSuite([
             var length = tilesets.length;
             for (var i = 0; i < length; ++i) {
                 var content = tilesets[i]._root.content;
-                expect(content.vertexMemoryInBytes).toEqual(expectedVertexMemory[i]);
-                expect(content.textureMemoryInBytes).toEqual(0);
+                expect(content.vertexMemorySizeInBytes).toEqual(expectedVertexMemory[i]);
+                expect(content.textureMemorySizeInBytes).toEqual(0);
             }
         });
     });
@@ -664,21 +664,26 @@ defineSuite([
             var pointCloudVertexMemory = 1000 * 25;
 
             // One RGBA byte pixel per feature
-            var batchTextureMemoryInBytes = content.featuresLength * 4;
-            var pickTextureMemoryInBytes = content.featuresLength * 4;
+            var batchTextureMemorySizeInBytes = content.featuresLength * 4;
+            var pickTextureMemorySizeInBytes = content.featuresLength * 4;
 
             // Features have not been picked or colored yet, so the batch table contribution is 0.
-            expect(content.vertexMemoryInBytes).toEqual(pointCloudVertexMemory);
-            expect(content.textureMemoryInBytes).toEqual(0);
+            expect(content.vertexMemorySizeInBytes).toEqual(pointCloudVertexMemory);
+            expect(content.textureMemorySizeInBytes).toEqual(0);
+            expect(content.batchTableMemorySizeInBytes).toEqual(0);
 
             // Color a feature and expect the texture memory to increase
             content.getFeature(0).color = Color.RED;
             scene.renderForSpecs();
-            expect(content.textureMemoryInBytes).toEqual(batchTextureMemoryInBytes);
+            expect(content.vertexMemorySizeInBytes).toEqual(pointCloudVertexMemory);
+            expect(content.textureMemorySizeInBytes).toEqual(0);
+            expect(content.batchTableMemorySizeInBytes).toEqual(batchTextureMemorySizeInBytes);
 
             // Pick the tile and expect the texture memory to increase
             scene.pickForSpecs();
-            expect(content.textureMemoryInBytes).toEqual(batchTextureMemoryInBytes + pickTextureMemoryInBytes);
+            expect(content.vertexMemorySizeInBytes).toEqual(pointCloudVertexMemory);
+            expect(content.textureMemorySizeInBytes).toEqual(0);
+            expect(content.batchTableMemorySizeInBytes).toEqual(batchTextureMemorySizeInBytes + pickTextureMemorySizeInBytes);
         });
     });
 
