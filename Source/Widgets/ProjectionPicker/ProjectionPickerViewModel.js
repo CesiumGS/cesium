@@ -90,7 +90,7 @@ define([
 
         var that = this;
         knockout.defineProperty(this, 'selectedTooltip', function() {
-            if (that._scene.camera.frustum instanceof OrthographicFrustum) {
+            if (that._orthographic) {
                 return that.tooltipOrthographic;
             }
             return that.tooltipPerspective;
@@ -227,6 +227,18 @@ define([
         switchToOrthographic : {
             get : function() {
                 return this._switchToOrthographic;
+            }
+        },
+
+        /**
+         * Gets whether the scene is currently using an orthographic projection.
+         * @memberof ProjectionPickerViewModel.prototype
+         *
+         * @type {Command}
+         */
+        isOrthographicProjection : {
+            get : function() {
+                return this._orthographic;
             }
         }
     });
