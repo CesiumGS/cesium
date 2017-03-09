@@ -25,9 +25,6 @@ define([
     "use strict";
 
     var PointEmitter = function(options) {
-        this.initialMass = defaultValue(options.initialMass, 1.0);
-        this.massVariance = defaultValue(options.massVariance, 0.0);
-
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
         var initialSize = Cartesian2.clone(options.initialSize);
@@ -101,7 +98,6 @@ define([
             // Create the new particle.
             var particle = new Particle({
                 image: this.image,
-                mass : this.initialMass + this.massVariance * random(0.0, 1.0),
                 size : size
             });
 

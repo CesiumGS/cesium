@@ -57,6 +57,16 @@ define([
             this.maxLife = defaultValue(options.maxLife, 5.0);
         }
 
+        var mass = defaultValue(options.mass, undefined);
+        if (mass) {
+            this.minMass = mass;
+            this.maxMass = mass;
+        }
+        else {
+            this.minMass = defaultValue(options.minMass, 1.0);
+            this.maxMass = defaultValue(options.maxMass, 1.0);
+        }
+
         this.image = defaultValue(options.image, null);
 
         this._billboardCollection = undefined;
@@ -102,6 +112,7 @@ define([
         particle.endScale = this.endScale;
         particle.image = this.image;
         particle.life = this.minLife + (this.maxLife - this.minLife) * random(0.0, 1.0);
+        particle.mass = this.minMass + (this.maxMass - this.minMass) * random(0.0, 1.0);
         var speed = this.minSpeed + (this.maxSpeed - this.minSpeed) * random(0.0, 1.0);
         Cartesian3.multiplyByScalar(particle.velocity, speed, particle.velocity);
 
