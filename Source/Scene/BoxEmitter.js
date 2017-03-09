@@ -9,7 +9,7 @@ define([
         CesiumMath) {
     "use strict";
 
-    var BoxPlacer = function(options) {
+    var BoxEmitter = function(options) {
         this.position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this.width = defaultValue(options.width, 1.0);
         this.height = defaultValue(options.height, 1.0);
@@ -24,7 +24,7 @@ define([
         return CesiumMath.nextRandomNumber() * (b - a) + a;
     }
 
-    BoxPlacer.prototype.place = function(particle) {
+    BoxEmitter.prototype.emit = function(particle) {
         var x = this.position.x + random(-this._halfWidth, this._halfWidth);
         var y = this.position.y + random(-this._halfDepth, this._halfDepth);
         var z = this.position.z + random(-this._halfHeight, this._halfHeight);
@@ -37,5 +37,5 @@ define([
         particle.velocity = velocity;
     };
 
-    return BoxPlacer;
+    return BoxEmitter;
 });

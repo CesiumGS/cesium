@@ -18,7 +18,7 @@ define([
         return CesiumMath.nextRandomNumber() * (b - a) + a;
     }
 
-    ConePlacer.prototype.place = function(particle) {
+    ConePlacer.prototype.emit = function(particle) {
 
         var radius = this.height * Math.tan(this.angle);
 

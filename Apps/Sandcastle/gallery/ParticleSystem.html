@@ -173,15 +173,10 @@ var particles = scene.primitives.add(new Cesium.ParticleSystem({
 
     lifeTime: 16.0,
 
-    emitter: new Cesium.PointEmitter({
-
-        // Position the particle system on the tail of the plane.
-        placer: new Cesium.CirclePlacer({
-            position: new Cesium.Cartesian3(2.5, 4.0, 1.0),
-            radius: 0.5
-        })
+    emitter: new Cesium.CircleEmitter({
+        position: new Cesium.Cartesian3(2.5, 4.0, 1.0),
+        radius: 0.5
     })
-
 }));
 
 entity._getModelMatrix(viewer.clock.currentTime, particles.modelMatrix);

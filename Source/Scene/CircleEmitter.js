@@ -9,7 +9,7 @@ define([
         CesiumMath) {
     "use strict";
 
-    var CirclePlacer = function(options) {
+    var CircleEmitter = function(options) {
         this.position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this.radius = defaultValue(options.radius, 1.0);
     };
@@ -18,7 +18,7 @@ define([
         return CesiumMath.nextRandomNumber() * (b - a) + a;
     }
 
-    CirclePlacer.prototype.place = function(particle) {
+    CircleEmitter.prototype.emit = function(particle) {
 
         var theta = random(0.0, CesiumMath.TWO_PI);
         var rad = random(0.0, this.radius);
@@ -33,5 +33,5 @@ define([
         particle.velocity = Cartesian3.clone(Cartesian3.UNIT_Z);
     };
 
-    return CirclePlacer;
+    return CircleEmitter;
 });

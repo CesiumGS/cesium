@@ -9,7 +9,7 @@ define([
         CesiumMath) {
     "use strict";
 
-    var SpherePlacer = function(options) {
+    var SphereEmitter = function(options) {
         this.position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this.radius = defaultValue(options.radius, 1.0);
     };
@@ -18,7 +18,7 @@ define([
         return CesiumMath.nextRandomNumber() * (b - a) + a;
     }
 
-    SpherePlacer.prototype.place = function(particle) {
+    SphereEmitter.prototype.emit = function(particle) {
 
         var theta = random(0.0, CesiumMath.TWO_PI);
         var phi = random(0.0, CesiumMath.PI);
@@ -31,12 +31,12 @@ define([
 
         particle.position = new Cartesian3(x, y, z);
 
-        // Modify the velocity to shoot out from the center
+         // Modify the velocity to shoot out from the center
         var velocity = new Cartesian3();
         Cartesian3.subtract(particle.position, this.position, velocity);
         Cartesian3.normalize(velocity, velocity);
         particle.velocity = velocity;
     };
 
-    return SpherePlacer;
+    return SphereEmitter;
 });

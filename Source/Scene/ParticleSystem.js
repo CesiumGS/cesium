@@ -204,13 +204,15 @@ define([
             dt = 0.0;
         }
 
+        var i = 0;
+
 
         var particles = this.particles;
         var emitter = this.emitter;
 
         // update particles and remove dead particles
         var length = particles.length;
-        for (var i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             var particle = particles[i];
             if (!particle.update(this.forces, dt)) {
                 removeBillboard(this, particle);
@@ -227,8 +229,31 @@ define([
         var numToEmit = this.calcNumberToEmit(dt);
 
         if (numToEmit > 0 && emitter) {
-            emitter.modelMatrix = this.modelMatrix;
-            emitter.emit(this, numToEmit);
+            for (i = 0; i < numToEmit; i++) {
+                // Create a new particle.
+                var particle = new Particle({
+                });
+
+                // Initialize the particle.
+                this.emitter.emit( particle );
+
+                //For the velocity we need to add it to the original position and then multiply by point.
+                var tmp = new Cartesian3();
+                Cartesian3.add(particle.position, particle.velocity, tmp);
+                Matrix4.multiplyByPoint(this.modelMatrix, tmp, tmp);
+
+                // Change the position to be in world coordinates
+                particle.position = Matrix4.multiplyByPoint(this.modelMatrix, particle.position, particle.position);
+
+                // Orient the velocity in world space as well.
+                var worldVelocity = new Cartesian3();
+                Cartesian3.subtract(tmp, particle.position, worldVelocity);
+                Cartesian3.normalize(worldVelocity, worldVelocity);
+                particle.velocity = worldVelocity;
+
+                // Add the particle to the system.
+                this.add(particle);
+            }
         }
 
         this._billboardCollection.update(frameState);
