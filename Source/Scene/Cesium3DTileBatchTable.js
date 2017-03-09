@@ -1199,37 +1199,19 @@ define([
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
-    function updateDerivedCommands(derivedCommands, command, useStencil, final) {
+    function updateDerivedCommands(derivedCommands, command) {
         for (var name in derivedCommands) {
             if (derivedCommands.hasOwnProperty(name)) {
                 var derivedCommand = derivedCommands[name];
                 derivedCommand.castShadows = command.castShadows;
                 derivedCommand.receiveShadows = command.receiveShadows;
                 derivedCommand.primitiveType = command.primitiveType;
-
-                if (useStencil && (
-                    !derivedCommand.renderState.stencilTest.enabled ||
-                    derivedCommand.renderState.stencilTest.frontFunction !== (final ? StencilFunction.ALWAYS : StencilFunction.EQUAL) ||
-                    derivedCommand.renderState.stencilTest.frontOperation.zPass !== (final ? StencilOperation.INCREMENT : StencilOperation.KEEP)
-                )) {
-                    derivedCommand.renderState = getStencilRenderState(command.renderState, final);
-                }
             }
         }
     }
 
-    function getStencilRenderState(renderState, final) {
-        var rs = clone(renderState, true);
-        rs.stencilTest.enabled = true;
-        rs.stencilTest.frontFunction = final ? StencilFunction.ALWAYS : StencilFunction.EQUAL;
-        rs.stencilTest.frontOperation.zPass = final ? StencilOperation.INCREMENT : StencilOperation.KEEP;
-
-        return RenderState.fromCache(rs);
-    }
-
     Cesium3DTileBatchTable.prototype.getAddCommand = function() {
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
-        var that = this;
 // TODO: This function most likely will not get optimized.  Do something like this later in the render loop.
         return function(command) {
             var commandList = this.commandList;
@@ -1244,9 +1226,7 @@ define([
                 derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
             }
 
-            var useStencil = that._content._tileset.stencilTiles;
-            var final = that._content._tile._finalResolution;
-            updateDerivedCommands(derivedCommands, command, useStencil, final);
+            updateDerivedCommands(derivedCommands, command);
 
             // If the command was originally opaque:
             //    * If the styling applied to the tile is all opaque, use the original command

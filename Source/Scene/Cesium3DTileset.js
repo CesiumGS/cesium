@@ -25,6 +25,8 @@ define([
     '../Core/Request',
     '../Core/RequestScheduler',
     '../Core/RequestType',
+    '../Renderer/DrawCommand',
+    '../Renderer/RenderState',
     '../ThirdParty/Uri',
     '../ThirdParty/when',
     './Cesium3DTile',
@@ -34,10 +36,13 @@ define([
     './Cesium3DTileOptimizationHint',
     './Cesium3DTileRefine',
     './Cesium3DTileStyleEngine',
+    './CullFace',
     './CullingVolume',
     './DebugCameraPrimitive',
     './SceneMode',
     './ShadowMode',
+    './StencilFunction',
+    './StencilOperation',
     './TileBoundingRegion',
     './TileBoundingSphere',
     './TileOrientedBoundingBox'
@@ -67,6 +72,8 @@ define([
         Request,
         RequestScheduler,
         RequestType,
+        DrawCommand,
+        RenderState,
         Uri,
         when,
         Cesium3DTile,
@@ -76,10 +83,13 @@ define([
         Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
         Cesium3DTileStyleEngine,
+        CullFace,
         CullingVolume,
         DebugCameraPrimitive,
         SceneMode,
         ShadowMode,
+        StencilFunction,
+        StencilOperation,
         TileBoundingRegion,
         TileBoundingSphere,
         TileOrientedBoundingBox) {
@@ -476,6 +486,7 @@ define([
         this._stencilTiles = defaultValue(options.stencilTiles, true);
         this._loadHeaps = {};
         this.loadSiblings = defaultValue(options.loadSiblings, true);
+        this._refining = false;
     }
 
     function Cesium3DTilesetStatistics() {
@@ -856,6 +867,12 @@ define([
             get : function() {
                 return this.skipLODs && this._stencilTiles && this.mixLOD;
             }
+        },
+
+        refining : {
+            get : function() {
+                return this.skipLODs && this._refining;
+            }
         }
     });
 
@@ -1123,13 +1140,6 @@ define([
         for (var i = 0; i < length; ++i) {
             var child = children[i];
             child.distanceToCamera = child.distanceToTile(frameState);
-
-            var toCenter = Cartesian3.subtract(child.contentBoundingVolume.boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
-            var distance = Cartesian3.magnitude(toCenter);
-            Cartesian3.divideByScalar(toCenter, distance, toCenter);
-            var dot = Cartesian3.dot(frameState.camera.directionWC, toCenter);
-            child._centerDistanceToCamera = distance;
-            child._centerZDistanceToCamera = distance * dot;
         }
     }
 
@@ -1250,6 +1260,7 @@ define([
         var finalQueue = selectionState.finalQueue;
         var selectionQueue = selectionState.selectionQueue;
         selectionQueue._length = 0;
+        tileset._refining = false;
 
         var length = finalQueue._length;
         for (var i = 0; i < length; ++i) {
@@ -1259,14 +1270,13 @@ define([
                 if (tile.refine === Cesium3DTileRefine.ADD) {
                     break;
                 }
+                tileset._refining = true;
                 tile = tile.parent;
             }
 
             if (defined(tile)) {
                 if (!tile.selected) {
                     tile._finalResolution = (tile === original || tile.refine === Cesium3DTileRefine.ADD);
-                    tile._targetDistanceToCamera = original.distanceToCamera;
-                    // tile.selected = true;
                     tile._selectedFrame = frameState.frameNumber;
                     push(selectionQueue, tile);
                 }
@@ -1282,8 +1292,6 @@ define([
                         if (child.contentReady) {
                             if (!child.selected) {
                                 child._finalResolution = true;
-                                child._targetDistanceToCamera = child.distanceToCamera;
-                                // child.selected = true;
                                 child._selectedFrame = frameState.frameNumber;
                                 touch(tileset, child, outOfCore);
                                 selectionQueue.push(child);
@@ -1434,6 +1442,7 @@ define([
         }
 
         traverseAndSelect(tileset, root, frameState);
+
 
         requestTiles(tileset, tileset._loadHeaps, outOfCore);
     }
@@ -1617,22 +1626,18 @@ define([
         return tileset.mixLOD || (state & ProcessingState.REFINED) !== 0;
     }
 
-    function sortByZDepth(a, b) {
-        return b._centerZDistanceToCamera - a._centerZDistanceToCamera;
-    }
-
     var tempStack2 = [];
     function traverseAndSelect(tileset, root, frameState) {
         var stack = tempStack;
-        var selectionStack = tempStack2;
-        var lowMemory = tileset.lowMemory;
+        var ancestorStack = tempStack2;
+
         stack.push(root);
 
-        while(stack.length > 0 || selectionStack.length > 0) {
-            if (selectionStack.length > 0) {
-                var waitingTile = selectionStack[selectionStack.length - 1];
+        while(stack.length > 0 || ancestorStack.length > 0) {
+            if (ancestorStack.length > 0) {
+                var waitingTile = ancestorStack[ancestorStack.length - 1];
                 if (waitingTile._stackLength === stack.length) {
-                    selectionStack.pop();
+                    ancestorStack.pop();
                     selectTile(tileset, waitingTile, waitingTile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
                     continue;
                 }
@@ -1647,11 +1652,13 @@ define([
 
             var children = tile.children;
             var childrenLength = children.length;
-            children.sort(sortByZDepth);
+
+            children.sort(sortChildrenByDistanceToCamera);
 
             var i, child;
 
             var additive = tile.refine === Cesium3DTileRefine.ADD;
+
             if (shouldSelect) {
                 if (tile._finalResolution || childrenLength === 0) {
                     selectTile(tileset, tile, tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
@@ -1661,27 +1668,15 @@ define([
                 }
 
                 if (!additive) {
-                    selectionStack.push(tile);
+                    ancestorStack.push(tile);
                     tile._stackLength = stack.length;
                 }
+            }
 
-                for (i = 0; i < childrenLength; ++i) {
-                    child = children[i];
-                    if (isVisible(child.visibilityPlaneMask)) {
-                        if (child._centerZDistanceToCamera <= tile._centerZDistanceToCamera || tile.distanceToCamera <= 0 || additive || lowMemory) {
-                            stack.push(child);
-                        } else if (tileset._refineToVisible) {
-                            stack.push(child);
-                            tile._stackLength = stack.length;
-                        }
-                    }
-                }
-            } else {
-                for (i = 0; i < childrenLength; ++i) {
-                    child = children[i];
-                    if (isVisible(child.visibilityPlaneMask)) {
-                        stack.push(child);
-                    }
+            for (i = 0; i < childrenLength; ++i) {
+                child = children[i];
+                if (isVisible(child.visibilityPlaneMask)) {
+                    stack.push(child);
                 }
             }
         }
@@ -2108,6 +2103,7 @@ define([
         last.numberOfTilesCulledWithChildrenUnion = stats.numberOfTilesCulledWithChildrenUnion;
     }
 
+    var backfaceCommands = [];
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
@@ -2116,13 +2112,82 @@ define([
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
         var tileVisible = tileset.tileVisible;
-        for (var i = 0; i < length; ++i) {
-            var tile = selectedTiles[i];
-            if (tile.selected) {
-                // Raise visible event before update in case the visible event
-                // makes changes that update needs to apply to WebGL resources
-                tileVisible.raiseEvent(tile);
-                tile.update(tileset, frameState);
+
+        var tile, i;
+
+        if (tileset._refining && tileset.stencilTiles) {
+            var command, rs;
+
+            var initialLength = commandList.length;
+            backfaceCommands.length = 0;
+
+            for (i = 0; i < length; ++i) {
+                tile = selectedTiles[i];
+                if (tile.selected) {
+                    // Raise visible event before update in case the visible event
+                    // makes changes that update needs to apply to WebGL resources
+                    tileVisible.raiseEvent(tile);
+
+                    var lengthBeforeUpdate = commandList.length;
+                    tile.update(tileset, frameState);
+                    for (var j = lengthBeforeUpdate; j < commandList.length; ++j) {
+                        command = commandList[j];
+                        if (tile._finalResolution) {
+                            // Final resolution tiles always increment stencil if they pass Z
+                            rs = clone(command.renderState, true);
+                            rs.stencilTest.enabled = true;
+                            rs.stencilTest.frontFunction = StencilFunction.ALWAYS;
+                            rs.stencilTest.frontOperation.zPass = StencilOperation.INCREMENT;
+                            command.renderState = RenderState.fromCache(rs);
+                        } else {
+                            // clone for drawing backfaces only
+                            backfaceCommands.push(DrawCommand.shallowClone(command));
+
+                            // Unresolved tiles do not draw if stencil is not 0 (final res tile is there)
+                            rs = clone(command.renderState, true);
+                            rs.stencilTest.enabled = true;
+                            rs.stencilTest.frontFunction = StencilFunction.EQUAL;
+                            rs.stencilTest.frontOperation.zPass = StencilOperation.KEEP;
+                            command.renderState = RenderState.fromCache(rs);
+                        }
+                    }
+                }
+            }
+
+            var addedCommandsLength = commandList.length - initialLength;
+            var backfaceCommandsLength = backfaceCommands.length;
+
+            // write just depth of unresolved tiles so resolved final res tiles do not appear in front
+            for (i = 0; i < backfaceCommandsLength; ++i) {
+                command = backfaceCommands[i];
+                rs = clone(command.renderState, true);
+                rs.cull.enabled = true;
+                rs.cull.face = CullFace.FRONT;
+                rs.depthMask = true;
+                rs.colorMask = false;
+                command.renderState = RenderState.fromCache(rs);
+            }
+
+            commandList.length = initialLength + addedCommandsLength + backfaceCommandsLength;
+
+            // missing cache all day?
+            for (i = addedCommandsLength - 1; i >= 0; --i) {
+                commandList[initialLength + backfaceCommandsLength + i] = commandList[initialLength + i];
+            }
+
+            for (i = 0; i < backfaceCommandsLength; ++i) {
+                commandList[initialLength + i] = backfaceCommands[i];
+            }
+
+        } else {
+            for (i = 0; i < length; ++i) {
+                tile = selectedTiles[i];
+                if (tile.selected) {
+                    // Raise visible event before update in case the visible event
+                    // makes changes that update needs to apply to WebGL resources
+                    tileVisible.raiseEvent(tile);
+                    tile.update(tileset, frameState);
+                }
             }
         }
 

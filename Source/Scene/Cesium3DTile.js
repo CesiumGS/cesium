@@ -358,9 +358,6 @@ define([
 
         this._sse = 0;
         this._finalResolution = true;
-        this._targetDistanceToCamera = 0;
-        this._centerDistanceToCamera = 0;
-        this._centerZDistanceToCamera = 0;
         this._loadHeap = undefined;
         this._depth = 0;
         this._stackLength = 0;
