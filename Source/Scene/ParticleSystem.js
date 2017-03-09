@@ -44,6 +44,8 @@ define([
         this.rate = defaultValue(options.rate, 5);
         this.bursts = defaultValue(options.bursts, null);
 
+        this.loop = defaultValue(options.loop, true);
+
         var speed = defaultValue(options.speed, undefined);
         if (speed) {
             this.minSpeed = speed;
@@ -261,8 +263,17 @@ define([
         this.currentTime += dt;
 
         if (this.lifeTime !== Number.MAX_VALUE && this.currentTime > this.lifeTime) {
-            this.isComplete = true;
-            this.complete.raiseEvent(this);
+            if (this.loop) {
+                this.currentTime = this.currentTime - this.lifeTime;
+                // Reset any bursts
+                for (i = 0; i < this.bursts.length; i++) {
+                    this.bursts[i].complete = false;
+                }
+            }
+            else {
+                this.isComplete = true;
+                this.complete.raiseEvent(this);
+            }
         }
     };
 
