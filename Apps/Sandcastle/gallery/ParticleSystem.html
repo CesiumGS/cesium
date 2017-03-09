@@ -21,10 +21,95 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+    #toolbar .header {
+        font-weight: bold;
+    }
+
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="toolbar">
+    <table><tbody>
+    <tr>
+        <td>Rate</td>
+        <td>
+            <input type="range" min="0.0" max="100.0" step="1" data-bind="value: rate, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: rate">
+        </td>
+    </tr>
+
+    <tr>
+        <td>Min Life</td>
+        <td>
+            <input type="range" min="0.1" max="30.0" step="1" data-bind="value: minLife, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: minLife">
+        </td>
+    </tr>
+
+    <tr>
+        <td>Max Life</td>
+        <td>
+            <input type="range" min="0.1" max="30.0" step="1" data-bind="value: maxLife, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: maxLife">
+        </td>
+    </tr>
+
+    <tr>
+        <td>Min Speed</td>
+        <td>
+            <input type="range" min="0.0" max="30.0" step="1" data-bind="value: minSpeed, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: minSpeed">
+        </td>
+    </tr>
+
+    <tr>
+        <td>Max Speed</td>
+        <td>
+            <input type="range" min="0.0" max="30.0" step="1" data-bind="value: maxSpeed, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: maxSpeed">
+        </td>
+    </tr>
+
+    <tr>
+        <td>Start Scale</td>
+        <td>
+            <input type="range" min="0.0" max="10.0" step="1" data-bind="value: startScale, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: startScale">
+        </td>
+    </tr>
+
+    <tr>
+        <td>End Scale</td>
+        <td>
+            <input type="range" min="0.0" max="10.0" step="1" data-bind="value: endScale, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: endScale">
+        </td>
+    </tr>
+
+
+    <tr>
+        <td>Gravity</td>
+        <td>
+            <input type="range" min="-20.0" max="20.0" step="1" data-bind="value: gravity, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: gravity">
+        </td>
+    </tr>
+
+
+    </tbody></table>
+</div>
+
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -47,6 +132,22 @@ viewer.clock.multiplier = 1;
 
 //Set timeline to simulation bounds
 viewer.timeline.zoomTo(start, stop);
+
+
+var viewModel = {
+    rate: 5.0,
+    gravity: 0.0,
+    minLife: 1.0,
+    maxLife: 1.0,
+    minSpeed: 5,
+    maxSpeed: 5,
+    startScale: 1.0,
+    endScale: 4.0
+};
+
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
 
 //Generate a random circular pattern with varying heights.
 function computeCirclularFlight(lon, lat, radius) {
@@ -131,7 +232,7 @@ var scene = viewer.scene;
 scene.debugShowFramesPerSecond = true;
 
 var particleSize = 60.0;
-var gravity = -9.8;
+
 var gravityScratch = new Cesium.Cartesian3();
 
 function applyGravity(p, dt) {
@@ -139,7 +240,7 @@ function applyGravity(p, dt) {
     var position = p.position;
 
     Cesium.Cartesian3.normalize(position, gravityScratch);
-    Cesium.Cartesian3.multiplyByScalar(gravityScratch, gravity * dt, gravityScratch);
+    Cesium.Cartesian3.multiplyByScalar(gravityScratch, viewModel.gravity * dt, gravityScratch);
 
     p.velocity = Cesium.Cartesian3.add(p.velocity, gravityScratch, p.velocity);
 }
@@ -151,19 +252,20 @@ var particles = scene.primitives.add(new Cesium.ParticleSystem({
     startColor: Cesium.Color.RED.withAlpha(0.7),
     endColor: Cesium.Color.YELLOW.withAlpha(0.3),
 
-    startScale: 1.0,
-    endScale: 4.0,
+    startScale: viewModel.startScale,
+    endScale: viewModel.endScale,
 
-    life: 1.0,
+    minLife: viewModel.minLife,
+    maxLife: viewModel.maxLife,
 
-    minSpeed: 5.0,
-    maxSpeed: 8.0,
+    minSpeed: viewModel.minSpeed,
+    maxSpeed: viewModel.maxSpeed,
 
     width: particleSize,
     height: particleSize,
 
     // Particles per second.
-    rate: 50,
+    rate: viewModel.rate,
 
     bursts: [
         {time: 5.0, min: 300, max: 500},
@@ -176,7 +278,9 @@ var particles = scene.primitives.add(new Cesium.ParticleSystem({
     emitter: new Cesium.CircleEmitter({
         position: new Cesium.Cartesian3(2.5, 4.0, 1.0),
         radius: 0.5
-    })
+    }),
+
+    forces: [applyGravity]
 }));
 
 entity._getModelMatrix(viewer.clock.currentTime, particles.modelMatrix);
@@ -186,6 +290,52 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
     // Sync the modelMatrix with the entitys position.
     entity._getModelMatrix(viewer.clock.currentTime, particles.modelMatrix);
 });
+
+
+Cesium.knockout.getObservable(viewModel, 'rate').subscribe(
+    function(newValue) {
+        particles.rate = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'minLife').subscribe(
+    function(newValue) {
+        particles.minLife = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'maxLife').subscribe(
+    function(newValue) {
+        particles.maxLife = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'minSpeed').subscribe(
+    function(newValue) {
+        particles.minSpeed = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'maxSpeed').subscribe(
+    function(newValue) {
+        particles.maxSpeed = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'startScale').subscribe(
+    function(newValue) {
+        particles.startScale = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'endScale').subscribe(
+    function(newValue) {
+        particles.endScale = parseFloat(newValue);
+    }
+);
+
+
+
 
 
 //Sandcastle_End
