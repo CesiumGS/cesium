@@ -332,6 +332,12 @@ define([
 
         var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');
 
+        var rtcCenter;
+        var rtcCenterArray = featureTable.getGlobalProperty('RTC_CENTER');
+        if (defined(rtcCenterArray)) {
+            rtcCenter = Cartesian3.unpack(rtcCenterArray);
+        }
+
         var instances = collectionOptions.instances;
         var instancePosition = new Cartesian3();
         var instancePositionArray = new Array(3);
@@ -371,6 +377,9 @@ define([
                 }
             }
             Cartesian3.unpack(position, 0, instancePosition);
+            if (defined(rtcCenter)) {
+                Cartesian3.add(instancePosition, rtcCenter, instancePosition);
+            }
             instanceTranslationRotationScale.translation = instancePosition;
 
             // Get the instance rotation
