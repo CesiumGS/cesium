@@ -136,6 +136,7 @@ define([
         var length = PixelFormat.compressedTextureSizeInBytes(format, width, height);
         var level0DXTData = new Uint8Array(length);
         level0DXTData.set(dxtData, 0);
+
         transferableObjects.push(level0DXTData.buffer);
         return new CompressedTextureBuffer(format, width, height, level0DXTData);
     }

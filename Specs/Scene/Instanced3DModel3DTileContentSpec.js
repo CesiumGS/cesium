@@ -9,8 +9,7 @@ defineSuite([
         'Scene/Cesium3DTileContentState',
         'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
-        'Specs/createScene',
-        'ThirdParty/when'
+        'Specs/createScene'
     ], function(
         Instanced3DModel3DTileContent,
         Cartesian3,
@@ -21,8 +20,7 @@ defineSuite([
         Cesium3DTileContentState,
         TileBoundingSphere,
         Cesium3DTilesTester,
-        createScene,
-        when) {
+        createScene) {
     'use strict';
 
     var scene;

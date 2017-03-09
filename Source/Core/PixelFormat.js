@@ -148,18 +148,16 @@ define([
          */
         componentsLength : function(pixelFormat) {
             switch (pixelFormat) {
+                // Many GPUs store RGB as RGBA internally
+                // https://devtalk.nvidia.com/default/topic/699479/general-graphics-programming/rgb-auto-converted-to-rgba/post/4142379/#4142379
                 case PixelFormat.RGB:
-                    // Many GPUs store RGB as RGBA internally
-                    // https://devtalk.nvidia.com/default/topic/699479/general-graphics-programming/rgb-auto-converted-to-rgba/post/4142379/#4142379
-                    return 4;
                 case PixelFormat.RGBA:
                     return 4;
-                case PixelFormat.ALPHA:
-                    return 1;
-                case PixelFormat.LUMINANCE:
-                    return 1;
                 case PixelFormat.LUMINANCE_ALPHA:
                     return 2;
+                case PixelFormat.ALPHA:
+                case PixelFormat.LUMINANCE:
+                    return 1;
                 default:
                     return 1;
             }
