@@ -162,24 +162,24 @@ var particles = scene.primitives.add(new Cesium.ParticleSystem({
     width: particleSize,
     height: particleSize,
 
+    // Particles per second.
+    rate: 50,
+
+    bursts: [
+        {time: 5.0, min: 300, max: 500},
+        {time: 10.0, min: 50, max: 100},
+        {time: 15.0, min: 200, max: 300}
+    ],
+
+    lifeTime: 16.0,
+
     emitter: new Cesium.PointEmitter({
 
         // Position the particle system on the tail of the plane.
         placer: new Cesium.CirclePlacer({
             position: new Cesium.Cartesian3(2.5, 4.0, 1.0),
             radius: 0.5
-        }),
-
-        // Particles per second.
-        rate: 50,
-
-        bursts: [
-            {time: 5.0, min: 300, max: 500},
-            {time: 10.0, min: 50, max: 100},
-            {time: 15.0, min: 200, max: 300}
-        ],
-
-        lifeTime: 16.0
+        })
     })
 
 }));

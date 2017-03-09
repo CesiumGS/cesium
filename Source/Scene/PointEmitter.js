@@ -5,7 +5,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/Event',
         '../Core/Matrix4',
         '../Core/Math',
         './Particle',
@@ -16,7 +15,6 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
-        Event,
         Matrix4,
         CesiumMath,
         Particle,
@@ -27,59 +25,14 @@ define([
     var PointEmitter = function(options) {
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
-        this.rate = defaultValue(options.rate, 5);
-
-        this.carryOver = 0.0;
-
-        this.currentTime = 0.0;
-
-        this.bursts = defaultValue(options.bursts, null);
-
         this.placer = defaultValue(options.placer, new PointPlacer({}));
-
-        this.lifeTime = defaultValue(options.lifeTime, Number.MAX_VALUE);
-
-        this.complete = new Event();
-        this.isComplete = false;
     };
 
     function random(a, b) {
         return CesiumMath.nextRandomNumber() * (b - a) + a;
     }
 
-    PointEmitter.prototype.emit = function(system, dt) {
-
-        // This emitter is finished if it exceeds it's lifetime.
-        if (this.isComplete) {
-            return;
-        }
-
-
-        // Compute the number of particles to emit based on the rate.
-        var v = dt * this.rate;
-        var numToEmit = Math.floor(v);
-        this.carryOver += (v-numToEmit);
-        if (this.carryOver>1.0)
-        {
-            numToEmit++;
-            this.carryOver -= 1.0;
-        }
-
-
-        var i = 0;
-
-        // Apply any bursts
-        if (this.bursts) {
-            for (i = 0; i < this.bursts.length; i++) {
-                var burst = this.bursts[i];
-                if ((!defined(burst, "complete") || !burst.complete) && this.currentTime > burst.time) {
-                    var count = burst.min + random(0.0, 1.0) * burst.max;
-                    numToEmit += count;
-                    burst.complete = true;
-                }
-            }
-        }
-
+    PointEmitter.prototype.emit = function(system, numToEmit) {
 
         for (var i = 0; i < numToEmit; ++i) {
             // Create the new particle.
@@ -105,15 +58,6 @@ define([
             // Add the particle to the particle system.
             system.add(particle);
         }
-
-
-        this.currentTime += dt;
-
-        if (this.lifeTime !== Number.MAX_VALUE && this.currentTime > this.lifeTime) {
-            this.isComplete = true;
-            this.complete.raiseEvent(this);
-        }
-
     };
 
     return PointEmitter;

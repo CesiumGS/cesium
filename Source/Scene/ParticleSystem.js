@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Event',
         '../Core/Matrix4',
         '../Core/Math',
         '../Core/JulianDate',
@@ -15,6 +16,7 @@ define([
         defined,
         Cartesian2,
         Cartesian3,
+        Event,
         Matrix4,
         CesiumMath,
         JulianDate,
@@ -38,6 +40,9 @@ define([
 
         this.startScale = defaultValue(options.startScale, 1.0);
         this.endScale = defaultValue(options.endScale, 1.0);
+
+        this.rate = defaultValue(options.rate, 5);
+        this.bursts = defaultValue(options.bursts, null);
 
         var speed = defaultValue(options.speed, undefined);
         if (speed) {
@@ -91,8 +96,14 @@ define([
             this.maxHeight = defaultValue(options.maxHeight, 1.0);
         }
 
-        this._billboardCollection = undefined;
+        this.lifeTime = defaultValue(options.lifeTime, Number.MAX_VALUE);
 
+        this.complete = new Event();
+        this.isComplete = false;
+
+        this.carryOver = 0.0;
+        this.currentTime = 0.0;
+        this._billboardCollection = undefined;
         this._previousTime = null;
     };
 
@@ -144,6 +155,40 @@ define([
         this.particles.push(particle);
     };
 
+    ParticleSystem.prototype.calcNumberToEmit = function(dt) {
+        // This emitter is finished if it exceeds it's lifetime.
+        if (this.isComplete) {
+            return 0;
+        }
+
+        // Compute the number of particles to emit based on the rate.
+        var v = dt * this.rate;
+        var numToEmit = Math.floor(v);
+        this.carryOver += (v-numToEmit);
+        if (this.carryOver>1.0)
+        {
+            numToEmit++;
+            this.carryOver -= 1.0;
+        }
+
+
+        var i = 0;
+
+        // Apply any bursts
+        if (this.bursts) {
+            for (i = 0; i < this.bursts.length; i++) {
+                var burst = this.bursts[i];
+                if ((!defined(burst, "complete") || !burst.complete) && this.currentTime > burst.time) {
+                    var count = burst.min + random(0.0, 1.0) * burst.max;
+                    numToEmit += count;
+                    burst.complete = true;
+                }
+            }
+        }
+
+        return numToEmit;
+    };
+
     ParticleSystem.prototype.update = function(frameState) {
         if (!defined(this._billboardCollection)) {
             this._billboardCollection = new BillboardCollection();
@@ -178,14 +223,24 @@ define([
         }
         particles.length = length;
 
-        // emit new particles if an emitter is attached.
-        // the emission counts as the particle "update"
-        emitter.modelMatrix = this.modelMatrix;
-        emitter.emit(this, dt);
+
+        var numToEmit = this.calcNumberToEmit(dt);
+
+        if (numToEmit > 0 && emitter) {
+            emitter.modelMatrix = this.modelMatrix;
+            emitter.emit(this, numToEmit);
+        }
 
         this._billboardCollection.update(frameState);
 
         this._previousTime = JulianDate.clone(frameState.time, this._previousTime);
+
+        this.currentTime += dt;
+
+        if (this.lifeTime !== Number.MAX_VALUE && this.currentTime > this.lifeTime) {
+            this.isComplete = true;
+            this.complete.raiseEvent(this);
+        }
     };
 
     return ParticleSystem;
