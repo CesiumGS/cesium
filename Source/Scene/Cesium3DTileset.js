@@ -20,6 +20,7 @@ define([
     '../Core/joinUrls',
     '../Core/JulianDate',
     '../Core/loadJson',
+    '../Core/ManagedArray',
     '../Core/Math',
     '../Core/Matrix4',
     '../Core/Request',
@@ -67,6 +68,7 @@ define([
         joinUrls,
         JulianDate,
         loadJson,
+        ManagedArray,
         CesiumMath,
         Matrix4,
         Request,
@@ -1259,12 +1261,12 @@ define([
     function markNearestLoadedTilesForSelection(selectionState, tileset, frameState, outOfCore) {
         var finalQueue = selectionState.finalQueue;
         var selectionQueue = selectionState.selectionQueue;
-        selectionQueue._length = 0;
+        selectionQueue.length = 0;
         tileset._refining = false;
 
-        var length = finalQueue._length;
+        var length = finalQueue.length;
         for (var i = 0; i < length; ++i) {
-            var original = finalQueue[i];
+            var original = finalQueue.get(i);
             var tile = original;
             while (defined(tile) && !(tile.hasContent && tile.contentReady)) {
                 if (tile.refine === Cesium3DTileRefine.ADD) {
@@ -1278,7 +1280,7 @@ define([
                 if (!tile.selected) {
                     tile._finalResolution = (tile === original || tile.refine === Cesium3DTileRefine.ADD);
                     tile._selectedFrame = frameState.frameNumber;
-                    push(selectionQueue, tile);
+                    selectionQueue.push(tile);
                 }
             } else {
                 descendantStack.push(original);
@@ -1305,11 +1307,12 @@ define([
             }
         }
 
-        selectionQueue.length = selectionQueue._length;
+        selectionQueue.trim();
     }
 
     function markTilesAsFinal(tiles) {
         var length = tiles.length;
+        tiles = tiles.internalData;
         var i;
         for (i = 0; i < length; ++i) {
             tiles[i]._finalResolution = true;
@@ -1326,31 +1329,12 @@ define([
     }
 
     var selectionState = {
-        processingQueue: [],
-        nextQueue: [],
-        finalQueue: [],
-        selectionQueue: [],
+        processingQueue: new ManagedArray(),
+        nextQueue: new ManagedArray(),
+        finalQueue: new ManagedArray(),
+        selectionQueue: new ManagedArray(),
         done: false
     };
-
-    selectionState.processingQueue._length = 0;
-    selectionState.nextQueue._length = 0;
-    selectionState.finalQueue._length = 0;
-    selectionState.selectionQueue._length = 0;
-
-    function push(array, item) {
-        var index = array._length++;
-        if (index < array.length) {
-            array[index] = item;
-        } else {
-            array.push(item);
-        }
-    }
-
-    function pop(array) {
-        var index = --array._length;
-        return array[index];
-    }
 
     function sortForLoad(a, b) {
         // return a.distanceToCamera - b.distanceToCamera;
@@ -1410,19 +1394,19 @@ define([
         var finalQueue = selectionState.finalQueue;
         var selectionQueue = selectionState.selectionQueue;
 
-        processingQueue._length = 0;
-        nextQueue._length = 0;
-        finalQueue._length = 0;
+        processingQueue.length = 0;
+        nextQueue.length = 0;
+        finalQueue.length = 0;
 
-        push(processingQueue, root);
+        processingQueue.push(root);
         selectionState.done = false;
 
         var processLength = 0;
         while (!selectionState.done) {
-            selectionState.nextQueue._length = 0;
+            selectionState.nextQueue.length = 0;
             processSelectionQueue(tileset, frameState, selectionState, outOfCore);
 
-            processLength = Math.max(processLength, selectionState.nextQueue._length);
+            processLength = Math.max(processLength, selectionState.nextQueue.length);
 
             processingQueue = selectionState.processingQueue;
             selectionState.processingQueue = selectionState.nextQueue;
@@ -1430,10 +1414,9 @@ define([
         }
 
         // on the next frame, we will likely need an array about the same size
-        // this will free up memory if less tiles are processed
-        processingQueue.length = processLength;
-        nextQueue.length = processLength;
-        finalQueue.length = finalQueue._length;
+        processingQueue.trim(processLength);
+        nextQueue.trim(processLength);
+        finalQueue.trim();
 
         markNearestLoadedTilesForSelection(selectionState, tileset, frameState, outOfCore);
 
@@ -1442,7 +1425,6 @@ define([
         }
 
         traverseAndSelect(tileset, root, frameState);
-
 
         requestTiles(tileset, tileset._loadHeaps, outOfCore);
     }
@@ -1465,22 +1447,22 @@ define([
         var processingQueue = selectionState.processingQueue;
         var nextQueue = selectionState.nextQueue;
         var finalQueue = selectionState.finalQueue;
-        var length = processingQueue._length;
+        var length = processingQueue.length;
 
         for (var i = 0; i < length; ++i) {
-            var processTile = processingQueue[i];
-            var nextCount = nextQueue._length;
-            var finalCount = finalQueue._length;
+            var processTile = processingQueue.get(i);
+            var nextCount = nextQueue.length;
+            var finalCount = finalQueue.length;
 
             var refined = queueDescendants(tileset, processTile, selectionState, frameState, outOfCore, iteration);
             if (!refined && !tileset.lowMemory) {   // in low memory mode, we don't wait for refinement
                 // tiles not refined. splice any descendants added
-                finalQueue._length = finalCount;
-                nextQueue._length = nextCount;
-                push(finalQueue, processTile);
+                finalQueue.length = finalCount;
+                nextQueue.length = nextCount;
+                finalQueue.push(processTile);
             }
         }
-        selectionState.done = (nextQueue._length === 0);
+        selectionState.done = (nextQueue.length === 0);
     }
 
     function selectionHeuristic(tileset, ancestor, tile) {
@@ -1550,7 +1532,7 @@ define([
             state |= ProcessingState.ANY_READY;
         }
         if (isVisible(tile.visibilityPlaneMask)) {
-            push(queue, tile);
+            queue.push(tile);
         }
         return state;
     }
@@ -1563,7 +1545,7 @@ define([
         touch(tileset, tile, outOfCore);
     }
 
-    var tempStack = [];
+    var tempStack = new ManagedArray();
     function queueDescendants(tileset, start, selectionState, frameState, outOfCore) {
         var stack = tempStack;
 
@@ -1577,7 +1559,10 @@ define([
         visitTile(tileset, start, frameState, outOfCore);
         updateAndPushChildren(tileset, start, stack, frameState, outOfCore, !siblings);
 
+        var maxLength = 0;
         while (stack.length > 0) {
+            maxLength = Math.max(maxLength, stack.length);
+
             var tile = stack.pop();
             visitTile(tileset, tile, frameState, outOfCore);
             if (tile.hasTilesetContent) {
@@ -1586,7 +1571,7 @@ define([
                 }
                 if (!tile.contentReady) {
                     state &= ~ProcessingState.REFINED;
-                    push(finalQueue, tile);
+                    finalQueue.push(tile);
                 } else {
                     var child = tile.children[0];
                     child.visibilityPlaneMask = tile.visibilityPlaneMask;
@@ -1598,7 +1583,7 @@ define([
             }
 
             var childrenLength = tile.children.length;
-
+            
             if (tile.refine === Cesium3DTileRefine.ADD) {
                 state = loadAndAddToQueue(tileset, tile, finalQueue, state);
                 updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, !siblings);
@@ -1622,26 +1607,34 @@ define([
             }
         }
 
+        stack.trim(maxLength);
+
         // always refined if mixLOD enabled
         return tileset.mixLOD || (state & ProcessingState.REFINED) !== 0;
     }
 
-    var tempStack2 = [];
+    var tempStack2 = new ManagedArray();
+    var tempStack3 = new ManagedArray();
+
     function traverseAndSelect(tileset, root, frameState) {
-        var stack = tempStack;
-        var ancestorStack = tempStack2;
+        var stack = tempStack2;
+        var ancestorStack = tempStack3;
 
         stack.push(root);
-
+        var maxLength = 0;
+        var maxAncestorLength = 0;
         while(stack.length > 0 || ancestorStack.length > 0) {
             if (ancestorStack.length > 0) {
-                var waitingTile = ancestorStack[ancestorStack.length - 1];
+                maxAncestorLength = Math.max(maxAncestorLength, ancestorStack.length);
+                var waitingTile = ancestorStack.get(ancestorStack.length - 1);
                 if (waitingTile._stackLength === stack.length) {
                     ancestorStack.pop();
                     selectTile(tileset, waitingTile, waitingTile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
                     continue;
                 }
             }
+
+            maxLength = Math.max(maxLength, stack.length);
 
             var tile = stack.pop();
             if (!defined(tile)) {
@@ -1680,6 +1673,9 @@ define([
                 }
             }
         }
+
+        stack.trim(maxLength);
+        ancestorStack.trim(maxAncestorLength);
     }
 
     function selectTiles(tileset, frameState, outOfCore) {
