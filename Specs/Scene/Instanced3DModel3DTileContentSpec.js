@@ -35,6 +35,7 @@ defineSuite([
     var oct16POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOct32POrientation/';
     var scaleUrl = './Data/Cesium3DTiles/Instanced/InstancedScale/';
     var scaleNonUniformUrl = './Data/Cesium3DTiles/Instanced/InstancedScaleNonUniform/';
+    var rtcUrl = './Data/Cesium3DTiles/Instanced/InstancedRTC';
     var quantizedUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantized/';
     var quantizedOct32POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedOct32POrientation/';
     var withTransformUrl = './Data/Cesium3DTiles/Instanced/InstancedWithTransform/';
@@ -184,6 +185,12 @@ defineSuite([
 
     it('renders with feature defined non-uniform scale', function() {
         return Cesium3DTilesTester.loadTileset(scene, scaleNonUniformUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with RTC_CENTER semantic', function() {
+        return Cesium3DTilesTester.loadTileset(scene, rtcUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
