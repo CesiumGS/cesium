@@ -12,7 +12,6 @@ define([
     "use strict";
 
     var CircleEmitter = function(options) {
-        this.position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this.radius = defaultValue(options.radius, 1.0);
     };
 
@@ -25,9 +24,9 @@ define([
         var theta = random(0.0, CesiumMath.TWO_PI);
         var rad = random(0.0, this.radius);
 
-        var x = this.position.x + rad * Math.cos(theta);
-        var y = this.position.y + rad * Math.sin(theta);
-        var z = this.position.z;
+        var x = rad * Math.cos(theta);
+        var y = rad * Math.sin(theta);
+        var z = 0.0;
 
         var position = new Cartesian3(x, y, z);
 

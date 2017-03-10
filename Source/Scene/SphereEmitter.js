@@ -12,7 +12,6 @@ define([
     "use strict";
 
     var SphereEmitter = function(options) {
-        this.position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this.radius = defaultValue(options.radius, 1.0);
     };
 
@@ -27,9 +26,9 @@ define([
 
         var rad = random(0.0, this.radius);
 
-        var x = this.position.x + rad * Math.cos(theta) * Math.sin(phi);
-        var y = this.position.y + rad * Math.sin(theta) * Math.sin(phi);
-        var z = this.position.z + rad * Math.cos(phi);
+        var x = rad * Math.cos(theta) * Math.sin(phi);
+        var y = rad * Math.sin(theta) * Math.sin(phi);
+        var z = rad * Math.cos(phi);
 
         var position = new Cartesian3(x, y, z);
 

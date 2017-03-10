@@ -12,7 +12,6 @@ define([
     "use strict";
 
     var BoxEmitter = function(options) {
-        this.position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this.width = defaultValue(options.width, 1.0);
         this.height = defaultValue(options.height, 1.0);
         this.depth = defaultValue(options.depth, 1.0);
@@ -27,9 +26,9 @@ define([
     }
 
     BoxEmitter.prototype.emit = function() {
-        var x = this.position.x + random(-this._halfWidth, this._halfWidth);
-        var y = this.position.y + random(-this._halfDepth, this._halfDepth);
-        var z = this.position.z + random(-this._halfHeight, this._halfHeight);
+        var x = random(-this._halfWidth, this._halfWidth);
+        var y = random(-this._halfDepth, this._halfDepth);
+        var z = random(-this._halfHeight, this._halfHeight);
         var position = new Cartesian3(x, y, z);
 
         // Modify the velocity to shoot out from the center
