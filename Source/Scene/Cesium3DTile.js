@@ -360,6 +360,7 @@ define([
         this._finalResolution = true;
         this._loadHeap = undefined;
         this._depth = 0;
+        this._centerZDepth = 0;
         this._stackLength = 0;
         this._selectedFrame = -1;
         this._selectionDepth = 0;

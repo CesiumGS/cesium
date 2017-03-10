@@ -1128,6 +1128,13 @@ define([
         for (var i = 0; i < length; ++i) {
             var child = children[i];
             child.distanceToCamera = child.distanceToTile(frameState);
+
+            var toCenter = Cartesian3.subtract(child.contentBoundingVolume.boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
+            var distance = Cartesian3.magnitude(toCenter);
+            Cartesian3.divideByScalar(toCenter, distance, toCenter);
+            var dot = Cartesian3.dot(frameState.camera.directionWC, toCenter);
+            // child._centerDistanceToCamera = distance;
+            child._centerZDepth = distance * dot;
         }
     }
 
@@ -1143,6 +1150,10 @@ define([
     // list of children are probably fully or mostly sorted unless the camera moved significantly?
     function sortChildrenByDistanceToCamera(a, b) {
         // Sort by farthest child first since this is going on a stack
+        if (b.distanceToCamera === 0 && a.distanceToCamera === 0) {
+            return b._centerZDepth - a.centerZDepth;
+        }
+        
         return b.distanceToCamera - a.distanceToCamera;
     }
 
