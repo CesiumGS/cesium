@@ -184,6 +184,8 @@ var viewModel = {
     pitch: 0.0,
     roll: 0.0,
 
+    fly: false,
+
     spin: false
 };
 
@@ -199,24 +201,14 @@ function computeCirclularFlight(lon, lat, radius) {
         var time = Cesium.JulianDate.addSeconds(start, i, new Cesium.JulianDate());
         var position = Cesium.Cartesian3.fromDegrees(lon + (radius * 1.5 * Math.cos(radians)), lat + (radius * Math.sin(radians)), Cesium.Math.nextRandomNumber() * 500 + 1750);
         property.addSample(time, position);
-
-        //Also create a point for each sample we generate.
-        viewer.entities.add({
-            position : position,
-            point : {
-                pixelSize : 8,
-                color : Cesium.Color.TRANSPARENT,
-                outlineColor : Cesium.Color.YELLOW,
-                outlineWidth : 3
-            }
-        });
     }
     return property;
 }
 
 //Compute the entity position property.
-/*
-var position = computeCirclularFlight(-112.110693, 36.0994841, 0.03);
+var circularPosition = computeCirclularFlight(-112.110693, 36.0994841, 0.03);
+var staticPosition = Cesium.Cartesian3.fromDegrees(-112.110693, 36.0994841, 1000);
+
 var entity = viewer.entities.add({
 
     //Set the entity availability to the same interval as the simulation time.
@@ -224,12 +216,6 @@ var entity = viewer.entities.add({
         start : start,
         stop : stop
     })]),
-
-    //Use our computed positions
-    position : position,
-
-    //Automatically compute orientation based on position movement.
-    orientation : new Cesium.VelocityOrientationProperty(position),
 
     //Load the Cesium plane model to represent the entity
     model : {
@@ -237,35 +223,7 @@ var entity = viewer.entities.add({
         minimumPixelSize : 64
     },
 
-    //Show the path as a pink line sampled in 1 second increments.
-    path : {
-        resolution : 1,
-        material : new Cesium.PolylineGlowMaterialProperty({
-            glowPower : 0.1,
-            color : Cesium.Color.YELLOW
-        }),
-        width : 10
-    }
-});
-*/
-
-var position = Cesium.Cartesian3.fromDegrees(-112.110693, 36.0994841, 1000);
-var entity = viewer.entities.add({
-
-    //Set the entity availability to the same interval as the simulation time.
-    availability : new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
-        start : start,
-        stop : stop
-    })]),
-
-    //Use our computed positions
-    position : position,
-
-    //Load the Cesium plane model to represent the entity
-    model : {
-        uri : '../../SampleData/models/CesiumAir/Cesium_Air.gltf',
-        minimumPixelSize : 64
-    }
+    position : staticPosition
 });
 viewer.trackedEntity = entity;
 
@@ -409,10 +367,29 @@ Cesium.knockout.getObservable(viewModel, 'endScale').subscribe(
     }
 );
 
+Cesium.knockout.getObservable(viewModel, 'fly').subscribe(
+    function(newValue) {
+        if (newValue) {
+            entity.position = circularPosition;
+            //Automatically compute orientation based on position movement.
+            entity.orientation = new Cesium.VelocityOrientationProperty(circularPosition);
+        }
+        else {
+            entity.position = staticPosition;
+            entity.orientation = null;
+        }
+    }
+);
+
 
 Sandcastle.addToggleButton('Spin', viewModel.spin, function(checked) {
     viewModel.spin = checked;
 });
+
+Sandcastle.addToggleButton('Fly', viewModel.fly, function(checked) {
+    viewModel.fly = checked;
+});
+
 
 
 var options = [{
