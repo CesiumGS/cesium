@@ -459,7 +459,7 @@ define([
             instanceScale.x = 1.0;
             instanceScale.y = 1.0;
             instanceScale.z = 1.0;
-            var scale = featureTable.getProperty('SCALE', i, ComponentDatatype.FLOAT);
+            var scale = featureTable.getProperty('SCALE', i, ComponentDatatype.FLOAT, 1);
             if (defined(scale)) {
                 Cartesian3.multiplyByScalar(instanceScale, scale, instanceScale);
             }
@@ -476,7 +476,7 @@ define([
             if (defined(featureTable.json.BATCH_ID)) {
                 var componentTypeName = featureTable.json.BATCH_ID.componentType;
                 var componentType = defined(componentTypeName) ? ComponentDatatype.fromName(componentTypeName) : ComponentDatatype.UNSIGNED_SHORT;
-                batchId = featureTable.getProperty('BATCH_ID', i, componentType);
+                batchId = featureTable.getProperty('BATCH_ID', i, componentType, 1);
             } else {
                 // If BATCH_ID semantic is undefined, batchId is just the instance number
                 batchId = i;
