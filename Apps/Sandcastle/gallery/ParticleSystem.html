@@ -411,16 +411,16 @@ var options = [{
     text : 'Box',
     onselect : function() {
         particles.emitter = new Cesium.BoxEmitter({
-            width: 1.0,
-            height: 1.0,
-            depth: 1.0,
+            width: 10.0,
+            height: 10.0,
+            depth: 10.0
         });
     }
 }, {
     text : 'Sphere',
     onselect : function() {
         particles.emitter = new Cesium.SphereEmitter({
-            radius: 1.0
+            radius: 5.0
         });
     }
 }];
