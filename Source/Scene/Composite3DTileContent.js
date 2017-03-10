@@ -100,6 +100,33 @@ define([
         },
 
         /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
          * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content of the composite's inner tiles, which can also be composites.
          */

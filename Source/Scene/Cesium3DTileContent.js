@@ -93,6 +93,48 @@ define([
         },
 
         /**
+         * Gets the tile's vertex memory in bytes.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
+         * Gets the tile's batch table memory in bytes.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
+         * Gets the tile's texture memory in bytes.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
          * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content a composite's inner tiles, which can also be composites.
          *

@@ -672,6 +672,13 @@ define([
                     // --- Optimization stats
                     '<li><strong>Children Union Culled: </strong>' + stats.numberOfTilesCulledWithChildrenUnion.toLocaleString() + '</li>';
                 s += '</ul>';
+                s += '<ul class="cesium-cesiumInspector-stats">';
+                s +=
+                    // --- Memory stats
+                    '<li><strong>Vertex Memory (MB): </strong>' + Math.round(stats.vertexMemorySizeInBytes / 1048576).toLocaleString() + '</li>' +
+                    '<li><strong>Texture Memory (MB): </strong>' + Math.round(stats.textureMemorySizeInBytes / 1048576).toLocaleString() + '</li>' +
+                    '<li><strong>Batch Table Memory (MB): </strong>' + Math.round(stats.batchTableMemorySizeInBytes / 1048576).toLocaleString() + '</li>';
+                s += '</ul>';
             }
 
             if (isPick) {
