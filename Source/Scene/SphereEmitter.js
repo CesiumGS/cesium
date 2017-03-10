@@ -34,8 +34,7 @@ define([
 
          // Modify the velocity to shoot out from the center
         var velocity = new Cartesian3();
-        Cartesian3.subtract(position, this.position, velocity);
-        Cartesian3.normalize(velocity, velocity);
+        Cartesian3.normalize(position, velocity);
 
         return new Particle({
             position: position,
