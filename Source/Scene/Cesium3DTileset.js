@@ -481,11 +481,10 @@ define([
 
         this.skipLODs = defaultValue(options.skipLODs, true);
         this.skipSSEFactor = defaultValue(options.skipSSEFactor, 10);
-        this.skipGeometricFactor = defaultValue(options.skipGeometricFactor, 2);
+        this.skipGeometricFactor = defaultValue(options.skipGeometricFactor, 1);
         this.skipLevels = defaultValue(options.skipLevels, 1);
         this.lowMemory = defaultValue(options.lowMemory, false);
         this.mixLOD = defaultValue(options.mixLOD, true);
-        this._stencilTiles = defaultValue(options.stencilTiles, true);
         this._loadHeaps = {};
         this.loadSiblings = defaultValue(options.loadSiblings, true);
         this._refining = false;
@@ -859,21 +858,6 @@ define([
         statistics : {
             get : function() {
                 return this._statistics;
-            }
-        },
-
-        /**
-         * @private
-         */
-        stencilTiles : {
-            get : function() {
-                return this.skipLODs && this._stencilTiles && this.mixLOD;
-            }
-        },
-
-        refining : {
-            get : function() {
-                return this.skipLODs && this._refining;
             }
         }
     });
@@ -1365,12 +1349,12 @@ define([
 
         var root = tileset._root;
         root.updateTransform(tileset._modelMatrix);
+        
+        visitTile(tileset, root, frameState, outOfCore);
 
         if (!root.insideViewerRequestVolume(frameState)) {
             return;
         }
-
-        root.distanceToCamera = root.distanceToTile(frameState);
 
         if (getScreenSpaceError(tileset, tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
             // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
@@ -1386,8 +1370,6 @@ define([
             requestContent(tileset, root, outOfCore);
             return;
         }
-
-        root._sse = getScreenSpaceError(tileset, root.geometricError, root, frameState);
 
         var processingQueue = selectionState.processingQueue;
         var nextQueue = selectionState.nextQueue;
@@ -1471,50 +1453,36 @@ define([
                (tile._depth > ancestor._depth + tileset.skipLevels);
     }
 
-    function updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, onlyVisible) {
+    function updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, state, loadSiblings) {
         var children = tile.children;
         var childrenLength = children.length;
 
         updateTransforms(children, tile.computedTransform);
-        computeDistanceToCamera(children, frameState);
 
         var childrenVisibility = computeChildrenVisibility(tile, frameState, true);
         var child, i;
 
-        if (tile.refine === Cesium3DTileRefine.ADD) {
-            var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
-            if (tile._sse > maximumScreenSpaceError) {
-                for (i = 0; i < childrenLength; ++i) {
-                    child = children[i];
-                    if (onlyVisible) {
-                        if (isVisible(child.visibilityPlaneMask)) {
-                            if (getScreenSpaceError(tileset, tile.geometricError, child, frameState) > maximumScreenSpaceError) {
-                                stack.push(child);
-                            }
-                        } else {
-                            touch(tileset, child, outOfCore);
-                        }
-                    } else {
+        var showAdditive = tile._sse > tileset._maximumScreenSpaceError;
+        var showReplacement = (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
+        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+        
+        if (showAdditive || showReplacement) {
+            for (i = 0; i < childrenLength; ++i) {
+                child = children[i];
+                if (isVisible(child.visibilityPlaneMask)) {
+                    if (tile.refine !== Cesium3DTileRefine.ADD || getScreenSpaceError(tileset, tile.geometricError, child, frameState) > maximumScreenSpaceError) {
                         stack.push(child);
                     }
-                }
-            }
-        } else {
-            if ((childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0) {
-                for (i = 0; i < childrenLength; ++i) {
-                    child = children[i];
-                    if (onlyVisible) {
-                        if (isVisible(child.visibilityPlaneMask)) {
-                            stack.push(child);
-                        } else {
-                            touch(tileset, child, outOfCore);
-                        }
-                    } else {
-                        stack.push(child);
+                } else {
+                    touch(tileset, child, outOfCore);
+                    if (loadSiblings) {
+                        state = loadTile(tileset, child, state);
                     }
                 }
             }
         }
+
+        return state;
     }
 
     var ProcessingState = freezeObject({
@@ -1522,7 +1490,7 @@ define([
         ANY_READY: 1 << 1
     });
 
-    function loadAndAddToQueue(tileset, tile, queue, state) {
+    function loadTile(tileset, tile, state) {
         if (tile.contentUnloaded) {
             tile._loadHeap.insert(tile);
         }
@@ -1531,6 +1499,11 @@ define([
         } else {
             state |= ProcessingState.ANY_READY;
         }
+        return state;
+    }
+
+    function loadAndAddToQueue(tileset, tile, queue, state) {
+        state = loadTile(tileset, tile, state);
         if (isVisible(tile.visibilityPlaneMask)) {
             queue.push(tile);
         }
@@ -1539,13 +1512,14 @@ define([
 
     function visitTile(tileset, tile, frameState, outOfCore) {
         ++tileset._statistics.visited;
+        tile.distanceToCamera = tile.distanceToTile(frameState);
         tile._sse = getScreenSpaceError(tileset, tile.geometricError, tile, frameState);
         tile.selected = false;
         tile._finalResolution = false;
         touch(tileset, tile, outOfCore);
     }
 
-    var tempStack = new ManagedArray();
+    var tempStack = [];
     function queueDescendants(tileset, start, selectionState, frameState, outOfCore) {
         var stack = tempStack;
 
@@ -1554,17 +1528,16 @@ define([
         var state = ProcessingState.REFINED & ~ProcessingState.ANY_READY;
         var maximumScreenSpaceError = tileset.maximumScreenSpaceError;
 
-        var siblings = tileset.loadSiblings;
+        var loadSiblings = tileset.loadSiblings;
 
-        visitTile(tileset, start, frameState, outOfCore);
-        updateAndPushChildren(tileset, start, stack, frameState, outOfCore, !siblings);
+        state = updateAndPushChildren(tileset, start, stack, frameState, outOfCore, state, loadSiblings);
 
         var maxLength = 0;
         while (stack.length > 0) {
-            maxLength = Math.max(maxLength, stack.length);
-
             var tile = stack.pop();
+
             visitTile(tileset, tile, frameState, outOfCore);
+            
             if (tile.hasTilesetContent) {
                 if (tile.contentUnloaded) {
                     tile._loadHeap.insert(tile);
@@ -1575,7 +1548,6 @@ define([
                 } else {
                     var child = tile.children[0];
                     child.visibilityPlaneMask = tile.visibilityPlaneMask;
-                    child.distanceToCamera = tile.distanceToCamera;
                     child.updateTransform(tile.computedTransform);
                     stack.push(child);
                 }
@@ -1586,7 +1558,7 @@ define([
             
             if (tile.refine === Cesium3DTileRefine.ADD) {
                 state = loadAndAddToQueue(tileset, tile, finalQueue, state);
-                updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, !siblings);
+                state = updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, state, loadSiblings);
             } else {
                 if (childrenLength === 0) {
                     state = loadAndAddToQueue(tileset, tile, finalQueue, state);
@@ -1602,39 +1574,32 @@ define([
                 } else if (tile.hasContent && selectionHeuristic(tileset, start, tile) && !tileset.lowMemory) {
                     state = loadAndAddToQueue(tileset, tile, nextQueue, state);
                 } else {
-                    updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, !siblings);
+                    state = updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, state, loadSiblings);
                 }
             }
         }
-
-        stack.trim(maxLength);
 
         // always refined if mixLOD enabled
         return tileset.mixLOD || (state & ProcessingState.REFINED) !== 0;
     }
 
-    var tempStack2 = new ManagedArray();
-    var tempStack3 = new ManagedArray();
+    var tempStack2 = [];
+    var tempStack3 = [];
 
     function traverseAndSelect(tileset, root, frameState) {
         var stack = tempStack2;
         var ancestorStack = tempStack3;
 
         stack.push(root);
-        var maxLength = 0;
-        var maxAncestorLength = 0;
         while(stack.length > 0 || ancestorStack.length > 0) {
             if (ancestorStack.length > 0) {
-                maxAncestorLength = Math.max(maxAncestorLength, ancestorStack.length);
-                var waitingTile = ancestorStack.get(ancestorStack.length - 1);
+                var waitingTile = ancestorStack[ancestorStack.length - 1];
                 if (waitingTile._stackLength === stack.length) {
                     ancestorStack.pop();
                     selectTile(tileset, waitingTile, waitingTile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
                     continue;
                 }
             }
-
-            maxLength = Math.max(maxLength, stack.length);
 
             var tile = stack.pop();
             if (!defined(tile)) {
@@ -1673,9 +1638,6 @@ define([
                 }
             }
         }
-
-        stack.trim(maxLength);
-        ancestorStack.trim(maxAncestorLength);
     }
 
     function selectTiles(tileset, frameState, outOfCore) {
@@ -2111,7 +2073,7 @@ define([
 
         var tile, i;
 
-        if (tileset._refining && tileset.stencilTiles) {
+        if (tileset._refining && tileset.skipLODs && tileset.mixLOD) {
             var command, rs;
 
             var initialLength = commandList.length;
