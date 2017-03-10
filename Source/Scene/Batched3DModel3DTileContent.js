@@ -264,8 +264,7 @@ define([
             var batchTable = content.batchTable;
             var gltf = content._model.gltf;
             var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-            var colorBlendMode = content._tileset.colorBlendMode;
-            var callback = batchTable.getFragmentShaderCallback(true, colorBlendMode, diffuseUniformName);
+            var callback = batchTable.getFragmentShaderCallback(true, diffuseUniformName);
             return defined(callback) ? callback(fs) : fs;
         };
     }

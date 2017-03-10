@@ -1129,7 +1129,7 @@ define([
         if (hasBatchTable) {
             // Batched points always use the HIGHLIGHT color blend mode
             drawVS = batchTable.getVertexShaderCallback(false, 'a_batchId')(drawVS);
-            drawFS = batchTable.getFragmentShaderCallback(false, Cesium3DTileColorBlendMode.HIGHLIGHT)(drawFS);
+            drawFS = batchTable.getFragmentShaderCallback(false, undefined)(drawFS);
         }
 
         var pickVS = vs;
