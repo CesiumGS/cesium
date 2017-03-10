@@ -1349,12 +1349,13 @@ define([
 
         var root = tileset._root;
         root.updateTransform(tileset._modelMatrix);
-        
-        visitTile(tileset, root, frameState, outOfCore);
 
         if (!root.insideViewerRequestVolume(frameState)) {
             return;
         }
+
+        root.distanceToCamera = root.distanceToTile(frameState);
+        visitTile(tileset, root, frameState, outOfCore);
 
         if (getScreenSpaceError(tileset, tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
             // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
@@ -1458,6 +1459,7 @@ define([
         var childrenLength = children.length;
 
         updateTransforms(children, tile.computedTransform);
+        computeDistanceToCamera(children, frameState);
 
         var childrenVisibility = computeChildrenVisibility(tile, frameState, true);
         var child, i;
@@ -1512,7 +1514,7 @@ define([
 
     function visitTile(tileset, tile, frameState, outOfCore) {
         ++tileset._statistics.visited;
-        tile.distanceToCamera = tile.distanceToTile(frameState);
+        // tile.distanceToCamera = tile.distanceToTile(frameState);
         tile._sse = getScreenSpaceError(tileset, tile.geometricError, tile, frameState);
         tile.selected = false;
         tile._finalResolution = false;
