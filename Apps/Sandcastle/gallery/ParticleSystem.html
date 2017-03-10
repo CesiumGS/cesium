@@ -172,7 +172,9 @@ var viewModel = {
 
     heading: 0.0,
     pitch: 0.0,
-    roll: 0.0
+    roll: 0.0,
+
+    spin: false
 };
 
 Cesium.knockout.track(viewModel);
@@ -275,13 +277,6 @@ function applyGravity(p, dt) {
     p.velocity = Cesium.Cartesian3.add(p.velocity, gravityScratch, p.velocity);
 }
 
-
-
-// Variables to control the emitter position
-var heading = 0.0;
-var pitch = 0.0;
-var roll = 0.0;
-
 var emitterModelMatrix = new Cesium.Matrix4();
 
 var particles = scene.primitives.add(new Cesium.ParticleSystem({
@@ -344,6 +339,13 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
         ),
         emitterModelMatrix
     );
+
+    // Spin the emitter if enabled.
+    if (viewModel.spin) {
+        viewModel.heading += 1;
+        viewModel.pitch += 1;
+        viewModel.roll += 1;
+    }
 });
 
 
@@ -388,6 +390,11 @@ Cesium.knockout.getObservable(viewModel, 'endScale').subscribe(
         particles.endScale = parseFloat(newValue);
     }
 );
+
+
+Sandcastle.addToggleButton('Spin', viewModel.spin, function(checked) {
+    viewModel.spin = checked;
+});
 
 
 
