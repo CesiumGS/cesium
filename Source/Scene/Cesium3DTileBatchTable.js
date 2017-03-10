@@ -910,28 +910,31 @@ define([
         };
     };
 
+    function getHighlightOnlyShader(source) {
+        source = ShaderSource.replaceMain(source, 'tile_main');
+        return source +
+               'void tile_color(vec4 tile_featureColor) \n' +
+               '{ \n' +
+               '    tile_main(); \n' +
+               '    gl_FragColor *= tile_featureColor; \n' +
+               '} \n';
+    }
+
     function modifyDiffuse(source, diffuseUniformName) {
         // If the glTF does not specify the _3DTILESDIFFUSE semantic, return a basic highlight shader.
         // Otherwise if _3DTILESDIFFUSE is defined prefer the shader below that can switch the color mode at runtime.
         if (!defined(diffuseUniformName)) {
-            source = ShaderSource.replaceMain(source, 'tile_main');
-            return source +
-                   'void tile_color(vec4 tile_featureColor) \n' +
-                   '{ \n' +
-                   '    tile_main(); \n' +
-                   '    gl_FragColor *= tile_featureColor; \n' +
-                   '} \n';
+            return getHighlightOnlyShader(source);
         }
 
         // Find the diffuse uniform
         var regex = new RegExp('uniform\\s+(vec[34]|sampler2D)\\s+' + diffuseUniformName + ';');
         var uniformMatch = source.match(regex);
 
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(uniformMatch)) {
-            throw new DeveloperError('Could not find uniform declaration for ' + diffuseUniformName + ' of type vec3, vec4, or sampler2D');
+            // Could not find uniform declaration of type vec3, vec4, or sampler2D
+            return getHighlightOnlyShader(source);
         }
-        //>>includeEnd('debug');
 
         var declaration = uniformMatch[0];
         var type = uniformMatch[1];
