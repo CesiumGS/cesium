@@ -26,6 +26,7 @@ define([
     '../Core/Request',
     '../Core/RequestScheduler',
     '../Core/RequestType',
+    '../Renderer/ClearCommand',
     '../Renderer/DrawCommand',
     '../Renderer/RenderState',
     '../ThirdParty/Uri',
@@ -74,6 +75,7 @@ define([
         Request,
         RequestScheduler,
         RequestType,
+        ClearCommand,
         DrawCommand,
         RenderState,
         Uri,
@@ -486,7 +488,7 @@ define([
         this.lowMemory = defaultValue(options.lowMemory, false);
         this.mixLOD = defaultValue(options.mixLOD, true);
         this._loadHeaps = {};
-        this.loadSiblings = defaultValue(options.loadSiblings, true);
+        this.loadSiblings = defaultValue(options.loadSiblings, false);
         this._refining = false;
     }
 
@@ -2079,7 +2081,12 @@ define([
 
         var tile, i;
 
-        if (tileset._refining && tileset.skipLODs && tileset.mixLOD) {
+        if (tileset._refining && tileset.skipLODs && tileset.mixLOD && frameState.context.stencilBuffer) {
+
+            commandList.push(new ClearCommand({
+                stencil : 0
+            }));
+
             var command, rs;
 
             var initialLength = commandList.length;
