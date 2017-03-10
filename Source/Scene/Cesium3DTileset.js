@@ -1468,15 +1468,15 @@ define([
         var childrenVisibility = computeChildrenVisibility(tile, frameState, true);
         var child, i;
 
-        var showAdditive = tile._sse > tileset._maximumScreenSpaceError;
-        var showReplacement = (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+        var showAdditive = tile.refine === Cesium3DTileRefine.ADD && tile._sse > maximumScreenSpaceError;
+        var showReplacement = tile.refine !== Cesium3DTileRefine.ADD && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
         
         if (showAdditive || showReplacement) {
             for (i = 0; i < childrenLength; ++i) {
                 child = children[i];
                 if (isVisible(child.visibilityPlaneMask)) {
-                    if (tile.refine !== Cesium3DTileRefine.ADD || getScreenSpaceError(tileset, tile.geometricError, child, frameState) > maximumScreenSpaceError) {
+                    if (!showAdditive || getScreenSpaceError(tileset, tile.geometricError, child, frameState) > maximumScreenSpaceError) {
                         stack.push(child);
                     }
                 } else {
@@ -1518,7 +1518,6 @@ define([
 
     function visitTile(tileset, tile, frameState, outOfCore) {
         ++tileset._statistics.visited;
-        // tile.distanceToCamera = tile.distanceToTile(frameState);
         tile._sse = getScreenSpaceError(tileset, tile.geometricError, tile, frameState);
         tile.selected = false;
         tile._finalResolution = false;
@@ -1555,6 +1554,7 @@ define([
                     var child = tile.children[0];
                     child.visibilityPlaneMask = tile.visibilityPlaneMask;
                     child.updateTransform(tile.computedTransform);
+                    child.distanceToCamera = tile.distanceToCamera;
                     stack.push(child);
                 }
                 continue;
@@ -2102,7 +2102,8 @@ define([
                     var lengthBeforeUpdate = commandList.length;
                     tile.update(tileset, frameState);
                     for (var j = lengthBeforeUpdate; j < commandList.length; ++j) {
-                        command = commandList[j];
+                        command = DrawCommand.shallowClone(commandList[j]);
+                        commandList[j] = command;
                         
                         if (!tile._finalResolution) {
                             // draw backfaces of all unresolved tiles so resolved tiles don't poke through
