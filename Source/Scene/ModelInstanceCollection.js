@@ -358,8 +358,7 @@ define([
             if (defined(batchTable)) {
                 var gltf = collection._model.gltf;
                 var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-                var colorBlendMode = batchTable._content._tileset.colorBlendMode;
-                fs = batchTable.getFragmentShaderCallback(true, colorBlendMode, diffuseUniformName)(fs);
+                fs = batchTable.getFragmentShaderCallback(true, diffuseUniformName)(fs);
             }
             return fs;
         };

@@ -910,7 +910,7 @@ define([
         };
     };
 
-    function modifyDiffuse(source, colorBlendMode, diffuseUniformName) {
+    function modifyDiffuse(source, diffuseUniformName) {
         // If the glTF does not specify the _3DTILESDIFFUSE semantic, return a basic highlight shader.
         // Otherwise if _3DTILESDIFFUSE is defined prefer the shader below that can switch the color mode at runtime.
         if (!defined(diffuseUniformName)) {
@@ -991,12 +991,12 @@ define([
         return source;
     }
 
-    Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function(handleTranslucent, colorBlendMode, diffuseUniformName) {
+    Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function(handleTranslucent, diffuseUniformName) {
         if (this.featuresLength === 0) {
             return;
         }
         return function(source) {
-            source = modifyDiffuse(source, colorBlendMode, diffuseUniformName);
+            source = modifyDiffuse(source, diffuseUniformName);
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per-feature show/hide already happened in the fragment shader
                 source +=
