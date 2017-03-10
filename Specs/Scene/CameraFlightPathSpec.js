@@ -404,18 +404,56 @@ defineSuite([
         expect(typeof overLonFlight.update).toEqual('function');
         expect(typeof directFlight.update).toEqual('function');
 
-        overLonFlight.update({ time : 0.1 });
+        overLonFlight.update({ time : 0.3 });
         projection.ellipsoid.cartesianToCartographic(camera.position, position);
         var lon = CesiumMath.toDegrees(position.longitude);
 
         expect(lon).toBeLessThan(10.0);
 
-        directFlight.update({ time : 0.1 });
+        directFlight.update({ time : 0.3 });
         projection.ellipsoid.cartesianToCartographic(camera.position, position);
         lon = CesiumMath.toDegrees(position.longitude);
 
-        expect(lon).toBeMoreThan(10.0);
+        expect(lon).toBeGreaterThan(10.0);
         expect(lon).toBeLessThan(20.0);
+
+    });
+
+    it('uses flyOverLongitudeWeight', function() {
+        var camera = scene.camera;
+        var projection = scene.mapProjection;
+        var position = new Cartographic();
+
+        camera.position = Cartesian3.fromDegrees(10.0, 45.0, 1000.0);
+
+        var endPosition = Cartesian3.fromDegrees(50.0, 45.0, 1000.0);
+
+        var overLonFlightSmallWeight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : 1.0,
+            flyOverLongitude: CesiumMath.toRadians(0.0),
+            flyOverLongitudeWeight: 2
+        });
+
+        var overLonFlightBigWeight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : 1.0,
+            flyOverLongitude: CesiumMath.toRadians(0.0),
+            flyOverLongitudeWeight: 20
+        });
+
+        overLonFlightBigWeight.update({ time : 0.3 });
+        projection.ellipsoid.cartesianToCartographic(camera.position, position);
+        var lon = CesiumMath.toDegrees(position.longitude);
+
+        expect(lon).toBeLessThan(10.0);
+
+        overLonFlightSmallWeight.update({ time : 0.3 });
+        projection.ellipsoid.cartesianToCartographic(camera.position, position);
+        lon = CesiumMath.toDegrees(position.longitude);
+
+        expect(lon).toBeGreaterThan(10.0);
+        expect(lon).toBeLessThan(50.0);
 
     });
 

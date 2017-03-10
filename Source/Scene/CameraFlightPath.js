@@ -178,12 +178,12 @@ define([
         destCart.longitude = CesiumMath.zeroToTwoPi(destCart.longitude);
 
         if (defined(optionFlyOverLongitude)) {
-            var intrmdtLon = CesiumMath.zeroToTwoPi(optionFlyOverLongitude);
+            var hitLon = CesiumMath.zeroToTwoPi(optionFlyOverLongitude);
 
             var lonMin = Math.min(startCart.longitude, destCart.longitude);
             var lonMax = Math.max(startCart.longitude, destCart.longitude);
 
-            var intrmdtInside =  (intrmdtLon >= lonMin && intrmdtLon <= lonMax);
+            var hitInside =  (hitLon >= lonMin && hitLon <= lonMax);
 
             if (defined(optionFlyOverLongitudeWeight)) {
                 // Distance inside  (0...2Pi)
@@ -191,38 +191,37 @@ define([
                 // Distance outside (0...2Pi)
                 var dot = CesiumMath.TWO_PI - din;
 
-                var hitDistance = intrmdtInside ? din : dot;
-                var offDistance = intrmdtInside ? dot : din;
+                var hitDistance = hitInside ? din : dot;
+                var offDistance = hitInside ? dot : din;
 
                 if (hitDistance < offDistance * optionFlyOverLongitudeWeight) {
-                    if (!intrmdtInside) {
-                        // Adjust start/stop to hit intrmdtLon
-                        flip();
+                    if (!hitInside) {
+                        // Adjust start/stop to hit hitLon
+                        useLongestFlight();
                     }
                 }
                 else {
-                    useShortest();
+                    useShortestFlight();
                 }
             }
-            else if (!intrmdtInside) {
-                // Adjust start/stop to hit intrmdtLon
-                flip();
+            else if (!hitInside) {
+                // Adjust start/stop to hit hitLon
+                useLongestFlight();
             }
         }
         else {
-            useShortest();
+            useShortestFlight();
         }
 
-        function flip() {
+        function useLongestFlight() {
             if (startCart.longitude < destCart.longitude) {
                 startCart.longitude += CesiumMath.TWO_PI;
-            }
-            else {
+            } else {
                 destCart.longitude += CesiumMath.TWO_PI;
             }
         }
 
-        function useShortest() {
+        function useShortestFlight() {
             var diff = startCart.longitude - destCart.longitude;
             if (diff < -CesiumMath.PI) {
                 startCart.longitude += CesiumMath.TWO_PI;
@@ -241,25 +240,37 @@ define([
             pitchFunction = createPitchFunction(camera, destination, startPitch, pitch, optionPitchAdjustHeight, heightFunction);
         }
 
-        function update(value) {
-            var time = value.time / duration;
+        // Isolate scope for update function.
+        // to have local copies of vars used in lerp
+        // Othervise, if you call nex
+        // createUpdate3D (createAnimationTween)
+        // before you played animation, variables will be overwriten.
+        function isolateUpdateFunction() {
+            var startLongitude = startCart.longitude;
+            var destLongitude = destCart.longitude;
+            var startLatitude = startCart.latitude;
+            var destLatitude = destCart.latitude;
 
-            var position = Cartesian3.fromRadians(
-                CesiumMath.lerp(startCart.longitude, destCart.longitude, time),
-                CesiumMath.lerp(startCart.latitude, destCart.latitude, time),
-                heightFunction(time)
-            );
+            return function update(value) {
+                var time = value.time / duration;
 
-            camera.setView({
-                destination : position,
-                orientation: {
-                    heading : CesiumMath.lerp(startHeading, heading, time),
-                    pitch : pitchFunction(time),
-                    roll : CesiumMath.lerp(startRoll, roll, time)
-                }
-            });
+                var position = Cartesian3.fromRadians(
+                    CesiumMath.lerp(startLongitude, destLongitude, time),
+                    CesiumMath.lerp(startLatitude, destLatitude, time),
+                    heightFunction(time)
+                );
+
+                camera.setView({
+                    destination : position,
+                    orientation: {
+                        heading : CesiumMath.lerp(startHeading, heading, time),
+                        pitch : pitchFunction(time),
+                        roll : CesiumMath.lerp(startRoll, roll, time)
+                    }
+                });
+            };
         }
-        return update;
+        return isolateUpdateFunction();
     }
 
     function createUpdate2D(scene, duration, destination, heading, pitch, roll, optionAltitude) {
