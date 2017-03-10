@@ -2286,6 +2286,31 @@ defineSuite([
         });
     });
 
+    it('Gets memory usage', function() {
+        // Texture is originally 211*211 but is scaled up to 256*256 to support its minification filter and then is mipmapped
+        var expectedTextureMemory = Math.floor(256*256*4*(4/3));
+        var expectedVertexMemory = 840;
+        var options = {
+            cacheKey : 'memory-usage-test',
+            incrementallyLoadTextures : false
+        };
+        return loadModel(texturedBoxUrl, options).then(function(model) {
+            // The first model owns the resources
+            expect(model.vertexMemorySizeInBytes).toBe(expectedVertexMemory);
+            expect(model.textureMemorySizeInBytes).toBe(expectedTextureMemory);
+            expect(model.cachedVertexMemorySizeInBytes).toBe(0);
+            expect(model.cachedTextureMemorySizeInBytes).toBe(0);
+
+            return loadModel(texturedBoxUrl, options).then(function(model) {
+                // The second model is sharing the resources, so its memory usage is reported as 0
+                expect(model.vertexMemorySizeInBytes).toBe(0);
+                expect(model.textureMemorySizeInBytes).toBe(0);
+                expect(model.cachedVertexMemorySizeInBytes).toBe(expectedVertexMemory);
+                expect(model.cachedTextureMemorySizeInBytes).toBe(expectedTextureMemory);
+            });
+        });
+    });
+
     describe('height referenced model', function() {
         function createMockGlobe() {
             var globe = {

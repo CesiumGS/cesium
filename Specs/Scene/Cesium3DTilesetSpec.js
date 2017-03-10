@@ -103,7 +103,7 @@ defineSuite([
     // Parent tile with content and four child tiles with content with viewer request volume for each child
     var tilesetReplacementWithViewerRequestVolumeUrl = './Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume';
 
-    var tilesetWithExternalResources = './Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources';
+    var tilesetWithExternalResourcesUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources';
 
     var styleUrl = './Data/Cesium3DTiles/Style/style.json';
 
@@ -269,12 +269,12 @@ defineSuite([
 
         var queryParams = '?a=1&b=boy';
         var queryParamsWithVersion = '?a=1&b=boy&v=1.2.3';
-        return Cesium3DTilesTester.loadTileset(scene, tilesetWithExternalResources + queryParams).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetWithExternalResourcesUrl + queryParams).then(function(tileset) {
             var calls = loadWithXhr.load.calls.all();
             var callsLength = calls.length;
             for (var i = 0; i < callsLength; ++i) {
                 var url = calls[0].args[0];
-                if (url.indexOf(tilesetWithExternalResources) >= 0) {
+                if (url.indexOf(tilesetWithExternalResourcesUrl) >= 0) {
                     var query = url.slice(url.indexOf('?'));
                     if (url.indexOf('tileset.json') >= 0) {
                         // The initial tileset.json does not have a tileset version parameter
@@ -500,6 +500,93 @@ defineSuite([
         }));
 
         return checkPointAndFeatureCounts(tileset, 8, 1000);
+    });
+
+    it('verify memory usage statistics', function() {
+        // Calculations in Batched3DModel3DTilesContentSpec
+        var singleTileVertexMemory = 8880;
+        var singleTileTextureMemory = 0;
+        var singleTileBatchTextureMemory = 40;
+        var singleTilePickTextureMemory = 40;
+        var tilesLength = 5;
+
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var stats = tileset._statistics;
+
+            // No tiles loaded
+            expect(stats.vertexMemorySizeInBytes).toEqual(0);
+            expect(stats.textureMemorySizeInBytes).toEqual(0);
+            expect(stats.batchTableMemorySizeInBytes).toEqual(0);
+
+            viewRootOnly();
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                // Root tile loaded
+                expect(stats.vertexMemorySizeInBytes).toEqual(singleTileVertexMemory);
+                expect(stats.textureMemorySizeInBytes).toEqual(singleTileTextureMemory);
+                expect(stats.batchTableMemorySizeInBytes).toEqual(0);
+
+                viewAllTiles();
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                    // All tiles loaded
+                    expect(stats.vertexMemorySizeInBytes).toEqual(singleTileVertexMemory * tilesLength);
+                    expect(stats.textureMemorySizeInBytes).toEqual(singleTileTextureMemory * tilesLength);
+                    expect(stats.batchTableMemorySizeInBytes).toEqual(0);
+
+                    // One feature colored, the batch table memory is now higher
+                    tileset._root.content.getFeature(0).color = Color.RED;
+                    scene.renderForSpecs();
+                    expect(stats.vertexMemorySizeInBytes).toEqual(singleTileVertexMemory * tilesLength);
+                    expect(stats.textureMemorySizeInBytes).toEqual(singleTileTextureMemory * tilesLength);
+                    expect(stats.batchTableMemorySizeInBytes).toEqual(singleTileBatchTextureMemory);
+
+                    // All tiles picked, the texture memory is now higher
+                    scene.pickForSpecs();
+                    expect(stats.vertexMemorySizeInBytes).toEqual(singleTileVertexMemory * tilesLength);
+                    expect(stats.textureMemorySizeInBytes).toEqual(singleTileTextureMemory * tilesLength);
+                    expect(stats.batchTableMemorySizeInBytes).toEqual(singleTileBatchTextureMemory + singleTilePickTextureMemory * tilesLength);
+
+                    // Tiles are still in memory when zoomed out
+                    viewNothing();
+                    scene.renderForSpecs();
+                    expect(stats.vertexMemorySizeInBytes).toEqual(singleTileVertexMemory * tilesLength);
+                    expect(stats.textureMemorySizeInBytes).toEqual(singleTileTextureMemory * tilesLength);
+                    expect(stats.batchTableMemorySizeInBytes).toEqual(singleTileBatchTextureMemory + singleTilePickTextureMemory * tilesLength);
+
+                    // Trim loaded tiles, expect the memory statistics to be 0
+                    tileset.trimLoadedTiles();
+                    scene.renderForSpecs();
+                    expect(stats.vertexMemorySizeInBytes).toEqual(0);
+                    expect(stats.textureMemorySizeInBytes).toEqual(0);
+                    expect(stats.batchTableMemorySizeInBytes).toEqual(0);
+                });
+            });
+        });
+    });
+
+    it('verify memory usage statistics for shared resources', function() {
+        // Six tiles total:
+        // * Two b3dm tiles - no shared resources
+        // * Two i3dm tiles with embedded glTF - no shared resources
+        // * Two i3dm tiles with external glTF - shared resources
+        // Expect to see some saving with memory usage since two of the tiles share resources
+        // All tiles reference the same external texture but texture caching is not supported yet
+        // TODO : tweak test when #5051 is in
+
+        var b3dmVertexMemory = 840; // Only one box in the tile, unlike most other test tiles
+        var i3dmVertexMemory = 840;
+
+        // Texture is 211x211 RGBA bytes, but upsampled to 256x256 because the wrap mode is REPEAT
+        var textureMemorySizeInBytes = 262144;
+
+        var expectedVertexMemory = b3dmVertexMemory * 2 + i3dmVertexMemory * 3;
+        var expectedTextureMemory = textureMemorySizeInBytes * 5;
+
+        return Cesium3DTilesTester.loadTileset(scene, tilesetWithExternalResourcesUrl).then(function(tileset) {
+            var stats = tileset._statistics;
+            expect(stats.vertexMemorySizeInBytes).toBe(expectedVertexMemory);
+            expect(stats.textureMemorySizeInBytes).toBe(expectedTextureMemory);
+        });
     });
 
     it('does not process tileset when screen space error is not met', function() {

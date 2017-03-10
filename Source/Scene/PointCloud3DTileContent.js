@@ -140,6 +140,7 @@ define([
         this._readyPromise = when.defer();
         this._features = undefined;
         this._pointsLength = 0;
+        this._vertexMemorySizeInBytes = 0;
     }
 
     defineProperties(PointCloud3DTileContent.prototype, {
@@ -161,6 +162,36 @@ define([
         pointsLength : {
             get : function() {
                 return this._pointsLength;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                return this._vertexMemorySizeInBytes;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                if (defined(this.batchTable)) {
+                    return this.batchTable.memorySizeInBytes;
+                }
+                return 0;
             }
         },
 
@@ -535,6 +566,8 @@ define([
                         usage : BufferUsage.STATIC_DRAW
                     });
 
+                    content._vertexMemorySizeInBytes += vertexBuffer.sizeInBytes;
+
                     var vertexAttribute = {
                         index : attributeLocation,
                         vertexBuffer : vertexBuffer,
@@ -583,6 +616,7 @@ define([
             typedArray : positions,
             usage : BufferUsage.STATIC_DRAW
         });
+        content._vertexMemorySizeInBytes += positionsVertexBuffer.sizeInBytes;
 
         var colorsVertexBuffer;
         if (hasColors) {
@@ -591,6 +625,7 @@ define([
                 typedArray : colors,
                 usage : BufferUsage.STATIC_DRAW
             });
+            content._vertexMemorySizeInBytes += colorsVertexBuffer.sizeInBytes;
         }
 
         var normalsVertexBuffer;
@@ -600,6 +635,7 @@ define([
                 typedArray : normals,
                 usage : BufferUsage.STATIC_DRAW
             });
+            content._vertexMemorySizeInBytes += normalsVertexBuffer.sizeInBytes;
         }
 
         var batchIdsVertexBuffer;
@@ -609,6 +645,7 @@ define([
                 typedArray : batchIds,
                 usage : BufferUsage.STATIC_DRAW
             });
+            content._vertexMemorySizeInBytes += batchIdsVertexBuffer.sizeInBytes;
         }
 
         var attributes = [];

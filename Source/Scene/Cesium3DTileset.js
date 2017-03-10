@@ -281,7 +281,7 @@ define([
             numberContentReady : 0, // Number of tiles with content loaded, does not include empty tiles
             numberTotal : 0, // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
             // Features stats
-            numberOfFeaturesSelected : 0,       // number of features rendered
+            numberOfFeaturesSelected : 0, // number of features rendered
             numberOfFeaturesLoaded : 0,  // number of features in memory
             numberOfPointsSelected: 0,
             numberOfPointsLoaded: 0,
@@ -290,6 +290,10 @@ define([
             numberOfFeaturesStyled : 0,
             // Optimization stats
             numberOfTilesCulledWithChildrenUnion : 0,
+            // Memory stats
+            vertexMemorySizeInBytes : 0,
+            textureMemorySizeInBytes : 0,
+            batchTableMemorySizeInBytes : 0,
 
             lastColor : new Cesium3DTilesetStatistics(),
             lastPick : new Cesium3DTilesetStatistics()
@@ -508,6 +512,9 @@ define([
         this.numberOfTilesStyled = 0;
         this.numberOfFeaturesStyled = 0;
         this.numberOfTilesCulledWithChildrenUnion = 0;
+        this.vertexMemorySizeInBytes = 0;
+        this.textureMemorySizeInBytes = 0;
+        this.batchTableMemorySizeInBytes = 0;
     }
 
     defineProperties(Cesium3DTileset.prototype, {
@@ -1661,6 +1668,9 @@ define([
         last.numberOfTilesStyled = stats.numberOfTilesStyled;
         last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
         last.numberOfTilesCulledWithChildrenUnion = stats.numberOfTilesCulledWithChildrenUnion;
+        last.vertexMemorySizeInBytes = stats.vertexMemorySizeInBytes;
+        last.textureMemorySizeInBytes = stats.textureMemorySizeInBytes;
+        last.batchTableMemorySizeInBytes = stats.batchTableMemorySizeInBytes;
     }
 
     function updatePointAndFeatureCounts(tileset, content, decrement, load) {
@@ -1668,10 +1678,15 @@ define([
         var contents = content.innerContents;
         var pointsLength = content.pointsLength;
         var featuresLength = content.featuresLength;
-
+        var vertexMemorySizeInBytes = content.vertexMemorySizeInBytes;
+        var textureMemorySizeInBytes = content.textureMemorySizeInBytes;
+        var batchTableMemorySizeInBytes = content.batchTableMemorySizeInBytes;
         if (load) {
             stats.numberOfFeaturesLoaded += decrement ? -featuresLength : featuresLength;
             stats.numberOfPointsLoaded += decrement ? -pointsLength : pointsLength;
+            stats.vertexMemorySizeInBytes += decrement ? -vertexMemorySizeInBytes : vertexMemorySizeInBytes;
+            stats.textureMemorySizeInBytes += decrement ? -textureMemorySizeInBytes : textureMemorySizeInBytes;
+            stats.batchTableMemorySizeInBytes += decrement ? -batchTableMemorySizeInBytes : batchTableMemorySizeInBytes;
         } else {
             stats.numberOfFeaturesSelected += decrement ? -featuresLength : featuresLength;
             stats.numberOfPointsSelected += decrement ? -pointsLength : pointsLength;
