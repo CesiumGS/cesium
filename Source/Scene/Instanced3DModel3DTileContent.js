@@ -421,7 +421,6 @@ define([
             instanceScale.z = 1.0;
             var scale = featureTable.getProperty('SCALE', i, ComponentDatatype.FLOAT, 1);
             if (defined(scale)) {
-                if (Array.isArray(scale)) scale = scale[0];
                 Cartesian3.multiplyByScalar(instanceScale, scale, instanceScale);
             }
             var nonUniformScale = featureTable.getProperty('SCALE_NON_UNIFORM', i, ComponentDatatype.FLOAT, 3);
@@ -436,7 +435,7 @@ define([
             var batchId;
             if (defined(featureTable.json.BATCH_ID)) {
                 var componentType = defaultValue(featureTable.json.BATCH_ID.componentType, ComponentDatatype.UNSIGNED_SHORT);
-                batchId = featureTable.getProperty('BATCH_ID', i, componentType);
+                batchId = featureTable.getProperty('BATCH_ID', i, componentType, 1);
             } else {
                 // If BATCH_ID semantic is undefined, batchId is just the instance number
                 batchId = i;
