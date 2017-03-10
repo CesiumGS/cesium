@@ -97,7 +97,6 @@
         </td>
     </tr>
 
-
     <tr>
         <td>Gravity</td>
         <td>
@@ -105,6 +104,29 @@
             <input type="text" size="5" data-bind="value: gravity">
         </td>
     </tr>
+
+    <tr>
+        <td>Translation </td>
+        <td>
+            X <input type="text" size="5" data-bind="value: transX">
+            Y <input type="text" size="5" data-bind="value: transY">
+            Z <input type="text" size="5" data-bind="value: transZ">
+        </td>
+    </tr>
+
+    <tr>
+        <td>Rotation </td>
+        <td>
+            H <input type="text" size="5" data-bind="value: heading">
+            P <input type="text" size="5" data-bind="value: pitch">
+            R <input type="text" size="5" data-bind="value: roll">
+        </td>
+    </tr>
+
+
+
+
+
 
 
     </tbody></table>
@@ -142,7 +164,15 @@ var viewModel = {
     minSpeed: 5,
     maxSpeed: 5,
     startScale: 1.0,
-    endScale: 4.0
+    endScale: 4.0,
+
+    transX: 2.5,
+    transY: 4.0,
+    transZ: 1.0,
+
+    heading: 0.0,
+    pitch: 0.0,
+    roll: 0.0
 };
 
 Cesium.knockout.track(viewModel);
@@ -245,6 +275,15 @@ function applyGravity(p, dt) {
     p.velocity = Cesium.Cartesian3.add(p.velocity, gravityScratch, p.velocity);
 }
 
+
+
+// Variables to control the emitter position
+var heading = 0.0;
+var pitch = 0.0;
+var roll = 0.0;
+
+var emitterModelMatrix = new Cesium.Matrix4();
+
 var particles = scene.primitives.add(new Cesium.ParticleSystem({
 
     image: '../../SampleData/fire.png',
@@ -276,9 +315,16 @@ var particles = scene.primitives.add(new Cesium.ParticleSystem({
     lifeTime: 16.0,
 
     emitter: new Cesium.CircleEmitter({
-        position: new Cesium.Cartesian3(2.5, 4.0, 1.0),
         radius: 0.5
     }),
+
+    emitterModelMatrix: Cesium.Matrix4.fromTranslationRotationScale(
+        new Cesium.TranslationRotationScale(
+            new Cesium.Cartesian3(viewModel.transX, viewModel.transY, viewModel.transZ),
+            Cesium.Quaternion.fromHeadingPitchRoll(Cesium.HeadingPitchRoll.fromDegrees(viewModel.heading, viewModel.pitch, viewModel.roll))
+        ),
+        emitterModelMatrix
+    ),
 
     forces: [applyGravity]
 }));
@@ -289,6 +335,15 @@ entity._getModelMatrix(viewer.clock.currentTime, particles.modelMatrix);
 viewer.scene.preRender.addEventListener(function(scene, time) {
     // Sync the modelMatrix with the entitys position.
     entity._getModelMatrix(viewer.clock.currentTime, particles.modelMatrix);
+
+    // Account for any changes to the emitter model matrix.
+    particles.emitterModelMatrix = Cesium.Matrix4.fromTranslationRotationScale(
+        new Cesium.TranslationRotationScale(
+            new Cesium.Cartesian3(viewModel.transX, viewModel.transY, viewModel.transZ),
+            Cesium.Quaternion.fromHeadingPitchRoll(Cesium.HeadingPitchRoll.fromDegrees(viewModel.heading, viewModel.pitch, viewModel.roll))
+        ),
+        emitterModelMatrix
+    );
 });
 
 

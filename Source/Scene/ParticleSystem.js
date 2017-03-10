@@ -34,6 +34,7 @@ define([
         this.emitter = defaultValue(options.emitter, undefined);
 
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+        this.emitterModelMatrix = Matrix4.clone(defaultValue(options.emitterModelMatrix, Matrix4.IDENTITY));
 
         this.startColor = defaultValue(options.startColor, Color.clone(Color.WHITE));
         this.endColor = defaultValue(options.endColor, Color.clone(Color.WHITE));
@@ -231,6 +232,11 @@ define([
         var numToEmit = this.calcNumberToEmit(dt);
 
         if (numToEmit > 0 && emitter) {
+
+            // Compute the final model matrix by combining the particle systems model matrix and the emitter matrix.
+            var combinedMatrix = new Matrix4();
+            Matrix4.multiply(this.modelMatrix, this.emitterModelMatrix, combinedMatrix);
+
             for (i = 0; i < numToEmit; i++) {
                 // Create a new particle.
                 var particle = this.emitter.emit( particle );
@@ -239,10 +245,10 @@ define([
                     //For the velocity we need to add it to the original position and then multiply by point.
                     var tmp = new Cartesian3();
                     Cartesian3.add(particle.position, particle.velocity, tmp);
-                    Matrix4.multiplyByPoint(this.modelMatrix, tmp, tmp);
+                    Matrix4.multiplyByPoint(combinedMatrix, tmp, tmp);
 
                     // Change the position to be in world coordinates
-                    particle.position = Matrix4.multiplyByPoint(this.modelMatrix, particle.position, particle.position);
+                    particle.position = Matrix4.multiplyByPoint(combinedMatrix, particle.position, particle.position);
 
                     // Orient the velocity in world space as well.
                     var worldVelocity = new Cartesian3();
