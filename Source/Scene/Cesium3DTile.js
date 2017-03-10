@@ -362,6 +362,7 @@ define([
         this._depth = 0;
         this._stackLength = 0;
         this._selectedFrame = -1;
+        this._selectionDepth = 0;
     }
 
     defineProperties(Cesium3DTile.prototype, {

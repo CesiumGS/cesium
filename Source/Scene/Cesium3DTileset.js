@@ -1252,6 +1252,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var original = finalQueue.get(i);
             var tile = original;
+            // traverse up the tree to find a ready ancestor
             while (defined(tile) && !(tile.hasContent && tile.contentReady)) {
                 if (tile.refine === Cesium3DTileRefine.ADD) {
                     break;
@@ -1267,6 +1268,7 @@ define([
                     selectionQueue.push(tile);
                 }
             } else {
+                // if no ancestors are ready, traverse down and select ready tiles to minimize empty regions
                 descendantStack.push(original);
                 while (descendantStack.length > 0) {
                     tile = descendantStack.pop();
@@ -1403,7 +1405,7 @@ define([
 
         markNearestLoadedTilesForSelection(selectionState, tileset, frameState, outOfCore);
 
-        if (!tileset.lowMemory) {
+        if (!tileset.lowMemory && tileset._refining) {
             markTilesAsFinal(selectionQueue);
         }
 
@@ -1620,6 +1622,8 @@ define([
             var additive = tile.refine === Cesium3DTileRefine.ADD;
 
             if (shouldSelect) {
+                tile._selectionDepth = ancestorStack.length;
+
                 if (tile._finalResolution || childrenLength === 0) {
                     selectTile(tileset, tile, tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE, frameState);
                     if (!additive) {
@@ -2092,24 +2096,20 @@ define([
                     tile.update(tileset, frameState);
                     for (var j = lengthBeforeUpdate; j < commandList.length; ++j) {
                         command = commandList[j];
-                        if (tile._finalResolution) {
-                            // Final resolution tiles always increment stencil if they pass Z
-                            rs = clone(command.renderState, true);
-                            rs.stencilTest.enabled = true;
-                            rs.stencilTest.frontFunction = StencilFunction.ALWAYS;
-                            rs.stencilTest.frontOperation.zPass = StencilOperation.INCREMENT;
-                            command.renderState = RenderState.fromCache(rs);
-                        } else {
-                            // clone for drawing backfaces only
+                        
+                        if (!tile._finalResolution) {
+                            // draw backfaces of all unresolved tiles so resolved tiles don't poke through
                             backfaceCommands.push(DrawCommand.shallowClone(command));
-
-                            // Unresolved tiles do not draw if stencil is not 0 (final res tile is there)
-                            rs = clone(command.renderState, true);
-                            rs.stencilTest.enabled = true;
-                            rs.stencilTest.frontFunction = StencilFunction.EQUAL;
-                            rs.stencilTest.frontOperation.zPass = StencilOperation.KEEP;
-                            command.renderState = RenderState.fromCache(rs);
                         }
+                        
+                        // Tiles only draw if their selection depth is >= the tile drawn already. They write their
+                        // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
+                        rs = clone(command.renderState, true);
+                        rs.stencilTest.enabled = true;
+                        rs.stencilTest.reference = tile._selectionDepth;
+                        rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
+                        rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
+                        command.renderState = RenderState.fromCache(rs);
                     }
                 }
             }
