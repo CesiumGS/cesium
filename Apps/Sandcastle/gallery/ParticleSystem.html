@@ -50,6 +50,14 @@
     </tr>
 
     <tr>
+        <td>Size</td>
+        <td>
+            <input type="range" min="2" max="60.0" step="1" data-bind="value: particleSize, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: particleSize">
+        </td>
+    </tr>
+
+    <tr>
         <td>Min Life</td>
         <td>
             <input type="range" min="0.1" max="30.0" step="1" data-bind="value: minLife, valueUpdate: 'input'">
@@ -166,6 +174,8 @@ var viewModel = {
     startScale: 1.0,
     endScale: 4.0,
 
+    particleSize: 40.0,
+
     transX: 2.5,
     transY: 4.0,
     transZ: 1.0,
@@ -263,8 +273,6 @@ viewer.trackedEntity = entity;
 var scene = viewer.scene;
 scene.debugShowFramesPerSecond = true;
 
-var particleSize = 60.0;
-
 var gravityScratch = new Cesium.Cartesian3();
 
 function applyGravity(p, dt) {
@@ -295,8 +303,8 @@ var particles = scene.primitives.add(new Cesium.ParticleSystem({
     minSpeed: viewModel.minSpeed,
     maxSpeed: viewModel.maxSpeed,
 
-    width: particleSize,
-    height: particleSize,
+    width: viewModel.particleSize,
+    height: viewModel.particleSize,
 
     // Particles per second.
     rate: viewModel.rate,
@@ -352,6 +360,16 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
 Cesium.knockout.getObservable(viewModel, 'rate').subscribe(
     function(newValue) {
         particles.rate = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'particleSize').subscribe(
+    function(newValue) {
+        var particleSize = parseFloat(newValue);
+        particles.minWidth = particleSize;
+        particles.maxWidth = particleSize;
+        particles.minHeight = particleSize;
+        particles.maxHeight = particleSize;
     }
 );
 
