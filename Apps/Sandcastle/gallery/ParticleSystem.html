@@ -415,7 +415,40 @@ Sandcastle.addToggleButton('Spin', viewModel.spin, function(checked) {
 });
 
 
+var options = [{
+    text : 'Circle',
+    onselect : function() {
+        particles.emitter = new Cesium.CircleEmitter({
+            radius: 0.5
+        });
+    }
+}, {
+    text : 'Cone',
+    onselect : function() {
+        particles.emitter = new Cesium.ConeEmitter({
+            height: 10.0,
+            angle: Cesium.Math.toRadians(45.0)
+        });
+    }
+}, {
+    text : 'Box',
+    onselect : function() {
+        particles.emitter = new Cesium.BoxEmitter({
+            width: 1.0,
+            height: 1.0,
+            depth: 1.0,
+        });
+    }
+}, {
+    text : 'Sphere',
+    onselect : function() {
+        particles.emitter = new Cesium.SphereEmitter({
+            radius: 1.0
+        });
+    }
+}];
 
+Sandcastle.addToolbarMenu(options);
 
 
 //Sandcastle_End
