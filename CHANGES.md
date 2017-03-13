@@ -11,6 +11,7 @@ Change Log
 * Fixed a bug in `Quaternion.fromHeadingPitchRoll` that made it erroneously throw an exception when passed individual angles in an unminified / debug build.
 * Fix `GroundPrimitive` rendering in 2D and Columbus View [#5078](https://github.com/AnalyticalGraphicsInc/cesium/pull/5078)
 * Fixed a bug in `ModelAnimationCache` causing different animations to reference the same animation. [#5064](https://github.com/AnalyticalGraphicsInc/cesium/pull/5064)
+* Added support for an orthographic projection in 3D and Columbus view. Set `projectionPicker` to `true` in the options when creating a `Viewer` to add a widget that will switch projections. [#5021](https://github.com/AnalyticalGraphicsInc/cesium/pull/5021)
 
 ### 1.31 - 2017-03-01
 
