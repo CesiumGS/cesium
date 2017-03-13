@@ -58,24 +58,28 @@ define([
     var scratchCart = new Cartesian3();
     var scratchCart2 = new Cartesian3();
 
-    function createPitchFunction(camera, destination, startPitch, endPitch, optionPitchAdjustHeight, heightFunction) {
-        var startHeight = heightFunction(0.0);
-        var endHeight = heightFunction(1.0);
-        var middleHeight = heightFunction(0.5);
+    function createPitchFunction(startPitch, endPitch, heightFunction, pitchAdjustHeight) {
+        if (defined(pitchAdjustHeight) && heightFunction(0.5) > pitchAdjustHeight) {
+            var startHeight = heightFunction(0.0);
+            var endHeight = heightFunction(1.0);
+            var middleHeight = heightFunction(0.5);
 
-        var d1 = (middleHeight - startHeight) * 1.0;
-        var d2 = (middleHeight - endHeight) * 1.0;
+            var d1 = middleHeight - startHeight;
+            var d2 = middleHeight - endHeight;
 
-        return function(time) {
-            var altitude = heightFunction(time);
-            if (time <= 0.5) {
-                var t1 = (altitude - startHeight) * 1.0 / d1;
-                return CesiumMath.lerp(startPitch, -CesiumMath.PI_OVER_TWO, t1);
-            }
-            else {
-                var t2 = (altitude - endHeight) * 1.0 / d2;
+            return function(time) {
+                var altitude = heightFunction(time);
+                if (time <= 0.5) {
+                    var t1 = (altitude - startHeight) / d1;
+                    return CesiumMath.lerp(startPitch, -CesiumMath.PI_OVER_TWO, t1);
+                }
+
+                var t2 = (altitude - endHeight) / d2;
                 return CesiumMath.lerp(-CesiumMath.PI_OVER_TWO, endPitch, 1 - t2);
-            }
+            };
+        }
+        return function(time) {
+            return CesiumMath.lerp(startPitch, endPitch, time);
         };
     }
 
@@ -158,12 +162,27 @@ define([
         return update;
     }
 
+    function useLongestFlight(startCart, destCart) {
+        if (startCart.longitude < destCart.longitude) {
+            startCart.longitude += CesiumMath.TWO_PI;
+        } else {
+            destCart.longitude += CesiumMath.TWO_PI;
+        }
+    }
+
+    function useShortestFlight(startCart, destCart) {
+        var diff = startCart.longitude - destCart.longitude;
+        if (diff < -CesiumMath.PI) {
+            startCart.longitude += CesiumMath.TWO_PI;
+        } else if (diff > CesiumMath.PI) {
+            destCart.longitude += CesiumMath.TWO_PI;
+        }
+    }
+
     var scratchStartCart = new Cartographic();
     var scratchEndCart = new Cartographic();
 
-    function createUpdate3D(scene, duration, destination, heading, pitch, roll,
-        optionAltitude, optionFlyOverLongitude, optionFlyOverLongitudeWeight, optionPitchAdjustHeight) {
-
+    function createUpdate3D(scene, duration, destination, heading, pitch, roll, optionAltitude, optionFlyOverLongitude, optionFlyOverLongitudeWeight, optionPitchAdjustHeight) {
         var camera = scene.camera;
         var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
@@ -176,6 +195,8 @@ define([
         var destCart = ellipsoid.cartesianToCartographic(destination, scratchEndCart);
         startCart.longitude = CesiumMath.zeroToTwoPi(startCart.longitude);
         destCart.longitude = CesiumMath.zeroToTwoPi(destCart.longitude);
+
+        var useLongFlight = false;
 
         if (defined(optionFlyOverLongitude)) {
             var hitLon = CesiumMath.zeroToTwoPi(optionFlyOverLongitude);
@@ -194,51 +215,22 @@ define([
                 var hitDistance = hitInside ? din : dot;
                 var offDistance = hitInside ? dot : din;
 
-                if (hitDistance < offDistance * optionFlyOverLongitudeWeight) {
-                    if (!hitInside) {
-                        // Adjust start/stop to hit hitLon
-                        useLongestFlight();
-                    }
+                if (hitDistance < offDistance * optionFlyOverLongitudeWeight && !hitInside) {
+                    useLongFlight = true;
                 }
-                else {
-                    useShortestFlight();
-                }
-            }
-            else if (!hitInside) {
-                // Adjust start/stop to hit hitLon
-                useLongestFlight();
-            }
-        }
-        else {
-            useShortestFlight();
-        }
-
-        function useLongestFlight() {
-            if (startCart.longitude < destCart.longitude) {
-                startCart.longitude += CesiumMath.TWO_PI;
-            } else {
-                destCart.longitude += CesiumMath.TWO_PI;
+            } else if (!hitInside) {
+                useLongFlight = true;
             }
         }
 
-        function useShortestFlight() {
-            var diff = startCart.longitude - destCart.longitude;
-            if (diff < -CesiumMath.PI) {
-                startCart.longitude += CesiumMath.TWO_PI;
-            } else if (diff > CesiumMath.PI) {
-                destCart.longitude += CesiumMath.TWO_PI;
-            }
+        if (useLongFlight) {
+            useLongestFlight(startCart, destCart);
+        } else {
+            useShortestFlight(startCart, destCart);
         }
 
         var heightFunction = createHeightFunction(camera, destination, startCart.height, destCart.height, optionAltitude);
-
-        var pitchFunction = function(time) {
-            return CesiumMath.lerp(startPitch, pitch, time);
-        };
-
-        if (defined(optionPitchAdjustHeight) && heightFunction(0.5) > optionPitchAdjustHeight) {
-            pitchFunction = createPitchFunction(camera, destination, startPitch, pitch, optionPitchAdjustHeight, heightFunction);
-        }
+        var pitchFunction = createPitchFunction(startPitch, pitch, heightFunction, optionPitchAdjustHeight);
 
         // Isolate scope for update function.
         // to have local copies of vars used in lerp
@@ -410,8 +402,7 @@ define([
 
         if (duration <= 0.0) {
             var newOnComplete = function() {
-                var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll,
-                                                   maximumHeight, flyOverLongitude, flyOverLongitudeWeight, pitchAdjustHeight);
+                var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll, maximumHeight, flyOverLongitude, flyOverLongitudeWeight, pitchAdjustHeight);
                 update({ time: 1.0 });
 
                 if (typeof complete === 'function') {
@@ -421,8 +412,7 @@ define([
             return emptyFlight(newOnComplete, cancel);
         }
 
-        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll,
-                                           maximumHeight, flyOverLongitude, flyOverLongitudeWeight, pitchAdjustHeight);
+        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll, maximumHeight, flyOverLongitude, flyOverLongitudeWeight, pitchAdjustHeight);
 
         if (!defined(easingFunction)) {
             var startHeight = camera.positionCartographic.height;
