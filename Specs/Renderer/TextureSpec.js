@@ -575,9 +575,11 @@ defineSuite([
 
     it('can get the size in bytes of a texture', function() {
         // Depth textures
-        expectTextureByteSize(16, 16, PixelFormat.DEPTH_COMPONENT, PixelDatatype.UNSIGNED_SHORT, 256 * 2);
-        expectTextureByteSize(16, 16, PixelFormat.DEPTH_COMPONENT, PixelDatatype.UNSIGNED_INT, 256 * 4);
-        expectTextureByteSize(16, 16, PixelFormat.DEPTH_STENCIL, PixelDatatype.UNSIGNED_INT_24_8, 256 * 4);
+        if (context.depthTexture) {
+            expectTextureByteSize(16, 16, PixelFormat.DEPTH_COMPONENT, PixelDatatype.UNSIGNED_SHORT, 256 * 2);
+            expectTextureByteSize(16, 16, PixelFormat.DEPTH_COMPONENT, PixelDatatype.UNSIGNED_INT, 256 * 4);
+            expectTextureByteSize(16, 16, PixelFormat.DEPTH_STENCIL, PixelDatatype.UNSIGNED_INT_24_8, 256 * 4);
+        }
 
         // Uncompressed formats
         expectTextureByteSize(16, 16, PixelFormat.ALPHA, PixelDatatype.UNSIGNED_BYTE, 256);
