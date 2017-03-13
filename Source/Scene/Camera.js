@@ -985,8 +985,12 @@ define([
     var pickGlobeScratchRay = new Ray();
     var scratchRayIntersection = new Cartesian3();
 
-    Camera.prototype._adjustOrthographicFrustum = function() {
+    Camera.prototype._adjustOrthographicFrustum = function(zooming) {
         if (!(this.frustum instanceof OrthographicFrustum)) {
+            return;
+        }
+
+        if (!zooming && this._positionCartographic.height < 150000.0) {
             return;
         }
 
@@ -1012,7 +1016,7 @@ define([
         }
 
         if (!defined(globe) || (!defined(rayIntersection))) {
-            var distance = this.positionCartographic.height;
+            var distance = Math.max(this.positionCartographic.height, 0.0);
             this.frustum.width = distance;
         }
     };
@@ -1041,7 +1045,7 @@ define([
 
         camera._setTransform(currentTransform);
 
-        camera._adjustOrthographicFrustum();
+        camera._adjustOrthographicFrustum(true);
     }
 
     function setViewCV(camera, position,hpr, convert) {
@@ -1067,7 +1071,7 @@ define([
 
         camera._setTransform(currentTransform);
 
-        camera._adjustOrthographicFrustum();
+        camera._adjustOrthographicFrustum(true);
     }
 
     function setView2D(camera, position, hpr, convert) {
@@ -1475,7 +1479,7 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, cameraPosition);
         }
-        this._adjustOrthographicFrustum();
+        this._adjustOrthographicFrustum(true);
     };
 
     /**
@@ -1691,6 +1695,8 @@ define([
         Matrix3.multiplyByVector(rotation, this.up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
+
+        this._adjustOrthographicFrustum(false);
     };
 
     /**
@@ -2039,7 +2045,7 @@ define([
         Cartesian3.cross(this.right, this.direction, this.up);
         Cartesian3.normalize(this.up, this.up);
 
-        this._adjustOrthographicFrustum();
+        this._adjustOrthographicFrustum(true);
     };
 
     var viewRectangle3DCartographic1 = new Cartographic();

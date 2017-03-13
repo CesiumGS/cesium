@@ -573,6 +573,7 @@ define([
             columbusViewMorph(startUp, endUp, value.time, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.normalize(camera.right, camera.right);
+            camera._adjustOrthographicFrustum(true);
         }
 
         function updateHeight(camera, height) {
@@ -795,6 +796,7 @@ define([
             columbusViewMorph(startUp, endUp, value.time, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.normalize(camera.right, camera.right);
+            camera._adjustOrthographicFrustum(true);
         }
         var tween = scene.tweens.add({
             duration : duration,
