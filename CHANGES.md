@@ -3,6 +3,10 @@ Change Log
 
 ### 1.32 - 2017-04-03
 
+* Added `Camera.flyTo` and `Camera.flyToBoundingSphere` options [#5070](https://github.com/AnalyticalGraphicsInc/cesium/pull/5070)
+    * `flyOverLongitude` to select one of two possible on Globe paths which camera should fly.
+    * `flyOverLongitudeWeight` to set a threshold: how many times the `flyOverLongitude` way can be than shortest path.
+    * `pitchAdjustHeight` to adjust camera pitch during exaggerated flights, to keep Earth in viewport.
 * Added the event `Viewer.trackedEntityChanged`, which is raised when the value of `viewer.trackedEntity` changes. [#5060](https://github.com/AnalyticalGraphicsInc/cesium/pull/5060)
 * Added `Camera.DEFAULT_OFFSET` for default view of objects with bounding spheres [#4936](https://github.com/AnalyticalGraphicsInc/cesium/pull/4936)
 * Fix crunch compressed textures in IE11. [#5057](https://github.com/AnalyticalGraphicsInc/cesium/pull/5057)
