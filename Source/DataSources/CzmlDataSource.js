@@ -424,8 +424,17 @@ define([
         // Intentionally omitted due to conficts in CZML property names:
         // * Image (conflicts with Uri)
         // * Rotation (conflicts with Number)
-
-        if (czmlInterval.hasOwnProperty('array')) {
+        //
+        // cartesianVelocity is also omitted due to incomplete support for
+        // derivative information in CZML properties.
+        // (Currently cartesianVelocity is hacked directly into the position processing code)
+        if (typeof czmlInterval === 'boolean') {
+            return Boolean;
+        } else if (typeof czmlInterval === 'number') {
+            return Number;
+        } else if (typeof czmlInterval === 'string') {
+            return String;
+        } else if (czmlInterval.hasOwnProperty('array')) {
             return Array;
         } else if (czmlInterval.hasOwnProperty('boolean')) {
             return Boolean;
@@ -434,7 +443,6 @@ define([
         } else if (czmlInterval.hasOwnProperty('cartesian2')) {
             return Cartesian2;
         } else if (czmlInterval.hasOwnProperty('cartesian') ||
-                   czmlInterval.hasOwnProperty('cartesianVelocity') ||
                    czmlInterval.hasOwnProperty('unitCartesian') ||
                    czmlInterval.hasOwnProperty('unitSpherical') ||
                    czmlInterval.hasOwnProperty('spherical') ||
@@ -465,7 +473,7 @@ define([
             return Object;
         } else if (czmlInterval.hasOwnProperty('unitQuaternion')) {
             return Quaternion;
-        } else if (czmlInterval.hasOwnProperty('shadows')) {
+        } else if (czmlInterval.hasOwnProperty('shadowMode')) {
             return ShadowMode;
         } else if (czmlInterval.hasOwnProperty('string')) {
             return String;
@@ -526,7 +534,7 @@ define([
             case Rotation:
                 return defaultValue(czmlInterval.number, czmlInterval);
             case ShadowMode:
-                return ShadowMode[defaultValue(czmlInterval.shadows, czmlInterval)];
+                return ShadowMode[defaultValue(defaultValue(czmlInterval.shadowMode, czmlInterval.shadows), czmlInterval)];
             case String:
                 return defaultValue(czmlInterval.string, czmlInterval);
             case StripeOrientation:
