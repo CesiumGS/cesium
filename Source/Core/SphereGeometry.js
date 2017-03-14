@@ -4,7 +4,6 @@ define([
         './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './EllipsoidGeometry',
         './VertexFormat'
     ], function(
@@ -12,7 +11,6 @@ define([
         Check,
         defaultValue,
         defined,
-        DeveloperError,
         EllipsoidGeometry,
         VertexFormat) {
     'use strict';
@@ -72,7 +70,7 @@ define([
      */
     SphereGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(value, 'value');
+        Check.typeOf.object('value', value);
         //>>includeEnd('debug');
 
         return EllipsoidGeometry.pack(value._ellipsoidGeometry, array, startingIndex);

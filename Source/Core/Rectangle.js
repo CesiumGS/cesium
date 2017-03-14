@@ -5,7 +5,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './Ellipsoid',
         './freezeObject',
         './Math'
@@ -15,7 +14,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Ellipsoid,
         freezeObject,
         CesiumMath) {
@@ -109,8 +107,8 @@ define([
      */
     Rectangle.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(value, 'value');
-        Check.defined(array, 'array');
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -133,7 +131,7 @@ define([
      */
     Rectangle.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined(array, 'array');
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -156,7 +154,7 @@ define([
      */
     Rectangle.computeWidth = function(rectangle) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
         var east = rectangle.east;
         var west = rectangle.west;
@@ -173,7 +171,7 @@ define([
      */
     Rectangle.computeHeight = function(rectangle) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
         return rectangle.north - rectangle.south;
     };
@@ -210,6 +208,32 @@ define([
     };
 
     /**
+     * Creates an rectangle given the boundary longitude and latitude in radians.
+     *
+     * @param {Number} [west=0.0] The westernmost longitude in radians in the range [-Math.PI, Math.PI].
+     * @param {Number} [south=0.0] The southernmost latitude in radians in the range [-Math.PI/2, Math.PI/2].
+     * @param {Number} [east=0.0] The easternmost longitude in radians in the range [-Math.PI, Math.PI].
+     * @param {Number} [north=0.0] The northernmost latitude in radians in the range [-Math.PI/2, Math.PI/2].
+     * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
+     * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
+     *
+     * @example
+     * var rectangle = Cesium.Rectangle.fromRadians(0.0, Math.PI/4, Math.PI/8, 3*Math.PI/4);
+     */
+    Rectangle.fromRadians = function(west, south, east, north, result) {
+        if (!defined(result)) {
+            return new Rectangle(west, south, east, north);
+        }
+
+        result.west = defaultValue(west, 0.0);
+        result.south = defaultValue(south, 0.0);
+        result.east = defaultValue(east, 0.0);
+        result.north = defaultValue(north, 0.0);
+
+        return result;
+    };
+
+    /**
      * Creates the smallest possible Rectangle that encloses all positions in the provided array.
      *
      * @param {Cartographic[]} cartographics The list of Cartographic instances.
@@ -218,7 +242,7 @@ define([
      */
     Rectangle.fromCartographicArray = function(cartographics, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined(cartographics, 'cartographics');
+        Check.defined('cartographics', cartographics);
         //>>includeEnd('debug');
 
         var west = Number.MAX_VALUE;
@@ -273,7 +297,7 @@ define([
      */
     Rectangle.fromCartesianArray = function(cartesians, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined(cartesians, 'cartesians');
+        Check.defined('cartesians', cartesians);
         //>>includeEnd('debug');
 
         var west = Number.MAX_VALUE;
@@ -391,7 +415,7 @@ define([
      */
     Rectangle.prototype.equalsEpsilon = function(other, epsilon) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number(epsilon, 'epsilon');
+        Check.typeOf.number('epsilon', epsilon);
         //>>includeEnd('debug');
 
         return defined(other) &&
@@ -413,27 +437,23 @@ define([
      */
     Rectangle.validate = function(rectangle) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
+        Check.typeOf.object('rectangle', rectangle);
 
         var north = rectangle.north;
-        Check.typeOf.number(north, 'north');
-        Check.numeric.minimum(north, -CesiumMath.PI_OVER_TWO);
-        Check.numeric.maximum(north, CesiumMath.PI_OVER_TWO);
+        Check.typeOf.number.greaterThanOrEquals('north', north, -CesiumMath.PI_OVER_TWO);
+        Check.typeOf.number.lessThanOrEquals('north', north, CesiumMath.PI_OVER_TWO);
 
         var south = rectangle.south;
-        Check.typeOf.number(south, 'south');
-        Check.numeric.minimum(south, -CesiumMath.PI_OVER_TWO);
-        Check.numeric.maximum(south, CesiumMath.PI_OVER_TWO);
+        Check.typeOf.number.greaterThanOrEquals('south', south, -CesiumMath.PI_OVER_TWO);
+        Check.typeOf.number.lessThanOrEquals('south', south, CesiumMath.PI_OVER_TWO);
 
         var west = rectangle.west;
-        Check.typeOf.number(west, 'west');
-        Check.numeric.minimum(west, -Math.PI);
-        Check.numeric.maximum(west, Math.PI);
+        Check.typeOf.number.greaterThanOrEquals('west', west, -Math.PI);
+        Check.typeOf.number.lessThanOrEquals('west', west, Math.PI);
 
         var east = rectangle.east;
-        Check.typeOf.number(east, 'east');
-        Check.numeric.minimum(east, -Math.PI);
-        Check.numeric.maximum(east, Math.PI);
+        Check.typeOf.number.greaterThanOrEquals('east', east, -Math.PI);
+        Check.typeOf.number.lessThanOrEquals('east', east, Math.PI);
         //>>includeEnd('debug');
     };
 
@@ -446,7 +466,7 @@ define([
      */
     Rectangle.southwest = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -467,7 +487,7 @@ define([
      */
     Rectangle.northwest = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -488,7 +508,7 @@ define([
      */
     Rectangle.northeast = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -509,7 +529,7 @@ define([
      */
     Rectangle.southeast = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -530,7 +550,7 @@ define([
      */
     Rectangle.center = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         var east = rectangle.east;
@@ -567,8 +587,8 @@ define([
      */
     Rectangle.intersection = function(rectangle, otherRectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
-        Check.typeOf.object(otherRectangle, 'otherRectangle');
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('otherRectangle', otherRectangle);
         //>>includeEnd('debug');
 
         var rectangleEast = rectangle.east;
@@ -626,8 +646,8 @@ define([
      */
     Rectangle.simpleIntersection = function(rectangle, otherRectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
-        Check.typeOf.object(otherRectangle, 'otherRectangle');
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('otherRectangle', otherRectangle);
         //>>includeEnd('debug');
 
         var west = Math.max(rectangle.west, otherRectangle.west);
@@ -660,8 +680,8 @@ define([
      */
     Rectangle.union = function(rectangle, otherRectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
-        Check.typeOf.object(otherRectangle, 'otherRectangle');
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('otherRectangle', otherRectangle);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -707,8 +727,8 @@ define([
      */
     Rectangle.expand = function(rectangle, cartographic, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
-        Check.typeOf.object(cartographic, 'cartographic');
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('cartographic', cartographic);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -732,8 +752,8 @@ define([
      */
     Rectangle.contains = function(rectangle, cartographic) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
-        Check.typeOf.object(cartographic, 'cartographic');
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('cartographic', cartographic);
         //>>includeEnd('debug');
 
         var longitude = cartographic.longitude;
@@ -768,7 +788,7 @@ define([
      */
     Rectangle.subsample = function(rectangle, ellipsoid, surfaceHeight, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(rectangle, 'rectangle');
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);

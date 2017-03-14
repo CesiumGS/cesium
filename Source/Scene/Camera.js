@@ -14,6 +14,7 @@ define([
         '../Core/EllipsoidGeodesic',
         '../Core/Event',
         '../Core/HeadingPitchRange',
+        '../Core/HeadingPitchRoll',
         '../Core/Intersect',
         '../Core/IntersectionTests',
         '../Core/Math',
@@ -42,6 +43,7 @@ define([
         EllipsoidGeodesic,
         Event,
         HeadingPitchRange,
+        HeadingPitchRoll,
         Intersect,
         IntersectionTests,
         CesiumMath,
@@ -257,6 +259,12 @@ define([
      * @type Number
      */
     Camera.DEFAULT_VIEW_FACTOR = 0.5;
+
+    /**
+     * The default heading/pitch/range that is used when the camera flies to a location that contains a bounding sphere.
+     * @type HeadingPitchRange
+     */
+    Camera.DEFAULT_OFFSET = new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_FOUR, 0.0);
 
     function updateViewMatrix(camera) {
         Matrix4.computeView(camera._position, camera._direction, camera._up, camera._right, camera._viewMatrix);
@@ -963,14 +971,15 @@ define([
     var scratchSetViewMatrix3 = new Matrix3();
     var scratchSetViewCartographic = new Cartographic();
 
-    function setView3D(camera, position, heading, pitch, roll) {
+    function setView3D(camera, position, hpr) {
         var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
         var localTransform = Transforms.eastNorthUpToFixedFrame(position, camera._projection.ellipsoid, scratchSetViewTransform2);
         camera._setTransform(localTransform);
 
         Cartesian3.clone(Cartesian3.ZERO, camera.position);
+        hpr.heading = hpr.heading - CesiumMath.PI_OVER_TWO;
 
-        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
+        var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
         var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
 
         Matrix3.getColumn(rotMat, 0, camera.direction);
@@ -980,7 +989,7 @@ define([
         camera._setTransform(currentTransform);
     }
 
-    function setViewCV(camera, position, heading, pitch, roll, convert) {
+    function setViewCV(camera, position,hpr, convert) {
         var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
         camera._setTransform(Matrix4.IDENTITY);
 
@@ -992,8 +1001,9 @@ define([
             }
             Cartesian3.clone(position, camera.position);
         }
+        hpr.heading = hpr.heading - CesiumMath.PI_OVER_TWO;
 
-        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
+        var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
         var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
 
         Matrix3.getColumn(rotMat, 0, camera.direction);
@@ -1003,10 +1013,7 @@ define([
         camera._setTransform(currentTransform);
     }
 
-    function setView2D(camera, position, heading, convert) {
-        var pitch = -CesiumMath.PI_OVER_TWO;
-        var roll = 0.0;
-
+    function setView2D(camera, position, hpr, convert) {
         var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
         camera._setTransform(Matrix4.IDENTITY);
 
@@ -1033,7 +1040,10 @@ define([
         }
 
         if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
-            var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
+            hpr.heading = hpr.heading  - CesiumMath.PI_OVER_TWO;
+            hpr.pitch = -CesiumMath.PI_OVER_TWO;
+            hpr.roll =  0.0;
+            var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
             var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
 
             Matrix3.getColumn(rotMat, 2, camera.up);
@@ -1082,6 +1092,7 @@ define([
         endTransform : undefined
     };
 
+    var scratchHpr = new HeadingPitchRoll();
     /**
      * Sets the camera position, orientation and transform.
      *
@@ -1156,18 +1167,18 @@ define([
             orientation = directionUpToHeadingPitchRoll(this, destination, orientation, scratchSetViewOptions.orientation);
         }
 
-        var heading = defaultValue(orientation.heading, 0.0);
-        var pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
-        var roll = defaultValue(orientation.roll, 0.0);
+        scratchHpr.heading = defaultValue(orientation.heading, 0.0);
+        scratchHpr.pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
+        scratchHpr.roll = defaultValue(orientation.roll, 0.0);
 
         this._suspendTerrainAdjustment = true;
 
         if (mode === SceneMode.SCENE3D) {
-            setView3D(this, destination, heading, pitch, roll);
+            setView3D(this, destination, scratchHpr);
         } else if (mode === SceneMode.SCENE2D) {
-            setView2D(this, destination, heading, convert);
+            setView2D(this, destination, scratchHpr, convert);
         } else {
-            setViewCV(this, destination, heading, pitch, roll, convert);
+            setViewCV(this, destination, scratchHpr, convert);
         }
     };
 
@@ -2559,6 +2570,9 @@ define([
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
+     * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
+     * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
+     * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
      * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      *
      * @exception {DeveloperError} If either direction or up is given, then both are required.
@@ -2654,6 +2668,9 @@ define([
         newOptions.endTransform = options.endTransform;
         newOptions.convert = isRectangle ? false : options.convert;
         newOptions.maximumHeight = options.maximumHeight;
+        newOptions.pitchAdjustHeight = options.pitchAdjustHeight;
+        newOptions.flyOverLongitude = options.flyOverLongitude;
+        newOptions.flyOverLongitudeWeight = options.flyOverLongitudeWeight;
         newOptions.easingFunction = options.easingFunction;
 
         var scene = this._scene;
@@ -2685,12 +2702,11 @@ define([
         return Math.max(right, top) * 1.50;
     }
 
-    var scratchDefaultOffset = new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_FOUR, 0.0);
     var MINIMUM_ZOOM = 100.0;
 
     function adjustBoundingSphereOffset(camera, boundingSphere, offset) {
         if (!defined(offset)) {
-            offset = HeadingPitchRange.clone(scratchDefaultOffset);
+            offset = HeadingPitchRange.clone(Camera.DEFAULT_OFFSET);
         }
 
         var range = offset.range;
@@ -2768,6 +2784,9 @@ define([
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
+     * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
+     * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
+     * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
      * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      */
     Camera.prototype.flyToBoundingSphere = function(boundingSphere, options) {
@@ -2825,7 +2844,10 @@ define([
             cancel : options.cancel,
             endTransform : options.endTransform,
             maximumHeight : options.maximumHeight,
-            easingFunction : options.easingFunction
+            easingFunction : options.easingFunction,
+            flyOverLongitude : options.flyOverLongitude,
+            flyOverLongitudeWeight : options.flyOverLongitudeWeight,
+            pitchAdjustHeight : options.pitchAdjustHeight
         });
     };
 

@@ -8,6 +8,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/GeometryInstance',
+        'Core/Math',
         'Core/PixelFormat',
         'Core/Rectangle',
         'Core/RectangleGeometry',
@@ -18,7 +19,9 @@ defineSuite([
         'Renderer/Framebuffer',
         'Renderer/Pass',
         'Renderer/PixelDatatype',
+        'Renderer/RenderState',
         'Renderer/ShaderProgram',
+        'Renderer/ShaderSource',
         'Renderer/Texture',
         'Scene/Camera',
         'Scene/EllipsoidSurfaceAppearance',
@@ -43,6 +46,7 @@ defineSuite([
         Ellipsoid,
         GeographicProjection,
         GeometryInstance,
+        CesiumMath,
         PixelFormat,
         Rectangle,
         RectangleGeometry,
@@ -53,7 +57,9 @@ defineSuite([
         Framebuffer,
         Pass,
         PixelDatatype,
+        RenderState,
         ShaderProgram,
+        ShaderSource,
         Texture,
         Camera,
         EllipsoidSurfaceAppearance,
@@ -72,9 +78,21 @@ defineSuite([
     'use strict';
 
     var scene;
+    var simpleShaderProgram;
+    var simpleRenderState;
 
     beforeAll(function() {
         scene = createScene();
+        simpleShaderProgram = ShaderProgram.fromCache({
+            context : scene.context,
+            vertexShaderSource : new ShaderSource({
+                sources : ['void main() { gl_Position = vec4(1.0); }']
+            }),
+            fragmentShaderSource : new ShaderSource({
+                sources : ['void main() { gl_FragColor = vec4(1.0); }']
+            })
+        });
+        simpleRenderState = new RenderState();
     });
 
     afterEach(function() {
@@ -82,7 +100,7 @@ defineSuite([
         scene.debugCommandFilter = undefined;
         scene.fxaa = false;
         scene.primitives.removeAll();
-        scene.morphTo3D();
+        scene.morphTo3D(0.0);
     });
 
     afterAll(function() {
@@ -165,10 +183,10 @@ defineSuite([
     });
 
     it('draws background color', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.backgroundColor = Color.BLUE;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it('calls afterRender functions', function() {
@@ -197,6 +215,8 @@ defineSuite([
 
     it('debugCommandFilter filters commands', function() {
         var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
             pass : Pass.OPAQUE
         });
         c.execute = function() {};
@@ -214,6 +234,8 @@ defineSuite([
 
     it('debugCommandFilter does not filter commands', function() {
         var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
             pass : Pass.OPAQUE
         });
         c.execute = function() {};
@@ -227,30 +249,31 @@ defineSuite([
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
-        var radius = Cartesian3.magnitude(scene.camera.position) - 10.0;
+        var radius = 10.0;
+        var center = Cartesian3.add(scene.camera.position, scene.camera.direction, new Cartesian3());
 
         var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
             pass : Pass.OPAQUE,
             debugShowBoundingVolume : true,
-            boundingVolume : new BoundingSphere(Cartesian3.ZERO, radius)
+            boundingVolume : new BoundingSphere(center, radius)
         });
         c.execute = function() {};
 
         scene.primitives.add(new CommandMockPrimitive(c));
         scene.depthTestAgainstTerrain = true;
 
-        expect(scene.renderForSpecs()[0]).not.toEqual(0);  // Red bounding sphere
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);  // Red bounding sphere
+        });
     });
 
     it('debugShowCommands tints commands', function() {
         var c = new DrawCommand({
-            pass : Pass.OPAQUE,
-
-            shaderProgram : ShaderProgram.fromCache({
-                context : scene.context,
-                vertexShaderSource : 'void main() { gl_Position = vec4(1.0); }',
-                fragmentShaderSource : 'void main() { gl_FragColor = vec4(1.0); }'
-            })
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
+            pass : Pass.OPAQUE
         });
         c.execute = function() {};
 
@@ -288,10 +311,11 @@ defineSuite([
         rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
         scene.primitives.add(rectanglePrimitive);
+        expect(scene).toRender([255, 0, 0, 255]);
 
-        expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
         scene.debugShowGlobeDepth = true;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
+
         scene.debugShowGlobeDepth = false;
     });
 
@@ -309,18 +333,18 @@ defineSuite([
         primitives.add(rectanglePrimitive2);
 
         scene.camera.setView({ destination : rectangle });
-
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).not.toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).not.toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
 
         primitives.raiseToTop(rectanglePrimitive1);
-
-        pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).not.toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).not.toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
     });
 
     it('opaque/translucent render order (2)', function() {
@@ -337,18 +361,18 @@ defineSuite([
         primitives.add(rectanglePrimitive2);
 
         scene.camera.setView({ destination : rectangle });
-
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
 
         primitives.raiseToTop(rectanglePrimitive1);
-
-        pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
     });
 
     it('renders fast path with no translucent primitives', function() {
@@ -361,11 +385,11 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.camera.setView({ destination : rectangle });
-
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
     });
 
     it('renders with OIT and without FXAA', function() {
@@ -378,13 +402,12 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.camera.setView({ destination : rectangle });
-
         scene.fxaa = false;
-
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
     });
 
     it('renders with forced FXAA', function() {
@@ -438,15 +461,16 @@ defineSuite([
 
         s.camera.setView({ destination : rectangle });
 
-        var pixels = s.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        expect(s).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
 
         s.destroyForSpecs();
     });
 
-    it('setting a central body', function() {
+    it('setting a globe', function() {
         var scene = createScene();
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var globe = new Globe(ellipsoid);
@@ -470,7 +494,7 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
-    it('renders a central body', function() {
+    it('renders a globe', function() {
         var s = createScene();
 
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
@@ -478,11 +502,14 @@ defineSuite([
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
 
-        s.renderForSpecs();
+        // To avoid Jasmine's spec has no expectations error
+        expect(true).toEqual(true);
 
-        return pollToPromise(function() {
-            render(s.frameState, s.globe);
-            return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+        return expect(s).toRenderAndCall(function() {
+            return pollToPromise(function() {
+                render(s.frameState, s.globe);
+                return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+            });
         });
     });
 
@@ -503,10 +530,11 @@ defineSuite([
 
                 s.camera.setView({ destination : rectangle });
 
-                var pixels = s.renderForSpecs();
-                expect(pixels[0]).not.toEqual(0);
-                expect(pixels[1]).toEqual(0);
-                expect(pixels[2]).toEqual(0);
+                expect(s).toRenderAndCall(function(rgba) {
+                    expect(rgba[0]).not.toEqual(0);
+                    expect(rgba[1]).toEqual(0);
+                    expect(rgba[2]).toEqual(0);
+                });
             }
 
             s.destroyForSpecs();
@@ -532,10 +560,11 @@ defineSuite([
 
             s.camera.setView({ destination : rectangle });
 
-            var pixels = s.renderForSpecs();
-            expect(pixels[0]).not.toEqual(0);
-            expect(pixels[1]).toEqual(0);
-            expect(pixels[2]).toEqual(0);
+            expect(s).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).not.toEqual(0);
+                expect(rgba[1]).toEqual(0);
+                expect(rgba[2]).toEqual(0);
+            });
         }
         s.destroyForSpecs();
     });
@@ -556,10 +585,11 @@ defineSuite([
             convert : false
         });
 
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
     });
 
     it('renders map when the camera is on the IDL in 2D', function() {
@@ -581,10 +611,11 @@ defineSuite([
             convert : false
         });
 
-        var pixels = s.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
+        expect(s).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
 
         s.destroyForSpecs();
     });
@@ -604,16 +635,21 @@ defineSuite([
 
             var uniformState = scene.context.uniformState;
 
-            scene.renderForSpecs();
-            expect(uniformState.globeDepthTexture).not.toBeDefined();
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(uniformState.globeDepthTexture).not.toBeDefined();
+            });
 
             scene.copyGlobeDepth = true;
-            scene.renderForSpecs();
-            expect(uniformState.globeDepthTexture).toBeDefined();
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(uniformState.globeDepthTexture).toBeDefined();
+            });
         }
 
         scene.destroyForSpecs();
     });
+
+    var pickedPosition3D = new Cartesian3(-455845.46867895435, -5210337.548977215, 3637549.8562320103);
+    var pickedPosition2D = new Cartesian3(-455861.7055871038, -5210523.137686572, 3637866.6638769475);
 
     it('pickPosition', function() {
         if (!scene.pickPositionSupported) {
@@ -623,24 +659,84 @@ defineSuite([
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
         scene.camera.setView({ destination : rectangle });
 
-        scene.renderForSpecs();
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toEqualEpsilon(pickedPosition3D, CesiumMath.EPSILON6);
+        });
+    });
+
+    it('pickPosition in CV', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        scene.morphToColumbusView(0.0);
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({ destination : rectangle });
 
         var canvas = scene.canvas;
         var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        var position = scene.pickPosition(windowPosition);
-        expect(position).not.toBeDefined();
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
 
-        var rectanglePrimitive = createRectangle(rectangle);
-        rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
-        var primitives = scene.primitives;
-        primitives.add(rectanglePrimitive);
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
 
-        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON6);
+        });
+    });
 
-        position = scene.pickPosition(windowPosition);
-        expect(position).toBeDefined();
+    it('pickPosition in 2D', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        scene.morphTo2D(0.0);
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({ destination : rectangle });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON6);
+        });
     });
 
     it('pickPosition returns undefined when useDepthPicking is false', function() {
@@ -663,18 +759,76 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.useDepthPicking = false;
-
-        scene.renderForSpecs();
-
-        var position = scene.pickPosition(windowPosition);
-        expect(position).not.toBeDefined();
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+        });
 
         scene.useDepthPicking = true;
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toBeDefined();
+        });
+    });
 
-        scene.renderForSpecs();
+    it('pickPosition picks translucent geometry when pickTranslucentDepth is true', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
 
-        position = scene.pickPosition(windowPosition);
-        expect(position).toBeDefined();
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({
+            destination : rectangle
+        });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        var rectanglePrimitive = createRectangle(rectangle);
+        rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive);
+
+        scene.useDepthPicking = true;
+        scene.pickTranslucentDepth = false;
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+        });
+
+        scene.pickTranslucentDepth = true;
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toBeDefined();
+        });
+
+        var rectanglePrimitive2 = createRectangle(rectangle);
+        rectanglePrimitive2.appearance.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
+        primitives.add(rectanglePrimitive2);
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toBeDefined();
+
+            var commandList = scene.frameState.commandList;
+            expect(commandList.length).toEqual(2);
+
+            var command1 = commandList[0];
+            var command2 = commandList[1];
+
+            expect(command1.derivedCommands).toBeDefined();
+            expect(command2.derivedCommands).toBeDefined();
+
+            expect(command1.derivedCommands.depth).toBeDefined();
+            expect(command2.derivedCommands.depth).toBeDefined();
+
+            expect(command1.derivedCommands.depth.depthOnlyCommand).toBeDefined();
+            expect(command2.derivedCommands.depth.depthOnlyCommand).toBeDefined();
+
+            expect(command1.derivedCommands.depth.depthOnlyCommand.shaderProgram).toEqual(command2.derivedCommands.depth.depthOnlyCommand.shaderProgram);
+            expect(command1.derivedCommands.depth.depthOnlyCommand.renderState).toEqual(command2.derivedCommands.depth.depthOnlyCommand.renderState);
+        });
     });
 
     it('pickPosition throws without windowPosition', function() {
@@ -895,7 +1049,7 @@ defineSuite([
         }
         s.destroyForSpecs();
     });
-    
+
     it('does not throw with debugShowFrustums', function() {
         var s = createScene();
         if (s.context.drawBuffers) {

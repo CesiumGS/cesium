@@ -2,13 +2,11 @@
 define([
         './Check',
         './defaultValue',
-        './defined',
-        './DeveloperError'
+        './defined'
     ], function(
         Check,
         defaultValue,
-        defined,
-        DeveloperError) {
+        defined) {
     'use strict';
 
     /**
@@ -36,7 +34,7 @@ define([
      */
     Spherical.fromCartesian3 = function(cartesian3, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(cartesian3, 'cartesian3');
+        Check.typeOf.object('cartesian3', cartesian3);
         //>>includeEnd('debug');
 
         var x = cartesian3.x;
@@ -85,7 +83,7 @@ define([
      */
     Spherical.normalize = function(spherical, result) {
       //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(spherical, 'spherical');
+        Check.typeOf.object('spherical', spherical);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
