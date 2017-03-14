@@ -417,7 +417,76 @@ define([
         return unitQuaternion;
     }
 
+    function getPropertyType(czmlInterval) {
+        // The associations in this function need to be kept in sync with the
+        // associations in unwrapInterval.
+
+        // Intentionally omitted due to conficts in CZML property names:
+        // * Image (conflicts with Uri)
+        // * Rotation (conflicts with Number)
+
+        if (czmlInterval.hasOwnProperty('array')) {
+            return Array;
+        } else if (czmlInterval.hasOwnProperty('boolean')) {
+            return Boolean;
+        } else if (czmlInterval.hasOwnProperty('boundingRectangle')) {
+            return BoundingRectangle;
+        } else if (czmlInterval.hasOwnProperty('cartesian2')) {
+            return Cartesian2;
+        } else if (czmlInterval.hasOwnProperty('cartesian') ||
+                   czmlInterval.hasOwnProperty('cartesianVelocity') ||
+                   czmlInterval.hasOwnProperty('unitCartesian') ||
+                   czmlInterval.hasOwnProperty('unitSpherical') ||
+                   czmlInterval.hasOwnProperty('spherical') ||
+                   czmlInterval.hasOwnProperty('cartographicRadians') ||
+                   czmlInterval.hasOwnProperty('cartographicDegrees')) {
+            return Cartesian3;
+        } else if (czmlInterval.hasOwnProperty('rgba') ||
+                   czmlInterval.hasOwnProperty('rgbaf')) {
+            return Color;
+        } else if (czmlInterval.hasOwnProperty('colorBlendMode')) {
+            return ColorBlendMode;
+        } else if (czmlInterval.hasOwnProperty('cornerType')) {
+            return CornerType;
+        } else if (czmlInterval.hasOwnProperty('heightReference')) {
+            return HeightReference;
+        } else if (czmlInterval.hasOwnProperty('horizontalOrigin')) {
+            return HorizontalOrigin;
+        } else if (czmlInterval.hasOwnProperty('date')) {
+            return JulianDate;
+        } else if (czmlInterval.hasOwnProperty('labelStyle')) {
+            return LabelStyle;
+        } else if (czmlInterval.hasOwnProperty('number')) {
+            return Number;
+        } else if (czmlInterval.hasOwnProperty('nearFarScalar')) {
+            return NearFarScalar;
+        } else if (czmlInterval.hasOwnProperty('object') ||
+                   czmlInterval.hasOwnProperty('value')) {
+            return Object;
+        } else if (czmlInterval.hasOwnProperty('unitQuaternion')) {
+            return Quaternion;
+        } else if (czmlInterval.hasOwnProperty('shadows')) {
+            return ShadowMode;
+        } else if (czmlInterval.hasOwnProperty('string')) {
+            return String;
+        } else if (czmlInterval.hasOwnProperty('stripeOrientation')) {
+            return StripeOrientation;
+        } else if (czmlInterval.hasOwnProperty('wsen') ||
+                   czmlInterval.hasOwnProperty('wsenDegrees')) {
+            return Rectangle;
+        } else if (czmlInterval.hasOwnProperty('uri')) {
+            return Uri;
+        } else if (czmlInterval.hasOwnProperty('verticalOrigin')) {
+            return VerticalOrigin;
+        } else {
+            // fallback case
+            return Object;
+        }
+    }
+
     function unwrapInterval(type, czmlInterval, sourceUri) {
+        // The associations in this function need to be kept in sync with the
+        // associations in getPropertyType
         /*jshint sub:true*/
         switch (type) {
             case Array:
@@ -451,7 +520,7 @@ define([
             case NearFarScalar:
                 return czmlInterval.nearFarScalar;
             case Object:
-                return defaultValue(czmlInterval.value, czmlInterval);
+                return defaultValue(defaultValue(czmlInterval.object, czmlInterval.value), czmlInterval);
             case Quaternion:
                 return unwrapQuaternionInterval(czmlInterval);
             case Rotation:
@@ -987,23 +1056,30 @@ define([
         }
     }
 
-    //Process the 'properties' property
     function processProperties(entity, packet, entityCollection, sourceUri) {
         var propertiesData = packet.properties;
         if (defined(propertiesData)) {
             if (!defined(entity.properties)) {
                 entity.properties = new PropertyBag();
             }
-            var key;
             //We cannot simply call processPacketData(entity, 'properties', propertyData, undefined, sourceUri, entityCollection)
             //because each property of "properties" may vary separately.
             //The properties will be accessible as entity.properties.myprop.getValue(time).
-            for (key in propertiesData) {
+
+            for (var key in propertiesData) {
                 if (propertiesData.hasOwnProperty(key)) {
                     if (!entity.properties.hasProperty(key)) {
                         entity.properties.addProperty(key);
                     }
-                    processPacketData(Object, entity.properties, key, propertiesData[key], undefined, sourceUri, entityCollection);
+
+                    var propertyData = propertiesData[key];
+                    if (isArray(propertyData)) {
+                        for (var i = 0, len = propertyData.length; i < len; i++) {
+                            processProperty(getPropertyType(propertyData[i]), entity.properties, key, propertyData[i], undefined, sourceUri, entityCollection);
+                        }
+                    } else {
+                        processProperty(getPropertyType(propertyData), entity.properties, key, propertyData, undefined, sourceUri, entityCollection);
+                    }
                 }
             }
         }

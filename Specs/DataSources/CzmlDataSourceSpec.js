@@ -1475,6 +1475,40 @@ defineSuite([
         expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray);
     });
 
+    it('works with properties which are constant with specified type.', function() {
+        var testObject = {
+            foo: 4,
+            bar: {
+                name: 'bar'
+            }
+        };
+        var testArray = [2, 4, 16, 'test'];
+        var packet = {
+            properties: {
+                constant_name: {
+                    string: 'ABC'
+                },
+                constant_height: {
+                    number: 8
+                },
+                constant_object: {
+                    object: testObject
+                },
+                constant_array: {
+                    array: testArray
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+        expect(entity.properties.constant_name.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_name.string);
+        expect(entity.properties.constant_height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_height.number);
+        expect(entity.properties.constant_object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject);
+        expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray);
+    });
+
     it('works with properties with one interval.', function() {
         var packet = {
             properties: {
@@ -1496,9 +1530,30 @@ defineSuite([
         expect(entity.properties.changing_name.getValue(time2)).toBeUndefined();
     });
 
+    it('works with properties with one interval with specified type.', function() {
+        var packet = {
+            properties: {
+                changing_name: {
+                    interval: '2012/2014',
+                    string: 'ABC'
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+
+        var time1 = JulianDate.fromIso8601('2013');
+        var time2 = JulianDate.fromIso8601('2015');
+
+        expect(entity.properties.changing_name.getValue(time1)).toEqual('ABC');
+        expect(entity.properties.changing_name.getValue(time2)).toBeUndefined();
+    });
+
     it('works with properties with multiple intervals.', function() {
-        var array1 = [1, 2, 3],
-            array2 = [4, 5, 6];
+        var array1 = [1, 2, 3];
+        var array2 = [4, 5, 6];
         var packet = {
             properties: {
                 changing_array: [
@@ -1523,6 +1578,317 @@ defineSuite([
 
         expect(entity.properties.changing_array.getValue(time1)).toEqual(array1);
         expect(entity.properties.changing_array.getValue(time2)).toEqual(array2);
+    });
+
+    it('handles boolean custom properties with intervals.', function() {
+        var packet = {
+            id: 'MyID',
+            properties: {
+                custom_boolean: [
+                    {
+                        interval: '2012-04-02T12:00:00Z/2012-04-02T12:00:01Z',
+                        boolean: true
+                    },
+                    {
+                        interval: '2012-04-02T12:00:01Z/2012-04-02T12:00:02Z',
+                        boolean: false
+                    },
+                    {
+                        interval: '2012-04-02T12:00:02Z/2012-04-02T12:01:00Z',
+                        boolean: true
+                    }
+                ]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.getById('MyID');
+        expect(entity).toBeDefined();
+        expect(entity.properties).toBeDefined();
+        expect(entity.properties.custom_boolean).toBeDefined();
+
+        expect(entity.properties.custom_boolean.getValue(JulianDate.fromIso8601('2012-04-02T12:00:00Z'))).toEqual(true);
+        expect(entity.properties.custom_boolean.getValue(JulianDate.fromIso8601('2012-04-02T12:00:01Z'))).toEqual(false);
+        expect(entity.properties.custom_boolean.getValue(JulianDate.fromIso8601('2012-04-02T12:00:02Z'))).toEqual(true);
+    });
+
+    it('works with properties with multiple intervals with specified type.', function() {
+        var array1 = [1, 2, 3];
+        var array2 = [4, 5, 6];
+        var packet = {
+            properties: {
+                changing_array: [
+                    {
+                        interval: '2012/2013',
+                        array: array1
+                    },
+                    {
+                        interval: '2013/2014',
+                        array: array2
+                    }
+                ]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+
+        var time1 = JulianDate.fromIso8601('2012-06-01');
+        var time2 = JulianDate.fromIso8601('2013-06-01');
+
+        expect(entity.properties.changing_array.getValue(time1)).toEqual(array1);
+        expect(entity.properties.changing_array.getValue(time2)).toEqual(array2);
+    });
+
+    it('handles sampled custom properties.', function() {
+        var packet = {
+            id: 'MyID',
+            properties: {
+                custom_cartesian: {
+                    epoch: '2012-04-02T12:00:00Z',
+                    cartesian: [
+                        0, 1, 2, 3,
+                        60, 4, 5, 6,
+                        120, 7, 8, 9
+                    ]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.getById('MyID');
+        expect(entity).toBeDefined();
+        expect(entity.properties).toBeDefined();
+        expect(entity.properties.custom_cartesian).toBeDefined();
+
+        expect(entity.properties.custom_cartesian.getValue(JulianDate.fromIso8601('2012-04-02T12:00:00Z'))).toBeInstanceOf(Cartesian3);
+        expect(entity.properties.custom_cartesian.getValue(JulianDate.fromIso8601('2012-04-02T12:00:00Z'))).toEqual(new Cartesian3(1, 2, 3));
+        // halfway between two samples, linearly interpolated
+        expect(entity.properties.custom_cartesian.getValue(JulianDate.fromIso8601('2012-04-02T12:00:30Z'))).toEqual(new Cartesian3((1 + 4) / 2, (2 + 5) / 2, (3 + 6) / 2));
+        expect(entity.properties.custom_cartesian.getValue(JulianDate.fromIso8601('2012-04-02T12:01:00Z'))).toEqual(new Cartesian3(4, 5, 6));
+        expect(entity.properties.custom_cartesian.getValue(JulianDate.fromIso8601('2012-04-02T12:02:00Z'))).toEqual(new Cartesian3(7, 8, 9));
+    });
+
+    it('handles various types of custom properties.', function() {
+        var interval1 = '2012/2013';
+        var interval2 = '2013/2014';
+        var packet = {
+            id: 'MyID',
+            properties: {
+                custom_array_constant: {
+                    array: [1, 2, 3]
+                },
+                custom_array_interval: [
+                    {
+                        interval: interval1,
+                        array: [1, 2, 3]
+                    },
+                    {
+                        interval: interval2,
+                        array: [4, 5, 6]
+                    }
+                ],
+                custom_boolean_constant: {
+                    boolean: true
+                },
+                custom_boolean_interval: [
+                    {
+                        interval: interval1,
+                        boolean: true
+                    },
+                    {
+                        interval: interval2,
+                        boolean: false
+                    }
+                ],
+                custom_boundingRectangle_constant: {
+                    boundingRectangle: [20, 30, 10, 11]
+                },
+                custom_boundingRectangle_interval: [
+                    {
+                        interval: interval1,
+                        boundingRectangle: [20, 30, 10, 11]
+                    },
+                    {
+                        interval: interval2,
+                        boundingRectangle: [21, 31, 11, 12]
+                    }
+                ],
+                custom_boundingRectangle_sampled: {
+                    epoch: '2012-06-01',
+                    boundingRectangle: [
+                        0, 20, 30, 10, 11,
+                        60, 21, 31, 11, 12
+                    ]
+                },
+                custom_cartesian2_constant: {
+                    cartesian2: [20, 30]
+                },
+                custom_cartesian2_interval: [
+                    {
+                        interval: interval1,
+                        cartesian2: [20, 30]
+                    },
+                    {
+                        interval: interval2,
+                        cartesian2: [21, 31]
+                    }
+                ],
+                custom_cartesian2_sampled: {
+                    epoch: '2012-06-01',
+                    cartesian2: [
+                        0, 20, 30,
+                        60, 21, 31
+                    ]
+                },
+                custom_cartesian_constant: {
+                    cartesian: [10, 11, 12]
+                },
+                custom_cartesian_interval: [
+                    {
+                        interval: interval1,
+                        cartesian: [10, 11, 12]
+                    },
+                    {
+                        interval: interval2,
+                        cartesian: [13, 14, 15]
+                    }
+                ],
+                custom_cartesian_sampled: {
+                    epoch: '2012-06-01',
+                    cartesian: [
+                        0, 10, 11, 12,
+                        60, 13, 14, 15
+                    ]
+                },
+                custom_color_constant: {
+                    rgbaf: [0.1, 0.2, 0.3, 0.4]
+                },
+                custom_color_interval: [
+                    {
+                        interval: interval1,
+                        rgbaf: [0.1, 0.2, 0.3, 0.4]
+                    },
+                    {
+                        interval: interval2,
+                        rgbaf: [0.5, 0.6, 0.7, 0.8]
+                    }
+                ],
+                custom_color_sampled: {
+                    epoch: '2012-06-01',
+                    rgbaf: [
+                        0, 0.1, 0.2, 0.3, 0.4,
+                        60, 0.5, 0.6, 0.7, 0.8
+                    ]
+                },
+                custom_date_constant: {
+                    date: '2014-06-01'
+                },
+                custom_date_interval: [
+                    {
+                        interval: interval1,
+                        date: '2014-06-01'
+                    },
+                    {
+                        interval: interval2,
+                        date: '2015-06-01'
+                    }
+                ]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.getById('MyID');
+        expect(entity).toBeDefined();
+        expect(entity.properties).toBeDefined();
+
+        var time1 = JulianDate.fromIso8601('2012-06-01');
+        var time2 = JulianDate.fromIso8601('2013-06-01');
+
+        expect(entity.properties.custom_array_constant).toBeDefined();
+        expect(entity.properties.custom_array_constant.getValue(time1)).toBeInstanceOf(Array);
+        expect(entity.properties.custom_array_constant.getValue(time1)).toEqual(packet.properties.custom_array_constant.array);
+
+        expect(entity.properties.custom_array_interval).toBeDefined();
+        expect(entity.properties.custom_array_interval.getValue(time1)).toBeInstanceOf(Array);
+        expect(entity.properties.custom_array_interval.getValue(time1)).toEqual(packet.properties.custom_array_interval[0].array);
+        expect(entity.properties.custom_array_interval.getValue(time2)).toEqual(packet.properties.custom_array_interval[1].array);
+
+        expect(entity.properties.custom_boolean_constant).toBeDefined();
+        expect(entity.properties.custom_boolean_constant.getValue(time1)).toEqual(packet.properties.custom_boolean_constant.boolean);
+
+        expect(entity.properties.custom_boolean_interval).toBeDefined();
+        expect(entity.properties.custom_boolean_interval.getValue(time1)).toEqual(packet.properties.custom_boolean_interval[0].boolean);
+        expect(entity.properties.custom_boolean_interval.getValue(time2)).toEqual(packet.properties.custom_boolean_interval[1].boolean);
+
+        expect(entity.properties.custom_boundingRectangle_constant).toBeDefined();
+        expect(entity.properties.custom_boundingRectangle_constant.getValue(time1)).toBeInstanceOf(BoundingRectangle);
+        expect(entity.properties.custom_boundingRectangle_constant.getValue(time1)).toEqual(BoundingRectangle.unpack(packet.properties.custom_boundingRectangle_constant.boundingRectangle));
+
+        expect(entity.properties.custom_boundingRectangle_interval).toBeDefined();
+        expect(entity.properties.custom_boundingRectangle_interval.getValue(time1)).toBeInstanceOf(BoundingRectangle);
+        expect(entity.properties.custom_boundingRectangle_interval.getValue(time1)).toEqual(BoundingRectangle.unpack(packet.properties.custom_boundingRectangle_interval[0].boundingRectangle));
+        expect(entity.properties.custom_boundingRectangle_interval.getValue(time2)).toEqual(BoundingRectangle.unpack(packet.properties.custom_boundingRectangle_interval[1].boundingRectangle));
+
+        expect(entity.properties.custom_boundingRectangle_sampled).toBeDefined();
+        expect(entity.properties.custom_boundingRectangle_sampled.getValue(time1)).toBeInstanceOf(BoundingRectangle);
+        expect(entity.properties.custom_boundingRectangle_sampled.getValue(time1)).toEqual(BoundingRectangle.unpack(packet.properties.custom_boundingRectangle_sampled.boundingRectangle, 0 + 1));
+        expect(entity.properties.custom_boundingRectangle_sampled.getValue(JulianDate.addSeconds(time1, 60, new JulianDate()))).toEqual(BoundingRectangle.unpack(packet.properties.custom_boundingRectangle_sampled.boundingRectangle, 4 + 2));
+
+        expect(entity.properties.custom_cartesian2_constant).toBeDefined();
+        expect(entity.properties.custom_cartesian2_constant.getValue(time1)).toBeInstanceOf(Cartesian2);
+        expect(entity.properties.custom_cartesian2_constant.getValue(time1)).toEqual(Cartesian2.unpack(packet.properties.custom_cartesian2_constant.cartesian2));
+
+        expect(entity.properties.custom_cartesian2_interval).toBeDefined();
+        expect(entity.properties.custom_cartesian2_interval.getValue(time1)).toBeInstanceOf(Cartesian2);
+        expect(entity.properties.custom_cartesian2_interval.getValue(time1)).toEqual(Cartesian2.unpack(packet.properties.custom_cartesian2_interval[0].cartesian2));
+        expect(entity.properties.custom_cartesian2_interval.getValue(time2)).toEqual(Cartesian2.unpack(packet.properties.custom_cartesian2_interval[1].cartesian2));
+
+        expect(entity.properties.custom_cartesian2_sampled).toBeDefined();
+        expect(entity.properties.custom_cartesian2_sampled.getValue(time1)).toBeInstanceOf(Cartesian2);
+        expect(entity.properties.custom_cartesian2_sampled.getValue(time1)).toEqual(Cartesian2.unpack(packet.properties.custom_cartesian2_sampled.cartesian2, 0 + 1));
+        expect(entity.properties.custom_cartesian2_sampled.getValue(JulianDate.addSeconds(time1, 60, new JulianDate()))).toEqual(Cartesian2.unpack(packet.properties.custom_cartesian2_sampled.cartesian2, 2 + 2));
+
+        expect(entity.properties.custom_cartesian_constant).toBeDefined();
+        expect(entity.properties.custom_cartesian_constant.getValue(time1)).toBeInstanceOf(Cartesian3);
+        expect(entity.properties.custom_cartesian_constant.getValue(time1)).toEqual(Cartesian3.unpack(packet.properties.custom_cartesian_constant.cartesian));
+
+        expect(entity.properties.custom_cartesian_interval).toBeDefined();
+        expect(entity.properties.custom_cartesian_interval.getValue(time1)).toBeInstanceOf(Cartesian3);
+        expect(entity.properties.custom_cartesian_interval.getValue(time1)).toEqual(Cartesian3.unpack(packet.properties.custom_cartesian_interval[0].cartesian));
+        expect(entity.properties.custom_cartesian_interval.getValue(time2)).toEqual(Cartesian3.unpack(packet.properties.custom_cartesian_interval[1].cartesian));
+
+        expect(entity.properties.custom_cartesian_sampled).toBeDefined();
+        expect(entity.properties.custom_cartesian_sampled.getValue(time1)).toBeInstanceOf(Cartesian3);
+        expect(entity.properties.custom_cartesian_sampled.getValue(time1)).toEqual(Cartesian3.unpack(packet.properties.custom_cartesian_sampled.cartesian, 0 + 1));
+        expect(entity.properties.custom_cartesian_sampled.getValue(JulianDate.addSeconds(time1, 60, new JulianDate()))).toEqual(Cartesian3.unpack(packet.properties.custom_cartesian_sampled.cartesian, 3 + 2));
+
+        expect(entity.properties.custom_color_constant).toBeDefined();
+        expect(entity.properties.custom_color_constant.getValue(time1)).toBeInstanceOf(Color);
+        expect(entity.properties.custom_color_constant.getValue(time1)).toEqual(Color.unpack(packet.properties.custom_color_constant.rgbaf));
+
+        expect(entity.properties.custom_color_interval).toBeDefined();
+        expect(entity.properties.custom_color_interval.getValue(time1)).toBeInstanceOf(Color);
+        expect(entity.properties.custom_color_interval.getValue(time1)).toEqual(Color.unpack(packet.properties.custom_color_interval[0].rgbaf));
+        expect(entity.properties.custom_color_interval.getValue(time2)).toEqual(Color.unpack(packet.properties.custom_color_interval[1].rgbaf));
+
+        expect(entity.properties.custom_color_sampled).toBeDefined();
+        expect(entity.properties.custom_color_sampled.getValue(time1)).toBeInstanceOf(Color);
+        expect(entity.properties.custom_color_sampled.getValue(time1)).toEqual(Color.unpack(packet.properties.custom_color_sampled.rgbaf, 0 + 1));
+        expect(entity.properties.custom_color_sampled.getValue(JulianDate.addSeconds(time1, 60, new JulianDate()))).toEqual(Color.unpack(packet.properties.custom_color_sampled.rgbaf, 4 + 2));
+
+        expect(entity.properties.custom_date_constant).toBeDefined();
+        expect(entity.properties.custom_date_constant.getValue(time1)).toBeInstanceOf(JulianDate);
+        expect(entity.properties.custom_date_constant.getValue(time1)).toEqual(JulianDate.fromIso8601(packet.properties.custom_date_constant.date));
+
+        expect(entity.properties.custom_date_interval).toBeDefined();
+        expect(entity.properties.custom_date_interval.getValue(time1)).toBeInstanceOf(JulianDate);
+        expect(entity.properties.custom_date_interval.getValue(time1)).toEqual(JulianDate.fromIso8601(packet.properties.custom_date_interval[0].date));
+        expect(entity.properties.custom_date_interval.getValue(time2)).toEqual(JulianDate.fromIso8601(packet.properties.custom_date_interval[1].date));
     });
 
     it('handles properties in a way that allows CompositeEntityCollection to work', function() {
