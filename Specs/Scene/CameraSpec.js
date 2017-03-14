@@ -2310,6 +2310,9 @@ defineSuite([
             endTransform : new Matrix4(),
             convert : true,
             maximumHeight : 100,
+            pitchAdjustHeight:101,
+            flyOverLongitude: 1,
+            flyOverLongitudeWeight: 20,
             easingFunction : function() {
             }
         };
@@ -2330,6 +2333,9 @@ defineSuite([
         expect(passedOptions.convert).toBe(options.convert);
         expect(passedOptions.maximumHeight).toBe(options.maximumHeight);
         expect(passedOptions.easingFunction).toBe(options.easingFunction);
+        expect(passedOptions.pitchAdjustHeight).toBe(options.pitchAdjustHeight);
+        expect(passedOptions.flyOverLongitude).toBe(options.flyOverLongitude);
+        expect(passedOptions.flyOverLongitudeWeight).toBe(options.flyOverLongitudeWeight);
     });
 
     it('can cancel a flight', function() {

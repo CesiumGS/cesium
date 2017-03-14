@@ -2671,6 +2671,9 @@ define([
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
+     * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
+     * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
+     * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
      * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      *
      * @exception {DeveloperError} If either direction or up is given, then both are required.
@@ -2766,6 +2769,9 @@ define([
         newOptions.endTransform = options.endTransform;
         newOptions.convert = isRectangle ? false : options.convert;
         newOptions.maximumHeight = options.maximumHeight;
+        newOptions.pitchAdjustHeight = options.pitchAdjustHeight;
+        newOptions.flyOverLongitude = options.flyOverLongitude;
+        newOptions.flyOverLongitudeWeight = options.flyOverLongitudeWeight;
         newOptions.easingFunction = options.easingFunction;
 
         var scene = this._scene;
@@ -2884,6 +2890,9 @@ define([
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
+     * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
+     * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
+     * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
      * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      */
     Camera.prototype.flyToBoundingSphere = function(boundingSphere, options) {
@@ -2941,7 +2950,10 @@ define([
             cancel : options.cancel,
             endTransform : options.endTransform,
             maximumHeight : options.maximumHeight,
-            easingFunction : options.easingFunction
+            easingFunction : options.easingFunction,
+            flyOverLongitude : options.flyOverLongitude,
+            flyOverLongitudeWeight : options.flyOverLongitudeWeight,
+            pitchAdjustHeight : options.pitchAdjustHeight
         });
     };
 
