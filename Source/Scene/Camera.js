@@ -984,6 +984,7 @@ define([
     var scratchAdjustOrtghographicFrustumMousePosition = new Cartesian2();
     var pickGlobeScratchRay = new Ray();
     var scratchRayIntersection = new Cartesian3();
+    var scratchDepthIntersection = new Cartesian3();
 
     Camera.prototype._adjustOrthographicFrustum = function(zooming) {
         if (!(this.frustum instanceof OrthographicFrustum)) {
@@ -1002,6 +1003,7 @@ define([
         var scene = this._scene;
         var globe = scene._globe;
         var rayIntersection;
+        var depthIntersection;
 
         if (defined(globe)) {
             var mousePosition = scratchAdjustOrtghographicFrustumMousePosition;
@@ -1010,12 +1012,23 @@ define([
 
             var ray = this.getPickRay(mousePosition, pickGlobeScratchRay);
             rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
-            if (defined(rayIntersection)) {
+
+            if (scene.pickPositionSupported) {
+                depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
+            }
+
+            if (defined(rayIntersection) && defined(depthIntersection)) {
+                var depthDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, this.positionWC) : Number.POSITIVE_INFINITY;
+                var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, this.positionWC) : Number.POSITIVE_INFINITY;
+                this.frustum.width = depthDistance < rayDistance ? depthDistance : rayDistance;
+            } else if (defined(depthIntersection)) {
+                this.frustum.width = Cartesian3.distance(depthIntersection, this.positionWC);
+            } else if (defined(rayIntersection)) {
                 this.frustum.width = Cartesian3.distance(rayIntersection, this.positionWC);
             }
         }
 
-        if (!defined(globe) || (!defined(rayIntersection))) {
+        if (!defined(globe) || (!defined(rayIntersection) && !defined(depthIntersection))) {
             var distance = Math.max(this.positionCartographic.height, 0.0);
             this.frustum.width = distance;
         }
