@@ -123,6 +123,13 @@ define([
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
      * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
+     * @param {Boolean} [options.skipLODs=true] Determines if level-of-detail skipping optimization should be used.
+     * @param {Number} [options.skipSSEFactor=10] Multiplier defining the minumum screen space error to skip when loading tiles.
+     * @param {Number} [options.skipGeometricFactor=1] Multiplier defining the minumum geometric error to skip when loading tiles.
+     * @param {Number} [options.skipLevels=1] Multiplier defining the minumum number of levels to skip when loading tiles.
+     * @param {Boolean} [options.lowMemory=false] Determines whether low memory level-of-detail skipping should be used.
+     * @param {Boolean} [options.mixLOD=true] Determines whether different levels-of-detail should be rendered together.
+     * @param {Boolean} [options.loadSiblings=false] Determines whether sibling tiles should be loaded when skipping levels-of-detail.
      *
      * @example
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -481,14 +488,85 @@ define([
             that._readyPromise.reject(error);
         });
 
+        /**
+         * Determines if level-of-detail skipping optimization should be used.
+         *
+         * @type {Boolean}
+         * @default true
+         */
         this.skipLODs = defaultValue(options.skipLODs, true);
+
+        /**
+         * This is a multiplier defining the minumum screen space error to skip.
+         * If current tile has screen space error of 100, no tiles will be loaded unless they
+         * are leaves or have a screen space error <= 100 / skipSSEFactor.
+         * 
+         * Only used when tileset.skipLODs === true.
+         *
+         * @type {Number}
+         * @default 10
+         */
         this.skipSSEFactor = defaultValue(options.skipSSEFactor, 10);
+
+        /**
+         * This is a multiplier defining the minumum geometric error to skip.
+         * If current tile has geometric error of 100, no tiles will be loaded unless they
+         * are leaves or have a geometric error <= 100 / skipGeometricFactor.
+         * 
+         * Only used when tileset.skipLODs === true.
+         *
+         * @type {Number}
+         * @default 1
+         */
         this.skipGeometricFactor = defaultValue(options.skipGeometricFactor, 1);
+
+        /**
+         * This is a constant defining the minumum number of levels skip.
+         * If current tile is level 1, no tiles will be loaded unless they
+         * are at level greater than 2.
+         * 
+         * Only used when tileset.skipLODs === true.
+         *
+         * @type {Number}
+         * @default 1
+         */
         this.skipLevels = defaultValue(options.skipLevels, 1);
+
+        /**
+         * Determines whether low memory level-of-detail skipping should be used.
+         * When true, only tiles that meet the maximum screen space error will ever be downloaded.
+         *
+         * Only used when tileset.skipLODs === true.
+         * 
+         * @type {Boolean}
+         * @default false
+         */
         this.lowMemory = defaultValue(options.lowMemory, false);
+
+        /**
+         * Determines whether different levels-of-detail should be rendered together.
+         * When true, a tile will not refine until all children that meet the level-skipping
+         * constraints are downloaded.
+         *
+         * Only used when tileset.skipLODs === true.
+         * 
+         * @type {Boolean}
+         * @default true
+         */
         this.mixLOD = defaultValue(options.mixLOD, true);
-        this._loadHeaps = {};
+
+        /**
+         * Determines whether sibling tiles should be loaded when skipping levels-of-detail.
+         * When true, the siblings of any visible and downloaded tile are downloaded as well.
+         *
+         * Only used when tileset.skipLODs === true.
+         * 
+         * @type {Boolean}
+         * @default false
+         */
         this.loadSiblings = defaultValue(options.loadSiblings, false);
+
+        this._loadHeaps = {};
         this._refining = false;
     }
 
@@ -1370,7 +1448,6 @@ define([
         }
 
         root.distanceToCamera = root.distanceToTile(frameState);
-        visitTile(tileset, root, frameState, outOfCore);
 
         if (getScreenSpaceError(tileset, tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
             // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
@@ -1396,6 +1473,7 @@ define([
         nextQueue.length = 0;
         finalQueue.length = 0;
 
+        visitTile(tileset, root, frameState, outOfCore);
         processingQueue.push(root);
         selectionState.done = false;
 
@@ -1546,6 +1624,9 @@ define([
 
         var loadSiblings = tileset.loadSiblings;
 
+        if (start.refine === Cesium3DTileRefine.ADD) {
+            state = loadAndAddToQueue(tileset, start, finalQueue, state);
+        }
         state = updateAndPushChildren(tileset, start, stack, frameState, outOfCore, state, loadSiblings);
 
         var maxLength = 0;
