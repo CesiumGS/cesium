@@ -32,6 +32,7 @@ defineSuite([
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
+        'Scene/PerspectiveFrustum',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -68,6 +69,7 @@ defineSuite([
         ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
+        PerspectiveFrustum,
         createScene,
         pollToPromise,
         when) {
@@ -156,6 +158,11 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
     });
 
     function addZoomTo(model) {

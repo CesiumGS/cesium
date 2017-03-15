@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/OrthographicFrustum',
+        'Scene/OrthographicOffCenterFrustum',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Math',
         'Core/Matrix4'
     ], function(
-        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -18,7 +18,7 @@ defineSuite([
     var frustum, planes;
 
     beforeEach(function() {
-        frustum = new OrthographicFrustum();
+        frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 3.0;
         frustum.right = 1.0;
@@ -152,7 +152,7 @@ defineSuite([
     });
 
     it('throws with undefined frustum parameters', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         expect(function() {
             return frustum.projectionMatrix;
         }).toThrowDeveloperError();
@@ -164,7 +164,7 @@ defineSuite([
     });
 
     it('clone with result parameter', function() {
-        var result = new OrthographicFrustum();
+        var result = new OrthographicOffCenterFrustum();
         var frustum2 = frustum.clone(result);
         expect(frustum2).toBe(result);
         expect(frustum).toEqual(frustum2);

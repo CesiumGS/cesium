@@ -4,7 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Math',
-        'Scene/OrthographicFrustum',
+        'Scene/OrthographicOffCenterFrustum',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
@@ -12,7 +12,7 @@ defineSuite([
         Cartesian3,
         Cartographic,
         CesiumMath,
-        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         SceneMode,
         createScene) {
     'use strict';
@@ -29,7 +29,7 @@ defineSuite([
 
     function createOrthographicFrustum() {
         var current = scene.camera.frustum;
-        var f = new OrthographicFrustum();
+        var f = new OrthographicOffCenterFrustum();
         f.near = current.near;
         f.far = current.far;
 
