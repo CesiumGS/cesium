@@ -69,7 +69,7 @@
     "mkdirp": "^0.5.1",
     "request": "^2.79.0",
     "rimraf": "^2.6.1",
-    "yargs": "^6.4.0"
+    "yargs": "^7.0.1"
   },
   "scripts": {
     "start": "node server.js",

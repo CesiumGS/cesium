@@ -1,19 +1,19 @@
 # Eclipse Guide
 
-While primarily known as a Java IDE, Eclipse can be configured to work well for web development too.
+While primarily known as a Java IDE, Eclipse can be configured to work well for web development too.  These instructions are written for Eclipse Neon but the process is the same for any recent version.
 
 * Install [Java](http://www.java.com/en/download/manual.jsp) if it isn't already.
-* Download the [Eclipse IDE](http://www.eclipse.org/downloads/) for Java Developers.  Extract to a directory of your choice.  Run it.
+* Download the [Eclipse IDE for Java Developers](http://www.eclipse.org/downloads/eclipse-packages/).  Extract to a directory of your choice and run.  Create a workspace anywhere you like.
 
 * Install additional Eclipse components: JavaScript Development Tools and Eclipse Web Developer Tools.
-   * Help - Install New Software.  Work with: select *Mars* from the list.
+   * Help - Install New Software.  Work with: select *Neon* from the list.
    * Expand *Programming Languages*, check *JavaScript Development Tools*.
    * Expand *Web, XML, Java EE and OSGi Enterprise Development*, check *Eclipse Web Developer Tools*.
    * Next, Next, Accept, Finish, _wait_, No (we have more to install).
 
 ![The Java Development Tools installation dialog](indigo.jpg)
 
-* Install the [JSHint](http://www.jshint.com/) plugin: 
+* Install the [JSHint](http://www.jshint.com/) plugin:
    * Help - Install New Software.  Work with: `http://github.eclipsesource.com/jshint-eclipse/updates/`.
    * Check *JSHint*.  Next, Next, Accept, Finish, _wait_, OK, _wait_, Restart.
 

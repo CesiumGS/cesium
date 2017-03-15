@@ -72,6 +72,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Camptocamp SA](https://www.camptocamp.com/)
    * [Frédéric Junod](https://github.com/fredj)
    * [Guillaume Beraudo](https://github.com/gberaudo)
+* [EndPoint](https://www.endpoint.com/)
+   * [Dmitry Kiselev](https://github.com/kiselev-dv)
 * [Safe Software](https://www.safe.com)
    * [Joel Depooter](https://github.com/JDepooter)
 * [Bentley Systems, Inc.](https://www.bentley.com)

@@ -60,6 +60,7 @@ define([
         './MapMode2D',
         './OIT',
         './OrthographicFrustum',
+        './OrthographicOffCenterFrustum',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
@@ -135,6 +136,7 @@ define([
         MapMode2D,
         OIT,
         OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PerspectiveFrustum,
@@ -1098,6 +1100,11 @@ define([
                 return this._useWebVR;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (this.camera.frustum instanceof OrthographicFrustum) {
+                    throw new DeveloperError('VR is unsupported with an orthographic projection.');
+                }
+                //>>includeEnd('debug');
                 this._useWebVR = value;
                 if (this._useWebVR) {
                     this._frameState.creditDisplay.container.style.visibility = 'hidden';
@@ -1740,6 +1747,7 @@ define([
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
+    var scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
 
     function executeCommands(scene, passState) {
         var camera = scene._camera;
@@ -1754,8 +1762,10 @@ define([
             frustum = camera.frustum.clone(scratchPerspectiveFrustum);
         } else if (defined(camera.frustum.infiniteProjectionMatrix)){
             frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
-        } else {
+        } else if (defined(camera.frustum.width)) {
             frustum = camera.frustum.clone(scratchOrthographicFrustum);
+        } else {
+            frustum = camera.frustum.clone(scratchOrthographicOffCenterFrustum);
         }
 
         // Ideally, we would render the sky box and atmosphere last for
@@ -2259,18 +2269,27 @@ define([
         // Update celestial and terrestrial environment effects.
         var environmentState = scene._environmentState;
         var renderPass = frameState.passes.render;
-        environmentState.skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
         var skyAtmosphere = scene.skyAtmosphere;
         var globe = scene.globe;
-        if (defined(skyAtmosphere) && defined(globe)) {
-            skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting);
-            environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
+
+        if (!renderPass || (scene._mode !== SceneMode.SCENE2D && frameState.camera.frustum instanceof OrthographicFrustum)) {
+            environmentState.skyAtmosphereCommand = undefined;
+            environmentState.skyBoxCommand = undefined;
+            environmentState.sunDrawCommand = undefined;
+            environmentState.sunComputeCommand = undefined;
+            environmentState.moonCommand = undefined;
+        } else {
+            if (defined(skyAtmosphere) && defined(globe)) {
+                skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting);
+                environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
+            }
+            environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
+            environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState) : undefined;
+            var sunCommands = defined(scene.sun) ? scene.sun.update(scene) : undefined;
+            environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
+            environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
+            environmentState.moonCommand = defined(scene.moon) ? scene.moon.update(frameState) : undefined;
         }
-        environmentState.skyAtmosphereCommand = (renderPass && defined(skyAtmosphere)) ? skyAtmosphere.update(frameState) : undefined;
-        var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
-        environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
-        environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
-        environmentState.moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
 
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
@@ -2618,7 +2637,7 @@ define([
         return Math.max(ContextLimits.minimumAliasedLineWidth, Math.min(width, ContextLimits.maximumAliasedLineWidth));
     };
 
-    var orthoPickingFrustum = new OrthographicFrustum();
+    var orthoPickingFrustum = new OrthographicOffCenterFrustum();
     var scratchOrigin = new Cartesian3();
     var scratchDirection = new Cartesian3();
     var scratchPixelSize = new Cartesian2();
@@ -2627,6 +2646,9 @@ define([
     function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
         var camera = scene._camera;
         var frustum = camera.frustum;
+        if (defined(frustum._offCenterFrustum)) {
+            frustum = frustum._offCenterFrustum;
+        }
 
         var viewport = scene._passState.viewport;
         var x = 2.0 * (drawingBufferPosition.x - viewport.x) / viewport.width - 1.0;
@@ -2645,7 +2667,9 @@ define([
 
         camera._setTransform(transform);
 
-        Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
+        if (scene.mode === SceneMode.SCENE2D) {
+            Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
+        }
 
         var pixelSize = frustum.getPixelDimensions(viewport.width, viewport.height, 1.0, scratchPixelSize);
 
@@ -2693,7 +2717,8 @@ define([
     }
 
     function getPickCullingVolume(scene, drawingBufferPosition, width, height) {
-        if (scene._mode === SceneMode.SCENE2D) {
+        var frustum = scene.camera.frustum;
+        if (frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum) {
             return getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height);
         }
 
@@ -2951,8 +2976,10 @@ define([
             frustum = camera.frustum.clone(scratchPerspectiveFrustum);
         } else if (defined(camera.frustum.infiniteProjectionMatrix)){
             frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
-        } else {
+        } else if (defined(camera.frustum.width)) {
             frustum = camera.frustum.clone(scratchOrthographicFrustum);
+        } else {
+            frustum = camera.frustum.clone(scratchOrthographicOffCenterFrustum);
         }
 
         var numFrustums = this.numberOfFrustums;

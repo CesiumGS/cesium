@@ -14,8 +14,21 @@ Change Log
 
 ### 1.32 - 2017-04-03
 
+* Deprecated
+    * The `left`, `right`, `bottom`, and `top` properties of `OrthographicFrustum` are deprecated and will be removed in 1.33. Use `OrthographicOffCenterFrustum` instead.
+* Added `Camera.flyTo` and `Camera.flyToBoundingSphere` options [#5070](https://github.com/AnalyticalGraphicsInc/cesium/pull/5070)
+    * `flyOverLongitude` to select one of two possible on Globe paths which camera should fly.
+    * `flyOverLongitudeWeight` to set a threshold: how many times the `flyOverLongitude` way can be than shortest path.
+    * `pitchAdjustHeight` to adjust camera pitch during exaggerated flights, to keep Earth in viewport.
 * Added the event `Viewer.trackedEntityChanged`, which is raised when the value of `viewer.trackedEntity` changes. [#5060](https://github.com/AnalyticalGraphicsInc/cesium/pull/5060)
+* Added `Camera.DEFAULT_OFFSET` for default view of objects with bounding spheres [#4936](https://github.com/AnalyticalGraphicsInc/cesium/pull/4936)
 * Fix crunch compressed textures in IE11. [#5057](https://github.com/AnalyticalGraphicsInc/cesium/pull/5057)
+* Fixed a bug in `Quaternion.fromHeadingPitchRoll` that made it erroneously throw an exception when passed individual angles in an unminified / debug build.
+* Fix `GroundPrimitive` rendering in 2D and Columbus View [#5078](https://github.com/AnalyticalGraphicsInc/cesium/pull/5078)
+* Fixed an issue with `PinBuilder` where inset images could have low-alpha fringes against an opaque background.  [#5099](https://github.com/AnalyticalGraphicsInc/cesium/pull/5099)
+* Fixed a bug in `ModelAnimationCache` causing different animations to reference the same animation. [#5064](https://github.com/AnalyticalGraphicsInc/cesium/pull/5064)
+* Fixed a bug that caused an exception in `CesiumInspectorViewModel` when using the NW / NE / SW / SE / Parent buttons to navigate to a terrain tile that is not yet loaded.
+* Added support for an orthographic projection in 3D and Columbus view. Set `projectionPicker` to `true` in the options when creating a `Viewer` to add a widget that will switch projections. [#5021](https://github.com/AnalyticalGraphicsInc/cesium/pull/5021)
 
 ### 1.31 - 2017-03-01
 
