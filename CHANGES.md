@@ -14,6 +14,7 @@ Change Log
 * Fix `GroundPrimitive` rendering in 2D and Columbus View [#5078](https://github.com/AnalyticalGraphicsInc/cesium/pull/5078)
 * Fixed an issue with `PinBuilder` where inset images could have low-alpha fringes against an opaque background.  [#5099](https://github.com/AnalyticalGraphicsInc/cesium/pull/5099)
 * Fixed a bug in `ModelAnimationCache` causing different animations to reference the same animation. [#5064](https://github.com/AnalyticalGraphicsInc/cesium/pull/5064)
+* Fixed a bug that caused an exception in `CesiumInspectorViewModel` when using the NW / NE / SW / SE / Parent buttons to navigate to a terrain tile that is not yet loaded.
 
 ### 1.31 - 2017-03-01
 
