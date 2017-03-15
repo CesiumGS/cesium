@@ -285,6 +285,7 @@ define([
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+     * @param {Boolean} [options.projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -516,7 +517,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         var projectionPicker;
-        if (!defined(options.projectionPicker) || options.projectionPicker !== false) {
+        if (options.projectionPicker) {
             projectionPicker = new ProjectionPicker(toolbar, cesiumWidget.scene);
         }
 
