@@ -2,29 +2,39 @@
 {
     "files.exclude": {
         "**/.git": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
         ".idea": true,
         ".metadata": true,
         "Build": true,
         "Instrumented": true,
-        "**/Cesium-*.zip": true,
-        "**/cesium-*.tgz": true,
-        "**/.DS_Store": true,
-        "**/Thumbs.db": true,
-
-        "Apps/Sandcastle/jsHintOption?.js": true,
-        "Apps/Sandcastle/gallery/gallery-inde?.js": true,
-
-        "Source/Cesiu?.js": true,
-        "Source/Shaders/**/*.js": true,
-
-        "Specs/SpecLis?.js": true,
         "node_modules": true,
-        "npm-debu?.log": true
+        ".settings": true,
+        ".externalToolBuilders": true,
+        ".project": true,
+        "launches": true,
+        "Cesium-*.zip": true,
+        "cesium-*.tgz": true,
+        "Apps/Sandcastle/jsHintOptions.js": true,
+        "Apps/Sandcastle/gallery/gallery-index.js": true,
+        "Source/Cesium.js": true,
+        "Source/Shaders/**/*.js": true,
+        "Specs/SpecList.js": true,
+        "npm-debug.log": true
     },
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "editor.insertSpaces": true,
     "editor.tabSize": 4,
     "editor.detectIndentation": false,
-    "jshint.enable": true
+    "jshint.enable": true,
+    "javascript.format.insertSpaceAfterCommaDelimiter": true,
+    "javascript.format.insertSpaceAfterSemicolonInForStatements": true,
+    "javascript.format.insertSpaceBeforeAndAfterBinaryOperators": true,
+    "javascript.format.insertSpaceAfterKeywordsInControlFlowStatements": true,
+    "javascript.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions": false,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
+    "javascript.format.placeOpenBraceOnNewLineForFunctions": false,
+    "javascript.format.placeOpenBraceOnNewLineForControlBlocks": false
 }
