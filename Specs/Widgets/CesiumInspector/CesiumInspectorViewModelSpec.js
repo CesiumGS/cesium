@@ -216,6 +216,7 @@ defineSuite([
         var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
         var tile = new QuadtreeTile({tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, level : 0});
         tile.data = new GlobeSurfaceTile();
+        tile.renderable = true;
         viewModel.tile = tile;
 
         viewModel.filterTile  = true;
