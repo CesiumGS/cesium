@@ -493,7 +493,7 @@ define([
 
                 globe._surface._tilesToRender = [];
 
-                if (defined(that._tile)) {
+                if (defined(that._tile) && that._tile.renderable) {
                     globe._surface._tilesToRender.push(that._tile);
                 }
             }
