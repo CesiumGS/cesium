@@ -309,7 +309,7 @@ defineSuite([
     
     var createTileset = function(options) {
         return new Cesium3DTileset(options);
-    }
+    };
 
     var originalCreateTileset = createTileset;
 
@@ -2117,6 +2117,10 @@ defineSuite([
                 expect(stats.numberOfCommands).toBe(totalCommands);
             });
         });
+    });
+
+    withLODSkipping(function() {
+
     });
 
     describe('without skipping LODs', function() {

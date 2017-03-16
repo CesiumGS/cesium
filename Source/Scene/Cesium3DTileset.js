@@ -1617,7 +1617,6 @@ define([
     var tempStack = [];
     function queueDescendants(tileset, start, selectionState, frameState, outOfCore) {
         var stack = tempStack;
-        var finalQueue = selectionState.finalQueue;
 
         var state = ProcessingState.REFINED & ~ProcessingState.ANY_READY;
         state = queueTile(tileset, start, start, stack, selectionState, frameState, outOfCore, state);
