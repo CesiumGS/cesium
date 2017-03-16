@@ -1344,12 +1344,13 @@ define([
             var original = finalQueue.get(i);
             var tile = original;
             // traverse up the tree to find a ready ancestor
-            while (defined(tile) && !(tile.hasContent && tile.contentReady)) {
-                if (tile.refine === Cesium3DTileRefine.ADD) {
-                    break;
+            if (tile.hasContent) {  // could be Empty3DTileContent
+                while (defined(tile) && !(tile.hasContent && tile.contentReady)) {
+                    if (!tile.contentReady) {
+                        tileset._refining = true;
+                    }
+                    tile = tile.parent;
                 }
-                tileset._refining = true;
-                tile = tile.parent;
             }
 
             if (defined(tile)) {
@@ -1616,69 +1617,65 @@ define([
     var tempStack = [];
     function queueDescendants(tileset, start, selectionState, frameState, outOfCore) {
         var stack = tempStack;
-
-        var nextQueue = selectionState.nextQueue;
         var finalQueue = selectionState.finalQueue;
+
         var state = ProcessingState.REFINED & ~ProcessingState.ANY_READY;
-        var maximumScreenSpaceError = tileset.maximumScreenSpaceError;
+        state = queueTile(tileset, start, start, stack, selectionState, frameState, outOfCore, state);
 
-        var loadSiblings = tileset.loadSiblings;
-
-        if (start.refine === Cesium3DTileRefine.ADD) {
-            state = loadAndAddToQueue(tileset, start, finalQueue, state);
-        }
-        state = updateAndPushChildren(tileset, start, stack, frameState, outOfCore, state, loadSiblings);
-
-        var maxLength = 0;
         while (stack.length > 0) {
             var tile = stack.pop();
-
             visitTile(tileset, tile, frameState, outOfCore);
-            
-            if (tile.hasTilesetContent) {
-                if (tile.contentUnloaded) {
-                    tile._loadHeap.insert(tile);
-                }
-                if (!tile.contentReady) {
-                    state &= ~ProcessingState.REFINED;
-                    finalQueue.push(tile);
-                } else {
-                    var child = tile.children[0];
-                    child.visibilityPlaneMask = tile.visibilityPlaneMask;
-                    child.updateTransform(tile.computedTransform);
-                    child.distanceToCamera = tile.distanceToCamera;
-                    stack.push(child);
-                }
-                continue;
-            }
-
-            var childrenLength = tile.children.length;
-            
-            if (tile.refine === Cesium3DTileRefine.ADD) {
-                state = loadAndAddToQueue(tileset, tile, finalQueue, state);
-                state = updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, state, loadSiblings);
-            } else {
-                if (childrenLength === 0) {
-                    state = loadAndAddToQueue(tileset, tile, finalQueue, state);
-                } else if (tile._sse <= maximumScreenSpaceError) {
-                    var useChildrenBoundUnion = tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
-                    if (useChildrenBoundUnion) {
-                        if (computeChildrenVisibility(tile, frameState, false) & Cesium3DTileChildrenVisibility.VISIBLE) {
-                            state = loadAndAddToQueue(tileset, tile, finalQueue, state);
-                        }
-                    } else {
-                        state = loadAndAddToQueue(tileset, tile, finalQueue, state);
-                    }
-                } else if (tile.hasContent && selectionHeuristic(tileset, start, tile) && !tileset.lowMemory) {
-                    state = loadAndAddToQueue(tileset, tile, nextQueue, state);
-                } else {
-                    state = updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, state, loadSiblings);
-                }
-            }
+            state = queueTile(tileset, start, tile, stack, selectionState, frameState, outOfCore, state);
         }
 
         // always refined if mixLOD enabled
         return tileset.mixLOD || (state & ProcessingState.REFINED) !== 0;
+    }
+
+    function queueTile(tileset, start, tile, stack, selectionState, frameState, outOfCore, state) {
+        var nextQueue = selectionState.nextQueue;
+        var finalQueue = selectionState.finalQueue;
+        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+        var loadSiblings = tileset.loadSiblings;
+
+        if (tile.hasTilesetContent) {
+            if (tile.contentUnloaded) {
+                tile._loadHeap.insert(tile);
+            }
+            if (!tile.contentReady) {
+                state &= ~ProcessingState.REFINED;
+                finalQueue.push(tile);
+            } else {
+                var child = tile.children[0];
+                child.visibilityPlaneMask = tile.visibilityPlaneMask;
+                child.updateTransform(tile.computedTransform);
+                child.distanceToCamera = tile.distanceToCamera;
+                stack.push(child);
+            }
+            return;
+        }
+
+        if (tile.refine === Cesium3DTileRefine.ADD) {
+            state = loadAndAddToQueue(tileset, tile, finalQueue, state);
+            state = updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, state, loadSiblings);
+        } else {
+            if (tile.children.length === 0) {
+                state = loadAndAddToQueue(tileset, tile, finalQueue, state);
+            } else if (tile._sse <= maximumScreenSpaceError) {
+                if (tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION) {
+                    if (computeChildrenVisibility(tile, frameState, false) & Cesium3DTileChildrenVisibility.VISIBLE) {
+                        state = loadAndAddToQueue(tileset, tile, finalQueue, state);
+                    }
+                } else {
+                    state = loadAndAddToQueue(tileset, tile, finalQueue, state);
+                }
+            } else if (start !== tile && tile.hasContent && !tileset.lowMemory && selectionHeuristic(tileset, start, tile)) {
+                state = loadAndAddToQueue(tileset, tile, nextQueue, state);
+            } else {
+                state = updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, state, loadSiblings);
+            }
+        }
+        return state;
     }
 
     var tempStack2 = [];
@@ -2173,7 +2170,7 @@ define([
 
         var tile, i;
 
-        if (tileset._refining && tileset.skipLODs && tileset.mixLOD && frameState.context.stencilBuffer) {
+        if (tileset._refining && tileset.skipLODs && tileset.mixLOD && frameState.context.stencilBuffer && length > 0) {
 
             commandList.push(new ClearCommand({
                 stencil : 0

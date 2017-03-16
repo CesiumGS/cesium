@@ -304,57 +304,6 @@ defineSuite([
        });
     });
 
-    function expectStats(stats, expectedBoth, condition, expected1, expected2) {
-        var name;
-        for (name in expectedBoth) {
-            if (expectedBoth.hasOwnProperty(name)) {
-                expect(stats[name]).toEqual(expectedBoth[name]);
-            }
-        }
-        if (condition) {
-            if (defined(expected1)) {
-                for (name in expected1) {
-                    if (expected1.hasOwnProperty(name)) {
-                        expect(stats[name]).toEqual(expected1[name]);
-                    }
-                }
-            }
-        } else {
-            if (defined(expected2)) {
-                for (name in expected2) {
-                    if (expected2.hasOwnProperty(name)) {
-                        expect(stats[name]).toEqual(expected2[name]);
-                    }
-                }
-            }
-        }
-    }
-
-    function emptyFunction(tileset) {}
-    function loadTilesetWithAndWithoutSkipping(scene, tilesetUrl, bothCallback, noskipCallback, skipCallback) {
-        bothCallback = defaultValue(bothCallback, emptyFunction);
-        noskipCallback = defaultValue(noskipCallback, emptyFunction);
-        skipCallback = defaultValue(skipCallback, emptyFunction);
-        
-        return when.join(
-            Cesium3DTilesTester.loadTileset(scene, tilesetUrl, { skipLODs: false } )
-            .then(function(tileset) {
-                return when.join(
-                    when.resolve(bothCallback(tileset)), 
-                    when.resolve(noskipCallback(tileset))
-                )
-            }),
-            
-            Cesium3DTilesTester.loadTileset(scene, tilesetUrl, { skipLODs: true } )
-            .then(function(tileset) {
-                return when.join(
-                    when.resolve(bothCallback(tileset)), 
-                    when.resolve(skipCallback(tileset))
-                )
-            })
-        );
-    }
-
     var noSkipLODTests = [];
     var skipLODTests = [];
     
@@ -390,29 +339,31 @@ defineSuite([
         return originalLoadTileset(scene, url, options);
     }
 
-    function withoutLODSkipping(name, func) {
-        noSkipLODTests.push(function() {
-            it(name, function() {
+    function wrapperLODSkipping(skip, func) {
+        return function() {
+            if (skip) {
+                Cesium3DTilesTester.loadTileset = loadWithSkip;
+                createTileset = createTilesetSkip;  
+            } else {
                 Cesium3DTilesTester.loadTileset = loadWithNoSkip;
                 createTileset = createTilesetNoSkip;
-                var result = func();
-                Cesium3DTilesTester.loadTileset = originalLoadTileset;
-                createTileset = originalCreateTileset;
-                return result;
-            });
+            }
+            var result = func();
+            Cesium3DTilesTester.loadTileset = originalLoadTileset;
+            createTileset = originalCreateTileset;
+            return result;
+        }
+    }
+
+    function withoutLODSkipping(name, func) {
+        noSkipLODTests.push(function() {
+            it(name, wrapperLODSkipping(false, func));
         });
     }
 
     function withLODSkipping(name, func) {
         skipLODTests.push(function() {
-            it(name, function() {
-                Cesium3DTilesTester.loadTileset = loadWithSkip;
-                createTileset = createTilesetSkip;
-                var result = func();
-                Cesium3DTilesTester.loadTileset = originalLoadTileset;
-                createTileset = originalCreateTileset;
-                return result;
-            });
+            it(name, wrapperLODSkipping(true, func));
         });
     }
 
@@ -493,11 +444,8 @@ defineSuite([
 
             // Update and check that child tiles are now requested
             scene.renderForSpecs();
-            if (tileset.skipLODs) {
-                expect(stats.visited).toEqual(5); // LOD skipping visits all visible
-            } else {
-                expect(stats.visited).toEqual(1); // Root is visited
-            }
+            // LOD skipping visits all visible; Only root is visited
+            expect(stats.visited).toEqual(tileset.skipLODs ? 5 : 1);
             expect(stats.numberOfCommands).toEqual(0);
             expect(stats.numberOfPendingRequests).toEqual(5);
             expect(stats.numberProcessing).toEqual(0);
@@ -749,8 +697,10 @@ defineSuite([
             scene.renderForSpecs();
 
             var stats = tileset._statistics;
-            expect(stats.visited).toEqual(1);
-            expect(stats.numberOfCommands).toEqual(1);
+             // LOD skipping visits all visible; Only root is visited
+            expect(stats.visited).toEqual(tileset.skipLODs ? 5 : 1);
+            // with LOD skipping, tileset is refining and adds a stencil clear command
+            expect(stats.numberOfCommands).toEqual(tileset.skipLODs ? 2 : 1);
             expect(stats.numberOfPendingRequests).toEqual(4);
             expect(root.numberOfChildrenWithoutContent).toEqual(4);
         });
@@ -898,7 +848,7 @@ defineSuite([
         });
     });
 
-    it('replacement refinement - selects root when sse is not met and subtree is not refinable (2)', function() {
+    withoutLODSkipping('replacement refinement - selects root when sse is not met and subtree is not refinable (2)', function() {
         // Check that the root is refinable once its child is loaded
         //
         //          C
@@ -931,7 +881,7 @@ defineSuite([
         });
     });
 
-    it('replacement refinement - selects root when sse is not met and subtree is not refinable (3)', function() {
+    withoutLODSkipping('replacement refinement - selects root when sse is not met and subtree is not refinable (3)', function() {
         // Check that the root is refinable once its child is loaded
         //
         //          C
@@ -981,8 +931,9 @@ defineSuite([
     });
 
     describe('children bound union optimization', function() {
+        var options = { skipLODs: false }
         it('does not select visible tiles with invisible children', function() {
-            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl, options).then(function(tileset) {
                 scene.camera.setView({
                     destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 22),
                     orientation: {
@@ -1010,7 +961,7 @@ defineSuite([
         });
 
         it('does not select visible tiles not meeting SSE with visible children', function() {
-            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl, options).then(function(tileset) {
                 var root = tileset._root;
                 var childRoot = root.children[0];
                 childRoot.geometricError = 240;
@@ -1038,8 +989,8 @@ defineSuite([
             });
         });
 
-        it ('does select visible tiles meeting SSE with visible children', function() {
-            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
+        it('does select visible tiles meeting SSE with visible children', function() {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl, options).then(function(tileset) {
                 var root = tileset._root;
                 var childRoot = root.children[0];
 
@@ -1068,7 +1019,7 @@ defineSuite([
         });
 
         it('does select visibile tiles with visible children failing request volumes', function() {
-            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl, options).then(function(tileset) {
                 scene.camera.setView({
                     destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 100),
                     orientation: {
@@ -1097,7 +1048,7 @@ defineSuite([
         });
 
         it('does select visibile tiles with visible children passing request volumes', function() {
-            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl, options).then(function(tileset) {
                 scene.camera.setView({
                     destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 40),
                     orientation: {
