@@ -10,6 +10,7 @@ defineSuite([
         'Core/Matrix4',
         'Core/PrimitiveType',
         'Core/RequestScheduler',
+        'Renderer/ClearCommand',
         'Renderer/ContextLimits',
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileColorBlendMode',
@@ -17,6 +18,7 @@ defineSuite([
         'Scene/Cesium3DTileOptimizations',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
+        'Scene/CullFace',
         'Scene/CullingVolume',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
@@ -33,6 +35,7 @@ defineSuite([
         Matrix4,
         PrimitiveType,
         RequestScheduler,
+        ClearCommand,
         ContextLimits,
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
@@ -40,6 +43,7 @@ defineSuite([
         Cesium3DTileOptimizations,
         Cesium3DTileRefine,
         Cesium3DTileStyle,
+        CullFace,
         CullingVolume,
         Cesium3DTilesTester,
         createScene,
@@ -2056,7 +2060,7 @@ defineSuite([
         });
 
         it('maximumNumberOfLoadedTiles throws when negative', function() {
-            var tileset = new Cesium3DTileset({
+            var tileset = createTileset({
                 url : tilesetUrl
             });
             expect(function() {
@@ -2065,7 +2069,7 @@ defineSuite([
         });
 
         it('maximumScreenSpaceError throws when negative', function() {
-            var tileset = new Cesium3DTileset({
+            var tileset = createTileset({
                 url : tilesetUrl
             });
             expect(function() {
@@ -2120,7 +2124,220 @@ defineSuite([
     });
 
     withLODSkipping(function() {
+        it('marks tileset as refining when tiles not resolved', function() {
+            viewRootOnly();
+            return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+                viewAllTiles();
+                scene.renderForSpecs();
+                var stats = tileset._statistics;
+                expect(stats.numberContentReady).toEqual(1);
+                expect(tileset._refining).toBe(true);
 
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                    expect(stats.numberContentReady).toEqual(5);
+                    expect(tileset._refining).toBe(false);
+                });
+            });
+        });
+
+        it('adds stencil clear command first when unresolved', function() {
+            viewRootOnly();
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+                scene.renderForSpecs();
+                var stats = tileset._statistics;
+                var root = tileset._root;
+
+                viewAllTiles();
+                scene.renderForSpecs();
+                return root.children[0].content.readyPromise.then(function() {
+                    scene.renderForSpecs();
+                    // 1 for root tiles, 1 for stencil clear
+                    expect(stats.numberOfCommands).toEqual(2);
+                    expect(tileset._refining).toBe(true);
+
+                    var commandList = scene.frameState.commandList;
+                    expect(commandList[0] instanceof ClearCommand).toBe(true);
+                });
+            });
+        });
+
+        it('creates duplicate backface commands', function() {
+            // Look at bottom-left corner of tileset so child is loaded first
+            scene.camera.moveLeft(200.0);
+            scene.camera.moveDown(200.0);
+
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+                scene.renderForSpecs();
+                var stats = tileset._statistics;
+                var root = tileset._root;
+
+                viewAllTiles();
+                scene.renderForSpecs();
+                return root.children[0].content.readyPromise.then(function() {
+                    scene.renderForSpecs();
+                    // 2 for root tile, 1 for child, 1 for stencil clear
+                    expect(stats.numberOfCommands).toEqual(4);
+                    expect(root.selected).toBe(true);
+                    expect(root._finalResolution).toBe(false);
+                    expect(root.children[0].children[0].children[3].selected).toBe(true);
+                    expect(root.children[0].children[0].children[3]._finalResolution).toBe(true);
+                    expect(tileset._refining).toBe(true);
+
+                    var commandList = scene.frameState.commandList;
+                    expect(commandList[0] instanceof ClearCommand).toBe(true);
+                    expect(commandList[0].stencil).toBe(0);
+                    var rs = commandList[1].renderState;
+                    expect(rs.cull.enabled).toBe(true);
+                    expect(rs.cull.face).toBe(CullFace.FRONT);
+                });
+            });
+        });
+
+        it('does not create duplicate backface commands if no selected descendants', function() {
+            viewRootOnly();
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+                scene.renderForSpecs();
+                var stats = tileset._statistics;
+                var root = tileset._root;
+
+                viewAllTiles();
+                scene.renderForSpecs();
+                return root.children[0].content.readyPromise.then(function() {
+                    scene.renderForSpecs();
+                    // 1 for root tile, 1 for stencil clear
+                    expect(stats.numberOfCommands).toEqual(2);
+                    expect(tileset._refining).toBe(true);
+
+                    var commandList = scene.frameState.commandList;
+                    expect(commandList[0] instanceof ClearCommand).toBe(true);
+                    expect(commandList[0].stencil).toBe(0);
+                });
+            });
+        });
+
+        it('does not add commands or stencil clear command with no selected tiles', function() {
+            var tileset = scene.primitives.add(createTileset({
+                url: tilesetUrl
+            }));
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            expect(tileset._selectedTiles.length).toEqual(0);
+            expect(stats.numberOfCommands).toEqual(0);
+        });
+
+        it ('does not add stencil clear command or backface commands when fully resolved', function() {
+            viewAllTiles();
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+                scene.renderForSpecs();
+                var stats = tileset._statistics;
+                expect(stats.numberOfCommands).toEqual(tileset._selectedTiles.length);
+
+                var commandList = scene.frameState.commandList;
+                var length = commandList.length;
+                for (var i = 0; i < length; ++i) {
+                    var command = commandList[i];
+                    expect(command instanceof ClearCommand).toBe(false);
+                    expect(command.renderState.cull.face).not.toBe(CullFace.FRONT);
+                }
+            });
+        });
+
+        it('mixLOD on', function() {
+            // Look at bottom-left corner of tileset
+            scene.camera.moveLeft(200.0);
+            scene.camera.moveDown(200.0);
+
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, { mixLOD: true }).then(function(tileset) {
+                var stats = tileset._statistics;
+                scene.renderForSpecs();
+                expect(stats.numberContentReady).toBe(2);
+            
+                viewAllTiles();
+                scene.renderForSpecs();
+                expect(tileset._selectedTiles.length).toBe(2);
+                // clear, root backface, root, tile
+                expect(stats.numberOfCommands).toBe(4);
+
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                    scene.renderForSpecs();
+                    expect(tileset._selectedTiles.length).toBe(4);
+                    expect(stats.numberOfCommands).toBe(4);
+                });
+            });
+        });
+
+        it('mixLOD off', function() {
+            // Look at bottom-left corner of tileset
+            scene.camera.moveLeft(200.0);
+            scene.camera.moveDown(200.0);
+
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, { mixLOD: false }).then(function(tileset) {
+                var stats = tileset._statistics;
+                scene.renderForSpecs();
+                expect(stats.numberContentReady).toBe(2);
+                
+                viewAllTiles();
+                scene.renderForSpecs();
+                expect(tileset._selectedTiles.length).toBe(1);
+                expect(stats.numberOfCommands).toBe(1); // just the root tile
+                
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                    scene.renderForSpecs();
+                    expect(tileset._selectedTiles.length).toBe(4);
+                    expect(stats.numberOfCommands).toBe(4);
+                });
+            });
+        });
+
+        it('loadSiblings', function() {
+            // Look at bottom-left corner of tileset
+            scene.camera.moveLeft(200.0);
+            scene.camera.moveDown(200.0);
+
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, { loadSiblings: false }).then(function(tileset) {
+                var stats = tileset._statistics;
+                scene.renderForSpecs();
+                expect(stats.numberContentReady).toBe(2);
+                tileset.loadSiblings = true;
+                scene.renderForSpecs();
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                    scene.renderForSpecs();
+                    expect(stats.numberContentReady).toBe(5);
+                });
+            });
+        });
+
+        it('lowMemory', function() {
+            // Look at bottom-left corner of tileset
+            scene.camera.moveLeft(200.0);
+            scene.camera.moveDown(200.0);
+
+            var tileset = scene.primitives.add(createTileset({
+                url: tilesetOfTilesetsUrl,
+                lowMemory: true,
+                skipSSEFactor: 0.1,         // tiny skip factor so we would normally load all tiles
+                skipGeometricFactor: 0.1,
+                skipLevels: 0
+            }));
+            return Cesium3DTilesTester.waitForReady(scene, tileset).then(function(tileset) {
+                scene.renderForSpecs();
+                return tileset._root.content.readyPromise.then(function() {
+                    tileset._root.children[0].refine = Cesium3DTileRefine.REPLACE;
+                    return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                        var stats = tileset._statistics;
+                        scene.renderForSpecs();
+                        expect(stats.numberContentReady).toBe(1);
+
+                        tileset.lowMemory = false;
+                        scene.renderForSpecs();``
+                        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                            scene.renderForSpecs();
+                            expect(stats.numberContentReady).toBe(2);
+                        });
+                    });
+                });
+            });
+        });
     });
 
     describe('without skipping LODs', function() {

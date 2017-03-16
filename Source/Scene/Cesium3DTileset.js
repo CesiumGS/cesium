@@ -1651,7 +1651,7 @@ define([
                 child.distanceToCamera = tile.distanceToCamera;
                 stack.push(child);
             }
-            return;
+            return state;
         }
 
         if (tile.refine === Cesium3DTileRefine.ADD) {
