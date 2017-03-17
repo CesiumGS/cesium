@@ -1020,7 +1020,7 @@ define([
             if (defined(rayIntersection) && defined(depthIntersection)) {
                 var depthDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, this.positionWC) : Number.POSITIVE_INFINITY;
                 var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, this.positionWC) : Number.POSITIVE_INFINITY;
-                this.frustum.width = depthDistance < rayDistance ? depthDistance : rayDistance;
+                this.frustum.width = Math.min(depthDistance, rayDistance);
             } else if (defined(depthIntersection)) {
                 this.frustum.width = Cartesian3.distance(depthIntersection, this.positionWC);
             } else if (defined(rayIntersection)) {
