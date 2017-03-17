@@ -2329,11 +2329,48 @@ defineSuite([
                         expect(stats.numberContentReady).toBe(1);
 
                         tileset.lowMemory = false;
-                        scene.renderForSpecs();``
+                        scene.renderForSpecs();
                         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
                             scene.renderForSpecs();
                             expect(stats.numberContentReady).toBe(2);
                         });
+                    });
+                });
+            });
+        });
+
+        it('selects children if no ancestors available', function() {
+            // Look at bottom-left corner of tileset
+            scene.camera.moveLeft(200.0);
+            scene.camera.moveDown(200.0);
+
+            var tileset = scene.primitives.add(createTileset({
+                url: tilesetOfTilesetsUrl,
+            }));
+
+            return Cesium3DTilesTester.waitForReady(scene, tileset).then(function(tileset) {
+                scene.renderForSpecs();
+                return tileset._root.content.readyPromise.then(function() {
+                    tileset._root.children[0].refine = Cesium3DTileRefine.REPLACE;
+                    return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                        var stats = tileset._statistics;
+                        scene.renderForSpecs();
+
+                        var parent = tileset._root.children[0];
+                        var child = parent.children[3].children[0];
+                        expect(child.contentReady).toBe(true);
+                        expect(parent.contentReady).toBe(false);
+                        expect(child.selected).toBe(true);
+                        expect(parent.selected).toBe(false);
+                        expect(stats.numberOfCommands).toEqual(1);
+
+                        viewAllTiles();
+                        scene.renderForSpecs();
+                        expect(child.contentReady).toBe(true);
+                        expect(parent.contentReady).toBe(false);
+                        expect(child.selected).toBe(true);
+                        expect(parent.selected).toBe(false);
+                        expect(stats.numberOfCommands).toEqual(2);
                     });
                 });
             });
