@@ -36,6 +36,7 @@ define([
         './CullingVolume',
         './DebugCameraPrimitive',
         './LabelCollection',
+        './OrthographicFrustum',
         './SceneMode',
         './ShadowMode',
         './TileBoundingRegion',
@@ -78,6 +79,7 @@ define([
         CullingVolume,
         DebugCameraPrimitive,
         LabelCollection,
+        OrthographicFrustum,
         SceneMode,
         ShadowMode,
         TileBoundingRegion,
@@ -1095,18 +1097,19 @@ define([
 
         // Avoid divide by zero when viewer is inside the tile
         var camera = frameState.camera;
+        var frustum = camera.frustum;
         var context = frameState.context;
         var height = context.drawingBufferHeight;
 
         var error;
-        if (frameState.mode === SceneMode.SCENE2D) {
-            var frustum = camera.frustum;
+        if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
+            if (defined(frustum._offCenterFrustum)) {
+                frustum = frustum._offCenterFrustum;
+            }
             var width = context.drawingBufferWidth;
-
             var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
             error = geometricError / pixelSize;
         } else {
-            // Avoid divide by zero when viewer is inside the tile
             var distance = Math.max(tile.distanceToCamera, CesiumMath.EPSILON7);
             var sseDenominator = camera.frustum.sseDenominator;
             error = (geometricError * height) / (distance * sseDenominator);
