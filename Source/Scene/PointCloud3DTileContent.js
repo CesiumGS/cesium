@@ -808,6 +808,7 @@ define([
     }
 
     var semantics = ['POSITION', 'COLOR', 'NORMAL'];
+    var tileConstants = ['RTC_CENTER', 'QUANTIZED_VOLUME_SCALE', 'QUANTIZED_VOLUME_OFFSET'];
 
     function getStyleableProperties(source, properties) {
         // Get all the properties used by this style
@@ -815,7 +816,7 @@ define([
         var matches = regex.exec(source);
         while (matches !== null) {
             var name = matches[1];
-            if ((semantics.indexOf(name) === -1) && (properties.indexOf(name) === -1)) {
+            if ((semantics.indexOf(name) === -1) && (properties.indexOf(name) === -1) && (tileConstants.indexOf(name) === -1)) {
                 properties.push(name);
             }
             matches = regex.exec(source);
@@ -830,6 +831,18 @@ define([
             var styleName = 'czm_tiles3d_style_' + semantic;
             if (source.indexOf(styleName) >= 0) {
                 properties.push(semantic);
+            }
+        }
+    }
+
+    function getStyleableTileConstants(source, properties) {
+        // Get the tile constants used by this style
+        var length = tileConstants.length;
+        for (var i = 0; i < length; ++i) {
+            var tileConstant = tileConstants[i];
+            var styleName = 'czm_tiles3d_style_' + tileConstant;
+            if (source.indexOf(styleName) >= 0) {
+                properties.push(tileConstant);
             }
         }
     }
@@ -852,6 +865,14 @@ define([
             var styleName = 'czm_tiles3d_style_' + semantic;
             var replaceName = semantic.toLowerCase();
             source = source.replace(new RegExp(styleName, 'g'), replaceName);
+        }
+
+        // Replace occurrences of czm_tiles3d_style_TILECONSTANT with tileConstant
+        length = tileConstants.length;
+        for (var i = 0; i < length; ++i) {
+            var tileConstant = tileConstants[i];
+            var styleName = 'czm_tiles3d_style_' + tileConstant;
+            source = source.replace(new RegExp(styleName, 'g'), tileConstant);
         }
 
         // Edit the function header to accept the point position, color, and normal
@@ -908,19 +929,23 @@ define([
         // Get the properties in use by the style
         var styleableProperties = [];
         var styleableSemantics = [];
+        var styleableTileConstants = [];
 
         if (hasColorStyle) {
             getStyleableProperties(colorStyleFunction, styleableProperties);
+            getStyleableTileConstants(colorStyleFunction, styleableTileConstants);
             getStyleableSemantics(colorStyleFunction, styleableSemantics);
             colorStyleFunction = modifyStyleFunction(colorStyleFunction);
         }
         if (hasShowStyle) {
             getStyleableProperties(showStyleFunction, styleableProperties);
+            getStyleableTileConstants(colorStyleFunction, styleableTileConstants);
             getStyleableSemantics(showStyleFunction, styleableSemantics);
             showStyleFunction = modifyStyleFunction(showStyleFunction);
         }
         if (hasPointSizeStyle) {
             getStyleableProperties(pointSizeStyleFunction, styleableProperties);
+            getStyleableTileConstants(colorStyleFunction, styleableTileConstants);
             getStyleableSemantics(pointSizeStyleFunction, styleableSemantics);
             pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
         }
@@ -1028,6 +1053,27 @@ define([
 
         if (isQuantized) {
             vs += 'uniform vec3 u_quantizedVolumeScale; \n';
+        }
+
+        if (styleableTileConstants.indexOf('RTC_CENTER') >= 0) {
+            if (!defined(content._rtcCenter)) {
+                throw new DeveloperError('Style references the RTC_CENTER tile constant but the point cloud does not have this value');                    
+            }
+            vs += 'const vec3 RTC_CENTER = vec3(' + content._rtcCenter.x + ', '  + content._rtcCenter.y + ', ' + content._rtcCenter.z + '); \n';
+        }
+
+        if (styleableTileConstants.indexOf('QUANTIZED_VOLUME_SCALE') >= 0) {
+            if (!defined(content._quantizedVolumeScale)) {
+                throw new DeveloperError('Style references the QUANTIZED_VOLUME_SCALE tile constant but the point cloud does not have this value');                    
+            }
+            vs += 'const vec3 QUANTIZED_VOLUME_SCALE = vec3(' + content._quantizedVolumeScale.x + ', '  + content._quantizedVolumeScale.y + ', ' + content._quantizedVolumeScale.z + '); \n';
+        }
+
+        if (styleableTileConstants.indexOf('QUANTIZED_VOLUME_OFFSET') >= 0) {
+            if (!defined(content._quantizedVolumeOffset)) {
+                throw new DeveloperError('Style references the QUANTIZED_VOLUME_OFFSET tile constant but the point cloud does not have this value');                    
+            }
+            vs += 'const vec3 QUANTIZED_VOLUME_OFFSET = vec3(' + content._quantizedVolumeOffset.x + ', '  + content._quantizedVolumeOffset.y + ', ' + content._quantizedVolumeOffset.z + '); \n';
         }
 
         if (hasColorStyle) {
