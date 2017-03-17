@@ -1211,7 +1211,6 @@ define([
             var distance = Cartesian3.magnitude(toCenter);
             Cartesian3.divideByScalar(toCenter, distance, toCenter);
             var dot = Cartesian3.dot(frameState.camera.directionWC, toCenter);
-            // child._centerDistanceToCamera = distance;
             child._centerZDepth = distance * dot;
         }
     }
@@ -1344,7 +1343,7 @@ define([
             var original = finalQueue.get(i);
             var tile = original;
             // traverse up the tree to find a ready ancestor
-            if (tile.hasContent) {  // could be Empty3DTileContent
+            if (tile.hasContent || tile.hasTilesetContent) {  // could be Empty3DTileContent
                 while (defined(tile) && !(tile.hasContent && tile.contentReady)) {
                     if (!tile.contentReady) {
                         tileset._refining = true;
@@ -1415,8 +1414,6 @@ define([
     };
 
     function sortForLoad(a, b) {
-        // return a.distanceToCamera - b.distanceToCamera;
-        // return a._centerZDistanceToCamera - b._centerZDistanceToCamera;
         var diff = b._sse - a._sse;
         if (diff === 0 || a.refine === Cesium3DTileRefine.ADD || b.refine === Cesium3DTileRefine.ADD) {
             return a.distanceToCamera - b.distanceToCamera;
