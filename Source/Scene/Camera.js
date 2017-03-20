@@ -3107,8 +3107,13 @@ define([
         return result;
     };
 
+    /**
+     * Switches the frustum/projection to perspective.
+     *
+     * This function is a no-op in 2D which must always be orthographic.
+     */
     Camera.prototype.switchToPerspectiveFrustum = function() {
-        if (this._mode === SceneMode.SCENE2D) {
+        if (this._mode === SceneMode.SCENE2D || this.frustum instanceof PerspectiveFrustum) {
             return;
         }
 
@@ -3118,45 +3123,28 @@ define([
         this.frustum.fov = CesiumMath.toRadians(60.0);
     };
 
+    /**
+     * Switches the frustum/projection to orthographic.
+     *
+     * This function is a no-op in 2D which will always be orthographic.
+     */
     Camera.prototype.switchToOrthographicFrustum = function() {
-        if (this._mode === SceneMode.SCENE2D) {
+        if (this._mode === SceneMode.SCENE2D || this.frustum instanceof OrthographicFrustum) {
             return;
         }
 
         var scene = this._scene;
-        var globe = scene._globe;
-
-        var distance;
-        if (!Matrix4.equals(Matrix4.IDENTITY, this.transform)) {
-            distance = Cartesian3.magnitude(this.position);
-        } else if (defined(globe)) {
-            var depthIntersection;
-            var rayIntersection;
-
-            var mousePosition = scratchAdjustOrtghographicFrustumMousePosition;
-            mousePosition.x = scene.drawingBufferWidth / 2.0;
-            mousePosition.y = scene.drawingBufferHeight / 2.0;
-
-            if (scene.pickPositionSupported) {
-                depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
-            }
-
-            var ray = this.getPickRay(mousePosition, pickGlobeScratchRay);
-            rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
-
-            var pickDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, this.positionWC) : Number.POSITIVE_INFINITY;
-            var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, this.positionWC) : Number.POSITIVE_INFINITY;
-
-            distance = pickDistance < rayDistance ? pickDistance : rayDistance;
-        }
-
-        if (!defined(distance)) {
-            distance = this.positionCartographic.height;
-        }
-
         this.frustum = new OrthographicFrustum();
         this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-        this.frustum.width = distance;
+
+        // It doesn't matter what we set this to. The adjust below will correct the width based on the camera position.
+        this.frustum.width = Cartesian3.magnitude(this.position);
+
+        // Check the projection matrix. It will always be defined, but we need to force an off-center update.
+        var projectionMatrix = this.frustum.projectionMatrix;
+        if (defined(projectionMatrix)) {
+            this._adjustOrthographicFrustum(true);
+        }
     };
 
     /**
