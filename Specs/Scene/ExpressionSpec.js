@@ -2028,6 +2028,19 @@ defineSuite([
 
         expression = new Expression('clamp(50.0, 75.0, 100.0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(75.0);
+
+        expression = new Expression('clamp(vec2(50.0,50.0), vec2(0.0,75.0), 100.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(50.0, 75.0));
+
+        expression = new Expression('clamp(vec2(50.0,50.0), vec2(0.0,75.0), vec2(25.0,100.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(25.0, 75.0));
+
+        expression = new Expression('clamp(vec3(50.0, 50.0, 50.0), vec3(0.0, 0.0, 75.0), vec3(100.0, 25.0, 100.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(50.0, 25.0, 75.0));
+
+        expression = new Expression('clamp(vec4(50.0, 50.0, 50.0, 100.0), vec4(0.0, 0.0, 75.0, 75.0), vec4(100.0, 25.0, 100.0, 85.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(50.0, 25.0, 75.0, 85.0));
+
     });
 
     it('throws if clamp function takes an invalid number of arguments', function() {
@@ -2048,9 +2061,55 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws if clamp function takes mismatching types', function() {
+        var expression = new Expression('clamp(0.0,vec2(0,1),0.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('clamp(vec2(0,1),vec3(0,1,2),0.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('clamp(vec2(0,1),vec2(0,1), vec3(1,2,3))');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates mix function', function() {
         var expression = new Expression('mix(0.0, 2.0, 0.5)');
         expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('mix(vec2(0.0,1.0), vec2(2.0,3.0), 0.5)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(1.0, 2.0));
+
+        expression = new Expression('mix(vec2(0.0,1.0), vec2(2.0,3.0), vec2(0.5,4.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(1.0, 9.0));
+
+        expression = new Expression('mix(vec3(0.0,1.0,2.0), vec3(2.0,3.0,4.0), vec3(0.5,4.0,5.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(1.0, 9.0, 12.0));
+
+        expression = new Expression('mix(vec4(0.0,1.0,2.0,1.5), vec4(2.0,3.0,4.0,2.5), vec4(0.5,4.0,5.0,3.5))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(1.0, 9.0, 12.0, 5.0));
+    });
+
+    it('throws if mix function takes mismatching types', function() {
+        var expression = new Expression('mix(0.0,vec2(0,1),0.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('mix(vec2(0,1),vec3(0,1,2),0.0)');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression('mix(vec2(0,1),vec2(0,1), vec3(1,2,3))');
+        expect(function() {
+            expression.evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('throws if mix function takes an invalid number of arguments', function() {
@@ -2079,19 +2138,16 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(0.5 * Math.PI, CesiumMath.EPSILON10);
 
         expression = new Expression('atan2(vec2(0,1),vec2(1,0))');
-        expect(expression.evaluate(frameState, undefined).x).toEqualEpsilon(0.0, CesiumMath.EPSILON10);
-        expect(expression.evaluate(frameState, undefined).y).toEqualEpsilon(0.5 * Math.PI, CesiumMath.EPSILON10);
+        expect(expression.evaluate(frameState, undefined))
+            .toEqualEpsilon(new Cartesian2(0.0, 0.5 * Math.PI), CesiumMath.EPSILON10);
 
         expression = new Expression('atan2(vec3(0,1,0.5),vec3(1,0,0.5))');
-        expect(expression.evaluate(frameState, undefined).x).toEqualEpsilon(0.0, CesiumMath.EPSILON10);
-        expect(expression.evaluate(frameState, undefined).y).toEqualEpsilon(0.5 * Math.PI, CesiumMath.EPSILON10);
-        expect(expression.evaluate(frameState, undefined).z).toEqualEpsilon(0.25 * Math.PI, CesiumMath.EPSILON10);
+        expect(expression.evaluate(frameState, undefined))
+            .toEqualEpsilon(new Cartesian3(0.0, 0.5 * Math.PI, 0.25 * Math.PI), CesiumMath.EPSILON10);
 
         expression = new Expression('atan2(vec4(0,1,0.5,1),vec4(1,0,0.5,0))');
-        expect(expression.evaluate(frameState, undefined).x).toEqualEpsilon(0.0, CesiumMath.EPSILON10);
-        expect(expression.evaluate(frameState, undefined).y).toEqualEpsilon(0.5 * Math.PI, CesiumMath.EPSILON10);
-        expect(expression.evaluate(frameState, undefined).z).toEqualEpsilon(0.25 * Math.PI, CesiumMath.EPSILON10);
-        expect(expression.evaluate(frameState, undefined).w).toEqualEpsilon(0.5 * Math.PI, CesiumMath.EPSILON10);
+        expect(expression.evaluate(frameState, undefined))
+            .toEqualEpsilon(new Cartesian4(0.0, 0.5 * Math.PI, 0.25 * Math.PI, 0.5 * Math.PI), CesiumMath.EPSILON10);
     });
 
     it('throws if atan2 function takes an invalid number of arguments', function() {
@@ -2104,17 +2160,20 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws if atan2 function takes invalid types / instances of arguments', function() {
+    it('throws if atan2 function takes mismatching types', function() {
+        var expression = new Expression('atan2(0.0,vec2(0,1))');
         expect(function() {
-            return new Expression('atan2(0.0, vec2(0,1))');
+            expression.evaluate(frameState, undefined);
         }).toThrowDeveloperError();
 
+        expression = new Expression('atan2(vec2(0,1),0.0)');
         expect(function() {
-            return new Expression('atan2(vec2(0,1),0.0)');
+            expression.evaluate(frameState, undefined);
         }).toThrowDeveloperError();
 
+        expression = new Expression('atan2(vec2(0,1),vec3(0,1,2))');
         expect(function() {
-            return new Expression('atan2(vec2(0,1),vec3(0,1,2))');
+            expression.evaluate(frameState, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -2146,17 +2205,20 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws if pow function takes invalid types / instances of arguments', function() {
+    it('throws if pow function takes mismatching types', function() {
+        var expression = new Expression('pow(0.0, vec2(0,1))');
         expect(function() {
-            return new Expression('pow(0.0, vec2(0,1))');
+            expression.evaluate(frameState, undefined);
         }).toThrowDeveloperError();
 
+        expression = new Expression('pow(vec2(0,1),0.0)');
         expect(function() {
-            return new Expression('pow(vec2(0,1),0.0)');
+            expression.evaluate(frameState, undefined);
         }).toThrowDeveloperError();
 
+        expression = new Expression('pow(vec2(0,1),vec3(0,1,2))');
         expect(function() {
-            return new Expression('pow(vec2(0,1),vec3(0,1,2))');
+            expression.evaluate(frameState, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -2190,13 +2252,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws if min function takes invalid types / instances of arguments', function() {
+    it('throws if min function takes mismatching types', function() {
+        var expression = new Expression('min(0.0, vec2(0,1))');
         expect(function() {
-            return new Expression('min(0.0, vec2(0,1))');
+            expression.evaluate(frameState, undefined);
         }).toThrowDeveloperError();
 
+        expression = new Expression('min(vec2(0,1),vec3(0,1,2))');
         expect(function() {
-            return new Expression('min(vec2(0,1),vec3(0,1,2))');
+            expression.evaluate(frameState, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -2254,13 +2318,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws if min function takes invalid types / instances of arguments', function() {
+    it('throws if min function takes mismatching types', function() {
+        var expression = new Expression('max(0.0, vec2(0,1))');
         expect(function() {
-            return new Expression('max(0.0, vec2(0,1))');
+            expression.evaluate(frameState, undefined);
         }).toThrowDeveloperError();
 
+        expression = new Expression('max(vec2(0,1),vec3(0,1,2))');
         expect(function() {
-            return new Expression('max(vec2(0,1),vec3(0,1,2))');
+            expression.evaluate(frameState, undefined);
         }).toThrowDeveloperError();
     });
 

@@ -79,10 +79,10 @@ define([
     };
 
     var binaryFunctions = {
-        atan2 : { evaluate: Math.atan2, requireTypeMatch: true },
-        pow : { evaluate: Math.pow, requireTypeMatch: true },
-        min : { evaluate: Math.min, requireTypeMatch: false },
-        max : { evaluate: Math.max, requireTypeMatch: false }
+        atan2 : Math.atan2,
+        pow : Math.pow,
+        min : Math.min,
+        max : Math.max
     };
 
     var unaryFunctions = {
@@ -806,14 +806,13 @@ define([
     }
 
     function getEvaluateBinaryFunction(call) {
-        var evaluate = binaryFunctions[call].evaluate;
-        var requireTypeMatch = binaryFunctions[call].requireTypeMatch;
+        var evaluate = binaryFunctions[call];
         return function(feature) {
             var left = this._left.evaluate(feature);
             var right = this._right.evaluate(feature);
 
             // Legal Type Mismatch
-            if (!requireTypeMatch && typeof right === 'number') {
+            if ((call === 'min' || call === 'max') && typeof right === 'number') {
                 if (left instanceof Cartesian2) {
                     return Cartesian2.fromElements(evaluate(left.x, right), evaluate(left.y, right), ScratchStorage.getCartesian2());
                 } else if (left instanceof Cartesian3) {
@@ -844,6 +843,40 @@ define([
     function getEvaluateTernaryFunction(call) {
         var evaluate = ternaryFunctions[call];
         return function(feature) {
+
+            var left = this._left.evaluate(feature);
+            var right = this._right.evaluate(feature);
+            var test = this._test.evaluate(feature);
+
+            // Legal Type Mismatch
+            if (typeof left === 'object' && typeof right === 'object' && typeof test === 'number') {
+                if (left instanceof Cartesian2 && right instanceof Cartesian2) {
+                    return Cartesian2.fromElements(evaluate(left.x, right.x, test), evaluate(left.y, right.y, test), ScratchStorage.getCartesian2());
+                } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+                    return Cartesian3.fromElements(evaluate(left.x, right.x, test), evaluate(left.y, right.y, test), evaluate(left.z, right.z, test), ScratchStorage.getCartesian3());
+                } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
+                    return Cartesian4.fromElements(evaluate(left.x, right.x, test), evaluate(left.y, right.y, test), evaluate(left.z, right.z, test), evaluate(left.w, right, right.w, test), ScratchStorage.getCartesian4());
+                }
+            }
+
+            // All Arguments match
+            if (typeof left === 'number' && typeof right === 'number' && typeof test === 'number') {
+                return evaluate(left, right, test);
+            } else if (left instanceof Cartesian2 && right instanceof Cartesian2 && test instanceof Cartesian2) {
+                return Cartesian2.fromElements(evaluate(left.x, right.x, test.x), evaluate(left.y, right.y, test.y), ScratchStorage.getCartesian2());
+            } else if (left instanceof Cartesian3 && right instanceof Cartesian3 && test instanceof Cartesian3) {
+                return Cartesian3.fromElements(evaluate(left.x, right.x, test.x), evaluate(left.y, right.y, test.y), evaluate(left.z, right.z, test.z), ScratchStorage.getCartesian3());
+            } else if (left instanceof Cartesian4 && right instanceof Cartesian4 && test instanceof Cartesian4) {
+                return Cartesian4.fromElements(evaluate(left.x, right.x, test.x), evaluate(left.y, right.y, test.y), evaluate(left.z, right.z, test.z), evaluate(left.w, right.w, test.w), ScratchStorage.getCartesian4());
+            }
+
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Function ' + call + '\'s type of both arguments must match');
+            //>>includeEnd('debug');
+            return evaluate(left, right); // jshint ignore:line
+
+
+
             return evaluate(this._left.evaluate(feature), this._right.evaluate(feature), this._test.evaluate(feature));
         };
     }
