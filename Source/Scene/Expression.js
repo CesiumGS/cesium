@@ -834,7 +834,7 @@ define([
             }
 
             //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Function ' + call + '\'s type of both arguments must match');
+            throw new DeveloperError('Function ' + call + '\'s argument types are mismatched');
             //>>includeEnd('debug');
             return evaluate(left, right); // jshint ignore:line
         };
@@ -871,7 +871,7 @@ define([
             }
 
             //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Function ' + call + '\'s type of both arguments must match');
+            throw new DeveloperError('Function ' + call + '\'s argument types are mismatched');
             //>>includeEnd('debug');
             return evaluate(left, right, test); // jshint ignore:line
         };
