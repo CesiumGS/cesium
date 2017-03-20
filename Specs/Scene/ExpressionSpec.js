@@ -2040,7 +2040,6 @@ defineSuite([
 
         expression = new Expression('clamp(vec4(50.0, 50.0, 50.0, 100.0), vec4(0.0, 0.0, 75.0, 75.0), vec4(100.0, 25.0, 100.0, 85.0))');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(50.0, 25.0, 75.0, 85.0));
-
     });
 
     it('throws if clamp function takes an invalid number of arguments', function() {
@@ -2192,7 +2191,6 @@ defineSuite([
 
         expression = new Expression('pow(vec4(5,4,3,2),vec4(0,2,3,5))');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(1.0, 16.0, 27.0, 32.0));
-
     });
 
     it('throws if pow function takes an invalid number of arguments', function() {

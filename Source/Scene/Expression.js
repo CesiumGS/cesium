@@ -873,11 +873,7 @@ define([
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Function ' + call + '\'s type of both arguments must match');
             //>>includeEnd('debug');
-            return evaluate(left, right); // jshint ignore:line
-
-
-
-            return evaluate(this._left.evaluate(feature), this._right.evaluate(feature), this._test.evaluate(feature));
+            return evaluate(left, right, test); // jshint ignore:line
         };
     }
 
