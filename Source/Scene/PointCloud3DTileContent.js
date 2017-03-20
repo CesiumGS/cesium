@@ -605,8 +605,17 @@ define([
 
         if (isQuantized) {
             uniformMap = combine(uniformMap, {
+                u_quantizedVolumeOffset : function() {
+                    return content._quantizedVolumeOffset;
+                },
                 u_quantizedVolumeScale : function() {
                     return content._quantizedVolumeScale;
+                }
+            });
+        } else if (defined(content._rtcCenter)) {
+            uniformMap = combine(uniformMap, {
+                u_rtcCenter : function() {
+                    return content._rtcCenter;
                 }
             });
         }
@@ -807,8 +816,8 @@ define([
         });
     }
 
-    var semantics = ['POSITION', 'COLOR', 'NORMAL'];
-    var tileConstants = ['RTC_CENTER', 'QUANTIZED_VOLUME_SCALE', 'QUANTIZED_VOLUME_OFFSET'];
+    var semantics = ['POSITION', 'COLOR', 'NORMAL', 'ABSOLUTE_POSITION'];
+    var calculatedSemantics = ['DISTANCE_TO_EARTHCENTER'];
 
     function getStyleableProperties(source, properties) {
         // Get all the properties used by this style
@@ -816,7 +825,7 @@ define([
         var matches = regex.exec(source);
         while (matches !== null) {
             var name = matches[1];
-            if ((semantics.indexOf(name) === -1) && (properties.indexOf(name) === -1) && (tileConstants.indexOf(name) === -1)) {
+            if ((semantics.indexOf(name) === -1) && (properties.indexOf(name) === -1) && (calculatedSemantics.indexOf(name) === -1)) {
                 properties.push(name);
             }
             matches = regex.exec(source);
@@ -831,18 +840,6 @@ define([
             var styleName = 'czm_tiles3d_style_' + semantic;
             if (source.indexOf(styleName) >= 0) {
                 properties.push(semantic);
-            }
-        }
-    }
-
-    function getStyleableTileConstants(source, properties) {
-        // Get the tile constants used by this style
-        var length = tileConstants.length;
-        for (var i = 0; i < length; ++i) {
-            var tileConstant = tileConstants[i];
-            var styleName = 'czm_tiles3d_style_' + tileConstant;
-            if (source.indexOf(styleName) >= 0) {
-                properties.push(tileConstant);
             }
         }
     }
@@ -867,16 +864,11 @@ define([
             source = source.replace(new RegExp(styleName, 'g'), replaceName);
         }
 
-        // Replace occurrences of czm_tiles3d_style_TILECONSTANT with tileConstant
-        length = tileConstants.length;
-        for (var i = 0; i < length; ++i) {
-            var tileConstant = tileConstants[i];
-            var styleName = 'czm_tiles3d_style_' + tileConstant;
-            source = source.replace(new RegExp(styleName, 'g'), tileConstant);
-        }
+        // Replace calculated semantics
+        source = source.replace(new RegExp('czm_tiles3d_style_DISTANCE_TO_EARTHCENTER', 'g'), 'length(absolute_position)');
 
         // Edit the function header to accept the point position, color, and normal
-        return source.replace('()', '(vec3 position, vec4 color, vec3 normal)');
+        return source.replace('()', '(vec3 position, vec3 absolute_position, vec4 color, vec3 normal)');
     }
 
     function createShaders(content, frameState, style) {
@@ -929,23 +921,19 @@ define([
         // Get the properties in use by the style
         var styleableProperties = [];
         var styleableSemantics = [];
-        var styleableTileConstants = [];
 
         if (hasColorStyle) {
             getStyleableProperties(colorStyleFunction, styleableProperties);
-            getStyleableTileConstants(colorStyleFunction, styleableTileConstants);
             getStyleableSemantics(colorStyleFunction, styleableSemantics);
             colorStyleFunction = modifyStyleFunction(colorStyleFunction);
         }
         if (hasShowStyle) {
             getStyleableProperties(showStyleFunction, styleableProperties);
-            getStyleableTileConstants(showStyleFunction, styleableTileConstants);
             getStyleableSemantics(showStyleFunction, styleableSemantics);
             showStyleFunction = modifyStyleFunction(showStyleFunction);
         }
         if (hasPointSizeStyle) {
             getStyleableProperties(pointSizeStyleFunction, styleableProperties);
-            getStyleableTileConstants(pointSizeStyleFunction, styleableTileConstants);
             getStyleableSemantics(pointSizeStyleFunction, styleableSemantics);
             pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
         }
@@ -1053,27 +1041,9 @@ define([
 
         if (isQuantized) {
             vs += 'uniform vec3 u_quantizedVolumeScale; \n';
-        }
-
-        if (styleableTileConstants.indexOf('RTC_CENTER') >= 0) {
-            if (!defined(content._rtcCenter)) {
-                throw new DeveloperError('Style references the RTC_CENTER tile constant but the point cloud does not have this value');                    
-            }
-            vs += 'const vec3 RTC_CENTER = vec3(' + content._rtcCenter.x + ', '  + content._rtcCenter.y + ', ' + content._rtcCenter.z + '); \n';
-        }
-
-        if (styleableTileConstants.indexOf('QUANTIZED_VOLUME_SCALE') >= 0) {
-            if (!defined(content._quantizedVolumeScale)) {
-                throw new DeveloperError('Style references the QUANTIZED_VOLUME_SCALE tile constant but the point cloud does not have this value');                    
-            }
-            vs += 'const vec3 QUANTIZED_VOLUME_SCALE = vec3(' + content._quantizedVolumeScale.x + ', '  + content._quantizedVolumeScale.y + ', ' + content._quantizedVolumeScale.z + '); \n';
-        }
-
-        if (styleableTileConstants.indexOf('QUANTIZED_VOLUME_OFFSET') >= 0) {
-            if (!defined(content._quantizedVolumeOffset)) {
-                throw new DeveloperError('Style references the QUANTIZED_VOLUME_OFFSET tile constant but the point cloud does not have this value');                    
-            }
-            vs += 'const vec3 QUANTIZED_VOLUME_OFFSET = vec3(' + content._quantizedVolumeOffset.x + ', '  + content._quantizedVolumeOffset.y + ', ' + content._quantizedVolumeOffset.z + '); \n';
+            vs += 'uniform vec3 u_quantizedVolumeOffset; \n';
+        } else if (defined(content._rtcCenter)){
+            vs += 'uniform vec3 u_rtcCenter; \n';
         }
 
         if (hasColorStyle) {
@@ -1112,8 +1082,14 @@ define([
 
         if (isQuantized) {
             vs += '    vec3 position = a_position * u_quantizedVolumeScale; \n';
+            vs += '    vec3 absolute_position = u_quantizedVolumeOffset + position; \n';
         } else {
             vs += '    vec3 position = a_position; \n';
+            if (defined(content._rtcCenter)) {
+                vs += '    vec3 absolute_position = u_rtcCenter + position; \n';
+            } else {
+                vs += '    vec3 absolute_position = position; \n';
+            }
         }
 
         if (hasNormals) {
@@ -1127,15 +1103,15 @@ define([
         }
 
         if (hasColorStyle) {
-            vs += '    color = getColorFromStyle(position, color, normal); \n';
+            vs += '    color = getColorFromStyle(position, absolute_position, color, normal); \n';
         }
 
         if (hasShowStyle) {
-            vs += '    float show = float(getShowFromStyle(position, color, normal)); \n';
+            vs += '    float show = float(getShowFromStyle(position, absolute_position, color, normal)); \n';
         }
 
         if (hasPointSizeStyle) {
-            vs += '    gl_PointSize = getPointSizeFromStyle(position, color, normal); \n';
+            vs += '    gl_PointSize = getPointSizeFromStyle(position, absolute_position, color, normal); \n';
         } else {
             vs += '    gl_PointSize = u_pointSize; \n';
         }
