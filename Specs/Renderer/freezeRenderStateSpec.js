@@ -10,7 +10,9 @@ defineSuite([
             var fresh = {
                 a: 1,
                 b: 'b',
-                c: 2.2
+                c: 2.2,
+                u: undefined,
+                n: null
             };
 
             var frozen = freezeRenderState(fresh);

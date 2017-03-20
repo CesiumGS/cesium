@@ -18,7 +18,7 @@ define([
          *
          */
         function freezeRenderState(renderState) {
-            if (typeof renderState !== 'object') {
+            if (typeof renderState !== 'object' || renderState === null) {
                 return renderState;
             }
 
