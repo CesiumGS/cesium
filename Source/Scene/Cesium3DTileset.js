@@ -125,10 +125,8 @@ define([
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      * @param {Boolean} [options.skipLODs=true] Determines if level-of-detail skipping optimization should be used.
      * @param {Number} [options.skipSSEFactor=10] Multiplier defining the minumum screen space error to skip when loading tiles.
-     * @param {Number} [options.skipGeometricFactor=1] Multiplier defining the minumum geometric error to skip when loading tiles.
      * @param {Number} [options.skipLevels=1] Multiplier defining the minumum number of levels to skip when loading tiles.
      * @param {Boolean} [options.lowMemory=false] Determines whether low memory level-of-detail skipping should be used.
-     * @param {Boolean} [options.mixLOD=true] Determines whether different levels-of-detail should be rendered together.
      * @param {Boolean} [options.loadSiblings=false] Determines whether sibling tiles should be loaded when skipping levels-of-detail.
      *
      * @example
@@ -509,18 +507,6 @@ define([
         this.skipSSEFactor = defaultValue(options.skipSSEFactor, 10);
 
         /**
-         * This is a multiplier defining the minumum geometric error to skip.
-         * If current tile has geometric error of 100, no tiles will be loaded unless they
-         * are leaves or have a geometric error <= 100 / skipGeometricFactor.
-         * 
-         * Only used when tileset.skipLODs === true.
-         *
-         * @type {Number}
-         * @default 1
-         */
-        this.skipGeometricFactor = defaultValue(options.skipGeometricFactor, 1);
-
-        /**
          * This is a constant defining the minumum number of levels skip.
          * If current tile is level 1, no tiles will be loaded unless they
          * are at level greater than 2.
@@ -542,18 +528,6 @@ define([
          * @default false
          */
         this.lowMemory = defaultValue(options.lowMemory, false);
-
-        /**
-         * Determines whether different levels-of-detail should be rendered together.
-         * When true, a tile will not refine until all children that meet the level-skipping
-         * constraints are downloaded.
-         *
-         * Only used when tileset.skipLODs === true.
-         * 
-         * @type {Boolean}
-         * @default true
-         */
-        this.mixLOD = defaultValue(options.mixLOD, true);
 
         /**
          * Determines whether sibling tiles should be loaded when skipping levels-of-detail.
@@ -1494,7 +1468,7 @@ define([
 
         markNearestLoadedTilesForSelection(selectionState, tileset, frameState, outOfCore);
 
-        if (!tileset.lowMemory && tileset._refining) {
+        if (tileset._refining) {
             markTilesAsFinal(selectionQueue);
         }
 
@@ -1528,24 +1502,18 @@ define([
             var nextCount = nextQueue.length;
             var finalCount = finalQueue.length;
 
-            var refined = queueDescendants(tileset, processTile, selectionState, frameState, outOfCore, iteration);
-            if (!refined && !tileset.lowMemory) {   // in low memory mode, we don't wait for refinement
-                // tiles not refined. splice any descendants added
-                finalQueue.length = finalCount;
-                nextQueue.length = nextCount;
-                finalQueue.push(processTile);
-            }
+            queueDescendants(tileset, processTile, selectionState, frameState, outOfCore, iteration);
         }
         selectionState.done = (nextQueue.length === 0);
     }
 
     function selectionHeuristic(tileset, ancestor, tile) {
-        return (tile._sse < ancestor._sse / tileset.skipSSEFactor) &&
-               (tile.geometricError < ancestor.geometricError / tileset.skipGeometricFactor) &&
+        return (ancestor !== tile && tile.hasContent && !tileset.lowMemory) && 
+               (tile._sse < ancestor._sse / tileset.skipSSEFactor) &&
                (tile._depth > ancestor._depth + tileset.skipLevels);
     }
 
-    function updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, state, loadSiblings) {
+    function updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, loadSiblings) {
         var children = tile.children;
         var childrenLength = children.length;
 
@@ -1569,38 +1537,24 @@ define([
                 } else {
                     touch(tileset, child, outOfCore);
                     if (loadSiblings) {
-                        state = loadTile(tileset, child, state);
+                        loadTile(tileset, child);
                     }
                 }
             }
         }
-
-        return state;
     }
 
-    var ProcessingState = freezeObject({
-        REFINED: 1 << 0,
-        ANY_READY: 1 << 1
-    });
-
-    function loadTile(tileset, tile, state) {
+    function loadTile(tileset, tile) {
         if (tile.contentUnloaded) {
             tile._loadHeap.insert(tile);
         }
-        if (!tile.contentReady) {
-            state &= ~ProcessingState.REFINED;
-        } else {
-            state |= ProcessingState.ANY_READY;
-        }
-        return state;
     }
 
-    function loadAndAddToQueue(tileset, tile, queue, state) {
-        state = loadTile(tileset, tile, state);
+    function loadAndAddToQueue(tileset, tile, queue) {
+        loadTile(tileset, tile);
         if (isVisible(tile.visibilityPlaneMask)) {
             queue.push(tile);
         }
-        return state;
     }
 
     function visitTile(tileset, tile, frameState, outOfCore) {
@@ -1615,20 +1569,16 @@ define([
     function queueDescendants(tileset, start, selectionState, frameState, outOfCore) {
         var stack = tempStack;
 
-        var state = ProcessingState.REFINED & ~ProcessingState.ANY_READY;
-        state = queueTile(tileset, start, start, stack, selectionState, frameState, outOfCore, state);
+        queueTile(tileset, start, start, stack, selectionState, frameState, outOfCore);
 
         while (stack.length > 0) {
             var tile = stack.pop();
             visitTile(tileset, tile, frameState, outOfCore);
-            state = queueTile(tileset, start, tile, stack, selectionState, frameState, outOfCore, state);
+            queueTile(tileset, start, tile, stack, selectionState, frameState, outOfCore);
         }
-
-        // always refined if mixLOD enabled
-        return tileset.mixLOD || (state & ProcessingState.REFINED) !== 0;
     }
 
-    function queueTile(tileset, start, tile, stack, selectionState, frameState, outOfCore, state) {
+    function queueTile(tileset, start, tile, stack, selectionState, frameState, outOfCore) {
         var nextQueue = selectionState.nextQueue;
         var finalQueue = selectionState.finalQueue;
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
@@ -1639,7 +1589,6 @@ define([
                 tile._loadHeap.insert(tile);
             }
             if (!tile.contentReady) {
-                state &= ~ProcessingState.REFINED;
                 finalQueue.push(tile);
             } else {
                 var child = tile.children[0];
@@ -1648,30 +1597,30 @@ define([
                 child.distanceToCamera = tile.distanceToCamera;
                 stack.push(child);
             }
-            return state;
+            return;
         }
 
         if (tile.refine === Cesium3DTileRefine.ADD) {
-            state = loadAndAddToQueue(tileset, tile, finalQueue, state);
-            state = updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, state, loadSiblings);
+            loadAndAddToQueue(tileset, tile, finalQueue);
+            updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, loadSiblings);
         } else {
             if (tile.children.length === 0) {
-                state = loadAndAddToQueue(tileset, tile, finalQueue, state);
+                loadAndAddToQueue(tileset, tile, finalQueue);
             } else if (tile._sse <= maximumScreenSpaceError) {
                 if (tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION) {
                     if (computeChildrenVisibility(tile, frameState, false) & Cesium3DTileChildrenVisibility.VISIBLE) {
-                        state = loadAndAddToQueue(tileset, tile, finalQueue, state);
+                        loadAndAddToQueue(tileset, tile, finalQueue);
                     }
                 } else {
-                    state = loadAndAddToQueue(tileset, tile, finalQueue, state);
+                    loadAndAddToQueue(tileset, tile, finalQueue);
                 }
-            } else if (start !== tile && tile.hasContent && !tileset.lowMemory && selectionHeuristic(tileset, start, tile)) {
-                state = loadAndAddToQueue(tileset, tile, nextQueue, state);
+            } else if (selectionHeuristic(tileset, start, tile)) {
+                loadAndAddToQueue(tileset, tile, nextQueue);
             } else {
-                state = updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, state, loadSiblings);
+                updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, loadSiblings);
             }
         }
-        return state;
+        return;
     }
 
     var tempStack2 = [];
@@ -2166,7 +2115,7 @@ define([
 
         var tile, i;
 
-        if (tileset._refining && tileset.skipLODs && tileset.mixLOD && frameState.context.stencilBuffer && length > 0) {
+        if (tileset._refining && tileset.skipLODs && frameState.context.stencilBuffer && length > 0) {
 
             commandList.push(new ClearCommand({
                 stencil : 0

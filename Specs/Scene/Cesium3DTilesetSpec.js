@@ -2242,53 +2242,6 @@ defineSuite([
             });
         });
 
-        it('mixLOD on', function() {
-            // Look at bottom-left corner of tileset
-            scene.camera.moveLeft(200.0);
-            scene.camera.moveDown(200.0);
-
-            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, { mixLOD: true }).then(function(tileset) {
-                var stats = tileset._statistics;
-                scene.renderForSpecs();
-                expect(stats.numberContentReady).toBe(2);
-            
-                viewAllTiles();
-                scene.renderForSpecs();
-                expect(tileset._selectedTiles.length).toBe(2);
-                // clear, root backface, root, tile
-                expect(stats.numberOfCommands).toBe(4);
-
-                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
-                    scene.renderForSpecs();
-                    expect(tileset._selectedTiles.length).toBe(4);
-                    expect(stats.numberOfCommands).toBe(4);
-                });
-            });
-        });
-
-        it('mixLOD off', function() {
-            // Look at bottom-left corner of tileset
-            scene.camera.moveLeft(200.0);
-            scene.camera.moveDown(200.0);
-
-            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, { mixLOD: false }).then(function(tileset) {
-                var stats = tileset._statistics;
-                scene.renderForSpecs();
-                expect(stats.numberContentReady).toBe(2);
-                
-                viewAllTiles();
-                scene.renderForSpecs();
-                expect(tileset._selectedTiles.length).toBe(1);
-                expect(stats.numberOfCommands).toBe(1); // just the root tile
-                
-                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
-                    scene.renderForSpecs();
-                    expect(tileset._selectedTiles.length).toBe(4);
-                    expect(stats.numberOfCommands).toBe(4);
-                });
-            });
-        });
-
         it('loadSiblings', function() {
             // Look at bottom-left corner of tileset
             scene.camera.moveLeft(200.0);
@@ -2316,7 +2269,6 @@ defineSuite([
                 url: tilesetOfTilesetsUrl,
                 lowMemory: true,
                 skipSSEFactor: 0.1,         // tiny skip factor so we would normally load all tiles
-                skipGeometricFactor: 0.1,
                 skipLevels: 0
             }));
             return Cesium3DTilesTester.waitForReady(scene, tileset).then(function(tileset) {
