@@ -3,12 +3,11 @@ Change Log
 
 ### 1.32 - 2017-04-03
 
-* Breaking changes
-    * The top-level `properties` in an `Entity` created by `GeoJsonDataSource` are now instances of `ConstantProperty` instead of raw values.
 * Deprecated
     * The `left`, `right`, `bottom`, and `top` properties of `OrthographicFrustum` are deprecated and will be removed in 1.33. Use `OrthographicOffCenterFrustum` instead.
 * Breaking changes
     * Removed `ArcGisImageServerTerrainProvider`.
+    * The top-level `properties` in an `Entity` created by `GeoJsonDataSource` are now instances of `ConstantProperty` instead of raw values.
 * Added `Camera.flyTo` and `Camera.flyToBoundingSphere` options [#5070](https://github.com/AnalyticalGraphicsInc/cesium/pull/5070)
     * `flyOverLongitude` to select one of two possible on Globe paths which camera should fly.
     * `flyOverLongitudeWeight` to set a threshold: how many times the `flyOverLongitude` way can be than shortest path.
