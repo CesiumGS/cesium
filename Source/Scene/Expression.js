@@ -855,7 +855,7 @@ define([
                 } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
                     return Cartesian3.fromElements(evaluate(left.x, right.x, test), evaluate(left.y, right.y, test), evaluate(left.z, right.z, test), ScratchStorage.getCartesian3());
                 } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
-                    return Cartesian4.fromElements(evaluate(left.x, right.x, test), evaluate(left.y, right.y, test), evaluate(left.z, right.z, test), evaluate(left.w, right, right.w, test), ScratchStorage.getCartesian4());
+                    return Cartesian4.fromElements(evaluate(left.x, right.x, test), evaluate(left.y, right.y, test), evaluate(left.z, right.z, test), evaluate(left.w, right.w, test), ScratchStorage.getCartesian4());
                 }
             }
 
