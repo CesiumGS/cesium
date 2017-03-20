@@ -32,6 +32,7 @@ defineSuite([
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
+        'Scene/PerspectiveFrustum',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -68,6 +69,7 @@ defineSuite([
         ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
+        PerspectiveFrustum,
         createScene,
         pollToPromise,
         when) {
@@ -156,6 +158,11 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
     });
 
     function addZoomTo(model) {
@@ -2282,6 +2289,31 @@ defineSuite([
                 var reference1 = commands[0].renderState.stencilTest.reference;
                 var reference2 = commands[2].renderState.stencilTest.reference;
                 expect(reference2).toEqual(reference1 + 1);
+            });
+        });
+    });
+
+    it('Gets memory usage', function() {
+        // Texture is originally 211*211 but is scaled up to 256*256 to support its minification filter and then is mipmapped
+        var expectedTextureMemory = Math.floor(256*256*4*(4/3));
+        var expectedVertexMemory = 840;
+        var options = {
+            cacheKey : 'memory-usage-test',
+            incrementallyLoadTextures : false
+        };
+        return loadModel(texturedBoxUrl, options).then(function(model) {
+            // The first model owns the resources
+            expect(model.vertexMemorySizeInBytes).toBe(expectedVertexMemory);
+            expect(model.textureMemorySizeInBytes).toBe(expectedTextureMemory);
+            expect(model.cachedVertexMemorySizeInBytes).toBe(0);
+            expect(model.cachedTextureMemorySizeInBytes).toBe(0);
+
+            return loadModel(texturedBoxUrl, options).then(function(model) {
+                // The second model is sharing the resources, so its memory usage is reported as 0
+                expect(model.vertexMemorySizeInBytes).toBe(0);
+                expect(model.textureMemorySizeInBytes).toBe(0);
+                expect(model.cachedVertexMemorySizeInBytes).toBe(expectedVertexMemory);
+                expect(model.cachedTextureMemorySizeInBytes).toBe(expectedTextureMemory);
             });
         });
     });

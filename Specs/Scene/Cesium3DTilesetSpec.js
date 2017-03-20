@@ -7,6 +7,7 @@ defineSuite([
         'Core/defined',
         'Core/HeadingPitchRange',
         'Core/loadWithXhr',
+        'Core/Math',
         'Core/Matrix4',
         'Core/PrimitiveType',
         'Core/RequestScheduler',
@@ -20,6 +21,7 @@ defineSuite([
         'Scene/Cesium3DTileStyle',
         'Scene/CullFace',
         'Scene/CullingVolume',
+        'Scene/PerspectiveFrustum',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
         'Specs/pollToPromise',
@@ -32,6 +34,7 @@ defineSuite([
         defined,
         HeadingPitchRange,
         loadWithXhr,
+        CesiumMath,
         Matrix4,
         PrimitiveType,
         RequestScheduler,
@@ -45,6 +48,7 @@ defineSuite([
         Cesium3DTileStyle,
         CullFace,
         CullingVolume,
+        PerspectiveFrustum,
         Cesium3DTilesTester,
         createScene,
         pollToPromise,
@@ -78,6 +82,7 @@ defineSuite([
 
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
+    var noBatchIdsUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
 
     var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
     var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
@@ -108,7 +113,12 @@ defineSuite([
     // Parent tile with content and four child tiles with content with viewer request volume for each child
     var tilesetReplacementWithViewerRequestVolumeUrl = './Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume';
 
+    var tilesetWithExternalResourcesUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources';
+
     var styleUrl = './Data/Cesium3DTiles/Style/style.json';
+
+    var pointCloudUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB';
+    var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
 
     var originalMaximumRequests;
 
@@ -122,6 +132,12 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
+
         originalMaximumRequests = RequestScheduler.maximumRequests;
         viewAllTiles();
     });
@@ -193,7 +209,7 @@ defineSuite([
     });
 
     it('url and tilesetUrl set up correctly given tileset.json path', function() {
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset3.json';
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
         var tileset = new Cesium3DTileset({
             url : path
         });
@@ -263,6 +279,30 @@ defineSuite([
         });
     });
 
+    it('passes version in query string to all external resources', function() {
+        //Spy on loadWithXhr so we can verify requested urls
+        spyOn(loadWithXhr, 'load').and.callThrough();
+
+        var queryParams = '?a=1&b=boy';
+        var queryParamsWithVersion = '?a=1&b=boy&v=1.2.3';
+        return Cesium3DTilesTester.loadTileset(scene, tilesetWithExternalResourcesUrl + queryParams).then(function(tileset) {
+            var calls = loadWithXhr.load.calls.all();
+            var callsLength = calls.length;
+            for (var i = 0; i < callsLength; ++i) {
+                var url = calls[0].args[0];
+                if (url.indexOf(tilesetWithExternalResourcesUrl) >= 0) {
+                    var query = url.slice(url.indexOf('?'));
+                    if (url.indexOf('tileset.json') >= 0) {
+                        // The initial tileset.json does not have a tileset version parameter
+                        expect(query).toBe(queryParams);
+                    } else {
+                        expect(query).toBe(queryParamsWithVersion);
+                    }
+                }
+            }
+        });
+    });
+
     it('throws when getting asset and tileset is not ready', function() {
         var tileset = new Cesium3DTileset({
             url : tilesetUrl
@@ -310,7 +350,7 @@ defineSuite([
 
     var noSkipLODTests = [];
     var skipLODTests = [];
-    
+
     var createTileset = function(options) {
         return new Cesium3DTileset(options);
     };
@@ -389,7 +429,7 @@ defineSuite([
                 var stats = tileset._statistics;
                 expect(stats.visited).toEqual(5);
                 expect(stats.numberOfCommands).toEqual(5);
-            }); 
+            });
         });
 
         it('renders tileset in 2D', function() {
@@ -447,6 +487,187 @@ defineSuite([
                     expect(stats.numberOfPendingRequests).toEqual(0);
                     expect(stats.numberProcessing).toEqual(0);
                 });
+            });
+        });
+
+        function checkPointAndFeatureCounts(tileset, features, points) {
+            var stats = tileset._statistics;
+
+            expect(stats.numberOfFeaturesSelected).toEqual(0);
+            expect(stats.numberOfFeaturesLoaded).toEqual(0);
+            expect(stats.numberOfPointsSelected).toEqual(0);
+            expect(stats.numberOfPointsLoaded).toEqual(0);
+
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                scene.renderForSpecs();
+                expect(stats.numberOfFeaturesSelected).toEqual(features);
+                expect(stats.numberOfFeaturesLoaded).toEqual(features);
+                expect(stats.numberOfPointsSelected).toEqual(points);
+                expect(stats.numberOfPointsLoaded).toEqual(points);
+
+                viewNothing();
+                scene.renderForSpecs();
+
+                expect(stats.numberOfFeaturesSelected).toEqual(0);
+                expect(stats.numberOfFeaturesLoaded).toEqual(features);
+                expect(stats.numberOfPointsSelected).toEqual(0);
+                expect(stats.numberOfPointsLoaded).toEqual(points);
+
+                tileset.trimLoadedTiles();
+
+                scene.renderForSpecs();
+
+                expect(stats.numberOfFeaturesSelected).toEqual(0);
+                expect(stats.numberOfFeaturesLoaded).toEqual(0);
+                expect(stats.numberOfPointsSelected).toEqual(0);
+                expect(stats.numberOfPointsLoaded).toEqual(0);
+            });
+        }
+
+        it('verify batched features statistics', function() {
+            var tileset = scene.primitives.add(new Cesium3DTileset({
+                url : withBatchTableUrl
+            }));
+
+            return checkPointAndFeatureCounts(tileset, 10, 0);
+        });
+
+        it('verify no batch table features statistics', function() {
+            var tileset = scene.primitives.add(new Cesium3DTileset({
+                url : noBatchIdsUrl
+            }));
+
+            return checkPointAndFeatureCounts(tileset, 0, 0);
+        });
+
+        it('verify instanced features statistics', function() {
+            var tileset = scene.primitives.add(new Cesium3DTileset({
+                url : instancedRedMaterialUrl
+            }));
+
+            return checkPointAndFeatureCounts(tileset, 25, 0);
+        });
+
+        it('verify composite features statistics', function() {
+            var tileset = scene.primitives.add(new Cesium3DTileset({
+                url : compositeUrl
+            }));
+
+            return checkPointAndFeatureCounts(tileset, 35, 0);
+        });
+
+        it('verify tileset of tilesets features statistics', function() {
+            var tileset = scene.primitives.add(new Cesium3DTileset({
+                url : tilesetOfTilesetsUrl
+            }));
+
+            return checkPointAndFeatureCounts(tileset, 50, 0);
+        });
+
+        it('verify points statistics', function() {
+            scene.camera.lookAt(Cartesian3.fromRadians(-1.31968, 0.698874, 5.0), new HeadingPitchRange(0.0, -1.57, 5.0));
+
+            var tileset = scene.primitives.add(new Cesium3DTileset({
+                url : pointCloudUrl
+            }));
+
+            return checkPointAndFeatureCounts(tileset, 0, 1000);
+        });
+
+        it('verify batched points statistics', function() {
+            scene.camera.lookAt(Cartesian3.fromRadians(-1.31968, 0.698874, 5.0), new HeadingPitchRange(0.0, -1.57, 5.0));
+
+            var tileset = scene.primitives.add(new Cesium3DTileset({
+                url : pointCloudBatchedUrl
+            }));
+
+            return checkPointAndFeatureCounts(tileset, 8, 1000);
+        });
+
+        it('verify memory usage statistics', function() {
+            // Calculations in Batched3DModel3DTilesContentSpec
+            var singleTileVertexMemory = 8880;
+            var singleTileTextureMemory = 0;
+            var singleTileBatchTextureMemory = 40;
+            var singleTilePickTextureMemory = 40;
+            var tilesLength = 5;
+
+            viewNothing();
+            return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+                var stats = tileset._statistics;
+
+                // No tiles loaded
+                expect(stats.vertexMemorySizeInBytes).toEqual(0);
+                expect(stats.textureMemorySizeInBytes).toEqual(0);
+                expect(stats.batchTableMemorySizeInBytes).toEqual(0);
+
+                viewRootOnly();
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                    // Root tile loaded
+                    expect(stats.vertexMemorySizeInBytes).toEqual(singleTileVertexMemory);
+                    expect(stats.textureMemorySizeInBytes).toEqual(singleTileTextureMemory);
+                    expect(stats.batchTableMemorySizeInBytes).toEqual(0);
+
+                    viewAllTiles();
+                    return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                        // All tiles loaded
+                        expect(stats.vertexMemorySizeInBytes).toEqual(singleTileVertexMemory * tilesLength);
+                        expect(stats.textureMemorySizeInBytes).toEqual(singleTileTextureMemory * tilesLength);
+                        expect(stats.batchTableMemorySizeInBytes).toEqual(0);
+
+                        // One feature colored, the batch table memory is now higher
+                        tileset._root.content.getFeature(0).color = Color.RED;
+                        scene.renderForSpecs();
+                        expect(stats.vertexMemorySizeInBytes).toEqual(singleTileVertexMemory * tilesLength);
+                        expect(stats.textureMemorySizeInBytes).toEqual(singleTileTextureMemory * tilesLength);
+                        expect(stats.batchTableMemorySizeInBytes).toEqual(singleTileBatchTextureMemory);
+
+                        // All tiles picked, the texture memory is now higher
+                        scene.pickForSpecs();
+                        expect(stats.vertexMemorySizeInBytes).toEqual(singleTileVertexMemory * tilesLength);
+                        expect(stats.textureMemorySizeInBytes).toEqual(singleTileTextureMemory * tilesLength);
+                        expect(stats.batchTableMemorySizeInBytes).toEqual(singleTileBatchTextureMemory + singleTilePickTextureMemory * tilesLength);
+
+                        // Tiles are still in memory when zoomed out
+                        viewNothing();
+                        scene.renderForSpecs();
+                        expect(stats.vertexMemorySizeInBytes).toEqual(singleTileVertexMemory * tilesLength);
+                        expect(stats.textureMemorySizeInBytes).toEqual(singleTileTextureMemory * tilesLength);
+                        expect(stats.batchTableMemorySizeInBytes).toEqual(singleTileBatchTextureMemory + singleTilePickTextureMemory * tilesLength);
+
+                        // Trim loaded tiles, expect the memory statistics to be 0
+                        tileset.trimLoadedTiles();
+                        scene.renderForSpecs();
+                        expect(stats.vertexMemorySizeInBytes).toEqual(0);
+                        expect(stats.textureMemorySizeInBytes).toEqual(0);
+                        expect(stats.batchTableMemorySizeInBytes).toEqual(0);
+                    });
+                });
+            });
+        });
+
+        it('verify memory usage statistics for shared resources', function() {
+            // Six tiles total:
+            // * Two b3dm tiles - no shared resources
+            // * Two i3dm tiles with embedded glTF - no shared resources
+            // * Two i3dm tiles with external glTF - shared resources
+            // Expect to see some saving with memory usage since two of the tiles share resources
+            // All tiles reference the same external texture but texture caching is not supported yet
+            // TODO : tweak test when #5051 is in
+
+            var b3dmVertexMemory = 840; // Only one box in the tile, unlike most other test tiles
+            var i3dmVertexMemory = 840;
+
+            // Texture is 211x211 RGBA bytes, but upsampled to 256x256 because the wrap mode is REPEAT
+            var textureMemorySizeInBytes = 262144;
+
+            var expectedVertexMemory = b3dmVertexMemory * 2 + i3dmVertexMemory * 3;
+            var expectedTextureMemory = textureMemorySizeInBytes * 5;
+
+            return Cesium3DTilesTester.loadTileset(scene, tilesetWithExternalResourcesUrl).then(function(tileset) {
+                var stats = tileset._statistics;
+                expect(stats.vertexMemorySizeInBytes).toBe(expectedVertexMemory);
+                expect(stats.textureMemorySizeInBytes).toBe(expectedTextureMemory);
             });
         });
 
@@ -913,6 +1134,19 @@ defineSuite([
             });
         });
 
+        it('replacement and additive refinement', function() {
+            //          A
+            //      A       R (not rendered)
+            //    R   A   R   A
+            //
+            return Cesium3DTilesTester.loadTileset(scene, tilesetRefinementMix).then(function(tileset) {
+                scene.renderForSpecs();
+                var stats = tileset._statistics;
+                expect(stats.visited).toEqual(7);
+                expect(stats.numberOfCommands).toEqual(6);
+            });
+        });
+
         describe('children bound union optimization', function() {
             it('does not select visible tiles with invisible children', function() {
                 return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
@@ -927,11 +1161,11 @@ defineSuite([
 
                     var root = tileset._root;
                     var childRoot = root.children[0];
-                    
+
                     scene.renderForSpecs();
 
                     expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                    
+
                     expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
                     expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
                     expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).toEqual(CullingVolume.MASK_OUTSIDE);
@@ -956,11 +1190,11 @@ defineSuite([
                             roll: 0
                         }
                     });
-                    
+
                     scene.renderForSpecs();
 
                     expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                    
+
                     expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                     expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                     expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
@@ -984,17 +1218,17 @@ defineSuite([
                             roll: 0
                         }
                     });
-                    
+
                     childRoot.geometricError = 0;
                     scene.renderForSpecs();
 
                     expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                    
+
                     expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                     expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                     expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                     expect(childRoot.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                    
+
                     expect(childRoot.selected).toBe(true);
                     expect(childRoot.replaced).toBe(false);
                 });
@@ -1018,7 +1252,7 @@ defineSuite([
                     scene.renderForSpecs();
 
                     expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                    
+
                     expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                     expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                     expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
@@ -1047,7 +1281,7 @@ defineSuite([
                     scene.renderForSpecs();
 
                     expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                    
+
                     expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                     expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
                     expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
@@ -1237,6 +1471,61 @@ defineSuite([
                 tileset.debugShowViewerRequestVolume = false;
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toEqual(5);
+            });
+        });
+
+         it('debugShowGeometricError with regions', function() {
+            // tilesetUrl has bounding regions
+            return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+                tileset.debugShowGeometricError = true;
+                scene.renderForSpecs();
+                expect(tileset._geometricErrorLabels).toBeDefined();
+                expect(tileset._geometricErrorLabels.length).toEqual(5);
+                expect(tileset._geometricErrorLabels._labels[0].text).toEqual('70');
+                expect(tileset._geometricErrorLabels._labels[1].text).toEqual('0');
+                expect(tileset._geometricErrorLabels._labels[2].text).toEqual('0');
+                expect(tileset._geometricErrorLabels._labels[3].text).toEqual('0');
+                expect(tileset._geometricErrorLabels._labels[4].text).toEqual('0');
+
+                tileset.debugShowGeometricError = false;
+                scene.renderForSpecs();
+                expect(tileset._geometricErrorLabels).not.toBeDefined();
+            });
+        });
+
+        it('debugShowGeometricError with boxes', function() {
+            // tilesetWithTransformsUrl has bounding boxes
+            return Cesium3DTilesTester.loadTileset(scene, tilesetWithTransformsUrl).then(function(tileset) {
+                tileset.debugShowGeometricError = true;
+                scene.renderForSpecs();
+                expect(tileset._geometricErrorLabels).toBeDefined();
+                expect(tileset._geometricErrorLabels.length).toEqual(2);
+                expect(tileset._geometricErrorLabels._labels[0].text).toEqual('70');
+                expect(tileset._geometricErrorLabels._labels[1].text).toEqual('0');
+
+                tileset.debugShowGeometricError = false;
+                scene.renderForSpecs();
+                expect(tileset._geometricErrorLabels).not.toBeDefined();
+            });
+        });
+
+        it('debugShowGeometricError with bounding spheres', function() {
+            // tilesetWithViewerRequestVolumeUrl has bounding sphere
+            return Cesium3DTilesTester.loadTileset(scene, tilesetWithViewerRequestVolumeUrl).then(function(tileset) {
+                tileset.debugShowGeometricError = true;
+                scene.renderForSpecs();
+                expect(tileset._geometricErrorLabels).toBeDefined();
+                expect(tileset._geometricErrorLabels.length).toEqual(6);
+                expect(tileset._geometricErrorLabels._labels[0].text).toEqual('70');
+                expect(tileset._geometricErrorLabels._labels[1].text).toEqual('0');
+                expect(tileset._geometricErrorLabels._labels[2].text).toEqual('0');
+                expect(tileset._geometricErrorLabels._labels[3].text).toEqual('0');
+                expect(tileset._geometricErrorLabels._labels[4].text).toEqual('0');
+                expect(tileset._geometricErrorLabels._labels[5].text).toEqual('0');
+
+                tileset.debugShowGeometricError = false;
+                scene.renderForSpecs();
+                expect(tileset._geometricErrorLabels).not.toBeDefined();
             });
         });
 
@@ -2332,7 +2621,7 @@ defineSuite([
     describe('without skipping LODs', function() {
         beforeAll(function() {
             Cesium3DTilesTester.loadTileset = loadWithNoSkip;
-            createTileset = createTilesetNoSkip;              
+            createTileset = createTilesetNoSkip;
         });
 
         for (var i = 0; i < noSkipLODTests.length; ++i) {
@@ -2348,7 +2637,7 @@ defineSuite([
     describe('skipping LODs', function() {
         beforeAll(function() {
             Cesium3DTilesTester.loadTileset = loadWithSkip;
-            createTileset = createTilesetSkip;              
+            createTileset = createTilesetSkip;
         });
 
         for (var i = 0; i < skipLODTests.length; ++i) {

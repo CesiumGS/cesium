@@ -116,7 +116,7 @@ define([
         this._instancingSupported = false;
         this._dynamic = defaultValue(options.dynamic, false);
         this._allowPicking = defaultValue(options.allowPicking, true);
-        this._cull = defaultValue(options.cull, true);
+        this._cull = defaultValue(options.cull, true); // Undocumented option
         this._ready = false;
         this._readyPromise = when.defer();
         this._state = LoadState.NEEDS_LOAD;
@@ -156,6 +156,7 @@ define([
         this._basePath = options.basePath;
         this._asynchronous = options.asynchronous;
         this._incrementallyLoadTextures = options.incrementallyLoadTextures;
+        this._upAxis = options.upAxis; // Undocumented option
 
         this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
         this._shadows = this.shadows;
@@ -357,8 +358,7 @@ define([
             if (defined(batchTable)) {
                 var gltf = collection._model.gltf;
                 var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-                var colorBlendMode = batchTable._content._tileset.colorBlendMode;
-                fs = batchTable.getFragmentShaderCallback(true, colorBlendMode, diffuseUniformName)(fs);
+                fs = batchTable.getFragmentShaderCallback(true, diffuseUniformName)(fs);
             }
             return fs;
         };
@@ -606,6 +606,7 @@ define([
             asynchronous : collection._asynchronous,
             allowPicking : allowPicking,
             incrementallyLoadTextures : collection._incrementallyLoadTextures,
+            upAxis : collection._upAxis,
             precreatedAttributes : undefined,
             vertexShaderLoaded : undefined,
             fragmentShaderLoaded : undefined,
@@ -787,8 +788,8 @@ define([
         for (var i = 0; i < commandsLength; ++i) {
             for (var j = 0; j < instancesLength; ++j) {
                 var drawCommand = DrawCommand.shallowClone(drawCommands[i]);
-                drawCommand.modelMatrix = new Matrix4(); // Updated in updateNonInstancedCommands
-                drawCommand.boundingVolume = new BoundingSphere(); // Updated in updateNonInstancedCommands
+                drawCommand.modelMatrix = new Matrix4(); // Updated in updateCommandsNonInstanced
+                drawCommand.boundingVolume = new BoundingSphere(); // Updated in updateCommandsNonInstanced
                 drawCommand.cull = cull;
                 drawCommand.uniformMap = clone(drawCommand.uniformMap);
                 if (usesBatchTable) {
@@ -798,8 +799,8 @@ define([
 
                 if (allowPicking) {
                     var pickCommand = DrawCommand.shallowClone(pickCommands[i]);
-                    pickCommand.modelMatrix = new Matrix4(); // Updated in updateNonInstancedCommands
-                    pickCommand.boundingVolume = new BoundingSphere(); // Updated in updateNonInstancedCommands
+                    pickCommand.modelMatrix = new Matrix4(); // Updated in updateCommandsNonInstanced
+                    pickCommand.boundingVolume = new BoundingSphere(); // Updated in updateCommandsNonInstanced
                     pickCommand.cull = cull;
                     pickCommand.uniformMap = clone(pickCommand.uniformMap);
                     if (usesBatchTable) {
@@ -917,8 +918,9 @@ define([
             this._state = LoadState.LOADED;
             this._ready = true;
 
-            // Expand bounding volume to fit the radius of the loaded model
-            this._boundingSphere.radius += model.boundingSphere.radius;
+            // Expand bounding volume to fit the radius of the loaded model including the model's offset from the center
+            var modelRadius = model.boundingSphere.radius + Cartesian3.magnitude(model.boundingSphere.center);
+            this._boundingSphere.radius += modelRadius;
 
             var modelCommands = getModelCommands(model);
             this._modelCommands = modelCommands.draw;

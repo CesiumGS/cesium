@@ -9,10 +9,10 @@ define([
         '../Core/Event',
         '../Core/getTimestamp',
         '../Core/Math',
-        '../Core/Queue',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Visibility',
+        './OrthographicFrustum',
         './QuadtreeOccluders',
         './QuadtreeTile',
         './QuadtreeTileLoadState',
@@ -28,10 +28,10 @@ define([
         Event,
         getTimestamp,
         CesiumMath,
-        Queue,
         Ray,
         Rectangle,
         Visibility,
+        OrthographicFrustum,
         QuadtreeOccluders,
         QuadtreeTile,
         QuadtreeTileLoadState,
@@ -669,7 +669,7 @@ define([
     }
 
     function screenSpaceError(primitive, frameState, tile) {
-        if (frameState.mode === SceneMode.SCENE2D) {
+        if (frameState.mode === SceneMode.SCENE2D || frameState.camera.frustum instanceof OrthographicFrustum) {
             return screenSpaceError2D(primitive, frameState, tile);
         }
 
@@ -691,6 +691,9 @@ define([
     function screenSpaceError2D(primitive, frameState, tile) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
+        if (defined(frustum._offCenterFrustum)) {
+            frustum = frustum._offCenterFrustum;
+        }
 
         var context = frameState.context;
         var width = context.drawingBufferWidth;
@@ -698,7 +701,13 @@ define([
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
-        return maxGeometricError / pixelSize;
+        var error = maxGeometricError / pixelSize;
+
+        if (frameState.fog.enabled && frameState.mode !== SceneMode.SCENE2D) {
+            error = error - CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
+        }
+
+        return error;
     }
 
     function addTileToRenderList(primitive, tile) {

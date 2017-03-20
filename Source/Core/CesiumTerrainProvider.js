@@ -19,11 +19,9 @@ define([
         './Math',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
-        './Rectangle',
         './Request',
         './RequestScheduler',
         './RequestType',
-        './RuntimeError',
         './TerrainProvider',
         './TileAvailability',
         './TileProviderError'
@@ -47,11 +45,9 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
-        Rectangle,
         Request,
         RequestScheduler,
         RequestType,
-        RuntimeError,
         TerrainProvider,
         TileAvailability,
         TileProviderError) {

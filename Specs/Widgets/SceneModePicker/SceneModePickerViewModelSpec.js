@@ -52,7 +52,7 @@ defineSuite([
         var viewModel = new SceneModePickerViewModel(scene);
 
         viewModel.dropDownVisible = true;
-        viewModel.morphTo2D();
+        viewModel.morphToColumbusView();
         expect(viewModel.dropDownVisible).toEqual(false);
 
         viewModel.dropDownVisible = true;
@@ -60,7 +60,7 @@ defineSuite([
         expect(viewModel.dropDownVisible).toEqual(false);
 
         viewModel.dropDownVisible = true;
-        viewModel.morphToColumbusView();
+        viewModel.morphTo2D();
         expect(viewModel.dropDownVisible).toEqual(false);
 
         viewModel.destroy();
@@ -71,17 +71,17 @@ defineSuite([
 
         expect(scene.mode).toEqual(SceneMode.SCENE3D);
 
-        viewModel.morphTo2D();
+        viewModel.morphToColumbusView();
         scene.completeMorph();
-        expect(scene.mode).toEqual(SceneMode.SCENE2D);
+        expect(scene.mode).toEqual(SceneMode.COLUMBUS_VIEW);
 
         viewModel.morphTo3D();
         scene.completeMorph();
         expect(scene.mode).toEqual(SceneMode.SCENE3D);
 
-        viewModel.morphToColumbusView();
+        viewModel.morphTo2D();
         scene.completeMorph();
-        expect(scene.mode).toEqual(SceneMode.COLUMBUS_VIEW);
+        expect(scene.mode).toEqual(SceneMode.SCENE2D);
 
         viewModel.destroy();
     });
@@ -89,14 +89,14 @@ defineSuite([
     it('selectedTooltip changes on transition', function() {
         var viewModel = new SceneModePickerViewModel(scene);
 
-        viewModel.morphTo2D();
-        expect(viewModel.selectedTooltip).toEqual(viewModel.tooltip2D);
+        viewModel.morphToColumbusView();
+        expect(viewModel.selectedTooltip).toEqual(viewModel.tooltipColumbusView);
 
         viewModel.morphTo3D();
         expect(viewModel.selectedTooltip).toEqual(viewModel.tooltip3D);
 
-        viewModel.morphToColumbusView();
-        expect(viewModel.selectedTooltip).toEqual(viewModel.tooltipColumbusView);
+        viewModel.morphTo2D();
+        expect(viewModel.selectedTooltip).toEqual(viewModel.tooltip2D);
 
         viewModel.destroy();
     });

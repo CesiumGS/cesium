@@ -1,20 +1,16 @@
 /*global define*/
 define([
-    '../ThirdParty/when',
     './binarySearch',
     './Cartographic',
     './defined',
     './defineProperties',
-    './sampleTerrain',
     './DeveloperError',
     './Rectangle'
 ], function(
-    when,
     binarySearch,
     Cartographic,
     defined,
     defineProperties,
-    sampleTerrain,
     DeveloperError,
     Rectangle) {
     "use strict";

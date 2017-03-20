@@ -11,6 +11,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
@@ -44,6 +45,7 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        getAbsoluteUri,
         getBaseUri,
         getMagic,
         getStringFromTypedArray,
@@ -101,7 +103,58 @@ define([
          */
         featuresLength : {
             get : function() {
-                return this._modelInstanceCollection.length;
+                if (defined(this._modelInstanceCollection)) {
+                    return this._modelInstanceCollection.length;
+                } else {
+                    return 0;
+                }
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        pointsLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                var collection = this._modelInstanceCollection;
+                if (defined(collection) && defined(collection._model)) {
+                    return collection._model.vertexMemorySizeInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                var collection = this._modelInstanceCollection;
+                if (defined(collection) && defined(collection._model)) {
+                    return collection._model.textureMemorySizeInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                if (defined(this.batchTable)) {
+                    return this.batchTable.memorySizeInBytes;
+                }
+                return 0;
             }
         },
 
@@ -305,19 +358,25 @@ define([
             requestType : RequestType.TILES3D,
             gltf : undefined,
             basePath : undefined,
-            incrementallyLoadTextures : false
+            incrementallyLoadTextures : false,
+            upAxis : this._tileset._gltfUpAxis
         };
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
-            var baseUrl = defaultValue(this._tileset.baseUrl, '');
-            collectionOptions.url = joinUrls(baseUrl, gltfUrl);
+            collectionOptions.url = getAbsoluteUri(joinUrls(getBaseUri(this._url, true), gltfUrl));
         } else {
             collectionOptions.gltf = gltfView;
-            collectionOptions.basePath = getBaseUri(this._url);
+            collectionOptions.basePath = getBaseUri(this._url, true);
         }
 
         var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');
+
+        var rtcCenter;
+        var rtcCenterArray = featureTable.getGlobalProperty('RTC_CENTER');
+        if (defined(rtcCenterArray)) {
+            rtcCenter = Cartesian3.unpack(rtcCenterArray);
+        }
 
         var instances = collectionOptions.instances;
         var instancePosition = new Cartesian3();
@@ -358,6 +417,9 @@ define([
                 }
             }
             Cartesian3.unpack(position, 0, instancePosition);
+            if (defined(rtcCenter)) {
+                Cartesian3.add(instancePosition, rtcCenter, instancePosition);
+            }
             instanceTranslationRotationScale.translation = instancePosition;
 
             // Get the instance rotation
@@ -406,7 +468,7 @@ define([
             instanceScale.x = 1.0;
             instanceScale.y = 1.0;
             instanceScale.z = 1.0;
-            var scale = featureTable.getProperty('SCALE', i, ComponentDatatype.FLOAT);
+            var scale = featureTable.getProperty('SCALE', i, ComponentDatatype.FLOAT, 1);
             if (defined(scale)) {
                 Cartesian3.multiplyByScalar(instanceScale, scale, instanceScale);
             }
@@ -421,8 +483,9 @@ define([
             // Get the batchId
             var batchId;
             if (defined(featureTable.json.BATCH_ID)) {
-                var componentType = defaultValue(featureTable.json.BATCH_ID.componentType, ComponentDatatype.UNSIGNED_SHORT);
-                batchId = featureTable.getProperty('BATCH_ID', i, componentType);
+                var componentTypeName = featureTable.json.BATCH_ID.componentType;
+                var componentType = defined(componentTypeName) ? ComponentDatatype.fromName(componentTypeName) : ComponentDatatype.UNSIGNED_SHORT;
+                batchId = featureTable.getProperty('BATCH_ID', i, componentType, 1);
             } else {
                 // If BATCH_ID semantic is undefined, batchId is just the instance number
                 batchId = i;

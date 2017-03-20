@@ -139,6 +139,8 @@ define([
         this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
         this._features = undefined;
+        this._pointsLength = 0;
+        this._vertexMemorySizeInBytes = 0;
     }
 
     defineProperties(PointCloud3DTileContent.prototype, {
@@ -149,6 +151,45 @@ define([
             get : function() {
                 if (defined(this.batchTable)) {
                     return this.batchTable.featuresLength;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        pointsLength : {
+            get : function() {
+                return this._pointsLength;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                return this._vertexMemorySizeInBytes;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                if (defined(this.batchTable)) {
+                    return this.batchTable.memorySizeInBytes;
                 }
                 return 0;
             }
@@ -459,13 +500,13 @@ define([
         }
 
         this._parsedContent = {
-            pointsLength : pointsLength,
             positions : positions,
             colors : colors,
             normals : normals,
             batchIds : batchIds,
             styleableProperties : styleableProperties
         };
+        this._pointsLength = pointsLength;
 
         this._isQuantized = isQuantized;
         this._isOctEncoded16P = isOctEncoded16P;
@@ -487,7 +528,7 @@ define([
     function createResources(content, frameState) {
         var context = frameState.context;
         var parsedContent = content._parsedContent;
-        var pointsLength = parsedContent.pointsLength;
+        var pointsLength = content._pointsLength;
         var positions = parsedContent.positions;
         var colors = parsedContent.colors;
         var normals = parsedContent.normals;
@@ -524,6 +565,8 @@ define([
                         typedArray : property.typedArray,
                         usage : BufferUsage.STATIC_DRAW
                     });
+
+                    content._vertexMemorySizeInBytes += vertexBuffer.sizeInBytes;
 
                     var vertexAttribute = {
                         index : attributeLocation,
@@ -573,6 +616,7 @@ define([
             typedArray : positions,
             usage : BufferUsage.STATIC_DRAW
         });
+        content._vertexMemorySizeInBytes += positionsVertexBuffer.sizeInBytes;
 
         var colorsVertexBuffer;
         if (hasColors) {
@@ -581,6 +625,7 @@ define([
                 typedArray : colors,
                 usage : BufferUsage.STATIC_DRAW
             });
+            content._vertexMemorySizeInBytes += colorsVertexBuffer.sizeInBytes;
         }
 
         var normalsVertexBuffer;
@@ -590,6 +635,7 @@ define([
                 typedArray : normals,
                 usage : BufferUsage.STATIC_DRAW
             });
+            content._vertexMemorySizeInBytes += normalsVertexBuffer.sizeInBytes;
         }
 
         var batchIdsVertexBuffer;
@@ -599,6 +645,7 @@ define([
                 typedArray : batchIds,
                 usage : BufferUsage.STATIC_DRAW
             });
+            content._vertexMemorySizeInBytes += batchIdsVertexBuffer.sizeInBytes;
         }
 
         var attributes = [];
@@ -1082,7 +1129,7 @@ define([
         if (hasBatchTable) {
             // Batched points always use the HIGHLIGHT color blend mode
             drawVS = batchTable.getVertexShaderCallback(false, 'a_batchId')(drawVS);
-            drawFS = batchTable.getFragmentShaderCallback(false, Cesium3DTileColorBlendMode.HIGHLIGHT)(drawFS);
+            drawFS = batchTable.getFragmentShaderCallback(false, undefined)(drawFS);
         }
 
         var pickVS = vs;

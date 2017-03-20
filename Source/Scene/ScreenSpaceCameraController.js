@@ -22,6 +22,7 @@ define([
         './CameraEventAggregator',
         './CameraEventType',
         './MapMode2D',
+        './OrthographicFrustum',
         './SceneMode',
         './SceneTransforms',
         './TweenCollection'
@@ -48,6 +49,7 @@ define([
         CameraEventAggregator,
         CameraEventType,
         MapMode2D,
+        OrthographicFrustum,
         SceneMode,
         SceneTransforms,
         TweenCollection) {
@@ -484,6 +486,14 @@ define([
         var camera = scene.camera;
         var mode = scene.mode;
 
+        if (camera.frustum instanceof OrthographicFrustum) {
+            if (Math.abs(distance) > 0.0) {
+                camera.zoomIn(distance);
+                camera._adjustOrthographicFrustum();
+            }
+            return;
+        }
+
         var sameStartPosition = Cartesian2.equals(startPosition, object._zoomMouseStart);
         var zoomingOnVector = object._zoomingOnVector;
         var rotatingZoom = object._rotatingZoom;
@@ -806,7 +816,7 @@ define([
 
         var depthIntersection;
         if (scene.pickPositionSupported) {
-            depthIntersection = scene.pickPosition(mousePosition, scratchDepthIntersection);
+            depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
         }
 
         var ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
@@ -1810,14 +1820,35 @@ define([
         var endPos = look3DEndPos;
         endPos.x = movement.endPosition.x;
         endPos.y = 0.0;
-        var start = camera.getPickRay(startPos, look3DStartRay).direction;
-        var end = camera.getPickRay(endPos, look3DEndRay).direction;
 
+        var startRay = camera.getPickRay(startPos, look3DStartRay);
+        var endRay = camera.getPickRay(endPos, look3DEndRay);
         var angle = 0.0;
+        var start;
+        var end;
+
+        if (camera.frustum instanceof OrthographicFrustum) {
+            start = startRay.origin;
+            end = endRay.origin;
+
+            Cartesian3.add(camera.direction, start, start);
+            Cartesian3.add(camera.direction, end, end);
+
+            Cartesian3.subtract(start, camera.position, start);
+            Cartesian3.subtract(end, camera.position, end);
+
+            Cartesian3.normalize(start, start);
+            Cartesian3.normalize(end, end);
+        } else {
+            start = startRay.direction;
+            end = endRay.direction;
+        }
+
         var dot = Cartesian3.dot(start, end);
         if (dot < 1.0) { // dot is in [0, 1]
             angle = Math.acos(dot);
         }
+
         angle = (movement.startPosition.x > movement.endPosition.x) ? -angle : angle;
 
         var horizontalRotationAxis = controller._horizontalRotationAxis;
@@ -1833,10 +1864,28 @@ define([
         startPos.y = movement.startPosition.y;
         endPos.x = 0.0;
         endPos.y = movement.endPosition.y;
-        start = camera.getPickRay(startPos, look3DStartRay).direction;
-        end = camera.getPickRay(endPos, look3DEndRay).direction;
 
+        startRay = camera.getPickRay(startPos, look3DStartRay);
+        endRay = camera.getPickRay(endPos, look3DEndRay);
         angle = 0.0;
+
+        if (camera.frustum instanceof OrthographicFrustum) {
+            start = startRay.origin;
+            end = endRay.origin;
+
+            Cartesian3.add(camera.direction, start, start);
+            Cartesian3.add(camera.direction, end, end);
+
+            Cartesian3.subtract(start, camera.position, start);
+            Cartesian3.subtract(end, camera.position, end);
+
+            Cartesian3.normalize(start, start);
+            Cartesian3.normalize(end, end);
+        } else {
+            start = startRay.direction;
+            end = endRay.direction;
+        }
+
         dot = Cartesian3.dot(start, end);
         if (dot < 1.0) { // dot is in [0, 1]
             angle = Math.acos(dot);

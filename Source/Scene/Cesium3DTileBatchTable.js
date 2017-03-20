@@ -9,6 +9,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/freezeObject',
@@ -40,6 +41,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         freezeObject,
@@ -138,6 +140,21 @@ define([
         this._textureStep = textureStep;
     }
 
+    defineProperties(Cesium3DTileBatchTable.prototype, {
+        memorySizeInBytes : {
+            get : function() {
+                var memory = 0;
+                if (defined(this._pickTexture)) {
+                    memory += this._pickTexture.sizeInBytes;
+                }
+                if (defined(this._batchTexture)) {
+                    memory += this._batchTexture.sizeInBytes;
+                }
+                return memory;
+            }
+        }
+    });
+
     function initializeHierarchy(json, binary) {
         var i;
         var classId;
@@ -173,11 +190,13 @@ define([
             }
         }
 
-        if (defined(parentIds.byteOffset)) {
-            parentIds.componentType = defaultValue(parentIds.componentType, 'UNSIGNED_SHORT');
-            parentIds.type = 'SCALAR';
-            binaryAccessor = getBinaryAccessor(parentIds);
-            parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, parentIdsLength);
+        if (defined(parentIds)) {
+            if (defined(parentIds.byteOffset)) {
+                parentIds.componentType = defaultValue(parentIds.componentType, 'UNSIGNED_SHORT');
+                parentIds.type = 'SCALAR';
+                binaryAccessor = getBinaryAccessor(parentIds);
+                parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, parentIdsLength);
+            }
         }
 
         var classesLength = classes.length;
@@ -232,6 +251,11 @@ define([
         var parentIndexes = hierarchy.parentIndexes;
         var classIds = hierarchy.classIds;
         var instancesLength = classIds.length;
+
+        if (!defined(parentIds)) {
+            // No need to validate if there are no parents
+            return;
+        }
 
         if (instanceIndex >= instancesLength) {
             throw new DeveloperError('Parent index ' + instanceIndex + ' exceeds the total number of instances: ' + instancesLength);
@@ -561,11 +585,18 @@ define([
         }
     }
 
+    function traverseHierarchyNoParents(hierarchy, instanceIndex, endConditionCallback) {
+        return endConditionCallback(hierarchy, instanceIndex);
+    }
+
     function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
         // Traverse over the hierarchy and process each instance with the endConditionCallback.
         // When the endConditionCallback returns a value, the traversal stops and that value is returned.
         var parentCounts = hierarchy.parentCounts;
-        if (defined(parentCounts)) {
+        var parentIds = hierarchy.parentIds;
+        if (!defined(parentIds)) {
+            return traverseHierarchyNoParents(hierarchy, instanceIndex, endConditionCallback);
+        } else if (defined(parentCounts)) {
             return traverseHierarchyMultipleParents(hierarchy, instanceIndex, endConditionCallback);
         }
         return traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback);
@@ -902,28 +933,31 @@ define([
         };
     };
 
-    function modifyDiffuse(source, colorBlendMode, diffuseUniformName) {
+    function getHighlightOnlyShader(source) {
+        source = ShaderSource.replaceMain(source, 'tile_main');
+        return source +
+               'void tile_color(vec4 tile_featureColor) \n' +
+               '{ \n' +
+               '    tile_main(); \n' +
+               '    gl_FragColor *= tile_featureColor; \n' +
+               '} \n';
+    }
+
+    function modifyDiffuse(source, diffuseUniformName) {
         // If the glTF does not specify the _3DTILESDIFFUSE semantic, return a basic highlight shader.
         // Otherwise if _3DTILESDIFFUSE is defined prefer the shader below that can switch the color mode at runtime.
         if (!defined(diffuseUniformName)) {
-            source = ShaderSource.replaceMain(source, 'tile_main');
-            return source +
-                   'void tile_color(vec4 tile_featureColor) \n' +
-                   '{ \n' +
-                   '    tile_main(); \n' +
-                   '    gl_FragColor *= tile_featureColor; \n' +
-                   '} \n';
+            return getHighlightOnlyShader(source);
         }
 
         // Find the diffuse uniform
         var regex = new RegExp('uniform\\s+(vec[34]|sampler2D)\\s+' + diffuseUniformName + ';');
         var uniformMatch = source.match(regex);
 
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(uniformMatch)) {
-            throw new DeveloperError('Could not find uniform declaration for ' + diffuseUniformName + ' of type vec3, vec4, or sampler2D');
+            // Could not find uniform declaration of type vec3, vec4, or sampler2D
+            return getHighlightOnlyShader(source);
         }
-        //>>includeEnd('debug');
 
         var declaration = uniformMatch[0];
         var type = uniformMatch[1];
@@ -983,12 +1017,12 @@ define([
         return source;
     }
 
-    Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function(handleTranslucent, colorBlendMode, diffuseUniformName) {
+    Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function(handleTranslucent, diffuseUniformName) {
         if (this.featuresLength === 0) {
             return;
         }
         return function(source) {
-            source = modifyDiffuse(source, colorBlendMode, diffuseUniformName);
+            source = modifyDiffuse(source, diffuseUniformName);
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per-feature show/hide already happened in the fragment shader
                 source +=
@@ -1356,6 +1390,7 @@ define([
             }
 
             batchTable._pickTexture = createTexture(batchTable, context, bytes);
+            content._tileset._statistics.batchTableMemorySizeInBytes += batchTable._pickTexture.sizeInBytes;
         }
     }
 
@@ -1386,6 +1421,7 @@ define([
             // Create batch texture on-demand
             if (!defined(this._batchTexture)) {
                 this._batchTexture = createTexture(this, context, this._batchValues);
+                tileset._statistics.batchTableMemorySizeInBytes += this._batchTexture.sizeInBytes;
             }
 
             updateBatchTexture(this);  // Apply per-feature show/color updates

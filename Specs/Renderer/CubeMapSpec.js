@@ -5,20 +5,14 @@ defineSuite([
         'Core/Color',
         'Core/loadImage',
         'Core/PixelFormat',
-        'Core/PrimitiveType',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
-        'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
         'Renderer/Sampler',
-        'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
-        'Renderer/VertexArray',
         'Specs/createContext',
         'ThirdParty/when'
     ], function(
@@ -27,20 +21,14 @@ defineSuite([
         Color,
         loadImage,
         PixelFormat,
-        PrimitiveType,
-        Buffer,
-        BufferUsage,
         ClearCommand,
         ContextLimits,
-        DrawCommand,
         PixelDatatype,
         Sampler,
-        ShaderProgram,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
-        VertexArray,
         createContext,
         when) {
     'use strict';
@@ -92,6 +80,7 @@ defineSuite([
     var blueImage;
     var blueAlphaImage;
     var blueOverRedImage;
+    var red16x16Image;
 
     beforeAll(function() {
         context = createContext();
@@ -108,6 +97,9 @@ defineSuite([
         }));
         promises.push(loadImage('./Data/Images/BlueOverRed.png').then(function(result) {
             blueOverRedImage = result;
+        }));
+        promises.push(loadImage('./Data/Images/Red16x16.png').then(function(result) {
+            red16x16Image = result;
         }));
 
         return when.all(promises);
@@ -184,6 +176,16 @@ defineSuite([
 
         expect(cubeMap.width).toEqual(16);
         expect(cubeMap.height).toEqual(16);
+    });
+
+    it('gets size in bytes', function() {
+        cubeMap = new CubeMap({
+            context : context,
+            width : 16,
+            height : 16
+        });
+
+        expect(cubeMap.sizeInBytes).toEqual(256 * 4 * 6);
     });
 
     it('gets flip Y', function() {
@@ -623,6 +625,24 @@ defineSuite([
             fragmentShader : fs,
             uniformMap : uniformMap
         }).contextToRender([0, 0, 255, 255]);
+    });
+
+    it('gets size in bytes for mipmap', function() {
+        cubeMap = new CubeMap({
+            context : context,
+            source : {
+                positiveX : red16x16Image,
+                negativeX : red16x16Image,
+                positiveY : red16x16Image,
+                negativeY : red16x16Image,
+                positiveZ : red16x16Image,
+                negativeZ : red16x16Image
+            }
+        });
+        cubeMap.generateMipmap();
+
+        // Allow for some leniency with the sizeInBytes approximation
+        expect(cubeMap.sizeInBytes).toEqualEpsilon((16*16 + 8*8 + 4*4 + 2*2 + 1) * 4 * 6, 10);
     });
 
     it('destroys', function() {

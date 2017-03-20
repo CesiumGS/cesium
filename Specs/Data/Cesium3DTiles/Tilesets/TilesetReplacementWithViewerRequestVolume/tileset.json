@@ -9,16 +9,16 @@
       "maximum": 9
     },
     "Longitude": {
-      "minimum": -1.3197190069941716,
-      "maximum": -1.3196399825465384
+      "minimum": -1.3197192952275933,
+      "maximum": -1.319644104024109
     },
     "Latitude": {
-      "minimum": 0.6988468038519597,
-      "maximum": 0.6989046685398855
+      "minimum": 0.698848878034009,
+      "maximum": 0.6989046192460953
     },
     "Height": {
-      "minimum": 6,
-      "maximum": 84
+      "minimum": 6.161747192963958,
+      "maximum": 84.83180232718587
     }
   },
   "geometricError": 240,
