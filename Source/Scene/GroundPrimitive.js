@@ -995,7 +995,7 @@ define([
 
     /**
      * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
-     * GroundPrimitive asynchronously.
+     * GroundPrimitive synchronously.
      *
      * @returns {Promise} A promise that will resolve once the terrain heights have been loaded.
      *
