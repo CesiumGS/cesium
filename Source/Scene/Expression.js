@@ -9,6 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/isArray',
         '../Core/Math',
+        '../Core/Noise',
         '../ThirdParty/jsep',
         './ExpressionNodeType'
     ], function(
@@ -21,6 +22,7 @@ define([
         DeveloperError,
         isArray,
         CesiumMath,
+        noise,
         jsep,
         ExpressionNodeType) {
     "use strict";
@@ -104,8 +106,8 @@ define([
         exp2 : exp2,
         log : Math.log,
         log2 : log2,
-        fract : fract,
-        noise: Math.sin
+        noise : noise,
+        fract : fract
     };
 
     var ternaryFunctions = {
@@ -775,6 +777,9 @@ define([
         return function(feature) {
             var left = this._left.evaluate(feature);
             if (call === 'noise') {
+                if (typeof left === 'number') {
+                    return Cartesian3.fromElements(evaluate(left), evaluate(left), evaluate(left), ScratchStorage.getCartesian3());
+                }
                 if (left instanceof Cartesian3) {
                     return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
                 }
@@ -946,6 +951,7 @@ define([
 
     Node.prototype._evaluateVariable = function(frameState, feature) {
         // evaluates to undefined if the property name is not defined for that feature
+        //debugger;
         return feature.getProperty(this._value);
     };
 

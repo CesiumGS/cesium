@@ -1,10 +1,10 @@
 /**
- * Produces arrayless, textureless 3D simplex noise.
+ * Produces a 3D simplex noise value.
  *
  * @name czm_noise
  * @glslFunction
  *
- * @param {vec3} the seed for the pseudo-random noise function.
+ * @param {vec3} czm_seed The seed for the pseudo-random noise function.
  *
  * @returns {float} returns a pseudo-random noise value.
  */
@@ -24,7 +24,7 @@
 
     vec4 permute(vec4 x)
     {
-        return mod289(((x*34.0)+1.0)*x);
+        return mod289(((x * 34.0) + 1.0) * x);
     }
 
     vec4 taylorInvSqrt(vec4 r)

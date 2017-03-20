@@ -119,19 +119,23 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
         var properties = tileset.properties;
+        //debugger;
         if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
             tileset.style = new Cesium.Cesium3DTileStyle({
-                color: {
-                    conditions: [
-                        ["${Height} >= 83", "color('purple', 0.5)"],
-                        ["${Height} >= 80", "color('red')"],
+                color: //"rgb(noise(vec3(0, 0, 0)), 0, 0)",
+
+                    {conditions: [
+                        ["${Height} >= 83", "rgb(${Height}, 0, 0)"],
+                        ["${Height} >= 80", "rgb(noise(vec3(0, 0, 0)), 0, 0)"],
                         ["${Height} >= 70", "color('orange')"],
                         ["${Height} >= 12", "color('yellow')"],
                         ["${Height} >= 7", "color('lime')"],
                         ["${Height} >= 1", "color('cyan')"],
                         ["true", "color('blue')"]
                     ]
-                },
+
+
+                    },
                 meta: {
                     description: "'Building id ${id} has height ${Height}.'"
                 }
