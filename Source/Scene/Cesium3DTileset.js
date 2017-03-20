@@ -145,7 +145,6 @@ define([
      * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles specification}
      */
     function Cesium3DTileset(options) {
-        console.log()
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var url = options.url;
@@ -1540,15 +1539,10 @@ define([
     function processSelectionQueue(tileset, frameState, selectionState, outOfCore, iteration) {
         var processingQueue = selectionState.processingQueue;
         var nextQueue = selectionState.nextQueue;
-        var finalQueue = selectionState.finalQueue;
         var length = processingQueue.length;
 
         for (var i = 0; i < length; ++i) {
-            var processTile = processingQueue.get(i);
-            var nextCount = nextQueue.length;
-            var finalCount = finalQueue.length;
-
-            queueDescendants(tileset, processTile, selectionState, frameState, outOfCore, iteration);
+            queueDescendants(tileset, processingQueue.get(i), selectionState, frameState, outOfCore, iteration);
         }
         selectionState.done = (nextQueue.length === 0);
     }
@@ -2198,7 +2192,7 @@ define([
         updatePointAndFeatureCounts(tileset, content, true, true);
     }
 
-    var scratchCartesian = new Cartesian3();
+    var scratchCartesian2 = new Cartesian3();
 
     function updateGeometricErrorLabels(tileset, frameState) {
         var selectedTiles = tileset._selectedTiles;
@@ -2211,15 +2205,15 @@ define([
                 var halfAxes = boundingVolume.halfAxes;
                 var radius = boundingVolume.radius;
 
-                var position = Cartesian3.clone(boundingVolume.center, scratchCartesian);
+                var position = Cartesian3.clone(boundingVolume.center, scratchCartesian2);
                 if (defined(halfAxes)) {
                     position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
                     position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
                     position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
                 } else if (defined(radius)) {
-                    var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian);
-                    normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian);
-                    position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian);
+                    var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian2);
+                    normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian2);
+                    position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian2);
                 }
                 tileset._geometricErrorLabels.add({
                     text: tile.geometricError.toString(),
