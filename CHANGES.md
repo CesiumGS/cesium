@@ -7,12 +7,15 @@ Change Log
     * The top-level `properties` in an `Entity` created by `GeoJsonDataSource` are now instances of `ConstantProperty` instead of raw values.
 * Deprecated
     * The `left`, `right`, `bottom`, and `top` properties of `OrthographicFrustum` are deprecated and will be removed in 1.33. Use `OrthographicOffCenterFrustum` instead.
+* Breaking changes
+    * Removed `ArcGisImageServerTerrainProvider`.
 * Added `Camera.flyTo` and `Camera.flyToBoundingSphere` options [#5070](https://github.com/AnalyticalGraphicsInc/cesium/pull/5070)
     * `flyOverLongitude` to select one of two possible on Globe paths which camera should fly.
     * `flyOverLongitudeWeight` to set a threshold: how many times the `flyOverLongitude` way can be than shortest path.
     * `pitchAdjustHeight` to adjust camera pitch during exaggerated flights, to keep Earth in viewport.
 * Added the event `Viewer.trackedEntityChanged`, which is raised when the value of `viewer.trackedEntity` changes. [#5060](https://github.com/AnalyticalGraphicsInc/cesium/pull/5060)
 * Added `Camera.DEFAULT_OFFSET` for default view of objects with bounding spheres [#4936](https://github.com/AnalyticalGraphicsInc/cesium/pull/4936)
+* Changed billboard blending behavior [#5066](https://github.com/AnalyticalGraphicsInc/cesium/pull/5056)
 * Fix crunch compressed textures in IE11. [#5057](https://github.com/AnalyticalGraphicsInc/cesium/pull/5057)
 * Fixed a bug in `Quaternion.fromHeadingPitchRoll` that made it erroneously throw an exception when passed individual angles in an unminified / debug build.
 * Fix `GroundPrimitive` rendering in 2D and Columbus View [#5078](https://github.com/AnalyticalGraphicsInc/cesium/pull/5078)
