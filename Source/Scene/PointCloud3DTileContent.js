@@ -939,13 +939,13 @@ define([
         }
         if (hasShowStyle) {
             getStyleableProperties(showStyleFunction, styleableProperties);
-            getStyleableTileConstants(colorStyleFunction, styleableTileConstants);
+            getStyleableTileConstants(showStyleFunction, styleableTileConstants);
             getStyleableSemantics(showStyleFunction, styleableSemantics);
             showStyleFunction = modifyStyleFunction(showStyleFunction);
         }
         if (hasPointSizeStyle) {
             getStyleableProperties(pointSizeStyleFunction, styleableProperties);
-            getStyleableTileConstants(colorStyleFunction, styleableTileConstants);
+            getStyleableTileConstants(pointSizeStyleFunction, styleableTileConstants);
             getStyleableSemantics(pointSizeStyleFunction, styleableSemantics);
             pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
         }
