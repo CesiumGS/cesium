@@ -66,7 +66,7 @@ blackMarble.splitDirection = Cesium.ImagerySplitDirection.LEFT; // Only show to 
 
 // Sync the position of the slider with the split position
 var slider = document.getElementById('slider');
-viewer.scene.imagerySplitPosition = (slider.offsetLeft) / slider.parentElement.offsetWidth;
+viewer.scene.imagerySplitPosition = slider.offsetLeft;
 
 var dragStartX = 0;
 
@@ -87,8 +87,14 @@ function sliderMove(e) {
   var slider = document.getElementById('slider');
   var splitPosition = (e.clientX - dragStartX) / slider.parentElement.offsetWidth;
   slider.style.left = 100.0 * splitPosition + "%";
-  viewer.scene.imagerySplitPosition = splitPosition;
+  viewer.scene.imagerySplitPosition = slider.offsetLeft;
 }
+
+// Update the slider position each frame to account for window resizing.
+viewer.scene.preRender.addEventListener(function(scene, time) {
+    var slider = document.getElementById('slider');
+    viewer.scene.imagerySplitPosition = slider.offsetLeft;
+});
 
 
 //Sandcastle_End
