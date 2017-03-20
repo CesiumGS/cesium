@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Expression',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Color',
-        'Core/Math',
-        'Scene/ExpressionNodeType'
-    ], function(
-        Expression,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Color,
-        CesiumMath,
-        ExpressionNodeType) {
+    'Scene/Expression',
+    'Core/Cartesian2',
+    'Core/Cartesian3',
+    'Core/Cartesian4',
+    'Core/Color',
+    'Core/Math',
+    'Scene/ExpressionNodeType'
+], function(
+    Expression,
+    Cartesian2,
+    Cartesian3,
+    Cartesian4,
+    Color,
+    CesiumMath,
+    ExpressionNodeType) {
     'use strict';
 
     var frameState = {};
@@ -2143,8 +2143,8 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('evaluates distance function', function() {
-        var expression = new Expression('distance(0,1)');
+    it ('evaluates the distance function', function() {
+        var expression = new Expression('distance(0, 1)');
         expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
 
         expression = new Expression('distance(vec2(1.0, 0.0), vec2(0.0, 0.0))');
@@ -2157,13 +2157,13 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(10.0);
     });
 
-    it('throws if distance function takes an invalid number of arguments', function() {
+    it ('throws if distance function takes an invalid number of arguments', function() {
         expect(function() {
             return new Expression('distance(0.0)');
-        }).toThrowDeveloperError();
+        }) .toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('distance(1, 2, 0)');
+            return new Expression('distance(1, 3, 0)');
         }).toThrowDeveloperError();
     });
 
@@ -2587,7 +2587,7 @@ defineSuite([
         feature.addProperty('complicatedArray', [{
             'subproperty' : Cartesian4.UNIT_X,
             'anotherproperty' : Cartesian4.UNIT_Y
-         }, {
+        }, {
             'subproperty' : Cartesian4.UNIT_Z,
             'anotherproperty' : Cartesian4.UNIT_W
         }]);
@@ -3016,7 +3016,7 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
-     it('gets shader expression for sin', function() {
+    it('gets shader expression for sin', function() {
         var expression = new Expression('sin(0.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'sin(0.0)';

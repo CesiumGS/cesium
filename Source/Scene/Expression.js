@@ -1,28 +1,28 @@
 /*global define*/
 define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/isArray',
-        '../Core/Math',
-        '../ThirdParty/jsep',
-        './ExpressionNodeType'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Color,
-        defined,
-        defineProperties,
-        DeveloperError,
-        isArray,
-        CesiumMath,
-        jsep,
-        ExpressionNodeType) {
+    '../Core/Cartesian2',
+    '../Core/Cartesian3',
+    '../Core/Cartesian4',
+    '../Core/Color',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/DeveloperError',
+    '../Core/isArray',
+    '../Core/Math',
+    '../ThirdParty/jsep',
+    './ExpressionNodeType'
+], function(
+    Cartesian2,
+    Cartesian3,
+    Cartesian4,
+    Color,
+    defined,
+    defineProperties,
+    DeveloperError,
+    isArray,
+    CesiumMath,
+    jsep,
+    ExpressionNodeType) {
     "use strict";
 
     var unaryOperators = ['!', '-', '+'];
@@ -83,7 +83,7 @@ define([
         pow : Math.pow,
         min : Math.min,
         max : Math.max,
-        distance : Cartesian3.distance()
+        distance : distance
     };
 
     var unaryFunctions = {
@@ -122,7 +122,11 @@ define([
     }
 
     function log2(number) {
-    	return CesiumMath.logBase(number, 2.0);
+        return CesiumMath.logBase(number, 2.0);
+    }
+
+    function distance(x, y) {
+        return Math.abs(x - y);
     }
 
     /**
@@ -247,9 +251,9 @@ define([
         }
 
         shaderExpression = returnType + ' ' + functionName + '() \n' +
-            '{ \n' +
-            '    return ' + shaderExpression + '; \n' +
-            '} \n';
+                           '{ \n' +
+                           '    return ' + shaderExpression + '; \n' +
+                           '} \n';
 
         return shaderExpression;
     };
@@ -400,7 +404,7 @@ define([
                 createRuntimeAst(expression, args[1]),
                 createRuntimeAst(expression, args[2])
             ];
-           return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
+            return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
         } else if (call === 'rgba' || call === 'hsla') {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength < 4) {
@@ -793,6 +797,22 @@ define([
     function getEvaluateBinaryFunction(call) {
         var evaluate = binaryFunctions[call];
         return function(feature) {
+            var left = this._left.evaluate(feature);
+            var right = this._right.evaluate(feature);
+
+            if (call === 'distance') {
+                if (typeof left === 'number' && typeof right === 'number') {
+                    return evaluate(left, right);
+                } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
+                    return Cartesian2.distance(left, right);
+                } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+                    return Cartesian3.distance(left, right);
+                } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
+                    return Cartesian4.distance(left, right);
+                } else {
+                    throw new DeveloperError('Function "' + call + '" requires matching types of inputs. Arguments are ' + left + ' and ' + right + '.');
+                }
+            }
             return evaluate(this._left.evaluate(feature), this._right.evaluate(feature));
         };
     }
@@ -1558,7 +1578,7 @@ define([
                 } else if (value === 'Number') {
                     return 'float(' + left + ')';
                 } else if (value === 'round') {
-                	return 'floor(' + left + ' + 0.5)';
+                    return 'floor(' + left + ' + 0.5)';
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
                 } else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {
@@ -1608,7 +1628,7 @@ define([
             case ExpressionNodeType.FUNCTION_CALL:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
-                //>>includeEnd('debug');
+            //>>includeEnd('debug');
             case ExpressionNodeType.ARRAY:
                 if (value.length === 4) {
                     return 'vec4(' + value[0] + ', ' + value[1] + ', ' + value[2] + ', ' + value[3] + ')';
@@ -1626,15 +1646,15 @@ define([
             case ExpressionNodeType.REGEX:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: Regular expressions are not supported.');
-                //>>includeEnd('debug');
+            //>>includeEnd('debug');
             case ExpressionNodeType.VARIABLE_IN_STRING:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: Converting a variable to a string is not supported.');
-                //>>includeEnd('debug');
+            //>>includeEnd('debug');
             case ExpressionNodeType.LITERAL_NULL:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: null is not supported.');
-                //>>includeEnd('debug');
+            //>>includeEnd('debug');
             case ExpressionNodeType.LITERAL_BOOLEAN:
                 return value ? 'true' : 'false';
             case ExpressionNodeType.LITERAL_NUMBER:
@@ -1653,7 +1673,7 @@ define([
                 }
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: String literals are not supported.');
-                //>>includeEnd('debug');
+            //>>includeEnd('debug');
             case ExpressionNodeType.LITERAL_COLOR:
                 var args = left;
                 if (value === 'color') {
@@ -1722,11 +1742,11 @@ define([
             case ExpressionNodeType.LITERAL_REGEX:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: Regular expressions are not supported.');
-                //>>includeEnd('debug');
+            //>>includeEnd('debug');
             case ExpressionNodeType.LITERAL_UNDEFINED:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: undefined is not supported.');
-                //>>includeEnd('debug');
+            //>>includeEnd('debug');
             case ExpressionNodeType.BUILTIN_VARIABLE:
                 if (value === 'tiles3d_tileset_time') {
                     return 'u_tilesetTime';
