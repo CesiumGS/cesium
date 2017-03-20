@@ -33,7 +33,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 // start with orthographic projection
-viewer.projectionPicker.viewModel.switchToOrthographic();
+viewer.scene.camera.switchToOrthographicFrustum();
 
 var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0.0);
 var hpr = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(135), 0.0, 0.0);
