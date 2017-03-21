@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Change the projection between perspective and orthographic.">
-    <meta name="cesium-sandcastle-labels" content="Tutorials,Showcases">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
@@ -33,7 +33,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 // start with orthographic projection
-viewer.scene.camera.switchToOrthographicFrustum();
+viewer.projectionPicker.viewModel.switchToOrthographic();
 
 var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0.0);
 var hpr = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(135), 0.0, 0.0);
