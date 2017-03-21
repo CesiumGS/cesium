@@ -1453,7 +1453,7 @@ define([
                 this._rsOpaque = RenderState.fromCache({
                     depthTest : {
                         enabled : true,
-                        func : WebGLConstants.LEQUAL  // Allows label glyphs and billboards to overlap.
+                        func : WebGLConstants.LESS
                     },
                     depthMask : true
                 });
@@ -1461,13 +1461,19 @@ define([
                 this._rsOpaque = undefined;
             }
 
+            // If OPAQUE_AND_TRANSLUCENT is in use, only the opaque pass gets the benefit of the depth buffer,
+            // not the translucent pass.  Otherwise, if the TRANSLUCENT pass is on its own, it turns on
+            // a depthMask in lieu of full depth sorting (because it has opaque-ish fragments that look bad in OIT).
+            // When the TRANSLUCENT depth mask is in use, label backgrounds require the depth func to be LEQUAL.
+            var useTranslucentDepthMask = this._blendOption === BlendOption.TRANSLUCENT;
+
             if (this._blendOption === BlendOption.TRANSLUCENT || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
                 this._rsTranslucent = RenderState.fromCache({
                     depthTest : {
                         enabled : true,
-                        func : WebGLConstants.LEQUAL  // Allows label glyphs and billboards to overlap.
+                        func : (useTranslucentDepthMask ? WebGLConstants.LEQUAL : WebGLConstants.LESS)
                     },
-                    depthMask : this._blendOption === BlendOption.TRANSLUCENT,
+                    depthMask : useTranslucentDepthMask,
                     blending : BlendingState.ALPHA_BLEND
                 });
             } else {
