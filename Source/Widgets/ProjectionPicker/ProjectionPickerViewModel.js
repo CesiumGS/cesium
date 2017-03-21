@@ -118,62 +118,17 @@ define([
                 return;
             }
 
-            var scene = that._scene;
-            var camera = that._scene.camera;
-            camera.frustum = new PerspectiveFrustum();
-            camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-            camera.frustum.fov = CesiumMath.toRadians(60.0);
-
+            that._scene.camera.switchToPerspectiveFrustum();
             that._orthographic = false;
             that.dropDownVisible = false;
         });
-
-        var scratchAdjustOrtghographicFrustumMousePosition = new Cartesian2();
-        var scratchDepthIntersection = new Cartesian3();
-        var pickGlobeScratchRay = new Ray();
-        var scratchRayIntersection = new Cartesian3();
 
         this._switchToOrthographic = createCommand(function() {
             if (that.sceneMode === SceneMode.SCENE2D) {
                 return;
             }
 
-            var scene = that._scene;
-            var camera = that._scene.camera;
-            var globe = scene._globe;
-
-            var distance;
-            if (!Matrix4.equals(Matrix4.IDENTITY, camera.transform)) {
-                distance = Cartesian3.magnitude(camera.position);
-            } else if (defined(globe)) {
-                var depthIntersection;
-                var rayIntersection;
-
-                var mousePosition = scratchAdjustOrtghographicFrustumMousePosition;
-                mousePosition.x = scene.drawingBufferWidth / 2.0;
-                mousePosition.y = scene.drawingBufferHeight / 2.0;
-
-                if (scene.pickPositionSupported) {
-                    depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
-                }
-
-                var ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
-                rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
-
-                var pickDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
-                var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
-
-                distance = pickDistance < rayDistance ? pickDistance : rayDistance;
-            }
-
-            if (!defined(distance)) {
-                distance = camera.positionCartographic.height;
-            }
-
-            camera.frustum = new OrthographicFrustum();
-            camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-            camera.frustum.width = distance;
-
+            that._scene.camera.switchToOrthographicFrustum();
             that._orthographic = true;
             that.dropDownVisible = false;
         });
