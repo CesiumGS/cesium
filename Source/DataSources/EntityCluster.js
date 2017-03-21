@@ -15,6 +15,7 @@ define([
         '../Scene/LabelCollection',
         '../Scene/PointPrimitive',
         '../Scene/PointPrimitiveCollection',
+        '../Scene/SceneMode',
         '../ThirdParty/kdbush'
     ], function(
         BoundingRectangle,
@@ -32,6 +33,7 @@ define([
         LabelCollection,
         PointPrimitive,
         PointPrimitiveCollection,
+        SceneMode,
         kdbush) {
     'use strict';
 
@@ -166,7 +168,7 @@ define([
             var item = collection.get(i);
             item.clusterShow = false;
 
-            if (!item.show || !occluder.isPointVisible(item.position)) {
+            if (!item.show || (entityCluster._scene.mode === SceneMode.SCENE3D && !occluder.isPointVisible(item.position))) {
                 continue;
             }
 

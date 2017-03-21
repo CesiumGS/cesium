@@ -20,6 +20,7 @@ defineSuite([
         'Scene/PerspectiveFrustum',
         'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
+        'Specs/createCanvas',
         'Specs/createGlobe',
         'Specs/createScene',
         'Specs/pollToPromise',
@@ -45,6 +46,7 @@ defineSuite([
         PerspectiveFrustum,
         TextureAtlas,
         VerticalOrigin,
+        createCanvas,
         createGlobe,
         createScene,
         pollToPromise,
@@ -1096,6 +1098,26 @@ defineSuite([
             position : Cartesian3.ZERO,
             eyeOffset : new Cartesian3(1.0, 1.0, 0.0)
         });
+        scene.renderForSpecs();
+        expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
+    });
+
+    it('computes screen space position in Columbus view', function() {
+        var b = billboards.add({
+            position : Cartesian3.fromDegrees(0.0, 0.0, 10.0)
+        });
+        scene.morphToColumbusView(0.0);
+        scene.camera.setView({ destination : Rectangle.MAX_VALUE });
+        scene.renderForSpecs();
+        expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
+    });
+
+    it('computes screen space position in 2D', function() {
+        var b = billboards.add({
+            position : Cartesian3.fromDegrees(0.0, 0.0, 10.0)
+        });
+        scene.morphTo2D(0.0);
+        scene.camera.setView({ destination : Rectangle.MAX_VALUE });
         scene.renderForSpecs();
         expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
     });
