@@ -134,65 +134,123 @@ define([
             return;
         }
 
-        var xhr = new XMLHttpRequest();
+        // If running under node, use http request instead of XMLHttpRequest
+        if (typeof process === 'object' && Object.prototype.toString.call(process) === '[object process]') {
+          loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType);
+          console.log('HEY');
+        } else {
 
-        if (TrustedServers.contains(url)) {
-            xhr.withCredentials = true;
+          var xhr = new XMLHttpRequest();
+
+          if (TrustedServers.contains(url)) {
+              xhr.withCredentials = true;
+          }
+
+          if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
+              xhr.overrideMimeType(overrideMimeType);
+          }
+
+          xhr.open(method, url, true);
+
+          if (defined(headers)) {
+              for (var key in headers) {
+                  if (headers.hasOwnProperty(key)) {
+                      xhr.setRequestHeader(key, headers[key]);
+                  }
+              }
+          }
+
+          if (defined(responseType)) {
+              xhr.responseType = responseType;
+          }
+
+          xhr.onload = function() {
+              if (xhr.status < 200 || xhr.status >= 300) {
+                  deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
+                  return;
+              }
+
+              var response = xhr.response;
+              var browserResponseType = xhr.responseType;
+
+              //All modern browsers will go into either the first if block or last else block.
+              //Other code paths support older browsers that either do not support the supplied responseType
+              //or do not support the xhr.response property.
+              if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
+                  deferred.resolve(response);
+              } else if ((responseType === 'json') && typeof response === 'string') {
+                  try {
+                      deferred.resolve(JSON.parse(response));
+                  } catch (e) {
+                      deferred.reject(e);
+                  }
+              } else if ((browserResponseType === '' || browserResponseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
+                  deferred.resolve(xhr.responseXML);
+              } else if ((browserResponseType === '' || browserResponseType === 'text') && defined(xhr.responseText)) {
+                  deferred.resolve(xhr.responseText);
+              } else {
+                  deferred.reject(new RuntimeError('Invalid XMLHttpRequest response type.'));
+              }
+          };
+
+          xhr.onerror = function(e) {
+              deferred.reject(new RequestErrorEvent());
+          };
+
+          xhr.send(data);
         }
-
-        if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
-            xhr.overrideMimeType(overrideMimeType);
-        }
-
-        xhr.open(method, url, true);
-
-        if (defined(headers)) {
-            for (var key in headers) {
-                if (headers.hasOwnProperty(key)) {
-                    xhr.setRequestHeader(key, headers[key]);
-                }
-            }
-        }
-
-        if (defined(responseType)) {
-            xhr.responseType = responseType;
-        }
-
-        xhr.onload = function() {
-            if (xhr.status < 200 || xhr.status >= 300) {
-                deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
-                return;
-            }
-
-            var response = xhr.response;
-            var browserResponseType = xhr.responseType;
-
-            //All modern browsers will go into either the first if block or last else block.
-            //Other code paths support older browsers that either do not support the supplied responseType
-            //or do not support the xhr.response property.
-            if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
-                deferred.resolve(response);
-            } else if ((responseType === 'json') && typeof response === 'string') {
-                try {
-                    deferred.resolve(JSON.parse(response));
-                } catch (e) {
-                    deferred.reject(e);
-                }
-            } else if ((browserResponseType === '' || browserResponseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
-                deferred.resolve(xhr.responseXML);
-            } else if ((browserResponseType === '' || browserResponseType === 'text') && defined(xhr.responseText)) {
-                deferred.resolve(xhr.responseText);
-            } else {
-                deferred.reject(new RuntimeError('Invalid XMLHttpRequest response type.'));
-            }
-        };
-
-        xhr.onerror = function(e) {
-            deferred.reject(new RequestErrorEvent());
-        };
-
-        xhr.send(data);
     };
+
+    function loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType) {
+      var URL = require('url').parse(url);
+      var http_s = require(URL.protocol.slice(0, -1));
+      var zlib = require('zlib');
+      var options = {
+        protocol: URL.protocol,
+        hostname: URL.hostname,
+        port: URL.port,
+        path: URL.path,
+        query: URL.query,
+        method: method,
+        headers: headers
+      }
+
+      // TODO: Handle responseTyoes
+
+      var req = http_s.request(options, function (res) {
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          deferred.reject(new RequestErrorEvent(res.statusCode, res, res.headers));
+          return;
+        }
+
+        var chunkArray = [];
+        res.on('data', function (chunk) {
+          chunkArray.push(chunk);
+        });
+
+        res.on('end', function () {
+          var response = Buffer.concat(chunkArray);
+          if (res.headers['content-encoding'] === 'gzip') {
+            zlib.gunzip(response, function (error, result) {
+              if (error) {
+                deferred.reject(new RuntimeError('Error decompressing response.'));
+              } else {
+                deferred.resolve(new Uint8Array(result).buffer);
+              }
+            });
+          } else {
+            deferred.resolve(response);
+          }
+        });
+      });
+
+      req.end();
+
+      req.on('error', function (e) {
+        deferred.reject(new RequestErrorEvent());
+      });
+
+    }
 
     loadWithXhr.defaultLoad = loadWithXhr.load;
 
