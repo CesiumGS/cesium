@@ -2269,14 +2269,17 @@ define([
                             }
                         }
 
-                        // Tiles only draw if their selection depth is >= the tile drawn already. They write their
-                        // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
-                        rs = clone(command.renderState, true);
-                        rs.stencilTest.enabled = true;
-                        rs.stencilTest.reference = tile._selectionDepth;
-                        rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
-                        rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
-                        command.renderState = RenderState.fromCache(rs);
+                        // ignore if tile does not write depth (ex. translucent)
+                        if (command.renderState.depthMask) {
+                            // Tiles only draw if their selection depth is >= the tile drawn already. They write their
+                            // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
+                            rs = clone(command.renderState, true);
+                            rs.stencilTest.enabled = true;
+                            rs.stencilTest.reference = tile._selectionDepth;
+                            rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
+                            rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
+                            command.renderState = RenderState.fromCache(rs);
+                        }
                     }
                 }
             }
