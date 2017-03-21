@@ -502,7 +502,7 @@ define([
     function createTileProgressFunction(primitive) {
         return function() {
             raiseTileLoadProgressEvent(primitive);
-        }
+        };
     }
 
     function visitTile(primitive, frameState, tile) {
