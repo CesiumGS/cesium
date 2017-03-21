@@ -2263,10 +2263,7 @@ define([
 
                         if (!tile._finalResolution) {
                             // draw backfaces of all unresolved tiles so resolved tiles don't poke through
-                            // only necessary if this command is writing depth
-                            if (command.renderState.depthMask) {
-                                backfaceCommands.push(DrawCommand.shallowClone(command));
-                            }
+                            backfaceCommands.push(DrawCommand.shallowClone(command));
                         }
 
                         // Tiles only draw if their selection depth is >= the tile drawn already. They write their
@@ -2290,14 +2287,8 @@ define([
                 rs = clone(command.renderState, true);
                 rs.cull.enabled = true;
                 rs.cull.face = CullFace.FRONT;
-                // rs.depthMask = true;
-                // rs.colorMask = false;
-
-                // Front face covering this pixel:
-                // - only write depth
-                // No front face covering this pixel:
-                // - if backface culling is on: do nothing
-                // - if backface culling is off: write depth and color
+                rs.depthMask = true;
+                rs.colorMask = false;
                 command.renderState = RenderState.fromCache(rs);
             }
 
