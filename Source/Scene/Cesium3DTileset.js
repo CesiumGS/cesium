@@ -2224,6 +2224,9 @@ define([
         tileset._geometricErrorLabels.update(frameState);
     }
 
+    var stencilClearCommnad = new ClearCommand({
+        stencil : 0
+    });
     var backfaceCommands = [];
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
@@ -2238,9 +2241,7 @@ define([
 
         if (tileset._refining && tileset.skipLODs && frameState.context.stencilBuffer && length > 0) {
 
-            commandList.push(new ClearCommand({
-                stencil : 0
-            }));
+            commandList.push(stencilClearCommnad);
 
             var command, rs;
 
