@@ -21,7 +21,8 @@ Change Log
 * Fixed an issue with `PinBuilder` where inset images could have low-alpha fringes against an opaque background.  [#5099](https://github.com/AnalyticalGraphicsInc/cesium/pull/5099)
 * Fixed a bug in `ModelAnimationCache` causing different animations to reference the same animation. [#5064](https://github.com/AnalyticalGraphicsInc/cesium/pull/5064)
 * Fixed a bug that caused an exception in `CesiumInspectorViewModel` when using the NW / NE / SW / SE / Parent buttons to navigate to a terrain tile that is not yet loaded.
-* Added support for time-varying properties in CZML [#3162](https:/github.com/AnalyticalGraphicsInc/cesium/issues/3162).
+* `ConstantProperty` now provides `valueOf` and `toString` methods that return the constant value.
+* Added support for time-varying properties in CZML [#5105](https:/github.com/AnalyticalGraphicsInc/cesium/pull/5105).
 * Added support for an orthographic projection in 3D and Columbus view.
     * Set `projectionPicker` to `true` in the options when creating a `Viewer` to add a widget that will switch projections. [#5021](https://github.com/AnalyticalGraphicsInc/cesium/pull/5021)
     * Call `switchToOrthographicFrustum` or `switchToPerspectiveFrustum` on `Camera` to change projections.
