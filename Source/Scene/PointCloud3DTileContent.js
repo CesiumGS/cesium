@@ -605,17 +605,8 @@ define([
 
         if (isQuantized) {
             uniformMap = combine(uniformMap, {
-                u_quantizedVolumeOffset : function() {
-                    return content._quantizedVolumeOffset;
-                },
                 u_quantizedVolumeScale : function() {
                     return content._quantizedVolumeScale;
-                }
-            });
-        } else if (defined(content._rtcCenter)) {
-            uniformMap = combine(uniformMap, {
-                u_rtcCenter : function() {
-                    return content._rtcCenter;
                 }
             });
         }
@@ -817,7 +808,6 @@ define([
     }
 
     var semantics = ['POSITION', 'COLOR', 'NORMAL', 'ABSOLUTE_POSITION'];
-    var calculatedSemantics = ['DISTANCE_TO_EARTHCENTER'];
 
     function getStyleableProperties(source, properties) {
         // Get all the properties used by this style
@@ -825,7 +815,7 @@ define([
         var matches = regex.exec(source);
         while (matches !== null) {
             var name = matches[1];
-            if ((semantics.indexOf(name) === -1) && (properties.indexOf(name) === -1) && (calculatedSemantics.indexOf(name) === -1)) {
+            if ((semantics.indexOf(name) === -1) && (properties.indexOf(name) === -1)) {
                 properties.push(name);
             }
             matches = regex.exec(source);
@@ -863,9 +853,6 @@ define([
             var replaceName = semantic.toLowerCase();
             source = source.replace(new RegExp(styleName, 'g'), replaceName);
         }
-
-        // Replace calculated semantics
-        source = source.replace(new RegExp('czm_tiles3d_style_DISTANCE_TO_EARTHCENTER', 'g'), 'length(absolute_position)');
 
         // Edit the function header to accept the point position, color, and normal
         return source.replace('()', '(vec3 position, vec3 absolute_position, vec4 color, vec3 normal)');
@@ -1041,9 +1028,6 @@ define([
 
         if (isQuantized) {
             vs += 'uniform vec3 u_quantizedVolumeScale; \n';
-            vs += 'uniform vec3 u_quantizedVolumeOffset; \n';
-        } else if (defined(content._rtcCenter)){
-            vs += 'uniform vec3 u_rtcCenter; \n';
         }
 
         if (hasColorStyle) {
@@ -1082,15 +1066,10 @@ define([
 
         if (isQuantized) {
             vs += '    vec3 position = a_position * u_quantizedVolumeScale; \n';
-            vs += '    vec3 absolute_position = u_quantizedVolumeOffset + position; \n';
         } else {
             vs += '    vec3 position = a_position; \n';
-            if (defined(content._rtcCenter)) {
-                vs += '    vec3 absolute_position = u_rtcCenter + position; \n';
-            } else {
-                vs += '    vec3 absolute_position = position; \n';
-            }
         }
+        vs += '    vec3 absolute_position = vec3(czm_model * vec4(position, 1.0)); \n';
 
         if (hasNormals) {
             if (isOctEncoded16P) {
