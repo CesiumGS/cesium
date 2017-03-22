@@ -1,4 +1,5 @@
 /*global define*/
+/*globals process, require, Buffer*/ // For node.js
 define([
         '../ThirdParty/when',
         './defaultValue',
@@ -213,7 +214,7 @@ define([
         query: URL.query,
         method: method,
         headers: headers
-      }
+      };
 
       var req = http_s.request(options, function (res) {
         if (res.statusCode < 200 || res.statusCode >= 300) {
