@@ -167,8 +167,9 @@ define([
             return undefined;
         }
 
-        if ((frameState.mode !== SceneMode.SCENE3D) &&
-            (frameState.mode !== SceneMode.MORPHING)) {
+        var mode = frameState.mode;
+        if ((mode !== SceneMode.SCENE3D) &&
+            (mode !== SceneMode.MORPHING)) {
             return undefined;
         }
 
@@ -305,7 +306,7 @@ define([
      *
      * @example
      * skyAtmosphere = skyAtmosphere && skyAtmosphere.destroy();
-     * 
+     *
      * @see SkyAtmosphere#isDestroyed
      */
     SkyAtmosphere.prototype.destroy = function() {

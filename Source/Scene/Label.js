@@ -75,6 +75,9 @@ define([
         if (defined(options.pixelOffsetScaleByDistance) && options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
             throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
         }
+        if (defined(options.scaleByDistance) && options.scaleByDistance.far <= options.scaleByDistance.near) {
+            throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
+        }
         if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
             throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
         }
@@ -99,6 +102,7 @@ define([
         this._id = options.id;
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+        this._scaleByDistance = options.scaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
         this._distanceDisplayCondition = options.distanceDisplayCondition;
 
@@ -614,6 +618,58 @@ define([
         },
 
         /**
+         * Gets or sets near and far scaling properties of a Label based on the label's distance from the camera.
+         * A label's scale will interpolate between the {@link NearFarScalar#nearValue} and
+         * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+         * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+         * Outside of these ranges the label's scale remains clamped to the nearest bound.  If undefined,
+         * scaleByDistance will be disabled.
+         * @memberof Label.prototype
+         * @type {NearFarScalar}
+         *
+         * @example
+         * // Example 1.
+         * // Set a label's scaleByDistance to scale by 1.5 when the
+         * // camera is 1500 meters from the label and disappear as
+         * // the camera distance approaches 8.0e6 meters.
+         * label.scaleByDistance = new Cesium.NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0);
+         *
+         * @example
+         * // Example 2.
+         * // disable scaling by distance
+         * label.scaleByDistance = undefined;
+         */
+        scaleByDistance : {
+            get : function() {
+                return this._scaleByDistance;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && value.far <= value.near) {
+                    throw new DeveloperError('far distance must be greater than near distance.');
+                }
+                //>>includeEnd('debug');
+
+                var scaleByDistance = this._scaleByDistance;
+                if (!NearFarScalar.equals(scaleByDistance, value)) {
+                    this._scaleByDistance = NearFarScalar.clone(value, scaleByDistance);
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.scaleByDistance = value;
+                        }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.scaleByDistance = value;
+                    }
+                }
+            }
+        },
+
+        /**
          * Gets and sets the 3D Cartesian offset applied to this label in eye coordinates.  Eye coordinates is a left-handed
          * coordinate system, where <code>x</code> points towards the viewer's right, <code>y</code> points up, and
          * <code>z</code> points into the screen.  Eye coordinates use the same scale as world and model coordinates,
@@ -1066,6 +1122,7 @@ define([
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
                NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
+               NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
                this._id === other._id;
     };

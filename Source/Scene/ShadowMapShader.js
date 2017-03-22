@@ -13,6 +13,10 @@ define([
     function ShadowMapShader() {
     }
 
+    ShadowMapShader.getShadowCastShaderKeyword = function(isPointLight, isTerrain, usesDepthTexture, isOpaque) {
+        return 'castShadow ' + isPointLight + ' ' + isTerrain + ' ' + usesDepthTexture + ' ' + isOpaque;
+    };
+
     ShadowMapShader.createShadowCastVertexShader = function(vs, isPointLight, isTerrain) {
         var defines = vs.defines.slice(0);
         var sources = vs.sources.slice(0);
@@ -104,6 +108,19 @@ define([
             defines : defines,
             sources : sources
         });
+    };
+
+    ShadowMapShader.getShadowReceiveShaderKeyword = function(shadowMap, castShadows, isTerrain, hasTerrainNormal) {
+        var usesDepthTexture = shadowMap._usesDepthTexture;
+        var polygonOffsetSupported = shadowMap._polygonOffsetSupported;
+        var isPointLight = shadowMap._isPointLight;
+        var isSpotLight = shadowMap._isSpotLight;
+        var hasCascades = shadowMap._numberOfCascades > 1;
+        var debugCascadeColors = shadowMap.debugCascadeColors;
+        var softShadows = shadowMap.softShadows;
+
+        return 'receiveShadow ' + usesDepthTexture + polygonOffsetSupported + isPointLight + isSpotLight +
+               hasCascades + debugCascadeColors + softShadows + castShadows + isTerrain + hasTerrainNormal;
     };
 
     ShadowMapShader.createShadowReceiveVertexShader = function(vs, isTerrain, hasTerrainNormal) {

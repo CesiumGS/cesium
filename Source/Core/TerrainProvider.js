@@ -21,7 +21,6 @@ define([
      *
      * @see EllipsoidTerrainProvider
      * @see CesiumTerrainProvider
-     * @see ArcGisImageServerTerrainProvider
      */
     function TerrainProvider() {
         DeveloperError.throwInstantiationError();

@@ -31,6 +31,8 @@ define([
     function ModelAnimationCache() {
     }
 
+    var dataUriRegex = /^data\:/i;
+
     function getAccessorKey(model, accessor) {
         var gltf = model.gltf;
         var buffers = gltf.buffers;
@@ -42,8 +44,8 @@ define([
         var byteOffset = bufferView.byteOffset + accessor.byteOffset;
         var byteLength = accessor.count * numberOfComponentsForType(accessor.type);
 
-        // buffer.path will be undefined when animations are embedded.
-        return model.cacheKey + '//' + defaultValue(buffer.path, '') + '/' + byteOffset + '/' + byteLength;
+        var uriKey = dataUriRegex.test(buffer.uri) ? '' : buffer.uri;
+        return model.cacheKey + '//' + uriKey + '/' + byteOffset + '/' + byteLength;
     }
 
     var cachedAnimationParameters = {

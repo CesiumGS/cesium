@@ -1,18 +1,16 @@
 /*global define*/
 define([
-    '../ThirdParty/when',
     './binarySearch',
     './Cartographic',
     './defined',
-    './sampleTerrain',
+    './defineProperties',
     './DeveloperError',
     './Rectangle'
 ], function(
-    when,
     binarySearch,
     Cartographic,
     defined,
-    sampleTerrain,
+    defineProperties,
     DeveloperError,
     Rectangle) {
     "use strict";
@@ -29,7 +27,7 @@ define([
     function TileAvailability(tilingScheme, maximumLevel) {
         this._tilingScheme = tilingScheme;
         this._maximumLevel = maximumLevel;
-        
+
         this._rootNodes = [];
         for (var y = 0; y < tilingScheme.getNumberOfYTilesAtLevel(); ++y) {
             for (var x = 0; x < tilingScheme.getNumberOfXTilesAtLevel(); ++x) {
@@ -75,7 +73,7 @@ define([
      * Determines the level of the most detailed tile covering the position.  This function
      * usually completes in time logarithmic to the number of rectangles added with
      * {@link TileAvailability#addAvailableTileRange}.
-     * 
+     *
      * @param {Cartographic} position The position for which to determine the maximum available level.  The height component is ignored.
      * @return {Number} The level of the most detailed tile covering the position.
      * @throws {DeveloperError} If position is outside any tile according to the tiling scheme.
@@ -212,7 +210,7 @@ define([
         this._ne = undefined;
     }
 
-    Object.defineProperties(QuadtreeNode.prototype, {
+    defineProperties(QuadtreeNode.prototype, {
         nw: {
             get: function() {
                 if (!this._nw) {

@@ -4,7 +4,6 @@ define([
         './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './EllipsoidGeometry',
         './VertexFormat'
     ], function(
@@ -12,7 +11,6 @@ define([
         Check,
         defaultValue,
         defined,
-        DeveloperError,
         EllipsoidGeometry,
         VertexFormat) {
     'use strict';

@@ -8,6 +8,7 @@ defineSuite([
         'Core/clone',
         'Core/Color',
         'Core/combine',
+        'Core/defaultValue',
         'Core/defined',
         'Core/defineProperties',
         'Core/DistanceDisplayCondition',
@@ -27,9 +28,11 @@ defineSuite([
         'Renderer/Pass',
         'Renderer/RenderState',
         'Renderer/ShaderSource',
+        'Scene/Axis',
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
+        'Scene/PerspectiveFrustum',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -42,6 +45,7 @@ defineSuite([
         clone,
         Color,
         combine,
+        defaultValue,
         defined,
         defineProperties,
         DistanceDisplayCondition,
@@ -61,9 +65,11 @@ defineSuite([
         Pass,
         RenderState,
         ShaderSource,
+        Axis,
         ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
+        PerspectiveFrustum,
         createScene,
         pollToPromise,
         when) {
@@ -74,10 +80,17 @@ defineSuite([
     var boxNoIndicesUrl = './Data/Models/Box-NoIndices/box-noindices.gltf';
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
+    var texturedBoxKTXUrl = './Data/Models/Box-Textured-KTX/CesiumTexturedBoxTest.gltf';
+    var texturedBoxKTXBinaryUrl = './Data/Models/Box-Textured-KTX-Binary/CesiumTexturedBoxTest.glb';
+    var texturedBoxKTXEmbeddedUrl = './Data/Models/Box-Textured-KTX-Embedded/CesiumTexturedBoxTest.gltf';
+    var texturedBoxCRNUrl = './Data/Models/Box-Textured-CRN/CesiumTexturedBoxTest.gltf';
+    var texturedBoxCRNBinaryUrl = './Data/Models/Box-Textured-CRN-Binary/CesiumTexturedBoxTest.glb';
+    var texturedBoxCRNEmbeddedUrl = './Data/Models/Box-Textured-CRN-Embedded/CesiumTexturedBoxTest.gltf';
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
-    var boxesEcefUrl = './Data/Models/Boxes-ECEF/ecef.glb';
+    var boxEcefUrl = './Data/Models/Box-ECEF/ecef.gltf';
+
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
@@ -145,6 +158,11 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
     });
 
     function addZoomTo(model) {
@@ -177,10 +195,11 @@ defineSuite([
     }
 
     function loadModelJson(gltf, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         options = combine(options, {
             modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             gltf : gltf,
-            show : false
+            show : defaultValue(options.show, false)
         });
 
         var model = primitives.add(new Model(options));
@@ -197,13 +216,11 @@ defineSuite([
 
     function verifyRender(model) {
         expect(model.ready).toBe(true);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         model.show = true;
         model.zoomTo();
-        var pixelColor = scene.renderForSpecs();
-        expect(pixelColor).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
         model.show = false;
-        return pixelColor;
     }
 
     it('fromGltf throws without options', function() {
@@ -279,7 +296,7 @@ defineSuite([
     });
 
     it('renders ECEF in 2D', function() {
-        return loadModel(boxesEcefUrl, {
+        return loadModel(boxEcefUrl, {
             modelMatrix : Matrix4.IDENTITY,
             minimumPixelSize : undefined
         }).then(function(m) {
@@ -301,13 +318,61 @@ defineSuite([
     });
 
     it('renders ECEF in CV', function() {
-        return loadModel(boxesEcefUrl, {
+        return loadModel(boxEcefUrl, {
             modelMatrix : Matrix4.IDENTITY,
             minimumPixelSize : undefined
         }).then(function(m) {
             scene.morphToColumbusView(0.0);
             verifyRender(m);
             primitives.remove(m);
+        });
+    });
+
+    it('Renders x-up model', function() {
+        return loadJson(boxEcefUrl).then(function(gltf) {
+            // Model data is z-up. Edit the transform to be z-up to x-up.
+            gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_X_UP, new Array(16));
+
+            return loadModelJson(gltf, {
+                modelMatrix : Matrix4.IDENTITY,
+                upAxis : Axis.X
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.upAxis).toBe(Axis.X);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('Renders y-up model', function() {
+        return loadJson(boxEcefUrl).then(function(gltf) {
+            // Model data is z-up. Edit the transform to be z-up to y-up.
+            gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_Y_UP, new Array(16));
+
+            return loadModelJson(gltf, {
+                modelMatrix : Matrix4.IDENTITY,
+                upAxis : Axis.Y
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.upAxis).toBe(Axis.Y);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('Renders z-up model', function() {
+        return loadJson(boxEcefUrl).then(function(gltf) {
+            // Model data is z-up. Edit the transform to be the identity.
+            gltf.nodes.node_transform.matrix = Matrix4.pack(Matrix4.IDENTITY, new Array(16));
+
+            return loadModelJson(gltf, {
+                modelMatrix : Matrix4.IDENTITY,
+                upAxis : Axis.Z
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.upAxis).toBe(Axis.Z);
+                primitives.remove(m);
+            });
         });
     });
 
@@ -404,7 +469,7 @@ defineSuite([
     });
 
     it('renders in wireframe', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         texturedBoxModel.show = true;
         texturedBoxModel.debugWireframe = true;
@@ -422,7 +487,7 @@ defineSuite([
     });
 
     it('renders with distance display condition', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         var center = Matrix4.getTranslation(texturedBoxModel.modelMatrix, new Cartesian3());
         var near = 10.0;
@@ -776,6 +841,57 @@ defineSuite([
         });
     });
 
+    it('renders textured box with external KTX texture', function() {
+        return loadModel(texturedBoxKTXUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with embedded binary KTX texture', function() {
+        return loadModel(texturedBoxKTXBinaryUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with embedded base64 encoded KTX texture', function() {
+        return loadModel(texturedBoxKTXEmbeddedUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with external CRN texture', function() {
+        if (!scene.context.s3tc) {
+            return;
+        }
+        return loadModel(texturedBoxCRNUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with embedded binary CRN texture', function() {
+        if (!scene.context.s3tc) {
+            return;
+        }
+        return loadModel(texturedBoxCRNBinaryUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with embedded base64 encoded CRN texture', function() {
+        if (!scene.context.s3tc) {
+            return;
+        }
+        return loadModel(texturedBoxCRNEmbeddedUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('loads cesiumAir', function() {
@@ -789,7 +905,7 @@ defineSuite([
     });
 
     it('renders cesiumAir with per-node show (root)', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         var commands = cesiumAirModel._nodeCommands;
         var i;
@@ -799,7 +915,7 @@ defineSuite([
         cesiumAirModel.zoomTo();
 
         cesiumAirModel.getNode('Cesium_Air').show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         length = commands.length;
         for (i = 0; i < length; ++i) {
@@ -807,7 +923,7 @@ defineSuite([
         }
 
         cesiumAirModel.getNode('Cesium_Air').show = true;
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         length = commands.length;
         for (i = 0; i < length; ++i) {
@@ -859,11 +975,12 @@ defineSuite([
         cesiumAirModel.show = true;
         cesiumAirModel.zoomTo();
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(cesiumAirModel);
-        expect(pick.id).toEqual(cesiumAirUrl);
-        expect(pick.node).toBeDefined();
-        expect(pick.mesh).toBeDefined();
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(cesiumAirModel);
+            expect(result.id).toEqual(cesiumAirUrl);
+            expect(result.node).toBeDefined();
+            expect(result.mesh).toBeDefined();
+        });
 
         cesiumAirModel.show = false;
     });
@@ -879,9 +996,10 @@ defineSuite([
         cesiumAirModel.show = true;
         cesiumAirModel.zoomTo();
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(cesiumAirModel);
-        expect(pick.id).toEqual('id');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(cesiumAirModel);
+            expect(result.id).toEqual('id');
+        });
 
         cesiumAirModel.id = oldId;
         cesiumAirModel.show = false;
@@ -890,8 +1008,7 @@ defineSuite([
     it('cesiumAir is not picked (show === false)', function() {
         cesiumAirModel.zoomTo();
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1247,10 +1364,16 @@ defineSuite([
 
             for (var i = 1; i < 4; ++i) {
                 var t = JulianDate.addSeconds(time, i, new JulianDate());
-                expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
+                expect({
+                    scene : scene,
+                    time : t
+                }).toRender([0, 0, 0, 255]);
 
                 m.show = true;
-                expect(scene.renderForSpecs(t)).not.toEqual([0, 0, 0, 255]);
+                expect({
+                    scene : scene,
+                    time : t
+                }).notToRender([0, 0, 0, 255]);
                 m.show = false;
 
                 expect(node.matrix).not.toEqual(previousMatrix);
@@ -1285,10 +1408,16 @@ defineSuite([
 
         for (var i = 0; i < 6; ++i) {
             var t = JulianDate.addSeconds(time, 0.25 * i, new JulianDate());
-            expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
+            expect({
+                scene : scene,
+                time : t
+            }).toRender([0, 0, 0, 255]);
 
             riggedFigureModel.show = true;
-            expect(scene.renderForSpecs(t)).not.toEqual([0, 0, 0, 255]);
+            expect({
+                scene : scene,
+                time : t
+            }).notToRender([0, 0, 0, 255]);
             riggedFigureModel.show = false;
         }
 
@@ -1559,10 +1688,17 @@ defineSuite([
 
     it('Loads with incrementallyLoadTextures set to true', function() {
         return loadModelJson(texturedBoxModel.gltf, {
-            incrementallyLoadTextures : true
+            incrementallyLoadTextures : true,
+            show : true
         }).then(function(m) {
             // Get the rendered color of the model before textures are loaded
-            var loadedColor = verifyRender(m);
+            var loadedColor;
+
+            m.zoomTo();
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                loadedColor = rgba;
+            });
 
             pollToPromise(function() {
                 // Render scene to progressively load textures
@@ -1570,8 +1706,7 @@ defineSuite([
                 // Textures have finished loading
                 return (m.pendingTextureLoads === 0);
             }, { timeout : 10000 }).then(function() {
-                var finishedColor = verifyRender(m);
-                expect(finishedColor).not.toEqual(loadedColor);
+                expect(scene).notToRender(loadedColor);
                 primitives.remove(m);
             });
         });
@@ -1579,10 +1714,17 @@ defineSuite([
 
     it('Loads with incrementallyLoadTextures set to false', function() {
         return loadModelJson(texturedBoxModel.gltf, {
-            incrementallyLoadTextures : false
+            incrementallyLoadTextures : false,
+            show : true
         }).then(function(m) {
             // Get the rendered color of the model before textures are loaded
-            var loadedColor = verifyRender(m);
+            var loadedColor;
+
+            m.zoomTo();
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                loadedColor = rgba;
+            });
 
             pollToPromise(function() {
                 // Render scene to progressively load textures (they should already be loaded)
@@ -1590,8 +1732,7 @@ defineSuite([
                 // Textures have finished loading
                 return !defined(m._loadResources);
             }, { timeout : 10000 }).then(function() {
-                var finishedColor = verifyRender(m);
-                expect(finishedColor).toEqual(loadedColor);
+                expect(scene).toRender(loadedColor);
                 primitives.remove(m);
             });
         });
@@ -1629,10 +1770,10 @@ defineSuite([
         return loadModel(boxNoLightUrl).then(function(m) {
             // Verify that we render a black model because lighting is completely off
             expect(m.ready).toBe(true);
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
             m.show = true;
             m.zoomTo();
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
             m.show = false;
 
             primitives.remove(m);
@@ -1748,8 +1889,13 @@ defineSuite([
         var rotateZ = Matrix3.fromRotationZ(CesiumMath.toRadians(90.0));
 
         // Each side of the cube should be a different color
-        var oldPixelColor = scene.renderForSpecs();
-        expect(oldPixelColor).not.toEqual([0, 0, 0, 255]);
+        var oldPixelColor;
+
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+            oldPixelColor = rgba;
+        });
+
         for(var i = 0; i < 6; i++) {
             var rotate = rotateZ;
             if (i % 3 === 0) {
@@ -1760,17 +1906,19 @@ defineSuite([
             }
             Matrix4.multiplyByMatrix3(m.modelMatrix, rotate, m.modelMatrix);
 
-            var pixelColor = scene.renderForSpecs();
-            expect(pixelColor).not.toEqual([0, 0, 0, 255]);
-            expect(pixelColor).not.toEqual(oldPixelColor);
-            oldPixelColor = pixelColor;
+            /* jshint loopfunc: true */
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                expect(rgba).not.toEqual(oldPixelColor);
+                oldPixelColor = rgba;
+            });
         }
     }
 
     it('loads a gltf with normalized color attributes', function() {
          return loadModel(boxColorUrl).then(function(m) {
              expect(m.ready).toBe(true);
-             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+             expect(scene).toRender([0, 0, 0, 255]);
              m.show = true;
              m.zoomTo();
              testBoxSideColors(m);
@@ -1801,7 +1949,7 @@ defineSuite([
     it('loads a gltf with WEB3D_quantized_attributes COLOR', function() {
         return loadModel(boxColorQuantizedUrl).then(function(m) {
             expect(m.ready).toBe(true);
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
             m.show = true;
             m.zoomTo();
             testBoxSideColors(m);
@@ -1857,6 +2005,7 @@ defineSuite([
         };
 
         var options = {
+            show : true,
             precreatedAttributes : precreatedAttributes,
             vertexShaderLoaded : vertexShaderLoaded,
             fragmentShaderLoaded : fragmentShaderLoaded,
@@ -1864,8 +2013,8 @@ defineSuite([
         };
 
         return loadModelJson(texturedBoxModel.gltf, options).then(function(model) {
-            var pixelColor = verifyRender(model);
-            expect(pixelColor).toEqual([255, 255, 255, 255]);
+            model.zoomTo();
+            expect(scene).toRender([255, 255, 255, 255]);
             primitives.remove(model);
         });
     });
@@ -1894,8 +2043,10 @@ defineSuite([
 
         return loadModelJson(texturedBoxModel.gltf, options).then(function(model) {
             model.show = true;
-            var pick = scene.pick(new Cartesian2(0, 0));
-            expect(pick.custom).toEqual('custom');
+            expect(scene).toPickAndCall(function(result) {
+                expect(result.custom).toEqual('custom');
+            });
+
             primitives.remove(model);
         });
     });
@@ -1966,51 +2117,58 @@ defineSuite([
             model.zoomTo();
 
             // Model is originally red
-            var sourceColor = scene.renderForSpecs();
-            expect(sourceColor[0]).toBeGreaterThan(0);
-            expect(sourceColor[1]).toEqual(0);
+            var sourceColor;
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[1]).toEqual(0);
+                sourceColor = rgba;
+            });
 
             // Check MIX
             model.colorBlendMode = ColorBlendMode.MIX;
             model.color = Color.LIME;
 
             model.colorBlendAmount = 0.0;
-            var color = scene.renderForSpecs();
-            expect(color).toEqual(sourceColor);
+            expect(scene).toRender(sourceColor);
 
             model.colorBlendAmount = 0.5;
-            color = scene.renderForSpecs();
-            expect(color[0]).toBeGreaterThan(0);
-            expect(color[1]).toBeGreaterThan(0);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[1]).toBeGreaterThan(0);
+            });
 
             model.colorBlendAmount = 1.0;
-            color = scene.renderForSpecs();
-            expect(color[0]).toEqual(0);
-            expect(color[1]).toEqual(255);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).toEqual(0);
+                expect(rgba[1]).toEqual(255);
+            });
 
             // Check REPLACE
             model.colorBlendMode = ColorBlendMode.REPLACE;
             model.colorBlendAmount = 0.5; // Should have no effect
-            color = scene.renderForSpecs();
-            expect(color[0]).toEqual(0);
-            expect(color[1]).toEqual(255);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).toEqual(0);
+                expect(rgba[1]).toEqual(255);
+            });
 
             // Check HIGHLIGHT
             model.colorBlendMode = ColorBlendMode.HIGHLIGHT;
             model.color = Color.DARKGRAY;
-            color = scene.renderForSpecs();
-            expect(sourceColor[0]).toBeGreaterThan(0);
-            expect(sourceColor[0]).toBeLessThan(255);
-            expect(sourceColor[1]).toEqual(0);
-            expect(sourceColor[2]).toEqual(0);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[0]).toBeLessThan(255);
+                expect(rgba[1]).toEqual(0);
+                expect(rgba[2]).toEqual(0);
+            });
 
             // Check alpha
             model.colorBlendMode = ColorBlendMode.REPLACE;
             model.color = Color.fromAlpha(Color.LIME, 0.5);
-            color = scene.renderForSpecs();
-            expect(color[0]).toEqual(0);
-            expect(color[1]).toBeLessThan(255);
-            expect(color[1]).toBeGreaterThan(0);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).toEqual(0);
+                expect(rgba[1]).toBeLessThan(255);
+                expect(rgba[1]).toBeGreaterThan(0);
+            });
 
             // No commands are issued when the alpha is 0.0
             model.color = Color.fromAlpha(Color.LIME, 0.0);
