@@ -2,25 +2,42 @@
 define([
         './defaultValue',
         './defined',
-        './defineProperties'
+        './defineProperties',
+        './Check'
     ], function(
         defaultValue,
         defined,
-        defineProperties) {
+        defineProperties,
+        Check) {
     'use strict';
-    
+
+    /**
+     * A wrapper around arrays so that the internal length of the array can be manually managed.
+     *
+     * @alias ManagedArray
+     * @constructor
+     *
+     * @param {Number} [length=0] The initial length of the array.
+     */
     function ManagedArray(length) {
         length = defaultValue(length, 0);
         this._array = new Array(length);
         this._length = length;
     }
-    
+
     defineProperties(ManagedArray.prototype, {
+
+        /**
+         * Gets or sets the length of the array.
+         * If the set length is greater than the length of the internal array, the internal array is resized.
+         *
+         * @type Number
+         */
         length : {
             get : function() {
                 return this._length;
             },
-            
+
             set : function(length) {
                 this._length = length;
                 if (length > this._array.length) {
@@ -28,48 +45,104 @@ define([
                 }
             }
         },
-        
+
+        /**
+         * Gets the internal array.
+         *
+         * @type Array
+         * @readonly
+         */
         internalData : {
             get : function() {
                 return this._array;
             }
         }
     });
-    
+
+    /**
+     * Gets the element at an index.
+     *
+     * @param {Number} index The index to get.
+     */
     ManagedArray.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number.lessThan('index', index, this._array._length);
+        //>>includeEnd('debug');
+
         return this._array[index];
     };
-    
+
+    /**
+     * Sets the element at an index. Resizes the array if index is greater than the length of the array.
+     *
+     * @param {Number} index The index to set.
+     * @param {*} value The value to set at index.
+     */
     ManagedArray.prototype.set = function(index, value) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('index', index);
+        //>>includeEnd('debug');
+
         if (index >= this.length) {
             this.length = index + 1;
         }
-        this._array[index] = value;  
+        this._array[index] = value;
     };
-    
+
+    /**
+     * Push an element into the array.
+     */
     ManagedArray.prototype.push = function(element) {
         var index = this.length++;
         this._array[index] = element;
     };
-    
+
+    /**
+     * Pop an element from the array.
+     *
+     * @returns {*} The last element in the array.
+     */
     ManagedArray.prototype.pop = function() {
-        return this._array[--this.length];  
+        return this._array[--this.length];
     };
-    
+
+    /**
+     * Resize the internal array if length > _array.length.
+     *
+     * @param {Number} length The length.
+     */
     ManagedArray.prototype.reserve = function(length) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number.greaterThanOrEquals('length', length, 0);
+        //>>includeEnd('debug');
+
         if (length > this._array.length) {
             this._array.length = length;
-        }  
+        }
     };
-    
+
+    /**
+     * Resize the array.
+     *
+     * @param {Number} length The length.
+     */
     ManagedArray.prototype.resize = function(length) {
-        this.length = length;  
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number.greaterThanOrEquals('length', length, 0);
+        //>>includeEnd('debug');
+
+        this.length = length;
     };
-    
+
+    /**
+     * Trim the internal array to the specified length. Defaults to the current length.
+     *
+     * @param {Number} length The length.
+     */
     ManagedArray.prototype.trim = function(length) {
         length = defaultValue(length, this.length);
-        this._array.length = length;  
+        this._array.length = length;
     };
-    
+
     return ManagedArray;
 });

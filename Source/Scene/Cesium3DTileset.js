@@ -538,7 +538,7 @@ define([
          * @type {Number}
          * @default 10
          */
-        this.skipSSEFactor = defaultValue(options.skipSSEFactor, 10);
+        this._skipSSEFactor = defaultValue(options.skipSSEFactor, 10);
 
         /**
          * This is a constant defining the minumum number of levels skip.
@@ -550,7 +550,7 @@ define([
          * @type {Number}
          * @default 1
          */
-        this.skipLevels = defaultValue(options.skipLevels, 1);
+        this._skipLevels = defaultValue(options.skipLevels, 1);
 
         /**
          * Determines whether low memory level-of-detail skipping should be used.
@@ -954,6 +954,32 @@ define([
             get : function() {
                 return this._statistics;
             }
+        },
+
+        /**
+         * @private
+         */
+        skipSSEFactor : {
+            get : function() {
+                return this.skipLODs ? this._skipSSEFactor : 0.1;
+            },
+
+            set : function(value) {
+                this._skipSSEFactor = value;
+            }
+        },
+
+        /**
+         * @private
+         */
+        skipLevels : {
+            get : function() {
+                return this.skipLODs ? this._skipLevels : 0;
+            },
+
+            set : function(value) {
+                this._skipLevels = value;
+            }
         }
     });
 
@@ -1052,6 +1078,12 @@ define([
                     refiningTiles.push(tile3D);
                 }
 
+                // Create a load heap, one for each unique server. We can only make limited requests to a given
+                // server so it is unecessary to keep a queue of all tiles needed to be loaded.
+                // Instead of creating a list of all tiles to load and then sorting it entirely to find the best ones,
+                // we keep just a heap so we have the best `maximumRequestsPerServer` to load. The order of these does
+                // not matter much as we will try to load them all.
+                // The heap approach is a O(n log k) to find the best tiles for loading.
                 var requestServer = tile3D.requestServer;
                 if (defined(requestServer)) {
                     if (!defined(that._loadHeaps[requestServer])) {
@@ -1606,6 +1638,12 @@ define([
     }
 
     var tempStack = [];
+
+    /**
+     * Add all descendants of the starting tile that meet the selection heuristic to selectionState.nextQueue.
+     * Any tiles that have no children, are additive, or meet the tileset's maximum screen space error are added
+     * to selectionState.finalQueue instead
+     */
     function queueDescendants(tileset, start, selectionState, frameState, outOfCore) {
         var stack = tempStack;
 
@@ -1618,6 +1656,9 @@ define([
         }
     }
 
+    /**
+     * Load and add a tile to the proper queue and load and push children to the processing stack
+     */
     function queueTile(tileset, start, tile, stack, selectionState, frameState, outOfCore) {
         var nextQueue = selectionState.nextQueue;
         var finalQueue = selectionState.finalQueue;
@@ -1666,6 +1707,25 @@ define([
     var tempStack2 = [];
     var tempStack3 = [];
 
+    /**
+     * Traverse the tree while tiles are visible and check if their selected frame is the current frame.
+     * If so, add it to a selection queue.
+     * Tiles are sorted near to far so we can take advantage of early Z.
+     * Furthermore, this is a preorder traversal so children tiles are selected before ancestor tiles.
+     *
+     * The reason for the preorder traversal is so that tiles can easily be marked with their
+     * selection depth. A tile's _selectionDepth is it's depth in the tree were all non-selected tiles removed.
+     * This property is important for use in the stencil test because we want to render deeper tiles on top of their
+     * ancestors. If a tileset is very deep, the depth is unlikely to fit into the stencil buffer.
+     *
+     * We want to select children before their ancestors because there is no guarantee on the relationship between
+     * the children's z-depth and the ancestor's z-depth. We cannot rely on Z because we want the child to appear on top
+     * of ancestor regardless of true depth. The stencil tests used require children to be drawn first. @see {@link updateTiles}
+     *
+     * NOTE: this will no longer work when there is a chain of selected tiles that is longer than the size of the
+     * stencil buffer (usually 8 bits). In other words, the subset of the tree containing only selected tiles must be
+     * no deeper than 255. It is very, very unlikely this will cause a problem.
+     */
     function traverseAndSelect(tileset, root, frameState) {
         var stack = tempStack2;
         var ancestorStack = tempStack3;
@@ -2228,6 +2288,7 @@ define([
         stencil : 0
     });
     var backfaceCommands = [];
+
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
@@ -2239,7 +2300,30 @@ define([
 
         var tile, i;
 
-        if (tileset._refining && tileset.skipLODs && frameState.context.stencilBuffer && length > 0) {
+        if (tileset._refining && frameState.context.stencilBuffer && length > 0) {
+            /**
+             * Consider 'leaf' tiles as selected tiles that have no selected descendants. They may have children,
+             * but they are currently our effective leaves because they do not have selected descendants. These tiles
+             * are those where with tile._finalResolution === true.
+             * Let 'unresolved' tiles be those with tile._finalResolution === false.
+             *
+             * 1. Render just the backfaces of unresolved tiles in order to lay down z
+             * 2. Render all frontfaces whereever tile._selectionDepth > stencilBuffer.
+             *    Replace stencilBuffer with tile._selectionDepth, when passing the z test.
+             *    Because children are always drawn before ancestors (@see {@link traverseAndSelect}),
+             *    this effectively draws children first and does not draw ancestors if a descendant has already
+             *    been drawn at that pixel.
+             *    Step 1 prevents child tiles from appearing on top when they are truly behind ancestor content.
+             *    If they are behind the backfaces of the ancestor, then they will not be drawn.
+             *
+             * NOTE: Step 2 sometimes causes visual artifacts when backfacing child content has some faces that
+             * partially face the camera and are inside of the ancestor content. Because they are inside, they will
+             * not be culled by the depth writes in Step 1, and because they partially face the camera, the stencil tests
+             * will draw them on top of the ancestor content.
+             *
+             * NOTE: Because we always render backfaces of unresolved tiles, if the camera is looking at the backfaces
+             * of an object, they will always be drawn while loading, even if backface culling is enabled.
+             */
 
             commandList.push(stencilClearCommnad);
 

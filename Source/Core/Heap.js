@@ -11,6 +11,12 @@ define([
         defineProperties) {
     'use strict';
 
+    /**
+     * @alias Heap
+     * @constructor
+     *
+     * @param {Function} comparator The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
+     */
     function Heap(comparator) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('comparator', comparator);
@@ -24,7 +30,12 @@ define([
 
     defineProperties(Heap.prototype, {
         /**
-         *  @readonly
+         * Gets the internal data in the heap.
+         *
+         * @memberof Heap.prototype
+         *
+         * @type {Array}
+         * @readonly
          */
         data : {
             get : function() {
@@ -32,6 +43,14 @@ define([
             }
         },
 
+        /**
+         * Gets the length of the heap.
+         *
+         * @memberof Heap.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
         length : {
             get : function() {
                 return this._length;
@@ -45,12 +64,22 @@ define([
         data[b] = temp;
     }
 
+    /**
+     * Resizes the internal array of the heap.
+     *
+     * @param {Number} [length] The length to resize internal array to. Defaults to the current size of the heap.
+     */
     Heap.prototype.reserve = function(length) {
         length = defaultValue(length, this._length);
         var data = this._data;
         data.length = length;
     };
 
+    /**
+     * Heapify. Update the heap so that index and all descendants satisfy the heap property.
+     *
+     * @param {Number} index The starting index to heapify from.
+     */
     Heap.prototype.heapify = function(index) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.number.greaterThanOrEquals('index', index, 0);
@@ -89,6 +118,11 @@ define([
         }
     };
 
+    /**
+     * Create a heap from an existing array. This will modify the original array.
+     *
+     * @param {Array} data The array to convert to a heap.
+     */
     Heap.prototype.buildHeap = function(data) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('data', data);
@@ -103,6 +137,12 @@ define([
         }
     };
 
+    /**
+     * Insert an element into the heap. If the length would grow greater than maximumSize
+     * of the heap, extra elements are removed.
+     *
+     * @param {*} value The element to insert
+     */
     Heap.prototype.insert = function(value) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('value', value);
@@ -133,6 +173,11 @@ define([
         }
     };
 
+    /**
+     * Remove the top element from the heap and return it.
+     *
+     * @returns {*} The top element of the heap.
+     */
     Heap.prototype.pop = function() {
         if (this._length === 0) {
             return undefined;
