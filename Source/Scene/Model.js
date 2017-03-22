@@ -1228,7 +1228,8 @@ define([
         };
     }
 
-    function computeBoundingSphere(model, gltf) {
+    function computeBoundingSphere(model) {
+        var gltf = model.gltf;
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
         var rootNodes = gltf.scenes[gltf.scene].nodes;
@@ -1427,14 +1428,13 @@ define([
 
     function parseTextures(model, context) {
         var gltf = model.gltf;
-        var buffers = gltf.buffers;
-        var bufferViews = gltf.bufferViews;
         var images = gltf.images;
         var textures = gltf.textures;
         for (var id in textures) {
             if (textures.hasOwnProperty(id)) {
                 var imageId = textures[id].source;
                 var gltfImage = images[imageId];
+                var extras = gltfImage.extras;
 
                 var bufferViewId = gltfImage.bufferView;
                 var uri = gltfImage.uri;
@@ -1475,13 +1475,10 @@ define([
 
                 // Image references either uri (external or base64-encoded) or bufferView
                 if (defined(bufferViewId)) {
-                    var bufferView = bufferViews[bufferViewId];
-                    var bufferId = bufferView.buffer;
-                    var buffer = buffers[bufferId];
                     model._loadResources.texturesToCreateFromBufferView.enqueue({
                         id : id,
                         image : undefined,
-                        bufferView : buffer.extras._pipeline.source.slice(bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength),
+                        bufferView : bufferViewId,
                         mimeType : gltfImage.mimeType
                     });
                 } else {
@@ -1489,11 +1486,11 @@ define([
                     uri = new Uri(uri);
                     var imagePath = uri.resolve(model._baseUri).toString();
                     if (ktxRegex.test(imagePath)) {
-                        loadKTX(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                        loadKTX(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
                     } else if (crnRegex.test(imagePath)) {
-                        loadCRN(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                        loadCRN(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
                     } else {
-                        loadImage(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                        loadImage(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
                     }
                 }
             }
@@ -4274,7 +4271,7 @@ define([
                     parseMeshes(this);
                     parseNodes(this);
 
-                    this._boundingSphere = computeBoundingSphere(this.gltf);
+                    this._boundingSphere = computeBoundingSphere(this);
                     this._initialRadius = this._boundingSphere.radius;
                     this._updatedGltfVersion = true;
                 }
