@@ -137,7 +137,6 @@ define([
         // If running under node, use http request instead of XMLHttpRequest
         if (typeof process === 'object' && Object.prototype.toString.call(process) === '[object process]') {
           loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType);
-          console.log('HEY');
         } else {
 
           var xhr = new XMLHttpRequest();
@@ -202,6 +201,7 @@ define([
     };
 
     function loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType) {
+      // Note: only the 'json' responseType transforms the loaded buffer
       var URL = require('url').parse(url);
       var http_s = require(URL.protocol.slice(0, -1));
       var zlib = require('zlib');
@@ -215,31 +215,32 @@ define([
         headers: headers
       }
 
-      // TODO: Handle responseTyoes
-
       var req = http_s.request(options, function (res) {
         if (res.statusCode < 200 || res.statusCode >= 300) {
           deferred.reject(new RequestErrorEvent(res.statusCode, res, res.headers));
           return;
         }
 
-        var chunkArray = [];
+        var chunkArray = []; // Array of buffers to receive the response
         res.on('data', function (chunk) {
           chunkArray.push(chunk);
         });
-
         res.on('end', function () {
-          var response = Buffer.concat(chunkArray);
-          if (res.headers['content-encoding'] === 'gzip') {
+          var response = Buffer.concat(chunkArray); // Concatenate all buffers
+          if (res.headers['content-encoding'] === 'gzip') { // Must deal with decompression
             zlib.gunzip(response, function (error, result) {
               if (error) {
                 deferred.reject(new RuntimeError('Error decompressing response.'));
               } else {
-                deferred.resolve(new Uint8Array(result).buffer);
+                if (responseType === 'json') {
+                  deferred.resolve(JSON.parse(result.toString('utf8')));
+                } else {
+                  deferred.resolve(new Uint8Array(result).buffer); // Convert Buffer to ArrayBuffer
+                }
               }
             });
           } else {
-            deferred.resolve(response);
+            deferred.resolve(responseType === 'json' ? JSON.parse(response.toString('utf8')) : response);
           }
         });
       });
