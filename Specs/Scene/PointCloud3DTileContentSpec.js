@@ -6,10 +6,15 @@ defineSuite([
         'Core/ComponentDatatype',
         'Core/defined',
         'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
+        'Core/Math',
         'Core/Transforms',
         'Scene/Cesium3DTileStyle',
+        'Scene/Expression',
+        'Scene/PerspectiveFrustum',
         'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
+        'Specs/createScene',
+        'ThirdParty/when'
     ], function(
         PointCloud3DTileContent,
         Cartesian3,
@@ -17,10 +22,15 @@ defineSuite([
         ComponentDatatype,
         defined,
         HeadingPitchRange,
+        HeadingPitchRoll,
+        CesiumMath,
         Transforms,
         Cesium3DTileStyle,
+        Expression,
+        PerspectiveFrustum,
         Cesium3DTilesTester,
-        createScene) {
+        createScene,
+        when) {
     'use strict';
 
     var scene;
@@ -48,11 +58,7 @@ defineSuite([
     }
 
     beforeAll(function() {
-        // Point tiles use RTC, which for now requires scene3DOnly to be true
-        scene = createScene({
-            scene3DOnly : true
-        });
-
+        scene = createScene();
         scene.frameState.passes.render = true;
     });
 
@@ -61,21 +67,19 @@ defineSuite([
     });
 
     beforeEach(function() {
+        scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
+
         setCamera(centerLongitude, centerLatitude);
     });
 
     afterEach(function() {
         scene.primitives.removeAll();
     });
-
-    function expectRenderPointCloud(tileset) {
-        tileset.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-        tileset.show = true;
-        var pixelColor = scene.renderForSpecs();
-        expect(pixelColor).not.toEqual([0, 0, 0, 255]);
-        return pixelColor;
-    }
 
     it('throws with invalid magic', function() {
         var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
@@ -177,80 +181,123 @@ defineSuite([
     });
 
     it('renders point cloud with rgb colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(expectRenderPointCloud);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     });
 
     it('renders point cloud with rgba colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBAUrl).then(expectRenderPointCloud);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBAUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     });
 
     it('renders point cloud with rgb565 colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGB565Url).then(expectRenderPointCloud);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGB565Url).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     });
 
     it('renders point cloud with no colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(expectRenderPointCloud);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     });
 
     it('renders point cloud with constant colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudConstantColorUrl).then(expectRenderPointCloud);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudConstantColorUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     });
 
     it('renders point cloud with normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl).then(expectRenderPointCloud);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     });
 
     it('renders point cloud with oct encoded normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsOctEncodedUrl).then(expectRenderPointCloud);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsOctEncodedUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     });
 
     it('renders point cloud with quantized positions', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedUrl).then(expectRenderPointCloud);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     });
 
     it('renders point cloud with quantized positions and oct-encoded normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl).then(expectRenderPointCloud);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     });
 
     it('renders point cloud that are not defined relative to center', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudWGS84Url).then(expectRenderPointCloud);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWGS84Url).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     });
 
     it('renders point cloud with batch table', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(expectRenderPointCloud);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     });
 
     it('renders point cloud with per-point properties', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(expectRenderPointCloud);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
     });
 
     it('renders point cloud with tile transform', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudWithTransformUrl).then(function(tileset) {
-            expectRenderPointCloud(tileset);
+            Cesium3DTilesTester.expectRender(scene, tileset);
 
             var newLongitude = -1.31962;
             var newLatitude = 0.698874;
             var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 5.0);
-            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, 0.0, 0.0, 0.0);
+            var newHPR = new HeadingPitchRoll();
+            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, newHPR);
 
             // Update tile transform
             tileset._root.transform = newTransform;
 
             // Move the camera to the new location
             setCamera(newLongitude, newLatitude);
-            expectRenderPointCloud(tileset);
+            Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders with debug color', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            var color = expectRenderPointCloud(tileset);
+            var color;
+            expect(scene).toRenderAndCall(function(rgba) {
+                color = rgba;
+            });
             tileset.debugColorizeTiles = true;
-            var debugColor = expectRenderPointCloud(tileset);
-            expect(debugColor).not.toEqual(color);
+            expect(scene).notToRender(color);
             tileset.debugColorizeTiles = false;
-            debugColor = expectRenderPointCloud(tileset);
-            expect(debugColor).toEqual(color);
+            expect(scene).toRender(color);
+        });
+    });
+
+    it('renders in CV', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            scene.morphToColumbusView(0.0);
+            setCamera(centerLongitude, centerLatitude);
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+    });
+
+    it('renders in 2D', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            scene.morphTo2D(0.0);
+            setCamera(centerLongitude, centerLatitude);
+            tileset.maximumScreenSpaceError = 3;
+            Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
@@ -258,32 +305,40 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var content = tileset._root.content;
             tileset.show = false;
-            var picked = scene.pickForSpecs();
-            expect(picked).toBeUndefined();
+            expect(scene).toPickPrimitive(undefined);
             tileset.show = true;
-            picked = scene.pickForSpecs();
-            expect(picked).toBeDefined();
-            expect(picked.primitive).toBe(content);
+            expect(scene).toPickAndCall(function(result) {
+                expect(result).toBeDefined();
+                expect(result.primitive).toBe(tileset);
+                expect(result.content).toBe(content);
+            });
         });
     });
 
     it('picks based on batchId', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
-            var pixelColor = scene.renderForSpecs();
+            // Get the original color
+            var color;
+            expect(scene).toRenderAndCall(function(rgba) {
+                color = rgba;
+            });
 
             // Change the color of the picked feature to yellow
-            var picked = scene.pickForSpecs();
-            expect(picked).toBeDefined();
-            picked.color = Color.clone(Color.YELLOW, picked.color);
+            expect(scene).toPickAndCall(function(first) {
+                expect(first).toBeDefined();
 
-            // Expect the pixel color to be some shade of yellow
-            var newPixelColor = scene.renderForSpecs();
-            expect(newPixelColor).not.toEqual(pixelColor);
+                first.color = Color.clone(Color.YELLOW, first.color);
 
-            // Turn show off. Expect a different feature to get picked.
-            picked.show = false;
-            var newPicked = scene.pickForSpecs();
-            expect(newPicked).not.toBe(picked);
+                // Expect the pixel color to be some shade of yellow
+                expect(scene).notToRender(color);
+
+                // Turn show off. Expect a different feature to get picked.
+                first.show = false;
+                expect(scene).toPickAndCall(function(second) {
+                    expect(second).toBeDefined();
+                    expect(second).not.toBe(first);
+                });
+            });
         });
     });
 
@@ -292,7 +347,7 @@ defineSuite([
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(0);
             expect(content.innerContents).toBeUndefined();
-            expect(content.hasProperty('name')).toBe(false);
+            expect(content.hasProperty(0, 'name')).toBe(false);
             expect(content.getFeature(0)).toBeUndefined();
         });
     });
@@ -302,7 +357,7 @@ defineSuite([
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(8);
             expect(content.innerContents).toBeUndefined();
-            expect(content.hasProperty('name')).toBe(true);
+            expect(content.hasProperty(0, 'name')).toBe(true);
             expect(content.getFeature(0)).toBeDefined();
         });
     });
@@ -315,7 +370,7 @@ defineSuite([
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(0);
             expect(content.innerContents).toBeUndefined();
-            expect(content.hasProperty('name')).toBe(false);
+            expect(content.hasProperty(0, 'name')).toBe(false);
             expect(content.getFeature(0)).toBeUndefined();
         });
     });
@@ -340,32 +395,52 @@ defineSuite([
             var content = tileset._root.content;
 
             // Get the number of picked sections with back face culling on
-            content.backFaceCulling = true;
-            var numberPickedCulling = 0;
-            var picked = scene.pickForSpecs();
-            while (defined(picked)) {
-                picked.show = false;
-                picked = scene.pickForSpecs();
-                ++numberPickedCulling;
-            }
-            content.backFaceCulling = false;
+            var pickedCountCulling = 0;
+            var pickedCount = 0;
+            var picked;
 
-            // Set the shows back to true
-            var length = content.featuresLength;
-            for (var i = 0; i < length; ++i) {
-                var feature = content.getFeature(i);
-                feature.show = true;
-            }
+            expect(scene).toPickAndCall(function(result) {
+                // Set culling to true
+                content.backFaceCulling = true;
 
-            // Get the number of picked sections with back face culling off
-            var numberPicked = 0;
-            picked = scene.pickForSpecs();
-            while (defined(picked)) {
-                picked.show = false;
-                picked = scene.pickForSpecs();
-                ++numberPicked;
-            }
-            expect(numberPicked).toBeGreaterThan(numberPickedCulling);
+                expect(scene).toPickAndCall(function(result) {
+                    picked = result;
+                });
+
+                /* jshint loopfunc: true */
+                while (defined(picked)) {
+                    picked.show = false;
+                    expect(scene).toPickAndCall(function(result) {
+                        picked = result;
+                    });
+                    ++pickedCountCulling;
+                }
+
+                // Set the shows back to true
+                var length = content.featuresLength;
+                for (var i = 0; i < length; ++i) {
+                    var feature = content.getFeature(i);
+                    feature.show = true;
+                }
+
+                // Set culling to false
+                content.backFaceCulling = false;
+
+                expect(scene).toPickAndCall(function(result) {
+                    picked = result;
+                });
+
+                /* jshint loopfunc: true */
+                while (defined(picked)) {
+                    picked.show = false;
+                    expect(scene).toPickAndCall(function(result) {
+                        picked = result;
+                    });
+                    ++pickedCount;
+                }
+
+                expect(pickedCount).toBeGreaterThan(pickedCountCulling);
+            });
         });
     });
 
@@ -377,29 +452,33 @@ defineSuite([
             tileset.style = new Cesium3DTileStyle({
                 color : 'color("red")'
             });
-            expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+            expect(scene).toRender([255, 0, 0, 255]);
             expect(content._styleTranslucent).toBe(false);
 
             // Applies translucency
             tileset.style = new Cesium3DTileStyle({
                 color : 'rgba(255, 0, 0, 0.005)'
             });
-            var pixelColor = scene.renderForSpecs();
-            expect(pixelColor[0]).toBeLessThan(255);
-            expect(pixelColor[1]).toBe(0);
-            expect(pixelColor[2]).toBe(0);
-            expect(pixelColor[3]).toBe(255);
-            expect(content._styleTranslucent).toBe(true);
+            expect(scene).toRenderAndCall(function(rgba) {
+                // Pixel is a darker red
+                expect(rgba[0]).toBeLessThan(255);
+                expect(rgba[1]).toBe(0);
+                expect(rgba[2]).toBe(0);
+                expect(rgba[3]).toBe(255);
+                expect(content._styleTranslucent).toBe(true);
+            });
 
             // Style with property
             tileset.style = new Cesium3DTileStyle({
                 color : 'color() * ${temperature}'
             });
-            pixelColor = scene.renderForSpecs(); // Pixel color is some shade of gray
-            expect(pixelColor[0]).toBe(pixelColor[1]);
-            expect(pixelColor[1]).toBe(pixelColor[2]);
-            expect(pixelColor[2]).toBeGreaterThan(0);
-            expect(pixelColor[3]).toBeLessThan(255);
+            expect(scene).toRenderAndCall(function(rgba) {
+                // Pixel color is some shade of gray
+                expect(rgba[0]).toBe(rgba[1]);
+                expect(rgba[1]).toBe(rgba[2]);
+                expect(rgba[2]).toBeGreaterThan(0);
+                expect(rgba[3]).toBeLessThan(255);
+            });
 
             // When no conditions are met the default color is white
             tileset.style = new Cesium3DTileStyle({
@@ -409,7 +488,7 @@ defineSuite([
                     ]
                 }
             });
-            expect(scene.renderForSpecs()).toEqual([255, 255, 255, 255]);
+            expect(scene).toRender([255, 255, 255, 255]);
 
             // Apply style with conditions
             tileset.style = new Cesium3DTileStyle({
@@ -428,42 +507,56 @@ defineSuite([
                     ]
                 }
             });
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
 
             // Apply show style
             tileset.style = new Cesium3DTileStyle({
                 show : true
             });
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
 
             // Apply show style that hides all points
             tileset.style = new Cesium3DTileStyle({
                 show : false
             });
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
 
             // Apply show style with property
             tileset.style = new Cesium3DTileStyle({
                 show : '${temperature} > 0.1'
             });
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
             tileset.style = new Cesium3DTileStyle({
-                show : '${temperature} > 0.9'
+                show : '${temperature} > 1.0'
             });
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
 
             // Apply style with point cloud semantics
             tileset.style = new Cesium3DTileStyle({
                 color : '${COLOR} / 2.0',
                 show : '${POSITION}[0] > 0.5'
             });
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
 
             // Apply pointSize style
             tileset.style = new Cesium3DTileStyle({
                 pointSize : 5.0
             });
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
+        });
+    });
+
+    it('rebuilds shader style when expression changes', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
+            // Solid red color
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color("red")'
+            });
+            expect(scene).toRender([255, 0, 0, 255]);
+
+            tileset.style.color = new Expression('color("lime")');
+            tileset.makeStyleDirty();
+            expect(scene).toRender([0, 255, 0, 255]);
         });
     });
 
@@ -472,9 +565,10 @@ defineSuite([
             tileset.style = new Cesium3DTileStyle({
                 color : 'color("red")'
             });
-            var red = scene.renderForSpecs()[0];
-            expect(red).toBeGreaterThan(0);
-            expect(red).toBeLessThan(255);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[0]).toBeLessThan(255);
+            });
         });
     });
 
@@ -483,7 +577,9 @@ defineSuite([
             tileset.style = new Cesium3DTileStyle({
                 color : 'color("red")'
             });
-            expect(scene.renderForSpecs()[0]).toBeGreaterThan(0);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).toBeGreaterThan(0);
+            });
         });
     });
 
@@ -492,7 +588,7 @@ defineSuite([
             tileset.style = new Cesium3DTileStyle({
                 color : 'color("red")'
             });
-            expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+            expect(scene).toRender([255, 0, 0, 255]);
         });
     });
 
@@ -528,7 +624,76 @@ defineSuite([
             expect(content._drawCommand.shaderProgram).toBe(shaderProgram);
 
             // Point cloud is styled through the batch table
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
+        });
+    });
+
+    it('throws when shader style is invalid', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(function() {
+                content.applyStyleWithShader(scene.frameState, new Cesium3DTileStyle({
+                    show : '1 < "2"'
+                }));
+            }).toThrowDeveloperError();
+        });
+    });
+
+    it('gets memory usage', function() {
+        var promises = [
+            Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl),
+            Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl),
+            Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl),
+            Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl)
+        ];
+
+        // 1000 points
+        var expectedVertexMemory = [
+            1000 * 12, // 3 floats (xyz)
+            1000 * 15, // 3 floats (xyz), 3 bytes (rgb)
+            1000 * 27, // 3 floats (xyz), 3 bytes (rgb), 3 floats (normal)
+            1000 * 11  // 3 shorts (quantized xyz), 3 bytes (rgb), 2 bytes (oct-encoded normal)
+        ];
+
+        return when.all(promises).then(function(tilesets) {
+            var length = tilesets.length;
+            for (var i = 0; i < length; ++i) {
+                var content = tilesets[i]._root.content;
+                expect(content.vertexMemorySizeInBytes).toEqual(expectedVertexMemory[i]);
+                expect(content.textureMemorySizeInBytes).toEqual(0);
+            }
+        });
+    });
+
+    it('gets memory usage for batch point cloud', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
+            var content = tileset._root.content;
+
+            // Point cloud consists of positions, colors, normals, and batchIds
+            // 3 floats (xyz), 3 floats (normal), 1 byte (batchId)
+            var pointCloudVertexMemory = 1000 * 25;
+
+            // One RGBA byte pixel per feature
+            var batchTextureMemorySizeInBytes = content.featuresLength * 4;
+            var pickTextureMemorySizeInBytes = content.featuresLength * 4;
+
+            // Features have not been picked or colored yet, so the batch table contribution is 0.
+            expect(content.vertexMemorySizeInBytes).toEqual(pointCloudVertexMemory);
+            expect(content.textureMemorySizeInBytes).toEqual(0);
+            expect(content.batchTableMemorySizeInBytes).toEqual(0);
+
+            // Color a feature and expect the texture memory to increase
+            content.getFeature(0).color = Color.RED;
+            scene.renderForSpecs();
+            expect(content.vertexMemorySizeInBytes).toEqual(pointCloudVertexMemory);
+            expect(content.textureMemorySizeInBytes).toEqual(0);
+            expect(content.batchTableMemorySizeInBytes).toEqual(batchTextureMemorySizeInBytes);
+
+            // Pick the tile and expect the texture memory to increase
+            scene.pickForSpecs();
+            expect(content.vertexMemorySizeInBytes).toEqual(pointCloudVertexMemory);
+            expect(content.textureMemorySizeInBytes).toEqual(0);
+            expect(content.batchTableMemorySizeInBytes).toEqual(batchTextureMemorySizeInBytes + pickTextureMemorySizeInBytes);
         });
     });
 

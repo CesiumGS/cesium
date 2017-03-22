@@ -91,7 +91,11 @@ define([
             }
         }
         if (Array.isArray(jsonValue)) {
-            return jsonValue.slice(featureId * featureSize, featureId * featureSize + featureSize);
+            var arr = jsonValue.slice(featureId * featureSize, featureId * featureSize + featureSize);
+            if (arr.length === 1){
+                return arr[0];
+            }
+            return arr;
         }
         return jsonValue;
     };

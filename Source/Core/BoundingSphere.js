@@ -2,30 +2,28 @@
 define([
         './Cartesian3',
         './Cartographic',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Ellipsoid',
         './GeographicProjection',
         './Intersect',
         './Interval',
         './Matrix3',
         './Matrix4',
-        './Plane',
         './Rectangle'
     ], function(
         Cartesian3,
         Cartographic,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         Ellipsoid,
         GeographicProjection,
         Intersect,
         Interval,
         Matrix3,
         Matrix4,
-        Plane,
         Rectangle) {
     'use strict';
 
@@ -350,9 +348,7 @@ define([
         stride = defaultValue(stride, 3);
 
         //>>includeStart('debug', pragmas.debug);
-        if (stride < 3) {
-            throw new DeveloperError('stride must be 3 or greater.');
-        }
+        Check.typeOf.number.greaterThanOrEquals('stride', stride, 3);
         //>>includeEnd('debug');
 
         var currentPos = fromPointsCurrentPos;
@@ -658,9 +654,8 @@ define([
      */
     BoundingSphere.fromCornerPoints = function(corner, oppositeCorner, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(corner) || !defined(oppositeCorner)) {
-            throw new DeveloperError('corner and oppositeCorner are required.');
-        }
+        Check.typeOf.object('corner', corner);
+        Check.typeOf.object('oppositeCorner', oppositeCorner);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -686,9 +681,7 @@ define([
      */
     BoundingSphere.fromEllipsoid = function(ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(ellipsoid)) {
-            throw new DeveloperError('ellipsoid is required.');
-        }
+        Check.typeOf.object('ellipsoid', ellipsoid);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -816,13 +809,8 @@ define([
      */
     BoundingSphere.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -846,9 +834,7 @@ define([
      */
     BoundingSphere.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -877,13 +863,8 @@ define([
      */
     BoundingSphere.union = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-
-        if (!defined(right)) {
-            throw new DeveloperError('right is required.');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -934,13 +915,8 @@ define([
      */
     BoundingSphere.expand = function(sphere, point, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-
-        if (!defined(point)) {
-            throw new DeveloperError('point is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('point', point);
         //>>includeEnd('debug');
 
         result = BoundingSphere.clone(sphere, result);
@@ -965,13 +941,8 @@ define([
      */
     BoundingSphere.intersectPlane = function(sphere, plane) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('plane', plane);
         //>>includeEnd('debug');
 
         var center = sphere.center;
@@ -999,13 +970,8 @@ define([
      */
     BoundingSphere.transform = function(sphere, transform, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-
-        if (!defined(transform)) {
-            throw new DeveloperError('transform is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('transform', transform);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -1035,12 +1001,8 @@ define([
      */
     BoundingSphere.distanceSquaredTo = function(sphere, cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         var diff = Cartesian3.subtract(sphere.center, cartesian, distanceSquaredToScratch);
@@ -1064,13 +1026,8 @@ define([
      */
     BoundingSphere.transformWithoutScale = function(sphere, transform, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-
-        if (!defined(transform)) {
-            throw new DeveloperError('transform is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('transform', transform);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -1099,17 +1056,9 @@ define([
      */
     BoundingSphere.computePlaneDistances = function(sphere, position, direction, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-
-        if (!defined(position)) {
-            throw new DeveloperError('position is required.');
-        }
-
-        if (!defined(direction)) {
-            throw new DeveloperError('direction is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('position', position);
+        Check.typeOf.object('direction', direction);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -1146,9 +1095,7 @@ define([
      */
     BoundingSphere.projectTo2D = function(sphere, projection, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
         //>>includeEnd('debug');
 
         projection = defaultValue(projection, projectTo2DProjection);
@@ -1245,12 +1192,8 @@ define([
      */
     BoundingSphere.isOccluded = function(sphere, occluder) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-        if (!defined(occluder)) {
-            throw new DeveloperError('occluder is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('occluder', occluder);
         //>>includeEnd('debug');
         return !occluder.isBoundingSphereVisible(sphere);
     };

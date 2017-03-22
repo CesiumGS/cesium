@@ -11,7 +11,9 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/isArray',
+        '../Core/loadCRN',
         '../Core/loadImage',
+        '../Core/loadKTX',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -42,7 +44,9 @@ define([
         destroyObject,
         DeveloperError,
         isArray,
+        loadCRN,
         loadImage,
+        loadKTX,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -413,10 +417,23 @@ define([
             uniformId = loadedImage.id;
             var image = loadedImage.image;
 
-            var texture = new Texture({
-                context : context,
-                source : image
-            });
+            var texture;
+            if (defined(image.internalFormat)) {
+                texture = new Texture({
+                    context : context,
+                    pixelFormat : image.internalFormat,
+                    width : image.width,
+                    height : image.height,
+                    source : {
+                        arrayBufferView : image.bufferView
+                    }
+                });
+            } else {
+                texture = new Texture({
+                    context : context,
+                    source : image
+                });
+            }
 
             this._textures[uniformId] = texture;
 
@@ -663,6 +680,9 @@ define([
         'mat4' : Matrix4
     };
 
+    var ktxRegex = /\.ktx$/i;
+    var crnRegex = /\.crn$/i;
+
     function createTexture2DUpdateFunction(uniformId) {
         var oldUniformValue;
         return function(material, context) {
@@ -741,7 +761,15 @@ define([
 
             if (uniformValue !== material._texturePaths[uniformId]) {
                 if (typeof uniformValue === 'string') {
-                    when(loadImage(uniformValue), function(image) {
+                    var promise;
+                    if (ktxRegex.test(uniformValue)) {
+                        promise = loadKTX(uniformValue);
+                    } else if (crnRegex.test(uniformValue)) {
+                        promise = loadCRN(uniformValue);
+                    } else {
+                        promise = loadImage(uniformValue);
+                    }
+                    when(promise, function(image) {
                         material._loadedImages.push({
                             id : uniformId,
                             image : image
@@ -1353,7 +1381,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.fadeInColor.alpha < 1.0) || (uniforms.fadeOutColor.alpha < 0.0);
+            return (uniforms.fadeInColor.alpha < 1.0) || (uniforms.fadeOutColor.alpha < 1.0);
         }
     });
 

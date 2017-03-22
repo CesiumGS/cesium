@@ -89,7 +89,7 @@ define([
      *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
-     * 
+     *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -459,7 +459,7 @@ define([
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.
      */
-    WebMapTileServiceImageryProvider.prototype.pickFeatures = function() {
+    WebMapTileServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
 

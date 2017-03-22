@@ -11,6 +11,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
@@ -44,6 +45,7 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        getAbsoluteUri,
         getBaseUri,
         getMagic,
         getStringFromTypedArray,
@@ -101,7 +103,58 @@ define([
          */
         featuresLength : {
             get : function() {
-                return this._modelInstanceCollection.length;
+                if (defined(this._modelInstanceCollection)) {
+                    return this._modelInstanceCollection.length;
+                } else {
+                    return 0;
+                }
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        pointsLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                var collection = this._modelInstanceCollection;
+                if (defined(collection) && defined(collection._model)) {
+                    return collection._model.vertexMemorySizeInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                var collection = this._modelInstanceCollection;
+                if (defined(collection) && defined(collection._model)) {
+                    return collection._model.textureMemorySizeInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                if (defined(this.batchTable)) {
+                    return this.batchTable.memorySizeInBytes;
+                }
+                return 0;
             }
         },
 
@@ -148,8 +201,8 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTable.hasProperty(name);
+    Instanced3DModel3DTileContent.prototype.hasProperty = function(batchId, name) {
+        return this.batchTable.hasProperty(batchId, name);
     };
 
     /**
@@ -243,7 +296,7 @@ define([
 
         var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
-        
+
         var gltfFormat = view.getUint32(byteOffset, true);
         //>>includeStart('debug', pragmas.debug);
         if (gltfFormat !== 1 && gltfFormat !== 0) {
@@ -300,29 +353,30 @@ define([
         var collectionOptions = {
             instances : new Array(instancesLength),
             batchTable : this.batchTable,
-            boundingVolume : this._tile.contentBoundingVolume.boundingVolume,
-            center : undefined,
-            transform : this._tile.computedTransform,
             cull : false, // Already culled by 3D Tiles
             url : undefined,
             requestType : RequestType.TILES3D,
             gltf : undefined,
             basePath : undefined,
-            incrementallyLoadTextures : false
+            incrementallyLoadTextures : false,
+            upAxis : this._tileset._gltfUpAxis
         };
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
-            var baseUrl = defaultValue(this._tileset.baseUrl, '');
-            collectionOptions.url = joinUrls(baseUrl, gltfUrl);
+            collectionOptions.url = getAbsoluteUri(joinUrls(getBaseUri(this._url, true), gltfUrl));
         } else {
             collectionOptions.gltf = gltfView;
-            collectionOptions.basePath = getBaseUri(this._url);
+            collectionOptions.basePath = getBaseUri(this._url, true);
         }
 
         var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');
 
-        var center = new Cartesian3();
+        var rtcCenter;
+        var rtcCenterArray = featureTable.getGlobalProperty('RTC_CENTER');
+        if (defined(rtcCenterArray)) {
+            rtcCenter = Cartesian3.unpack(rtcCenterArray);
+        }
 
         var instances = collectionOptions.instances;
         var instancePosition = new Cartesian3();
@@ -363,8 +417,10 @@ define([
                 }
             }
             Cartesian3.unpack(position, 0, instancePosition);
+            if (defined(rtcCenter)) {
+                Cartesian3.add(instancePosition, rtcCenter, instancePosition);
+            }
             instanceTranslationRotationScale.translation = instancePosition;
-            Cartesian3.add(center, instancePosition, center);
 
             // Get the instance rotation
             var normalUp = featureTable.getProperty('NORMAL_UP', i, ComponentDatatype.FLOAT, 3);
@@ -412,7 +468,7 @@ define([
             instanceScale.x = 1.0;
             instanceScale.y = 1.0;
             instanceScale.z = 1.0;
-            var scale = featureTable.getProperty('SCALE', i, ComponentDatatype.FLOAT);
+            var scale = featureTable.getProperty('SCALE', i, ComponentDatatype.FLOAT, 1);
             if (defined(scale)) {
                 Cartesian3.multiplyByScalar(instanceScale, scale, instanceScale);
             }
@@ -426,9 +482,10 @@ define([
 
             // Get the batchId
             var batchId;
-            if (defined(featureTable.BATCH_ID)) {
-                var componentType = defaultValue(featureTable.BATCH_ID.componentType, ComponentDatatype.UNSIGNED_SHORT);
-                batchId = featureTable.getProperty('BATCH_ID', i, componentType);
+            if (defined(featureTable.json.BATCH_ID)) {
+                var componentTypeName = featureTable.json.BATCH_ID.componentType;
+                var componentType = defined(componentTypeName) ? ComponentDatatype.fromName(componentTypeName) : ComponentDatatype.UNSIGNED_SHORT;
+                batchId = featureTable.getProperty('BATCH_ID', i, componentType, 1);
             } else {
                 // If BATCH_ID semantic is undefined, batchId is just the instance number
                 batchId = i;
@@ -442,9 +499,6 @@ define([
                 batchId : batchId
             };
         }
-
-        center = Cartesian3.divideByScalar(center, instancesLength, center);
-        collectionOptions.center = center;
 
         var modelInstanceCollection = new ModelInstanceCollection(collectionOptions);
         this._modelInstanceCollection = modelInstanceCollection;
@@ -490,8 +544,9 @@ define([
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
         this.batchTable.update(tileset, frameState);
-        this._modelInstanceCollection.transform = this._tile.computedTransform;
+        this._modelInstanceCollection.modelMatrix = this._tile.computedTransform;
         this._modelInstanceCollection.shadows = this._tileset.shadows;
+        this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
         this._modelInstanceCollection.update(frameState);
 
         frameState.addCommand = oldAddCommand;

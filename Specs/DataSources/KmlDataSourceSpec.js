@@ -1014,6 +1014,23 @@ defineSuite([
         });
     });
 
+    it('Styles: empty color', function() {
+        CesiumMath.setRandomNumberSeed(0);
+
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+              <Style>\
+                  <IconStyle>\
+                      <color></color>\
+                  </IconStyle>\
+              </Style>\
+            </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            expect(dataSource.entities.values[0].billboard.color).toBeUndefined();
+        });
+    });
+
     it('Styles: Applies expected styles to Point geometry', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <Document xmlns="http://www.opengis.net/kml/2.2"\
@@ -1125,7 +1142,7 @@ defineSuite([
             expect(entity.wall.material).toBeInstanceOf(ColorMaterialProperty);
             expect(entity.wall.material.color.getValue()).toEqual(uberPolyColor);
             expect(entity.wall.fill.getValue()).toEqual(uberPolyFill);
-            expect(entity.wall.outline.getValue()).toEqual(uberPolyOutline);
+            expect(entity.wall.outline.getValue()).toEqual(true);
             expect(entity.wall.outlineColor.getValue()).toEqual(uberLineColor);
             expect(entity.wall.outlineWidth.getValue()).toEqual(uberLineWidth);
 

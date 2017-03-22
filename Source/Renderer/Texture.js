@@ -8,14 +8,13 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/PixelFormat',
+        '../Core/WebGLConstants',
         './ContextLimits',
         './MipmapHint',
         './PixelDatatype',
         './Sampler',
         './TextureMagnificationFilter',
-        './TextureMinificationFilter',
-        './TextureWrap',
-        './WebGLConstants'
+        './TextureMinificationFilter'
     ], function(
         Cartesian2,
         defaultValue,
@@ -25,16 +24,15 @@ define([
         DeveloperError,
         CesiumMath,
         PixelFormat,
+        WebGLConstants,
         ContextLimits,
         MipmapHint,
         PixelDatatype,
         Sampler,
         TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        WebGLConstants) {
+        TextureMinificationFilter) {
     'use strict';
-    
+
     function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -61,6 +59,8 @@ define([
         var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
         var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         var internalFormat = pixelFormat;
+
+        var isCompressed = PixelFormat.isCompressedFormat(internalFormat);
 
         if (context.webgl2) {
             if (pixelFormat === PixelFormat.DEPTH_STENCIL) {
@@ -99,7 +99,7 @@ define([
             throw new DeveloperError('Invalid options.pixelFormat.');
         }
 
-        if (!PixelDatatype.validate(pixelDatatype)) {
+        if (!isCompressed && !PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid options.pixelDatatype.');
         }
 
@@ -125,6 +125,24 @@ define([
                 throw new DeveloperError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check context.depthTexture.');
             }
         }
+
+        if (isCompressed) {
+            if (!defined(source) || !defined(source.arrayBufferView)) {
+                throw new DeveloperError('When options.pixelFormat is compressed, options.source.arrayBufferView must be defined.');
+            }
+
+            if (PixelFormat.isDXTFormat(internalFormat) && !context.s3tc) {
+                throw new DeveloperError('When options.pixelFormat is S3TC compressed, this WebGL implementation must support the WEBGL_texture_compression_s3tc extension. Check context.s3tc.');
+            } else if (PixelFormat.isPVRTCFormat(internalFormat) && !context.pvrtc) {
+                throw new DeveloperError('When options.pixelFormat is PVRTC compressed, this WebGL implementation must support the WEBGL_texture_compression_pvrtc extension. Check context.pvrtc.');
+            } else if (PixelFormat.isETC1Format(internalFormat) && !context.etc1) {
+                throw new DeveloperError('When options.pixelFormat is ETC1 compressed, this WebGL implementation must support the WEBGL_texture_compression_etc1 extension. Check context.etc1.');
+            }
+
+            if (PixelFormat.compressedTextureSizeInBytes(internalFormat, width, height) !== source.arrayBufferView.byteLength) {
+                throw new DeveloperError('The byte length of the array buffer is invalid for the compressed texture with the given width and height.');
+            }
+        }
         //>>includeEnd('debug');
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
@@ -146,7 +164,11 @@ define([
 
             if (defined(source.arrayBufferView)) {
                 // Source: typed array
-                gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
+                if (isCompressed) {
+                    gl.compressedTexImage2D(textureTarget, 0, internalFormat, width, height, 0, source.arrayBufferView);
+                } else {
+                    gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
+                }
             } else if (defined(source.framebuffer)) {
                 // Source: framebuffer
                 if (source.framebuffer !== context.defaultFramebuffer) {
@@ -167,6 +189,13 @@ define([
         }
         gl.bindTexture(textureTarget, null);
 
+        var sizeInBytes;
+        if (isCompressed) {
+            sizeInBytes = PixelFormat.compressedTextureSizeInBytes(pixelFormat, width, height);
+        } else {
+            sizeInBytes = PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, height);
+        }
+
         this._context = context;
         this._textureFilterAnisotropic = context._textureFilterAnisotropic;
         this._textureTarget = textureTarget;
@@ -176,6 +205,8 @@ define([
         this._width = width;
         this._height = height;
         this._dimensions = new Cartesian2(width, height);
+        this._hasMipmap = false;
+        this._sizeInBytes = sizeInBytes;
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
         this._sampler = undefined;
@@ -199,7 +230,7 @@ define([
      * @returns {Texture} A texture with contents from the framebuffer.
      *
      * @exception {DeveloperError} Invalid pixelFormat.
-     * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
+     * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT, DEPTH_STENCIL or a compressed format.
      * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
      * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
      * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
@@ -211,9 +242,9 @@ define([
      * var t = Texture.fromFramebuffer({
      *     context : context
      * });
-     * 
+     *
      * @see Sampler
-     * 
+     *
      * @private
      */
     Texture.fromFramebuffer = function(options) {
@@ -239,27 +270,21 @@ define([
         if (!defined(options.context)) {
             throw new DeveloperError('context is required.');
         }
-
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid pixelFormat.');
         }
-
-        if (PixelFormat.isDepthFormat(pixelFormat)) {
-            throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
+        if (PixelFormat.isDepthFormat(pixelFormat) || PixelFormat.isCompressedFormat(pixelFormat)) {
+            throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT, DEPTH_STENCIL or a compressed format.');
         }
-
         if (framebufferXOffset < 0) {
             throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
         }
-
         if (framebufferYOffset < 0) {
             throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
         }
-
         if (framebufferXOffset + width > gl.drawingBufferWidth) {
             throw new DeveloperError('framebufferXOffset + width must be less than or equal to drawingBufferWidth');
         }
-
         if (framebufferYOffset + height > gl.drawingBufferHeight) {
             throw new DeveloperError('framebufferYOffset + height must be less than or equal to drawingBufferHeight.');
         }
@@ -364,6 +389,14 @@ define([
                 return this._height;
             }
         },
+        sizeInBytes : {
+            get : function() {
+                if (this._hasMipmap) {
+                    return Math.floor(this._sizeInBytes * 4 / 3);
+                }
+                return this._sizeInBytes;
+            }
+        },
         _target : {
             get : function() {
                 return this._textureTarget;
@@ -381,6 +414,7 @@ define([
      * @param {Number} [yOffset=0] The offset in the y direction within the texture to copy into.
      *
      * @exception {DeveloperError} Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
+     * @exception {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
      * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
@@ -404,6 +438,9 @@ define([
         }
         if (PixelFormat.isDepthFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
+        if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
+            throw new DeveloperError('Cannot call copyFrom with a compressed texture pixel format.');
         }
         if (xOffset < 0) {
             throw new DeveloperError('xOffset must be greater than or equal to zero.');
@@ -447,6 +484,7 @@ define([
      *
      * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
+     * @exception {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
@@ -469,6 +507,9 @@ define([
         }
         if (this._pixelDatatype === PixelDatatype.FLOAT) {
             throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.');
+        }
+        if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
+            throw new DeveloperError('Cannot call copyFrom with a compressed texture pixel format.');
         }
         if (xOffset < 0) {
             throw new DeveloperError('xOffset must be greater than or equal to zero.');
@@ -503,6 +544,7 @@ define([
      * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] optional.
      *
      * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
+     * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is a compressed format.
      * @exception {DeveloperError} hint is invalid.
      * @exception {DeveloperError} This texture's width must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This texture's height must be a power of two to call generateMipmap().
@@ -515,6 +557,9 @@ define([
         if (PixelFormat.isDepthFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
+        if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
+            throw new DeveloperError('Cannot call generateMipmap with a compressed pixel format.');
+        }
         if (this._width > 1 && !CesiumMath.isPowerOfTwo(this._width)) {
             throw new DeveloperError('width must be a power of two to call generateMipmap().');
         }
@@ -525,6 +570,8 @@ define([
             throw new DeveloperError('hint is invalid.');
         }
         //>>includeEnd('debug');
+
+        this._hasMipmap = true;
 
         var gl = this._context._gl;
         var target = this._textureTarget;

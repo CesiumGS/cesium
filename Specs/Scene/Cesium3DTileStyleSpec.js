@@ -494,7 +494,7 @@ defineSuite([
                 volume : '${Height} * ${Width} * ${Depth}'
             }
         });
-        expect(style.meta.featureColor.evaluate(frameState, feature1)).toEqual(Color.fromBytes(38, 255, 82));
+        expect(style.meta.featureColor.evaluateColor(frameState, feature1)).toEqual(Color.fromBytes(38, 255, 82));
         expect(style.meta.volume.evaluate(frameState, feature1)).toEqual(20 * 20 * 100);
     });
 
@@ -537,18 +537,18 @@ defineSuite([
         });
 
         expect(style.show.evaluate(frameState, undefined)).toEqual(true);
-        expect(style.color.evaluate(frameState, undefined)).toEqual(Color.WHITE);
+        expect(style.color.evaluateColor(frameState, undefined)).toEqual(Color.WHITE);
         expect(style.pointSize.evaluate(frameState, undefined)).toEqual(1.0);
     });
 
     it('applies show style with variable', function() {
         var style = new Cesium3DTileStyle({
-            "show" : "${ZipCode} == '19341'"
+            "show" : "${ZipCode} === '19341'"
         });
 
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
         expect(style.show.evaluate(frameState, feature2)).toEqual(false);
-        expect(style.color.evaluate(frameState, undefined)).toEqual(Color.WHITE);
+        expect(style.color.evaluateColor(frameState, undefined)).toEqual(Color.WHITE);
     });
 
     it('applies show style with regexp and variables', function() {
@@ -558,7 +558,7 @@ defineSuite([
 
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
         expect(style.show.evaluate(frameState, feature2)).toEqual(false);
-        expect(style.color.evaluate(frameState, undefined)).toEqual(Color.WHITE);
+        expect(style.color.evaluateColor(frameState, undefined)).toEqual(Color.WHITE);
     });
 
     it('applies show style with complex conditional', function() {
@@ -601,8 +601,8 @@ defineSuite([
             "color" : "(${Temperature} > 90) ? color('red') : color('white')"
         });
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
-        expect(style.color.evaluate(frameState, feature1)).toEqual(Color.WHITE);
-        expect(style.color.evaluate(frameState, feature2)).toEqual(Color.RED);
+        expect(style.color.evaluateColor(frameState, feature1)).toEqual(Color.WHITE);
+        expect(style.color.evaluateColor(frameState, feature2)).toEqual(Color.RED);
     });
 
     it('applies color style with new color', function() {
@@ -610,24 +610,24 @@ defineSuite([
             "color" : "rgba(${red}, ${green}, ${blue}, (${volume} > 100 ? 0.5 : 1.0))"
         });
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
-        expect(style.color.evaluate(frameState, feature1)).toEqual(new Color(38/255, 255/255, 82/255, 0.5));
-        expect(style.color.evaluate(frameState, feature2)).toEqual(new Color(255/255, 30/255, 30/255, 1.0));
+        expect(style.color.evaluateColor(frameState, feature1)).toEqual(new Color(38/255, 255/255, 82/255, 0.5));
+        expect(style.color.evaluateColor(frameState, feature2)).toEqual(new Color(255/255, 30/255, 30/255, 1.0));
     });
 
     it('applies color style that maps id to color', function() {
         var style = new Cesium3DTileStyle({
             "color" : {
-                "expression" : "regExp('^1(\\d)').exec(${id})",
+                "expression" : "regExp('^1(\\d)').exec(String(${id}))",
                 "conditions" : [
-                    ["${expression} == '1'", "color('#FF0000')"],
-                    ["${expression} == '2'", "color('#00FF00')"],
+                    ["${expression} === '1'", "color('#FF0000')"],
+                    ["${expression} === '2'", "color('#00FF00')"],
                     ["true", "color('#FFFFFF')"]
                 ]
             }
         });
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
-        expect(style.color.evaluate(frameState, feature1)).toEqual(Color.RED);
-        expect(style.color.evaluate(frameState, feature2)).toEqual(Color.LIME);
+        expect(style.color.evaluateColor(frameState, feature1)).toEqual(Color.RED);
+        expect(style.color.evaluateColor(frameState, feature2)).toEqual(Color.LIME);
     });
 
     it('applies color style with complex conditional', function() {
@@ -645,8 +645,8 @@ defineSuite([
             }
         });
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
-        expect(style.color.evaluate(frameState, feature1)).toEqual(Color.BLUE);
-        expect(style.color.evaluate(frameState, feature2)).toEqual(Color.YELLOW);
+        expect(style.color.evaluateColor(frameState, feature1)).toEqual(Color.BLUE);
+        expect(style.color.evaluateColor(frameState, feature2)).toEqual(Color.YELLOW);
     });
 
     it('applies color style with conditional', function() {
@@ -663,8 +663,8 @@ defineSuite([
             }
         });
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
-        expect(style.color.evaluate(frameState, feature1)).toEqual(Color.BLUE);
-        expect(style.color.evaluate(frameState, feature2)).toEqual(Color.YELLOW);
+        expect(style.color.evaluateColor(frameState, feature1)).toEqual(Color.BLUE);
+        expect(style.color.evaluateColor(frameState, feature2)).toEqual(Color.YELLOW);
     });
 
     it('applies pointSize style with variable', function() {

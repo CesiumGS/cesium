@@ -2,27 +2,23 @@
 defineSuite([
         'Renderer/loadCubeMap',
         'Core/Cartesian3',
-        'Core/defined',
         'Core/PrimitiveType',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
         'Renderer/ShaderProgram',
         'Renderer/VertexArray',
-        'Specs/createContext',
-        'ThirdParty/when'
+        'Specs/createContext'
     ], function(
         loadCubeMap,
         Cartesian3,
-        defined,
         PrimitiveType,
         Buffer,
         BufferUsage,
         DrawCommand,
         ShaderProgram,
         VertexArray,
-        createContext,
-        when) {
+        createContext) {
     'use strict';
 
     var context;
@@ -60,7 +56,16 @@ defineSuite([
                     position : 0
                 }
             });
-            sp.allUniforms.u_texture.value = cm;
+            var uniformMap = {
+                direction : undefined,
+
+                u_texture : function() {
+                    return cm;
+                },
+                u_direction : function() {
+                    return this.direction;
+                }
+            };
 
             var va = new VertexArray({
                 context : context,
@@ -77,38 +82,39 @@ defineSuite([
             var command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp,
-                vertexArray : va
+                vertexArray : va,
+                uniformMap : uniformMap
             });
 
             // +X is green
-            sp.allUniforms.u_direction.value = new Cartesian3(1, 0, 0);
+            uniformMap.direction = new Cartesian3(1, 0, 0);
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+            expect(context).toReadPixels([0, 255, 0, 255]);
 
             // -X is blue
-            sp.allUniforms.u_direction.value = new Cartesian3(-1, 0, 0);
+            uniformMap.direction = new Cartesian3(-1, 0, 0);
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+            expect(context).toReadPixels([0, 0, 255, 255]);
 
             // +Y is green
-            sp.allUniforms.u_direction.value = new Cartesian3(0, 1, 0);
+            uniformMap.direction = new Cartesian3(0, 1, 0);
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+            expect(context).toReadPixels([0, 255, 0, 255]);
 
             // -Y is blue
-            sp.allUniforms.u_direction.value = new Cartesian3(0, -1, 0);
+            uniformMap.direction = new Cartesian3(0, -1, 0);
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+            expect(context).toReadPixels([0, 0, 255, 255]);
 
             // +Z is green
-            sp.allUniforms.u_direction.value = new Cartesian3(0, 0, 1);
+            uniformMap.direction = new Cartesian3(0, 0, 1);
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+            expect(context).toReadPixels([0, 255, 0, 255]);
 
             // -Z is blue
-            sp.allUniforms.u_direction.value = new Cartesian3(0, 0, -1);
+            uniformMap.direction = new Cartesian3(0, 0, -1);
             command.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+            expect(context).toReadPixels([0, 0, 255, 255]);
 
             sp.destroy();
             va.destroy();

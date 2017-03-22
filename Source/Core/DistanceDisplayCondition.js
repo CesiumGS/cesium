@@ -1,11 +1,9 @@
 /*global define*/
 define([
-        './Cartesian3',
         './defaultValue',
         './defined',
         './defineProperties'
     ], function(
-        Cartesian3,
         defaultValue,
         defined,
         defineProperties) {

@@ -15,7 +15,6 @@ define([
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
         './BoundingSphereState',
-        './EntityCluster',
         './Property'
     ], function(
         AssociativeArray,
@@ -33,7 +32,6 @@ define([
         LabelStyle,
         VerticalOrigin,
         BoundingSphereState,
-        EntityCluster,
         Property) {
     'use strict';
 
@@ -43,6 +41,9 @@ define([
     var defaultFillColor = Color.WHITE;
     var defaultOutlineColor = Color.BLACK;
     var defaultOutlineWidth = 1.0;
+    var defaultShowBackground = false;
+    var defaultBackgroundColor = new Color(0.165, 0.165, 0.165, 0.8);
+    var defaultBackgroundPadding = new Cartesian2(7, 5);
     var defaultPixelOffset = Cartesian2.ZERO;
     var defaultEyeOffset = Cartesian3.ZERO;
     var defaultHeightReference = HeightReference.NONE;
@@ -52,10 +53,13 @@ define([
     var position = new Cartesian3();
     var fillColor = new Color();
     var outlineColor = new Color();
+    var backgroundColor = new Color();
+    var backgroundPadding = new Cartesian2();
     var eyeOffset = new Cartesian3();
     var pixelOffset = new Cartesian2();
     var translucencyByDistance = new NearFarScalar();
     var pixelOffsetScaleByDistance = new NearFarScalar();
+    var scaleByDistance = new NearFarScalar();
     var distanceDisplayCondition = new DistanceDisplayCondition();
 
     function EntityData(entity) {
@@ -148,6 +152,9 @@ define([
             label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, time, defaultFillColor, fillColor);
             label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
             label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, time, defaultOutlineWidth);
+            label.showBackground = Property.getValueOrDefault(labelGraphics._showBackground, time, defaultShowBackground);
+            label.backgroundColor = Property.getValueOrDefault(labelGraphics._backgroundColor, time, defaultBackgroundColor, backgroundColor);
+            label.backgroundPadding = Property.getValueOrDefault(labelGraphics._backgroundPadding, time, defaultBackgroundPadding, backgroundPadding);
             label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, defaultPixelOffset, pixelOffset);
             label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
             label.heightReference = Property.getValueOrDefault(labelGraphics._heightReference, time, defaultHeightReference);
@@ -155,6 +162,7 @@ define([
             label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, defaultVerticalOrigin);
             label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistance);
             label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
+            label.scaleByDistance = Property.getValueOrUndefined(labelGraphics._scaleByDistance, time, scaleByDistance);
             label.distanceDisplayCondition = Property.getValueOrUndefined(labelGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
         }
         return true;

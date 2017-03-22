@@ -7,8 +7,8 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/Event',
         '../../Core/EventHelper',
-        '../../Core/Fullscreen',
         '../../Core/isArray',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
@@ -22,7 +22,6 @@ define([
         '../../DataSources/Property',
         '../../Scene/ImageryLayer',
         '../../Scene/SceneMode',
-        '../../Scene/ShadowMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../Animation/Animation',
@@ -38,6 +37,7 @@ define([
         '../HomeButton/HomeButton',
         '../InfoBox/InfoBox',
         '../NavigationHelpButton/NavigationHelpButton',
+        '../ProjectionPicker/ProjectionPicker',
         '../SceneModePicker/SceneModePicker',
         '../SelectionIndicator/SelectionIndicator',
         '../subscribeAndEvaluate',
@@ -51,8 +51,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        Event,
         EventHelper,
-        Fullscreen,
         isArray,
         Matrix4,
         Rectangle,
@@ -66,7 +66,6 @@ define([
         Property,
         ImageryLayer,
         SceneMode,
-        ShadowMode,
         knockout,
         when,
         Animation,
@@ -82,6 +81,7 @@ define([
         HomeButton,
         InfoBox,
         NavigationHelpButton,
+        ProjectionPicker,
         SceneModePicker,
         SelectionIndicator,
         subscribeAndEvaluate,
@@ -188,6 +188,7 @@ define([
         var geocoder = viewer._geocoder;
         var homeButton = viewer._homeButton;
         var sceneModePicker = viewer._sceneModePicker;
+        var projectionPicker = viewer._projectionPicker;
         var baseLayerPicker = viewer._baseLayerPicker;
         var animation = viewer._animation;
         var timeline = viewer._timeline;
@@ -205,6 +206,9 @@ define([
         }
         if(defined(sceneModePicker)) {
             sceneModePicker.container.style.visibility = visibility;
+        }
+        if (defined(projectionPicker)) {
+            projectionPicker.container.style.visibility = visibility;
         }
         if(defined(baseLayerPicker)) {
             baseLayerPicker.container.style.visibility = visibility;
@@ -281,6 +285,7 @@ define([
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+     * @param {Boolean} [options.projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -473,6 +478,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             toolbar.appendChild(geocoderContainer);
             geocoder = new Geocoder({
                 container : geocoderContainer,
+                geocoderServices: defined(options.geocoder) ? (isArray(options.geocoder) ? options.geocoder : [options.geocoder]) : undefined,
                 scene : cesiumWidget.scene
             });
             // Subscribe to search so that we can clear the trackedEntity when it is clicked.
@@ -508,6 +514,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var sceneModePicker;
         if (!scene3DOnly && (!defined(options.sceneModePicker) || options.sceneModePicker !== false)) {
             sceneModePicker = new SceneModePicker(toolbar, cesiumWidget.scene);
+        }
+
+        var projectionPicker;
+        if (options.projectionPicker) {
+            projectionPicker = new ProjectionPicker(toolbar, cesiumWidget.scene);
         }
 
         // BaseLayerPicker
@@ -641,6 +652,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._toolbar = toolbar;
         this._homeButton = homeButton;
         this._sceneModePicker = sceneModePicker;
+        this._projectionPicker = projectionPicker;
         this._baseLayerPicker = baseLayerPicker;
         this._navigationHelpButton = navigationHelpButton;
         this._animation = animation;
@@ -664,6 +676,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._zoomTarget = undefined;
         this._zoomPromise = undefined;
         this._zoomOptions = undefined;
+        this._selectedEntityChanged = new Event();
+        this._trackedEntityChanged = new Event();
 
         knockout.track(this, ['_trackedEntity', '_selectedEntity', '_clockTrackedDataSource']);
 
@@ -804,6 +818,18 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         sceneModePicker : {
             get : function() {
                 return this._sceneModePicker;
+            }
+        },
+
+        /**
+         * Gets the ProjectionPicker.
+         * @memberof Viewer.prototype
+         * @type {ProjectionPicker}
+         * @readonly
+         */
+        projectionPicker : {
+            get : function() {
+                return this._projectionPicker;
             }
         },
 
@@ -1171,12 +1197,13 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
                         this._entityView = undefined;
                         this.camera.lookAtTransform(Matrix4.IDENTITY);
-                        return;
+                    } else {
+                        //We can't start tracking immediately, so we set a flag and start tracking
+                        //when the bounding sphere is ready (most likely next frame).
+                        this._needTrackedEntityUpdate = true;
                     }
 
-                    //We can't start tracking immediately, so we set a flag and start tracking
-                    //when the bounding sphere is ready (most likely next frame).
-                    this._needTrackedEntityUpdate = true;
+                    this._trackedEntityChanged.raiseEvent(value);
                 }
             }
         },
@@ -1203,11 +1230,35 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                             selectionIndicatorViewModel.animateDepart();
                         }
                     }
+                    this._selectedEntityChanged.raiseEvent(value);
                 }
             }
         },
         /**
+         * Gets the event that is raised when the selected entity chages
+         * @memberof Viewer.prototype
+         * @type {Event}
+         * @readonly
+         */
+        selectedEntityChanged : {
+            get : function() {
+                return this._selectedEntityChanged;
+            }
+        },
+        /**
+         * Gets the event that is raised when the tracked entity chages
+         * @memberof Viewer.prototype
+         * @type {Event}
+         * @readonly
+         */
+        trackedEntityChanged : {
+            get : function() {
+                return this._trackedEntityChanged;
+            }
+        },
+        /**
          * Gets or sets the data source to track with the viewer's clock.
+         * @memberof Viewer.prototype
          * @type {DataSource}
          */
         clockTrackedDataSource : {
@@ -1267,6 +1318,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (defined(baseLayerPickerDropDown)) {
             baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
+        }
+
+        if (defined(this._geocoder)) {
+            var geocoderSuggestions = this._geocoder.searchSuggestionsContainer;
+            geocoderSuggestions.style.maxHeight = panelMaxHeight + 'px';
         }
 
         if (defined(this._infoBox)) {
@@ -1392,6 +1448,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (defined(this._sceneModePicker)) {
             this._sceneModePicker = this._sceneModePicker.destroy();
+        }
+
+        if (defined(this._projectionPicker)) {
+            this._projectionPicker = this._projectionPicker.destroy();
         }
 
         if (defined(this._baseLayerPicker)) {

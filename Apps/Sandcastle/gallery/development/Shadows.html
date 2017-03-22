@@ -530,7 +530,7 @@ function createScene() {
     var frustumSize = 55.0;
     var frustumNear = 1.0;
     var frustumFar = 400.0;
-    var frustum = new Cesium.OrthographicFrustum();
+    var frustum = new Cesium.OrthographicOffCenterFrustum();
     frustum.left = -frustumSize;
     frustum.right = frustumSize;
     frustum.bottom = -frustumSize;
@@ -718,7 +718,7 @@ canvas.onclick = function() {
 
 var handler = new Cesium.ScreenSpaceEventHandler(canvas);
 
-// Double click object to turn castShadows on/off
+// Click object to turn castShadows on/off
 handler.setInputAction(function(movement) {
     var picked = scene.pick(movement.position);
     if (Cesium.defined(picked) && Cesium.defined(picked.primitive)) {
@@ -726,9 +726,9 @@ handler.setInputAction(function(movement) {
         var receiveShadows = Cesium.ShadowMode.receiveShadows(picked.primitive.shadows);
         picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(!castShadows, receiveShadows);
     }
-}, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-// Double middle click object to turn receiveShadows on/off
+// Middle click object to turn receiveShadows on/off
 handler.setInputAction(function(movement) {
     var picked = scene.pick(movement.position);
     if (Cesium.defined(picked)) {
@@ -736,7 +736,7 @@ handler.setInputAction(function(movement) {
         var receiveShadows = Cesium.ShadowMode.receiveShadows(picked.primitive.shadows);
         picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(castShadows, !receiveShadows);
     }
-}, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
+}, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
 
 //Sandcastle_End
 Sandcastle.finishedLoading();

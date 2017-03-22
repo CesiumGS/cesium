@@ -4,19 +4,19 @@ define([
         'Core/Color',
         'Core/defined',
         'Renderer/ClearCommand',
+        'Renderer/Pass',
         'Scene/CreditDisplay',
         'Scene/FrameState',
-        'Scene/JobScheduler',
-        'Scene/Pass'
+        'Scene/JobScheduler'
     ], function(
         BoundingRectangle,
         Color,
         defined,
         ClearCommand,
+        Pass,
         CreditDisplay,
         FrameState,
-        JobScheduler,
-        Pass) {
+        JobScheduler) {
     'use strict';
 
     function executeCommands(context, passState, commands) {

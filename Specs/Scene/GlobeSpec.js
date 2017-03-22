@@ -3,10 +3,8 @@ defineSuite([
         'Scene/Globe',
         'Core/CesiumTerrainProvider',
         'Core/defined',
-        'Core/Ellipsoid',
         'Core/loadWithXhr',
         'Core/Rectangle',
-        'Renderer/ClearCommand',
         'Scene/SingleTileImageryProvider',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -14,10 +12,8 @@ defineSuite([
         Globe,
         CesiumTerrainProvider,
         defined,
-        Ellipsoid,
         loadWithXhr,
         Rectangle,
-        ClearCommand,
         SingleTileImageryProvider,
         createScene,
         pollToPromise) {
@@ -83,9 +79,9 @@ defineSuite([
 
         return updateUntilDone(globe).then(function() {
             scene.globe.show = false;
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
             scene.globe.show = true;
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
         });
     });
 
@@ -100,9 +96,9 @@ defineSuite([
 
         return updateUntilDone(globe).then(function() {
             scene.globe.show = false;
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
             scene.globe.show = true;
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
         });
     });
 
@@ -147,9 +143,9 @@ defineSuite([
 
             return updateUntilDone(globe).then(function() {
                 scene.globe.show = false;
-                expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+                expect(scene).toRender([0, 0, 0, 255]);
                 scene.globe.show = true;
-                expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+                expect(scene).notToRender([0, 0, 0, 255]);
             });
         });
     });

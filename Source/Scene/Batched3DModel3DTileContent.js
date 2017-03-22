@@ -7,6 +7,7 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
@@ -28,6 +29,7 @@ define([
         deprecationWarning,
         destroyObject,
         DeveloperError,
+        getAbsoluteUri,
         getBaseUri,
         getMagic,
         getStringFromTypedArray,
@@ -72,6 +74,9 @@ define([
         this._features = undefined;
     }
 
+    // This can be overridden for testing purposes
+    Batched3DModel3DTileContent._deprecationWarning = deprecationWarning;
+
     defineProperties(Batched3DModel3DTileContent.prototype, {
         /**
          * Part of the {@link Cesium3DTileContent} interface.
@@ -79,6 +84,51 @@ define([
         featuresLength : {
             get : function() {
                 return this._featuresLength;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        pointsLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                if (defined(this._model)) {
+                    return this._model.vertexMemorySizeInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                if (defined(this._model)) {
+                    return this._model.textureMemorySizeInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                if (defined(this.batchTable)) {
+                    return this.batchTable.memorySizeInBytes;
+                }
+                return 0;
             }
         },
 
@@ -122,11 +172,11 @@ define([
         }
     }
 
-     /**
+    /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Batched3DModel3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTable.hasProperty(name);
+    Batched3DModel3DTileContent.prototype.hasProperty = function(batchId, name) {
+        return this.batchTable.hasProperty(batchId, name);
     };
 
     /**
@@ -178,11 +228,22 @@ define([
         return true;
     };
 
+    function getBatchIdAttributeName(gltf) {
+        var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, '_BATCHID');
+        if (!defined(batchIdAttributeName)) {
+            batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            if (defined(batchIdAttributeName)) {
+                Batched3DModel3DTileContent._deprecationWarning('b3dm-legacy-batchid', 'The glTF in this b3dm uses the semantic `BATCHID`. Application-specific semantics should be prefixed with an underscore: `_BATCHID`.');
+            }
+        }
+        return batchIdAttributeName;
+    }
+
     function getVertexShaderCallback(content) {
         return function(vs) {
             var batchTable = content.batchTable;
             var gltf = content._model.gltf;
-            var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            var batchIdAttributeName = getBatchIdAttributeName(gltf);
             var callback = batchTable.getVertexShaderCallback(true, batchIdAttributeName);
             return defined(callback) ? callback(vs) : vs;
         };
@@ -192,7 +253,7 @@ define([
         return function(vs) {
             var batchTable = content.batchTable;
             var gltf = content._model.gltf;
-            var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            var batchIdAttributeName = getBatchIdAttributeName(gltf);
             var callback = batchTable.getPickVertexShaderCallback(batchIdAttributeName);
             return defined(callback) ? callback(vs) : vs;
         };
@@ -203,8 +264,7 @@ define([
             var batchTable = content.batchTable;
             var gltf = content._model.gltf;
             var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-            var colorBlendMode = content._tileset.colorBlendMode;
-            var callback = batchTable.getFragmentShaderCallback(true, colorBlendMode, diffuseUniformName);
+            var callback = batchTable.getFragmentShaderCallback(true, diffuseUniformName);
             return defined(callback) ? callback(fs) : fs;
         };
     }
@@ -293,16 +353,20 @@ define([
             gltf : gltfView,
             cull : false,           // The model is already culled by the 3D tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-            basePath : getBaseUri(this._url),
+            basePath : getAbsoluteUri(getBaseUri(this._url, true)),
             modelMatrix : this._tile.computedTransform,
+            upAxis : this._tileset._gltfUpAxis,
             shadows: this._tileset.shadows,
+            debugWireframe: this._tileset.debugWireframe,
             incrementallyLoadTextures : false,
+            pickPrimitive : this._tileset,
             vertexShaderLoaded : getVertexShaderCallback(this),
             fragmentShaderLoaded : getFragmentShaderCallback(this),
             uniformMapLoaded : batchTable.getUniformMapCallback(),
             pickVertexShaderLoaded : getPickVertexShaderCallback(this),
             pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
-            pickUniformMapLoaded : batchTable.getPickUniformMapCallback()
+            pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
+            addBatchIdToGeneratedShaders : (batchLength > 0) // If the batch table has values in it, generated shaders will need a batchId attribute
         });
 
         this._model = model;
@@ -350,6 +414,7 @@ define([
         this.batchTable.update(tileset, frameState);
         this._model.modelMatrix = this._tile.computedTransform;
         this._model.shadows = this._tileset.shadows;
+        this._model.debugWireframe = this._tileset.debugWireframe;
         this._model.update(frameState);
 
         frameState.addCommand = oldAddCommand;

@@ -15,9 +15,11 @@ define([
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/WebGLConstants',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -26,9 +28,9 @@ define([
         '../Shaders/BillboardCollectionVS',
         './Billboard',
         './BlendingState',
+        './BlendOption',
         './HeightReference',
         './HorizontalOrigin',
-        './Pass',
         './SceneMode',
         './TextureAtlas',
         './VerticalOrigin'
@@ -48,9 +50,11 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix4,
+        WebGLConstants,
         Buffer,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -59,9 +63,9 @@ define([
         BillboardCollectionVS,
         Billboard,
         BlendingState,
+        BlendOption,
         HeightReference,
         HorizontalOrigin,
-        Pass,
         SceneMode,
         TextureAtlas,
         VerticalOrigin) {
@@ -133,6 +137,9 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each billboard from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {Scene} [options.scene] Must be passed in for billboards that use the height reference property or will be depth tested against the globe.
+     * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The billboard blending option. The default
+     * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
+     * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve performance by up to 2x.
      *
      * @performance For best performance, prefer a few collections, each with many billboards, to
      * many collections with only a few billboards each.  Organize collections so that billboards
@@ -169,9 +176,11 @@ define([
         this._textureAtlasGUID = undefined;
         this._destroyTextureAtlas = true;
         this._sp = undefined;
-        this._rs = undefined;
-        this._vaf = undefined;
+        this._spTranslucent = undefined;
         this._spPick = undefined;
+        this._rsOpaque = undefined;
+        this._rsTranslucent = undefined;
+        this._vaf = undefined;
 
         this._billboards = [];
         this._billboardsToUpdate = [];
@@ -268,6 +277,17 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+
+        /**
+         * The billboard blending option. The default is used for rendering both opaque and translucent billboards.
+         * However, if either all of the billboards are completely opaque or all are completely translucent,
+         * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve
+         * performance by up to 2x.
+         * @type {BlendOption}
+         * @default BlendOption.OPAQUE_AND_TRANSLUCENT
+         */
+        this.blendOption = defaultValue(options.blendOption, BlendOption.OPAQUE_AND_TRANSLUCENT);
+        this._blendOption = undefined;
 
         this._mode = SceneMode.SCENE3D;
 
@@ -408,12 +428,23 @@ define([
      *   position : Cesium.Cartesian3.ZERO,
      *   pixelOffset : Cesium.Cartesian2.ZERO,
      *   eyeOffset : Cesium.Cartesian3.ZERO,
+     *   heightReference : Cesium.HeightReference.NONE,
      *   horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
      *   verticalOrigin : Cesium.VerticalOrigin.CENTER,
      *   scale : 1.0,
      *   image : 'url/to/image',
+     *   imageSubRegion : undefined,
      *   color : Cesium.Color.WHITE,
-     *   id : undefined
+     *   id : undefined,
+     *   rotation : 0.0,
+     *   alignedAxis : Cesium.Cartesian3.ZERO,
+     *   width : undefined,
+     *   height : undefined,
+     *   scaleByDistance : undefined,
+     *   translucencyByDistance : undefined,
+     *   pixelOffsetScaleByDistance : undefined,
+     *   sizeInMeters : false,
+     *   distanceDisplayCondition : undefined
      * });
      *
      * @example
@@ -824,6 +855,11 @@ define([
             show = false;
         }
 
+        // Raw billboards don't distinguish between BASELINE and BOTTOM, only LabelCollection does that.
+        if (verticalOrigin === VerticalOrigin.BASELINE) {
+            verticalOrigin = VerticalOrigin.BOTTOM;
+        }
+
         billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER;
         billboardCollection._allVerticalCenter = billboardCollection._allVerticalCenter && verticalOrigin === VerticalOrigin.CENTER;
 
@@ -928,7 +964,7 @@ define([
         }
 
         var textureWidth = billboardCollection._textureAtlas.texture.width;
-        var imageWidth = Math.ceil(defaultValue(billboard.width, textureWidth * width) * 0.5);
+        var imageWidth = Math.round(defaultValue(billboard.width, textureWidth * width));
         billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageWidth);
 
         var compressed0 = CesiumMath.clamp(imageWidth, 0.0, LEFT_SHIFT16);
@@ -983,7 +1019,7 @@ define([
         }
 
         var dimensions = billboardCollection._textureAtlas.texture.dimensions;
-        var imageHeight = Math.ceil(defaultValue(billboard.height, dimensions.y * height) * 0.5);
+        var imageHeight = Math.round(defaultValue(billboard.height, dimensions.y * height));
         billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageHeight);
 
         var red = Color.floatToByte(color.red);
@@ -1443,75 +1479,93 @@ define([
         }
         updateBoundingVolume(this, frameState, boundingVolume);
 
-        var va;
-        var vaLength;
-        var command;
-        var vs;
-        var fs;
-        var uniforms;
-        var vsSource;
-        var fsSource;
-        var j;
+        var blendOptionChanged = this._blendOption !== this.blendOption;
+        this._blendOption = this.blendOption;
 
-        var commandList = frameState.commandList;
-
-        if (pass.render) {
-            var colorList = this._colorCommands;
-
-            if (!defined(this._rs)) {
-                this._rs = RenderState.fromCache({
+        if (blendOptionChanged) {
+            if (this._blendOption === BlendOption.OPAQUE || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
+                this._rsOpaque = RenderState.fromCache({
                     depthTest : {
-                        enabled : true
+                        enabled : true,
+                        func : WebGLConstants.LESS
                     },
-                    blending : BlendingState.ALPHA_BLEND
+                    depthMask : true
                 });
+            } else {
+                this._rsOpaque = undefined;
             }
 
-            if (!defined(this._sp) ||
-                (this._shaderRotation !== this._compiledShaderRotation) ||
-                (this._shaderAlignedAxis !== this._compiledShaderAlignedAxis) ||
-                (this._shaderScaleByDistance !== this._compiledShaderScaleByDistance) ||
-                (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistance) ||
-                (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
-                (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition)) {
+            // If OPAQUE_AND_TRANSLUCENT is in use, only the opaque pass gets the benefit of the depth buffer,
+            // not the translucent pass.  Otherwise, if the TRANSLUCENT pass is on its own, it turns on
+            // a depthMask in lieu of full depth sorting (because it has opaque-ish fragments that look bad in OIT).
+            // When the TRANSLUCENT depth mask is in use, label backgrounds require the depth func to be LEQUAL.
+            var useTranslucentDepthMask = this._blendOption === BlendOption.TRANSLUCENT;
 
-                vsSource = BillboardCollectionVS;
-                fsSource = BillboardCollectionFS;
-
-                if (defined(this._batchTable)) {
-                    vsSource = this._batchTable.getVertexShaderCallback(false, 'a_batchId')(vsSource);
-                    fsSource = this._batchTable.getFragmentShaderCallback()(fsSource);
-                }
-
-                vs = new ShaderSource({
-                    sources : [vsSource]
+            if (this._blendOption === BlendOption.TRANSLUCENT || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
+                this._rsTranslucent = RenderState.fromCache({
+                    depthTest : {
+                        enabled : true,
+                        func : (useTranslucentDepthMask ? WebGLConstants.LEQUAL : WebGLConstants.LESS)
+                    },
+                    depthMask : useTranslucentDepthMask,
+                    blending : BlendingState.ALPHA_BLEND
                 });
-                if (this._instanced) {
-                    vs.defines.push('INSTANCED');
-                }
-                if (this._shaderRotation) {
-                    vs.defines.push('ROTATION');
-                }
-                if (this._shaderAlignedAxis) {
-                    vs.defines.push('ALIGNED_AXIS');
-                }
-                if (this._shaderScaleByDistance) {
-                    vs.defines.push('EYE_DISTANCE_SCALING');
-                }
-                if (this._shaderTranslucencyByDistance) {
-                    vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
-                }
-                if (this._shaderPixelOffsetScaleByDistance) {
-                    vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
-                }
-                if (this._shaderDistanceDisplayCondition) {
-                    vs.defines.push('DISTANCE_DISPLAY_CONDITION');
-                }
+            } else {
+                this._rsTranslucent = undefined;
+            }
+        }
 
+        var vs;
+        var fs;
+        var vsSource;
+        var fsSource;
+
+        if (blendOptionChanged ||
+            (this._shaderRotation !== this._compiledShaderRotation) ||
+            (this._shaderAlignedAxis !== this._compiledShaderAlignedAxis) ||
+            (this._shaderScaleByDistance !== this._compiledShaderScaleByDistance) ||
+            (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistance) ||
+            (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
+            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition)) {
+
+            vsSource = BillboardCollectionVS;
+            fsSource = BillboardCollectionFS;
+
+            if (defined(this._batchTable)) {
+                vsSource = this._batchTable.getVertexShaderCallback(false, 'a_batchId')(vsSource);
+                fsSource = this._batchTable.getFragmentShaderCallback()(fsSource);
+            }
+
+            vs = new ShaderSource({
+                sources : [vsSource]
+            });
+            if (this._instanced) {
+                vs.defines.push('INSTANCED');
+            }
+            if (this._shaderRotation) {
+                vs.defines.push('ROTATION');
+            }
+            if (this._shaderAlignedAxis) {
+                vs.defines.push('ALIGNED_AXIS');
+            }
+            if (this._shaderScaleByDistance) {
+                vs.defines.push('EYE_DISTANCE_SCALING');
+            }
+            if (this._shaderTranslucencyByDistance) {
+                vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
+            }
+            if (this._shaderPixelOffsetScaleByDistance) {
+                vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
+            }
+            if (this._shaderDistanceDisplayCondition) {
+                vs.defines.push('DISTANCE_DISPLAY_CONDITION');
+            }
+
+            if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
                 fs = new ShaderSource({
+                    defines : ['OPAQUE'],
                     sources : [fsSource]
                 });
-
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._sp,
@@ -1520,13 +1574,131 @@ define([
                     attributeLocations : attributeLocations
                 });
 
-                this._compiledShaderRotation = this._shaderRotation;
-                this._compiledShaderAlignedAxis = this._shaderAlignedAxis;
-                this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
-                this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
-                this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
-                this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
+                    sources : [vsSource]
+                fs = new ShaderSource({
+                    defines : ['TRANSLUCENT'],
+                    sources : [fsSource]
+                });
+                this._spTranslucent = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._spTranslucent,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
             }
+
+            if (this._blendOption === BlendOption.OPAQUE) {
+                fs = new ShaderSource({
+                    sources : [fsSource]
+                });
+                this._sp = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._sp,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+            }
+
+            if (this._blendOption === BlendOption.TRANSLUCENT) {
+                fs = new ShaderSource({
+                    sources : [fsSource]
+                });
+                this._spTranslucent = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._spTranslucent,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+            }
+
+            this._compiledShaderRotation = this._shaderRotation;
+            this._compiledShaderAlignedAxis = this._shaderAlignedAxis;
+            this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
+            this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
+            this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
+            this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
+        }
+
+        if (!defined(this._spPick) ||
+            (this._shaderRotation !== this._compiledShaderRotationPick) ||
+            (this._shaderAlignedAxis !== this._compiledShaderAlignedAxisPick) ||
+            (this._shaderScaleByDistance !== this._compiledShaderScaleByDistancePick) ||
+            (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistancePick) ||
+            (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistancePick) ||
+            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayConditionPick)) {
+
+            vsSource = BillboardCollectionVS;
+            fsSource = BillboardCollectionFS;
+
+            if (defined(this._batchTable)) {
+                vsSource = this._batchTable.getPickVertexShaderCallback('a_batchId')(vsSource);
+                fsSource = this._batchTable.getPickFragmentShaderCallback()(fsSource);
+            }
+
+            var renderForPick = defined(this._batchTable) ? '' : 'RENDER_FOR_PICK';
+
+            vs = new ShaderSource({
+                defines : [renderForPick],
+                sources : [vsSource]
+            });
+
+            if(this._instanced) {
+                vs.defines.push('INSTANCED');
+            }
+            if (this._shaderRotation) {
+                vs.defines.push('ROTATION');
+            }
+            if (this._shaderAlignedAxis) {
+                vs.defines.push('ALIGNED_AXIS');
+            }
+            if (this._shaderScaleByDistance) {
+                vs.defines.push('EYE_DISTANCE_SCALING');
+            }
+            if (this._shaderTranslucencyByDistance) {
+                vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
+            }
+            if (this._shaderPixelOffsetScaleByDistance) {
+                vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
+            }
+            if (this._shaderDistanceDisplayCondition) {
+                vs.defines.push('DISTANCE_DISPLAY_CONDITION');
+            }
+
+            fs = new ShaderSource({
+                defines : [renderForPick],
+                sources : [fsSource]
+            });
+
+            this._spPick = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : this._spPick,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+            this._compiledShaderRotationPick = this._shaderRotation;
+            this._compiledShaderAlignedAxisPick = this._shaderAlignedAxis;
+            this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
+            this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
+            this._compiledShaderPixelOffsetScaleByDistancePick = this._shaderPixelOffsetScaleByDistance;
+            this._compiledShaderDistanceDisplayConditionPick = this._shaderDistanceDisplayCondition;
+        }
+
+        var va;
+        var vaLength;
+        var command;
+        var j;
+
+        var commandList = frameState.commandList;
+
+        if (pass.render) {
+            var colorList = this._colorCommands;
+
+            var opaque = this._blendOption === BlendOption.OPAQUE;
+            var opaqueAndTranslucent = this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT;
 
             va = this._vaf.va;
             vaLength = va.length;
@@ -1537,22 +1709,26 @@ define([
             }
 
             colorList.length = vaLength;
-            for (j = 0; j < vaLength; ++j) {
+            var totalLength = opaqueAndTranslucent ? vaLength * 2 : vaLength;
+            for (j = 0; j < totalLength; ++j) {
                 command = colorList[j];
                 if (!defined(command)) {
-                    command = colorList[j] = new DrawCommand({
-                        pass : Pass.OPAQUE,
-                        owner : this
-                    });
+                    command = colorList[j] = new DrawCommand();
                 }
 
+                var opaqueCommand = opaque || (opaqueAndTranslucent && j % 2 === 0);
+
+                command.pass = opaqueCommand || !opaqueAndTranslucent ? Pass.OPAQUE : Pass.TRANSLUCENT;
+                command.owner = this;
+
+                var index = opaqueAndTranslucent ? Math.floor(j / 2.0) : j;
                 command.boundingVolume = boundingVolume;
                 command.modelMatrix = modelMatrix;
-                command.count = va[j].indicesCount;
-                command.shaderProgram = this._sp;
+                command.count = va[index].indicesCount;
+                command.shaderProgram = opaqueCommand ? this._sp : this._spTranslucent;
                 command.uniformMap = uniforms;
-                command.vertexArray = va[j].va;
-                command.renderState = this._rs;
+                command.vertexArray = va[index].va;
+                command.renderState = opaqueCommand ? this._rsOpaque : this._rsTranslucent;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
                 if (this._instanced) {
@@ -1566,71 +1742,6 @@ define([
 
         if (picking) {
             var pickList = this._pickCommands;
-
-            if (!defined(this._spPick) ||
-                (this._shaderRotation !== this._compiledShaderRotationPick) ||
-                (this._shaderAlignedAxis !== this._compiledShaderAlignedAxisPick) ||
-                (this._shaderScaleByDistance !== this._compiledShaderScaleByDistancePick) ||
-                (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistancePick) ||
-                (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistancePick) ||
-                (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayConditionPick)) {
-
-                vsSource = BillboardCollectionVS;
-                fsSource = BillboardCollectionFS;
-
-                if (defined(this._batchTable)) {
-                    vsSource = this._batchTable.getPickVertexShaderCallback('a_batchId')(vsSource);
-                    fsSource = this._batchTable.getPickFragmentShaderCallback()(fsSource);
-                }
-
-                var renderForPick = defined(this._batchTable) ? '' : 'RENDER_FOR_PICK';
-
-                vs = new ShaderSource({
-                    defines : [renderForPick],
-                    sources : [vsSource]
-                });
-
-                if(this._instanced) {
-                    vs.defines.push('INSTANCED');
-                }
-                if (this._shaderRotation) {
-                    vs.defines.push('ROTATION');
-                }
-                if (this._shaderAlignedAxis) {
-                    vs.defines.push('ALIGNED_AXIS');
-                }
-                if (this._shaderScaleByDistance) {
-                    vs.defines.push('EYE_DISTANCE_SCALING');
-                }
-                if (this._shaderTranslucencyByDistance) {
-                    vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
-                }
-                if (this._shaderPixelOffsetScaleByDistance) {
-                    vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
-                }
-                if (this._shaderDistanceDisplayCondition) {
-                    vs.defines.push('DISTANCE_DISPLAY_CONDITION');
-                }
-
-                fs = new ShaderSource({
-                    defines : [renderForPick],
-                    sources : [fsSource]
-                });
-
-                this._spPick = ShaderProgram.replaceCache({
-                    context : context,
-                    shaderProgram : this._spPick,
-                    vertexShaderSource : vs,
-                    fragmentShaderSource : fs,
-                    attributeLocations : attributeLocations
-                });
-                this._compiledShaderRotationPick = this._shaderRotation;
-                this._compiledShaderAlignedAxisPick = this._shaderAlignedAxis;
-                this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
-                this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
-                this._compiledShaderPixelOffsetScaleByDistancePick = this._shaderPixelOffsetScaleByDistance;
-                this._compiledShaderDistanceDisplayConditionPick = this._shaderDistanceDisplayCondition;
-            }
 
             va = this._vaf.va;
             vaLength = va.length;
@@ -1656,7 +1767,7 @@ define([
                 command.shaderProgram = this._spPick;
                 command.uniformMap = uniforms;
                 command.vertexArray = va[j].va;
-                command.renderState = this._rs;
+                command.renderState = this._rsOpaque;
 
                 if (this._instanced) {
                     command.count = 6;
@@ -1708,6 +1819,7 @@ define([
 
         this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
         this._sp = this._sp && this._sp.destroy();
+        this._spTranslucent = this._spTranslucent && this._spTranslucent.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
         destroyBillboards(this._billboards);

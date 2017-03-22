@@ -12,8 +12,9 @@ var request = require('request');
 
 var globby = require('globby');
 var jshint = require('gulp-jshint');
+var gulpTap = require('gulp-tap');
 var rimraf = require('rimraf');
-var stripComments = require('strip-comments');
+var glslStripComments = require('glsl-strip-comments');
 var mkdirp = require('mkdirp');
 var eventStream = require('event-stream');
 var gulp = require('gulp');
@@ -288,6 +289,14 @@ gulp.task('makeZipFile', ['release'], function() {
     var indexSrc = gulp.src('index.release.html').pipe(gulpRename("index.html"));
 
     return eventStream.merge(builtSrc, staticSrc, indexSrc)
+        .pipe(gulpTap(function(file) {
+            // Work around an issue with gulp-zip where archives generated on Windows do
+            // not properly have their directory executable mode set.
+            // see https://github.com/sindresorhus/gulp-zip/issues/64#issuecomment-205324031
+            if (file.isDirectory()) {
+                file.stat.mode = parseInt('40777', 8);
+            }
+        }))
         .pipe(gulpZip('Cesium-' + version + '.zip'))
         .pipe(gulp.dest('.'));
 });
@@ -318,7 +327,7 @@ gulp.task('deploy-s3', function(done) {
         return;
     }
 
-    var argv = yargs.usage('Usage: delpoy -b [Bucket Name] -d [Upload Directory]')
+    var argv = yargs.usage('Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]')
         .demand(['b', 'd']).argv;
 
     var uploadDirectory = argv.d;
@@ -562,7 +571,8 @@ function listAll(s3, bucketName, prefix, files, marker) {
 gulp.task('deploy-set-version', function() {
     var version = yargs.argv.version;
     if (version) {
-        packageJson.version += '-' + version;
+        // NPM versions can only contain alphanumeric and hyphen characters
+        packageJson.version += '-' + version.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
     }
 });
@@ -619,6 +629,7 @@ gulp.task('test', function(done) {
     var includeCategory = argv.include ? argv.include : '';
     var excludeCategory = argv.exclude ? argv.exclude : '';
     var webglValidation = argv.webglValidation ? argv.webglValidation : false;
+    var webglStub = argv.webglStub ? argv.webglStub : false;
     var release = argv.release ? argv.release : false;
     var failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
     var suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
@@ -652,7 +663,7 @@ gulp.task('test', function(done) {
         },
         files: files,
         client: {
-            args: [includeCategory, excludeCategory, webglValidation, release]
+            args: [includeCategory, excludeCategory, webglValidation, webglStub, release]
         }
     }, function(e) {
         return done(failTaskOnError ? e : undefined);
@@ -993,7 +1004,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
         }
 
         if (minify) {
-            contents = stripComments(contents);
+            contents = glslStripComments(contents);
             contents = contents.replace(/\s+$/gm, '').replace(/^\s+/gm, '').replace(/\n+/gm, '\n');
             contents += '\n';
         }
@@ -1117,8 +1128,10 @@ function createGalleryList() {
         fileList.push('!Apps/Sandcastle/gallery/development/**/*.html');
     }
 
+    var helloWorld;
     globby.sync(fileList).forEach(function(file) {
         var demo = filePathToModuleId(path.relative('Apps/Sandcastle/gallery', file));
+
         var demoObject = {
             name : demo,
             date : fs.statSync(file).mtime.getTime()
@@ -1129,6 +1142,10 @@ function createGalleryList() {
         }
 
         demoObjects.push(demoObject);
+
+        if (demo === 'Hello World') {
+            helloWorld = demoObject;
+        }
     });
 
     demoObjects.sort(function(a, b) {
@@ -1141,6 +1158,8 @@ function createGalleryList() {
       }
     });
 
+    var helloWorldIndex = Math.max(demoObjects.indexOf(helloWorld), 0);
+
     var i;
     for (i = 0; i < demoObjects.length; ++i) {
       demoJSONs[i] = JSON.stringify(demoObjects[i], null, 2);
@@ -1148,6 +1167,7 @@ function createGalleryList() {
 
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
+var hello_world_index = ' + helloWorldIndex + ';\n\
 var gallery_demos = [' + demoJSONs.join(', ') + '];';
 
     fs.writeFileSync(output, contents);

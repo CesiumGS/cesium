@@ -5,7 +5,6 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Material',
         'Scene/Primitive',
@@ -16,7 +15,6 @@ defineSuite([
         GeometryInstance,
         Rectangle,
         RectangleGeometry,
-        ClearCommand,
         Appearance,
         Material,
         Primitive,
@@ -79,10 +77,10 @@ defineSuite([
         });
         primitive.appearance = new EllipsoidSurfaceAppearance();
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
 }, 'WebGL');

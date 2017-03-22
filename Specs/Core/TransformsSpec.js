@@ -4,8 +4,6 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
-        'Core/defined',
-        'Core/DeveloperError',
         'Core/EarthOrientationParameters',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
@@ -17,16 +15,12 @@ defineSuite([
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/Quaternion',
-        'Core/TimeConstants',
-        'Core/TimeInterval',
-        'ThirdParty/when'
+        'Core/TimeInterval'
     ], function(
         Transforms,
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        defined,
-        DeveloperError,
         EarthOrientationParameters,
         Ellipsoid,
         GeographicProjection,
@@ -38,9 +32,7 @@ defineSuite([
         Matrix3,
         Matrix4,
         Quaternion,
-        TimeConstants,
-        TimeInterval,
-        when) {
+        TimeInterval) {
     'use strict';
 
     var negativeX = new Cartesian4(-1, 0, 0, 0);
@@ -239,6 +231,151 @@ defineSuite([
         expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
     });
 
+    it('normal use of localFrameToFixedFrameGenerator', function() {
+        var cartesianTab = [
+            new Cartesian3(0.0, 0.0, 1.0),
+            new Cartesian3(0.0, 0.0, -1.0),
+            new Cartesian3(10.0, 20.0, 30.0),
+            new Cartesian3(-10.0, -20.0, -30.0),
+            new Cartesian3(-25.0, 60.0, -1.0),
+            new Cartesian3(9.0, 0.0, -7.0)
+        ];
+
+        var converterTab = [
+            {
+                converter : Transforms.localFrameToFixedFrameGenerator('north', 'east'),
+                order : ['north', 'east', 'down']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('north', 'west'),
+                order : ['north', 'west', 'up']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('north', 'up'),
+                order : ['north', 'up', 'east']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('north', 'down'),
+                order : ['north', 'down', 'west']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('south', 'east'),
+                order : ['south', 'east', 'up']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('south', 'west'),
+                order : ['south', 'west', 'down']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('south', 'up'),
+                order : ['south', 'up', 'west']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('south', 'down'),
+                order : ['south', 'down', 'east']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('east', 'north'),
+                order : ['east', 'north', 'up']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('east', 'south'),
+                order : ['east', 'south', 'down']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('east', 'up'),
+                order : ['east', 'up', 'south']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('east', 'down'),
+                order : ['east', 'down', 'north']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('west', 'north'),
+                order : ['west', 'north', 'down']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('west', 'south'),
+                order : ['west', 'south', 'up']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('west', 'up'),
+                order : ['west', 'up', 'north']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('west', 'down'),
+                order : ['west', 'down', 'south']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('up', 'north'),
+                order : ['up', 'north', 'west']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('up', 'south'),
+                order : ['up', 'south', 'east']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('up', 'east'),
+                order : ['up', 'east', 'north']
+            }, {
+                converter : Transforms.localFrameToFixedFrameGenerator('up', 'west'),
+                order : ['up', 'west', 'south']
+            }
+        ];
+
+        function testAllLocalFrame(classicalENUMatrix, position) {
+            var ENUColumn = new Cartesian4();
+            var converterColumn = new Cartesian4();
+            for (var i = 0; i < converterTab.length; i++) {
+                var converterMatrix = (converterTab[i].converter)(position, Ellipsoid.UNIT_SPHERE);
+                var order = converterTab[i].order;
+                // check translation
+                Matrix4.getColumn(classicalENUMatrix, 3, ENUColumn);
+                Matrix4.getColumn(converterMatrix, 3, converterColumn);
+                expect(ENUColumn).toEqual(converterColumn);
+                // check axis
+                for (var j = 0; j < 3; j++) {
+                    Matrix4.getColumn(converterMatrix, j, converterColumn);
+                    var axisName = order[j];
+                    if (axisName === 'east') {
+                        Matrix4.getColumn(classicalENUMatrix, 0, ENUColumn);
+                    } else if (axisName === 'west') {
+                        Matrix4.getColumn(classicalENUMatrix, 0, ENUColumn);
+                        Cartesian4.negate(ENUColumn, ENUColumn);
+                    } else if (axisName === 'north') {
+                        Matrix4.getColumn(classicalENUMatrix, 1, ENUColumn);
+                    } else if (axisName === 'south') {
+                        Matrix4.getColumn(classicalENUMatrix, 1, ENUColumn);
+                        Cartesian4.negate(ENUColumn, ENUColumn);
+                    } else if (axisName === 'up') {
+                        Matrix4.getColumn(classicalENUMatrix, 2, ENUColumn);
+                    } else if (axisName === 'down') {
+                        Matrix4.getColumn(classicalENUMatrix, 2, ENUColumn);
+                        Cartesian4.negate(ENUColumn, ENUColumn);
+                    }
+                    expect(ENUColumn).toEqual(converterColumn);
+                }
+            }
+        }
+
+        for (var i = 0; i < cartesianTab.length; i++) {
+            var cartesian = cartesianTab[i];
+            var classicalEastNorthUpReferential = Transforms.eastNorthUpToFixedFrame(cartesian, Ellipsoid.UNIT_SPHERE);
+            testAllLocalFrame(classicalEastNorthUpReferential, cartesian);
+        }
+    });
+
+    it('abnormal use of localFrameToFixedFrameGenerator', function() {
+        function checkDeveloperError(firstAxis, secondAxis) {
+            expect(function() {
+                Transforms.localFrameToFixedFrameGenerator(firstAxis, secondAxis);
+            }).toThrowDeveloperError();
+        }
+
+        checkDeveloperError(undefined, undefined);
+        checkDeveloperError('north', undefined);
+        checkDeveloperError(undefined, 'north');
+        checkDeveloperError('south', undefined);
+        checkDeveloperError('northe', 'southe');
+
+        checkDeveloperError('north', 'north');
+        checkDeveloperError('north', 'south');
+        checkDeveloperError('south', 'north');
+        checkDeveloperError('south', 'south');
+
+        checkDeveloperError('up', 'up');
+        checkDeveloperError('up', 'down');
+        checkDeveloperError('down', 'up');
+        checkDeveloperError('down', 'down');
+
+        checkDeveloperError('east', 'east');
+        checkDeveloperError('east', 'west');
+        checkDeveloperError('west', 'east');
+        checkDeveloperError('west', 'west');
+    });
+
     it('headingPitchRollToFixedFrame works without a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
@@ -246,7 +383,35 @@ defineSuite([
         var roll = CesiumMath.toRadians(40.0);
         var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
+        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(hpr));
+        var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
+        var expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
+        var expectedZ = Matrix3.getColumn(expectedRotation, 2, new Cartesian3());
+
+        Cartesian3.fromElements(expectedX.z, expectedX.x, expectedX.y, expectedX);
+        Cartesian3.fromElements(expectedY.z, expectedY.x, expectedY.y, expectedY);
+        Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
+
+        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
+        var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
+        var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
+        var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
+        var actualTranslation = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 3, new Cartesian4()));
+
+        expect(actualX).toEqual(expectedX);
+        expect(actualY).toEqual(expectedY);
+        expect(actualZ).toEqual(expectedZ);
+        expect(actualTranslation).toEqual(origin);
+    });
+
+    it('headingPitchRollToFixedFrame works with a HeadingPitchRoll object and without a result parameter and a fixedFrameTransform', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var heading = CesiumMath.toRadians(20.0);
+        var pitch = CesiumMath.toRadians(30.0);
+        var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
+
+        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(hpr));
         var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
         var expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
         var expectedZ = Matrix3.getColumn(expectedRotation, 2, new Cartesian3());
@@ -274,7 +439,7 @@ defineSuite([
         var roll = CesiumMath.toRadians(40.0);
         var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
+        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(hpr));
         var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
         var expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
         var expectedZ = Matrix3.getColumn(expectedRotation, 2, new Cartesian3());
@@ -283,7 +448,7 @@ defineSuite([
         Cartesian3.fromElements(expectedY.z, expectedY.x, expectedY.y, expectedY);
         Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
-        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
+        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, Transforms.eastNorthUpToFixedFrame);
         var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
         var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
         var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
@@ -302,7 +467,7 @@ defineSuite([
         var roll = CesiumMath.toRadians(40.0);
         var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
+        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(hpr));
         var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
         var expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
         var expectedZ = Matrix3.getColumn(expectedRotation, 2, new Cartesian3());
@@ -312,7 +477,7 @@ defineSuite([
         Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
         var result = new Matrix4();
-        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, result);
+        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, Transforms.eastNorthUpToFixedFrame, result);
         var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
         var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
         var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
@@ -325,33 +490,52 @@ defineSuite([
         expect(actualTranslation).toEqual(origin);
     });
 
-    it('headingPitchRollToFixedFrame works with a HeadingPitchRoll object and a result parameter', function() {
+    it('headingPitchRollToFixedFrame works with a custom fixedFrameTransform', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
         var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
-        var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
-        var expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
-        var expectedZ = Matrix3.getColumn(expectedRotation, 2, new Cartesian3());
+        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(hpr));
+        var expectedEast = Matrix3.getColumn(expectedRotation, 0, new Cartesian3()); // east
+        var expectedNorth = Matrix3.getColumn(expectedRotation, 1, new Cartesian3()); // north
+        var expectedUp = Matrix3.getColumn(expectedRotation, 2, new Cartesian3()); // up
 
-        Cartesian3.fromElements(expectedX.z, expectedX.x, expectedX.y, expectedX);
-        Cartesian3.fromElements(expectedY.z, expectedY.x, expectedY.y, expectedY);
-        Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
+        Cartesian3.fromElements(expectedEast.z, expectedEast.x, expectedEast.y, expectedEast);
+        Cartesian3.fromElements(expectedNorth.z, expectedNorth.x, expectedNorth.y, expectedNorth);
+        Cartesian3.fromElements(expectedUp.z, expectedUp.x, expectedUp.y, expectedUp);
 
         var result = new Matrix4();
-        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, result);
-        var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
-        var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
-        var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
+        var returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, Transforms.eastNorthUpToFixedFrame, result);
+        var actualEast = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4())); // east
+        var actualNorth = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4())); // north
+        var actualUp = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4())); // up
         var actualTranslation = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 3, new Cartesian4()));
 
         expect(returnedResult).toBe(result);
-        expect(actualX).toEqual(expectedX);
-        expect(actualY).toEqual(expectedY);
-        expect(actualZ).toEqual(expectedZ);
+        expect(actualEast).toEqual(expectedEast);
+        expect(actualNorth).toEqual(expectedNorth);
+        expect(actualUp).toEqual(expectedUp);
+        expect(actualTranslation).toEqual(origin);
+
+        var UNEFixedFrameConverter = Transforms.localFrameToFixedFrameGenerator('west','south'); // up north east
+        returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, UNEFixedFrameConverter, result);
+        actualEast = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4())); // east
+        actualEast.y = -actualEast.y;
+        actualEast.z= -actualEast.z;
+        actualNorth = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4())); // north
+        actualNorth.y = -actualNorth.y;
+        actualNorth.z= -actualNorth.z;
+        actualUp = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4())); // up
+        actualUp.y = -actualUp.y;
+        actualUp.z= -actualUp.z;
+        actualTranslation = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 3, new Cartesian4()));
+
+        expect(returnedResult).toBe(result);
+        expect(actualEast).toEqual(expectedEast);
+        expect(actualNorth).toEqual(expectedNorth);
+        expect(actualUp).toEqual(expectedUp);
         expect(actualTranslation).toEqual(origin);
     });
 
@@ -365,22 +549,7 @@ defineSuite([
         var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
-        var quaternion = Transforms.headingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
-        var actual = Matrix3.fromQuaternion(quaternion);
-        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
-    });
-
-    it('headingPitchRollQuaternion works with a HeadingPitchRoll object and without a result parameter', function() {
-        var origin = new Cartesian3(1.0, 0.0, 0.0);
-        var heading = CesiumMath.toRadians(20.0);
-        var pitch = CesiumMath.toRadians(30.0);
-        var roll = CesiumMath.toRadians(40.0);
-        var hpr = new HeadingPitchRoll(heading, pitch, roll);
-
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
-        var expected = Matrix4.getRotation(transform, new Matrix3());
-
-        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE);
+        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, Transforms.eastNorthUpToFixedFrame);
         var actual = Matrix3.fromQuaternion(quaternion);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
     });
@@ -396,13 +565,13 @@ defineSuite([
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
         var result = new Quaternion();
-        var quaternion = Transforms.headingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
+        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, Transforms.eastNorthUpToFixedFrame, result);
         var actual = Matrix3.fromQuaternion(quaternion);
         expect(quaternion).toBe(result);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
     });
 
-    it('headingPitchRollQuaternion works with a HeadingPitchRoll object and a result parameter', function() {
+    it('headingPitchRollQuaternion works without a custom fixedFrameTransform', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
@@ -413,7 +582,26 @@ defineSuite([
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
         var result = new Quaternion();
-        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, result);
+        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, undefined, result);
+        var actual = Matrix3.fromQuaternion(quaternion);
+        expect(quaternion).toBe(result);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
+    });
+
+
+    it('headingPitchRollQuaternion works with a custom fixedFrameTransform', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var heading = CesiumMath.toRadians(20.0);
+        var pitch = CesiumMath.toRadians(30.0);
+        var roll = CesiumMath.toRadians(40.0);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
+        var fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator('west','south');
+
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, fixedFrameTransform);
+        var expected = Matrix4.getRotation(transform, new Matrix3());
+
+        var result = new Quaternion();
+        var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, fixedFrameTransform, result);
         var actual = Matrix3.fromQuaternion(quaternion);
         expect(quaternion).toBe(result);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
@@ -907,6 +1095,34 @@ defineSuite([
         expect(rotation2D).toEqualEpsilon(expected, CesiumMath.EPSILON3);
     });
 
+    it('wgs84To2DModelMatrix creates a model matrix to transform vertices centered origin to 2D', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new GeographicProjection(ellipsoid);
+        var origin = Cartesian3.fromDegrees(-72.0, 40.0, 100.0, ellipsoid);
+
+        var actual = Transforms.wgs84To2DModelMatrix(projection, origin, new Matrix4());
+        var expected = Matrix4.fromTranslation(origin);
+        Transforms.basisTo2D(projection, expected, expected);
+
+        var actualRotation = Matrix4.getRotation(actual, new Matrix3());
+        var expectedRotation = Matrix4.getRotation(expected, new Matrix3());
+        expect(actualRotation).toEqualEpsilon(expectedRotation, CesiumMath.EPSILON14);
+
+        var fromENU = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid, new Matrix4());
+        var toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
+        var toENUTranslation = Matrix4.getTranslation(toENU, new Cartesian4());
+        var projectedTranslation = Matrix4.getTranslation(expected, new Cartesian4());
+
+        var expectedTranslation = new Cartesian4();
+        expectedTranslation.x = projectedTranslation.x + toENUTranslation.z;
+        expectedTranslation.y = projectedTranslation.y + toENUTranslation.x;
+        expectedTranslation.z = projectedTranslation.z + toENUTranslation.y;
+
+        var actualTranslation = Matrix4.getTranslation(actual, new Cartesian4());
+
+        expect(actualTranslation).toEqualEpsilon(expectedTranslation, CesiumMath.EPSILON14);
+    });
+
     it('eastNorthUpToFixedFrame throws without an origin', function() {
         expect(function() {
             Transforms.eastNorthUpToFixedFrame(undefined, Ellipsoid.WGS84);
@@ -927,25 +1143,13 @@ defineSuite([
 
     it('headingPitchRollToFixedFrame throws without an origin', function() {
         expect(function() {
-            Transforms.headingPitchRollToFixedFrame(undefined, 0.0, 0.0, 0.0);
+            Transforms.headingPitchRollToFixedFrame(undefined, new HeadingPitchRoll());
         }).toThrowDeveloperError();
     });
 
-    it('headingPitchRollToFixedFrame throws without an heading', function() {
+    it('headingPitchRollToFixedFrame throws without a headingPitchRoll', function() {
         expect(function() {
-            Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, undefined, 0.0, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('headingPitchRollToFixedFrame throws without an pitch', function() {
-        expect(function() {
-            Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, 0.0, undefined, 0.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('headingPitchRollToFixedFrame throws without an roll', function() {
-        expect(function() {
-            Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, 0.0, 0.0, undefined);
+            Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -988,6 +1192,24 @@ defineSuite([
     it('basisTo2D throws without result', function() {
         expect(function() {
             Transforms.basisTo2D(new GeographicProjection(), Matrix4.IDENTITY, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it ('wgs84To2DModelMatrix throws without projection', function() {
+        expect(function() {
+            Transforms.wgs84To2DModelMatrix(undefined, Cartesian3.UNIT_X, new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it ('wgs84To2DModelMatrix throws without center', function() {
+        expect(function() {
+            Transforms.wgs84To2DModelMatrix(new GeographicProjection(), undefined, new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it ('wgs84To2DModelMatrix throws without result', function() {
+        expect(function() {
+            Transforms.wgs84To2DModelMatrix(new GeographicProjection(), Cartesian3.UNIT_X, undefined);
         }).toThrowDeveloperError();
     });
 });

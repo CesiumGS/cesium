@@ -54,6 +54,42 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
+        pointsLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
         innerContents : {
             get : function() {
                 return undefined;
@@ -83,7 +119,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.  <code>Empty3DTileContent</code>
      * always returns <code>false</code> since a tile of this type does not have any features.
      */
-    Empty3DTileContent.prototype.hasProperty = function(name) {
+    Empty3DTileContent.prototype.hasProperty = function(batchId, name) {
         return false;
     };
 

@@ -3,54 +3,36 @@ define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/destroyObject',
         '../Core/EllipsoidalOccluder',
         '../Core/Event',
         '../Core/Matrix4',
         '../Scene/Billboard',
         '../Scene/BillboardCollection',
-        '../Scene/HeightReference',
-        '../Scene/HorizontalOrigin',
         '../Scene/Label',
         '../Scene/LabelCollection',
-        '../Scene/LabelStyle',
         '../Scene/PointPrimitive',
         '../Scene/PointPrimitiveCollection',
-        '../Scene/SceneTransforms',
-        '../Scene/VerticalOrigin',
-        '../ThirdParty/kdbush',
-        './Entity',
-        './Property'
+        '../ThirdParty/kdbush'
     ], function(
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
-        Color,
         defaultValue,
         defined,
         defineProperties,
-        destroyObject,
         EllipsoidalOccluder,
         Event,
         Matrix4,
         Billboard,
         BillboardCollection,
-        HeightReference,
-        HorizontalOrigin,
         Label,
         LabelCollection,
-        LabelStyle,
         PointPrimitive,
         PointPrimitiveCollection,
-        SceneTransforms,
-        VerticalOrigin,
-        kdbush,
-        Entity,
-        Property) {
+        kdbush) {
     'use strict';
 
     /**
@@ -166,7 +148,7 @@ define([
         cluster.label.show = true;
         cluster.label.text = numPoints.toLocaleString();
         cluster.billboard.position = cluster.label.position = cluster.point.position = position;
-        
+
         entityCluster._clusterEvent.raiseEvent(ids, cluster);
     }
 
@@ -226,7 +208,7 @@ define([
             var pointCollection = entityCluster._pointCollection;
 
             if ((!defined(labelCollection) && !defined(billboardCollection) && !defined(pointCollection)) ||
-		(!entityCluster._clusterBillboards && !entityCluster._clusterLabels && !entityCluster._clusterPoints)) {
+                (!entityCluster._clusterBillboards && !entityCluster._clusterLabels && !entityCluster._clusterPoints)) {
                 return;
             }
 
@@ -274,10 +256,10 @@ define([
                 getScreenSpacePositions(labelCollection, points, scene, occluder, entityCluster);
             }
             if (entityCluster._clusterBillboards) {
-        	getScreenSpacePositions(billboardCollection, points, scene, occluder, entityCluster);
+                getScreenSpacePositions(billboardCollection, points, scene, occluder, entityCluster);
             }
             if (entityCluster._clusterPoints) {
-        	getScreenSpacePositions(pointCollection, points, scene, occluder, entityCluster);
+                getScreenSpacePositions(pointCollection, points, scene, occluder, entityCluster);
             }
 
             var i;
@@ -489,48 +471,48 @@ define([
                 return this._clusterEvent;
             }
         },
-	/**
+        /**
          * Gets or sets whether clustering billboard entities is enabled.
          * @memberof EntityCluster.prototype
          * @type {Boolean}
          */
-	clusterBillboards : {
-	    get : function() {
-		return this._clusterBillboards;
-	    },
-	    set : function(value) {
-		this._clusterDirty = this._clusterDirty || value !== this._clusterBillboards;
-		this._clusterBillboards = value;
-	    }
-	},
-	/**
+        clusterBillboards : {
+            get : function() {
+                return this._clusterBillboards;
+            },
+            set : function(value) {
+                this._clusterDirty = this._clusterDirty || value !== this._clusterBillboards;
+                this._clusterBillboards = value;
+            }
+        },
+        /**
          * Gets or sets whether clustering labels entities is enabled.
          * @memberof EntityCluster.prototype
          * @type {Boolean}
          */
-	clusterLabels : {
-	    get : function() {
-		return this._clusterLabels;
-	    },
-	    set : function(value) {
-		this._clusterDirty = this._clusterDirty || value !== this._clusterLabels;
-		this._clusterLabels = value;
-	    }
-	},
-	/**
+        clusterLabels : {
+            get : function() {
+                return this._clusterLabels;
+            },
+            set : function(value) {
+                this._clusterDirty = this._clusterDirty || value !== this._clusterLabels;
+                this._clusterLabels = value;
+            }
+        },
+        /**
          * Gets or sets whether clustering point entities is enabled.
          * @memberof EntityCluster.prototype
          * @type {Boolean}
          */
-	clusterPoints : {
-	    get : function() {
-		return this._clusterPoints;
-	    },
-	    set : function(value) {
-		this._clusterDirty = this._clusterDirty || value !== this._clusterPoints;
-		this._clusterPoints = value;
-	    }
-	}
+        clusterPoints : {
+            get : function() {
+                return this._clusterPoints;
+            },
+            set : function(value) {
+                this._clusterDirty = this._clusterDirty || value !== this._clusterPoints;
+                this._clusterPoints = value;
+            }
+        }
     });
 
     function createGetEntity(collectionProperty, CollectionConstructor, unusedIndicesProperty, entityIndexProperty) {

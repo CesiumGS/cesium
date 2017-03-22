@@ -4,7 +4,6 @@ defineSuite([
         'Core/BoundingRectangle',
         'Core/Color',
         'Core/loadImage',
-        'Renderer/ClearCommand',
         'Renderer/Texture',
         'Scene/Material',
         'Specs/createScene',
@@ -14,7 +13,6 @@ defineSuite([
         BoundingRectangle,
         Color,
         loadImage,
-        ClearCommand,
         Texture,
         Material,
         createScene,
@@ -82,15 +80,15 @@ defineSuite([
 
     it('does not render when show is false', function() {
         viewportQuad.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.primitives.add(viewportQuad);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('renders material', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.primitives.add(viewportQuad);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders user created texture', function() {
@@ -105,9 +103,9 @@ defineSuite([
         pollToPromise(function() {
             return viewportQuad.material._loadedImages.length !== 0;
         }).then(function() {
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
             scene.primitives.add(viewportQuad);
-            expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+            expect(scene).toRender([255, 0, 0, 255]);
         });
     });
 

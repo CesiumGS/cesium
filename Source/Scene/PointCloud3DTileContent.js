@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -19,14 +20,16 @@ define([
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
+        '../Core/Transforms',
+        '../Core/WebGLConstants',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
-        '../Renderer/WebGLConstants',
         '../ThirdParty/when',
         './BlendingState',
         './Cesium3DTileBatchTable',
@@ -34,9 +37,10 @@ define([
         './Cesium3DTileContentState',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
-        './Pass'
+        './SceneMode'
     ], function(
         Cartesian3,
+        Cartesian4,
         Color,
         combine,
         ComponentDatatype,
@@ -55,14 +59,16 @@ define([
         Request,
         RequestScheduler,
         RequestType,
+        Transforms,
+        WebGLConstants,
         Buffer,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
         VertexArray,
-        WebGLConstants,
         when,
         BlendingState,
         Cesium3DTileBatchTable,
@@ -70,7 +76,7 @@ define([
         Cesium3DTileContentState,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
-        Pass) {
+        SceneMode) {
     'use strict';
 
     /**
@@ -121,6 +127,8 @@ define([
         this._quantizedVolumeScale = undefined;
         this._quantizedVolumeOffset = undefined;
 
+        this._mode = undefined;
+
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
@@ -131,6 +139,8 @@ define([
         this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
         this._features = undefined;
+        this._pointsLength = 0;
+        this._vertexMemorySizeInBytes = 0;
     }
 
     defineProperties(PointCloud3DTileContent.prototype, {
@@ -141,6 +151,45 @@ define([
             get : function() {
                 if (defined(this.batchTable)) {
                     return this.batchTable.featuresLength;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        pointsLength : {
+            get : function() {
+                return this._pointsLength;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                return this._vertexMemorySizeInBytes;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                if (defined(this.batchTable)) {
+                    return this.batchTable.memorySizeInBytes;
                 }
                 return 0;
             }
@@ -189,9 +238,9 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    PointCloud3DTileContent.prototype.hasProperty = function(name) {
+    PointCloud3DTileContent.prototype.hasProperty = function(batchId, name) {
         if (defined(this.batchTable)) {
-            return this.batchTable.hasProperty(name);
+            return this.batchTable.hasProperty(batchId, name);
         }
         return false;
     };
@@ -451,13 +500,13 @@ define([
         }
 
         this._parsedContent = {
-            pointsLength : pointsLength,
             positions : positions,
             colors : colors,
             normals : normals,
             batchIds : batchIds,
             styleableProperties : styleableProperties
         };
+        this._pointsLength = pointsLength;
 
         this._isQuantized = isQuantized;
         this._isOctEncoded16P = isOctEncoded16P;
@@ -479,7 +528,7 @@ define([
     function createResources(content, frameState) {
         var context = frameState.context;
         var parsedContent = content._parsedContent;
-        var pointsLength = parsedContent.pointsLength;
+        var pointsLength = content._pointsLength;
         var positions = parsedContent.positions;
         var colors = parsedContent.colors;
         var normals = parsedContent.normals;
@@ -506,7 +555,6 @@ define([
 
             for (var name in styleableProperties) {
                 if (styleableProperties.hasOwnProperty(name)) {
-                    // TODO : this will not handle matrix types currently
                     var property = styleableProperties[name];
                     var typedArray = property.typedArray;
                     var componentCount = property.componentCount;
@@ -517,6 +565,8 @@ define([
                         typedArray : property.typedArray,
                         usage : BufferUsage.STATIC_DRAW
                     });
+
+                    content._vertexMemorySizeInBytes += vertexBuffer.sizeInBytes;
 
                     var vertexAttribute = {
                         index : attributeLocation,
@@ -566,6 +616,7 @@ define([
             typedArray : positions,
             usage : BufferUsage.STATIC_DRAW
         });
+        content._vertexMemorySizeInBytes += positionsVertexBuffer.sizeInBytes;
 
         var colorsVertexBuffer;
         if (hasColors) {
@@ -574,6 +625,7 @@ define([
                 typedArray : colors,
                 usage : BufferUsage.STATIC_DRAW
             });
+            content._vertexMemorySizeInBytes += colorsVertexBuffer.sizeInBytes;
         }
 
         var normalsVertexBuffer;
@@ -583,6 +635,7 @@ define([
                 typedArray : normals,
                 usage : BufferUsage.STATIC_DRAW
             });
+            content._vertexMemorySizeInBytes += normalsVertexBuffer.sizeInBytes;
         }
 
         var batchIdsVertexBuffer;
@@ -592,6 +645,7 @@ define([
                 typedArray : batchIds,
                 usage : BufferUsage.STATIC_DRAW
             });
+            content._vertexMemorySizeInBytes += batchIdsVertexBuffer.sizeInBytes;
         }
 
         var attributes = [];
@@ -699,7 +753,8 @@ define([
             pickUniformMap = batchTable.getPickUniformMapCallback()(uniformMap);
         } else {
             content._pickId = context.createPickId({
-                primitive : content
+                primitive : content._tileset,
+                content : content
             });
 
             pickUniformMap = combine(uniformMap, {
@@ -839,7 +894,9 @@ define([
             colorStyleFunction = style.getColorShaderFunction('getColorFromStyle', 'czm_tiles3d_style_', shaderState);
             showStyleFunction = style.getShowShaderFunction('getShowFromStyle', 'czm_tiles3d_style_', shaderState);
             pointSizeStyleFunction = style.getPointSizeShaderFunction('getPointSizeFromStyle', 'czm_tiles3d_style_', shaderState);
-            styleTranslucent = shaderState.translucent;
+            if (defined(colorStyleFunction) && shaderState.translucent) {
+                styleTranslucent = true;
+            }
         }
 
         content._styleTranslucent = styleTranslucent;
@@ -908,12 +965,7 @@ define([
             attributeLocations.a_batchId = batchIdLocation;
         }
 
-        var vs = 'attribute vec3 a_position; \n' +
-                 'varying vec4 v_color; \n' +
-                 'uniform float u_pointSize; \n' +
-                 'uniform vec4 u_constantColor; \n' +
-                 'uniform vec4 u_highlightColor; \n' +
-                 'uniform float u_tilesetTime; \n';
+        var attributeDeclarations = '';
 
         var length = styleableProperties.length;
         for (i = 0; i < length; ++i) {
@@ -934,9 +986,18 @@ define([
                 attributeType = 'vec' + componentCount;
             }
 
-            vs += 'attribute ' + attributeType + ' ' + attributeName + '; \n';
+            attributeDeclarations += 'attribute ' + attributeType + ' ' + attributeName + '; \n';
             attributeLocations[attributeName] = attribute.location;
         }
+
+        var vs = 'attribute vec3 a_position; \n' +
+                 'varying vec4 v_color; \n' +
+                 'uniform float u_pointSize; \n' +
+                 'uniform vec4 u_constantColor; \n' +
+                 'uniform vec4 u_highlightColor; \n' +
+                 'uniform float u_tilesetTime; \n';
+
+        vs += attributeDeclarations;
 
         if (usesColors) {
             if (isTranslucent) {
@@ -1068,7 +1129,7 @@ define([
         if (hasBatchTable) {
             // Batched points always use the HIGHLIGHT color blend mode
             drawVS = batchTable.getVertexShaderCallback(false, 'a_batchId')(drawVS);
-            drawFS = batchTable.getFragmentShaderCallback(false, Cesium3DTileColorBlendMode.HIGHLIGHT)(drawFS);
+            drawFS = batchTable.getFragmentShaderCallback(false, undefined)(drawFS);
         }
 
         var pickVS = vs;
@@ -1104,6 +1165,19 @@ define([
             fragmentShaderSource : pickFS,
             attributeLocations : attributeLocations
         });
+
+        try {
+            // Check if the shader compiles correctly. If not there is likely a syntax error with the style.
+            drawCommand.shaderProgram._bind();
+        } catch (error) {
+            //>>includeStart('debug', pragmas.debug);
+            // Turn the RuntimeError into a DeveloperError and rephrase it.
+            throw new DeveloperError('Error generating style shader: this may be caused by a type mismatch, index out-of-bounds, or other syntax error.');
+            //>>includeEnd('debug');
+
+            // In release silently ignore and recreate the shader without a style. Tell jsHint to ignore this line.
+            createShaders(content, frameState, undefined);  // jshint ignore:line
+        }
     }
 
     /**
@@ -1124,11 +1198,15 @@ define([
         return false;
     };
 
+    var scratchComputedTranslation = new Cartesian4();
+    var scratchComputedMatrixIn2D = new Matrix4();
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
-        var updateModelMatrix = this._tile.transformDirty;
+        var updateModelMatrix = this._tile.transformDirty || this._mode !== frameState.mode;
+        this._mode = frameState.mode;
 
         if (!defined(this._drawCommand)) {
             createResources(this, frameState);
@@ -1149,7 +1227,31 @@ define([
             } else {
                 Matrix4.clone(this._tile.computedTransform, this._drawCommand.modelMatrix);
             }
+
+            if (frameState.mode !== SceneMode.SCENE3D) {
+                var projection = frameState.mapProjection;
+                var modelMatrix = this._drawCommand.modelMatrix;
+                var translation = Matrix4.getColumn(modelMatrix, 3, scratchComputedTranslation);
+                if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
+                    Transforms.basisTo2D(projection, modelMatrix, modelMatrix);
+                } else {
+                    var center = this._tile.boundingSphere.center;
+                    var to2D = Transforms.wgs84To2DModelMatrix(projection, center, scratchComputedMatrixIn2D);
+                    Matrix4.multiply(to2D, modelMatrix, modelMatrix);
+                }
+            }
+
             Matrix4.clone(this._drawCommand.modelMatrix, this._pickCommand.modelMatrix);
+
+            var boundingVolume;
+            if (defined(this._tile._contentBoundingVolume)) {
+                boundingVolume = this._mode === SceneMode.SCENE3D ? this._tile._contentBoundingVolume.boundingSphere : this._tile._contentBoundingVolume2D.boundingSphere;
+            } else {
+                boundingVolume = this._mode === SceneMode.SCENE3D ? this._tile._boundingVolume.boundingSphere : this._tile._boundingVolume2D.boundingSphere;
+            }
+
+            this._drawCommand.boundingVolume = boundingVolume;
+            this._pickCommand.boundingVolume = boundingVolume;
         }
 
         if (this.backFaceCulling !== this._backFaceCulling) {

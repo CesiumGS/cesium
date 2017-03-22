@@ -4,7 +4,6 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
-        'Renderer/ClearCommand',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
@@ -12,7 +11,6 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         CesiumMath,
-        ClearCommand,
         SceneMode,
         createScene) {
     'use strict';
@@ -34,7 +32,7 @@ defineSuite([
     it('draws sky with camera in atmosphere', function() {
         var s = new SkyAtmosphere();
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.render();
 
         var command = s.update(scene.frameState);
@@ -47,7 +45,7 @@ defineSuite([
     it('draws sky with camera in space', function() {
         var s = new SkyAtmosphere();
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.render();
 
         var command = s.update(scene.frameState);
@@ -61,7 +59,7 @@ defineSuite([
         var s = new SkyAtmosphere();
         s.setDynamicAtmosphereColor(true);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.render();
 
         var command = s.update(scene.frameState);
@@ -76,7 +74,7 @@ defineSuite([
         var s = new SkyAtmosphere();
         s.setDynamicAtmosphereColor(false);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.render();
 
         var command = s.update(scene.frameState);
@@ -103,14 +101,18 @@ defineSuite([
             }
         });
 
-        var color = scene.renderForSpecs();
-        expect(color).not.toEqual([0, 0, 0, 255]);
+        var color;
+        expect(scene).toRenderAndCall(function(rgba) {
+            color = rgba;
+            expect(color).not.toEqual([0, 0, 0, 255]);
+        });
 
         // Expect color correction to change the color output.
         s.hueShift = 0.5;
-        var hueColor = scene.renderForSpecs();
-        expect(hueColor).not.toEqual([0, 0, 0, 255]);
-        expect(hueColor).not.toEqual(color);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+            expect(rgba).not.toEqual(color);
+        });
 
         scene.skyAtmosphere = oldSkyAtmosphere;
     });
@@ -119,7 +121,7 @@ defineSuite([
         var s = new SkyAtmosphere();
         s.show = false;
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.render();
 
         var command = s.update(scene.frameState);
@@ -129,7 +131,7 @@ defineSuite([
     it('does not render in 2D', function() {
         var s = new SkyAtmosphere();
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.mode = SceneMode.SCENE2D;
         scene.render();
 

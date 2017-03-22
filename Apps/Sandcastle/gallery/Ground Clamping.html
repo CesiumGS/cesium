@@ -10,10 +10,10 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        require.config({
-            baseUrl : '../../../Source',
-            waitSeconds : 60
-        });
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -29,8 +29,8 @@
     <div id="sampleButtons"></div>
 </div>
 <script id="cesium_sandcastle_script">
-    function startup(Cesium) {
-        'use strict';
+function startup(Cesium) {
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
@@ -39,12 +39,12 @@ var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     requestVertexNormals : true
 });
 viewer.terrainProvider = cesiumTerrainProviderMeshes;
-
+viewer.scene.globe.depthTestAgainstTerrain = true;
 Sandcastle.addDefaultToolbarMenu([{
     //
     // To clamp points or billboards set the heightReference to CLAMP_TO_GROUND or RELATIVE_TO_GROUND
     //
-    text : 'Draw Points',
+    text : 'Draw Point with Label',
     onselect : function() {
         var e = viewer.entities.add({
             position : Cesium.Cartesian3.fromDegrees(-122.1958, 46.1915),
@@ -54,6 +54,17 @@ Sandcastle.addDefaultToolbarMenu([{
                 outlineColor : Cesium.Color.YELLOW,
                 outlineWidth : 3,
                 heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
+            },
+            label : {
+                text : 'Clamped to ground',
+                font : '14pt sans-serif',
+                heightReference : Cesium.HeightReference.CLAMP_TO_GROUND,
+                horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
+                verticalOrigin : Cesium.VerticalOrigin.BASELINE,
+                fillColor : Cesium.Color.BLACK,
+                showBackground : true,
+                backgroundColor : new Cesium.Color(1, 1, 1, 0.7),
+                backgroundPadding : new Cesium.Cartesian2(8, 4)
             }
         });
 
@@ -123,6 +134,21 @@ Sandcastle.addDefaultToolbarMenu([{
 
         viewer.zoomTo(e);
     }
+}, {
+    text : 'Draw Model',
+    onselect : function() {
+        var e = viewer.entities.add({
+            position : Cesium.Cartesian3.fromDegrees(-122.1958, 46.1915),
+            model : {
+                uri : '../../SampleData/models/CesiumMan/Cesium_Man.glb',
+                heightReference : Cesium.HeightReference.CLAMP_TO_GROUND,
+                minimumPixelSize : 128,
+                maximumScale : 100
+            }
+        });
+
+        viewer.trackedEntity = e;
+    }
 }], 'zoomButtons');
 
 Sandcastle.reset = function () {
@@ -130,13 +156,13 @@ Sandcastle.reset = function () {
 };
 
 //Sandcastle_End
-        Sandcastle.finishedLoading();
-    }
-    if (typeof Cesium !== "undefined") {
-        startup(Cesium);
-    } else if (typeof require === "function") {
-        require(["Cesium"], startup);
-    }
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>
