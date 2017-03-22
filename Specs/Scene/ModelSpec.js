@@ -384,7 +384,7 @@ defineSuite([
 
     it('rejects readyPromise on error', function() {
         var invalidGltf = clone(texturedBoxModel.gltf, true);
-        invalidGltf.shaders.CesiumTexturedBoxTest0FS.uri = 'invalid.glsl';
+        invalidGltf.shaders[0].uri = 'invalid.glsl';
 
         var model = primitives.add(new Model({
             gltf : invalidGltf
@@ -549,7 +549,7 @@ defineSuite([
         var node = texturedBoxModel.getNode('Mesh');
         expect(node).toBeDefined();
         expect(node.name).toEqual('Mesh');
-        expect(node.id).toEqual('Geometry-mesh002Node');
+        expect(node.id).toEqual(0);
         expect(node.show).toEqual(true);
 
         // Change node transform and render
@@ -585,7 +585,7 @@ defineSuite([
         var mesh = texturedBoxModel.getMesh('Mesh');
         expect(mesh).toBeDefined();
         expect(mesh.name).toEqual('Mesh');
-        expect(mesh.id).toEqual('Geometry-mesh002');
+        expect(mesh.id).toEqual(0);
         expect(mesh.materials[0].name).toEqual('Texture');
     });
 
@@ -610,7 +610,7 @@ defineSuite([
         var material = texturedBoxModel.getMaterial('Texture');
         expect(material).toBeDefined();
         expect(material.name).toEqual('Texture');
-        expect(material.id).toEqual('Effect-Texture');
+        expect(material.id).toEqual(0);
     });
 
     it('ModelMaterial.setValue throws when name is not provided', function() {
@@ -741,7 +741,7 @@ defineSuite([
 
             // Verify that rotation is converted from
             // Axis-Angle (1,0,0,0) to Quaternion (0,0,0,1)
-            var rotation = m.gltf.nodes['Geometry-mesh005Node'].rotation;
+            var rotation = m.gltf.nodes[3].rotation;
             expect(rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
 
             verifyRender(m);
@@ -796,7 +796,7 @@ defineSuite([
     });
 
     it('Throws because of an invalid Binary glTF header - magic', function() {
-        var arrayBuffer = new ArrayBuffer(16);
+        var arrayBuffer = new ArrayBuffer(20);
         expect(function() {
             return new Model({
                 gltf : arrayBuffer
@@ -1071,10 +1071,10 @@ defineSuite([
         var spyAdd = jasmine.createSpy('listener');
         animations.animationAdded.addEventListener(spyAdd);
         var a = animations.add({
-            name : 'animation_1'
+            name : 1
         });
         expect(a).toBeDefined();
-        expect(a.name).toEqual('animation_1');
+        expect(a.name).toEqual(1);
         expect(a.startTime).not.toBeDefined();
         expect(a.delay).toEqual(0.0);
         expect(a.stopTime).not.toBeDefined();
@@ -1143,7 +1143,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             removeOnStop : true
         });
@@ -1189,7 +1189,7 @@ defineSuite([
 
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             delay : 1.0
         });
@@ -1213,7 +1213,7 @@ defineSuite([
 
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             stopTime : stopTime
         });
@@ -1237,7 +1237,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             speedup : 1.5
         });
@@ -1262,7 +1262,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             reverse : true
         });
@@ -1289,7 +1289,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             loop : ModelAnimationLoop.REPEAT
         });
@@ -1319,7 +1319,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             loop : ModelAnimationLoop.MIRRORED_REPEAT
         });
@@ -1353,7 +1353,7 @@ defineSuite([
             var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
             var animations = m.activeAnimations;
             var a = animations.add({
-                name : 'animation_1',
+                name : 1,
                 startTime : time
             });
 

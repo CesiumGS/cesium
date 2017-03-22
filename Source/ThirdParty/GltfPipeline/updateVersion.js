@@ -232,7 +232,20 @@ define([
 
     function objectsToArrays(gltf) {
         var i;
-        var globalMapping = {};
+        var globalMapping = {
+            accessors: {},
+            animations: {},
+            bufferViews: {},
+            buffers: {},
+            cameras: {},
+            materials: {},
+            meshes: {},
+            nodes: {},
+            programs: {},
+            shaders: {},
+            skins: {},
+            techniques: {}
+        };
         // Convert top level objects to arrays
         for (var topLevelId in gltf) {
             if (gltf.hasOwnProperty(topLevelId) && topLevelId !== 'extras' && topLevelId !== 'asset') {

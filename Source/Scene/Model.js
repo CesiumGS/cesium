@@ -1522,6 +1522,7 @@ define([
 
         for (var id in nodes) {
             if (nodes.hasOwnProperty(id)) {
+                id = parseInt(id);
                 var node = nodes[id];
 
                 var runtimeNode = {
@@ -1583,6 +1584,7 @@ define([
 
         for (var id in materials) {
             if (materials.hasOwnProperty(id)) {
+                id = parseInt(id);
                 // Allocated now so ModelMaterial can keep a reference to it.
                 uniformMaps[id] = {
                     uniformMap : undefined,
@@ -1608,6 +1610,7 @@ define([
 
         for (var id in meshes) {
             if (meshes.hasOwnProperty(id)) {
+                id = parseInt(id);
                 var mesh = meshes[id];
                 runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
                 if (defined(model.extensionsUsed.WEB3D_quantized_attributes)) {
@@ -4265,7 +4268,7 @@ define([
                         parseBufferViews(this);
                         parseShaders(this);
                         parsePrograms(this);
-                        parseTextures(this);
+                        parseTextures(this, context);
                     }
                     parseMaterials(this);
                     parseMeshes(this);

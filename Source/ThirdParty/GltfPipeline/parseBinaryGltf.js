@@ -62,6 +62,10 @@ define([
             buffers = gltf.buffers;
             if (defined(buffers) && Object.keys(buffers).length > 0) {
                 var binaryGltfBuffer = buffers.binary_glTF;
+                // In some older models, the binary glTF buffer is named KHR_binary_glTF
+                if (!defined(binaryGltfBuffer)) {
+                    binaryGltfBuffer = buffers.KHR_binary_glTF;
+                }
                 if (defined(binaryGltfBuffer)) {
                     binaryGltfBuffer.extras = {
                         _pipeline: {
