@@ -38,7 +38,7 @@ define([
                 var source = buffer.extras._pipeline.source;
 
                 var count = accessor.count;
-                var byteStride = getAccessorByteStride(accessor);
+                var byteStride = getAccessorByteStride(gltf, accessor);
                 var byteOffset = accessor.byteOffset + bufferView.byteOffset;
                 var componentType = accessor.componentType;
 

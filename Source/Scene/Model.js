@@ -48,6 +48,7 @@ define([
         '../Renderer/VertexArray',
         '../ThirdParty/GltfPipeline/addDefaults',
         '../ThirdParty/GltfPipeline/addPipelineExtras',
+        '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/GltfPipeline/numberOfComponentsForType',
         '../ThirdParty/GltfPipeline/parseBinaryGltf',
         '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
@@ -115,6 +116,7 @@ define([
         VertexArray,
         addDefaults,
         addPipelineExtras,
+        ForEach,
         numberOfComponentsForType,
         parseBinaryGltf,
         processModelMaterialsCommon,
@@ -225,7 +227,6 @@ define([
 
     function setCachedGltf(model, cachedGltf) {
         model._cachedGltf = cachedGltf;
-        model._animationIds = getAnimationIds(cachedGltf);
     }
 
     // glTF JSON can be big given embedded geometry, textures, and animations, so we
@@ -270,8 +271,8 @@ define([
 
     function getAnimationIds(cachedGltf) {
         var animationIds = [];
-        if (defined(cachedGltf) && defined(cachedGltf.gltf)) {
-            var animations = cachedGltf.gltf.animations;
+        if (defined(cachedGltf)) {
+            var animations = cachedGltf.animations;
             for (var id in animations) {
                 if (animations.hasOwnProperty(id)) {
                     animationIds.push(id);
@@ -1221,24 +1222,22 @@ define([
                 n = nodeStack.pop();
                 var transformToRoot = n._transformToRoot;
 
-                var meshes = n.meshes;
-                if (defined(meshes)) {
-                    var meshesLength = meshes.length;
-                    for (var j = 0; j < meshesLength; ++j) {
-                        var primitives = gltfMeshes[meshes[j]].primitives;
-                        var primitivesLength = primitives.length;
-                        for (var m = 0; m < primitivesLength; ++m) {
-                            var positionAccessor = primitives[m].attributes.POSITION;
-                            if (defined(positionAccessor)) {
-                                var minMax = getAccessorMinMax(gltf, positionAccessor);
-                                var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
-                                var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
-                                if (defined(min) && defined(max)) {
-                                    Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
-                                    Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
-                                    Cartesian3.minimumByComponent(min, aMin, min);
-                                    Cartesian3.maximumByComponent(max, aMax, max);
-                                }
+                var meshId = n.mesh;
+                if (defined(meshId)) {
+                    var mesh = gltfMeshes[meshId];
+                    var primitives = mesh.primitives;
+                    var primitivesLength = primitives.length;
+                    for (var m = 0; m < primitivesLength; ++m) {
+                        var positionAccessor = primitives[m].attributes.POSITION;
+                        if (defined(positionAccessor)) {
+                            var minMax = getAccessorMinMax(gltf, positionAccessor);
+                            var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
+                            var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
+                            if (defined(min) && defined(max)) {
+                                Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
+                                Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
+                                Cartesian3.minimumByComponent(min, aMin, min);
+                                Cartesian3.maximumByComponent(max, aMax, max);
                             }
                         }
                     }
@@ -1269,11 +1268,18 @@ define([
         };
     }
 
+    function addBuffersToLoadResources(model) {
+        var gltf = model.gltf;
+        var loadResources = model._loadResources;
+        ForEach.buffer(gltf, function(buffer, id) {
+            loadResources.buffers[id] = buffer.extras._pipeline.source;
+        });
+    }
+
     function bufferLoad(model, id) {
         return function(arrayBuffer) {
             var loadResources = model._loadResources;
             var buffer = new Uint8Array(arrayBuffer);
-            loadResources.buffers[id] = buffer;
             --loadResources.pendingBufferLoads;
             model.gltf.buffers[id].extras._pipeline.source = buffer;
         };
@@ -1282,9 +1288,12 @@ define([
     function parseBuffers(model) {
         var loadResources = model._loadResources;
         var buffers = model.gltf.buffers;
+        // Iterate this way for compatibility with objects and arrays
         for (var id in buffers) {
             if (buffers.hasOwnProperty(id)) {
                 var buffer = buffers[id];
+                buffer.extras = defaultValue(buffer.extras, {});
+                buffer.extras._pipeline = defaultValue(buffer.extras._pipeline, {});
                 if (defined(buffer.extras._pipeline.source)) {
                     loadResources.buffers[id] = buffer.extras._pipeline.source;
                 } else {
@@ -1321,16 +1330,30 @@ define([
     }
 
     function parseShaders(model) {
-        var shaders = model.gltf.shaders;
+        var gltf = model.gltf;
+        var buffers = gltf.buffers;
+        var bufferViews = gltf.bufferViews;
+        var shaders = gltf.shaders;
         for (var id in shaders) {
             if (shaders.hasOwnProperty(id)) {
                 var shader = shaders[id];
 
                 // Shader references either uri (external or base64-encoded) or bufferView
-                if (defined(shader.extras._pipeline.source)) {
+                if (defined(shader.bufferView)) {
+                    var bufferViewId = shader.bufferView;
+                    var bufferView = bufferViews[bufferViewId];
+                    var bufferId = bufferView.buffer;
+                    var buffer = buffers[bufferId];
+                    var source = String.fromCharCode.apply(null, buffer.extras._pipeline.source.slice(bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength));
+                    model._loadResources.shaders[id] = {
+                        source : source,
+                        bufferView : undefined
+                    };
+                    shader.extras._pipeline.source = source;
+                } else if (defined(shader.extras._pipeline.source)) {
                     model._loadResources.shaders[id] = {
                         source : shader.extras._pipeline.source,
-                        bufferView : undefined
+                        bufferView: undefined
                     };
                 } else {
                     ++model._loadResources.pendingShaderLoads;
@@ -1366,20 +1389,27 @@ define([
     }
 
     function parseTextures(model) {
-        var images = model.gltf.images;
-        var textures = model.gltf.textures;
+        var gltf = model.gltf;
+        var buffers = gltf.buffers;
+        var bufferViews = gltf.bufferViews;
+        var images = gltf.images;
+        var textures = gltf.textures;
         for (var id in textures) {
             if (textures.hasOwnProperty(id)) {
                 var imageId = textures[id].source;
                 var gltfImage = images[imageId];
 
                 // Image references either uri (external or base64-encoded) or bufferView
-                if (defined(gltfImage.extras._pipeline.source)) {
+                if (defined(gltfImage.bufferView)) {
+                    var bufferViewId = gltfImage.bufferView;
+                    var bufferView = bufferViews[bufferViewId];
+                    var bufferId = bufferView.buffer;
+                    var buffer = buffers[bufferId];
                     model._loadResources.texturesToCreateFromBufferView.enqueue({
                         id : id,
                         image : undefined,
-                        bufferView : gltfImage.extras._pipeline.source,
-                        mimeType : gltfImage.extras._pipeline.extension
+                        bufferView : buffer.extras._pipeline.source.slice(bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength),
+                        mimeType : gltfImage.mimeType
                     });
                 } else {
                     ++model._loadResources.pendingTextureLoads;
@@ -2091,10 +2121,8 @@ define([
             // 2. These nodes form the root nodes of the forest to search for each joint in skin.jointNames.  This search uses jointName, not the node's name.
             // 3. Search for the joint name among the gltf node hierarchy instead of the runtime node hierarchy. Child links aren't set up yet for runtime nodes.
             var forest = [];
-            var gltfSkeletons = node.skeletons;
-            var skeletonsLength = gltfSkeletons.length;
-            for (var k = 0; k < skeletonsLength; ++k) {
-                forest.push(gltfSkeletons[k]);
+            if (defined(node.skeleton)) {
+                forest.push(node.skeleton);
             }
 
             var mappedJointNames = mapJointNames(forest, nodes);
@@ -2203,7 +2231,7 @@ define([
 
                     var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, input, path, output);
                     // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
-                    channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.id], target.path, spline);
+                    channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.node], target.path, spline);
                 }
 
                 model._runtime.animations[animationId] = {
@@ -2968,86 +2996,124 @@ define([
         var techniques = gltf.techniques;
         var materials = gltf.materials;
 
-        var meshes = gltfNode.meshes;
-        var meshesLength = meshes.length;
+        var id = gltfNode.mesh;
+        var mesh = gltfMeshes[id];
 
-        for (var j = 0; j < meshesLength; ++j) {
-            var id = meshes[j];
-            var mesh = gltfMeshes[id];
-            var primitives = mesh.primitives;
-            var length = primitives.length;
+        var primitives = mesh.primitives;
+        var length = primitives.length;
 
-            // The glTF node hierarchy is a DAG so a node can have more than one
-            // parent, so a node may already have commands.  If so, append more
-            // since they will have a different model matrix.
+        // The glTF node hierarchy is a DAG so a node can have more than one
+        // parent, so a node may already have commands.  If so, append more
+        // since they will have a different model matrix.
 
-            for (var i = 0; i < length; ++i) {
-                var primitive = primitives[i];
-                var ix = accessors[primitive.indices];
-                var material = materials[primitive.material];
-                var technique = techniques[material.technique];
-                var programId = technique.program;
+        for (var i = 0; i < length; ++i) {
+            var primitive = primitives[i];
+            var ix = accessors[primitive.indices];
+            var material = materials[primitive.material];
+            var technique = techniques[material.technique];
+            var programId = technique.program;
 
-                var boundingSphere;
-                var positionAccessor = primitive.attributes.POSITION;
-                if (defined(positionAccessor)) {
-                    var minMax = getAccessorMinMax(gltf, positionAccessor);
-                    boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
+            var boundingSphere;
+            var positionAccessor = primitive.attributes.POSITION;
+            if (defined(positionAccessor)) {
+                var minMax = getAccessorMinMax(gltf, positionAccessor);
+                boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
+            }
+
+            var vertexArray = rendererVertexArrays[id + '.primitive.' + i];
+            var offset;
+            var count;
+            if (defined(ix)) {
+                count = ix.count;
+                offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
+            }
+            else {
+                var positions = accessors[primitive.attributes.POSITION];
+                count = positions.count;
+                offset = 0;
+            }
+
+            var um = uniformMaps[primitive.material];
+            var uniformMap = um.uniformMap;
+            if (defined(um.jointMatrixUniformName)) {
+                var jointUniformMap = {};
+                jointUniformMap[um.jointMatrixUniformName] = createJointMatricesFunction(runtimeNode);
+
+                uniformMap = combine(uniformMap, jointUniformMap);
+            }
+
+            uniformMap = combine(uniformMap, {
+                gltf_color : createColorFunction(model),
+                gltf_colorBlend : createColorBlendFunction(model)
+            });
+
+            // Allow callback to modify the uniformMap
+            if (defined(model._uniformMapLoaded)) {
+                uniformMap = model._uniformMapLoaded(uniformMap, programId, runtimeNode);
+            }
+
+            // Add uniforms for decoding quantized attributes if used
+            if (model.extensionsUsed.WEB3D_quantized_attributes) {
+                var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive, context);
+                uniformMap = combine(uniformMap, quantizedUniformMap);
+            }
+
+            var rs = rendererRenderStates[material.technique];
+
+            // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
+            var isTranslucent = rs.blending.enabled;
+            var owner = {
+                primitive : defaultValue(model.pickPrimitive, model),
+                id : model.id,
+                node : runtimeNode.publicNode,
+                mesh : runtimeMeshesByName[mesh.name]
+            };
+
+            var castShadows = ShadowMode.castShadows(model._shadows);
+            var receiveShadows = ShadowMode.receiveShadows(model._shadows);
+
+            var command = new DrawCommand({
+                boundingVolume : new BoundingSphere(), // updated in update()
+                cull : model.cull,
+                modelMatrix : new Matrix4(),           // computed in update()
+                primitiveType : primitive.mode,
+                vertexArray : vertexArray,
+                count : count,
+                offset : offset,
+                shaderProgram : rendererPrograms[technique.program],
+                castShadows : castShadows,
+                receiveShadows : receiveShadows,
+                uniformMap : uniformMap,
+                renderState : rs,
+                owner : owner,
+                pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+            });
+
+            var pickCommand;
+
+            if (allowPicking) {
+                var pickUniformMap;
+
+                // Callback to override default model picking
+                if (defined(model._pickFragmentShaderLoaded)) {
+                    if (defined(model._pickUniformMapLoaded)) {
+                        pickUniformMap = model._pickUniformMapLoaded(uniformMap);
+                    } else {
+                        // This is unlikely, but could happen if the override shader does not
+                        // need new uniforms since, for example, its pick ids are coming from
+                        // a vertex attribute or are baked into the shader source.
+                        pickUniformMap = combine(uniformMap);
+                    }
+                } else {
+                    var pickId = context.createPickId(owner);
+                    pickIds.push(pickId);
+                    var pickUniforms = {
+                        czm_pickColor : createPickColorFunction(pickId.color)
+                    };
+                    pickUniformMap = combine(uniformMap, pickUniforms);
                 }
 
-                var vertexArray = rendererVertexArrays[id + '.primitive.' + i];
-                var offset;
-                var count;
-                if (defined(ix)) {
-                    count = ix.count;
-                    offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
-                }
-                else {
-                    var positions = accessors[primitive.attributes.POSITION];
-                    count = positions.count;
-                    offset = 0;
-                }
-
-                var um = uniformMaps[primitive.material];
-                var uniformMap = um.uniformMap;
-                if (defined(um.jointMatrixUniformName)) {
-                    var jointUniformMap = {};
-                    jointUniformMap[um.jointMatrixUniformName] = createJointMatricesFunction(runtimeNode);
-
-                    uniformMap = combine(uniformMap, jointUniformMap);
-                }
-
-                uniformMap = combine(uniformMap, {
-                    gltf_color : createColorFunction(model),
-                    gltf_colorBlend : createColorBlendFunction(model)
-                });
-
-                // Allow callback to modify the uniformMap
-                if (defined(model._uniformMapLoaded)) {
-                    uniformMap = model._uniformMapLoaded(uniformMap, programId, runtimeNode);
-                }
-
-                // Add uniforms for decoding quantized attributes if used
-                if (model.extensionsUsed.WEB3D_quantized_attributes) {
-                    var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive, context);
-                    uniformMap = combine(uniformMap, quantizedUniformMap);
-                }
-
-                var rs = rendererRenderStates[material.technique];
-
-                // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
-                var isTranslucent = rs.blending.enabled;
-                var owner = {
-                    primitive : defaultValue(model.pickPrimitive, model),
-                    id : model.id,
-                    node : runtimeNode.publicNode,
-                    mesh : runtimeMeshesByName[mesh.name]
-                };
-
-                var castShadows = ShadowMode.castShadows(model._shadows);
-                var receiveShadows = ShadowMode.receiveShadows(model._shadows);
-
-                var command = new DrawCommand({
+                pickCommand = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     cull : model.cull,
                     modelMatrix : new Matrix4(),           // computed in update()
@@ -3055,89 +3121,48 @@ define([
                     vertexArray : vertexArray,
                     count : count,
                     offset : offset,
-                    shaderProgram : rendererPrograms[technique.program],
-                    castShadows : castShadows,
-                    receiveShadows : receiveShadows,
-                    uniformMap : uniformMap,
+                    shaderProgram : rendererPickPrograms[technique.program],
+                    uniformMap : pickUniformMap,
                     renderState : rs,
                     owner : owner,
                     pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                 });
+            }
 
-                var pickCommand;
+            var command2D;
+            var pickCommand2D;
+            if (!scene3DOnly) {
+                command2D = DrawCommand.shallowClone(command);
+                command2D.boundingVolume = new BoundingSphere(); // updated in update()
+                command2D.modelMatrix = new Matrix4();           // updated in update()
 
                 if (allowPicking) {
-                    var pickUniformMap;
-
-                    // Callback to override default model picking
-                    if (defined(model._pickFragmentShaderLoaded)) {
-                        if (defined(model._pickUniformMapLoaded)) {
-                            pickUniformMap = model._pickUniformMapLoaded(uniformMap);
-                        } else {
-                            // This is unlikely, but could happen if the override shader does not
-                            // need new uniforms since, for example, its pick ids are coming from
-                            // a vertex attribute or are baked into the shader source.
-                            pickUniformMap = combine(uniformMap);
-                        }
-                    } else {
-                        var pickId = context.createPickId(owner);
-                        pickIds.push(pickId);
-                        var pickUniforms = {
-                            czm_pickColor : createPickColorFunction(pickId.color)
-                        };
-                        pickUniformMap = combine(uniformMap, pickUniforms);
-                    }
-
-                    pickCommand = new DrawCommand({
-                        boundingVolume : new BoundingSphere(), // updated in update()
-                        cull : model.cull,
-                        modelMatrix : new Matrix4(),           // computed in update()
-                        primitiveType : primitive.mode,
-                        vertexArray : vertexArray,
-                        count : count,
-                        offset : offset,
-                        shaderProgram : rendererPickPrograms[technique.program],
-                        uniformMap : pickUniformMap,
-                        renderState : rs,
-                        owner : owner,
-                        pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
-                    });
+                    pickCommand2D = DrawCommand.shallowClone(pickCommand);
+                    pickCommand2D.boundingVolume = new BoundingSphere(); // updated in update()
+                    pickCommand2D.modelMatrix = new Matrix4();           // updated in update()
                 }
-
-                var command2D;
-                var pickCommand2D;
-                if (!scene3DOnly) {
-                    command2D = DrawCommand.shallowClone(command);
-                    command2D.boundingVolume = new BoundingSphere(); // updated in update()
-                    command2D.modelMatrix = new Matrix4();           // updated in update()
-
-                    if (allowPicking) {
-                        pickCommand2D = DrawCommand.shallowClone(pickCommand);
-                        pickCommand2D.boundingVolume = new BoundingSphere(); // updated in update()
-                        pickCommand2D.modelMatrix = new Matrix4();           // updated in update()
-                    }
-                }
-
-                var nodeCommand = {
-                    show : true,
-                    boundingSphere : boundingSphere,
-                    command : command,
-                    pickCommand : pickCommand,
-                    command2D : command2D,
-                    pickCommand2D : pickCommand2D,
-                    // Generated on demand when silhouette size is greater than 0.0 and silhouette alpha is greater than 0.0
-                    silhouetteModelCommand : undefined,
-                    silhouetteModelCommand2D : undefined,
-                    silhouetteColorCommand : undefined,
-                    silhouetteColorCommand2D : undefined,
-                    // Generated on demand when color alpha is less than 1.0
-                    translucentCommand : undefined,
-                    translucentCommand2D : undefined
-                };
-                runtimeNode.commands.push(nodeCommand);
-                nodeCommands.push(nodeCommand);
             }
+
+            var nodeCommand = {
+                show : true,
+                boundingSphere : boundingSphere,
+                command : command,
+                pickCommand : pickCommand,
+                command2D : command2D,
+                pickCommand2D : pickCommand2D,
+                // Generated on demand when silhouette size is greater than 0.0 and silhouette alpha is greater than 0.0
+                silhouetteModelCommand : undefined,
+                silhouetteModelCommand2D : undefined,
+                silhouetteColorCommand : undefined,
+                silhouetteColorCommand2D : undefined,
+                // Generated on demand when color alpha is less than 1.0
+                translucentCommand : undefined,
+                translucentCommand2D : undefined
+            };
+            runtimeNode.commands.push(nodeCommand);
+            nodeCommands.push(nodeCommand);
         }
+
     }
 
     function createRuntimeNodes(model, context, scene3DOnly) {
@@ -3163,6 +3188,7 @@ define([
         var length = sceneNodes.length;
 
         var stack = [];
+        var seen = {};
 
         for (var i = 0; i < length; ++i) {
             stack.push({
@@ -3171,8 +3197,10 @@ define([
                 id : sceneNodes[i]
             });
 
+            var skeletonIds = [];
             while (stack.length > 0) {
                 var n = stack.pop();
+                seen[n.id] = true;
                 var parentRuntimeNode = n.parentRuntimeNode;
                 var gltfNode = n.gltfNode;
 
@@ -3197,29 +3225,38 @@ define([
                     rootNodes.push(runtimeNode);
                 }
 
-                if (defined(gltfNode.meshes)) {
+                if (defined(gltfNode.mesh)) {
                     createCommand(model, gltfNode, runtimeNode, context, scene3DOnly);
                 }
 
                 var children = gltfNode.children;
                 var childrenLength = children.length;
                 for (var j = 0; j < childrenLength; j++) {
-                    stack.push({
-                        parentRuntimeNode : runtimeNode,
-                        gltfNode : nodes[children[j]],
-                        id : children[j]
-                    });
+                    var childId = children[j];
+                    if (!seen[childId]) {
+                        stack.push({
+                            parentRuntimeNode : runtimeNode,
+                            gltfNode : nodes[childId],
+                            id : children[j]
+                        });
+                    }
                 }
 
-                var skeletons = gltfNode.skeletons;
-                if (defined(skeletons)) {
-                var skeletonsLength = skeletons.length;
-                    for (var k = 0; k < skeletonsLength; k++) {
-                        stack.push({
-                            parentRuntmeNode : undefined,
-                            gltfNode : nodes[skeletons[k]],
-                            id : skeletons[k]
-                        });
+                var skeleton = gltfNode.skeleton;
+                if (defined(skeleton)) {
+                    skeletonIds.push(skeleton);
+                }
+
+                if (stack.length === 0) {
+                    for (var k = 0; k < skeletonIds.length; k++) {
+                        skeleton = skeletonIds[k];
+                        if (!seen[skeleton]) {
+                            stack.push({
+                                parentRuntmeNode : undefined,
+                                gltfNode : nodes[skeleton],
+                                id : skeleton
+                            });
+                        }
                     }
                 }
             }
@@ -4048,7 +4085,6 @@ define([
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             // Use renderer resources from cache instead of loading/creating them?
-            addPipelineExtras(this.gltf);
             var cachedRendererResources;
             var cacheKey = this.cacheKey;
             if (defined(cacheKey)) {
@@ -4118,8 +4154,12 @@ define([
                 if (!this._updatedGltfVersion) {
                     updateVersion(this.gltf);
                     checkSupportedExtensions(this);
-                    processModelMaterialsCommon(this.gltf);
+                    addPipelineExtras(this.gltf);
                     addDefaults(this.gltf);
+                    processModelMaterialsCommon(this.gltf);
+                    // We do this after to make sure that the ids don't change
+                    addBuffersToLoadResources(this);
+                    this._animationIds = getAnimationIds(this.gltf);
 
                     if (!this._loadRendererResourcesFromCache) {
                         parseBufferViews(this);

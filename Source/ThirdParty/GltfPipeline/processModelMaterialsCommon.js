@@ -1,14 +1,22 @@
 /*global define*/
 define([
+        './addToArray',
+        './ForEach',
+        './numberOfComponentsForType',
         './techniqueParameterForSemantic',
-        '../../Core/WebGLConstants',
+        '../../Core/clone',
         '../../Core/defined',
-        '../../Core/defaultValue'
+        '../../Core/defaultValue',
+        '../../Core/WebGLConstants'
     ], function(
+        addToArray,
+        ForEach,
+        numberOfComponentsForType,
         techniqueParameterForSemantic,
-        WebGLConstants,
+        clone,
         defined,
-        defaultValue) {
+        defaultValue,
+        WebGLConstants) {
     'use strict';
 
     function webGLConstantToGlslType(webGLValue) {
@@ -29,6 +37,27 @@ define([
                 return 'mat4';
             case WebGLConstants.SAMPLER_2D:
                 return 'sampler2D';
+        }
+    }
+
+    function glslTypeToWebGLConstant(glslType) {
+        switch (glslType) {
+            case 'float':
+                return WebGLConstants.FLOAT;
+            case 'vec2':
+                return WebGLConstants.FLOAT_VEC2;
+            case 'vec3':
+                return WebGLConstants.FLOAT_VEC3;
+            case 'vec4':
+                return WebGLConstants.FLOAT_VEC4;
+            case 'mat2':
+                return WebGLConstants.FLOAT_MAT2;
+            case 'mat3':
+                return WebGLConstants.FLOAT_MAT3;
+            case 'mat4':
+                return WebGLConstants.FLOAT_MAT4;
+            case 'sampler2D':
+                return WebGLConstants.SAMPLER_2D;
         }
     }
 
@@ -146,21 +175,6 @@ define([
         return result;
     }
 
-    function getNextId(dictionary, baseName, startingCount) {
-        var count = defaultValue(startingCount, 0);
-        var nextId;
-        do {
-            nextId = baseName + (count++).toString();
-        } while (defined(dictionary[nextId]));
-
-        return nextId;
-    }
-
-    var techniqueCount = 0;
-    var vertexShaderCount = 0;
-    var fragmentShaderCount = 0;
-    var programCount = 0;
-
     function generateTechnique(gltf, khrMaterialsCommon, lightParameters, optimizeForCesium) {
         var techniques = gltf.techniques;
         var shaders = gltf.shaders;
@@ -172,16 +186,15 @@ define([
         }
         var parameterValues = khrMaterialsCommon.values;
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
-        var hasSkinning = (jointCount > 0);
+
+        var hasSkinning = jointCount > 0;
+        var skinningInfo = {};
+        if (hasSkinning) {
+            skinningInfo = khrMaterialsCommon.extras._pipeline.skinning;
+        }
 
         var vertexShader = 'precision highp float;\n';
         var fragmentShader = 'precision highp float;\n';
-
-        // Generate IDs for our new objects
-        var techniqueId = getNextId(techniques, 'technique', techniqueCount);
-        var vertexShaderId = getNextId(shaders, 'vertexShader', vertexShaderCount);
-        var fragmentShaderId = getNextId(shaders, 'fragmentShader', fragmentShaderCount);
-        var programId = getNextId(programs, 'program', programCount);
 
         var hasNormals = (lightingModel !== 'CONSTANT');
 
@@ -265,10 +278,34 @@ define([
         // Add attributes with semantics
         var vertexShaderMain = '';
         if (hasSkinning) {
-            vertexShaderMain += '  mat4 skinMat = a_weight.x * u_jointMatrix[int(a_joint.x)];\n';
-            vertexShaderMain += '  skinMat += a_weight.y * u_jointMatrix[int(a_joint.y)];\n';
-            vertexShaderMain += '  skinMat += a_weight.z * u_jointMatrix[int(a_joint.z)];\n';
-            vertexShaderMain += '  skinMat += a_weight.w * u_jointMatrix[int(a_joint.w)];\n';
+            var i, j;
+            var numberOfComponents = numberOfComponentsForType(skinningInfo.type);
+            var matrix = false;
+            if (skinningInfo.type.indexOf('MAT') === 0) {
+                matrix = true;
+                numberOfComponents = Math.sqrt(numberOfComponents);
+            }
+            if (!matrix) {
+                for (i = 0; i < numberOfComponents; i++) {
+                    if (i === 0) {
+                        vertexShaderMain += '  mat4 skinMat = ';
+                    } else {
+                        vertexShaderMain += '  skinMat += ';
+                    }
+                    vertexShaderMain += 'a_weight[' + i + '] * u_jointMatrix[int(a_joint[' + i + '])];\n';
+                }
+            } else {
+                for (i = 0; i < numberOfComponents; i++) {
+                    for (j = 0; j < numberOfComponents; j++) {
+                        if (i === 0 && j === 0) {
+                            vertexShaderMain += '  mat4 skinMat = ';
+                        } else {
+                            vertexShaderMain += '  skinMat += ';
+                        }
+                        vertexShaderMain += 'a_weight[' + i + '][' + j + '] * u_jointMatrix[int(a_joint[' + i + '][' + j + '])];\n';
+                    }
+                }
+            }
         }
 
         // Add position always
@@ -327,18 +364,21 @@ define([
 
         if (hasSkinning) {
             techniqueAttributes.a_joint = 'joint';
+            var attributeType = getShaderVariable(skinningInfo.type);
+            var webGLConstant = glslTypeToWebGLConstant(attributeType);
+
             techniqueParameters.joint = {
                 semantic: 'JOINT',
-                type: WebGLConstants.FLOAT_VEC4
+                type: webGLConstant
             };
             techniqueAttributes.a_weight = 'weight';
             techniqueParameters.weight = {
                 semantic: 'WEIGHT',
-                type: WebGLConstants.FLOAT_VEC4
+                type: webGLConstant
             };
 
-            vertexShader += 'attribute vec4 a_joint;\n';
-            vertexShader += 'attribute vec4 a_weight;\n';
+            vertexShader += 'attribute ' + attributeType + ' a_joint;\n';
+            vertexShader += 'attribute ' + attributeType + ' a_weight;\n';
         }
 
         var hasSpecular = hasNormals && ((lightingModel === 'BLINN') || (lightingModel === 'PHONG')) &&
@@ -484,13 +524,13 @@ define([
             }
 
             if (defined(techniqueParameters.transparency)) {
-                finalColorComputation = '  gl_FragColor = vec4(color * diffuse.a, diffuse.a * u_transparency);\n';
+                finalColorComputation = '  gl_FragColor = vec4(color * diffuse.a * u_transparency, diffuse.a * u_transparency);\n';
             } else {
                 finalColorComputation = '  gl_FragColor = vec4(color * diffuse.a, diffuse.a);\n';
             }
         } else {
             if (defined(techniqueParameters.transparency)) {
-                finalColorComputation = '  gl_FragColor = vec4(color, u_transparency);\n';
+                finalColorComputation = '  gl_FragColor = vec4(color * u_transparency, u_transparency);\n';
             } else {
                 finalColorComputation = '  gl_FragColor = vec4(color, 1.0);\n';
             }
@@ -562,25 +602,19 @@ define([
                 ]
             };
         }
-        techniques[techniqueId] = {
-            attributes: techniqueAttributes,
-            parameters: techniqueParameters,
-            program: programId,
-            states: techniqueStates,
-            uniforms: techniqueUniforms
-        };
 
         // Add shaders
-        shaders[vertexShaderId] = {
+        var vertexShaderId = addToArray(shaders, {
             type: WebGLConstants.VERTEX_SHADER,
-            extras: {
-                _pipeline: {
-                    source: vertexShader,
-                    extension: '.glsl'
+                extras: {
+                    _pipeline: {
+                        source: vertexShader,
+                        extension: '.glsl'
                 }
             }
-        };
-        shaders[fragmentShaderId] = {
+        });
+
+        var fragmentShaderId = addToArray(shaders, {
             type: WebGLConstants.FRAGMENT_SHADER,
             extras: {
                 _pipeline: {
@@ -588,15 +622,23 @@ define([
                     extension: '.glsl'
                 }
             }
-        };
+        });
 
         // Add program
         var programAttributes = Object.keys(techniqueAttributes);
-        programs[programId] = {
+        var programId = addToArray(programs, {
             attributes: programAttributes,
             fragmentShader: fragmentShaderId,
             vertexShader: vertexShaderId
-        };
+        });
+
+        var techniqueId = addToArray(techniques, {
+            attributes: techniqueAttributes,
+            parameters: techniqueParameters,
+            program: programId,
+            states: techniqueStates,
+            uniforms: techniqueUniforms
+        });
 
         return techniqueId;
     }
@@ -614,13 +656,13 @@ define([
 
         switch (paramName) {
             case 'ambient':
-                return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
+                return value.length === 1 ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
             case 'diffuse':
-                return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
+                return value.length === 1 ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
             case 'emission':
-                return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
+                return value.length === 1 ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
             case 'specular':
-                return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
+                return value.length === 1 ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
             case 'shininess':
                 return WebGLConstants.FLOAT;
             case 'transparency':
@@ -644,20 +686,22 @@ define([
         var keysCount = keys.length;
         for (var i = 0; i < keysCount; ++i) {
             var name = keys[i];
-            //generate first part of key using shader parameters for KHR_materials_common attributes
-            //(including a check, because some boolean flags should not be used as shader parameters)
-            if (values.hasOwnProperty(name) && (name !== 'transparent') && (name !== 'doubleSided')) {
+            if (values.hasOwnProperty(name)) {
                 techniqueKey += name + ':' + getKHRMaterialsCommonValueType(name, values[name]);
                 techniqueKey += ';';
             }
         }
 
-        var doubleSided = defaultValue(values.doubleSided, false);
+        var doubleSided = defaultValue(khrMaterialsCommon.doubleSided, false);
         techniqueKey += doubleSided.toString() + ';';
-        var transparent = defaultValue(values.transparent, false);
+        var transparent = defaultValue(khrMaterialsCommon.transparent, false);
         techniqueKey += transparent.toString() + ';';
-        var jointCount = defaultValue(values.jointCount, 0);
+        var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
         techniqueKey += jointCount.toString() + ';';
+        if (jointCount > 0) {
+            var skinningInfo = khrMaterialsCommon.extras._pipeline.skinning;
+            techniqueKey += skinningInfo.type + ';';
+        }
 
         return techniqueKey;
     }
@@ -678,62 +722,60 @@ define([
         }
         var lights = khrMaterialsCommon.lights;
 
-        for (var name in lights) {
-            if (lights.hasOwnProperty(name)) {
-                var light = lights[name];
-                if (light.type === 'ambient') {
-                    if (!defined(light.ambient)) {
-                        light.ambient = {};
-                    }
-                    var ambientLight = light.ambient;
-
-                    if (!defined(ambientLight.color)) {
-                        ambientLight.color = [1.0, 1.0, 1.0];
-                    }
-                } else if (light.type === 'directional') {
-                    if (!defined(light.directional)) {
-                        light.directional = {};
-                    }
-                    var directionalLight = light.directional;
-
-                    if (!defined(directionalLight.color)) {
-                        directionalLight.color = [1.0, 1.0, 1.0];
-                    }
-                } else if (light.type === 'point') {
-                    if (!defined(light.point)) {
-                        light.point = {};
-                    }
-                    var pointLight = light.point;
-
-                    if (!defined(pointLight.color)) {
-                        pointLight.color = [1.0, 1.0, 1.0];
-                    }
-
-                    pointLight.constantAttenuation = defaultValue(pointLight.constantAttenuation, 1.0);
-                    pointLight.linearAttenuation = defaultValue(pointLight.linearAttenuation, 0.0);
-                    pointLight.quadraticAttenuation = defaultValue(pointLight.quadraticAttenuation, 0.0);
-                } else if (light.type === 'spot') {
-                    if (!defined(light.spot)) {
-                        light.spot = {};
-                    }
-                    var spotLight = light.spot;
-
-                    if (!defined(spotLight.color)) {
-                        spotLight.color = [1.0, 1.0, 1.0];
-                    }
-
-                    spotLight.constantAttenuation = defaultValue(spotLight.constantAttenuation, 1.0);
-                    spotLight.fallOffAngle = defaultValue(spotLight.fallOffAngle, 3.14159265);
-                    spotLight.fallOffExponent = defaultValue(spotLight.fallOffExponent, 0.0);
-                    spotLight.linearAttenuation = defaultValue(spotLight.linearAttenuation, 0.0);
-                    spotLight.quadraticAttenuation = defaultValue(spotLight.quadraticAttenuation, 0.0);
+        var lightsLength = lights.length;
+        for (var lightId = 0; lightId < lightsLength; lightId++) {
+            var light = lights[lightId];
+            if (light.type === 'ambient') {
+                if (!defined(light.ambient)) {
+                    light.ambient = {};
                 }
+                var ambientLight = light.ambient;
+
+                if (!defined(ambientLight.color)) {
+                    ambientLight.color = [1.0, 1.0, 1.0];
+                }
+            } else if (light.type === 'directional') {
+                if (!defined(light.directional)) {
+                    light.directional = {};
+                }
+                var directionalLight = light.directional;
+
+                if (!defined(directionalLight.color)) {
+                    directionalLight.color = [1.0, 1.0, 1.0];
+                }
+            } else if (light.type === 'point') {
+                if (!defined(light.point)) {
+                    light.point = {};
+                }
+                var pointLight = light.point;
+
+                if (!defined(pointLight.color)) {
+                    pointLight.color = [1.0, 1.0, 1.0];
+                }
+
+                pointLight.constantAttenuation = defaultValue(pointLight.constantAttenuation, 1.0);
+                pointLight.linearAttenuation = defaultValue(pointLight.linearAttenuation, 0.0);
+                pointLight.quadraticAttenuation = defaultValue(pointLight.quadraticAttenuation, 0.0);
+            } else if (light.type === 'spot') {
+                if (!defined(light.spot)) {
+                    light.spot = {};
+                }
+                var spotLight = light.spot;
+
+                if (!defined(spotLight.color)) {
+                    spotLight.color = [1.0, 1.0, 1.0];
+                }
+
+                spotLight.constantAttenuation = defaultValue(spotLight.constantAttenuation, 1.0);
+                spotLight.fallOffAngle = defaultValue(spotLight.fallOffAngle, 3.14159265);
+                spotLight.fallOffExponent = defaultValue(spotLight.fallOffExponent, 0.0);
+                spotLight.linearAttenuation = defaultValue(spotLight.linearAttenuation, 0.0);
+                spotLight.quadraticAttenuation = defaultValue(spotLight.quadraticAttenuation, 0.0);
             }
         }
     }
 
-    function getShaderVariable(accessor) {
-        var type = accessor.type;
+    function getShaderVariable(type) {
         if (type === 'SCALAR') {
             return 'float';
         }
@@ -759,6 +801,9 @@ define([
                     var accessorId = attributes[semantic];
                     var accessor = accessors[accessorId];
                     var lowerCase = semantic.toLowerCase();
+                    if (lowerCase.charAt(0) === '_') {
+                        lowerCase = lowerCase.slice(1);
+                    }
                     var attributeName = 'a_' + lowerCase;
                     technique.parameters[lowerCase] = {
                         semantic: semantic,
@@ -768,7 +813,7 @@ define([
                     program.attributes.push(attributeName);
                     var pipelineExtras = vertexShader.extras._pipeline;
                     var shaderText = pipelineExtras.source;
-                    shaderText = 'attribute ' + getShaderVariable(accessor) + ' ' + attributeName + ';\n' + shaderText;
+                    shaderText = 'attribute ' + getShaderVariable(accessor.type) + ' ' + attributeName + ';\n' + shaderText;
                     pipelineExtras.source = shaderText;
                 }
             }
@@ -776,17 +821,55 @@ define([
     }
 
     function ensureSemanticExistence(gltf) {
-        var meshes = gltf.meshes;
-        for (var meshId in meshes) {
-            if (meshes.hasOwnProperty(meshId)) {
-                var mesh = meshes[meshId];
-                var primitives = mesh.primitives;
-                var primitivesLength = primitives.length;
-                for (var i = 0; i < primitivesLength; i++) {
-                    ensureSemanticExistenceForPrimitive(gltf, primitives[i]);
-                }
-            }
-        }
+        ForEach.mesh(gltf, function(mesh) {
+            ForEach.meshPrimitives(mesh, function(primitive) {
+                ensureSemanticExistenceForPrimitive(gltf, primitive);
+            });
+        });
+    }
+
+    function splitIncompatibleSkins(gltf) {
+        var accessors = gltf.accessors;
+        var materials = gltf.materials;
+        ForEach.mesh(gltf, function(mesh) {
+           ForEach.meshPrimitives(mesh, function(primitive) {
+               var materialId = primitive.material;
+               var material = materials[materialId];
+
+               if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
+                   var khrMaterialsCommon = material.extensions.KHR_materials_common;
+                   var jointAccessorId = primitive.attributes.JOINT;
+                   var componentType;
+                   var type;
+                   if (defined(jointAccessorId)) {
+                       var jointAccessor = accessors[jointAccessorId];
+                       componentType = jointAccessor.componentType;
+                       type = jointAccessor.type;
+                   }
+                   var isSkinned = defined(jointAccessorId);
+
+                   var skinningInfo = khrMaterialsCommon.extras._pipeline.skinning;
+                   if (!defined(skinningInfo)) {
+                       khrMaterialsCommon.extras._pipeline.skinning = {
+                           skinned: isSkinned,
+                           componentType: componentType,
+                           type: type
+                       };
+                   } else if ((skinningInfo.skinned !== isSkinned) || (skinningInfo.type !== type)) {
+                       // This primitive uses the same material as another one that either isn't skinned or uses a different type to store joints and weights
+                       var clonedMaterial = clone(material, true);
+                       clonedMaterial.extensions.KHR_materials_common.extras._pipeline.skinning = {
+                           skinned: isSkinned,
+                           componentType: componentType,
+                           type: type
+                       };
+                       // Split this off as a separate material
+                       materialId = addToArray(materials, clonedMaterial);
+                       primitive.material = materialId;
+                   }
+               }
+           });
+        });
     }
 
     /**
@@ -817,61 +900,58 @@ define([
         }
 
         if (hasExtension) {
-            gltf.asset.premultipliedAlpha = true;
             if (!defined(gltf.programs)) {
-                gltf.programs = {};
+                gltf.programs = [];
             }
             if (!defined(gltf.shaders)) {
-                gltf.shaders = {};
+                gltf.shaders = [];
             }
             if (!defined(gltf.techniques)) {
-                gltf.techniques = {};
+                gltf.techniques = [];
             }
             lightDefaults(gltf);
 
             var lightParameters = generateLightParameters(gltf);
 
+            // Pre-processing to assign skinning info and address incompatibilities
+            splitIncompatibleSkins(gltf);
+
             var techniques = {};
-            var materials = gltf.materials;
-            for (var name in materials) {
-                if (materials.hasOwnProperty(name)) {
-                    var material = materials[name];
-                    if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
-                        var khrMaterialsCommon = material.extensions.KHR_materials_common;
-                        var techniqueKey = getTechniqueKey(khrMaterialsCommon);
-                        var technique = techniques[techniqueKey];
-                        if (!defined(technique)) {
-                            technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters, options.optimizeForCesium);
-                            techniques[techniqueKey] = technique;
+            ForEach.material(gltf, function(material) {
+                if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
+                    var khrMaterialsCommon = material.extensions.KHR_materials_common;
+                    var techniqueKey = getTechniqueKey(khrMaterialsCommon);
+                    var technique = techniques[techniqueKey];
+                    if (!defined(technique)) {
+                        technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters, options.optimizeForCesium);
+                        techniques[techniqueKey] = technique;
+                    }
+
+                    // Take advantage of the fact that we generate techniques that use the
+                    // same parameter names as the extension values.
+                    material.values = {};
+                    var values = khrMaterialsCommon.values;
+                    for (var valueName in values) {
+                        if (values.hasOwnProperty(valueName)) {
+                            var value = values[valueName];
+                            material.values[valueName] = value;
                         }
+                    }
 
-                        // Take advantage of the fact that we generate techniques that use the
-                        // same parameter names as the extension values.
-                        material.values = {};
-                        var values = khrMaterialsCommon.values;
-                        for (var valueName in values) {
-                            if (values.hasOwnProperty(valueName) && (valueName !== 'transparent') && (valueName !== 'doubleSided')) {
-                                var value = values[valueName];
+                    material.technique = technique;
 
-                                // Backwards compatibility for COLLADA2GLTF v1.0-draft when it encoding
-                                // materials using KHR_materials_common with explicit type/value members
-                                if (defined(value.value)) {
-                                    material.values[valueName] = value.value;
-                                } else {
-                                    material.values[valueName] = value;
-                                }
-                            }
-                        }
-
-                        material.technique = technique;
-
-                        delete material.extensions.KHR_materials_common;
+                    delete material.extensions.KHR_materials_common;
+                    if (Object.keys(material.extensions).length === 0) {
+                        delete material.extensions;
                     }
                 }
-            }
+            });
 
             if (defined(gltf.extensions)) {
                 delete gltf.extensions.KHR_materials_common;
+                if (Object.keys(gltf.extensions).length === 0) {
+                    delete gltf.extensions;
+                }
             }
 
             // If any primitives have semantics that aren't declared in the generated

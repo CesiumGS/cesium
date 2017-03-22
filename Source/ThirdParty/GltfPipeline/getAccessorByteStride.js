@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './byteLengthForComponentType',
-        './numberOfComponentsForType'
+        './numberOfComponentsForType',
+        '../../Core/defined'
     ], function(
         byteLengthForComponentType,
-        numberOfComponentsForType) {
+        numberOfComponentsForType,
+        defined) {
     'use strict';
 
     /**
@@ -14,9 +16,10 @@ define([
      * @param {Object} accessor The accessor.
      * @returns {Number} The byte stride of the accessor.
      */
-    function getAccessorByteStride(accessor) {
-        if (accessor.byteStride > 0) {
-            return accessor.byteStride;
+    function getAccessorByteStride(gltf, accessor) {
+        var bufferView = gltf.bufferViews[accessor.bufferView];
+        if (defined(bufferView.byteStride) && bufferView.byteStride > 0) {
+            return bufferView.byteStride;
         }
         return byteLengthForComponentType(accessor.componentType) * numberOfComponentsForType(accessor.type);
     }

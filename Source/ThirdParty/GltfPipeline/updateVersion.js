@@ -1,22 +1,24 @@
 /*global define*/
 define([
-        './getUniqueId',
+        './addToArray',
+        './ForEach',
         './findAccessorMinMax',
         '../../Core/Cartesian3',
         '../../Core/Math',
-        '../../Core/Matrix4',
         '../../Core/Quaternion',
         '../../Core/WebGLConstants',
+        '../../Core/clone',
         '../../Core/defaultValue',
         '../../Core/defined'
     ], function(
-        getUniqueId,
+        addToArray,
+        ForEach,
         findAccessorMinMax,
         Cartesian3,
         CesiumMath,
-        Matrix4,
         Quaternion,
         WebGLConstants,
+        clone,
         defaultValue,
         defined) {
     'use strict';
@@ -62,7 +64,6 @@ define([
         var updateFunction = updateFunctions[version];
 
         while (defined(updateFunction)) {
-            version = gltf.asset.version;
             if (version === targetVersion) {
                 break;
             }
@@ -193,62 +194,6 @@ define([
         }
     }
 
-    function stripWebGLRevisionNumber(gltf) {
-        var asset = gltf.asset;
-        var profile = asset.profile;
-        if (defined(profile)) {
-            var version = profile.version;
-            if (defined(version)) {
-                profile.version = version[0] + '.' + version[2];
-            }
-        }
-    }
-
-    var knownExtensions = {
-        CESIUM_RTC : true,
-        KHR_binary_glTF : true,
-        KHR_materials_common : true,
-        WEB3D_quantized_attributes : true
-    };
-    function requireKnownExtensions(gltf) {
-        var extensionsUsed = gltf.extensionsUsed;
-        gltf.extensionsRequired = defaultValue(gltf.extensionsRequired, []);
-        if (defined(extensionsUsed)) {
-            var extensionsUsedLength = extensionsUsed.length;
-            for (var i = 0; i < extensionsUsedLength; i++) {
-                var extension = extensionsUsed[i];
-                if (defined(knownExtensions[extension])) {
-                    gltf.extensionsRequired.push(extension);
-                }
-            }
-        }
-    }
-
-    function addGlExtensionsUsed(gltf) {
-        var accessors = gltf.accessors;
-        var meshes = gltf.meshes;
-        for (var meshId in meshes) {
-            if (meshes.hasOwnProperty(meshId)) {
-                var mesh = meshes[meshId];
-                var primitives = mesh.primitives;
-                if (defined(primitives)) {
-                    var primitivesLength = primitives.length;
-                    for (var i = 0; i < primitivesLength; i++) {
-                        var primitive = primitives[i];
-                        var indicesAccessorId = primitive.indices;
-                        if (defined(indicesAccessorId)) {
-                            var indicesAccessor = accessors[indicesAccessorId];
-                            if (indicesAccessor.componentType === WebGLConstants.UNSIGNED_INT) {
-                                gltf.glExtensionsUsed = ['OES_element_index_uint'];
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     function removeAnimationSamplersIndirection(gltf) {
         var animations = gltf.animations;
         for (var animationId in animations) {
@@ -270,83 +215,332 @@ define([
         }
     }
 
-    function removeBufferType(gltf) {
-        var buffers = gltf.buffers;
-        for (var bufferId in buffers) {
-            if (buffers.hasOwnProperty(bufferId)) {
-                var buffer = buffers[bufferId];
-                delete buffer.type;
+    function objectToArray(object, mapping) {
+        var array = [];
+        for (var id in object) {
+            if (object.hasOwnProperty(id)) {
+                var value = object[id];
+                mapping[id] = array.length;
+                array.push(value);
+                if (!defined(value.name)) {
+                    value.name = id;
+                }
             }
         }
+        return array;
     }
 
-    function makeMaterialValuesArray(gltf) {
-        var materials = gltf.materials;
-        for (var materialId in materials) {
-            if (materials.hasOwnProperty(materialId)) {
-                var material = materials[materialId];
-                var materialValues = material.values;
-                for (var materialValueId in materialValues) {
-                    if (materialValues.hasOwnProperty(materialValueId)) {
-                        var materialValue = materialValues[materialValueId];
-                        if (!Array.isArray(materialValue)) {
-                            materialValues[materialValueId] = [materialValue];
-                        }
+    function objectsToArrays(gltf) {
+        var i;
+        var globalMapping = {};
+        // Convert top level objects to arrays
+        for (var topLevelId in gltf) {
+            if (gltf.hasOwnProperty(topLevelId) && topLevelId !== 'extras' && topLevelId !== 'asset') {
+                var objectMapping = {};
+                var object = gltf[topLevelId];
+                if (typeof(object) === 'object' && !Array.isArray(object)) {
+                    gltf[topLevelId] = objectToArray(object, objectMapping);
+                    globalMapping[topLevelId] = objectMapping;
+                    if (topLevelId === 'animations') {
+                        objectMapping = {};
+                        object.samplers = objectToArray(object.samplers, objectMapping);
+                        globalMapping[topLevelId].samplers = objectMapping;
                     }
                 }
             }
         }
-    }
-
-    function requireAttributeSetIndex(gltf) {
-        var meshes = gltf.meshes;
-        for (var meshId in meshes) {
-            if (meshes.hasOwnProperty(meshId)) {
-                var mesh = meshes[meshId];
-                var primitives = mesh.primitives;
-                if (defined(primitives)) {
-                    var primitivesLength = primitives.length;
-                    for (var i = 0; i < primitivesLength; i++) {
-                        var primitive = primitives[i];
-                        var attributes = primitive.attributes;
-                        if (defined(attributes)) {
-                            var semantics = Object.keys(attributes);
-                            var semanticsLength = semantics.length;
-                            for (var j = 0; j < semanticsLength; j++) {
-                                var semantic = semantics[j];
-                                if (semantic === 'TEXCOORD') {
-                                    attributes.TEXCOORD_0 = attributes[semantic];
-                                    delete attributes[semantic];
-                                } else if (semantic === 'COLOR') {
-                                    attributes.COLOR_0 = attributes[semantic];
-                                    delete attributes[semantic];
+        // Fix references
+        if (defined(gltf.scene)) {
+            gltf.scene = globalMapping.scenes[gltf.scene];
+        }
+        ForEach.bufferView(gltf, function(bufferView) {
+            if (defined(bufferView.buffer)) {
+                bufferView.buffer = globalMapping.buffers[bufferView.buffer];
+            }
+        });
+        ForEach.accessor(gltf, function(accessor) {
+            if (defined(accessor.bufferView)) {
+                accessor.bufferView = globalMapping.bufferViews[accessor.bufferView];
+            }
+        });
+        ForEach.shader(gltf, function(shader) {
+            var extensions = shader.extensions;
+            if (defined(extensions)) {
+                var binaryGltf = extensions.KHR_binary_glTF;
+                if (defined(binaryGltf)) {
+                    shader.bufferView = globalMapping.bufferViews[binaryGltf.bufferView];
+                    delete extensions.KHR_binary_glTF;
+                }
+                if (Object.keys(extensions).length === 0) {
+                    delete shader.extensions;
+                }
+            }
+        });
+        ForEach.program(gltf, function(program) {
+            if (defined(program.vertexShader)) {
+                program.vertexShader = globalMapping.shaders[program.vertexShader];
+            }
+            if (defined(program.fragmentShader)) {
+                program.fragmentShader = globalMapping.shaders[program.fragmentShader];
+            }
+        });
+        ForEach.technique(gltf, function(technique) {
+            if (defined(technique.program)) {
+                technique.program = globalMapping.programs[technique.program];
+            }
+            ForEach.techniqueParameter(technique, function(parameter) {
+                if (defined(parameter.node)) {
+                    parameter.node = globalMapping.nodes[parameter.node];
+                }
+                var value = parameter.value;
+                if (defined(value)) {
+                    if (Array.isArray(value)) {
+                        if (value.length === 1) {
+                            var textureId = value[0];
+                            if (typeof textureId === 'string') {
+                                value[0] = globalMapping.textures[textureId];
+                            }
+                        }
+                    }
+                    else if (typeof value === 'string') {
+                        parameter.value = [globalMapping.textures[value]];
+                    }
+                }
+            });
+        });
+        ForEach.mesh(gltf, function(mesh) {
+            ForEach.meshPrimitives(mesh, function(primitive) {
+                if (defined(primitive.indices)) {
+                    primitive.indices = globalMapping.accessors[primitive.indices];
+                }
+                ForEach.meshPrimitiveAttributes(primitive, function(accessorId, semantic) {
+                    primitive.attributes[semantic] = globalMapping.accessors[accessorId];
+                });
+                if (defined(primitive.material)) {
+                    primitive.material = globalMapping.materials[primitive.material];
+                }
+            });
+        });
+        ForEach.skin(gltf, function(skin) {
+            if (defined(skin.inverseBindMatrices)) {
+                skin.inverseBindMatrices = globalMapping.accessors[skin.inverseBindMatrices];
+            }
+        });
+        ForEach.node(gltf, function(node) {
+            var children = node.children;
+            if (defined(children)) {
+                var childrenLength = children.length;
+                for (i = 0; i < childrenLength; i++) {
+                    children[i] = globalMapping.nodes[children[i]];
+                }
+            }
+            if (defined(node.meshes)) {
+                // Split out meshes on nodes
+                var meshes = node.meshes;
+                var meshesLength = meshes.length;
+                if (meshesLength > 0) {
+                    node.mesh = globalMapping.meshes[meshes[0]];
+                    for (i = 1; i < meshesLength; i++) {
+                        var meshNode = {
+                            mesh: globalMapping.meshes[meshes[i]],
+                            extras: {
+                                _pipeline: {}
+                            }
+                        };
+                        var meshNodeId = addToArray(gltf.nodes, meshNode);
+                        if (!defined(children)) {
+                            children = [];
+                            node.children = children;
+                        }
+                        children.push(meshNodeId);
+                    }
+                }
+                delete node.meshes;
+            }
+            if (defined(node.camera)) {
+                node.camera = globalMapping.cameras[node.camera];
+            }
+            if (defined(node.skeletons)) {
+                // Split out skeletons on nodes
+                var skeletons = node.skeletons;
+                var skeletonsLength = skeletons.length;
+                if (skeletonsLength > 0) {
+                    node.skeleton = globalMapping.nodes[skeletons[0]];
+                    for (i = 1; i < skeletonsLength; i++) {
+                        var skeletonNode = {
+                            skeleton: globalMapping.nodes[skeletons[i]]
+                        };
+                        var skeletonNodeId = addToArray(gltf.nodes, skeletonNode);
+                        if (!defined(children)) {
+                            children = [];
+                            node.children = children;
+                        }
+                        children.push(skeletonNodeId);
+                    }
+                }
+                delete node.skeletons;
+            }
+            if (defined(node.skin)) {
+                node.skin = globalMapping.skins[node.skin];
+            }
+        });
+        ForEach.scene(gltf, function(scene) {
+            var sceneNodes = scene.nodes;
+            if (defined(sceneNodes)) {
+                var sceneNodesLength = sceneNodes.length;
+                for (i = 0; i < sceneNodesLength; i++) {
+                    sceneNodes[i] = globalMapping.nodes[sceneNodes[i]];
+                }
+            }
+        });
+        ForEach.animation(gltf, function(animation) {
+            var samplerMapping = {};
+            animation.samplers = objectToArray(animation.samplers, samplerMapping);
+            ForEach.animationSamplers(animation, function(sampler) {
+                sampler.input = globalMapping.accessors[sampler.input];
+                sampler.output = globalMapping.accessors[sampler.output];
+            });
+            var channels = animation.channels;
+            if (defined(channels)) {
+                var channelsLength = channels.length;
+                for (i = 0; i < channelsLength; i++) {
+                    var channel = channels[i];
+                    channel.sampler = samplerMapping[channel.sampler];
+                    var target = channel.target;
+                    if (defined(target)) {
+                        target.node = globalMapping.nodes[target.id];
+                    }
+                }
+            }
+        });
+        ForEach.material(gltf, function(material) {
+            if (defined(material.technique)) {
+                material.technique = globalMapping.techniques[material.technique];
+            }
+            ForEach.materialValue(material, function(value, name) {
+                if (Array.isArray(value)) {
+                    if (value.length === 1) {
+                        var textureId = value[0];
+                        if (typeof textureId === 'string') {
+                            value[0] = globalMapping.textures[textureId];
+                        }
+                    }
+                }
+                else if (typeof value === 'string') {
+                    material.values[name] = [globalMapping.textures[value]];
+                }
+            });
+            var extensions = material.extensions;
+            if (defined(extensions)) {
+                var materialsCommon = extensions.KHR_materials_common;
+                if (defined(materialsCommon)) {
+                    ForEach.materialValue(materialsCommon, function(value, name) {
+                        if (Array.isArray(value)) {
+                            if (value.length === 1) {
+                                var textureId = value[0];
+                                if (typeof textureId === 'string') {
+                                    value[0] = globalMapping.textures[textureId];
                                 }
                             }
                         }
-                    }
-                }
-            }
-        }
-        var techniques = gltf.techniques;
-        for (var techniqueId in techniques) {
-            if (techniques.hasOwnProperty(techniqueId)) {
-                var technique = techniques[techniqueId];
-                var techniqueParameters = technique.parameters;
-                for (var techniqueParameterId in techniqueParameters) {
-                    if (techniqueParameters.hasOwnProperty(techniqueParameterId)) {
-                        var techniqueParameter = techniqueParameters[techniqueParameterId];
-                        var techniqueParameterSemantic = techniqueParameter.semantic;
-                        if (defined(techniqueParameterSemantic)) {
-                            if (techniqueParameterSemantic === 'TEXCOORD') {
-                                techniqueParameter.semantic = 'TEXCOORD_0';
-                            } else if (techniqueParameterSemantic === 'COLOR') {
-                                techniqueParameter.semantic = 'COLOR_0';
-                            }
+                        else if (typeof value === 'string') {
+                            materialsCommon.values[name] = [globalMapping.textures[value]];
                         }
-                    }
+                    });
+                }
+            }
+        });
+        ForEach.image(gltf, function(image) {
+            var extensions = image.extensions;
+            if (defined(extensions)) {
+                var binaryGltf = extensions.KHR_binary_glTF;
+                if (defined(binaryGltf)) {
+                    image.bufferView = globalMapping.bufferViews[binaryGltf.bufferView];
+                    image.mimeType = binaryGltf.mimeType;
+                    delete extensions.KHR_binary_glTF;
+                }
+                if (Object.keys(extensions).length === 0) {
+                    delete image.extensions;
+                }
+            }
+        });
+        ForEach.texture(gltf, function(texture) {
+            if (defined(texture.sampler)) {
+                texture.sampler = globalMapping.samplers[texture.sampler];
+            }
+            if (defined(texture.source)) {
+                texture.source = globalMapping.images[texture.source];
+            }
+        });
+    }
+
+    function stripProfile(gltf) {
+        var asset = gltf.asset;
+        delete asset.profile;
+    }
+
+    var knownExtensions = {
+        CESIUM_RTC : true,
+        KHR_materials_common : true,
+        WEB3D_quantized_attributes : true
+    };
+    function requireKnownExtensions(gltf) {
+        var extensionsUsed = gltf.extensionsUsed;
+        gltf.extensionsRequired = defaultValue(gltf.extensionsRequired, []);
+        if (defined(extensionsUsed)) {
+            var extensionsUsedLength = extensionsUsed.length;
+            for (var i = 0; i < extensionsUsedLength; i++) {
+                var extension = extensionsUsed[i];
+                if (defined(knownExtensions[extension])) {
+                    gltf.extensionsRequired.push(extension);
                 }
             }
         }
+    }
+
+    function removeBufferType(gltf) {
+        ForEach.buffer(gltf, function(buffer) {
+            delete buffer.type;
+
+        });
+    }
+
+    function makeMaterialValuesArrays(gltf) {
+        ForEach.material(gltf, function(material) {
+           ForEach.materialValue(material, function(value, name) {
+               if (!Array.isArray(value)) {
+                   material.values[name] = [value];
+               }
+           }) ;
+        });
+    }
+
+    function requireAttributeSetIndex(gltf) {
+        ForEach.mesh(gltf, function(mesh) {
+           ForEach.meshPrimitives(mesh, function(primitive) {
+               ForEach.meshPrimitiveAttributes(primitive, function(accessorId, semantic) {
+                   if (semantic === 'TEXCOORD') {
+                       primitive.attributes.TEXCOORD_0 = accessorId;
+                   } else if (semantic === 'COLOR') {
+                       primitive.attributes.COLOR_0 = accessorId;
+                   }
+               });
+               delete primitive.attributes.TEXCOORD;
+               delete primitive.attributes.COLOR;
+           });
+        });
+        ForEach.technique(gltf, function(technique) {
+           ForEach.techniqueParameter(technique, function(parameter) {
+               var semantic = parameter.semantic;
+               if (defined(semantic)) {
+                   if (semantic === 'TEXCOORD') {
+                       parameter.semantic = 'TEXCOORD_0';
+                   } else if (semantic === 'COLOR') {
+                       parameter.semantic = 'COLOR_0';
+                   }
+               }
+           });
+        });
     }
 
     var knownSemantics = {
@@ -355,333 +549,180 @@ define([
         TEXCOORD: true,
         COLOR: true,
         JOINT: true,
-        WEIGHT: true,
+        WEIGHT: true
     };
     function underscoreApplicationSpecificSemantics(gltf) {
         var mappedSemantics = {};
-        var meshes = gltf.meshes;
-        var techniques = gltf.techniques;
-        for (var meshId in meshes) {
-            if (meshes.hasOwnProperty(meshId)) {
-                var mesh = meshes[meshId];
-                var primitives = mesh.primitives;
-                if (defined(primitives)) {
-                    var primitivesLength = primitives.length;
-                    for (var i = 0; i < primitivesLength; i++) {
-                        var primitive = primitives[i];
-                        var attributes = primitive.attributes;
-                        if (defined(attributes)) {
-                            var semantics = Object.keys(attributes);
-                            var semanticsLength = semantics.length;
-                            for (var j = 0; j < semanticsLength; j++) {
-                                var semantic = semantics[j];
-                                if (semantic.charAt(0) !== '_') {
-                                    var setIndex = semantic.search(/_[0-9]+/g);
-                                    var strippedSemantic = semantic;
-                                    if (setIndex >= 0) {
-                                        strippedSemantic = semantic.substring(0, setIndex);
-                                    }
-                                    if (!defined(knownSemantics[strippedSemantic])) {
-                                        var attributeValue = attributes[semantic];
-                                        delete attributes[semantic];
-                                        var newSemantic = '_' + semantic;
-                                        attributes[newSemantic] = attributeValue;
-                                        mappedSemantics[semantic] = newSemantic;
-                                    }
-                                }
-                            }
-                        }
-                    }
+        ForEach.mesh(gltf, function(mesh) {
+           ForEach.meshPrimitives(mesh, function(primitive) {
+               /* jshint unused:vars */
+               ForEach.meshPrimitiveAttributes(primitive, function(accessorId, semantic) {
+                   if (semantic.charAt(0) !== '_') {
+                       var setIndex = semantic.search(/_[0-9]+/g);
+                       var strippedSemantic = semantic;
+                       if (setIndex >= 0) {
+                           strippedSemantic = semantic.substring(0, setIndex);
+                       }
+                       if (!defined(knownSemantics[strippedSemantic])) {
+                           var newSemantic = '_' + semantic;
+                           mappedSemantics[semantic] = newSemantic;
+                       }
+                   }
+               });
+               for(var semantic in mappedSemantics) {
+                   if (mappedSemantics.hasOwnProperty(semantic)) {
+                       var mappedSemantic = mappedSemantics[semantic];
+                       var accessorId = primitive.attributes[semantic];
+                       delete primitive.attributes[semantic];
+                       primitive.attributes[mappedSemantic] = accessorId;
+                   }
+               }
+           });
+        });
+        ForEach.technique(gltf, function(technique) {
+            ForEach.techniqueParameter(technique, function(parameter) {
+                var mappedSemantic = mappedSemantics[parameter.semantic];
+                if (defined(mappedSemantic)) {
+                    parameter.semantic = mappedSemantic;
                 }
-            }
-        }
-        for (var techniqueId in techniques) {
-            if (techniques.hasOwnProperty(techniqueId)) {
-                var technique = techniques[techniqueId];
-                var techniqueParameters = technique.parameters;
-                for (var techniqueParameterId in techniqueParameters) {
-                    if (techniqueParameters.hasOwnProperty(techniqueParameterId)) {
-                        var techniqueParameter = techniqueParameters[techniqueParameterId];
-                        var mappedSemantic = mappedSemantics[techniqueParameter.semantic];
-                        if (defined(mappedSemantic)) {
-                            techniqueParameter.semantic = mappedSemantic;
-                        }
-                    }
-                }
-            }
-        }
+            });
+        });
     }
 
     function makeTechniqueValuesArrays(gltf) {
-        var techniques = gltf.techniques;
-        for (var techniqueId in techniques) {
-            if (techniques.hasOwnProperty(techniqueId)) {
-                var technique = techniques[techniqueId];
-                var techniqueParameters = technique.parameters;
-                for (var techniqueParameterId in techniqueParameters) {
-                    if (techniqueParameters.hasOwnProperty(techniqueParameterId)) {
-                        var techniqueParameter = techniqueParameters[techniqueParameterId];
-                        var techniqueParameterValue = techniqueParameter.value;
-                        if (defined(techniqueParameterValue) && !Array.isArray(techniqueParameterValue)) {
-                            techniqueParameter.value = [techniqueParameterValue];
-                        }
-                    }
+        ForEach.technique(gltf, function(technique) {
+            ForEach.techniqueParameter(technique, function(parameter) {
+                var value = parameter.value;
+                if (defined(value) && !Array.isArray(value)) {
+                    parameter.value = [value];
                 }
-            }
-        }
+            });
+        });
     }
 
     function removeScissorFromTechniques(gltf) {
-        var techniques = gltf.techniques;
-        for (var techniqueId in techniques) {
-            if (techniques.hasOwnProperty(techniqueId)) {
-                var technique = techniques[techniqueId];
-                var techniqueStates = technique.states;
-                if (defined(techniqueStates)) {
-                    var techniqueFunctions = techniqueStates.functions;
-                    if (defined(techniqueFunctions)) {
-                        delete techniqueFunctions.scissor;
-                    }
-                    var enableStates = techniqueStates.enable;
-                    if (defined(enableStates)) {
-                        var scissorIndex = enableStates.indexOf(WebGLConstants.SCISSOR_TEST);
-                        if (scissorIndex >= 0) {
-                            enableStates.splice(scissorIndex, 1);
-                        }
+        ForEach.technique(gltf, function(technique) {
+            var techniqueStates = technique.states;
+            if (defined(techniqueStates)) {
+                var techniqueFunctions = techniqueStates.functions;
+                if (defined(techniqueFunctions)) {
+                    delete techniqueFunctions.scissor;
+                }
+                var enableStates = techniqueStates.enable;
+                if (defined(enableStates)) {
+                    var scissorIndex = enableStates.indexOf(WebGLConstants.SCISSOR_TEST);
+                    if (scissorIndex >= 0) {
+                        enableStates.splice(scissorIndex, 1);
                     }
                 }
             }
-        }
+        });
     }
 
     function clampTechniqueFunctionStates(gltf) {
         var i;
-        var techniques = gltf.techniques;
-        for (var techniqueId in techniques) {
-            if (techniques.hasOwnProperty(techniqueId)) {
-                var technique = techniques[techniqueId];
-                var techniqueStates = technique.states;
-                if (defined(techniqueStates)) {
-                    var functions = techniqueStates.functions;
-                    if (defined(functions)) {
-                        var blendColor = functions.blendColor;
-                        if (defined(blendColor)) {
-                            for (i = 0; i < 4; i++) {
-                                blendColor[i] = CesiumMath.clamp(blendColor[i], 0.0, 1.0);
-                            }
+        ForEach.technique(gltf, function(technique) {
+            var techniqueStates = technique.states;
+            if (defined(techniqueStates)) {
+                var functions = techniqueStates.functions;
+                if (defined(functions)) {
+                    var blendColor = functions.blendColor;
+                    if (defined(blendColor)) {
+                        for (i = 0; i < 4; i++) {
+                            blendColor[i] = CesiumMath.clamp(blendColor[i], 0.0, 1.0);
                         }
-                        var depthRange = functions.depthRange;
-                        if (defined(depthRange)) {
-                            depthRange[1] = CesiumMath.clamp(depthRange[1], 0.0, 1.0);
-                            depthRange[0] = CesiumMath.clamp(depthRange[0], 0.0, depthRange[1]);
-                        }
+                    }
+                    var depthRange = functions.depthRange;
+                    if (defined(depthRange)) {
+                        depthRange[1] = CesiumMath.clamp(depthRange[1], 0.0, 1.0);
+                        depthRange[0] = CesiumMath.clamp(depthRange[0], 0.0, depthRange[1]);
                     }
                 }
             }
-        }
+        });
     }
 
     function clampCameraParameters(gltf) {
-        var cameras = gltf.cameras;
-        for (var cameraId in cameras) {
-            if (cameras.hasOwnProperty(cameraId)) {
-                var camera = cameras[cameraId];
-                var perspective = camera.perspective;
-                if (defined(perspective)) {
-                    var aspectRatio = perspective.aspectRatio;
-                    if (defined(aspectRatio) && aspectRatio === 0.0) {
-                        delete perspective.aspectRatio;
-                    }
-                    var yfov = perspective.yfov;
-                    if (defined(yfov) && yfov === 0.0) {
-                        perspective.yfov = 1.0;
-                    }
+        ForEach.camera(gltf, function(camera) {
+            var perspective = camera.perspective;
+            if (defined(perspective)) {
+                var aspectRatio = perspective.aspectRatio;
+                if (defined(aspectRatio) && aspectRatio === 0.0) {
+                    delete perspective.aspectRatio;
+                }
+                var yfov = perspective.yfov;
+                if (defined(yfov) && yfov === 0.0) {
+                    perspective.yfov = 1.0;
                 }
             }
-        }
+        });
     }
 
     function requireByteLength(gltf) {
-        var buffers = gltf.buffers;
-        for (var bufferId in buffers) {
-            if (buffers.hasOwnProperty(bufferId)) {
-                var buffer = buffers[bufferId];
-                if (!defined(buffer.byteLength)) {
-                    buffer.byteLength = buffer.extras._pipeline.source.length;
-                }
+        ForEach.buffer(gltf, function(buffer) {
+            if (!defined(buffer.byteLength)) {
+                buffer.byteLength = buffer.extras._pipeline.source.length;
             }
-        }
-        var bufferViews = gltf.bufferViews;
-        for (var bufferViewId in bufferViews) {
-            if (bufferViews.hasOwnProperty(bufferViewId)) {
-                var bufferView = bufferViews[bufferViewId];
-                if (!defined(bufferView.byteLength)) {
-                    var bufferViewBufferId = bufferView.buffer;
-                    var bufferViewBuffer = buffers[bufferViewBufferId];
-                    bufferView.byteLength = bufferViewBuffer.byteLength;
-                }
+        });
+        ForEach.bufferView(gltf, function(bufferView) {
+            if (!defined(bufferView.byteLength)) {
+                var bufferViewBufferId = bufferView.buffer;
+                var bufferViewBuffer = gltf.buffers[bufferViewBufferId];
+                bufferView.byteLength = bufferViewBuffer.byteLength;
             }
-        }
+        });
+    }
+
+    function moveByteStrideToBufferView(gltf) {
+        ForEach.accessor(gltf, function(accessor) {
+            if (defined(accessor.byteStride)) {
+                var byteStride = accessor.byteStride;
+                if (byteStride !== 0) {
+                    var bufferView = gltf.bufferViews[accessor.bufferView];
+                    if (defined(bufferView.byteStride) && bufferView.byteStride !== byteStride) {
+                        // another accessor uses this with a different byte stride
+                        bufferView = clone(bufferView);
+                        accessor.bufferView = addToArray(gltf.bufferViews, bufferView);
+                    }
+                    bufferView.byteStride = byteStride;
+                }
+                delete accessor.byteStride;
+            }
+        });
     }
 
     function requireAccessorMinMax(gltf) {
-        var accessors = gltf.accessors;
-        for (var accessorId in accessors) {
-            if (accessors.hasOwnProperty(accessorId)) {
-                var accessor = accessors[accessorId];
-                if (!defined(accessor.min) || !defined(accessor.max)) {
-                    var minMax = findAccessorMinMax(gltf, accessor);
-                    accessor.min = minMax.min;
-                    accessor.max = minMax.max;
-                }
+        ForEach.accessor(gltf, function(accessor) {
+            if (!defined(accessor.min) || !defined(accessor.max)) {
+                var minMax = findAccessorMinMax(gltf, accessor);
+                accessor.min = minMax.min;
+                accessor.max = minMax.max;
             }
-        }
-    }
-
-    var scratchTranslation = new Cartesian3();
-    var scratchRotation = new Quaternion();
-    var scratchScale = new Cartesian3();
-    var defaultScale = new Cartesian3(1.0, 1.0, 1.0);
-    var scratchMatrix4 = new Matrix4();
-    var scratchPreApplyTransform = new Matrix4();
-    function getNodeTransform(node) {
-        if (defined(node.matrix)) {
-            return Matrix4.fromArray(node.matrix);
-        } else if (defined(node.translation) || defined(node.rotation) || defined(node.scale)) {
-            Cartesian3.ZERO.clone(scratchTranslation);
-            if (defined(node.translation)) {
-                Cartesian3.unpack(node.translation, 0, scratchTranslation);
-            }
-            Quaternion.IDENTITY.clone(scratchRotation);
-            if (defined(node.rotation)) {
-                Quaternion.unpack(node.rotation, 0, scratchRotation);
-            }
-            defaultScale.clone(scratchScale);
-            if (defined(node.scale)) {
-                Cartesian3.unpack(node.scale, 0, scratchScale);
-            }
-            Matrix4.fromTranslationQuaternionRotationScale(scratchTranslation, scratchRotation, scratchScale, scratchMatrix4);
-            return scratchMatrix4;
-        } else {
-            return Matrix4.IDENTITY;
-        }
-    }
-
-    function separateSkeletonHierarchy(gltf) {
-        var nodes = gltf.nodes;
-        var scenes = gltf.scenes;
-
-        var skinnedNodes = [];
-        var parentNodes = {};
-
-        var i;
-        var skeletonIds;
-
-        for (var nodeId in nodes) {
-            if (nodes.hasOwnProperty(nodeId)) {
-                var node = nodes[nodeId];
-                var children = node.children;
-                if (defined(children)) {
-                    var childrenLength = children.length;
-                    for (i = 0; i < childrenLength; i++) {
-                        var childNodeId = children[i];
-                        parentNodes[childNodeId] = nodeId;
-                    }
-                }
-                var skinId = node.skin;
-                skeletonIds = node.skeletons;
-                if (defined(skinId) && defined(skeletonIds)) {
-                    skinnedNodes.push(nodeId);
-                }
-            }
-        }
-
-        var sceneId = gltf.scene;
-        if (defined(sceneId)) {
-            var scene = scenes[sceneId];
-
-            var skinnedNodesLength = skinnedNodes.length;
-            for (i = 0; i < skinnedNodesLength; i++) {
-                var skinnedNodeId = skinnedNodes[i];
-                var skinnedNode = nodes[skinnedNodeId];
-                skeletonIds = skinnedNode.skeletons;
-                var skeletonIdsLength = skeletonIds.length;
-                for (var j = 0; j < skeletonIdsLength; j++) {
-                    var skeletonId = skeletonIds[j];
-                    var parentNodeId = parentNodes[skeletonId];
-                    if (defined(parentNodeId)) {
-                        var parentNode = nodes[parentNodeId];
-                        var parentChildren = parentNode.children;
-                        var index = parentChildren.indexOf(skeletonId);
-                        parentChildren.splice(index, 1);
-                        parentNode.children = parentChildren;
-                        Matrix4.IDENTITY.clone(scratchPreApplyTransform);
-                        while (defined(parentNode)) {
-                            var parentTransform = getNodeTransform(parentNode);
-                            Matrix4.multiply(parentTransform, scratchPreApplyTransform, scratchPreApplyTransform);
-                            parentNodeId = parentNodes[parentNodeId];
-                            parentNode = nodes[parentNodeId];
-                        }
-                        if (!Matrix4.equals(scratchPreApplyTransform, Matrix4.IDENTITY)) {
-                            var newRootNodeId = getUniqueId(gltf, 'root-' + skeletonId);
-                            var newRootNode = {
-                                children: [],
-                                matrix: Matrix4.pack(scratchPreApplyTransform, [], 0),
-                                extras: {
-                                    _pipeline: {}
-                                }
-                            };
-                            newRootNode.children.push(skeletonId);
-                            nodes[newRootNodeId] = newRootNode;
-                            skeletonId = newRootNodeId;
-                            skeletonIds[j] = newRootNodeId;
-                        }
-                        scene.nodes.push(skeletonId);
-                    }
-                }
-            }
-        }
+        });
     }
 
     function stripTechniqueAttributeValues(gltf) {
-        var techniques = gltf.techniques;
-        for (var techniqueId in techniques) {
-            if (techniques.hasOwnProperty(techniqueId)) {
-                var technique = techniques[techniqueId];
-                var attributes = technique.attributes;
-                var parameters = technique.parameters;
-                for (var attributeName in attributes) {
-                    if (attributes.hasOwnProperty(attributeName)) {
-                        var parameterId = attributes[attributeName];
-                        var parameter = parameters[parameterId];
-                        if (defined(parameter.value)) {
-                            delete parameter.value;
-                        }
-                    }
-                }
-            }
-        }
+        ForEach.technique(gltf, function(technique) {
+           ForEach.techniqueAttribute(technique, function(attribute) {
+               var parameter = technique.parameters[attribute];
+               if (defined(parameter.value)) {
+                   delete parameter.value;
+               }
+           });
+        });
     }
 
     function stripTechniqueParameterCount(gltf) {
-        var techniques = gltf.techniques;
-        for (var techniqueId in techniques) {
-            if (techniques.hasOwnProperty(techniqueId)) {
-                var technique = techniques[techniqueId];
-                var parameters = technique.parameters;
-                for (var parameterId in parameters) {
-                    if (parameters.hasOwnProperty(parameterId)) {
-                        var parameter = parameters[parameterId];
-                        if (defined(parameter.count)) {
-                            var semantic = parameter.semantic;
-                            if (!defined(semantic) || (semantic !== 'JOINTMATRIX' && semantic.indexOf('_') !== 0)) {
-                                delete parameter.count;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        ForEach.technique(gltf, function(technique) {
+           ForEach.techniqueParameter(technique, function(parameter) {
+               if (defined(parameter.count)) {
+                   var semantic = parameter.semantic;
+                   if (!defined(semantic) || (semantic !== 'JOINTMATRIX' && semantic.indexOf('_') !== 0)) {
+                       delete parameter.count;
+                   }
+               }
+           });
+        });
     }
 
     function glTF10to20(gltf) {
@@ -690,26 +731,28 @@ define([
         }
         var asset = gltf.asset;
         asset.version = '2.0';
-        // profile.version does not include revision number ("1.0.3" -> "1.0")
-        stripWebGLRevisionNumber(gltf);
-        // move known extensions from extensionsUsed to extensionsRequired
-        requireKnownExtensions(gltf);
-        // if any index accessors have UNSIGNED_INT componentType, add the WebGL extension OES_element_index_uint
-        addGlExtensionsUsed(gltf);
         // animation.samplers now refers directly to accessors and animation.parameters should be removed
         removeAnimationSamplersIndirection(gltf);
+        // top-level objects are now arrays referenced by index instead of id
+        objectsToArrays(gltf);
+        // asset.profile no longer exists
+        stripProfile(gltf);
+        // move known extensions from extensionsUsed to extensionsRequired
+        requireKnownExtensions(gltf);
         // bufferView.byteLength and buffer.byteLength are required
         requireByteLength(gltf);
+        // byteStride moved from accessor to bufferView
+        moveByteStrideToBufferView(gltf);
         // accessor.min and accessor.max must be defined
         requireAccessorMinMax(gltf);
         // buffer.type is unnecessary and should be removed
         removeBufferType(gltf);
-        // material.values should be arrays
-        makeMaterialValuesArray(gltf);
         // TEXCOORD and COLOR attributes must be written with a set index (TEXCOORD_#)
         requireAttributeSetIndex(gltf);
         // Add underscores to application-specific parameters
         underscoreApplicationSpecificSemantics(gltf);
+        // material.values should be arrays
+        makeMaterialValuesArrays(gltf);
         // technique.parameters.value should be arrays
         makeTechniqueValuesArrays(gltf);
         // remove scissor from techniques
@@ -718,8 +761,6 @@ define([
         clampTechniqueFunctionStates(gltf);
         // clamp camera parameters
         clampCameraParameters(gltf);
-        // skeleton hierarchy must be separate from the node hierarchy (a node with jointName cannot contain camera, skeletons, skins, or meshes)
-        separateSkeletonHierarchy(gltf);
         // a technique parameter specified as an attribute cannot have a value
         stripTechniqueAttributeValues(gltf);
         // only techniques with a JOINTMATRIX or application specific semantic may have a defined count property

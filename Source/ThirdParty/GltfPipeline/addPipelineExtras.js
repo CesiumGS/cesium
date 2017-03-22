@@ -24,10 +24,18 @@ define([
      */
     function addPipelineExtras(gltf) {
         var objectStack = [];
-        for (var rootObjectId in gltf) {
-            if (gltf.hasOwnProperty(rootObjectId)) {
-                var rootObject = gltf[rootObjectId];
-                objectStack.push(rootObject);
+        for (var rootArrayId in gltf) {
+            if (gltf.hasOwnProperty(rootArrayId)) {
+                var rootArray = gltf[rootArrayId];
+                var rootArrayLength = rootArray.length;
+                for (var i = 0; i < rootArrayLength; i++) {
+                    var rootObject = rootArray[i];
+                    if (defined(rootObject) && typeof rootObject === 'object') {
+                        rootObject.extras = defaultValue(rootObject.extras, {});
+                        rootObject.extras._pipeline = defaultValue(rootObject.extras._pipeline, {});
+                        objectStack.push(rootObject);
+                    }
+                }
             }
         }
         while (objectStack.length > 0) {

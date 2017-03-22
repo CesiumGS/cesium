@@ -1,12 +1,12 @@
 /*global define*/
 define([
-        './getUniqueId',
+        './addToArray',
         '../../Core/clone',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/WebGLConstants'
     ], function(
-        getUniqueId,
+        addToArray,
         clone,
         defaultValue,
         defined,
@@ -14,43 +14,33 @@ define([
     'use strict';
 
     var gltfTemplate = {
-        accessors : {
-            '*' : {
-                byteStride : 0
-            }
-        },
-        animations : {
-            '*' : {
+        accessors: [],
+        animations : [
+            {
                 channels : [],
-                samplers : {
-                    '*' : {
+                samplers : [
+                    {
                         interpolation : 'LINEAR'
                     }
-                }
+                ]
             }
-        },
-        asset : {
-            premultipliedAlpha : false,
-            profile : {
-                api : 'WebGL',
-                version : '1.0'
-            }
-        },
-        buffers : {
-            '*': {
+        ],
+        asset : {},
+        buffers : [
+            {
                 byteLength: 0,
                 type: 'arraybuffer'
             }
-        },
-        bufferViews: {
-            '*': {
+        ],
+        bufferViews: [
+            {
                 byteLength: 0
             }
-        },
-        cameras: {},
-        images: {},
-        materials: {
-            '*': {
+        ],
+        cameras: [],
+        images: [],
+        materials: [
+            {
                 values: function(material) {
                     var extensions = defaultValue(material.extensions, {});
                     var materialsCommon = extensions.KHR_materials_common;
@@ -65,29 +55,29 @@ define([
                         var technique = materialsCommon.technique;
                         var defaults = {
                             ambient: [0.0, 0.0, 0.0, 1.0],
-                            doubleSided: false,
                             emission: [0.0, 0.0, 0.0, 1.0],
-                            transparency: 1.0,
-                            transparent: false
+                            transparency: [1.0]
                         };
                         if (technique !== 'CONSTANT') {
                             defaults.diffuse = [0.0, 0.0, 0.0, 1.0];
                             if (technique !== 'LAMBERT') {
                                 defaults.specular = [0.0, 0.0, 0.0, 1.0];
-                                defaults.shininess = 0.0;
+                                defaults.shininess = [0.0];
                             }
                         }
                         return {
                             KHR_materials_common: {
+                                doubleSided: false,
+                                transparent: false,
                                 values: defaults
                             }
                         };
                     }
                 }
             }
-        },
-        meshes : {
-            '*' : {
+        ],
+        meshes : [
+            {
                 primitives : [
                     {
                         attributes : {},
@@ -95,9 +85,9 @@ define([
                     }
                 ]
             }
-        },
-        nodes : {
-            '*' : {
+        ],
+        nodes : [
+            {
                 children : [],
                 matrix : function(node) {
                     if (!defined(node.translation) && !defined(node.rotation) && !defined(node.scale)) {
@@ -125,28 +115,28 @@ define([
                     }
                 }
             }
-        },
-        programs : {
-            '*' : {
+        ],
+        programs : [
+            {
                 attributes : []
             }
-        },
-        samplers : {
-            '*' : {
+        ],
+        samplers : [
+            {
                 magFilter: WebGLConstants.LINEAR,
                 minFilter : WebGLConstants.NEAREST_MIPMAP_LINEAR,
                 wrapS : WebGLConstants.REPEAT,
                 wrapT : WebGLConstants.REPEAT
             }
-        },
-        scenes : {
-            '*' : {
+        ],
+        scenes : [
+            {
                 nodes : []
             }
-        },
-        shaders : {},
-        skins : {
-            '*' : {
+        ],
+        shaders : [],
+        skins : [
+            {
                 bindShapeMatrix : [
                     1.0, 0.0, 0.0, 0.0,
                     0.0, 1.0, 0.0, 0.0,
@@ -154,9 +144,9 @@ define([
                     0.0, 0.0, 0.0, 1.0
                 ]
             }
-        },
-        techniques : {
-            '*' : {
+        ],
+        techniques : [
+            {
                 parameters: {},
                 attributes: {},
                 uniforms: {},
@@ -164,15 +154,15 @@ define([
                     enable: []
                 }
             }
-        },
-        textures : {
-            '*' : {
+        ],
+        textures : [
+            {
                 format: WebGLConstants.RGBA,
                 internalFormat: WebGLConstants.RGBA,
                 target: WebGLConstants.TEXTURE_2D,
                 type: WebGLConstants.UNSIGNED_BYTE
             }
-        },
+        ],
         extensionsUsed : [],
         extensionsRequired : []
     };
@@ -314,24 +304,23 @@ define([
     };
 
     function addDefaultMaterial(gltf) {
+        var materials = gltf.materials;
         var meshes = gltf.meshes;
 
         var defaultMaterialId;
 
-        for (var meshId in meshes) {
-            if (meshes.hasOwnProperty(meshId)) {
-                var mesh = meshes[meshId];
-                var primitives = mesh.primitives;
-                var primitivesLength = primitives.length;
-                for (var i = 0; i < primitivesLength; i++) {
-                    var primitive = primitives[i];
-                    if (!defined(primitive.material)) {
-                        if (!defined(defaultMaterialId)) {
-                            defaultMaterialId = getUniqueId(gltf, 'defaultMaterial');
-                            gltf.materials[defaultMaterialId] = clone(defaultMaterial, true);
-                        }
-                        primitive.material = defaultMaterialId;
+        var meshesLength = meshes.length;
+        for (var meshId = 0; meshId < meshesLength; meshId++) {
+            var mesh = meshes[meshId];
+            var primitives = mesh.primitives;
+            var primitivesLength = primitives.length;
+            for (var j = 0; j < primitivesLength; j++) {
+                var primitive = primitives[j];
+                if (!defined(primitive.material)) {
+                    if (!defined(defaultMaterialId)) {
+                        defaultMaterialId = addToArray(materials, clone(defaultMaterial, true));
                     }
+                    primitive.material = defaultMaterialId;
                 }
             }
         }
@@ -344,41 +333,30 @@ define([
         var shaders = gltf.shaders;
 
         var defaultTechniqueId;
-        var defaultProgramId;
-        var defaultVertexShaderId;
-        var defaultFragmentShaderId;
 
-        for (var materialId in materials) {
-            if (materials.hasOwnProperty(materialId)) {
-                var material = materials[materialId];
-                var techniqueId = material.technique;
-                var extensions = defaultValue(material.extensions, {});
-                var materialsCommon = extensions.KHR_materials_common;
-                if (!defined(techniqueId)) {
-                    if (!defined(defaultTechniqueId) && !defined(materialsCommon)) {
-                        defaultTechniqueId = getUniqueId(gltf, 'defaultTechnique');
-                        defaultProgramId = getUniqueId(gltf, 'defaultProgram');
-                        defaultVertexShaderId = getUniqueId(gltf, 'defaultVertexShader');
-                        defaultFragmentShaderId = getUniqueId(gltf, 'defaultFragmentShader');
+        var materialsLength = materials.length;
+        for (var materialId = 0; materialId < materialsLength; materialId++) {
+            var material = materials[materialId];
+            var techniqueId = material.technique;
+            var extensions = defaultValue(material.extensions, {});
+            var materialsCommon = extensions.KHR_materials_common;
+            if (!defined(techniqueId)) {
+                if (!defined(defaultTechniqueId) && !defined(materialsCommon)) {
+                    var technique = clone(defaultTechnique, true);
+                    defaultTechniqueId = addToArray(techniques, technique);
 
-                        var technique = clone(defaultTechnique, true);
-                        techniques[defaultTechniqueId] = technique;
-                        technique.program = defaultProgramId;
+                    var program = clone(defaultProgram, true);
+                    technique.program = addToArray(programs, program);
 
-                        var program = clone(defaultProgram, true);
-                        programs[defaultProgramId] = program;
-                        program.vertexShader = defaultVertexShaderId;
-                        program.fragmentShader = defaultFragmentShaderId;
+                    var vertexShader = clone(defaultVertexShader, true);
+                    program.vertexShader = addToArray(shaders, vertexShader);
 
-                        var vertexShader = clone(defaultVertexShader, true);
-                        shaders[defaultVertexShaderId] = vertexShader;
-
-                        var fragmentShader = clone(defaultFragmentShader, true);
-                        shaders[defaultFragmentShaderId] = fragmentShader;
-                    }
-                    material.technique = defaultTechniqueId;
+                    var fragmentShader = clone(defaultFragmentShader, true);
+                    program.fragmentShader = addToArray(shaders, fragmentShader);
                 }
+                material.technique = defaultTechniqueId;
             }
+
         }
     }
 
@@ -386,45 +364,45 @@ define([
         var materials = gltf.materials;
         var techniques = gltf.techniques;
 
-        for (var materialId in materials) {
-            if (materials.hasOwnProperty(materialId)) {
-                var material = materials[materialId];
-                if (defined(material.values) && defined(material.values.diffuse)) {
-                    // Check if the diffuse texture/color is transparent
-                    var diffuse = material.values.diffuse;
-                    var diffuseTransparent = false;
-                    if (typeof diffuse === 'string') {
-                        diffuseTransparent = gltf.images[gltf.textures[diffuse].source].extras._pipeline.transparent;
-                    } else {
-                        diffuseTransparent = diffuse[3] < 1.0;
-                    }
-
-                    var technique = techniques[material.technique];
-                    var blendingEnabled = technique.states.enable.indexOf(WebGLConstants.BLEND) > -1;
-
-                    // Override the technique's states if blending isn't already enabled
-                    if (diffuseTransparent && !blendingEnabled) {
-                        technique.states = {
-                            enable: [
-                                WebGLConstants.DEPTH_TEST,
-                                WebGLConstants.BLEND
-                            ],
-                            depthMask: false,
-                            functions: {
-                                blendEquationSeparate: [
-                                    WebGLConstants.FUNC_ADD,
-                                    WebGLConstants.FUNC_ADD
-                                ],
-                                blendFuncSeparate: [
-                                    WebGLConstants.ONE,
-                                    WebGLConstants.ONE_MINUS_SRC_ALPHA,
-                                    WebGLConstants.ONE,
-                                    WebGLConstants.ONE_MINUS_SRC_ALPHA
-                                ]
-                            }
-                        };
-                    }
+        var materialsLength = materials.length;
+        for (var materialId = 0; materialId < materialsLength; materialId++) {
+            var material = materials[materialId];
+            if (defined(material.values) && defined(material.values.diffuse)) {
+                // Check if the diffuse texture/color is transparent
+                var diffuse = material.values.diffuse;
+                var diffuseTransparent = false;
+                if (diffuse.length === 1) {
+                    diffuseTransparent = gltf.images[gltf.textures[diffuse[0]].source].extras._pipeline.transparent;
+                } else {
+                    diffuseTransparent = diffuse[3] < 1.0;
                 }
+
+                var technique = techniques[material.technique];
+                var blendingEnabled = technique.states.enable.indexOf(WebGLConstants.BLEND) > -1;
+
+                // Override the technique's states if blending isn't already enabled
+                if (diffuseTransparent && !blendingEnabled) {
+                    technique.states = {
+                        enable: [
+                            WebGLConstants.DEPTH_TEST,
+                            WebGLConstants.BLEND
+                        ],
+                        depthMask: false,
+                        functions: {
+                            blendEquationSeparate: [
+                                WebGLConstants.FUNC_ADD,
+                                WebGLConstants.FUNC_ADD
+                            ],
+                            blendFuncSeparate: [
+                                WebGLConstants.ONE,
+                                WebGLConstants.ONE_MINUS_SRC_ALPHA,
+                                WebGLConstants.ONE,
+                                WebGLConstants.ONE_MINUS_SRC_ALPHA
+                            ]
+                        }
+                    };
+                }
+
             }
         }
     }
@@ -433,11 +411,10 @@ define([
         var scenes = gltf.scenes;
 
         if (!defined(gltf.scene)) {
-            for (var sceneId in scenes) {
-                if (scenes.hasOwnProperty(sceneId)) {
-                    gltf.scene = sceneId;
-                    break;
-                }
+            var scenesLength = scenes.length;
+            for (var sceneId = 0; sceneId < scenesLength; sceneId++) {
+                gltf.scene = sceneId;
+                break;
             }
         }
     }
@@ -445,13 +422,12 @@ define([
     function optimizeForCesium(gltf) {
         // Give the diffuse uniform a semantic to support color replacement in 3D Tiles
         var techniques = gltf.techniques;
-        for (var techniqueId in techniques) {
-            if (techniques.hasOwnProperty(techniqueId)) {
-                var technique = techniques[techniqueId];
-                var parameters = technique.parameters;
-                if (defined(parameters.diffuse)) {
-                    parameters.diffuse.semantic = '_3DTILESDIFFUSE';
-                }
+        var techniquesLength = techniques.length;
+        for (var techniqueId = 0; techniqueId < techniquesLength; techniqueId++) {
+            var technique = techniques[techniqueId];
+            var parameters = technique.parameters;
+            if (defined(parameters.diffuse)) {
+                parameters.diffuse.semantic = '_3DTILESDIFFUSE';
             }
         }
     }

@@ -10,7 +10,7 @@ define([
         '../Core/QuaternionSpline',
         '../Core/WebGLConstants',
         '../ThirdParty/GltfPipeline/getAccessorByteStride',
-        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
+        '../ThirdParty/GltfPipeline/numberOfComponentsForType'
     ], function(
         Cartesian3,
         ComponentDatatype,
@@ -69,7 +69,7 @@ define([
             var type = accessor.type;
             var numberOfComponents = numberOfComponentsForType(type);
             var count = accessor.count;
-            var byteStride = getAccessorByteStride(accessor);
+            var byteStride = getAccessorByteStride(gltf, accessor);
 
             values = new Array(count);
             var byteOffset = bufferView.byteOffset + accessor.byteOffset;
@@ -172,7 +172,7 @@ define([
             var componentType = accessor.componentType;
             var type = accessor.type;
             var count = accessor.count;
-            var byteStride = getAccessorByteStride(accessor);
+            var byteStride = getAccessorByteStride(gltf, accessor);
             var byteOffset = bufferView.byteOffset + accessor.byteOffset;
             var numberOfComponents = numberOfComponentsForType(type);
 
