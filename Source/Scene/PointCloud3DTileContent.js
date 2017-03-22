@@ -807,7 +807,7 @@ define([
         });
     }
 
-    var semantics = ['POSITION', 'COLOR', 'NORMAL', 'ABSOLUTE_POSITION'];
+    var semantics = ['POSITION', 'COLOR', 'NORMAL', 'POSITION_ABSOLUTE'];
 
     function getStyleableProperties(source, properties) {
         // Get all the properties used by this style
@@ -855,7 +855,7 @@ define([
         }
 
         // Edit the function header to accept the point position, color, and normal
-        return source.replace('()', '(vec3 position, vec3 absolute_position, vec4 color, vec3 normal)');
+        return source.replace('()', '(vec3 position, vec3 position_absolute, vec4 color, vec3 normal)');
     }
 
     function createShaders(content, frameState, style) {
@@ -1069,7 +1069,7 @@ define([
         } else {
             vs += '    vec3 position = a_position; \n';
         }
-        vs += '    vec3 absolute_position = vec3(czm_model * vec4(position, 1.0)); \n';
+        vs += '    vec3 position_absolute = vec3(czm_model * vec4(position, 1.0)); \n';
 
         if (hasNormals) {
             if (isOctEncoded16P) {
@@ -1082,15 +1082,15 @@ define([
         }
 
         if (hasColorStyle) {
-            vs += '    color = getColorFromStyle(position, absolute_position, color, normal); \n';
+            vs += '    color = getColorFromStyle(position, position_absolute, color, normal); \n';
         }
 
         if (hasShowStyle) {
-            vs += '    float show = float(getShowFromStyle(position, absolute_position, color, normal)); \n';
+            vs += '    float show = float(getShowFromStyle(position, position_absolute, color, normal)); \n';
         }
 
         if (hasPointSizeStyle) {
-            vs += '    gl_PointSize = getPointSizeFromStyle(position, absolute_position, color, normal); \n';
+            vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal); \n';
         } else {
             vs += '    gl_PointSize = u_pointSize; \n';
         }
