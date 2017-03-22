@@ -665,7 +665,7 @@ define([
         this.initializeFrame();
     }
 
-    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.99;
+    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
 
     defineProperties(Scene.prototype, {
         /**
