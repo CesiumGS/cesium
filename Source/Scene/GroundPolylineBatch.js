@@ -11,14 +11,14 @@ define([
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Shaders/GroundPolylineBatchVS',
         '../Shaders/PolylineCommon',
-        './BlendingState',
-        './Pass'
+        './BlendingState'
     ], function(
         Cartesian3,
         Color,
@@ -31,14 +31,14 @@ define([
         Buffer,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
         VertexArray,
         GroundPolylineBatchVS,
         PolylineCommon,
-        BlendingState,
-        Pass) {
+        BlendingState) {
     'use strict';
 
     /**

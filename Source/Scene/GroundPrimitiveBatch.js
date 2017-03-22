@@ -22,6 +22,7 @@ define([
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -30,7 +31,6 @@ define([
         '../Shaders/ShadowVolumeVS',
         './BlendingState',
         './DepthFunction',
-        './Pass',
         './StencilFunction',
         './StencilOperation'
     ], function(
@@ -56,6 +56,7 @@ define([
         Buffer,
         BufferUsage,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -64,7 +65,6 @@ define([
         ShadowVolumeVS,
         BlendingState,
         DepthFunction,
-        Pass,
         StencilFunction,
         StencilOperation) {
     'use strict';

@@ -1574,7 +1574,6 @@ define([
                     attributeLocations : attributeLocations
                 });
 
-                    sources : [vsSource]
                 fs = new ShaderSource({
                     defines : ['TRANSLUCENT'],
                     sources : [fsSource]
@@ -1690,6 +1689,7 @@ define([
         var va;
         var vaLength;
         var command;
+        var uniforms;
         var j;
 
         var commandList = frameState.commandList;
