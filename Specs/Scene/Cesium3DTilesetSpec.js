@@ -930,7 +930,6 @@ defineSuite([
             scene.renderForSpecs();
 
             var stats = tileset._statistics;
-            var root = tileset._root;
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toEqual(1);
