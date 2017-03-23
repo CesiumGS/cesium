@@ -271,7 +271,6 @@ define([
             buffer = colorToBuffers[rgba];
             var positionOffset = buffer.offset;
             var positionIndex = positionOffset * 3;
-            var colorIndex = positionOffset * 4;
             var batchIdIndex = positionOffset;
 
             var polygonOffset = offsets[i];
@@ -315,7 +314,6 @@ define([
                 batchedIds[batchIdIndex + 1] = batchId;
 
                 positionIndex += 6;
-                colorIndex += 8;
                 batchIdIndex += 2;
             }
 
@@ -351,14 +349,17 @@ define([
             }
 
             // indices for the walls of the extruded polygon
-            for (j = 0; j < polygonCount - 1; ++j) {
-                batchedIndices[indicesIndex++] = j * 2 + 1 + positionOffset;
-                batchedIndices[indicesIndex++] = (j + 1) * 2 + positionOffset;
-                batchedIndices[indicesIndex++] = j * 2 + positionOffset;
+            for (j = 0; j < polygonCount; ++j) {
+                var v0 = j;
+                var v1 = (j + 1) % polygonCount;
 
-                batchedIndices[indicesIndex++] = j * 2 + 1 + positionOffset;
-                batchedIndices[indicesIndex++] = (j + 1) * 2 + 1 + positionOffset;
-                batchedIndices[indicesIndex++] = (j + 1) * 2 + positionOffset;
+                batchedIndices[indicesIndex++] = v0 * 2 + 1 + positionOffset;
+                batchedIndices[indicesIndex++] = v1 * 2 + positionOffset;
+                batchedIndices[indicesIndex++] = v0 * 2 + positionOffset;
+
+                batchedIndices[indicesIndex++] = v0 * 2 + 1 + positionOffset;
+                batchedIndices[indicesIndex++] = v1 * 2 + 1 + positionOffset;
+                batchedIndices[indicesIndex++] = v1 * 2 + positionOffset;
             }
 
             buffer.offset += polygonCount * 2;
