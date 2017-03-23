@@ -359,13 +359,13 @@ defineSuite([
 
     function createTilesetNoSkip(options) {
         options = defaultValue(options, {});
-        options.skipLODs = false;
+        options.oldSelection = true;
         return originalCreateTileset(options);
     }
 
     function createTilesetSkip(options) {
         options = defaultValue(options, {});
-        options.skipLODs = true;
+        options.oldSelection = false;
         return originalCreateTileset(options);
     }
 
@@ -373,13 +373,13 @@ defineSuite([
 
     function loadWithNoSkip(scene, url, options) {
         options = defaultValue(options, {});
-        options.skipLODs = false;
+        options.oldSelection = true;
         return originalLoadTileset(scene, url, options);
     }
 
     function loadWithSkip(scene, url, options) {
         options = defaultValue(options, {});
-        options.skipLODs = true;
+        options.oldSelection = false;
         return originalLoadTileset(scene, url, options);
     }
 
@@ -399,7 +399,7 @@ defineSuite([
     withoutLODSkipping(function() {
         it('helper', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-                expect(tileset.skipLODs).toBe(false);
+                expect(tileset.oldSelection).toBe(true);
             });
         });
     });
@@ -407,7 +407,7 @@ defineSuite([
     withLODSkipping(function() {
         it('helper', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-                expect(tileset.skipLODs).toBe(true);
+                expect(tileset.oldSelection).toBe(false);
             });
         });
     });
@@ -474,7 +474,7 @@ defineSuite([
                 // Update and check that child tiles are now requested
                 scene.renderForSpecs();
                 // LOD skipping visits all visible; Only root is visited
-                expect(stats.visited).toEqual(tileset.skipLODs ? 5 : 1);
+                expect(stats.visited).toEqual(!tileset.oldSelection ? 5 : 1);
                 expect(stats.numberOfCommands).toEqual(0);
                 expect(stats.numberOfPendingRequests).toEqual(5);
                 expect(stats.numberProcessing).toEqual(0);
@@ -908,9 +908,9 @@ defineSuite([
 
                 var stats = tileset._statistics;
                 // LOD skipping visits all visible; Only root is visited
-                expect(stats.visited).toEqual(tileset.skipLODs ? 5 : 1);
+                expect(stats.visited).toEqual(!tileset.oldSelection ? 5 : 1);
                 // with LOD skipping, tileset is refining and adds a stencil clear command
-                expect(stats.numberOfCommands).toEqual(tileset.skipLODs ? 2 : 1);
+                expect(stats.numberOfCommands).toEqual(!tileset.oldSelection ? 2 : 1);
                 expect(stats.numberOfPendingRequests).toEqual(4);
                 expect(root.numberOfChildrenWithoutContent).toEqual(4);
             });

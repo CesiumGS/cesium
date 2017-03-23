@@ -520,6 +520,8 @@ define([
             that._readyPromise.reject(error);
         });
 
+        this.oldSelection = defaultValue(options.oldSelection, false);
+
         /**
          * Determines if level-of-detail skipping optimization should be used.
          *
@@ -2300,7 +2302,7 @@ define([
 
         var tile, i;
 
-        if (tileset._refining && frameState.context.stencilBuffer && length > 0) {
+        if (!tileset.oldSelection && tileset._refining && frameState.context.stencilBuffer && length > 0) {
             /**
              * Consider 'leaf' tiles as selected tiles that have no selected descendants. They may have children,
              * but they are currently our effective leaves because they do not have selected descendants. These tiles
@@ -2526,7 +2528,7 @@ define([
             updateDynamicScreenSpaceError(this, frameState);
         }
 
-        if (this.skipLODs) {
+        if (!this.oldSelection) {
             selectTilesSkip(this, frameState, outOfCore);
         } else {
             selectTiles(this, frameState, outOfCore);
