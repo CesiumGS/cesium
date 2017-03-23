@@ -785,6 +785,7 @@ define([
         },
 
         /**
+         * The current background color
          * @memberof UniformState.prototype
          * @type {Color}
          */
