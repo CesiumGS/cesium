@@ -147,6 +147,7 @@ define([
         this._eyeHeight2D = new Cartesian2();
         this._resolutionScale = 1.0;
         this._orthographicIn3D = false;
+        this._backgroundColor = undefined;
 
         this._fogDensity = undefined;
 
@@ -783,6 +784,16 @@ define([
 
         /**
          * @memberof UniformState.prototype
+         * @type {Color}
+         */
+        backgroundColor : {
+            get : function() {
+                return this._backgroundColor;
+            }
+        },
+
+        /**
+         * @memberof UniformState.prototype
          * @type {Number}
          */
         imagerySplitPosition : {
@@ -915,6 +926,10 @@ define([
 
     UniformState.prototype.updatePass = function(pass) {
         this._pass = pass;
+    };
+
+    UniformState.prototype.updateBackgroundColor = function(color) {
+        this._backgroundColor = color;
     };
 
     /**
