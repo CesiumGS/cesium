@@ -2549,14 +2549,15 @@ define([
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(scene, frameNumber, time);
         frameState.passes.render = true;
+
+        var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
+        frameState.backgroundColor = backgroundColor;
+
         frameState.creditDisplay.beginFrame();
 
         scene.fog.update(frameState);
 
         us.update(frameState);
-
-        var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
-        us.updateBackgroundColor(backgroundColor);
 
         var shadowMap = scene.shadowMap;
         if (defined(shadowMap) && shadowMap.enabled) {

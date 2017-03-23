@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/EncodedCartesian3',
@@ -21,6 +22,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Color,
         defined,
         defineProperties,
         EncodedCartesian3,
@@ -147,7 +149,7 @@ define([
         this._eyeHeight2D = new Cartesian2();
         this._resolutionScale = 1.0;
         this._orthographicIn3D = false;
-        this._backgroundColor = undefined;
+        this._backgroundColor = new Color();
 
         this._fogDensity = undefined;
 
@@ -928,10 +930,6 @@ define([
         this._pass = pass;
     };
 
-    UniformState.prototype.updateBackgroundColor = function(color) {
-        this._backgroundColor = color;
-    };
-
     /**
      * Synchronizes frame state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
@@ -978,6 +976,7 @@ define([
         }
 
         this._geometricToleranceOverMeter = pixelSizePerMeter * frameState.maximumScreenSpaceError;
+        Color.clone(frameState.backgroundColor, this._backgroundColor);
     };
 
     function cleanViewport(uniformState) {
