@@ -1421,7 +1421,7 @@ define([
          * // Example: In fragment shader, if frag color matches background, invert frag color.
          * if (czm_backgroundColor.rgb == gl_FragColor.rgb)
          * {
-         *    gl_FragColor = vec4(1.0-gl_FragColor.r, 1.0-gl_FragColor.g, 1.0-gl_FragColor.b, gl_FragColor.a);
+         *    gl_FragColor.rgb = vec3(1.0) - gl_FragColor.rgb;
          * }
          */
         czm_backgroundColor : new AutomaticUniform({
