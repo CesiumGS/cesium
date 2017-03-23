@@ -520,8 +520,6 @@ define([
             that._readyPromise.reject(error);
         });
 
-        this.oldSelection = defaultValue(options.oldSelection, false);
-
         /**
          * Determines if level-of-detail skipping optimization should be used.
          *
@@ -1367,6 +1365,9 @@ define([
             if (checkViewerRequestVolume) {
                 if (!child.insideViewerRequestVolume(frameState)) {
                     visibilityMask = CullingVolume.MASK_OUTSIDE;
+                    if (isVisible(visibilityMask)) {
+                        flag |= Cesium3DTileChildrenVisibility.VISIBLE_NOT_IN_REQUEST_VOLUME;
+                    }
                 } else {
                     flag |= Cesium3DTileChildrenVisibility.IN_REQUEST_VOLUME;
                     if (isVisible(visibilityMask)) {
@@ -1693,6 +1694,8 @@ define([
                 if (tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION) {
                     if (computeChildrenVisibility(tile, frameState, false) & Cesium3DTileChildrenVisibility.VISIBLE) {
                         loadAndAddToQueue(tileset, tile, finalQueue);
+                    } else {
+                        ++tileset._statistics.numberOfTilesCulledWithChildrenUnion;
                     }
                 } else {
                     loadAndAddToQueue(tileset, tile, finalQueue);
@@ -1701,6 +1704,10 @@ define([
                 loadAndAddToQueue(tileset, tile, nextQueue);
             } else {
                 updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, loadSiblings);
+                // at least one child was visible but not in request volume. Add the parent.
+                if (tile.childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_NOT_IN_REQUEST_VOLUME) {
+                    loadAndAddToQueue(tileset, tile, finalQueue);
+                }
             }
         }
         return;
@@ -2302,7 +2309,7 @@ define([
 
         var tile, i;
 
-        if (!tileset.oldSelection && tileset._refining && frameState.context.stencilBuffer && length > 0) {
+        if (tileset._refining && frameState.context.stencilBuffer && length > 0) {
             /**
              * Consider 'leaf' tiles as selected tiles that have no selected descendants. They may have children,
              * but they are currently our effective leaves because they do not have selected descendants. These tiles
@@ -2528,11 +2535,7 @@ define([
             updateDynamicScreenSpaceError(this, frameState);
         }
 
-        if (!this.oldSelection) {
-            selectTilesSkip(this, frameState, outOfCore);
-        } else {
-            selectTiles(this, frameState, outOfCore);
-        }
+        selectTilesSkip(this, frameState, outOfCore);
         updateTiles(this, frameState);
 
         if (outOfCore) {
