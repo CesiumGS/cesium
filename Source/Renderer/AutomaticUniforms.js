@@ -1409,6 +1409,24 @@ define([
         }),
 
         /**
+         * An automatic GLSL uniform representing the current scene background color.
+         *
+         * @alias czm_backgroundColor
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec4 czm_pass;
+         */
+        czm_backgroundColor : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.backgroundColor;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
          * from True Equator Mean Equinox (TEME) axes to the pseudo-fixed axes at the current scene time.
          *

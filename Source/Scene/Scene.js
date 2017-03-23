@@ -2562,6 +2562,9 @@ define([
 
         us.update(frameState);
 
+        var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
+        us.updateBackgroundColor(backgroundColor);
+
         var shadowMap = scene.shadowMap;
         if (defined(shadowMap) && shadowMap.enabled) {
             // Update the sun's direction
@@ -2582,7 +2585,7 @@ define([
         }
 
         updateEnvironment(scene);
-        updateAndExecuteCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+        updateAndExecuteCommands(scene, passState, backgroundColor);
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
