@@ -807,30 +807,18 @@ define([
         });
     }
 
-    var semantics = ['POSITION', 'COLOR', 'NORMAL', 'POSITION_ABSOLUTE'];
+    var defaultProperties = ['POSITION', 'COLOR', 'NORMAL', 'POSITION_ABSOLUTE'];
 
     function getStyleableProperties(source, properties) {
         // Get all the properties used by this style
-        var regex = /czm_tiles3d_style_(\w+)/g;
+        var regex = /czm_tiles3d_style_([\w_]+)/g;
         var matches = regex.exec(source);
         while (matches !== null) {
             var name = matches[1];
-            if ((semantics.indexOf(name) === -1) && (properties.indexOf(name) === -1)) {
+            if (properties.indexOf(name) === -1) {
                 properties.push(name);
             }
             matches = regex.exec(source);
-        }
-    }
-
-    function getStyleableSemantics(source, properties) {
-        // Get the semantics used by this style
-        var length = semantics.length;
-        for (var i = 0; i < length; ++i) {
-            var semantic = semantics[i];
-            var styleName = 'czm_tiles3d_style_' + semantic;
-            if (source.indexOf(styleName) >= 0) {
-                properties.push(semantic);
-            }
         }
     }
 
@@ -845,13 +833,13 @@ define([
     }
 
     function modifyStyleFunction(source) {
-        // Replace occurrences of czm_tiles3d_style_SEMANTIC with semantic
-        var length = semantics.length;
+        // Replace occurrences of czm_tiles3d_style_DEFAULTPROPERTY
+        var length = defaultProperties.length;
         for (var i = 0; i < length; ++i) {
-            var semantic = semantics[i];
-            var styleName = 'czm_tiles3d_style_' + semantic;
-            var replaceName = semantic.toLowerCase();
-            source = source.replace(new RegExp(styleName, 'g'), replaceName);
+            var property = defaultProperties[i];
+            var styleName = 'czm_tiles3d_style_' + property;
+            var replaceName = property.toLowerCase();
+            source = source.replace(new RegExp(styleName + "([^\w_$])", 'g'), replaceName + "$1");
         }
 
         // Edit the function header to accept the point position, color, and normal
@@ -907,27 +895,26 @@ define([
 
         // Get the properties in use by the style
         var styleableProperties = [];
-        var styleableSemantics = [];
 
         if (hasColorStyle) {
             getStyleableProperties(colorStyleFunction, styleableProperties);
-            getStyleableSemantics(colorStyleFunction, styleableSemantics);
             colorStyleFunction = modifyStyleFunction(colorStyleFunction);
         }
         if (hasShowStyle) {
             getStyleableProperties(showStyleFunction, styleableProperties);
-            getStyleableSemantics(showStyleFunction, styleableSemantics);
             showStyleFunction = modifyStyleFunction(showStyleFunction);
         }
         if (hasPointSizeStyle) {
             getStyleableProperties(pointSizeStyleFunction, styleableProperties);
-            getStyleableSemantics(pointSizeStyleFunction, styleableSemantics);
             pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
         }
 
-        var usesColorSemantic = styleableSemantics.indexOf('COLOR') >= 0;
-        var usesNormalSemantic = styleableSemantics.indexOf('NORMAL') >= 0;
-
+        var usesColorSemantic = styleableProperties.indexOf('COLOR') >= 0;
+        var usesNormalSemantic = styleableProperties.indexOf('NORMAL') >= 0;
+		
+		// Split default properties from user properties
+        var userProperties = styleableProperties.filter(function(property) { defaultProperties.includes(property); });
+		
         //>>includeStart('debug', pragmas.debug);
         if (usesNormalSemantic && !hasNormals) {
             throw new DeveloperError('Style references the NORMAL semantic but the point cloud does not have normals');
@@ -939,7 +926,7 @@ define([
         for (name in styleableShaderAttributes) {
             if (styleableShaderAttributes.hasOwnProperty(name)) {
                 attribute = styleableShaderAttributes[name];
-                var enabled = (styleableProperties.indexOf(name) >= 0);
+                var enabled = (userProperties.indexOf(name) >= 0);
                 var vertexAttribute = getVertexAttribute(vertexArray, attribute.location);
                 vertexAttribute.enabled = enabled;
             }
@@ -967,9 +954,9 @@ define([
 
         var attributeDeclarations = '';
 
-        var length = styleableProperties.length;
+        var length = userProperties.length;
         for (i = 0; i < length; ++i) {
-            name = styleableProperties[i];
+            name = userProperties[i];
             attribute = styleableShaderAttributes[name];
             //>>includeStart('debug', pragmas.debug);
             if (!defined(attribute)) {
