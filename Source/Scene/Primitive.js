@@ -35,6 +35,9 @@ define([
         '../ThirdParty/when',
         './BatchTable',
         './CullFace',
+        './DepthFunction',
+        './Material',
+        './PolylineMaterialAppearance',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
@@ -75,6 +78,9 @@ define([
         when,
         BatchTable,
         CullFace,
+        DepthFunction,
+        Material,
+        PolylineMaterialAppearance,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
@@ -324,6 +330,11 @@ define([
         this._frontFaceRS = undefined;
         this._backFaceRS = undefined;
         this._sp = undefined;
+
+        this._depthFailAppearance = undefined;
+        this._backFaceDepthFailRS = undefined;
+        this._spDepthFail = undefined;
+        this._frontFaceDepthFailRS = undefined;
 
         this._pickRS = undefined;
         this._pickSP = undefined;
@@ -1316,6 +1327,25 @@ define([
                 primitive._pickRS = RenderState.fromCache(rs);
             }
         }
+
+        if (defined(primitive._depthFailAppearance)) {
+            renderState = primitive._depthFailAppearance.getRenderState();
+            rs = clone(renderState, false);
+            rs.depthTest.func = DepthFunction.GREATER;
+            if (twoPasses) {
+                rs.cull = {
+                    enabled : true,
+                    face : CullFace.BACK
+                };
+                primitive._frontFaceDepthFailRS = RenderState.fromCache(rs);
+
+                rs.cull.face = CullFace.FRONT;
+                primitive._backFaceDepthFailRS = RenderState.fromCache(rs);
+            } else {
+                primitive._frontFaceDepthFailRS = RenderState.fromCache(rs);
+                primitive._backFaceDepthFailRS = primitive._frontFaceRS;
+            }
+        }
     }
 
     function createShaderProgram(primitive, frameState, appearance) {
@@ -1361,12 +1391,27 @@ define([
             attributeLocations : attributeLocations
         });
         validateShaderMatching(primitive._sp, attributeLocations);
+
+        if (defined(primitive._depthFailAppearance)) {
+            vs = primitive._batchTable.getVertexShaderCallback()(primitive._depthFailAppearance.vertexShaderSource);
+            vs = Primitive._appendShowToShader(primitive, vs);
+            vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs, frameState.scene3DOnly);
+            vs = Primitive._updateColorAttribute(primitive, vs);
+            vs = modifyForEncodedNormals(primitive, vs);
+            vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
+
+            primitive._spDepthFail = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : primitive._spDepthFail,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+            validateShaderMatching(primitive._spDepthFail, attributeLocations);
+        }
     }
 
-    var modifiedModelViewScratch = new Matrix4();
-    var rtcScratch = new Cartesian3();
-
-    function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
+    function getUniforms(primitive, appearance, material, frameState) {
         // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
         var materialUniformMap = defined(material) ? material._uniforms : undefined;
         var appearanceUniformMap = {};
@@ -1399,9 +1444,26 @@ define([
             };
         }
 
+        return uniforms;
+    }
+
+    var modifiedModelViewScratch = new Matrix4();
+    var rtcScratch = new Cartesian3();
+
+    function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
+        var uniforms = getUniforms(primitive, appearance, material, frameState);
+
+        var depthFailUniforms;
+        if (defined(primitive._depthFailAppearance)) {
+            depthFailUniforms = getUniforms(primitive, primitive._depthFailAppearance, primitive._depthFailAppearance.material, frameState);
+        }
+
         var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
-        colorCommands.length = primitive._va.length * (twoPasses ? 2 : 1);
+        var multiplier = twoPasses ? 2 : 1;
+        multiplier *= defined(primitive._depthFailAppearance) ? 2 : 1;
+
+        colorCommands.length = primitive._va.length * multiplier;
         pickCommands.length = primitive._va.length;
 
         var length = colorCommands.length;
@@ -1439,6 +1501,40 @@ define([
             colorCommand.shaderProgram = primitive._sp;
             colorCommand.uniformMap = uniforms;
             colorCommand.pass = pass;
+
+            if (defined(primitive._depthFailAppearance)) {
+                ++i;
+
+                if (twoPasses) {
+                    colorCommand = colorCommands[i];
+                    if (!defined(colorCommand)) {
+                        colorCommand = colorCommands[i] = new DrawCommand({
+                            owner : primitive,
+                            primitiveType : primitive._primitiveType
+                        });
+                    }
+                    colorCommand.vertexArray = primitive._va[vaIndex];
+                    colorCommand.renderState = primitive._backFaceDepthFailRS;
+                    colorCommand.shaderProgram = primitive._spDepthFail;
+                    colorCommand.uniformMap = depthFailUniforms;
+                    colorCommand.pass = pass;
+
+                    ++i;
+                }
+
+                colorCommand = colorCommands[i];
+                if (!defined(colorCommand)) {
+                    colorCommand = colorCommands[i] = new DrawCommand({
+                        owner : primitive,
+                        primitiveType : primitive._primitiveType
+                    });
+                }
+                colorCommand.vertexArray = primitive._va[vaIndex];
+                colorCommand.renderState = primitive._frontFaceDepthFailRS;
+                colorCommand.shaderProgram = primitive._spDepthFail;
+                colorCommand.uniformMap = depthFailUniforms;
+                colorCommand.pass = pass;
+            }
 
             var pickCommand = pickCommands[m];
             if (!defined(pickCommand)) {

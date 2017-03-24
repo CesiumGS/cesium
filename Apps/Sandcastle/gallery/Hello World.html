@@ -28,6 +28,132 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+    url : 'https://assets.agi.com/stk-terrain/world',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+
+var scene = viewer.scene;
+scene.globe.depthTestAgainstTerrain = true;
+
+(function lookAtMtEverest() {
+    var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
+    var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
+    viewer.camera.lookAt(target, offset);
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+})();
+
+function createPositions() {
+    var length = 1000;
+
+    var startLon = Cesium.Math.toRadians(86.953793);
+    var endLon = Cesium.Math.toRadians(86.896497);
+
+    var lat = Cesium.Math.toRadians(27.988257);
+
+    var terrainSamplePositions = [];
+    for (var i = 0; i < length; ++i) {
+        var lon = Cesium.Math.lerp(endLon, startLon, i / (length - 1));
+        var position = new Cesium.Cartographic(lon, lat);
+        terrainSamplePositions.push(position);
+    }
+    return terrainSamplePositions;
+}
+
+Cesium.when(Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, createPositions()), function(samples) {
+    var offset = 10.0;
+    for (var i = 0; i < samples.length; ++i) {
+        samples[i].height += offset;
+    }
+
+    var cartesianSamples = Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray(samples);
+
+    var material = Cesium.Material.fromType(Cesium.Material.PolylineOutlineType);
+    material.uniforms.color = Cesium.Color.ORANGE;
+    material.uniforms.outlineWidth = 2;
+    material.uniforms.outlineColor = Cesium.Color.BLACK;
+
+    var line = scene.primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.PolylineGeometry({
+                positions : cartesianSamples,
+                followSurface : false,
+                width : 5,
+                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+            })
+        }),
+        appearance : new Cesium.PolylineMaterialAppearance({
+            material : material
+        })
+    }));
+
+    var material = Cesium.Material.fromType(Cesium.Material.PolylineOutlineType);
+    material.uniforms.color = Cesium.Color.RED;
+    material.uniforms.outlineColor = Cesium.Color.BLACK;
+    material.uniforms.outlineWidth = 2;
+
+    line._depthFailAppearance = new Cesium.PolylineMaterialAppearance({
+        material : material
+    });
+
+    var vs = line._depthFailAppearance.vertexShaderSource;
+    vs = Cesium.ShaderSource.replaceMain(vs, 'czm_old_main');
+    vs += 'varying float v_WindowZ;\n' +
+          'void main() {\n' +
+          '    czm_old_main();\n' +
+          '    vec4 position = gl_Position;\n' +
+          '    v_WindowZ = (0.5 * (position.z / position.w) + 0.5) * position.w;\n' +
+          '    position.z = min(position.z, position.w);\n' +
+          '    gl_Position = position;' +
+          '}\n';
+
+    var fs = line._depthFailAppearance.fragmentShaderSource;
+    fs = Cesium.ShaderSource.replaceMain(fs, 'czm_old_main()');
+    fs += 'varying float v_WindowZ;\n' +
+          'void main() {\n' +
+          '    czm_old_main();\n' +
+          '    gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
+          '}\n';
+    fs = '#extension GL_EXT_frag_depth : enable\n' + fs;
+
+    line._depthFailAppearance._vertexShaderSource = vs;
+    line._depthFailAppearance._fragmentShaderSource = fs;
+});
+
+
+var dimension = 500.0;
+var positionCart = new Cesium.Cartographic(1.51728, 0.488037, 8407.4);
+var position = Cesium.Ellipsoid.WGS84.cartographicToCartesian(positionCart);
+
+var box = scene.primitives.add(new Cesium.Primitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : Cesium.BoxGeometry.fromDimensions({
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            dimensions : new Cesium.Cartesian3(dimension, dimension, dimension)
+        }),
+        modelMatrix :  Cesium.Transforms.eastNorthUpToFixedFrame(position),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 1.0, 0.5)),
+            depthFailColor : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+        }
+    }),
+    appearance : new Cesium.PerInstanceColorAppearance({
+        closed: true
+    })
+}));
+
+
+box._depthFailAppearance = new Cesium.PerInstanceColorAppearance({
+    closed: true
+});
+
+var vs = box._depthFailAppearance.vertexShaderSource;
+vs = vs.replace(/attribute\s+vec(?:3|4)\s+color;/g, '');
+vs = vs.replace(/(\b)color(\b)/g, '$1czm_batchTable_depthFailColor(batchId)$2');
+
+box._depthFailAppearance._vertexShaderSource = vs;
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
