@@ -913,7 +913,7 @@ define([
         var usesNormalSemantic = styleableProperties.indexOf('NORMAL') >= 0;
 		
 		// Split default properties from user properties
-        var userProperties = styleableProperties.filter(function(property) { defaultProperties.includes(property); });
+        var userProperties = styleableProperties.filter(function(property) { return !defaultProperties.includes(property); });
 		
         //>>includeStart('debug', pragmas.debug);
         if (usesNormalSemantic && !hasNormals) {
