@@ -811,7 +811,7 @@ define([
 
     function getStyleableProperties(source, properties) {
         // Get all the properties used by this style
-        var regex = /czm_tiles3d_style_([\w_]+)/g;
+        var regex = /czm_tiles3d_style_(\w+)/g;
         var matches = regex.exec(source);
         while (matches !== null) {
             var name = matches[1];
@@ -839,7 +839,7 @@ define([
             var property = defaultProperties[i];
             var styleName = 'czm_tiles3d_style_' + property;
             var replaceName = property.toLowerCase();
-            source = source.replace(new RegExp(styleName + "([^\w_$])", 'g'), replaceName + "$1");
+            source = source.replace(new RegExp(styleName + '(\\W)', 'g'), replaceName + '$1');
         }
 
         // Edit the function header to accept the point position, color, and normal
@@ -911,10 +911,10 @@ define([
 
         var usesColorSemantic = styleableProperties.indexOf('COLOR') >= 0;
         var usesNormalSemantic = styleableProperties.indexOf('NORMAL') >= 0;
-		
-		// Split default properties from user properties
-        var userProperties = styleableProperties.filter(function(property) { return !defaultProperties.includes(property); });
-		
+
+        // Split default properties from user properties
+        var userProperties = styleableProperties.filter(function(property) { return defaultProperties.indexOf(property) === -1; });
+
         //>>includeStart('debug', pragmas.debug);
         if (usesNormalSemantic && !hasNormals) {
             throw new DeveloperError('Style references the NORMAL semantic but the point cloud does not have normals');
