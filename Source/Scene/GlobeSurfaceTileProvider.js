@@ -758,6 +758,9 @@ define([
             u_dayTextureSplit : function() {
                 return this.properties.dayTextureSplit;
             },
+            u_dayTextureColorPalette : function() {
+                return this.properties.dayTextureColorPalette;
+            },
 
             // make a separate object so that changes to the properties are seen on
             // derived commands that combine another uniform map with this one.
@@ -783,6 +786,7 @@ define([
                 dayTextureSaturation : [],
                 dayTextureOneOverGamma : [],
                 dayTextureSplit : [],
+                dayTextureColorPalette : [],
                 dayIntensity : 0.0,
 
                 southAndNorthLatitude : new Cartesian2(),
@@ -1017,6 +1021,7 @@ define([
 
         do {
             var numberOfDayTextures = 0;
+            var numberOfPaletteTextures = 0;
 
             var command;
             var uniformMap;
@@ -1078,6 +1083,7 @@ define([
             var applyGamma = false;
             var applyAlpha = false;
             var applySplit = false;
+            var colorPaletteKeys = [];
 
             while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                 var tileImagery = tileImageryCollection[imageryIndex];
@@ -1138,6 +1144,12 @@ define([
                 uniformMapProperties.dayTextureSplit[numberOfDayTextures] = imageryLayer.splitDirection;
                 applySplit = applySplit || uniformMapProperties.dayTextureSplit[numberOfDayTextures] !== 0.0;
 
+                if(imageryLayer.colorPalette !== ImageryLayer.DEFAULT_COLOR_PALETTE) {
+                    uniformMapProperties.dayTextureColorPalette[numberOfPaletteTextures] = imageryLayer.colorPalette;
+                    colorPaletteKeys[numberOfDayTextures] = numberOfPaletteTextures;
+                    ++numberOfPaletteTextures;
+                }
+
                 if (defined(imagery.credits)) {
                     var creditDisplay = frameState.creditDisplay;
                     var credits = imagery.credits;
@@ -1159,7 +1171,8 @@ define([
             uniformMapProperties.minMaxHeight.y = encoding.maximumHeight;
             Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
+
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, numberOfPaletteTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, colorPaletteKeys, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

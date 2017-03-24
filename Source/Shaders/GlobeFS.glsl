@@ -38,6 +38,10 @@ uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
+#if PALETTE_UNITS > 0
+uniform sampler2D u_dayTextureColorPalette[PALETTE_UNITS];
+#endif
+
 #ifdef SHOW_REFLECTIVE_OCEAN
 uniform sampler2D u_waterMask;
 uniform vec4 u_waterMaskTranslationAndScale;
@@ -67,6 +71,7 @@ varying vec3 v_mieColor;
 vec4 sampleAndBlend(
     vec4 previousColor,
     sampler2D texture,
+    sampler2D textureColorPalette,
     vec2 tileTextureCoordinates,
     vec4 textureCoordinateRectangle,
     vec4 textureCoordinateTranslationAndScale,
@@ -76,7 +81,8 @@ vec4 sampleAndBlend(
     float textureHue,
     float textureSaturation,
     float textureOneOverGamma,
-    float split)
+    float split,
+    int applyTextureColorPalette)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
@@ -107,6 +113,27 @@ vec4 sampleAndBlend(
     // Split to the right
     else if (split > 0.0 && gl_FragCoord.x < splitPosition) {
        alpha = 0.0;
+    }
+#endif
+
+#if PALETTE_UNITS > 0
+    if(applyTextureColorPalette == 1) {
+        float step = 1.0/1024.0;
+        float a1 = texture2D(texture, textureCoordinates).r;
+        float a2 = texture2D(texture, textureCoordinates + vec2(step, 0.0)).r;
+        float a3 = texture2D(texture, textureCoordinates + vec2(0.0, step)).r;
+        float a4 = texture2D(texture, textureCoordinates + vec2(step, step)).r;
+        if ((a1 != 0.0 && (a2 == 0.0 || a3 == 0.0 || a4 == 0.0)) || a1 == 0.0) {
+        } else {
+          vec2 f = fract(textureCoordinates * vec2(1024.0, 1024.0));
+          float tA = mix(a1, a2, f.x);
+          float tB = mix(a3, a4, f.x);
+          a1 = mix(tA, tB, f.y);
+        }
+
+        vec4 pixColor = texture2D(textureColorPalette, vec2(0.0, a1));
+        color = pixColor.rgb;
+        alpha = pixColor.a;
     }
 #endif
 

@@ -91,6 +91,15 @@ define([
          */
         this.defaultGamma = undefined;
 
+        /**
+         * The default color palette to apply to this provider.  1.0 uses the unmodified imagery color palette.
+         *
+         * @type {Array}
+         * @default undefined
+         */
+        this.defaultColorPalette = undefined;
+
+
         DeveloperError.throwInstantiationError();
     }
 

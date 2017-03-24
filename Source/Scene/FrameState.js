@@ -249,6 +249,12 @@ define([
          * @default []
          */
         this.frustumSplits = [];
+
+        /* The color palette to use when rendering imagery layers.
+        * @type {Array}
+        * @default undefined
+        */
+        this.imageryColorPalette = 1.0;
     }
 
     /**
