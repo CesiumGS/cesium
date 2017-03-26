@@ -146,7 +146,6 @@ define([
         var south = rectangle.south;
         var southSurfaceNormal;
 
-        // On the northern hemisphere we have to find the southernmost point to use as a southern plane's point
         if (south > 0.0){
             cartographicScratch.longitude = (rectangle.west +  rectangle.east) * 0.5;
             cartographicScratch.latitude = south;
@@ -163,7 +162,6 @@ define([
         Cartesian3.normalize(southNormal, tileBB.southNormal);
 
         // Compute the normal of the plane bounding the northern edge of the tile.
-        // On the southern hemisphere we have to find the northernmost point to use as a northern plane's point
         var north = rectangle.north;
         var northSurfaceNormal;
         if (north < 0.0){
