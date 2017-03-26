@@ -146,7 +146,7 @@ define([
         var south = rectangle.south;
         var southSurfaceNormal;
 
-        // On the northern hemisphere we have to find the southernmost point to use as a plane's point at the south
+        // On the northern hemisphere we have to find the southernmost point to use as a southern plane's point
         if (south > 0.0){
             cartographicScratch.longitude = (rectangle.west +  rectangle.east) * 0.5;
             cartographicScratch.latitude = south;
@@ -163,14 +163,14 @@ define([
         Cartesian3.normalize(southNormal, tileBB.southNormal);
 
         // Compute the normal of the plane bounding the northern edge of the tile.
-        // On the southern hemisphere we have to find the northernmost point to use as a plane's point at the north
+        // On the southern hemisphere we have to find the northernmost point to use as a northern plane's point
         var north = rectangle.north;
         var northSurfaceNormal;
         if (north < 0.0){
-            cartographicScratch.longitude = (rectangle.west +  rectangle.east) * 0.5;
+            cartographicScratch.longitude = (rectangle.west + rectangle.east) * 0.5;
             cartographicScratch.latitude = north;
             var northCenterCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, rayScratch.origin);
-            Cartesian3.negate(eastWestNormal,rayScratch.direction);
+            Cartesian3.negate(eastWestNormal, rayScratch.direction);
             var eastPlane = Plane.fromPointNormal(tileBB.northeastCornerCartesian, tileBB.eastNormal, planeScratch);
             IntersectionTests.rayPlane(rayScratch, eastPlane, tileBB.northeastCornerCartesian);
             northSurfaceNormal = ellipsoid.geodeticSurfaceNormal(northCenterCartesian, cartesian3Scratch2);
