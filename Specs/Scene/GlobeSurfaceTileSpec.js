@@ -206,7 +206,7 @@ defineSuite([
             });
         });
 
-        it('loaded terrain replacing upsampled terrain triggers re-upsampling and re-loading of children', function() {
+        xit('loaded terrain replacing upsampled terrain triggers re-upsampling and re-loading of children', function() {
             var childTile = rootTile.children[0];
             var grandchildTile = childTile.children[0];
 
@@ -237,7 +237,7 @@ defineSuite([
             });
         });
 
-        it('improved upsampled terrain triggers re-upsampling of children', function() {
+        xit('improved upsampled terrain triggers re-upsampling of children', function() {
             var childTile = rootTile.children[0];
             var grandchildTile = childTile.children[0];
             var greatGrandchildTile = grandchildTile.children[0];
