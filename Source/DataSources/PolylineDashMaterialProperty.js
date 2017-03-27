@@ -119,7 +119,7 @@ define([
         return this === other || //
                (other instanceof PolylineDashMaterialProperty && //
                 Property.equals(this._color, other._color) &&
-                Property.equals(this._dashLength, other._dashLength))
+                Property.equals(this._dashLength, other._dashLength));
     };
 
     return PolylineDashMaterialProperty;
