@@ -114,6 +114,26 @@ var czml = [{
         "followSurface" : false,
         "width" : 10
     }
+}, {
+    "id" : "dashedLine",
+    "name" : "Blue dashed line",
+    "polyline" : {
+        "positions" : {
+            "cartographicDegrees" : [
+                -75, 45, 500000,
+                -125, 45, 500000
+            ]
+        },
+        "material" : {
+            "polylineDash" : {
+                "color" : {
+                    "rgba" : [0, 0, 255, 255]
+                },
+                "dashLength": 4.0
+            }
+        },
+        "width" : 4
+    }
 }];
 
 var viewer = new Cesium.Viewer('cesiumContainer');

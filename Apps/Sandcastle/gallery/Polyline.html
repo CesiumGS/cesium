@@ -77,6 +77,19 @@ var purpleArrow = viewer.entities.add({
     }
 });
 
+var dashedLine = viewer.entities.add({
+    name : 'Blue dashed line',
+    polyline : {
+        positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 45, 500000,
+                                                               -125, 45, 500000]),
+        width : 4,
+        material : new Cesium.PolylineDashMaterialProperty({
+            color: Cesium.Color.BLUE,
+            dashLength: 4.0
+        })
+    }
+});
+
 viewer.zoomTo(viewer.entities);
 //Sandcastle_End
 Sandcastle.finishedLoading();

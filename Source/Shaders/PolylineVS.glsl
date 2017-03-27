@@ -15,8 +15,9 @@ attribute vec4 texCoordExpandAndBatchIndex;
 varying vec2  v_st;
 varying float v_width;
 varying vec4  czm_pickColor;
+varying float v_angle;
 
-void main() 
+void main()
 {
     float texCoord = texCoordExpandAndBatchIndex.x;
     float expandDir = texCoordExpandAndBatchIndex.y;
@@ -33,7 +34,7 @@ void main()
     }
 
     vec4 pickColor = batchTable_getPickColor(batchTableIndex);
-    
+
     vec4 p, prev, next;
     if (czm_morphTime == 1.0)
     {
@@ -88,10 +89,34 @@ void main()
             show = 0.0;
         }
     #endif
-    
+
+    // Compute the points in eye coordinates.
+    vec4 prevEC = czm_modelViewRelativeToEye * prev;
+    vec4 nextEC = czm_modelViewRelativeToEye * next;
+    vec4 pEC = czm_modelViewRelativeToEye * p;
+
+    // Compute the positions in clip space.
+
+    vec4 prevClip = czm_viewportOrthographic * prevEC;
+    vec4 nextClip = czm_viewportOrthographic * nextEC;
+    vec4 pClip = czm_viewportOrthographic * pEC;
+
+    // Determine the relative screen space direction of the line.
+    vec2 dir;
+    if (usePrev) {
+        dir = normalize(pClip.xy - prevClip.xy);
+    }
+    else {
+        dir = normalize(nextClip.xy - pClip.xy);
+    }
+    v_angle = atan(dir.x, dir.y) - atan(1.0, 0.0);
+
+    // Quantize the angle so it doesn't change rapidly between segments.
+    v_angle = floor(v_angle / czm_piOverFour + 0.5) * czm_piOverFour;
+
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev);
     gl_Position = czm_viewportOrthographic * positionWC * show;
-    
+
     v_st = vec2(texCoord, clamp(expandDir, 0.0, 1.0));
     v_width = width;
     czm_pickColor = pickColor;
