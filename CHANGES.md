@@ -25,6 +25,7 @@ Change Log
     * Set `projectionPicker` to `true` in the options when creating a `Viewer` to add a widget that will switch projections. [#5021](https://github.com/AnalyticalGraphicsInc/cesium/pull/5021)
     * Call `switchToOrthographicFrustum` or `switchToPerspectiveFrustum` on `Camera` to change projections.
 * Fix billboard, point and label clustering in 2D and Columbus view. [#5136](https://github.com/AnalyticalGraphicsInc/cesium/pull/5136)
+* Fixed issues with imagerySplitPosition and the international date line in 2D mode. [#5151](https://github.com/AnalyticalGraphicsInc/cesium/pull/5151)
 
 ### 1.31 - 2017-03-01
 
