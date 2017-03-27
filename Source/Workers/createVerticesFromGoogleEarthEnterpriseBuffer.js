@@ -68,6 +68,7 @@ define([
     var maximumScratch = new Cartesian3();
     var matrix4Scratch = new Matrix4();
     function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle) {
+        debugger;
         var geographicWest;
         var geographicSouth;
         var geographicEast;
@@ -137,16 +138,16 @@ define([
             //var quadSize = dv.getUint32(offset, true);
             offset += sizeOfUint32;
 
-            var originX = CesiumMath.toRadians(dv.getFloat64(offset, true));
+            var originX = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
             offset += sizeOfDouble;
 
-            var originY = CesiumMath.toRadians(dv.getFloat64(offset, true));
+            var originY = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
             offset += sizeOfDouble;
 
-            var stepX = CesiumMath.toRadians(dv.getFloat64(offset, true));
+            var stepX = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
             offset += sizeOfDouble;
 
-            var stepY = CesiumMath.toRadians(dv.getFloat64(offset, true));
+            var stepY = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
             offset += sizeOfDouble;
 
             var numPoints = dv.getInt32(offset, true);
