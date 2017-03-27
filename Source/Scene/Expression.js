@@ -83,7 +83,9 @@ define([
         pow : Math.pow,
         min : Math.min,
         max : Math.max,
-        distance : distance
+        distance : distance,
+        dot: dot,
+        cross: cross
     };
 
     var unaryFunctions = {
@@ -127,6 +129,14 @@ define([
 
     function distance(x, y) {
         return Math.abs(x - y);
+    }
+
+    function dot(x, y) {
+        return x * y;
+    }
+
+    function cross(x, y) {
+        return Cartesian3.cross(x, y);
     }
 
     /**
@@ -800,17 +810,36 @@ define([
             var left = this._left.evaluate(feature);
             var right = this._right.evaluate(feature);
 
-            if (call === 'distance') {
+            if (call === 'distance' || call === 'dot') {
+
                 if (typeof left === 'number' && typeof right === 'number') {
                     return evaluate(left, right);
                 } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
-                    return Cartesian2.distance(left, right);
+                    if (call ==='distance') {
+                        return Cartesian2.distance(left, right);
+                    } else if (call === 'dot') {
+                        return Cartesian2.dot(left, right);
+                    }
                 } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
-                    return Cartesian3.distance(left, right);
+                    if (call ==='distance') {
+                        return Cartesian3.distance(left, right);
+                    } else if (call === 'dot') {
+                        return Cartesian3.dot(left, right);
+                    }
                 } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
-                    return Cartesian4.distance(left, right);
+                    if (call ==='distance') {
+                        return Cartesian4.distance(left, right);
+                    } else if (call === 'dot') {
+                        return Cartesian4.dot(left, right);
+                    }
                 } else {
                     throw new DeveloperError('Function "' + call + '" requires matching types of inputs. Arguments are ' + left + ' and ' + right + '.');
+                }
+            } else if (call === 'cross') {
+                if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+                    return Cartesian3.cross(left, right);
+                } else {
+                    throw new DeveloperError('Function "cross" requires both inputs be vec3. Arguments are ' + left + ' and ' + right + '.');
                 }
             }
             return evaluate(this._left.evaluate(feature), this._right.evaluate(feature));
