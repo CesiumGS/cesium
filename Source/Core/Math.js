@@ -1,16 +1,21 @@
 /*global define*/
 define([
         '../ThirdParty/mersenne-twister',
+        // './Cartesian3',
+        './Cartesian2',
+        './Cartesian4',
         './defaultValue',
         './defined',
         './DeveloperError'
     ], function(
         MersenneTwister,
+        // Cartesian3,
+        Cartesian2,
+        Cartesian4,
         defaultValue,
         defined,
         DeveloperError) {
     'use strict';
-
     /**
      * Math functions.
      *

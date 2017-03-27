@@ -69,6 +69,10 @@ addStyle('Color Gradient', {
     color : "color() * ${temperature}"
 });
 
+addStyle('Noise', {
+    color : "rgb(255 * noise(${POSITION}), 0, 0)"
+});
+
 addStyle('Step Red/Blue', {
     color : "${temperature} > 0.5 ? color('red') : color('blue')"
 });

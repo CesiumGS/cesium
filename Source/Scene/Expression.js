@@ -9,6 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/isArray',
         '../Core/Math',
+        '../Core/Noise',
         '../ThirdParty/jsep',
         './ExpressionNodeType'
     ], function(
@@ -21,6 +22,7 @@ define([
         DeveloperError,
         isArray,
         CesiumMath,
+        noise,
         jsep,
         ExpressionNodeType) {
     "use strict";
@@ -104,6 +106,7 @@ define([
         exp2 : exp2,
         log : Math.log,
         log2 : log2,
+        noise : noise,
         fract : fract
     };
 
@@ -773,18 +776,30 @@ define([
         var evaluate = unaryFunctions[call];
         return function(feature) {
             var left = this._left.evaluate(feature);
-            if (typeof left === 'number') {
-                return evaluate(left);
-            } else if (left instanceof Cartesian2) {
-                return Cartesian2.fromElements(evaluate(left.x), evaluate(left.y), ScratchStorage.getCartesian2());
-            } else if (left instanceof Cartesian3) {
-                return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
-            } else if (left instanceof Cartesian4) {
-                return Cartesian4.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), evaluate(left.w), ScratchStorage.getCartesian4());
+            if (call === 'noise') {
+                if (typeof left === 'number') {
+                    return Cartesian3.fromElements(evaluate(left), evaluate(left), evaluate(left), ScratchStorage.getCartesian3());
+                }
+                if (left instanceof Cartesian3) {
+                    return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
+                }
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Noise requires a vec3. Argument is ' + left + '.');
+                //>>includeEnd('debug');
+            } else {
+                if (typeof left === 'number') {
+                    return evaluate(left);
+                } else if (left instanceof Cartesian2) {
+                    return Cartesian2.fromElements(evaluate(left.x), evaluate(left.y), ScratchStorage.getCartesian2());
+                } else if (left instanceof Cartesian3) {
+                    return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
+                } else if (left instanceof Cartesian4) {
+                    return Cartesian4.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), evaluate(left.w), ScratchStorage.getCartesian4());
+                }
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
+                //>>includeEnd('debug');
             }
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
-            //>>includeEnd('debug');
             return evaluate(left); // jshint ignore:line
         };
     }
@@ -936,6 +951,7 @@ define([
 
     Node.prototype._evaluateVariable = function(frameState, feature) {
         // evaluates to undefined if the property name is not defined for that feature
+        //debugger;
         return feature.getProperty(this._value);
     };
 
@@ -1557,7 +1573,9 @@ define([
                 } else if (value === 'Number') {
                     return 'float(' + left + ')';
                 } else if (value === 'round') {
-                	return 'floor(' + left + ' + 0.5)';
+                    return 'floor(' + left + ' + 0.5)';
+                } else if (value === 'noise') {
+                    return 'czm_noise(' + left + ')';
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
                 } else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {
