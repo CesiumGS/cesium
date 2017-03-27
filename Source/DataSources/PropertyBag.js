@@ -206,16 +206,16 @@ define([
             var sourceProperty = source[name];
 
             //Custom properties that are registered on the source must also be added to this.
-            if (!defined(targetProperty) && propertyNames.indexOf(name) === -1) {
+            if (targetProperty === undefined && propertyNames.indexOf(name) === -1) {
                 this.addProperty(name, undefined, createPropertyCallback);
             }
 
-            if (defined(sourceProperty)) {
-                if (defined(targetProperty)) {
-                    if (defined(targetProperty.merge)) {
+            if (sourceProperty !== undefined) {
+                if (targetProperty !== undefined) {
+                    if (defined(targetProperty) && defined(targetProperty.merge)) {
                         targetProperty.merge(sourceProperty);
                     }
-                } else if (defined(sourceProperty.merge) && defined(sourceProperty.clone)) {
+                } else if (defined(sourceProperty) && defined(sourceProperty.merge) && defined(sourceProperty.clone)) {
                     this[name] = sourceProperty.clone();
                 } else {
                     this[name] = sourceProperty;
