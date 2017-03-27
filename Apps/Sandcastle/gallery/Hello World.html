@@ -74,7 +74,12 @@ Cesium.when(Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, createPosit
     material.uniforms.outlineWidth = 2;
     material.uniforms.outlineColor = Cesium.Color.BLACK;
 
-    var line = scene.primitives.add(new Cesium.Primitive({
+    var depthFailMaterial = Cesium.Material.fromType(Cesium.Material.PolylineOutlineType);
+    depthFailMaterial.uniforms.color = Cesium.Color.RED;
+    depthFailMaterial.uniforms.outlineColor = Cesium.Color.BLACK;
+    depthFailMaterial.uniforms.outlineWidth = 2;
+
+    scene.primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolylineGeometry({
                 positions : cartesianSamples,
@@ -85,40 +90,11 @@ Cesium.when(Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, createPosit
         }),
         appearance : new Cesium.PolylineMaterialAppearance({
             material : material
+        }),
+        depthFailAppearance : new Cesium.PolylineMaterialAppearance({
+            material : depthFailMaterial
         })
     }));
-
-    var material = Cesium.Material.fromType(Cesium.Material.PolylineOutlineType);
-    material.uniforms.color = Cesium.Color.RED;
-    material.uniforms.outlineColor = Cesium.Color.BLACK;
-    material.uniforms.outlineWidth = 2;
-
-    line._depthFailAppearance = new Cesium.PolylineMaterialAppearance({
-        material : material
-    });
-
-    var vs = line._depthFailAppearance.vertexShaderSource;
-    vs = Cesium.ShaderSource.replaceMain(vs, 'czm_old_main');
-    vs += 'varying float v_WindowZ;\n' +
-          'void main() {\n' +
-          '    czm_old_main();\n' +
-          '    vec4 position = gl_Position;\n' +
-          '    v_WindowZ = (0.5 * (position.z / position.w) + 0.5) * position.w;\n' +
-          '    position.z = min(position.z, position.w);\n' +
-          '    gl_Position = position;' +
-          '}\n';
-
-    var fs = line._depthFailAppearance.fragmentShaderSource;
-    fs = Cesium.ShaderSource.replaceMain(fs, 'czm_old_main()');
-    fs += 'varying float v_WindowZ;\n' +
-          'void main() {\n' +
-          '    czm_old_main();\n' +
-          '    gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
-          '}\n';
-    fs = '#extension GL_EXT_frag_depth : enable\n' + fs;
-
-    line._depthFailAppearance._vertexShaderSource = vs;
-    line._depthFailAppearance._fragmentShaderSource = fs;
 });
 
 
@@ -126,7 +102,7 @@ var dimension = 500.0;
 var positionCart = new Cesium.Cartographic(1.51728, 0.488037, 8407.4);
 var position = Cesium.Ellipsoid.WGS84.cartographicToCartesian(positionCart);
 
-var box = scene.primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : Cesium.BoxGeometry.fromDimensions({
             vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -140,19 +116,11 @@ var box = scene.primitives.add(new Cesium.Primitive({
     }),
     appearance : new Cesium.PerInstanceColorAppearance({
         closed: true
+    }),
+    depthFailAppearance : new Cesium.PerInstanceColorAppearance({
+        closed: true
     })
 }));
-
-
-box._depthFailAppearance = new Cesium.PerInstanceColorAppearance({
-    closed: true
-});
-
-var vs = box._depthFailAppearance.vertexShaderSource;
-vs = vs.replace(/attribute\s+vec(?:3|4)\s+color;/g, '');
-vs = vs.replace(/(\b)color(\b)/g, '$1czm_batchTable_depthFailColor(batchId)$2');
-
-box._depthFailAppearance._vertexShaderSource = vs;
 
 //Sandcastle_End
     Sandcastle.finishedLoading();

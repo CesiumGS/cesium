@@ -213,7 +213,7 @@ define([
         this.geometryInstances = options.geometryInstances;
 
         /**
-         * The {@link Appearance} used to shade this primitive.  Each geometry
+         * The {@link Appearance} used to shade this primitive. Each geometry
          * instance is shaded with the same appearance.  Some appearances, like
          * {@link PerInstanceColorAppearance} allow giving each instance unique
          * properties.
@@ -225,6 +225,29 @@ define([
         this.appearance = options.appearance;
         this._appearance = undefined;
         this._material = undefined;
+
+        /**
+         * The {@link Appearance} used to shade this primitive when it fails the depth test. Each geometry
+         * instance is shaded with the same appearance.  Some appearances, like
+         * {@link PerInstanceColorAppearance} allow giving each instance unique
+         * properties.
+         *
+         * <p>
+         * When using an appearance that requires a color attribute, like PerInstanceColorAppearance,
+         * add a depthFailColor per-instance attribute instead.
+         * </p>
+         *
+         * <p>
+         * Requires the EXT_frag_depth WebGL extension to render properly. If the extension is not supported,
+         * a DeveloperError will be thrown.
+         * </p>
+         * @type Appearance
+         *
+         * @default undefined
+         */
+        this.depthFailAppearance = options.depthFailAppearance;
+        this._depthFailAppearance = undefined;
+        this._depthFailMaterial = undefined;
 
         /**
          * The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
@@ -332,9 +355,9 @@ define([
         this._sp = undefined;
 
         this._depthFailAppearance = undefined;
-        this._backFaceDepthFailRS = undefined;
         this._spDepthFail = undefined;
         this._frontFaceDepthFailRS = undefined;
+        this._backFaceDepthFailRS = undefined;
 
         this._pickRS = undefined;
         this._pickSP = undefined;
@@ -805,7 +828,7 @@ define([
         return renamedVS + '\n' + showMain;
     };
 
-    Primitive._updateColorAttribute = function(primitive, vertexShaderSource) {
+    Primitive._updateColorAttribute = function(primitive, vertexShaderSource, isDepthFail) {
         // some appearances have a color attribute for per vertex color.
         // only remove if color is a per instance attribute.
         if (!defined(primitive._batchTableAttributeIndices.color)) {
@@ -816,9 +839,19 @@ define([
             return vertexShaderSource;
         }
 
+        //>>includeStart('debug', pragmas.debug);
+        if (isDepthFail && !defined(primitive._batchTableAttributeIndices.depthFailColor)) {
+            throw new DeveloperError('A depthFailColor per-instance attribute is required when using a depth fail appearance that uses a color attribute.');
+        }
+        //>>includeEnd('debug');
+
         var modifiedVS = vertexShaderSource;
         modifiedVS = modifiedVS.replace(/attribute\s+vec4\s+color;/g, '');
-        modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_color(batchId)$2');
+        if (!isDepthFail) {
+            modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_color(batchId)$2');
+        } else {
+            modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_depthFailColor(batchId)$2');
+        }
         return modifiedVS;
     };
 
@@ -956,6 +989,36 @@ define([
             '}';
 
         return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
+    }
+
+    function depthClampVS(vertexShaderSource) {
+        var modifiedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_depth_clamp_main');
+        modifiedVS += 'varying float v_WindowZ;\n' +
+                      'void main() {\n' +
+                      '    czm_non_depth_clamp_main();\n' +
+                      '    vec4 position = gl_Position;\n' +
+                      '    v_WindowZ = (0.5 * (position.z / position.w) + 0.5) * position.w;\n' +
+                      '    position.z = min(position.z, position.w);\n' +
+                      '    gl_Position = position;' +
+                      '}\n';
+        return modifiedVS;
+    }
+
+    function depthClampFS(context, fragmentShaderSource) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!context.fragmentDepth) {
+            throw new DeveloperError('The depth fail appearance requires the EXT_frag_depth extension.');
+        }
+        //>>includeEnd('debug');
+
+        var modifiedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_non_depth_clamp_main');
+        modifiedFS += 'varying float v_WindowZ;\n' +
+              'void main() {\n' +
+              '    czm_non_depth_clamp_main();\n' +
+              '    gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
+              '}\n';
+        modifiedFS = '#extension GL_EXT_frag_depth : enable\n' + modifiedFS;
+        return modifiedFS;
     }
 
     function validateShaderMatching(shaderProgram, attributeLocations) {
@@ -1356,7 +1419,7 @@ define([
         var vs = primitive._batchTable.getVertexShaderCallback()(appearance.vertexShaderSource);
         vs = Primitive._appendShowToShader(primitive, vs);
         vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs, frameState.scene3DOnly);
-        vs = Primitive._updateColorAttribute(primitive, vs);
+        vs = Primitive._updateColorAttribute(primitive, vs, false);
         vs = modifyForEncodedNormals(primitive, vs);
         vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         var fs = appearance.getFragmentShaderSource();
@@ -1396,9 +1459,12 @@ define([
             vs = primitive._batchTable.getVertexShaderCallback()(primitive._depthFailAppearance.vertexShaderSource);
             vs = Primitive._appendShowToShader(primitive, vs);
             vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs, frameState.scene3DOnly);
-            vs = Primitive._updateColorAttribute(primitive, vs);
+            vs = Primitive._updateColorAttribute(primitive, vs, true);
             vs = modifyForEncodedNormals(primitive, vs);
             vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
+            vs = depthClampVS(vs);
+
+            fs = depthClampFS(context, primitive._depthFailAppearance.getFragmentShaderSource());
 
             primitive._spDepthFail = ShaderProgram.replaceCache({
                 context : context,
@@ -1716,6 +1782,19 @@ define([
             createSP = true;
         } else if (this._material !== material ) {
             this._material = material;
+            createSP = true;
+        }
+
+        var depthFailAppearance = this.depthFailAppearance;
+        var depthFailMaterial = defined(depthFailAppearance) ? depthFailAppearance.material : undefined;
+
+        if (this._depthFailAppearance !== depthFailAppearance) {
+            this._depthFailAppearance = depthFailAppearance;
+            this._depthFailMaterial = depthFailMaterial;
+            createRS = true;
+            createSP = true;
+        } else if (this._depthFailMaterial !== depthFailMaterial) {
+            this._depthFailMaterial = depthFailMaterial;
             createSP = true;
         }
 
