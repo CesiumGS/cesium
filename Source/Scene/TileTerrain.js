@@ -109,6 +109,10 @@ define([
 
     function requestTileGeometry(tileTerrain, terrainProvider, x, y, level) {
         function success(terrainData) {
+            if (!defined(terrainData)) {
+                return failure();
+            }
+
             tileTerrain.data = terrainData;
             tileTerrain.state = TerrainState.RECEIVED;
         }

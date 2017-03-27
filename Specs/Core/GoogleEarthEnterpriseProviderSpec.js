@@ -1,33 +1,29 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/GoogleEarthEnterpriseImageryProvider',
+        'Core/GoogleEarthEnterpriseProvider',
         'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/defined',
         'Core/loadImage',
-        'Core/loadJsonp',
         'Core/loadWithXhr',
         'Core/Math',
         'Core/TerrainProvider',
         'Core/WebMercatorTilingScheme',
-        'Scene/BingMapsStyle',
         'Scene/DiscardMissingTileImagePolicy',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'ThirdParty/when'
     ], function(
-        GoogleEarthEnterpriseImageryProvider,
+        GoogleEarthEnterpriseProvider,
         DefaultProxy,
         defaultValue,
         defined,
         loadImage,
-        loadJsonp,
         loadWithXhr,
         CesiumMath,
         TerrainProvider,
         WebMercatorTilingScheme,
-        BingMapsStyle,
         DiscardMissingTileImagePolicy,
         Imagery,
         ImageryLayer,
@@ -35,39 +31,33 @@ defineSuite([
         when) {
     'use strict';
 
-    // afterEach(function() {
-    //     loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
-    //     loadImage.createImage = loadImage.defaultCreateImage;
-    //     loadWithXhr.load = loadWithXhr.defaultLoad;
-    // });
-
     it('tileXYToQuadKey', function() {
         // http://msdn.microsoft.com/en-us/library/bb259689.aspx
         // Levels are off by one compared to the documentation because our levels
         // start at 0 while Bing's start at 1.
-        expect(GoogleEarthEnterpriseImageryProvider.tileXYToQuadKey(1, 0, 0)).toEqual('2');
-        expect(GoogleEarthEnterpriseImageryProvider.tileXYToQuadKey(1, 2, 1)).toEqual('02');
-        expect(GoogleEarthEnterpriseImageryProvider.tileXYToQuadKey(3, 5, 2)).toEqual('021');
-        expect(GoogleEarthEnterpriseImageryProvider.tileXYToQuadKey(4, 7, 2)).toEqual('100');
+        expect(GoogleEarthEnterpriseProvider.tileXYToQuadKey(1, 0, 0)).toEqual('2');
+        expect(GoogleEarthEnterpriseProvider.tileXYToQuadKey(1, 2, 1)).toEqual('02');
+        expect(GoogleEarthEnterpriseProvider.tileXYToQuadKey(3, 5, 2)).toEqual('021');
+        expect(GoogleEarthEnterpriseProvider.tileXYToQuadKey(4, 7, 2)).toEqual('100');
     });
 
     it('quadKeyToTileXY', function() {
-        expect(GoogleEarthEnterpriseImageryProvider.quadKeyToTileXY('2')).toEqual({
+        expect(GoogleEarthEnterpriseProvider.quadKeyToTileXY('2')).toEqual({
             x : 1,
             y : 0,
             level : 0
         });
-        expect(GoogleEarthEnterpriseImageryProvider.quadKeyToTileXY('02')).toEqual({
+        expect(GoogleEarthEnterpriseProvider.quadKeyToTileXY('02')).toEqual({
             x : 1,
             y : 2,
             level : 1
         });
-        expect(GoogleEarthEnterpriseImageryProvider.quadKeyToTileXY('021')).toEqual({
+        expect(GoogleEarthEnterpriseProvider.quadKeyToTileXY('021')).toEqual({
             x : 3,
             y : 5,
             level : 2
         });
-        expect(GoogleEarthEnterpriseImageryProvider.quadKeyToTileXY('100')).toEqual({
+        expect(GoogleEarthEnterpriseProvider.quadKeyToTileXY('100')).toEqual({
             x : 4,
             y : 7,
             level : 2
@@ -83,11 +73,11 @@ defineSuite([
 
         var buffer = data.buffer.slice();
         var a = new Uint8Array(buffer);
-        GoogleEarthEnterpriseImageryProvider._decode(buffer);
+        GoogleEarthEnterpriseProvider._decode(buffer);
         expect(a).not.toEqual(data);
 
         // For the algorithm encode/decode are the same
-        GoogleEarthEnterpriseImageryProvider._decode(buffer);
+        GoogleEarthEnterpriseProvider._decode(buffer);
         expect(a).toEqual(data);
     });
 
@@ -95,11 +85,10 @@ defineSuite([
         var quad = '0123';
         var index = 0;
         var provider;
-        spyOn(GoogleEarthEnterpriseImageryProvider.prototype, '_getQuadTreePacket').and.callFake(function(quadKey, version) {
+        spyOn(GoogleEarthEnterpriseProvider.prototype, '_getQuadTreePacket').and.callFake(function(quadKey, version) {
             quadKey = defaultValue(quadKey, '') + index.toString();
             this._tileInfo[quadKey] = {
                 bits : 0xFF,
-                cnodeVersion : 1,
                 imageryVersion : 1,
                 terrainVersion : 1
             };
@@ -109,7 +98,7 @@ defineSuite([
         });
 
         var count = 0;
-        var requestQuads = [GoogleEarthEnterpriseImageryProvider.tileXYToQuadKey(0, 0, 1), quad];
+        var requestQuads = [GoogleEarthEnterpriseProvider.tileXYToQuadKey(0, 0, 1), quad];
         var requestType = ['blob', 'arraybuffer'];
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             expect(url).toEqual('http://test.server/3d/flatfile?f1-0' + requestQuads[count] + '-i.1');
@@ -118,18 +107,18 @@ defineSuite([
             deferred.resolve();
         });
 
-        provider = new GoogleEarthEnterpriseImageryProvider({
+        provider = new GoogleEarthEnterpriseProvider({
             url: 'http://test.server/3d'
         });
 
-        var tileXY = GoogleEarthEnterpriseImageryProvider.quadKeyToTileXY(quad);
+        var tileXY = GoogleEarthEnterpriseProvider.quadKeyToTileXY(quad);
         return provider.requestImage(tileXY.x, tileXY.y, tileXY.level)
             .then(function(image) {
-                expect(GoogleEarthEnterpriseImageryProvider.prototype._getQuadTreePacket.calls.count()).toEqual(4);
-                expect(GoogleEarthEnterpriseImageryProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith();
-                expect(GoogleEarthEnterpriseImageryProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('0', 1);
-                expect(GoogleEarthEnterpriseImageryProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('01', 1);
-                expect(GoogleEarthEnterpriseImageryProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('012', 1);
+                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket.calls.count()).toEqual(4);
+                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith();
+                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('0');
+                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('01');
+                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('012');
 
                 var tileInfo = provider._tileInfo;
                 expect(tileInfo['0']).toBeDefined();
@@ -140,11 +129,11 @@ defineSuite([
     });
 
     it('conforms to ImageryProvider interface', function() {
-        expect(GoogleEarthEnterpriseImageryProvider).toConformToInterface(ImageryProvider);
+        expect(GoogleEarthEnterpriseProvider).toConformToInterface(ImageryProvider);
     });
 
     it('conforms to TerrainProvider interface', function() {
-        expect(GoogleEarthEnterpriseImageryProvider).toConformToInterface(TerrainProvider);
+        expect(GoogleEarthEnterpriseProvider).toConformToInterface(TerrainProvider);
     });
 
     // it('constructor throws when url is not specified', function() {
