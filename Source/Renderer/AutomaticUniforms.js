@@ -1418,10 +1418,13 @@ define([
          * // GLSL declaration
          * uniform vec4 czm_backgroundColor;
          *
-         * // Example: In fragment shader, if frag color matches background, invert frag color.
-         * if (czm_backgroundColor.rgb == gl_FragColor.rgb)
+         * // Example: If the given color's RGB matches the background color, invert it.
+         * vec4 adjustColorForContrast(vec4 color)
          * {
-         *    gl_FragColor.rgb = vec3(1.0) - gl_FragColor.rgb;
+         *     if (czm_backgroundColor.rgb == color.rgb)
+         *         color.rgb = vec3(1.0) - color.rgb;
+         *
+         *     return color;
          * }
          */
         czm_backgroundColor : new AutomaticUniform({
