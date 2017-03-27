@@ -105,7 +105,7 @@ define([
         log : Math.log,
         log2 : log2,
         fract : fract,
-        length : length // Dummy function so length is a known function (requires different implementations for Cartesian2, Cartesian3 and Cartesian4)
+        length : Math.abs
     };
 
     var ternaryFunctions = {
@@ -776,14 +776,16 @@ define([
             var left = this._left.evaluate(feature);
 
             if (call === 'length') {
-                if (left instanceof Cartesian2) {
+                if (typeof left === 'number') {
+                    return evaluate(left);
+                } else if (left instanceof Cartesian2) {
                     return Cartesian2.magnitude(left);
                 } else if (left instanceof Cartesian3) {
                     return Cartesian3.magnitude(left);
                 } else if (left instanceof Cartesian4) {
                     return Cartesian4.magnitude(left);
                 } else {
-                    throw new DeveloperError('Function "' + call + '" requires a vector argument. Argument is ' + left + '.');
+                    throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
                 }
             }
 

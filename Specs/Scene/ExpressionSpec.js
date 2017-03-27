@@ -2144,6 +2144,9 @@ defineSuite([
     });
 
     it('evaluates length function', function() {
+        var expression = new Expression('length(-3.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(3.0);
+
         var expression = new Expression('length(vec2(-3.0, 4.0))');
         expect(expression.evaluate(frameState, undefined)).toEqual(5.0);
 
@@ -2154,13 +2157,6 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(13.0);
     });
 
-    it('throws if length function takes an invalid type of argument', function() {
-        expect(function() {
-            var expression = new Expression('length(1.0)');
-            expression.evaluate(frameState, undefined);
-        }).toThrowDeveloperError();
-    });
-    
     it('throws if length function takes an invalid number of arguments', function() {
         expect(function() {
             return new Expression('length()');			
