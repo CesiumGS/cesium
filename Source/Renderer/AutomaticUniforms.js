@@ -1422,7 +1422,9 @@ define([
          * vec4 adjustColorForContrast(vec4 color)
          * {
          *     if (czm_backgroundColor.rgb == color.rgb)
+         *     {
          *         color.rgb = vec3(1.0) - color.rgb;
+         *     }
          *
          *     return color;
          * }
