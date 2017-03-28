@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-* `QuadtreePrimitive` now uses `frameState.afterRender` to fire `tileLoadProgressEvent` [3450](https://github.com/AnalyticalGraphicsInc/cesium/issues/3450)
+* `QuadtreePrimitive` now uses `frameState.afterRender` to fire `tileLoadProgressEvent` [#3450](https://github.com/AnalyticalGraphicsInc/cesium/issues/3450)
 
 ### 1.32 - 2017-04-03
 
