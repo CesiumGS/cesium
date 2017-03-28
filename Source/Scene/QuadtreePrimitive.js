@@ -496,7 +496,13 @@ define([
             }
         }
 
-        raiseTileLoadProgressEvent(primitive);
+        frameState.afterRender.push(createTileProgressFunction(primitive));
+    }
+
+    function createTileProgressFunction(primitive) {
+        return function() {
+            raiseTileLoadProgressEvent(primitive);
+        };
     }
 
     function visitTile(primitive, frameState, tile) {

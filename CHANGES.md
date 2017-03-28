@@ -1,5 +1,6 @@
 Change Log
 ==========
+* `QuadtreePrimitive` now uses `frameState.afterRender` to fire `tileLoadProgressEvent` [3450](https://github.com/AnalyticalGraphicsInc/cesium/issues/3450)
 * Fixed an issue with `TileBoundingBox` that caused the terrain to disappear in certain places [4032](https://github.com/AnalyticalGraphicsInc/cesium/issues/4032)
 
 ### 1.32 - 2017-04-03
