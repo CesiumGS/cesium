@@ -92,6 +92,10 @@ define([
         this._scaleByDistanceSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
+        this._disableDepthDistance = undefined;
+        this._disableDepthDistanceSubscription = undefined;
+        this._alwaysDisableDepth = undefined;
+        this._alwaysDisableDepthSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -309,7 +313,11 @@ define([
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        disableDepthDistance : createPropertyDescriptor('disableDepthDistance'),
+
+        alwaysDisableDepthDistance : createPropertyDescriptor('alwaysDisableDepth')
     });
 
     /**
@@ -342,6 +350,8 @@ define([
         result.pixelOffsetScaleByDistance = this.pixelOffsetScaleByDistance;
         result.scaleByDistance = this.scaleByDistance;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.disableDepthDistance = this.disableDepthDistance;
+        result.alwaysDisableDepth = this.alwaysDisableDepth;
         return result;
     };
 
@@ -374,10 +384,12 @@ define([
         this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
-        this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
-        this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
-        this.scaleByDistance = defaultValue(this._scaleByDistance, source.scaleByDistance);
+        this.translucencyByDistance = defaultValue(this.translucencyByDistance, source.translucencyByDistance);
+        this.pixelOffsetScaleByDistance = defaultValue(this.pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
+        this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.disableDepthDistance = defaultValue(this.disableDepthDistance, source.disableDepthDistance);
+        this.alwaysDisableDepth = defaultValue(this.alwaysDisableDepth, source.alwaysDisableDepth);
     };
 
     return LabelGraphics;

@@ -143,12 +143,16 @@ define([
                 pointPrimitive.outlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
                 pointPrimitive.pixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
                 pointPrimitive.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
+                pointPrimitive.disableDepthDistance = Property.getValueOrUndefined(pointGraphics._disableDepthDistance, time);
+                pointPrimitive.alwaysDisableDepth = Property.getValueOrUndefined(pointGraphics._alwaysDisableDepth, time);
             } else { // billboard
                 billboard.show = true;
                 billboard.position = position;
                 billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
                 billboard.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistance);
                 billboard.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
+                billboard.disableDepthDistance = Property.getValueOrUndefined(pointGraphics._disableDepthDistance, time);
+                billboard.alwaysDisableDepth = Property.getValueOrUndefined(pointGraphics._alwaysDisableDepth, time);
                 billboard.heightReference = heightReference;
 
                 var newColor = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);

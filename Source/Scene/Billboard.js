@@ -111,6 +111,8 @@ define([
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._sizeInMeters = defaultValue(options.sizeInMeters, false);
         this._distanceDisplayCondition = options.distanceDisplayCondition;
+        this._disableDepthDistance = options.disableDepthDistance;
+        this._alwaysDisableDepth = options.alwaysDisableDepth;
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -178,7 +180,9 @@ define([
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
     var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
-    Billboard.NUMBER_OF_PROPERTIES = 15;
+    var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE = 15;
+    var ALWAYS_DISABLE_DEPTH = Billboard.ALWAYS_DISABLE_DEPTH = 16;
+    Billboard.NUMBER_OF_PROPERTIES = 17;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -744,6 +748,35 @@ define([
                     //>>includeEnd('debug');
                     this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
                     makeDirty(this, DISTANCE_DISPLAY_CONDITION);
+                }
+            }
+        },
+
+        disableDepthDistance : {
+            get : function() {
+                return this._disableDepthDistance;
+            },
+            set : function(value) {
+                if (this._disableDepthDistance !== value) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (defined(value) && value <= 0.0) {
+                        throw new DeveloperError('disableDepthDistance must be greater than 0.0.');
+                    }
+                    //>>includeEnd('debug');
+                    this._disableDepthDistance = value;
+                    makeDirty(this, DISABLE_DEPTH_DISTANCE);
+                }
+            }
+        },
+
+        alwaysDisableDepth : {
+            get : function() {
+                return this._alwaysDisableDepth;
+            },
+            set : function(value) {
+                if (this._alwaysDisableDepth !== value) {
+                    this._alwaysDisableDepth = value;
+                    makeDirty(this, ALWAYS_DISABLE_DEPTH);
                 }
             }
         },

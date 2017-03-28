@@ -164,6 +164,8 @@ define([
             label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
             label.scaleByDistance = Property.getValueOrUndefined(labelGraphics._scaleByDistance, time, scaleByDistance);
             label.distanceDisplayCondition = Property.getValueOrUndefined(labelGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
+            label.disableDepthDistance = Property.getValueOrUndefined(labelGraphics._disableDepthDistance, time);
+            label.alwaysDisableDepth = Property.getValueOrUndefined(labelGraphics._alwaysDisableDepth, time);
         }
         return true;
     };

@@ -86,6 +86,8 @@ define([
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX;
     var DISTANCE_DISPLAY_CONDITION_INDEX = Billboard.DISTANCE_DISPLAY_CONDITION_INDEX;
+    var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE;
+    var ALWAYS_DISABLE_DEPTH = Billboard.ALWAYS_DISABLE_DEPTH;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     var attributeLocations;
@@ -99,7 +101,7 @@ define([
         eyeOffset : 5,                   // 4 bytes free
         scaleByDistance : 6,
         pixelOffsetScaleByDistance : 7,
-        distanceDisplayCondition : 8
+        distanceDisplayConditionAndDisableDepth : 8
     };
 
     var attributeLocationsInstanced = {
@@ -112,7 +114,7 @@ define([
         eyeOffset : 6,                  // texture range in w
         scaleByDistance : 7,
         pixelOffsetScaleByDistance : 8,
-        distanceDisplayCondition : 9
+        distanceDisplayConditionAndDisableDepth : 9
     };
 
     /**
@@ -208,6 +210,14 @@ define([
         this._shaderDistanceDisplayCondition = false;
         this._compiledShaderDistanceDisplayCondition = false;
         this._compiledShaderDistanceDisplayConditionPick = false;
+
+        this._shaderDisableDepthDistance = false;
+        this._compiledShaderDisableDepthDistance = false;
+        this._compiledShaderDisableDepthDistancePick = false;
+
+        this._shaderAlwaysDisableDepth = false;
+        this._compiledShaderAlwaysDisableDepth = false;
+        this._compiledShaderAlwaysDisableDepthPick = false;
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
@@ -729,8 +739,8 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]
         }, {
-            index : attributeLocations.distanceDisplayCondition,
-            componentsPerAttribute : 2,
+            index : attributeLocations.distanceDisplayConditionAndDisableDepth,
+            componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX]
         }];
@@ -1146,9 +1156,9 @@ define([
         }
     }
 
-    function writeDistanceDisplayCondition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+    function writeDistanceDisplayConditionAndDepthDisable(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i;
-        var writer = vafWriters[attributeLocations.distanceDisplayCondition];
+        var writer = vafWriters[attributeLocations.distanceDisplayConditionAndDisableDepth];
         var near = 0.0;
         var far = Number.MAX_VALUE;
 
@@ -1160,15 +1170,29 @@ define([
             billboardCollection._shaderDistanceDisplayCondition = true;
         }
 
+        var disableDepthDistance = billboard.disableDepthDistance;
+        if (defined(disableDepthDistance)) {
+            billboardCollection._shaderDisableDepthDistance = true;
+        } else {
+            disableDepthDistance = -1.0;
+        }
+
+        var alwaysDisableDepth = billboard.alwaysDisableDepth;
+        if (alwaysDisableDepth) {
+            billboardCollection._shaderAlwaysDisableDepth = true;
+        }
+
+        alwaysDisableDepth = alwaysDisableDepth ? 1.0 : 0.0;
+
         if (billboardCollection._instanced) {
             i = billboard._index;
-            writer(i, near, far);
+            writer(i, near, far, disableDepthDistance, alwaysDisableDepth);
         } else {
             i = billboard._index * 4;
-            writer(i + 0, near, far);
-            writer(i + 1, near, far);
-            writer(i + 2, near, far);
-            writer(i + 3, near, far);
+            writer(i + 0, near, far, disableDepthDistance, alwaysDisableDepth);
+            writer(i + 1, near, far, disableDepthDistance, alwaysDisableDepth);
+            writer(i + 2, near, far, disableDepthDistance, alwaysDisableDepth);
+            writer(i + 3, near, far, disableDepthDistance, alwaysDisableDepth);
         }
     }
 
@@ -1180,7 +1204,7 @@ define([
         writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeDistanceDisplayCondition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeDistanceDisplayConditionAndDepthDisable(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -1376,8 +1400,8 @@ define([
                     writers.push(writePixelOffsetScaleByDistance);
                 }
 
-                if (properties[DISTANCE_DISPLAY_CONDITION_INDEX]) {
-                    writers.push(writeDistanceDisplayCondition);
+                if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE] || properties[ALWAYS_DISABLE_DEPTH]) {
+                    writers.push(writeDistanceDisplayConditionAndDepthDisable);
                 }
 
                 var numWriters = writers.length;
@@ -1487,7 +1511,9 @@ define([
             (this._shaderScaleByDistance !== this._compiledShaderScaleByDistance) ||
             (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistance) ||
             (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
-            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition)) {
+            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition) ||
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance) ||
+            (this._shaderAlwaysDisableDepth !== this._compiledShaderAlwaysDisableDepth)) {
 
             vs = new ShaderSource({
                 sources : [BillboardCollectionVS]
@@ -1512,6 +1538,12 @@ define([
             }
             if (this._shaderDistanceDisplayCondition) {
                 vs.defines.push('DISTANCE_DISPLAY_CONDITION');
+            }
+            if (this._shaderDisableDepthDistance) {
+                vs.defines.push('DISABLE_DEPTH_DISTANCE');
+            }
+            if (this._shaderAlwaysDisableDepth) {
+                vs.defines.push('ALWAYS_DISABLE_DEPTH');
             }
 
             if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
@@ -1572,6 +1604,8 @@ define([
             this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
             this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
             this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
+            this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
+            this._compiledShaderAlwaysDisableDepth = this._shaderAlwaysDisableDepth;
         }
 
         if (!defined(this._spPick) ||
@@ -1580,7 +1614,9 @@ define([
             (this._shaderScaleByDistance !== this._compiledShaderScaleByDistancePick) ||
             (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistancePick) ||
             (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistancePick) ||
-            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayConditionPick)) {
+            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayConditionPick) ||
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistancePick) ||
+            (this._shaderAlwaysDisableDepth !== this._compiledShaderAlwaysDisableDepthPick)) {
 
             vs = new ShaderSource({
                 defines : ['RENDER_FOR_PICK'],
@@ -1608,6 +1644,12 @@ define([
             if (this._shaderDistanceDisplayCondition) {
                 vs.defines.push('DISTANCE_DISPLAY_CONDITION');
             }
+            if (this._shaderDisableDepthDistance) {
+                vs.defines.push('DISABLE_DEPTH_DISTANCE');
+            }
+            if (this._shaderAlwaysDisableDepth) {
+                vs.defines.push('ALWAYS_DISABLE_DEPTH');
+            }
 
             fs = new ShaderSource({
                 defines : ['RENDER_FOR_PICK'],
@@ -1627,6 +1669,8 @@ define([
             this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
             this._compiledShaderPixelOffsetScaleByDistancePick = this._shaderPixelOffsetScaleByDistance;
             this._compiledShaderDistanceDisplayConditionPick = this._shaderDistanceDisplayCondition;
+            this._compiledShaderDisableDepthDistancePick = this._shaderDisableDepthDistance;
+            this._compiledShaderAlwaysDisableDepthPick = this._shaderAlwaysDisableDepth;
         }
 
         var va;

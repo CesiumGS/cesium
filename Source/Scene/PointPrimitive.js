@@ -81,6 +81,8 @@ define([
         this._scaleByDistance = options.scaleByDistance;
         this._translucencyByDistance = options.translucencyByDistance;
         this._distanceDisplayCondition = options.distanceDisplayCondition;
+        this._disableDepthDistance = options.disableDepthDistance;
+        this._alwaysDisableDepth = options.alwaysDisableDepth;
         this._id = options.id;
         this._collection = defaultValue(options.collection, pointPrimitiveCollection);
 
@@ -100,7 +102,9 @@ define([
     var PIXEL_SIZE_INDEX = PointPrimitive.PIXEL_SIZE_INDEX = 5;
     var SCALE_BY_DISTANCE_INDEX = PointPrimitive.SCALE_BY_DISTANCE_INDEX = 6;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX = 7;
-    var DISTANCE_DISPLAY_CONDITION_INDEX = PointPrimitive.DISTANCE_DISPLAY_CONDITION = 8;
+    var DISTANCE_DISPLAY_CONDITION_INDEX = PointPrimitive.DISTANCE_DISPLAY_CONDITION_INDEX = 8;
+    var DISABLE_DEPTH_DISTANCE_INDEX = PointPrimitive.DISABLE_DEPTH_DISTANCE_INDEX = 15;
+    var ALWAYS_DISABLE_DEPTH_INDEX = PointPrimitive.ALWAYS_DISABLE_DEPTH_INDEX = 16;
     PointPrimitive.NUMBER_OF_PROPERTIES = 9;
 
     function makeDirty(pointPrimitive, propertyChanged) {
@@ -370,6 +374,35 @@ define([
                 if (!DistanceDisplayCondition.equals(this._distanceDisplayCondition, value)) {
                     this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
                     makeDirty(this, DISTANCE_DISPLAY_CONDITION_INDEX);
+                }
+            }
+        },
+
+        disableDepthDistance : {
+            get : function() {
+                return this._disableDepthDistance;
+            },
+            set : function(value) {
+                if (this._disableDepthDistance !== value) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (defined(value) && value <= 0.0) {
+                        throw new DeveloperError('disableDepthDistance must be greater than 0.0.');
+                    }
+                    //>>includeEnd('debug');
+                    this._disableDepthDistance = value;
+                    makeDirty(this, DISABLE_DEPTH_DISTANCE_INDEX);
+                }
+            }
+        },
+
+        alwaysDisableDepth : {
+            get : function() {
+                return this._alwaysDisableDepth;
+            },
+            set : function(value) {
+                if (this._alwaysDisableDepth !== value) {
+                    this._alwaysDisableDepth = value;
+                    makeDirty(this, ALWAYS_DISABLE_DEPTH_INDEX);
                 }
             }
         },

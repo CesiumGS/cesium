@@ -105,6 +105,8 @@ define([
         this._scaleByDistance = options.scaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
         this._distanceDisplayCondition = options.distanceDisplayCondition;
+        this._disableDepthDistance = options.disableDepthDistance;
+        this._alwaysDisableDepth = options.alwaysDisableDepth;
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -879,6 +881,57 @@ define([
                     var backgroundBillboard = this._backgroundBillboard;
                     if (defined(backgroundBillboard)) {
                         backgroundBillboard.distanceDisplayCondition = value;
+                    }
+                }
+            }
+        },
+
+        disableDepthDistance : {
+            get : function() {
+                return this._disableDepthDistance;
+            },
+            set : function(value) {
+                if (this._disableDepthDistance !== value) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (defined(value) && value <= 0.0) {
+                        throw new DeveloperError('disableDepthDistance must be greater than 0.0.');
+                    }
+                    //>>includeEnd('debug');
+                    this._disableDepthDistance = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.disableDepthDistance = value;
+                        }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.disableDepthDistance = value;
+                    }
+                }
+            }
+        },
+
+        alwaysDisableDepth : {
+            get : function() {
+                return this._alwaysDisableDepth;
+            },
+            set : function(value) {
+                if (this._alwaysDisableDepth !== value) {
+                    this._alwaysDisableDepth = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.alwaysDisableDepth = value;
+                        }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.alwaysDisableDepth = value;
                     }
                 }
             }
