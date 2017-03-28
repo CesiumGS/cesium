@@ -271,6 +271,13 @@ define([
          * @default []
          */
         this.frustumSplits = [];
+
+        /**
+         * The current scene background color
+         *
+         * @type {Color}
+         */
+        this.backgroundColor = undefined;
     }
 
     FrameState.prototype.addCommand = function(command) {
