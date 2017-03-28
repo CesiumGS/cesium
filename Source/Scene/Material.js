@@ -1420,7 +1420,8 @@ define([
             type : Material.PolylineDashType,
             uniforms : {
                 color : new Color(1.0, 0.0, 1.0, 1.0),
-                dashLength : 5.0,
+                dashLength : 16.0,
+                dashPattern : 255.0
             },
             source : PolylineDashMaterial
         },

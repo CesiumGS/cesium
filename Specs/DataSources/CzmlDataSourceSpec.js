@@ -3287,7 +3287,8 @@ defineSuite([
                         color : {
                             rgbaf : [0.1, 0.2, 0.3, 0.4]
                         },
-                        dashLength: 16.0
+                        dashLength: 16.0,
+                        dashPattern: 7.0
                     }
                 }
             }
@@ -3299,6 +3300,7 @@ defineSuite([
         var entity = dataSource.entities.getById('polylineDash');
         expect(entity.polyline.material.color.getValue()).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
         expect(entity.polyline.material.dashLength.getValue()).toEqual(16.0);
+        expect(entity.polyline.material.dashPattern.getValue()).toEqual(7.0);
     });
 
     it('Processes extrapolation options', function() {
