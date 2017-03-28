@@ -469,15 +469,47 @@ define([
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
+        var quadKey = GoogleEarthEnterpriseProvider.tileXYToQuadKey(x, y, level);
+        var tileInfo = this._tileInfo;
+        var info = tileInfo[quadKey];
+        if (defined(info)) {
+            if (info.bits & imageBitmask === 0) {
+                // Already have info and there isn't any imagery here
+                return undefined;
+            }
+        } else {
+            if (info === null) {
+                // Parent was retrieved and said child doesn't exist
+                return undefined;
+            }
+
+            var q = quadKey;
+            var last;
+            while(q.length > 1) {
+                last = q.substring(q.length-1);
+                q = q.substring(0, q.length-1);
+                info = tileInfo[q];
+                if (defined(info)) {
+                    if ((info.bits & cacheFlagBitmask === 0) &&
+                        (info.bits & childrenBitmasks[parseInt(last)] === 0)){
+                        // We have no subtree or child available at some point in this node's ancestry
+                        return undefined;
+                    }
+
+                    break;
+                } else if (info === null) {
+                    // Some node in the ancestry was loaded and said there wasn't a subtree
+                    return undefined;
+                }
+            }
+        }
 
         var that = this;
-        var tileInfo = this._tileInfo;
-        var quadKey = GoogleEarthEnterpriseProvider.tileXYToQuadKey(x, y, level);
         return populateSubtree(this, quadKey)
             .then(function(exists){
                 if (exists) {
-                    var info = tileInfo[quadKey];
-                    if (info.bits & imageBitmask) {
+                    info = tileInfo[quadKey];
+                    if (info.bits & imageBitmask !== 0) {
                         var url = buildImageUrl(that, quadKey, info.imageryVersion);
                         return loadArrayBuffer(url)
                             .then(function(image) {
@@ -626,10 +658,44 @@ define([
         }
         //>>includeEnd('debug');
 
-        var that = this;
-        var tileInfo = this._tileInfo;
-        var terrainCache = this._terrainCache;
         var quadKey = GoogleEarthEnterpriseProvider.tileXYToQuadKey(x, y, level);
+        var tileInfo = this._tileInfo;
+        var info = tileInfo[quadKey];
+        if (defined(info)) {
+            if ((info.bits & terrainBitmask === 0) && !info.terrainInParent){
+                // Already have info and there isn't any imagery here
+                return undefined;
+            }
+        } else {
+            if (info === null) {
+                // Parent was retrieved and said child doesn't exist
+                return undefined;
+            }
+
+            var q = quadKey;
+            var last;
+            while(q.length > 1) {
+                last = q.substring(q.length-1);
+                q = q.substring(0, q.length-1);
+                info = tileInfo[q];
+                if (defined(info)) {
+                    if ((info.bits & cacheFlagBitmask === 0) &&
+                        (info.bits & childrenBitmasks[parseInt(last)] === 0)){
+                        // We have no subtree or child available at some point in this node's ancestry
+                        return undefined;
+                    }
+
+                    break;
+                } else if (info === null) {
+                    // Some node in the ancestry was loaded and said there wasn't a subtree
+                    return undefined;
+                }
+            }
+        }
+
+
+        var that = this;
+        var terrainCache = this._terrainCache;
         return populateSubtree(this, quadKey)
             .then(function(exists){
                 if (exists) {

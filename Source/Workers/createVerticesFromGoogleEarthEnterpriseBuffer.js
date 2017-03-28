@@ -63,6 +63,8 @@ define([
         };
     }
 
+    var negativeElevationFactor = -Math.pow(2, 32);
+    var negativeElevationThreshold = CesiumMath.EPSILON12;
     var scratchCartographic = new Cartographic();
     var minimumScratch = new Cartesian3();
     var maximumScratch = new Cartesian3();
@@ -167,6 +169,14 @@ define([
                 scratchCartographic.latitude = latitude;
                 // Height is stored in units of (1/EarthRadius) or (1/6371010.0)
                 var height = dv.getFloat32(offset, true) * 6371010.0;
+
+                // In order to support old clients, negative altitude values are stored as
+                // height/-2^32. Old clients see the value as really close to 0 but new clients multiply
+                // by -2^32 to get the real negative altitude value.
+                if (height < negativeElevationThreshold) {
+                    height *= negativeElevationFactor;
+                }
+
                 scratchCartographic.height = height;
                 offset += sizeOfFloat;
 
