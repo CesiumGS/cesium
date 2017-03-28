@@ -162,7 +162,7 @@ defineSuite([
 
     it('rejects readyPromise with invalid tileset.json', function() {
         var tileset = scene.primitives.add(new Cesium3DTileset({
-            url : 'invalid'
+            url : 'invalid.json'
         }));
         scene.renderForSpecs();
         return tileset.readyPromise.then(function() {
@@ -171,7 +171,7 @@ defineSuite([
             expect(tileset.ready).toEqual(false);
             expect(error.statusCode).toEqual(404);
         });
-    });
+    }, 10000);
 
     it('rejects readyPromise with invalid tileset version', function() {
         var tilesetJson = {
