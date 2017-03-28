@@ -831,7 +831,7 @@ define([
     Primitive._updateColorAttribute = function(primitive, vertexShaderSource, isDepthFail) {
         // some appearances have a color attribute for per vertex color.
         // only remove if color is a per instance attribute.
-        if (!defined(primitive._batchTableAttributeIndices.color)) {
+        if (!defined(primitive._batchTableAttributeIndices.color) && !defined(primitive._batchTableAttributeIndices.depthFailColor)) {
             return vertexShaderSource;
         }
 

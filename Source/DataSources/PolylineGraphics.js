@@ -43,6 +43,8 @@ define([
         this._showSubscription = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
+        this._depthFailMaterial = undefined;
+        this._depthFailMaterialSubscription = undefined;
         this._positions = undefined;
         this._positionsSubscription = undefined;
         this._followSurface = undefined;
@@ -90,6 +92,8 @@ define([
          * @default Color.WHITE
          */
         material : createMaterialPropertyDescriptor('material'),
+
+        depthFailMaterial : createMaterialPropertyDescriptor('depthFailMaterial'),
 
         /**
          * Gets or sets the Property specifying the array of {@link Cartesian3}
@@ -153,6 +157,7 @@ define([
         }
         result.show = this.show;
         result.material = this.material;
+        result.depthFailMaterial = this.depthFailMaterial;
         result.positions = this.positions;
         result.width = this.width;
         result.followSurface = this.followSurface;
@@ -177,6 +182,7 @@ define([
 
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
+        this.depthFailMaterial = defaultValue(this.depthFailMaterial, source.depthFailMaterial);
         this.positions = defaultValue(this.positions, source.positions);
         this.width = defaultValue(this.width, source.width);
         this.followSurface = defaultValue(this.followSurface, source.followSurface);
