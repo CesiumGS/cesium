@@ -317,7 +317,7 @@ define([
 
         disableDepthDistance : createPropertyDescriptor('disableDepthDistance'),
 
-        alwaysDisableDepthDistance : createPropertyDescriptor('alwaysDisableDepth')
+        alwaysDisableDepth : createPropertyDescriptor('alwaysDisableDepth')
     });
 
     /**

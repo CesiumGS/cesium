@@ -572,7 +572,9 @@ define([
                Color.equals(this._outlineColor, other._outlineColor) &&
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
-               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition);
+               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
+               this._disableDepthDistance === other._disableDepthDistance &&
+               this._alwaysDisableDepth === other._alwaysDisableDepth;
     };
 
     PointPrimitive.prototype._destroy = function() {

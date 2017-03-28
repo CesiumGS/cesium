@@ -1177,6 +1177,8 @@ define([
                NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
+               this._disableDepthDistance === other._disableDepthDistance &&
+               this._alwaysDisableDepth === other._alwaysDisableDepth &&
                this._id === other._id;
     };
 

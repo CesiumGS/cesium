@@ -1311,7 +1311,9 @@ define([
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
                NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
-               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition);
+               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
+               this._disableDepthDistance === other._disableDepthDistance &&
+               this._alwaysDisableDepth === other._alwaysDisableDepth;
     };
 
     Billboard.prototype._destroy = function() {
