@@ -2147,19 +2147,19 @@ defineSuite([
         var expression = new Expression('length(-3.0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(3.0);
 
-        var expression = new Expression('length(vec2(-3.0, 4.0))');
+        expression = new Expression('length(vec2(-3.0, 4.0))');
         expect(expression.evaluate(frameState, undefined)).toEqual(5.0);
 
-        var expression = new Expression('length(vec3(2.0, 3.0, 6.0))');
+        expression = new Expression('length(vec3(2.0, 3.0, 6.0))');
         expect(expression.evaluate(frameState, undefined)).toEqual(7.0);
-        
-        var expression = new Expression('length(vec4(2.0, 4.0, 7.0, 10.0))');
+
+        expression = new Expression('length(vec4(2.0, 4.0, 7.0, 10.0))');
         expect(expression.evaluate(frameState, undefined)).toEqual(13.0);
     });
 
     it('throws if length function takes an invalid number of arguments', function() {
         expect(function() {
-            return new Expression('length()');			
+            return new Expression('length()');
         }).toThrowDeveloperError();
 
         expect(function() {
