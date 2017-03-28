@@ -465,7 +465,8 @@ defineSuite([
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];
             expect(entity.name).toBeUndefined();
-            expect(entity.properties).toBe(featureWithNullName.properties);
+            expect(entity.properties.name.getValue()).toBe(featureWithNullName.properties.name);
+            expect(entity.properties.getValue(time)).toEqual(featureWithNullName.properties);
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(featureWithNullName.geometry.coordinates));
             expect(entity.billboard).toBeDefined();
         });
@@ -796,11 +797,15 @@ defineSuite([
             var entities = entityCollection.values;
 
             var polygon = entities[0];
-            expect(polygon.properties).toBe(topoJson.objects.polygon.properties);
+            expect(polygon.properties.myProps.getValue()).toBe(topoJson.objects.polygon.properties.myProps);
+            expect(polygon.properties.getValue(time)).toEqual(topoJson.objects.polygon.properties);
+
             expect(polygon.polygon.hierarchy).toBeDefined();
 
             var lineString = entities[1];
-            expect(lineString.properties).toBe(topoJson.objects.lineString.properties);
+            expect(lineString.properties.myProps.getValue()).toBe(topoJson.objects.lineString.properties.myProps);
+            expect(lineString.properties.getValue(time)).toEqual(topoJson.objects.lineString.properties);
+
             expect(lineString.polyline).toBeDefined();
         });
     });

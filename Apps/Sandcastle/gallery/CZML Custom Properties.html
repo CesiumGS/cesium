@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="CZML Custom Properties">
+    <meta name="cesium-sandcastle-labels" content="CZML">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+@import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var czml = [{
+    "id" : "document",
+    "name" : "CZML Custom Properties",
+    "version" : "1.0",
+    "clock": {
+        "interval": "1990/2010",
+        "currentTime": "1990",
+        "multiplier": 100000000
+    }
+}, {
+    "id" : "custom_property_object",
+    "name" : "An object with custom properties",
+    "properties" : {
+        "constant_property" : true,
+        "population_intervals" : [{
+            "interval" : "1990/2000",
+            "number": 11881643
+        }, {
+            "interval" : "2000/2010",
+            "number" : 12281054
+        }],
+        "population_sampled" : {
+            "number": [
+                "1990", 11881643,
+                "2000", 12281054,
+                "2010", 12702379
+            ]
+        }
+    }
+}, {
+    "id" : "pennsylvania",
+    "name" : "Pennsylvania",
+    "polygon" : {
+        "positions" : {
+            "cartographicDegrees" : [
+                -75.5, 42, 0,
+                -79.8, 42, 0,
+                -79.9, 42.3, 0,
+                -80.5, 42, 0,
+                -80.5, 39.8, 0,
+                -75.7, 39.8, 0,
+                -74.5, 40.2, 0,
+                -75.2, 40.8, 0,
+                -74.7, 41.3, 0
+            ]
+        },
+        "material" : {
+            "solidColor" : {
+                "color" : {
+                    "rgba" : [0, 255, 0, 150]
+                }
+            }
+        },
+        "height" : 0,
+        "extrudedHeight": 0
+    }
+}];
+
+// custom properties can be queried directly:
+Sandcastle.addToolbarButton('Print Values', function() {
+    var entity = dataSource.entities.getById('custom_property_object');
+    // get the values of all properties at the current time.
+    var propertyValues = entity.properties.getValue(viewer.clock.currentTime);
+    console.log('constant_property: ' + propertyValues.constant_property);
+    console.log('population_intervals: ' + propertyValues.population_intervals);
+    console.log('population_sampled: ' + propertyValues.population_sampled);
+});
+
+// Custom properties can be used as the value of graphical properties:
+Sandcastle.addToolbarButton('Use interval data', function() {
+    var customProperyObject = dataSource.entities.getById('custom_property_object');
+    var intervalProperty = customProperyObject.properties.population_intervals;
+    var pennsylvania = dataSource.entities.getById('pennsylvania');
+
+    // Because the population values are so large, we scale them down
+    // by 100 so they fit on the screen.
+    // If we didn't need to scale, we could directly assign the property
+    // to extrudedHeight.
+    pennsylvania.polygon.extrudedHeight = scaleProperty(intervalProperty, 1 / 100.0);
+});
+Sandcastle.addToolbarButton('Use sampled data', function() {
+    var customProperyObject = dataSource.entities.getById('custom_property_object');
+    var sampledProperty = customProperyObject.properties.population_sampled;
+    var pennsylvania = dataSource.entities.getById('pennsylvania');
+    pennsylvania.polygon.extrudedHeight = scaleProperty(sampledProperty, 1 / 100.0);
+});
+
+function scaleProperty(property, scalingFactor) {
+    // returns a property that scales another property by a constant factor.
+    return new Cesium.CallbackProperty(function(time, result) {
+        result = property.getValue(time, result);
+        result = result * scalingFactor;
+        return result;
+    }, property.isConstant);
+}
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+var dataSource = new Cesium.CzmlDataSource();
+dataSource.load(czml);
+viewer.dataSources.add(dataSource);
+viewer.zoomTo(dataSource);//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
