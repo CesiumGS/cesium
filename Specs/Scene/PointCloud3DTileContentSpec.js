@@ -7,9 +7,11 @@ defineSuite([
         'Core/defined',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
+        'Core/Math',
         'Core/Transforms',
         'Scene/Cesium3DTileStyle',
         'Scene/Expression',
+        'Scene/PerspectiveFrustum',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
         'ThirdParty/when'
@@ -21,9 +23,11 @@ defineSuite([
         defined,
         HeadingPitchRange,
         HeadingPitchRoll,
+        CesiumMath,
         Transforms,
         Cesium3DTileStyle,
         Expression,
+        PerspectiveFrustum,
         Cesium3DTilesTester,
         createScene,
         when) {
@@ -64,6 +68,12 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
+
         setCamera(centerLongitude, centerLatitude);
     });
 

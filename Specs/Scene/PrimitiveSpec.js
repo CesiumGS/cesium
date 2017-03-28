@@ -26,6 +26,7 @@ defineSuite([
         'Scene/Camera',
         'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
+        'Scene/PerspectiveFrustum',
         'Scene/SceneMode',
         'Specs/BadGeometry',
         'Specs/createContext',
@@ -59,6 +60,7 @@ defineSuite([
         Camera,
         MaterialAppearance,
         PerInstanceColorAppearance,
+        PerspectiveFrustum,
         SceneMode,
         BadGeometry,
         createContext,
@@ -99,6 +101,12 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
+
         scene.frameState.passes.render = true;
         scene.frameState.passes.pick = false;
 

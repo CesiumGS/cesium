@@ -216,10 +216,25 @@ defineSuite([
         var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
         var tile = new QuadtreeTile({tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, level : 0});
         tile.data = new GlobeSurfaceTile();
+        tile.renderable = true;
         viewModel.tile = tile;
 
         viewModel.filterTile  = true;
         expect(viewModel.scene.globe._surface._tilesToRender[0]).toBe(tile);
+        expect(viewModel.suspendUpdates).toBe(true);
+
+        viewModel.filterTile = false;
+        expect(viewModel.suspendUpdates).toBe(false);
+    });
+
+    it('does not try to render a non-renderable tile', function() {
+        var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
+        var tile = new QuadtreeTile({tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, level : 0});
+        tile.data = new GlobeSurfaceTile();
+        viewModel.tile = tile;
+
+        viewModel.filterTile  = true;
+        expect(viewModel.scene.globe._surface._tilesToRender.length).toBe(0);
         expect(viewModel.suspendUpdates).toBe(true);
 
         viewModel.filterTile = false;

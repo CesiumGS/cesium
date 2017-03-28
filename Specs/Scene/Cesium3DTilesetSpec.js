@@ -6,6 +6,7 @@ defineSuite([
         'Core/defined',
         'Core/HeadingPitchRange',
         'Core/loadWithXhr',
+        'Core/Math',
         'Core/Matrix4',
         'Core/PrimitiveType',
         'Core/RequestScheduler',
@@ -17,6 +18,7 @@ defineSuite([
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
         'Scene/CullingVolume',
+        'Scene/PerspectiveFrustum',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
         'Specs/pollToPromise',
@@ -28,6 +30,7 @@ defineSuite([
         defined,
         HeadingPitchRange,
         loadWithXhr,
+        CesiumMath,
         Matrix4,
         PrimitiveType,
         RequestScheduler,
@@ -39,6 +42,7 @@ defineSuite([
         Cesium3DTileRefine,
         Cesium3DTileStyle,
         CullingVolume,
+        PerspectiveFrustum,
         Cesium3DTilesTester,
         createScene,
         pollToPromise,
@@ -122,6 +126,12 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
+
         originalMaximumRequests = RequestScheduler.maximumRequests;
         viewAllTiles();
     });

@@ -37,6 +37,7 @@ define([
         '../HomeButton/HomeButton',
         '../InfoBox/InfoBox',
         '../NavigationHelpButton/NavigationHelpButton',
+        '../ProjectionPicker/ProjectionPicker',
         '../SceneModePicker/SceneModePicker',
         '../SelectionIndicator/SelectionIndicator',
         '../subscribeAndEvaluate',
@@ -80,6 +81,7 @@ define([
         HomeButton,
         InfoBox,
         NavigationHelpButton,
+        ProjectionPicker,
         SceneModePicker,
         SelectionIndicator,
         subscribeAndEvaluate,
@@ -186,6 +188,7 @@ define([
         var geocoder = viewer._geocoder;
         var homeButton = viewer._homeButton;
         var sceneModePicker = viewer._sceneModePicker;
+        var projectionPicker = viewer._projectionPicker;
         var baseLayerPicker = viewer._baseLayerPicker;
         var animation = viewer._animation;
         var timeline = viewer._timeline;
@@ -203,6 +206,9 @@ define([
         }
         if(defined(sceneModePicker)) {
             sceneModePicker.container.style.visibility = visibility;
+        }
+        if (defined(projectionPicker)) {
+            projectionPicker.container.style.visibility = visibility;
         }
         if(defined(baseLayerPicker)) {
             baseLayerPicker.container.style.visibility = visibility;
@@ -279,6 +285,7 @@ define([
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+     * @param {Boolean} [options.projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -509,6 +516,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             sceneModePicker = new SceneModePicker(toolbar, cesiumWidget.scene);
         }
 
+        var projectionPicker;
+        if (options.projectionPicker) {
+            projectionPicker = new ProjectionPicker(toolbar, cesiumWidget.scene);
+        }
+
         // BaseLayerPicker
         var baseLayerPicker;
         var baseLayerPickerDropDown;
@@ -640,6 +652,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._toolbar = toolbar;
         this._homeButton = homeButton;
         this._sceneModePicker = sceneModePicker;
+        this._projectionPicker = projectionPicker;
         this._baseLayerPicker = baseLayerPicker;
         this._navigationHelpButton = navigationHelpButton;
         this._animation = animation;
@@ -805,6 +818,18 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         sceneModePicker : {
             get : function() {
                 return this._sceneModePicker;
+            }
+        },
+
+        /**
+         * Gets the ProjectionPicker.
+         * @memberof Viewer.prototype
+         * @type {ProjectionPicker}
+         * @readonly
+         */
+        projectionPicker : {
+            get : function() {
+                return this._projectionPicker;
             }
         },
 
@@ -1423,6 +1448,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (defined(this._sceneModePicker)) {
             this._sceneModePicker = this._sceneModePicker.destroy();
+        }
+
+        if (defined(this._projectionPicker)) {
+            this._projectionPicker = this._projectionPicker.destroy();
         }
 
         if (defined(this._baseLayerPicker)) {
