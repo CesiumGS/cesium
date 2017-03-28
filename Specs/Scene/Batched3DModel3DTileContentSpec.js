@@ -36,7 +36,8 @@ defineSuite([
     var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
     var texturedUrl = './Data/Cesium3DTiles/Batched/BatchedTextured/';
     var compressedTexturesUrl = './Data/Cesium3DTiles/Batched/BatchedCompressedTextures/';
-    var deprecatedUrl = './Data/Cesium3DTiles/Batched/BatchedDeprecated/';
+    var deprecated1Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated1/';
+    var deprecated2Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated2/';
     var gltfZUpUrl = './Data/Cesium3DTiles/Batched/BatchedGltfZUp';
 
     function setCamera(longitude, latitude) {
@@ -75,9 +76,21 @@ defineSuite([
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'b3dm');
     });
 
-    it('recognizes the legacy b3dm format', function() {
+    it('recognizes the legacy 20-byte header', function() {
         spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
-        return Cesium3DTilesTester.loadTileset(scene, deprecatedUrl)
+        return Cesium3DTilesTester.loadTileset(scene, deprecated1Url)
+            .then(function(tileset) {
+                expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
+                Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+                var batchTable = tileset._root._content.batchTable;
+                expect(batchTable.batchTableJson).toBeDefined();
+                expect(batchTable.batchTableBinary).toBeUndefined();
+            });
+    });
+
+    it('recognizes the legacy 24-byte header', function() {
+        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
+        return Cesium3DTilesTester.loadTileset(scene, deprecated2Url)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
@@ -89,7 +102,7 @@ defineSuite([
 
     it('logs deprecation warning for use of BATCHID without prefixed underscore', function() {
         spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
-        return Cesium3DTilesTester.loadTileset(scene, deprecatedUrl)
+        return Cesium3DTilesTester.loadTileset(scene, deprecated1Url)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
