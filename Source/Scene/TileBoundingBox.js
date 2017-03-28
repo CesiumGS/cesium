@@ -146,12 +146,12 @@ define([
         var south = rectangle.south;
         var southSurfaceNormal;
 
-        if (south > 0.0){
+        if (south > 0.0) {
             // Compute a plane that doesn't cut through the tile.
             cartographicScratch.longitude = (rectangle.west +  rectangle.east) * 0.5;
             cartographicScratch.latitude = south;
             var southCenterCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, rayScratch.origin);
-            Cartesian3.clone(eastWestNormal,rayScratch.direction);
+            Cartesian3.clone(eastWestNormal, rayScratch.direction);
             var westPlane = Plane.fromPointNormal(tileBB.southwestCornerCartesian, tileBB.westNormal, planeScratch);
             // Find a point that is on the west and the south planes
             IntersectionTests.rayPlane(rayScratch, westPlane, tileBB.southwestCornerCartesian);
@@ -166,7 +166,7 @@ define([
         // Compute the normal of the plane bounding the northern edge of the tile.
         var north = rectangle.north;
         var northSurfaceNormal;
-        if (north < 0.0){
+        if (north < 0.0) {
             // Compute a plane that doesn't cut through the tile.
             cartographicScratch.longitude = (rectangle.west + rectangle.east) * 0.5;
             cartographicScratch.latitude = north;
