@@ -74,8 +74,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Guillaume Beraudo](https://github.com/gberaudo)
 * [EndPoint](https://www.endpoint.com/)
    * [Dmitry Kiselev](https://github.com/kiselev-dv)
-* [Safe Software](https://www.safe.com)
-   * [Joel Depooter](https://github.com/JDepooter)
 * [Bentley Systems, Inc.](https://www.bentley.com)
    * [Paul Connelly](https://github.com/pmconne)
 
@@ -135,4 +133,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Prasanna Natarajan](https://github.com/PrasannaNatarajan)
 * [Joseph Klinger](https://github.com/klingerj)
 * [Grace Lee](https://github.com/glee2244)
-* [Heiko Thiel](https://github.com/SunBlack)
