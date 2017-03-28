@@ -153,7 +153,7 @@ defineSuite([
     }
 
     function viewAllTiles() {
-        setZoom(20.0);
+        setZoom(15.0);
     }
 
     function viewRootOnly() {
