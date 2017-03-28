@@ -271,6 +271,8 @@ void main()
 #endif
 
 #if defined(DISABLE_DEPTH_DISTANCE) || defined(ALWAYS_DISABLE_DEPTH)
+    gl_Position.z = min(gl_Position.z, gl_Position.w);
+
     bool clipped = gl_Position.z < -gl_Position.w || gl_Position.z > gl_Position.w;
     float distance = length(positionEC.xyz);
     if (!clipped && (alwaysDisableDepth || (distance > 0.0 && distance < disableDepthDistance)))
