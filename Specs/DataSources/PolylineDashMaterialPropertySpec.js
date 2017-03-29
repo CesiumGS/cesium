@@ -21,7 +21,7 @@ defineSuite([
 
         var result = property.getValue();
         expect(result.color).toEqual(Color.WHITE);
-        expect(result.gapColor).toEqual(Color.BLACK.withAlpha(0.0));
+        expect(result.gapColor).toEqual(Color.TRANSPARENT);
         expect(result.dashLength).toEqual(16.0);
         expect(result.dashPattern).toEqual(255.0);
     });

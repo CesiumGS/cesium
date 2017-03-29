@@ -18,7 +18,7 @@ define([
     'use strict';
 
     var defaultColor = Color.WHITE;
-    var defaultGapColor = Color.BLACK.withAlpha(0.0);
+    var defaultGapColor = Color.TRANSPARENT;
     var defaultDashLength = 16.0;
     var defaultDashPattern = 255.0;
 
@@ -29,7 +29,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
-     * @param {Property} [options.gapColor=Color.BLACK.withAlpha(0.0)] A Property specifying the {@link Color} of the gaps in the line.
+     * @param {Property} [options.gapColor=Color.TRANSPARENT] A Property specifying the {@link Color} of the gaps in the line.
      * @param {Property} [options.dashLength=16.0] A numeric Property specifying the length of the dash pattern in pixel.s
      * @param {Property} [options.dashPattern=255.0] A numeric Property specifying a 16 bit pattern for the dash
      */
