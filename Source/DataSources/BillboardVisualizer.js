@@ -157,7 +157,6 @@ define([
             billboard.sizeInMeters = Property.getValueOrDefault(billboardGraphics._sizeInMeters, defaultSizeInMeters);
             billboard.distanceDisplayCondition = Property.getValueOrUndefined(billboardGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
             billboard.disableDepthDistance = Property.getValueOrUndefined(billboardGraphics._disableDepthDistance, time);
-            billboard.alwaysDisableDepth = Property.getValueOrUndefined(billboardGraphics._alwaysDisableDepth, time);
 
             var subRegion = Property.getValueOrUndefined(billboardGraphics._imageSubRegion, time, boundingRectangle);
             if (defined(subRegion)) {

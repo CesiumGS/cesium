@@ -172,7 +172,6 @@ define([
             backgroundBillboard.scaleByDistance = label._scaleByDistance;
             backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
             backgroundBillboard.disableDepthDistance = label._disableDepthDistance;
-            backgroundBillboard.alwaysDisableDepth = label._alwaysDisableDepth;
         }
 
         var glyphTextureCache = labelCollection._glyphTextureCache;
@@ -267,7 +266,6 @@ define([
                 billboard.scaleByDistance = label._scaleByDistance;
                 billboard.distanceDisplayCondition = label._distanceDisplayCondition;
                 billboard.disableDepthDistance = label._disableDepthDistance;
-                billboard.alwaysDisableDepth = label._alwaysDisableDepth;
             }
         }
 

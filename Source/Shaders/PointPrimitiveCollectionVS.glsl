@@ -5,7 +5,7 @@ attribute vec4 positionLowAndOutline;
 attribute vec4 compressedAttribute0;                       // color, outlineColor, pick color
 attribute vec4 compressedAttribute1;                       // show, translucency by distance, some free space
 attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
-attribute vec4 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthDistance, alwaysDisableDepth
+attribute vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthDistance
 
 varying vec4 v_color;
 varying vec4 v_outlineColor;
@@ -153,24 +153,15 @@ void main()
 
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthDistance = distanceDisplayConditionAndDisableDepth.z;
-#else
-    float disableDepthDistance = -1.0;
-#endif
+    if (disableDepthDistance != 0.0) {
+        gl_Position.z = min(gl_Position.z, gl_Position.w);
 
-#ifdef ALWAYS_DISABLE_DEPTH
-    bool alwaysDisableDepth = distanceDisplayConditionAndDisableDepth.w > 0.0;
-#else
-    bool alwaysDisableDepth = false;
-#endif
-
-#if defined(DISABLE_DEPTH_DISTANCE) || defined(ALWAYS_DISABLE_DEPTH)
-    gl_Position.z = min(gl_Position.z, gl_Position.w);
-
-    bool clipped = gl_Position.z < -gl_Position.w || gl_Position.z > gl_Position.w;
-    float distance = length(positionEC.xyz);
-    if (!clipped && (alwaysDisableDepth || (distance > 0.0 && distance < disableDepthDistance)))
-    {
-        gl_Position.z = -gl_Position.w;
+        bool clipped = gl_Position.z < -gl_Position.w || gl_Position.z > gl_Position.w;
+        float distance = length(positionEC.xyz);
+        if (!clipped && (disableDepthDistance < 0.0 || (distance > 0.0 && distance < disableDepthDistance)))
+        {
+            gl_Position.z = -gl_Position.w;
+        }
     }
 #endif
 

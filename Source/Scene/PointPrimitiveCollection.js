@@ -67,7 +67,6 @@ define([
     var TRANSLUCENCY_BY_DISTANCE_INDEX = PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX;
     var DISTANCE_DISPLAY_CONDITION_INDEX = PointPrimitive.DISTANCE_DISPLAY_CONDITION_INDEX;
     var DISABLE_DEPTH_DISTANCE_INDEX = PointPrimitive.DISABLE_DEPTH_DISTANCE_INDEX;
-    var ALWAYS_DISABLE_DEPTH_INDEX = PointPrimitive.ALWAYS_DISABLE_DEPTH_INDEX;
     var NUMBER_OF_PROPERTIES = PointPrimitive.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
@@ -149,10 +148,6 @@ define([
         this._shaderDisableDepthDistance = false;
         this._compiledShaderDisableDepthDistance = false;
         this._compiledShaderDisableDepthDistancePick = false;
-
-        this._shaderAlwaysDisableDepth = false;
-        this._compiledShaderAlwaysDisableDepth = false;
-        this._compiledShaderAlwaysDisableDepthPick = false;
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
@@ -500,7 +495,7 @@ define([
             usage : buffersUsage[SCALE_BY_DISTANCE_INDEX]
         }, {
             index : attributeLocations.distanceDisplayConditionAndDisableDepth,
-            componentsPerAttribute : 4,
+            componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX]
         }], numberOfPointPrimitives); // 1 vertex per pointPrimitive
@@ -652,20 +647,14 @@ define([
         }
 
         var disableDepthDistance = pointPrimitive.disableDepthDistance;
-        if (defined(disableDepthDistance)) {
+        if (disableDepthDistance > 0.0) {
             pointPrimitiveCollection._shaderDisableDepthDistance = true;
-        } else {
-            disableDepthDistance = -1.0;
+            if (disableDepthDistance === Number.POSITIVE_INFINITY) {
+                disableDepthDistance = -1.0;
+            }
         }
 
-        var alwaysDisableDepth = pointPrimitive.alwaysDisableDepth;
-        if (alwaysDisableDepth) {
-            pointPrimitiveCollection._shaderAlwaysDisableDepth = true;
-        }
-
-        alwaysDisableDepth = alwaysDisableDepth ? 1.0 : 0.0;
-
-        writer(i, near, far, disableDepthDistance, alwaysDisableDepth);
+        writer(i, near, far, disableDepthDistance);
     }
 
     function writePointPrimitive(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
@@ -812,7 +801,7 @@ define([
                     writers.push(writeScaleByDistance);
                 }
 
-                if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE_INDEX] || properties[ALWAYS_DISABLE_DEPTH_INDEX]) {
+                if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE_INDEX]) {
                     writers.push(writeDistanceDisplayConditionAndDepthDisable);
                 }
 
@@ -911,8 +900,7 @@ define([
             (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
             (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
             (this._shaderDistanceDisplayCondition && !this._compiledShaderDistanceDisplayCondition) ||
-            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance) ||
-            (this._shaderAlwaysDisableDepth !== this._compiledShaderAlwaysDisableDepth)) {
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance)) {
 
             vs = new ShaderSource({
                 sources : [PointPrimitiveCollectionVS]
@@ -928,9 +916,6 @@ define([
             }
             if (this._shaderDisableDepthDistance) {
                 vs.defines.push('DISABLE_DEPTH_DISTANCE');
-            }
-            if (this._shaderAlwaysDisableDepth) {
-                vs.defines.push('ALWAYS_DISABLE_DEPTH');
             }
 
             if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
@@ -989,15 +974,13 @@ define([
             this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
             this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
             this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
-            this._compiledShaderAlwaysDisableDepth = this._shaderAlwaysDisableDepth;
         }
 
         if (!defined(this._spPick) ||
             (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
             (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
             (this._shaderDistanceDisplayCondition && !this._compiledShaderDistanceDisplayConditionPick) ||
-            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistancePick) ||
-            (this._shaderAlwaysDisableDepth !== this._compiledShaderAlwaysDisableDepthPick)) {
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistancePick)) {
 
             vs = new ShaderSource({
                 defines : ['RENDER_FOR_PICK'],
@@ -1015,9 +998,6 @@ define([
             }
             if (this._shaderDisableDepthDistance) {
                 vs.defines.push('DISABLE_DEPTH_DISTANCE');
-            }
-            if (this._shaderAlwaysDisableDepth) {
-                vs.defines.push('ALWAYS_DISABLE_DEPTH');
             }
 
             fs = new ShaderSource({
@@ -1037,7 +1017,6 @@ define([
             this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
             this._compiledShaderDistanceDisplayConditionPick = this._shaderDistanceDisplayCondition;
             this._compiledShaderDisableDepthDistancePick = this._shaderDisableDepthDistance;
-            this._compiledShaderAlwaysDisableDepthPick = this._shaderAlwaysDisableDepth;
         }
 
         var va;

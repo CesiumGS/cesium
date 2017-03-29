@@ -53,8 +53,6 @@ define([
         this._distanceDisplayConditionSubscription = undefined;
         this._disableDepthDistance = undefined;
         this._disableDepthDistanceSubscription = undefined;
-        this._alwaysDisableDepth = undefined;
-        this._alwaysDisableDepthSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -148,9 +146,7 @@ define([
          */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
 
-        disableDepthDistance : createPropertyDescriptor('disableDepthDistance'),
-
-        alwaysDisableDepth : createPropertyDescriptor('alwaysDisableDepth')
+        disableDepthDistance : createPropertyDescriptor('disableDepthDistance')
     });
 
     /**
@@ -173,7 +169,6 @@ define([
         result.heightReference = this.heightReference;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         result.disableDepthDistance = this.disableDepthDistance;
-        result.alwaysDisableDepth = this.alwaysDisableDepth;
         return result;
     };
 
@@ -200,7 +195,6 @@ define([
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.disableDepthDistance = defaultValue(this.disableDepthDistance, source.disableDepthDistance);
-        this.alwaysDisableDepth = defaultValue(this.alwaysDisableDepth, source.alwaysDisableDepth);
     };
 
     return PointGraphics;

@@ -87,7 +87,6 @@ define([
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX;
     var DISTANCE_DISPLAY_CONDITION_INDEX = Billboard.DISTANCE_DISPLAY_CONDITION_INDEX;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE;
-    var ALWAYS_DISABLE_DEPTH = Billboard.ALWAYS_DISABLE_DEPTH;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     var attributeLocations;
@@ -214,10 +213,6 @@ define([
         this._shaderDisableDepthDistance = false;
         this._compiledShaderDisableDepthDistance = false;
         this._compiledShaderDisableDepthDistancePick = false;
-
-        this._shaderAlwaysDisableDepth = false;
-        this._compiledShaderAlwaysDisableDepth = false;
-        this._compiledShaderAlwaysDisableDepthPick = false;
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
@@ -740,7 +735,7 @@ define([
             usage : buffersUsage[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]
         }, {
             index : attributeLocations.distanceDisplayConditionAndDisableDepth,
-            componentsPerAttribute : 4,
+            componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX]
         }];
@@ -1171,28 +1166,22 @@ define([
         }
 
         var disableDepthDistance = billboard.disableDepthDistance;
-        if (defined(disableDepthDistance)) {
+        if (disableDepthDistance > 0.0) {
             billboardCollection._shaderDisableDepthDistance = true;
-        } else {
-            disableDepthDistance = -1.0;
+            if (disableDepthDistance === Number.POSITIVE_INFINITY) {
+                disableDepthDistance = -1.0;
+            }
         }
-
-        var alwaysDisableDepth = billboard.alwaysDisableDepth;
-        if (alwaysDisableDepth) {
-            billboardCollection._shaderAlwaysDisableDepth = true;
-        }
-
-        alwaysDisableDepth = alwaysDisableDepth ? 1.0 : 0.0;
 
         if (billboardCollection._instanced) {
             i = billboard._index;
-            writer(i, near, far, disableDepthDistance, alwaysDisableDepth);
+            writer(i, near, far, disableDepthDistance);
         } else {
             i = billboard._index * 4;
-            writer(i + 0, near, far, disableDepthDistance, alwaysDisableDepth);
-            writer(i + 1, near, far, disableDepthDistance, alwaysDisableDepth);
-            writer(i + 2, near, far, disableDepthDistance, alwaysDisableDepth);
-            writer(i + 3, near, far, disableDepthDistance, alwaysDisableDepth);
+            writer(i + 0, near, far, disableDepthDistance);
+            writer(i + 1, near, far, disableDepthDistance);
+            writer(i + 2, near, far, disableDepthDistance);
+            writer(i + 3, near, far, disableDepthDistance);
         }
     }
 
@@ -1400,7 +1389,7 @@ define([
                     writers.push(writePixelOffsetScaleByDistance);
                 }
 
-                if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE] || properties[ALWAYS_DISABLE_DEPTH]) {
+                if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE]) {
                     writers.push(writeDistanceDisplayConditionAndDepthDisable);
                 }
 
@@ -1512,8 +1501,7 @@ define([
             (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistance) ||
             (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
             (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition) ||
-            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance) ||
-            (this._shaderAlwaysDisableDepth !== this._compiledShaderAlwaysDisableDepth)) {
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance)) {
 
             vs = new ShaderSource({
                 sources : [BillboardCollectionVS]
@@ -1541,9 +1529,6 @@ define([
             }
             if (this._shaderDisableDepthDistance) {
                 vs.defines.push('DISABLE_DEPTH_DISTANCE');
-            }
-            if (this._shaderAlwaysDisableDepth) {
-                vs.defines.push('ALWAYS_DISABLE_DEPTH');
             }
 
             if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
@@ -1605,7 +1590,6 @@ define([
             this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
             this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
             this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
-            this._compiledShaderAlwaysDisableDepth = this._shaderAlwaysDisableDepth;
         }
 
         if (!defined(this._spPick) ||
@@ -1615,8 +1599,7 @@ define([
             (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistancePick) ||
             (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistancePick) ||
             (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayConditionPick) ||
-            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistancePick) ||
-            (this._shaderAlwaysDisableDepth !== this._compiledShaderAlwaysDisableDepthPick)) {
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistancePick)) {
 
             vs = new ShaderSource({
                 defines : ['RENDER_FOR_PICK'],
@@ -1647,9 +1630,6 @@ define([
             if (this._shaderDisableDepthDistance) {
                 vs.defines.push('DISABLE_DEPTH_DISTANCE');
             }
-            if (this._shaderAlwaysDisableDepth) {
-                vs.defines.push('ALWAYS_DISABLE_DEPTH');
-            }
 
             fs = new ShaderSource({
                 defines : ['RENDER_FOR_PICK'],
@@ -1670,7 +1650,6 @@ define([
             this._compiledShaderPixelOffsetScaleByDistancePick = this._shaderPixelOffsetScaleByDistance;
             this._compiledShaderDistanceDisplayConditionPick = this._shaderDistanceDisplayCondition;
             this._compiledShaderDisableDepthDistancePick = this._shaderDisableDepthDistance;
-            this._compiledShaderAlwaysDisableDepthPick = this._shaderAlwaysDisableDepth;
         }
 
         var va;
