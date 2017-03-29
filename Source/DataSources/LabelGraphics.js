@@ -92,8 +92,8 @@ define([
         this._scaleByDistanceSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
-        this._disableDepthDistance = undefined;
-        this._disableDepthDistanceSubscription = undefined;
+        this._disableDepthTestDistance = undefined;
+        this._disableDepthTestDistanceSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -313,7 +313,7 @@ define([
          */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
 
-        disableDepthDistance : createPropertyDescriptor('disableDepthDistance')
+        disableDepthTestDistance : createPropertyDescriptor('disableDepthTestDistance')
     });
 
     /**
@@ -346,7 +346,7 @@ define([
         result.pixelOffsetScaleByDistance = this.pixelOffsetScaleByDistance;
         result.scaleByDistance = this.scaleByDistance;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
-        result.disableDepthDistance = this.disableDepthDistance;
+        result.disableDepthTestDistance = this.disableDepthTestDistance;
         return result;
     };
 
@@ -383,7 +383,7 @@ define([
         this.pixelOffsetScaleByDistance = defaultValue(this.pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
         this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
-        this.disableDepthDistance = defaultValue(this.disableDepthDistance, source.disableDepthDistance);
+        this.disableDepthTestDistance = defaultValue(this.disableDepthTestDistance, source.disableDepthTestDistance);
     };
 
     return LabelGraphics;

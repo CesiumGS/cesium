@@ -81,7 +81,7 @@ define([
         this._scaleByDistance = options.scaleByDistance;
         this._translucencyByDistance = options.translucencyByDistance;
         this._distanceDisplayCondition = options.distanceDisplayCondition;
-        this._disableDepthDistance = defaultValue(options.disableDepthDistance, 0.0);
+        this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
         this._id = options.id;
         this._collection = defaultValue(options.collection, pointPrimitiveCollection);
 
@@ -376,18 +376,18 @@ define([
             }
         },
 
-        disableDepthDistance : {
+        disableDepthTestDistance : {
             get : function() {
-                return this._disableDepthDistance;
+                return this._disableDepthTestDistance;
             },
             set : function(value) {
-                if (this._disableDepthDistance !== value) {
+                if (this._disableDepthTestDistance !== value) {
                     //>>includeStart('debug', pragmas.debug);
                     if (!defined(value) && value < 0.0) {
-                        throw new DeveloperError('disableDepthDistance must be greater than or equal to 0.0.');
+                        throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
                     }
                     //>>includeEnd('debug');
-                    this._disableDepthDistance = value;
+                    this._disableDepthTestDistance = value;
                     makeDirty(this, DISABLE_DEPTH_DISTANCE_INDEX);
                 }
             }
@@ -559,7 +559,7 @@ define([
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
                DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
-               this._disableDepthDistance === other._disableDepthDistance;
+               this._disableDepthTestDistance === other._disableDepthTestDistance;
     };
 
     PointPrimitive.prototype._destroy = function() {

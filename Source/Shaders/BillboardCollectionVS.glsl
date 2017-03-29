@@ -9,7 +9,7 @@ attribute vec4 compressedAttribute2;                       // image height, colo
 attribute vec4 eyeOffset;                                  // eye offset in meters, 4 bytes free (texture range)
 attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
-attribute vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthDistance
+attribute vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthTestDistance
 
 varying vec2 v_textureCoordinates;
 
@@ -259,13 +259,13 @@ void main()
     v_textureCoordinates = textureCoordinates;
 
 #ifdef DISABLE_DEPTH_DISTANCE
-    float disableDepthDistance = distanceDisplayConditionAndDisableDepth.z;
-    if (disableDepthDistance != 0.0) {
+    float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
+    if (disableDepthTestDistance != 0.0) {
         gl_Position.z = min(gl_Position.z, gl_Position.w);
 
         bool clipped = gl_Position.z < -gl_Position.w || gl_Position.z > gl_Position.w;
         float distance = length(positionEC.xyz);
-        if (!clipped && (disableDepthDistance < 0.0 || (distance > 0.0 && distance < disableDepthDistance)))
+        if (!clipped && (disableDepthTestDistance < 0.0 || (distance > 0.0 && distance < disableDepthTestDistance)))
         {
             gl_Position.z = -gl_Position.w;
         }

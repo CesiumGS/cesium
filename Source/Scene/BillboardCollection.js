@@ -1165,23 +1165,23 @@ define([
             billboardCollection._shaderDistanceDisplayCondition = true;
         }
 
-        var disableDepthDistance = billboard.disableDepthDistance;
-        if (disableDepthDistance > 0.0) {
+        var disableDepthTestDistance = billboard.disableDepthTestDistance;
+        if (disableDepthTestDistance > 0.0) {
             billboardCollection._shaderDisableDepthDistance = true;
-            if (disableDepthDistance === Number.POSITIVE_INFINITY) {
-                disableDepthDistance = -1.0;
+            if (disableDepthTestDistance === Number.POSITIVE_INFINITY) {
+                disableDepthTestDistance = -1.0;
             }
         }
 
         if (billboardCollection._instanced) {
             i = billboard._index;
-            writer(i, near, far, disableDepthDistance);
+            writer(i, near, far, disableDepthTestDistance);
         } else {
             i = billboard._index * 4;
-            writer(i + 0, near, far, disableDepthDistance);
-            writer(i + 1, near, far, disableDepthDistance);
-            writer(i + 2, near, far, disableDepthDistance);
-            writer(i + 3, near, far, disableDepthDistance);
+            writer(i + 0, near, far, disableDepthTestDistance);
+            writer(i + 1, near, far, disableDepthTestDistance);
+            writer(i + 2, near, far, disableDepthTestDistance);
+            writer(i + 3, near, far, disableDepthTestDistance);
         }
     }
 

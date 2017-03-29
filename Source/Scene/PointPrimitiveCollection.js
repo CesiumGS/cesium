@@ -646,15 +646,15 @@ define([
             pointPrimitiveCollection._shaderDistanceDisplayCondition = true;
         }
 
-        var disableDepthDistance = pointPrimitive.disableDepthDistance;
-        if (disableDepthDistance > 0.0) {
+        var disableDepthTestDistance = pointPrimitive.disableDepthTestDistance;
+        if (disableDepthTestDistance > 0.0) {
             pointPrimitiveCollection._shaderDisableDepthDistance = true;
-            if (disableDepthDistance === Number.POSITIVE_INFINITY) {
-                disableDepthDistance = -1.0;
+            if (disableDepthTestDistance === Number.POSITIVE_INFINITY) {
+                disableDepthTestDistance = -1.0;
             }
         }
 
-        writer(i, near, far, disableDepthDistance);
+        writer(i, near, far, disableDepthTestDistance);
     }
 
     function writePointPrimitive(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
