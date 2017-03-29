@@ -74,7 +74,7 @@ var cyanLine = viewer.entities.add({
         width : 10,
         material : new Cesium.PolylineDashMaterialProperty({
             color : Cesium.Color.CYAN,
-            dashPattern: 3087.0
+            dashPattern: parseInt("110000001111", 2)
         })
     }
 });
@@ -87,7 +87,7 @@ var yellowLine = viewer.entities.add({
         width : 10,
         material : new Cesium.PolylineDashMaterialProperty({
             color : Cesium.Color.YELLOW,
-            dashPattern: 43690.0
+            dashPattern: parseInt("1010101010101010", 2)
         })
     }
 });
