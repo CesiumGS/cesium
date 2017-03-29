@@ -2,6 +2,7 @@
 defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/defaultValue',
         'Core/Matrix4',
         'Renderer/Pass',
@@ -15,6 +16,7 @@ defineSuite([
     ], 'Renderer/AutomaticUniforms', function(
         Cartesian2,
         Cartesian3,
+        Color,
         defaultValue,
         Matrix4,
         Pass,
@@ -1230,6 +1232,21 @@ defineSuite([
         var fs =
             'void main() { ' +
             '  gl_FragColor = vec4(czm_imagerySplitPosition == 0.0); ' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_backgroundColor', function() {
+        var frameState = createFrameState(context, createMockCamera());
+        frameState.backgroundColor = new Color(0.0, 0.25, 0.75, 1.0);
+        context.uniformState.update(frameState);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_backgroundColor.r == 0.0, czm_backgroundColor.g == 0.25, czm_backgroundColor.b == 0.75, czm_backgroundColor.a == 1.0); ' +
             '}';
         expect({
             context : context,
