@@ -1,4 +1,5 @@
 uniform vec4 color;
+uniform vec4 gapColor;
 uniform float dashLength;
 uniform float dashPattern;
 varying float v_angle;
@@ -26,11 +27,12 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float maskIndex = floor(dashPosition * maskLength);
     // Test the bit mask.
     float maskTest = floor(dashPattern / pow(2.0, maskIndex));
-    if (mod(maskTest, 2.0) < 1.0) {
-      discard;
+    vec4 fragColor = (mod(maskTest, 2.0) < 1.0) ? gapColor : color;
+    if (fragColor.a < 0.005) {   // matches 0/255 and 1/255
+        discard;
     }
 
-    material.emission = color.rgb;
-    material.alpha = color.a;
+    material.emission = fragColor.rgb;
+    material.alpha = fragColor.a;
     return material;
 }

@@ -1017,6 +1017,7 @@ define([
             }
             materialData = packetData.polylineDash;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, undefined, entityCollection);
+            processPacketData(Color, existingMaterial, 'gapColor', materialData.gapColor, undefined, undefined, entityCollection);
             processPacketData(Number, existingMaterial, 'dashLength', materialData.dashLength, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'dashPattern', materialData.dashPattern, undefined, sourceUri, entityCollection);
         }

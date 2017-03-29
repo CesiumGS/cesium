@@ -212,7 +212,9 @@ define([
      *  <li>PolylineDash</li>
      *  <ul>
      *      <li><code>color</code>: color for the line.</li>
+     *      <li><code>gapColor</code>: color for the gaps in the line.</li>
      *      <li><code>dashLength</code>: Dash length in pixels.</li>
+     *      <li><code>dashPattern</code>: The 16 bit stipple pattern for the line..</li>
      *  </ul>
      *  <li>PolylineGlow</li>
      *  <ul>
@@ -1420,6 +1422,7 @@ define([
             type : Material.PolylineDashType,
             uniforms : {
                 color : new Color(1.0, 0.0, 1.0, 1.0),
+                gapColor : new Color(0.0, 0.0, 0.0, 0.0),
                 dashLength : 16.0,
                 dashPattern : 255.0
             },

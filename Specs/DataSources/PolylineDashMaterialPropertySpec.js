@@ -21,6 +21,7 @@ defineSuite([
 
         var result = property.getValue();
         expect(result.color).toEqual(Color.WHITE);
+        expect(result.gapColor).toEqual(Color.BLACK.withAlpha(0.0));
         expect(result.dashLength).toEqual(16.0);
         expect(result.dashPattern).toEqual(255.0);
     });
@@ -28,16 +29,19 @@ defineSuite([
     it('constructor sets options and allows raw assignment', function() {
         var options = {
             color : Color.RED,
+            gapColor : Color.YELLOW,
             dashLength: 10.0,
             dashPattern: 7.0
         };
 
         var property = new PolylineDashMaterialProperty(options);
         expect(property.color).toBeInstanceOf(ConstantProperty);
+        expect(property.gapColor).toBeInstanceOf(ConstantProperty);
         expect(property.dashLength).toBeInstanceOf(ConstantProperty);
         expect(property.dashPattern).toBeInstanceOf(ConstantProperty);
 
         expect(property.color.getValue()).toEqual(options.color);
+        expect(property.gapColor.getValue()).toEqual(options.gapColor);
         expect(property.dashLength.getValue()).toEqual(options.dashLength);
         expect(property.dashPattern.getValue()).toEqual(options.dashPattern);
     });
@@ -45,11 +49,13 @@ defineSuite([
     it('works with constant values', function() {
         var property = new PolylineDashMaterialProperty();
         property.color = new ConstantProperty(Color.RED);
+        property.gapColor = new ConstantProperty(Color.YELLOW);
         property.dashLength = new ConstantProperty(10.0);
         property.dashPattern = new ConstantProperty(7.0);
 
         var result = property.getValue(JulianDate.now());
         expect(result.color).toEqual(Color.RED);
+        expect(result.gapColor).toEqual(Color.YELLOW);
         expect(result.dashLength).toEqual(10.0);
         expect(result.dashPattern).toEqual(7.0);
 
@@ -58,6 +64,7 @@ defineSuite([
     it('works with dynamic values', function() {
         var property = new PolylineDashMaterialProperty();
         property.color = new TimeIntervalCollectionProperty();
+        property.gapColor = new TimeIntervalCollectionProperty();
         property.dashLength = new TimeIntervalCollectionProperty();
         property.dashPattern = new TimeIntervalCollectionProperty();
 
@@ -67,6 +74,11 @@ defineSuite([
             start : start,
             stop : stop,
             data : Color.BLUE
+        }));
+        property.gapColor.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.YELLOW
         }));
         property.dashLength.intervals.addInterval(new TimeInterval({
             start : start,
@@ -81,6 +93,7 @@ defineSuite([
 
         var result = property.getValue(start);
         expect(result.color).toEqual(Color.BLUE);
+        expect(result.gapColor).toEqual(Color.YELLOW);
         expect(result.dashLength).toEqual(10.0);
         expect(result.dashPattern).toEqual(11.0);
     });
@@ -88,17 +101,20 @@ defineSuite([
     it('works with a result parameter', function() {
         var property = new PolylineDashMaterialProperty();
         property.color = new ConstantProperty(Color.RED);
+        property.gapColor = new ConstantProperty(Color.YELLOW);
         property.dashLength = new ConstantProperty(10.0);
         property.dashPattern = new ConstantProperty(11.0);
 
         var result = {
             color : Color.YELLOW.clone(),
+            gapColor : Color.RED.clone(),
             dashLength : 1.0,
             dashPattern: 2.0
         };
         var returnedResult = property.getValue(JulianDate.now(), result);
         expect(returnedResult).toBe(result);
         expect(result.color).toEqual(Color.RED);
+        expect(result.gapColor).toEqual(Color.YELLOW);
         expect(result.dashLength).toEqual(10.0);
         expect(result.dashPattern).toEqual(11.0);
     });
@@ -106,11 +122,13 @@ defineSuite([
     it('equals works', function() {
         var left = new PolylineDashMaterialProperty();
         left.color = new ConstantProperty(Color.WHITE);
+        left.gapColor = new ConstantProperty(Color.YELLOW);
         left.dashLength = new ConstantProperty(5.0);
         left.dashPattern = new ConstantProperty(7.0);
 
         var right = new PolylineDashMaterialProperty();
         right.color = new ConstantProperty(Color.WHITE);
+        right.gapColor = new ConstantProperty(Color.YELLOW);
         right.dashLength = new ConstantProperty(5.0);
         right.dashPattern = new ConstantProperty(7.0);
         expect(left.equals(right)).toEqual(true);
@@ -138,6 +156,19 @@ defineSuite([
         listener.calls.reset();
 
         property.color = property.color;
+        expect(listener.calls.count()).toEqual(0);
+        listener.calls.reset();
+
+        oldValue = property.gapColor;
+        property.gapColor = new ConstantProperty(Color.RED);
+        expect(listener).toHaveBeenCalledWith(property, 'gapColor', property.gapColor, oldValue);
+        listener.calls.reset();
+
+        property.gapColor.setValue(Color.YELLOW);
+        expect(listener).toHaveBeenCalledWith(property, 'gapColor', property.gapColor, property.gapColor);
+        listener.calls.reset();
+
+        property.gapColor = property.gapColor;
         expect(listener.calls.count()).toEqual(0);
         listener.calls.reset();
 
@@ -171,6 +202,7 @@ defineSuite([
         expect(property.isConstant).toBe(true);
 
         property.color = undefined;
+        property.gapColor = undefined;
         property.dashLength = undefined;
         property.dashPattern = undefined;
         expect(property.isConstant).toBe(true);
@@ -187,6 +219,17 @@ defineSuite([
 
         property.color = undefined;
         expect(property.isConstant).toBe(true);
+
+        property.gapColor = new TimeIntervalCollectionProperty();
+        property.gapColor.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.RED
+        }));
+        expect(property.isConstant).toBe(false);
+        property.gapColor = undefined;
+        expect(property.isConstant).toBe(true);
+
         property.dashLength = new TimeIntervalCollectionProperty();
         property.dashLength.intervals.addInterval(new TimeInterval({
             start : start,
