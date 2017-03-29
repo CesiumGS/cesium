@@ -1186,15 +1186,26 @@ define([
         }
         //>>includeEnd('debug');
 
-        // pixel offset for screenspace computation is the pixelOffset + screenspace translate
+        // pixel offset for screen space computation is the pixelOffset + screen space translate
         Cartesian2.clone(this._pixelOffset, scratchPixelOffset);
         Cartesian2.add(scratchPixelOffset, this._translate, scratchPixelOffset);
 
         var modelMatrix = billboardCollection.modelMatrix;
-        var actualPosition = this._getActualPosition();
+        var position = this._position;
+        if (defined(this._clampedPosition)) {
+            position = this._clampedPosition;
+            if (scene.mode !== SceneMode.SCENE3D) {
+                // position needs to be in world coordinates
+                var projection = scene.mapProjection;
+                var ellipsoid = projection.ellipsoid;
+                var cart = projection.unproject(position, scratchCartographic);
+                position = ellipsoid.cartographicToCartesian(cart, scratchCartesian3);
+                modelMatrix = Matrix4.IDENTITY;
+            }
+        }
 
-        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition,
-                this._eyeOffset, scratchPixelOffset, scene, result);
+        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, position,
+            this._eyeOffset, scratchPixelOffset, scene, result);
         return windowCoordinates;
     };
 

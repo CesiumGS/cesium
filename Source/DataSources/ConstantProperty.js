@@ -18,9 +18,6 @@ define([
      * @param {Object} [value] The property value.
      *
      * @see ConstantPositionProperty
-     *
-     * @exception {DeveloperError} value.clone is a required function.
-     * @exception {DeveloperError} value.equals is a required function.
      */
     function ConstantProperty(value) {
         this._value = undefined;
@@ -73,9 +70,6 @@ define([
      * Sets the value of the property.
      *
      * @param {Object} value The property value.
-     *
-     * @exception {DeveloperError} value.clone is a required function.
-     * @exception {DeveloperError} value.equals is a required function.
      */
     ConstantProperty.prototype.setValue = function(value) {
         var oldValue = this._value;
@@ -107,6 +101,24 @@ define([
                (other instanceof ConstantProperty && //
                 ((!this._hasEquals && (this._value === other._value)) || //
                 (this._hasEquals && this._value.equals(other._value))));
+    };
+
+    /**
+     * Gets this property's value.
+     *
+     * @returns {*} This property's value.
+     */
+    ConstantProperty.prototype.valueOf = function() {
+        return this._value;
+    };
+
+    /**
+     * Creates a string representing this property's value.
+     *
+     * @returns {String} A string representing the property's value.
+     */
+    ConstantProperty.prototype.toString = function() {
+        return String(this._value);
     };
 
     return ConstantProperty;

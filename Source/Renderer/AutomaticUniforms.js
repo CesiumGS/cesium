@@ -1498,7 +1498,7 @@ define([
 
          /**
          * An automatic GLSL uniform representing the splitter position to use when rendering imagery layers with a splitter.
-         * This will be in the range 0.0 to 1.0 with 0.0 being the far left of the viewport and 1.0 being the far right of the viewport.
+         * This will be in pixel coordinates relative to the canvas.
          *
          * @alias czm_imagerySplitPosition
          * @glslUniform
