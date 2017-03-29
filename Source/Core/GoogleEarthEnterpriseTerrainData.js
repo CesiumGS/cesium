@@ -2,6 +2,7 @@
 define([
     '../ThirdParty/when',
     './Cartesian2',
+    './Cartesian3',
     './defaultValue',
     './defined',
     './defineProperties',
@@ -19,6 +20,7 @@ define([
 ], function(
     when,
     Cartesian2,
+    Cartesian3,
     defaultValue,
     defined,
     defineProperties,
@@ -42,7 +44,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {TypedArray} options.buffer The buffer containing height data.
+     * @param {ArrayBuffer} options.buffer The buffer containing terrain data.
      * @param {Number} [options.childTileMask=15] A bit mask indicating which of this tile's four children exist.
      *                 If a child's bit is set, geometry will be requested for that tile as well when it
      *                 is needed.  If the bit is cleared, the child tile is not requested and geometry is
@@ -387,7 +389,7 @@ define([
     var texCoordScratch0 = new Cartesian2();
     var texCoordScratch1 = new Cartesian2();
     var texCoordScratch2 = new Cartesian2();
-
+    var barycentricCoordinateScratch = new Cartesian3();
     function interpolateMeshHeight(terrainData, u, v) {
         var mesh = terrainData._mesh;
         var vertices = mesh.vertices;

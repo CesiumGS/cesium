@@ -44,7 +44,7 @@ define([
         parameters.rectangle = Rectangle.clone(parameters.rectangle);
 
         var statistics = processBuffer(parameters.buffer, parameters.relativeToCenter, parameters.ellipsoid,
-            parameters.rectangle, parameters.nativeRectangle);
+            parameters.rectangle, parameters.nativeRectangle, parameters.exaggeration);
         var vertices = statistics.vertices;
         transferableObjects.push(vertices.buffer);
         var indices = statistics.indices;
@@ -66,10 +66,11 @@ define([
     var negativeElevationFactor = -Math.pow(2, 32);
     var negativeElevationThreshold = CesiumMath.EPSILON12;
     var scratchCartographic = new Cartographic();
+    var scratchCartesian = new Cartesian3();
     var minimumScratch = new Cartesian3();
     var maximumScratch = new Cartesian3();
     var matrix4Scratch = new Matrix4();
-    function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle) {
+    function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle, exaggeration) {
         debugger;
         var geographicWest;
         var geographicSouth;
@@ -121,7 +122,7 @@ define([
             size += c;
 
             c = dv.getInt32(o, true); // Read index count
-            indicesSize += c;
+            indicesSize += c*3;
 
             offset += quadSize + sizeOfUint32; // Jump to next quad
         }
@@ -169,6 +170,7 @@ define([
                 scratchCartographic.latitude = latitude;
                 // Height is stored in units of (1/EarthRadius) or (1/6371010.0)
                 var height = dv.getFloat32(offset, true) * 6371010.0;
+                offset += sizeOfFloat;
 
                 // In order to support old clients, negative altitude values are stored as
                 // height/-2^32. Old clients see the value as really close to 0 but new clients multiply
@@ -176,21 +178,21 @@ define([
                 if (height < negativeElevationThreshold) {
                     height *= negativeElevationFactor;
                 }
+                height *= exaggeration;
 
                 scratchCartographic.height = height;
-                offset += sizeOfFloat;
 
                 minHeight = Math.min(height, minHeight);
                 maxHeight = Math.max(height, maxHeight);
                 heights[index] = height;
 
                 var pos = ellipsoid.cartographicToCartesian(scratchCartographic);
-                Matrix4.multiplyByPoint(toENU, pos, pos);
-
-                Cartesian3.minimumByComponent(pos, minimum, minimum);
-                Cartesian3.maximumByComponent(pos, maximum, maximum);
-
                 positions[index] = pos;
+
+                Matrix4.multiplyByPoint(toENU, pos, scratchCartesian);
+
+                Cartesian3.minimumByComponent(scratchCartesian, minimum, minimum);
+                Cartesian3.maximumByComponent(scratchCartesian, maximum, maximum);
 
                 var u = (longitude - geographicWest) / (geographicEast - geographicWest);
                 u = CesiumMath.clamp(u, 0.0, 1.0);
