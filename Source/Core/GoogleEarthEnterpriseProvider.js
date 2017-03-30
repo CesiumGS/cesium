@@ -68,6 +68,28 @@ define([
     var sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
+    function GoogleEarthEnterpriseDiscardPolicy() {
+        this._image = new Image();
+    }
+
+    /**
+     * Determines if the discard policy is ready to process images.
+     * @returns {Boolean} True if the discard policy is ready to process images; otherwise, false.
+     */
+    GoogleEarthEnterpriseDiscardPolicy.prototype.isReady = function() {
+        return true;
+    };
+
+    /**
+     * Given a tile image, decide whether to discard that image.
+     *
+     * @param {Image} image An image to test.
+     * @returns {Boolean} True if the image should be discarded; otherwise, false.
+     */
+    GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function(image) {
+        return (image === this._image);
+    };
+
     /**
      * Provides tiled imagery using the Google Earth Enterprise Imagery REST API.
      *
@@ -80,15 +102,8 @@ define([
      *        By default, tiles are loaded using the same protocol as the page.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
-     *        is invalid and should be discarded.  If this value is not specified, a default
-     *        {@link DiscardMissingTileImagePolicy} is used which requests
-     *        tile 0,0 at the maximum tile level and checks pixels (0,0), (120,140), (130,160),
-     *        (200,50), and (200,200).  If all of these pixels are transparent, the discard check is
-     *        disabled and no tiles are discarded.  If any of them have a non-transparent color, any
-     *        tile that has the same values in these pixel locations is discarded.  The end result of
-     *        these defaults should be correct tile discarding for a standard Google Earth Enterprise server.  To ensure
-     *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
-     *        parameter.
+     *        is invalid and should be discarded. If this value is not specified, a default
+     *        is to discard tiles that fail to download.
      * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
@@ -138,12 +153,7 @@ define([
 
         // Install the default tile discard policy if none has been supplied.
         if (!defined(this._tileDiscardPolicy)) {
-            this._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-                // TODO - missing image url
-                missingImageUrl : buildImageUrl(this, GoogleEarthEnterpriseProvider.tileXYToQuadKey(0, 0, 1)),
-                pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
-                disableCheckIfAllPixelsAreTransparent : true
-            });
+            this._tileDiscardPolicy = new GoogleEarthEnterpriseDiscardPolicy();
         }
 
         this._tileInfo = {};
@@ -469,18 +479,19 @@ define([
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
+        var invalidImage = this._tileDiscardPolicy._image; // Empty image or undefined depending on discard policy
         var quadKey = GoogleEarthEnterpriseProvider.tileXYToQuadKey(x, y, level);
         var tileInfo = this._tileInfo;
         var info = tileInfo[quadKey];
         if (defined(info)) {
             if (info.bits & imageBitmask === 0) {
                 // Already have info and there isn't any imagery here
-                return undefined;
+                return invalidImage;
             }
         } else {
             if (info === null) {
                 // Parent was retrieved and said child doesn't exist
-                return undefined;
+                return invalidImage;
             }
 
             var q = quadKey;
@@ -493,22 +504,21 @@ define([
                     if ((info.bits & cacheFlagBitmask === 0) &&
                         (info.bits & childrenBitmasks[parseInt(last)] === 0)){
                         // We have no subtree or child available at some point in this node's ancestry
-                        return undefined;
+                        return invalidImage;
                     }
 
                     break;
                 } else if (info === null) {
                     // Some node in the ancestry was loaded and said there wasn't a subtree
-                    return undefined;
+                    return invalidImage;
                 }
             }
         }
 
         var that = this;
         return populateSubtree(this, quadKey)
-            .then(function(exists){
-                if (exists) {
-                    info = tileInfo[quadKey];
+            .then(function(info){
+                if (defined(info)) {
                     if (info.bits & imageBitmask !== 0) {
                         var url = buildImageUrl(that, quadKey, info.imageryVersion);
                         return loadArrayBuffer(url)
@@ -529,12 +539,17 @@ define([
 
                                     return loadImageFromTypedArray(a, type);
                                 }
+
+                                return invalidImage;
                             })
                             .otherwise(function(error) {
-                                // Just ignore failures and return undefined
+                                // Just ignore failures and return invalidImage
+                                return invalidImage;
                             });
                     }
                 }
+
+                return invalidImage;
             });
     };
 
@@ -697,9 +712,8 @@ define([
         var that = this;
         var terrainCache = this._terrainCache;
         return populateSubtree(this, quadKey)
-            .then(function(exists){
-                if (exists) {
-                    var info = tileInfo[quadKey];
+            .then(function(info){
+                if (defined(info)) {
                     if (defined(terrainCache[quadKey])) {
                         var buffer = terrainCache[quadKey];
                         delete terrainCache[quadKey];
@@ -1091,7 +1105,7 @@ define([
         var t = tileInfo[q];
         // If we have tileInfo make sure sure it is not a node with a subtree that's not loaded
         if (defined(t) && ((t.bits & cacheFlagBitmask) === 0 || (t.bits & anyChildBitmask) !== 0)) {
-            return when(true);
+            return when(t);
         }
 
         while((t === undefined) && q.length > 1) {
@@ -1103,28 +1117,32 @@ define([
         //   null so one of its parents was a leaf node, so this tile doesn't exist
         //   undefined so no parent exists - this shouldn't ever happen once the provider is ready
         if (!defined(t)) {
-            return when(false);
+            return when(undefined);
         }
 
         var subtreePromises = that._subtreePromises;
         var promise = subtreePromises[q];
         if (defined(promise)) {
-            return promise;
+            return promise
+                .then(function() {
+                    return tileInfo[quadKey];
+                });
         }
 
         // We need to split up the promise here because when will execute syncronously if _getQuadTreePacket
         //  is already resolved (like in the tests), so subtreePromises will never get cleared out.
-        promise = that._getQuadTreePacket(q);
+        //  The promise will always resolve with a bool, but the initial request will also remove
+        //  the promise from subtreePromises.
+        promise = subtreePromises[q] = that._getQuadTreePacket(q);
 
-        subtreePromises[q] = promise
-            .then(function() {
-                return true;
-            });
         return promise
             .then(function() {
                 delete subtreePromises[q];
                 // Recursively call this incase we need multiple subtree requests
                 return populateSubtree(that, quadKey);
+            })
+            .then(function() {
+                return tileInfo[quadKey];
             });
     }
 

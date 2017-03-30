@@ -71,7 +71,6 @@ define([
     var maximumScratch = new Cartesian3();
     var matrix4Scratch = new Matrix4();
     function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle, exaggeration) {
-        debugger;
         var geographicWest;
         var geographicSouth;
         var geographicEast;
