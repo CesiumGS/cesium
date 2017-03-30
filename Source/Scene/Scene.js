@@ -3023,7 +3023,7 @@ define([
 
     var pickPositionCache={};
 
-    /**
+     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
      * <p>
      * The position reconstructed from the depth buffer in 2D may be slightly different from those
@@ -3042,16 +3042,19 @@ define([
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
      */
     Scene.prototype.pickPosition = function(windowPosition, result) {
-        //check cache
-        var cached = pickPositionCache[windowPosition.toString()];
-        if (defined(cached) && defined(result)){
-            result.x = cached.x;
-            result.y = cached.y;
 
-            return result;
+        if(defined(windowPosition) && pickPositionCache.hasOwnProperty(windowPosition.toString())){
+            var cached = pickPositionCache[windowPosition.toString()];
+            if (defined(cached) && defined(result)){
+                result.x = cached.x;
+                result.y = cached.y;
+            }
 
-        } else if (defined(cached)){
-            return cached.clone();
+            if (defined(cached)){
+                return cached.clone();
+            }
+
+            return cached;
         }
 
         result = this.pickPositionWorldCoordinates(windowPosition, result);
@@ -3065,7 +3068,7 @@ define([
             ellipsoid.cartographicToCartesian(cart, result);
         }
 
-        pickPositionCache[windowPosition.toString()] = result.clone();
+        pickPositionCache[windowPosition.toString()] = defined(result) ? result.clone() : result;
 
         return result;
     };
