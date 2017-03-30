@@ -145,11 +145,10 @@ define([
         // Compute the center of the tile for RTC rendering.
         var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
 
-        // TODO
-        this._skirtHeight = 0;
-        // var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, this._width, tilingScheme.getNumberOfXTilesAtLevel(0));
-        // var thisLevelMaxError = levelZeroMaxError / (1 << level);
-        // this._skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
+        // 1024 was the initial size of the heightmap before decimation in GEE
+        var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, 1024, tilingScheme.getNumberOfXTilesAtLevel(0));
+        var thisLevelMaxError = levelZeroMaxError / (1 << level);
+        this._skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
 
         var verticesPromise = taskProcessor.scheduleTask({
             buffer : this._buffer,

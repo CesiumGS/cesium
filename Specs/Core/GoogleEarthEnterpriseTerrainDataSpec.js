@@ -3,23 +3,29 @@ defineSuite([
     'Core/GoogleEarthEnterpriseTerrainData',
     'Core/BoundingSphere',
     'Core/Cartesian3',
+    'Core/Cartographic',
     'Core/Ellipsoid',
     'Core/GeographicTilingScheme',
     'Core/Math',
+    'Core/Matrix4',
     'Core/Rectangle',
     'Core/TerrainData',
     'Core/TerrainMesh',
+    'Core/Transforms',
     'ThirdParty/when'
 ], function(
     GoogleEarthEnterpriseTerrainData,
     BoundingSphere,
     Cartesian3,
+    Cartographic,
     Ellipsoid,
     GeographicTilingScheme,
     CesiumMath,
+    Matrix4,
     Rectangle,
     TerrainData,
     TerrainMesh,
+    Transforms,
     when) {
     'use strict';
 
@@ -55,8 +61,10 @@ defineSuite([
         var buf = new ArrayBuffer(totalSize);
         var dv = new DataView(buf);
 
+        var altitudeStart = 0;
         var offset = 0;
         for(var i=0;i<4;++i) {
+            altitudeStart = 0;
             dv.setUint32(offset, quadSize, true);
             offset += sizeOfUint32;
 
@@ -65,6 +73,7 @@ defineSuite([
             var yOrigin = southwest.latitude;
             if (i & 1) {
                 xOrigin = center.longitude;
+                altitudeStart = 10;
             }
             if (i & 2) {
                 yOrigin = center.latitude;
@@ -97,8 +106,10 @@ defineSuite([
             for (var j = 0; j < 4; ++j) {
                 var xPos = 0;
                 var yPos = 0;
+                var altitude = altitudeStart;
                 if (j & 1) {
                     ++xPos;
+                    altitude += 10;
                 }
                 if (j & 2) {
                     ++yPos;
@@ -106,7 +117,7 @@ defineSuite([
 
                 dv.setUint8(offset++, xPos);
                 dv.setUint8(offset++, yPos);
-                dv.setFloat32(offset, (i * 4 + j) * toEarthRadii, true);
+                dv.setFloat32(offset, altitude * toEarthRadii, true);
                 offset += sizeOfFloat;
             }
 
@@ -502,17 +513,35 @@ defineSuite([
 
         it('creates specified vertices plus skirt vertices', function() {
             var rectangle = tilingScheme.tileXYToRectangle(0, 0, 0);
-            var bs = BoundingSphere.fromRectangle3D(rectangle, Ellipsoid.WGS84, 15);
+            
+            var wgs84 = Ellipsoid.WGS84;
             return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
                 expect(mesh).toBeInstanceOf(TerrainMesh);
-                expect(mesh.vertices.length).toBe(16 * mesh.encoding.getStride()); // 16 regular vertices
-                expect(mesh.indices.length).toBe(4 * 2 * 3); // 2 regular triangles per quad
+                expect(mesh.vertices.length).toBe(28 * mesh.encoding.getStride()); // 16 regular + 12 skirt vertices
+                expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
                 expect(mesh.minimumHeight).toBe(0);
-                expect(mesh.maximumHeight).toBeCloseTo(15, 5);
+                expect(mesh.maximumHeight).toBeCloseTo(20, 5);
 
-                // Bounding spheres of points and whole rectangle should be close
-                expect(Cartesian3.distance(bs.center, mesh.boundingSphere3D.center)).toBeLessThan(3);
-                expect(bs.radius - mesh.boundingSphere3D.radius).toBeLessThan(4);
+                var encoding = mesh.encoding;
+                var cartesian = new Cartesian3();
+                var cartographic = new Cartographic();
+                var count = mesh.vertices.length / mesh.encoding.getStride();
+                for (var i = 0; i < count; ++i) {
+                    encoding.decodePosition(mesh.vertices, i, cartesian);
+                    wgs84.cartesianToCartographic(cartesian, cartographic);
+
+
+                    var height = encoding.decodeHeight(mesh.vertices, i);
+                    if (i < 16) { // Original vertices
+                        expect(height).toBeBetween(0, 20);
+
+                        // Only test on original positions as the skirts angle outward
+                        cartographic.longitude = CesiumMath.convertLongitudeRange(cartographic.longitude);
+                        expect(Rectangle.contains(rectangle,cartographic)).toBe(true);
+                    } else { // Skirts
+                        expect(height).toBeBetween(-1000, -980);
+                    }
+                }
             });
         });
 
@@ -524,7 +553,7 @@ defineSuite([
                 expect(mesh.vertices.length).toBe(16 * mesh.encoding.getStride()); // 16 regular vertices
                 expect(mesh.indices.length).toBe(4 * 2 * 3); // 2 regular triangles
                 expect(mesh.minimumHeight).toBe(0);
-                expect(mesh.maximumHeight).toBeCloseTo(30, 5);
+                expect(mesh.maximumHeight).toBeCloseTo(40, 5);
 
                 // Bounding spheres of points and whole rectangle should be close
                 expect(Cartesian3.distance(bs.center, mesh.boundingSphere3D.center)).toBeLessThan(6);

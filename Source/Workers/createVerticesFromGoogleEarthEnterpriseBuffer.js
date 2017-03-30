@@ -44,7 +44,7 @@ define([
         parameters.rectangle = Rectangle.clone(parameters.rectangle);
 
         var statistics = processBuffer(parameters.buffer, parameters.relativeToCenter, parameters.ellipsoid,
-            parameters.rectangle, parameters.nativeRectangle, parameters.exaggeration);
+            parameters.rectangle, parameters.nativeRectangle, parameters.exaggeration, parameters.skirtHeight);
         var vertices = statistics.vertices;
         transferableObjects.push(vertices.buffer);
         var indices = statistics.indices;
@@ -70,22 +70,27 @@ define([
     var minimumScratch = new Cartesian3();
     var maximumScratch = new Cartesian3();
     var matrix4Scratch = new Matrix4();
-    function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle, exaggeration) {
+    function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle, exaggeration, skirtHeight) {
         var geographicWest;
         var geographicSouth;
         var geographicEast;
         var geographicNorth;
+        var rectangleWidth, rectangleHeight;
 
         if (!defined(rectangle)) {
             geographicWest = CesiumMath.toRadians(nativeRectangle.west);
             geographicSouth = CesiumMath.toRadians(nativeRectangle.south);
             geographicEast = CesiumMath.toRadians(nativeRectangle.east);
             geographicNorth = CesiumMath.toRadians(nativeRectangle.north);
+            rectangleWidth = CesiumMath.toRadians(rectangle.width);
+            rectangleHeight = CesiumMath.toRadians(rectangle.height);
         } else {
             geographicWest = rectangle.west;
             geographicSouth = rectangle.south;
             geographicEast = rectangle.east;
             geographicNorth = rectangle.north;
+            rectangleWidth = rectangle.width;
+            rectangleHeight = rectangle.height;
         }
 
         var fromENU = Transforms.eastNorthUpToFixedFrame(relativeToCenter, ellipsoid);
@@ -132,6 +137,13 @@ define([
         var heights = new Array(size);
         var indices = new Array(indicesSize);
 
+        // Points are laid out in rows starting at SW, so storing border points as we
+        //  come across them all points will be adjacent.
+        var westBorder = [];
+        var southBorder = [];
+        var eastBorder = [];
+        var northBorder = [];
+
         // Each tile is split into 4 parts
         var pointOffset = 0;
         var indicesOffset = 0;
@@ -147,9 +159,11 @@ define([
             offset += sizeOfDouble;
 
             var stepX = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
+            var halfStepX = stepX * 0.5;
             offset += sizeOfDouble;
 
             var stepY = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
+            var halfStepY = stepY * 0.5;
             offset += sizeOfDouble;
 
             var numPoints = dv.getInt32(offset, true);
@@ -180,6 +194,30 @@ define([
                 height *= exaggeration;
 
                 scratchCartographic.height = height;
+
+                if (Math.abs(longitude - geographicWest) < halfStepX) {
+                    westBorder.push({
+                        index: index,
+                        cartographic: Cartographic.clone(scratchCartographic)
+                    });
+                } else if(Math.abs(longitude - geographicEast) < halfStepX) {
+                    eastBorder.push({
+                        index: index,
+                        cartographic: Cartographic.clone(scratchCartographic)
+                    });
+                }
+
+                if (Math.abs(latitude - geographicSouth) < halfStepY) {
+                    southBorder.push({
+                        index: index,
+                        cartographic: Cartographic.clone(scratchCartographic)
+                    });
+                } else if(Math.abs(latitude - geographicNorth) < halfStepY) {
+                    northBorder.push({
+                        index: index,
+                        cartographic: Cartographic.clone(scratchCartographic)
+                    });
+                }
 
                 minHeight = Math.min(height, minHeight);
                 maxHeight = Math.max(height, maxHeight);
@@ -212,6 +250,54 @@ define([
             indicesOffset += facesElementCount;
         }
 
+        // Add skirt points
+        var hMin = minHeight;
+        function addSkirt(borderPoints, longitudeFudge, latitudeFudge) {
+            var count = borderPoints.length;
+            var lastBorderPoint;
+            for (var j = 0; j < count; ++j) {
+                var borderPoint = borderPoints[j];
+                var borderCartographic = borderPoint.cartographic;
+                if (!defined(lastBorderPoint) ||
+                    !Cartographic.equalsEpsilon(borderCartographic, lastBorderPoint.cartographic, CesiumMath.EPSILON7)) {
+                    var borderIndex = borderPoint.index;
+                    var currentIndex = positions.length;
+
+                    var longitude = borderCartographic.longitude + longitudeFudge;
+                    var latitude = borderCartographic.latitude + latitudeFudge;
+                    latitude = CesiumMath.clamp(latitude, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO); // Don't go over the poles
+                    var height = borderCartographic.height - skirtHeight;
+                    hMin = Math.min(hMin, height);
+
+                    Cartographic.fromRadians(longitude, latitude, height, scratchCartographic);
+                    var pos = ellipsoid.cartographicToCartesian(scratchCartographic);
+                    positions.push(pos);
+                    heights.push(height);
+                    uvs.push(Cartesian2.clone(uvs[borderIndex])); // Copy UVs from border point
+
+                    Matrix4.multiplyByPoint(toENU, pos, scratchCartesian);
+
+                    Cartesian3.minimumByComponent(scratchCartesian, minimum, minimum);
+                    Cartesian3.maximumByComponent(scratchCartesian, maximum, maximum);
+
+                    if (defined(lastBorderPoint)) {
+                        var lastBorderIndex = lastBorderPoint.index;
+                        indices.push(lastBorderIndex, currentIndex - 1, currentIndex, currentIndex, borderIndex, lastBorderIndex);
+                    }
+
+                    lastBorderPoint = borderPoint;
+                }
+            }
+        }
+
+        var percentage = 0.00001;
+        addSkirt(westBorder, -percentage*rectangleWidth, 0);
+        addSkirt(southBorder, 0, -percentage*rectangleWidth);
+        addSkirt(eastBorder, percentage*rectangleWidth, 0);
+        addSkirt(northBorder, 0, percentage*rectangleWidth);
+
+        size = positions.length; // Get new size with skirt vertices
+
         var boundingSphere3D = BoundingSphere.fromPoints(positions);
         var orientedBoundingBox;
         if (defined(rectangle) && rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
@@ -224,7 +310,7 @@ define([
         var occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(relativeToCenter, positions);
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
-        var encoding = new TerrainEncoding(aaBox, minHeight, maxHeight, fromENU, false, false);
+        var encoding = new TerrainEncoding(aaBox, hMin, maxHeight, fromENU, false, false);
         var vertices = new Float32Array(size * encoding.getStride());
 
         var bufferIndex = 0;
