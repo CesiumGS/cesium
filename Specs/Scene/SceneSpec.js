@@ -838,6 +838,25 @@ defineSuite([
         });
     });
 
+    it('pickPosition caches results per frame',function(){
+        var s = createScene();
+
+        if (!s.pickPositionSupported) {
+            return;
+        }
+
+        spyOn(s, 'pickPositionWorldCoordinates');
+
+        var canvas = s.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        var position = s.pickPosition(windowPosition);
+
+        expect(s.pickPositionWorldCoordinates).toHaveBeenCalled();
+        position = s.pickPosition(windowPosition);
+
+        expect(s.pickPositionWorldCoordinates.calls.count()).toEqual(1);
+    })
+
     it('pickPosition throws without windowPosition', function() {
         expect(function() {
             scene.pickPosition();

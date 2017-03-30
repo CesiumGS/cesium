@@ -2612,6 +2612,7 @@ define([
      * @private
      */
     Scene.prototype.render = function(time) {
+        pickPositionCache = {}; //clean cache
         try {
             render(this, time);
         } catch (error) {
@@ -3020,6 +3021,8 @@ define([
 
     var scratchPickPositionCartographic = new Cartographic();
 
+    var pickPositionCache={};
+
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
      * <p>
@@ -3039,6 +3042,18 @@ define([
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
      */
     Scene.prototype.pickPosition = function(windowPosition, result) {
+        //check cache
+        var cached = pickPositionCache[windowPosition.toString()];
+        if (defined(cached) && defined(result)){
+            result.x = cached.x;
+            result.y = cached.y;
+
+            return result;
+
+        } else if (defined(cached)){
+            return cached.clone();
+        }
+
         result = this.pickPositionWorldCoordinates(windowPosition, result);
         if (defined(result) && this.mode !== SceneMode.SCENE3D) {
             Cartesian3.fromElements(result.y, result.z, result.x, result);
@@ -3049,6 +3064,9 @@ define([
             var cart = projection.unproject(result, scratchPickPositionCartographic);
             ellipsoid.cartographicToCartesian(cart, result);
         }
+
+        pickPositionCache[windowPosition.toString()] = result.clone();
+
         return result;
     };
 
