@@ -321,6 +321,8 @@ define([
         this._cameraStartFired = false;
         this._cameraMovedTime = undefined;
 
+        this._pickPositionCache = {};
+
         /**
          * Exceptions occurring in <code>render</code> are always caught in order to raise the
          * <code>renderError</code> event.  If this property is true, the error is rethrown
@@ -2476,7 +2478,7 @@ define([
         if (useFXAA) {
             if (!useOIT && useGlobeDepthFramebuffer) {
                 passState.framebuffer = scene._fxaa.getColorFramebuffer();
-                scene._globeDepth.executeCopyColor(context, passState);
+                    <scene className="_globeDepth execu"></scene>teCopyColor(context, passState);
             }
 
             passState.framebuffer = environmentState.originalFramebuffer;
@@ -2523,6 +2525,8 @@ define([
     var scratchEyeTranslation = new Cartesian3();
 
     function render(scene, time) {
+        scene._pickPositionCache = {}; //clean <cache></cache>
+
         if (!defined(time)) {
             time = JulianDate.now();
         }
@@ -2616,7 +2620,7 @@ define([
      * @private
      */
     Scene.prototype.render = function(time) {
-        pickPositionCache = {}; //clean cache
+
         try {
             render(this, time);
         } catch (error) {
@@ -3025,7 +3029,9 @@ define([
 
     var scratchPickPositionCartographic = new Cartographic();
 
-    var pickPositionCache={};
+    function createPickPositionCacheKey(windowPosition){
+
+    }
 
      /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
@@ -3046,19 +3052,14 @@ define([
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
      */
     Scene.prototype.pickPosition = function(windowPosition, result) {
+        var cacheKey;
 
-        if(defined(windowPosition) && pickPositionCache.hasOwnProperty(windowPosition.toString())){
-            var cached = pickPositionCache[windowPosition.toString()];
-            if (defined(cached) && defined(result)){
-                result.x = cached.x;
-                result.y = cached.y;
-            }
+        if(defined(windowPosition)){
+            cacheKey = windowPosition.x + '-' + windowPosition.y;
+        }
 
-            if (defined(cached)){
-                return cached.clone();
-            }
-
-            return cached;
+        if(defined(windowPosition) && this._pickPositionCache.hasOwnProperty(cacheKey)){
+            return Cartesian2.clone(this._pickPositionCache[cacheKey], result);
         }
 
         result = this.pickPositionWorldCoordinates(windowPosition, result);
@@ -3072,7 +3073,7 @@ define([
             ellipsoid.cartographicToCartesian(cart, result);
         }
 
-        pickPositionCache[windowPosition.toString()] = defined(result) ? result.clone() : result;
+        this._pickPositionCache[cacheKey] = Cartesian2.clone(result);
 
         return result;
     };

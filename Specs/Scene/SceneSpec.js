@@ -873,40 +873,6 @@ defineSuite([
             expect(s.pickPositionWorldCoordinates.calls.count()).toEqual(2);
         });
 
-
-
-
-        // var s = createScene();
-
-        // if (!s.pickPositionSupported) {
-        //     return;
-        // }
-
-        // var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-        // s.camera.setView({
-        //     destination : rectangle
-        // });
-
-        // var rectanglePrimitive = createRectangle(rectangle);
-        // rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
-
-        // var primitives = s.primitives;
-        // primitives.add(rectanglePrimitive);
-
-        // spyOn(s, 'pickPositionWorldCoordinates');
-
-        // var canvas = s.canvas;
-        // var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
-        // s.useDepthPicking = true;
-
-        // expect(s).toRenderAndCall(function() {
-        //     var position = s.pickPosition(windowPosition);
-
-        //     expect(s.pickPositionWorldCoordinates).toHaveBeenCalled();
-        //     position = s.pickPosition(windowPosition);
-
-        //     expect(s.pickPositionWorldCoordinates.calls.count()).toEqual(1);
-        // });
     });
 
     it('pickPosition throws without windowPosition', function() {
