@@ -807,6 +807,14 @@ define([
             }
         },
 
+        /**
+         * The distance from the camera at which to disable the depth test of billboards, labels and points
+         * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
+         * be applied. When less than zero, the depth test should never be applied.
+         *
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
         minimumDisableDepthTestDistance : {
             get : function() {
                 return this._minimumDisableDepthTestDistance;

@@ -320,6 +320,12 @@ define([
          */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
 
+        /**
+         * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+         * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         */
         disableDepthTestDistance : createPropertyDescriptor('disableDepthTestDistance')
     });
 

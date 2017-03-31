@@ -1148,6 +1148,15 @@ define([
             }
         },
 
+        /**
+         * The distance from the camera at which to disable the depth test of billboards, labels and points
+         * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
+         * be applied. When less than zero, the depth test should never be applied. Setting the diableDepthTestDistance
+         * property of a billboard, label or point will override this value.
+         * @memberof Scene.prototype
+         * @type {Number}
+         * @default 0.0
+         */
         minimumDisableDepthTestDistance : {
             get : function() {
                 return this._minimumDisableDepthTestDistance;

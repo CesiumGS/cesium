@@ -750,6 +750,13 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+         * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+         * @memberof Billboard.prototype
+         * @type {Number}
+         * @default 0.0
+         */
         disableDepthTestDistance : {
             get : function() {
                 return this._disableDepthTestDistance;
