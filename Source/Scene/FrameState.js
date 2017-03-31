@@ -250,6 +250,13 @@ define([
          */
         this.frustumSplits = [];
 
+        /**
+         * The current scene background color
+         *
+         * @type {Color}
+         */
+        this.backgroundColor = undefined;
+
         this.minimumDisableDepthTestDistance = undefined;
     }
 
