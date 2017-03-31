@@ -76,6 +76,13 @@ define([
         this._image = new Image();
     }
 
+    var TerrainState = {
+        UNKNOWN : 0,
+        NONE : 1,
+        SELF : 2,
+        PARENT : 3
+    };
+
     /**
      * Determines if the discard policy is ready to process images.
      * @returns {Boolean} True if the discard policy is ready to process images; otherwise, false.
@@ -677,43 +684,48 @@ define([
         }
         //>>includeEnd('debug');
 
-        var bHasTerrain = true;
+        var hasTerrain = true;
         var quadKey = GoogleEarthEnterpriseProvider.tileXYToQuadKey(x, y, level);
+        var terrainCache = this._terrainCache;
         var tileInfo = this._tileInfo;
         var info = tileInfo[quadKey];
-        if (defined(info)) {
-            if (!isBitSet(info.bits, terrainBitmask) && !info.terrainInParent){
-                // Already have info and there isn't any terrain here
-                bHasTerrain = false;
-            }
-        } else {
-            if (info === null) {
-                // Parent was retrieved and said child doesn't exist
-                bHasTerrain = false;
-            }
 
-            var q = quadKey;
-            var last;
-            while(q.length > 1) {
-                last = q.substring(q.length-1);
-                q = q.substring(0, q.length-1);
-                info = tileInfo[q];
-                if (defined(info)) {
-                    if (!isBitSet(info.bits, cacheFlagBitmask) &&
-                        !isBitSet(info.bits, childrenBitmasks[parseInt(last)])){
-                        // We have no subtree or child available at some point in this node's ancestry
-                        bHasTerrain = false;
+        if (!defined(terrainCache[quadKey])) { // If its in the cache we know we have it so just skip all the checks
+            if (defined(info)) {
+                if (info.terrainState === TerrainState.NONE) {
+                    // Already have info and there isn't any terrain here
+                    hasTerrain = false;
+                }
+            } else {
+                if (info === null) {
+                    // Parent was retrieved and said child doesn't exist
+                    hasTerrain = false;
+                }
+
+                var q = quadKey;
+                var last;
+                while (q.length > 1) {
+                    last = q.substring(q.length - 1);
+                    q = q.substring(0, q.length - 1);
+                    info = tileInfo[q];
+                    if (defined(info)) {
+                        if (!isBitSet(info.bits, cacheFlagBitmask) &&
+                            !isBitSet(info.bits, childrenBitmasks[parseInt(last)])) {
+                            // We have no subtree or child available at some point in this node's ancestry
+                            hasTerrain = false;
+                        }
+
+                        break;
+                    } else if (info === null) {
+                        // Some node in the ancestry was loaded and said there wasn't a subtree
+                        hasTerrain = false;
+                        break;
                     }
-
-                    break;
-                } else if (info === null) {
-                    // Some node in the ancestry was loaded and said there wasn't a subtree
-                    bHasTerrain = false;
                 }
             }
         }
 
-        if (!bHasTerrain) {
+        if (!hasTerrain) {
             if(defined(info) && !info.ancestorHasTerrain) {
                 // We haven't reached a level with terrain, so return the ellipsoid
                 return new HeightmapTerrainData({
@@ -728,11 +740,14 @@ define([
 
 
         var that = this;
-        var terrainCache = this._terrainCache;
         return populateSubtree(this, quadKey)
             .then(function(info){
                 if (defined(info)) {
                     if (defined(terrainCache[quadKey])) {
+                        if (info.terrainState === TerrainState.UNKNOWN) {
+                            // If its already in the cache then a parent request must've loaded it
+                            info.terrainState = TerrainState.PARENT;
+                        }
                         var buffer = terrainCache[quadKey];
                         delete terrainCache[quadKey];
                         return new GoogleEarthEnterpriseTerrainData({
@@ -740,13 +755,35 @@ define([
                             childTileMask: info.bits & anyChildBitmask
                         });
                     }
-                    if (isBitSet(info.bits, terrainBitmask) || info.terrainInParent) {
-                        var q = quadKey;
-                        if (info.terrainInParent) {
-                            // If terrain is in parent tile, process that instead
-                            q = q.substring(0, q.length-1);
+
+                    var q = quadKey;
+                    var terrainVersion = -1;
+                    var terrainState = info.terrainState;
+                    if (terrainState !== TerrainState.NONE) {
+                        switch(terrainState) {
+                            case TerrainState.SELF: // We have terrain and have retrieved it before
+                                terrainVersion = info.terrainVersion;
+                                break;
+                            case TerrainState.PARENT: // We have terrain in our parent
+                                q = q.substring(0, q.length-1);
+                                terrainVersion = tileInfo[q].terrainVersion;
+                                break;
+                            case TerrainState.UNKNOWN: // We haven't tried to retrieve terrain yet
+                                if (isBitSet(info.bits, terrainBitmask)) {
+                                    terrainVersion = info.terrainVersion; // We should have terrain
+                                } else {
+                                    q = q.substring(0, q.length-1);
+                                    var parentInfo = tileInfo[q];
+                                    if (defined(parentInfo) && isBitSet(parentInfo.bits, terrainBitmask)) {
+                                        terrainVersion = parentInfo.terrainVersion; // Try checking in the parent
+                                    }
+                                }
+                                break;
                         }
-                        var url = buildTerrainUrl(that, q, info.terrainVersion);
+                    }
+
+                    if (terrainVersion > 0) {
+                        var url = buildTerrainUrl(that, q, terrainVersion);
                         var promise;
                         throttleRequests = defaultValue(throttleRequests, true);
                         if (throttleRequests) {
@@ -766,15 +803,23 @@ define([
                                     parseTerrainPacket(that, uncompressedTerrain, q);
 
                                     var buffer = terrainCache[quadKey];
-                                    delete terrainCache[quadKey];
-                                    return new GoogleEarthEnterpriseTerrainData({
-                                        buffer: buffer,
-                                        childTileMask: info.bits & anyChildBitmask
-                                    });
+                                    if (defined(buffer)) {
+                                        if (q !== quadKey) {
+                                            // If we didn't request this tile directly then it came from a parent
+                                            info.terrainState = TerrainState.PARENT;
+                                        }
+                                        delete terrainCache[quadKey];
+                                        return new GoogleEarthEnterpriseTerrainData({
+                                            buffer : buffer,
+                                            childTileMask : info.bits & anyChildBitmask
+                                        });
+                                    } else {
+                                        info.terrainState = TerrainState.NONE;
+                                    }
                                 }
                             })
                             .otherwise(function(error) {
-                                // Just ignore failures and return undefined
+                                info.terrainState = TerrainState.NONE;
                             });
                     } else if(!info.ancestorHasTerrain) {
                         // We haven't reached a level with terrain, so return the ellipsoid
@@ -812,12 +857,12 @@ define([
 
         // If we were sent child tiles, store them till they are needed
         terrainCache[quadKey] = terrainTiles[0];
+        info.terrainState = TerrainState.SELF;
         var count = terrainTiles.length-1;
-        for (var j = 0;j<count;++j) {
+        for (var j = 0; j < count; ++j) {
+            var childKey = quadKey + j.toString();
             if (isBitSet(info.bits, childrenBitmasks[j])) {
-                var childKey = quadKey + j.toString();
-                terrainCache[childKey] = terrainTiles[j + 1];
-                tileInfo[childKey].terrainInParent = true;
+                terrainCache[childKey] = terrainTiles[j+1];
             }
         }
     }
@@ -1056,7 +1101,7 @@ define([
                         imageryVersion : imageVersion,
                         terrainVersion : terrainVersion,
                         ancestorHasTerrain : false, // Set it later once we find its parent
-                        terrainInParent : false
+                        terrainState : TerrainState.UNKNOWN
                     });
                 }
 
