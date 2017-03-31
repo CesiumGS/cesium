@@ -114,6 +114,7 @@ defineSuite([
             scene.renderForSpecs();
             return collection.ready;
         }).then(function() {
+            zoomTo(collection, 0);
             return collection;
         });
     }
@@ -577,7 +578,6 @@ defineSuite([
             gltf : boxGltf,
             instances : createInstances(4)
         }).then(function(collection) {
-            zoomTo(collection, 1);
             expect(scene).toPickAndCall(function(result) {
                 var originalMatrix = result.modelMatrix;
                 result.modelMatrix = Matrix4.IDENTITY;
@@ -597,7 +597,6 @@ defineSuite([
             gltf : boxGltf,
             instances : createInstances(4)
         }).then(function(collection) {
-            zoomTo(collection, 1);
             expect(scene).toPickAndCall(function(result) {
                 var originalMatrix = result.modelMatrix;
                 var originalRadius = collection._boundingSphere.radius;
