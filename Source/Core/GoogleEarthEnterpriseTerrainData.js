@@ -1,6 +1,7 @@
 /*global define*/
 define([
     '../ThirdParty/when',
+    './BoundingSphere',
     './Cartesian2',
     './Cartesian3',
     './defaultValue',
@@ -12,6 +13,8 @@ define([
     './IndexDatatype',
     './Intersections2D',
     './Math',
+    './OrientedBoundingBox',
+    './QuantizedMeshTerrainData',
     './Rectangle',
     './TaskProcessor',
     './TerrainEncoding',
@@ -19,6 +22,7 @@ define([
     './TerrainProvider'
 ], function(
     when,
+    BoundingSphere,
     Cartesian2,
     Cartesian3,
     defaultValue,
@@ -30,6 +34,8 @@ define([
     IndexDatatype,
     Intersections2D,
     CesiumMath,
+    OrientedBoundingBox,
+    QuantizedMeshTerrainData,
     Rectangle,
     TaskProcessor,
     TerrainEncoding,
@@ -80,13 +86,27 @@ define([
         //>>includeEnd('debug');
 
         this._buffer = options.buffer;
-        this._childTileMask = defaultValue(options.childTileMask, 15);
+
+
+        // Convert from google layout to layout of other providers
+        // 3 2 -> 2 3
+        // 0 1 -> 0 1
+        var googleChildTileMask = defaultValue(options.childTileMask, 15);
+        var childTileMask = googleChildTileMask & 3; // Bottom row is identical
+        childTileMask |= (googleChildTileMask & 4) ? 8 : 0; // NE
+        childTileMask |= (googleChildTileMask & 8) ? 4 : 0; // NW
+
+        this._childTileMask = childTileMask;
 
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
 
         this._skirtHeight = undefined;
         this._bufferType = this._buffer.constructor;
         this._mesh = undefined;
+        this._minimumHeight = undefined;
+        this._maximumHeight = undefined;
+        this._vertexCountWithoutSkirts = undefined;
+        this._skirtIndex = undefined;
     }
 
     defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
@@ -180,6 +200,11 @@ define([
                 TerrainEncoding.clone(result.encoding),
                 exaggeration);
 
+            that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
+            that._skirtIndex = result.skirtIndex;
+            that._minimumHeight = result.minimumHeight;
+            that._maximumHeight = result.maximumHeight;
+
             // Free memory received from server after mesh is created.
             that._buffer = undefined;
             return that._mesh;
@@ -212,7 +237,7 @@ define([
         return heightSample;
     };
 
-    //var upsampleTaskProcessor = new TaskProcessor('upsampleQuantizedTerrainMesh');
+    var upsampleTaskProcessor = new TaskProcessor('upsampleQuantizedTerrainMesh');
 
     /**
      * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
@@ -258,73 +283,65 @@ define([
         }
         //>>includeEnd('debug');
 
-        return undefined;
+        var mesh = this._mesh;
+        if (!defined(this._mesh)) {
+            return undefined;
+        }
 
-        // var mesh = this._mesh;
-        // if (!defined(this._mesh)) {
-        //     return undefined;
-        // }
-        //
-        // var isEastChild = thisX * 2 !== descendantX;
-        // var isNorthChild = thisY * 2 === descendantY;
-        //
-        // var ellipsoid = tilingScheme.ellipsoid;
-        // var childRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
-        //
-        // var upsamplePromise = upsampleTaskProcessor.scheduleTask({
-        //     vertices : mesh.vertices,
-        //     vertexCountWithoutSkirts : mesh.vertices.length / 3,
-        //     indices : mesh.indices,
-        //     skirtIndex : undefined,
-        //     encoding : mesh.encoding,
-        //     minimumHeight : this._minimumHeight,
-        //     maximumHeight : this._maximumHeight,
-        //     isEastChild : isEastChild,
-        //     isNorthChild : isNorthChild,
-        //     childRectangle : childRectangle,
-        //     ellipsoid : ellipsoid,
-        //     exaggeration : mesh.exaggeration
-        // });
-        //
-        // if (!defined(upsamplePromise)) {
-        //     // Postponed
-        //     return undefined;
-        // }
-        //
-        // // TODO: Skirt
-        // // var shortestSkirt = Math.min(this._westSkirtHeight, this._eastSkirtHeight);
-        // // shortestSkirt = Math.min(shortestSkirt, this._southSkirtHeight);
-        // // shortestSkirt = Math.min(shortestSkirt, this._northSkirtHeight);
-        // //
-        // // var westSkirtHeight = isEastChild ? (shortestSkirt * 0.5) : this._westSkirtHeight;
-        // // var southSkirtHeight = isNorthChild ? (shortestSkirt * 0.5) : this._southSkirtHeight;
-        // // var eastSkirtHeight = isEastChild ? this._eastSkirtHeight : (shortestSkirt * 0.5);
-        // // var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
-        //
-        // return when(upsamplePromise, function(result) {
-        //     var quantizedVertices = new Uint16Array(result.vertices);
-        //     var indicesTypedArray = IndexDatatype.createTypedArray(quantizedVertices.length / 3, result.indices);
-        //
-        //     return new GoogleEarthEnterpriseTerrainData({
-        //         quantizedVertices : quantizedVertices,
-        //         indices : indicesTypedArray,
-        //         minimumHeight : result.minimumHeight,
-        //         maximumHeight : result.maximumHeight,
-        //         boundingSphere : BoundingSphere.clone(result.boundingSphere),
-        //         orientedBoundingBox : OrientedBoundingBox.clone(result.orientedBoundingBox),
-        //         horizonOcclusionPoint : Cartesian3.clone(result.horizonOcclusionPoint),
-        //         westIndices : result.westIndices,
-        //         southIndices : result.southIndices,
-        //         eastIndices : result.eastIndices,
-        //         northIndices : result.northIndices,
-        //         westSkirtHeight : 0,
-        //         southSkirtHeight : 0,
-        //         eastSkirtHeight : 0,
-        //         northSkirtHeight : 0,
-        //         childTileMask : 0,
-        //         createdByUpsampling : true
-        //     });
-        // });
+        var isEastChild = thisX * 2 !== descendantX;
+        var isNorthChild = thisY * 2 === descendantY;
+
+        var ellipsoid = tilingScheme.ellipsoid;
+        var childRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
+
+        var upsamplePromise = upsampleTaskProcessor.scheduleTask({
+            vertices : mesh.vertices,
+            vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
+            indices : mesh.indices,
+            skirtIndex : this._skirtIndex,
+            encoding : mesh.encoding,
+            minimumHeight : this._minimumHeight,
+            maximumHeight : this._maximumHeight,
+            isEastChild : isEastChild,
+            isNorthChild : isNorthChild,
+            childRectangle : childRectangle,
+            ellipsoid : ellipsoid,
+            exaggeration : mesh.exaggeration
+        });
+
+        if (!defined(upsamplePromise)) {
+            // Postponed
+            return undefined;
+        }
+
+        var that = this;
+        return when(upsamplePromise, function(result) {
+            var quantizedVertices = new Uint16Array(result.vertices);
+            var indicesTypedArray = IndexDatatype.createTypedArray(quantizedVertices.length / 3, result.indices);
+
+            var skirtHeight = that._skirtHeight;
+
+            // Use QuantizedMeshTerrainData since we have what we need already parsed
+            return new QuantizedMeshTerrainData({
+                quantizedVertices : quantizedVertices,
+                indices : indicesTypedArray,
+                minimumHeight : result.minimumHeight,
+                maximumHeight : result.maximumHeight,
+                boundingSphere : BoundingSphere.clone(result.boundingSphere),
+                orientedBoundingBox : OrientedBoundingBox.clone(result.orientedBoundingBox),
+                horizonOcclusionPoint : Cartesian3.clone(result.horizonOcclusionPoint),
+                westIndices : result.westIndices,
+                southIndices : result.southIndices,
+                eastIndices : result.eastIndices,
+                northIndices : result.northIndices,
+                westSkirtHeight : skirtHeight,
+                southSkirtHeight : skirtHeight,
+                eastSkirtHeight : skirtHeight,
+                northSkirtHeight : skirtHeight,
+                childTileMask : 0,
+                createdByUpsampling : true
+            });
+        });
     };
 
     /**
@@ -355,19 +372,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        // Layout:
-        // 3 2
-        // 0 1
-        var bitNumber = 0; // southwest child
-        if (childY === thisY * 2) { // north child
-            bitNumber += 2;
-            if (childX === thisX * 2) {
-                ++bitNumber; // west child
-            }
-        } else { // south child
-            if (childX !== thisX * 2) {
-                ++bitNumber; // east child
-            }
+        var bitNumber = 2; // northwest child
+        if (childX !== thisX * 2) {
+            ++bitNumber; // east child
+        }
+        if (childY !== thisY * 2) {
+            bitNumber -= 2; // south child
         }
 
         return (this._childTileMask & (1 << bitNumber)) !== 0;

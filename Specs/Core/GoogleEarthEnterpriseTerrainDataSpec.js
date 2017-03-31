@@ -135,7 +135,7 @@ defineSuite([
     it('conforms to TerrainData interface', function() {
         expect(GoogleEarthEnterpriseTerrainData).toConformToInterface(TerrainData);
     });
-/*
+
     describe('upsample', function() {
         function findVertexWithCoordinates(uBuffer, vBuffer, u, v) {
             u *= 32767;
@@ -176,35 +176,21 @@ defineSuite([
         }
 
         it('works for all four children of a simple quad', function() {
-            var data = new QuantizedMeshTerrainData({
-                minimumHeight : 0.0,
-                maximumHeight : 4.0,
-                quantizedVertices : new Uint16Array([ // order is sw nw se ne
-                    // u
-                    0, 0, 32767, 32767,
-                    // v
-                    0, 32767, 0, 32767,
-                    // heights
-                    32767 / 4.0, 2.0 * 32767 / 4.0, 3.0 * 32767 / 4.0, 32767
-                ]),
-                indices : new Uint16Array([
-                    0, 3, 1,
-                    0, 2, 3
-                ]),
-                boundingSphere : new BoundingSphere(),
-                horizonOcclusionPoint : new Cartesian3(),
-                westIndices : [],
-                southIndices : [],
-                eastIndices : [],
-                northIndices : [],
-                westSkirtHeight : 1.0,
-                southSkirtHeight : 1.0,
-                eastSkirtHeight : 1.0,
-                northSkirtHeight : 1.0,
+            var maxShort = 32767;
+            tilingScheme = new GeographicTilingScheme();
+            var buffer = getBuffer(tilingScheme, 0, 0, 0);
+            var data = new GoogleEarthEnterpriseTerrainData({
+                buffer : buffer,
                 childTileMask : 15
             });
 
             var tilingScheme = new GeographicTilingScheme();
+            var childRectangles = [
+                tilingScheme.tileXYToRectangle(0, 0, 1),
+                tilingScheme.tileXYToRectangle(1, 0, 1),
+                tilingScheme.tileXYToRectangle(0, 1, 1),
+                tilingScheme.tileXYToRectangle(1, 1, 1)
+            ];
 
             return when(data.createMesh(tilingScheme, 0, 0, 0, 1)).then(function() {
                 var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
@@ -222,96 +208,98 @@ defineSuite([
                     var uBuffer = upsampled._uValues;
                     var vBuffer = upsampled._vValues;
                     var ib = upsampled._indices;
+                    var heights = upsampled._heightValues;
 
-                    expect(uBuffer.length).toBe(4);
-                    expect(vBuffer.length).toBe(4);
-                    expect(upsampled._heightValues.length).toBe(4);
+                    expect(uBuffer.length).toBe(9);
+                    expect(vBuffer.length).toBe(9);
+                    expect(heights.length).toBe(9);
                     expect(ib.length).toBe(6);
 
-                    var sw = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 0.0);
-                    expect(sw).not.toBe(-1);
-                    var nw = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 1.0);
-                    expect(nw).not.toBe(-1);
-                    var se = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 0.0);
-                    expect(se).not.toBe(-1);
-                    var ne = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 1.0);
-                    expect(ne).not.toBe(-1);
+                    var rectangle = childRectangles[i];
+                    var north = 0;
+                    var south = 0;
+                    var east = 0;
+                    var west = 0;
+                    var index, u, v, h;
+                    for (var j = 0; j < ib.length; ++j) {
+                        index = ib[j];
+                        u = (uBuffer[index] / maxShort) * rectangle.width + rectangle.west;
+                        v = (vBuffer[index] / maxShort) * rectangle.height + rectangle.south;
+                        if (CesiumMath.equalsEpsilon(u, rectangle.west, CesiumMath.EPSILON7)) {
+                            ++west;
+                        } else if (CesiumMath.equalsEpsilon(u, rectangle.east, CesiumMath.EPSILON7)) {
+                            ++east;
+                        }
 
-                    var nwToSe = hasTriangle(ib, sw, se, nw) && hasTriangle(ib, nw, se, ne);
-                    var swToNe = hasTriangle(ib, sw, ne, nw) && hasTriangle(ib, sw, se, ne);
-                    expect(nwToSe || swToNe).toBe(true);
-                }
-            });
-        });
-
-        it('oct-encoded normals works for all four children of a simple quad', function() {
-            var data = new QuantizedMeshTerrainData({
-                minimumHeight : 0.0,
-                maximumHeight : 4.0,
-                quantizedVertices : new Uint16Array([ // order is sw nw se ne
-                    // u
-                    0, 0, 32767, 32767,
-                    // v
-                    0, 32767, 0, 32767,
-                    // heights
-                    32767 / 4.0, 2.0 * 32767 / 4.0, 3.0 * 32767 / 4.0, 32767
-                ]),
-                encodedNormals : new Uint8Array([
-                    // fun property of oct-encoded normals: the octrahedron is projected onto a plane
-                    // and unfolded into a unit square.  The 4 corners of this unit square are encoded values
-                    // of the same Cartesian normal, vec3(0.0, 0.0, 1.0).
-                    // Therefore, all 4 normals below are actually oct-encoded representations of vec3(0.0, 0.0, 1.0)
-                    255, 0,     // sw
-                    255, 255,   // nw
-                    255, 0,   // se
-                    255, 255  // ne
-                ]),
-                indices : new Uint16Array([
-                    0, 3, 1,
-                    0, 2, 3
-                ]),
-                boundingSphere : new BoundingSphere(),
-                horizonOcclusionPoint : new Cartesian3(),
-                westIndices : [],
-                southIndices : [],
-                eastIndices : [],
-                northIndices : [],
-                westSkirtHeight : 1.0,
-                southSkirtHeight : 1.0,
-                eastSkirtHeight : 1.0,
-                northSkirtHeight : 1.0,
-                childTileMask : 15
-            });
-
-            var tilingScheme = new GeographicTilingScheme();
-
-            return when(data.createMesh(tilingScheme, 0, 0, 0, 1)).then(function() {
-                var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-                var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
-                var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
-                var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
-                return when.join(swPromise, sePromise, nwPromise, nePromise);
-            }).then(function(upsampleResults) {
-                expect(upsampleResults.length).toBe(4);
-
-                for (var i = 0; i < upsampleResults.length; ++i) {
-                    var upsampled = upsampleResults[i];
-                    expect(upsampled).toBeDefined();
-
-                    var encodedNormals = upsampled._encodedNormals;
-
-                    expect(encodedNormals.length).toBe(8);
-
-                    // All 4 normals should remain oct-encoded representations of vec3(0.0, 0.0, -1.0)
-                    for (var n = 0; n < encodedNormals.length; ++n) {
-                        expect(encodedNormals[i]).toBe(255);
+                        if (CesiumMath.equalsEpsilon(v, rectangle.south, CesiumMath.EPSILON7)) {
+                            ++south;
+                        } else if (CesiumMath.equalsEpsilon(v, rectangle.north, CesiumMath.EPSILON7)) {
+                            ++north;
+                        }
                     }
+
+                    expect(north).toEqual(3);
+                    expect(south).toEqual(3);
+                    expect(east).toEqual(3);
+                    expect(west).toEqual(3);
+
+                    var westIndices = upsampled._westIndices;
+                    for (j = 0; j < westIndices.length; ++j) {
+                        index = westIndices[j];
+                        u = (uBuffer[index] / maxShort) * rectangle.width + rectangle.west;
+                        v = (vBuffer[index] / maxShort) * rectangle.height + rectangle.south;
+                        h = CesiumMath.lerp(upsampled._minimumHeight, upsampled._maximumHeight, heights[index] / maxShort);
+                        console.log(u+'/'+v+'/'+h);
+                    }
+                    console.log();
+
+                    var southIndices = upsampled._southIndices;
+                    for (j = 0; j < southIndices.length; ++j) {
+                        index = southIndices[j];
+                        u = (uBuffer[index] / maxShort) * rectangle.width + rectangle.west;
+                        v = (vBuffer[index] / maxShort) * rectangle.height + rectangle.south;
+                        h = CesiumMath.lerp(upsampled._minimumHeight, upsampled._maximumHeight, heights[index] / maxShort);
+                        console.log(u+'/'+v+'/'+h);
+                    }
+                    console.log();
+
+                    var eastIndices = upsampled._eastIndices;
+                    for (j = 0; j < eastIndices.length; ++j) {
+                        index = eastIndices[j];
+                        u = (uBuffer[index] / maxShort) * rectangle.width + rectangle.west;
+                        v = (vBuffer[index] / maxShort) * rectangle.height + rectangle.south;
+                        h = CesiumMath.lerp(upsampled._minimumHeight, upsampled._maximumHeight, heights[index] / maxShort);
+                        console.log(u+'/'+v+'/'+h);
+                    }
+                    console.log();
+
+                    var northIndices = upsampled._northIndices;
+                    for (j = 0; j < northIndices.length; ++j) {
+                        index = northIndices[j];
+                        u = (uBuffer[index] / maxShort) * rectangle.width + rectangle.west;
+                        v = (vBuffer[index] / maxShort) * rectangle.height + rectangle.south;
+                        h = CesiumMath.lerp(upsampled._minimumHeight, upsampled._maximumHeight, heights[index] / maxShort);
+                        console.log(u+'/'+v+'/'+h);
+                    }
+
+                    // var sw = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 0.0);
+                    // expect(sw).not.toBe(-1);
+                    // var nw = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 1.0);
+                    // expect(nw).not.toBe(-1);
+                    // var se = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 0.0);
+                    // expect(se).not.toBe(-1);
+                    // var ne = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 1.0);
+                    // expect(ne).not.toBe(-1);
+                    //
+                    // var nwToSe = hasTriangle(ib, sw, se, nw) && hasTriangle(ib, nw, se, ne);
+                    // var swToNe = hasTriangle(ib, sw, ne, nw) && hasTriangle(ib, sw, se, ne);
+                    // expect(nwToSe || swToNe).toBe(true);
                 }
             });
         });
-
+/*
         it('works for a quad with an extra vertex in the northwest child', function() {
-            var data = new QuantizedMeshTerrainData({
+            var data = new GoogleEarthEnterpriseTerrainData({
                 minimumHeight : 0.0,
                 maximumHeight : 6.0,
                 quantizedVertices : new Uint16Array([ // order is sw, nw, se, ne, extra vertex in nw quadrant
@@ -385,7 +373,7 @@ defineSuite([
         });
 
         it('works for a quad with an extra vertex on the splitting plane', function() {
-            var data = new QuantizedMeshTerrainData({
+            var data = new GoogleEarthEnterpriseTerrainData({
                 minimumHeight : 0.0,
                 maximumHeight : 6.0,
                 quantizedVertices : new Uint16Array([ // order is sw, nw, se, ne, extra vertex in nw quadrant
@@ -471,8 +459,9 @@ defineSuite([
                 expect(upsampleResults[1]._southIndices.length).toBe(3);
             });
         });
+        */
     });
-*/
+
     describe('createMesh', function() {
         var data;
         var tilingScheme;
@@ -513,7 +502,7 @@ defineSuite([
 
         it('creates specified vertices plus skirt vertices', function() {
             var rectangle = tilingScheme.tileXYToRectangle(0, 0, 0);
-            
+
             var wgs84 = Ellipsoid.WGS84;
             return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
                 expect(mesh).toBeInstanceOf(TerrainMesh);
@@ -527,15 +516,13 @@ defineSuite([
                 var cartographic = new Cartographic();
                 var count = mesh.vertices.length / mesh.encoding.getStride();
                 for (var i = 0; i < count; ++i) {
-                    encoding.decodePosition(mesh.vertices, i, cartesian);
-                    wgs84.cartesianToCartographic(cartesian, cartographic);
-
-
                     var height = encoding.decodeHeight(mesh.vertices, i);
                     if (i < 16) { // Original vertices
                         expect(height).toBeBetween(0, 20);
 
                         // Only test on original positions as the skirts angle outward
+                        encoding.decodePosition(mesh.vertices, i, cartesian);
+                        wgs84.cartesianToCartographic(cartesian, cartographic);
                         cartographic.longitude = CesiumMath.convertLongitudeRange(cartographic.longitude);
                         expect(Rectangle.contains(rectangle,cartographic)).toBe(true);
                     } else { // Skirts
@@ -546,59 +533,25 @@ defineSuite([
         });
 
         it('exaggerates mesh', function() {
-            var rectangle = tilingScheme.tileXYToRectangle(0, 0, 0);
-            var bs = BoundingSphere.fromRectangle3D(rectangle, Ellipsoid.WGS84, 30);
             return data.createMesh(tilingScheme, 0, 0, 0, 2).then(function(mesh) {
                 expect(mesh).toBeInstanceOf(TerrainMesh);
-                expect(mesh.vertices.length).toBe(16 * mesh.encoding.getStride()); // 16 regular vertices
-                expect(mesh.indices.length).toBe(4 * 2 * 3); // 2 regular triangles
+                expect(mesh.vertices.length).toBe(28 * mesh.encoding.getStride()); // 16 regular + 12 skirt vertices
+                expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
                 expect(mesh.minimumHeight).toBe(0);
                 expect(mesh.maximumHeight).toBeCloseTo(40, 5);
 
-                // Bounding spheres of points and whole rectangle should be close
-                expect(Cartesian3.distance(bs.center, mesh.boundingSphere3D.center)).toBeLessThan(6);
-                expect(bs.radius - mesh.boundingSphere3D.radius).toBeLessThan(8);
+                var encoding = mesh.encoding;
+                var count = mesh.vertices.length / mesh.encoding.getStride();
+                for (var i = 0; i < count; ++i) {
+                    var height = encoding.decodeHeight(mesh.vertices, i);
+                    if (i < 16) { // Original vertices
+                        expect(height).toBeBetween(0, 40);
+                    } else { // Skirts
+                        expect(height).toBeBetween(-1000, -960);
+                    }
+                }
             });
         });
-
-        // it('requires 32bit indices for large meshes', function() {
-        //     var tilingScheme = new GeographicTilingScheme();
-        //     var quantizedVertices = [];
-        //     var i;
-        //     for (i = 0; i < 65 * 1024; i++) {
-        //         quantizedVertices.push(i % 32767); // u
-        //     }
-        //     for (i = 0; i < 65 * 1024; i++) {
-        //         quantizedVertices.push(Math.floor(i / 32767)); // v
-        //     }
-        //     for (i = 0; i < 65 * 1024; i++) {
-        //         quantizedVertices.push(0.0);       // height
-        //     }
-        //     var data = new QuantizedMeshTerrainData({
-        //         minimumHeight : 0.0,
-        //         maximumHeight : 4.0,
-        //         quantizedVertices : new Uint16Array(quantizedVertices),
-        //         indices : new Uint32Array([ 0, 3, 1,
-        //                                     0, 2, 3,
-        //                                     65000, 65002, 65003]),
-        //         boundingSphere : new BoundingSphere(),
-        //         horizonOcclusionPoint : new Cartesian3(),
-        //         westIndices : [0, 1],
-        //         southIndices : [0, 1],
-        //         eastIndices : [2, 3],
-        //         northIndices : [1, 3],
-        //         westSkirtHeight : 1.0,
-        //         southSkirtHeight : 1.0,
-        //         eastSkirtHeight : 1.0,
-        //         northSkirtHeight : 1.0,
-        //         childTileMask : 15
-        //     });
-        //
-        //     return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
-        //         expect(mesh).toBeInstanceOf(TerrainMesh);
-        //         expect(mesh.indices.BYTES_PER_ELEMENT).toBe(4);
-        //     });
-        // });
     });
 
     /*

@@ -59,7 +59,9 @@ define([
             boundingSphere3D : statistics.boundingSphere3D,
             orientedBoundingBox : statistics.orientedBoundingBox,
             occludeePointInScaledSpace : statistics.occludeePointInScaledSpace,
-            encoding : statistics.encoding
+            encoding : statistics.encoding,
+            vertexCountWithoutSkirts : statistics.vertexCountWithoutSkirts,
+            skirtIndex : statistics.skirtIndex
         };
     }
 
@@ -250,6 +252,9 @@ define([
             indicesOffset += facesElementCount;
         }
 
+        var vertexCountWithoutSkirts = pointOffset;
+        var skirtIndex = indicesOffset;
+
         // Add skirt points
         var hMin = minHeight;
         function addSkirt(borderPoints, longitudeFudge, latitudeFudge) {
@@ -326,7 +331,9 @@ define([
             encoding : encoding,
             boundingSphere3D : boundingSphere3D,
             orientedBoundingBox : orientedBoundingBox,
-            occludeePointInScaledSpace : occludeePointInScaledSpace
+            occludeePointInScaledSpace : occludeePointInScaledSpace,
+            vertexCountWithoutSkirts : vertexCountWithoutSkirts,
+            skirtIndex : skirtIndex
         };
     }
 
