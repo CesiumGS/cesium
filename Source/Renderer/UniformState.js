@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/EncodedCartesian3',
@@ -21,6 +22,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Color,
         defined,
         defineProperties,
         EncodedCartesian3,
@@ -147,6 +149,7 @@ define([
         this._eyeHeight2D = new Cartesian2();
         this._resolutionScale = 1.0;
         this._orthographicIn3D = false;
+        this._backgroundColor = new Color();
 
         this._fogDensity = undefined;
 
@@ -782,6 +785,17 @@ define([
         },
 
         /**
+         * The current background color
+         * @memberof UniformState.prototype
+         * @type {Color}
+         */
+        backgroundColor : {
+            get : function() {
+                return this._backgroundColor;
+            }
+        },
+
+        /**
          * @memberof UniformState.prototype
          * @type {Number}
          */
@@ -951,7 +965,8 @@ define([
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
 
-        this._imagerySplitPosition = frameState.imagerySplitPosition;
+        // Convert the relative imagerySplitPosition to absolute pixel coordinates
+        this._imagerySplitPosition = frameState.imagerySplitPosition * canvas.clientWidth;
         var fov = camera.frustum.fov;
         var viewport = this._viewport;
         var pixelSizePerMeter;
@@ -962,6 +977,7 @@ define([
         }
 
         this._geometricToleranceOverMeter = pixelSizePerMeter * frameState.maximumScreenSpaceError;
+        Color.clone(frameState.backgroundColor, this._backgroundColor);
     };
 
     function cleanViewport(uniformState) {

@@ -665,7 +665,7 @@ define([
         this.initializeFrame();
     }
 
-    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.99;
+    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
 
     defineProperties(Scene.prototype, {
         /**
@@ -2549,6 +2549,10 @@ define([
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(scene, frameNumber, time);
         frameState.passes.render = true;
+
+        var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
+        frameState.backgroundColor = backgroundColor;
+
         frameState.creditDisplay.beginFrame();
 
         scene.fog.update(frameState);
@@ -2575,7 +2579,7 @@ define([
         }
 
         updateEnvironment(scene);
-        updateAndExecuteCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+        updateAndExecuteCommands(scene, passState, backgroundColor);
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
