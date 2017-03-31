@@ -297,9 +297,9 @@ define([
 
         var percentage = 0.00001;
         addSkirt(westBorder, -percentage*rectangleWidth, 0);
-        addSkirt(southBorder, 0, -percentage*rectangleWidth);
+        addSkirt(southBorder, 0, -percentage*rectangleHeight);
         addSkirt(eastBorder, percentage*rectangleWidth, 0);
-        addSkirt(northBorder, 0, percentage*rectangleWidth);
+        addSkirt(northBorder, 0, percentage*rectangleHeight);
 
         size = positions.length; // Get new size with skirt vertices
 

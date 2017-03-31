@@ -238,6 +238,7 @@ defineSuite([
                         }
                     }
 
+                    // Each one is made up of 2 triangles
                     expect(north).toEqual(3);
                     expect(south).toEqual(3);
                     expect(east).toEqual(3);
