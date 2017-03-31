@@ -68,6 +68,10 @@ define([
     var sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
+    function isBitSet(bits, mask) {
+        return ((bits & mask) !== 0);
+    }
+
     function GoogleEarthEnterpriseDiscardPolicy() {
         this._image = new Image();
     }
@@ -484,7 +488,7 @@ define([
         var tileInfo = this._tileInfo;
         var info = tileInfo[quadKey];
         if (defined(info)) {
-            if (info.bits & imageBitmask === 0) {
+            if (!isBitSet(info.bits, imageBitmask)) {
                 // Already have info and there isn't any imagery here
                 return invalidImage;
             }
@@ -501,8 +505,8 @@ define([
                 q = q.substring(0, q.length-1);
                 info = tileInfo[q];
                 if (defined(info)) {
-                    if ((info.bits & cacheFlagBitmask === 0) &&
-                        (info.bits & childrenBitmasks[parseInt(last)] === 0)){
+                    if (!isBitSet(info.bits, cacheFlagBitmask) &&
+                        !isBitSet(info.bits, childrenBitmasks[parseInt(last)])){
                         // We have no subtree or child available at some point in this node's ancestry
                         return invalidImage;
                     }
@@ -519,7 +523,7 @@ define([
         return populateSubtree(this, quadKey)
             .then(function(info){
                 if (defined(info)) {
-                    if (info.bits & imageBitmask !== 0) {
+                    if (isBitSet(info.bits, imageBitmask)) {
                         var url = buildImageUrl(that, quadKey, info.imageryVersion);
                         return loadArrayBuffer(url)
                             .then(function(image) {
@@ -598,13 +602,13 @@ define([
             //|___|___|
             //
 
-            if ((y & bitmask) === 0) { // Top Row
+            if (!isBitSet(y, bitmask)) { // Top Row
                 digit |= 2;
-                if ((x & bitmask) === 0) { // Right to left
+                if (!isBitSet(x, bitmask)) { // Right to left
                     digit |= 1;
                 }
             } else {
-                if ((x & bitmask) !== 0) { // Left to right
+                if (isBitSet(x, bitmask)) { // Left to right
                     digit |= 1;
                 }
             }
@@ -630,13 +634,13 @@ define([
             var bitmask = 1 << i;
             var digit = +quadkey[level - i];
 
-            if ((digit & 2) !== 0) {  // Top Row
-                if ((digit & 1) === 0) { // // Right to left
+            if (isBitSet(digit, 2)) {  // Top Row
+                if (!isBitSet(digit, 1)) { // // Right to left
                     x |= bitmask;
                 }
             } else {
                 y |= bitmask;
-                if ((digit & 1) !== 0) { // Left to right
+                if (isBitSet(digit, 1)) { // Left to right
                     x |= bitmask;
                 }
             }
@@ -673,18 +677,19 @@ define([
         }
         //>>includeEnd('debug');
 
+        var bHasTerrain = true;
         var quadKey = GoogleEarthEnterpriseProvider.tileXYToQuadKey(x, y, level);
         var tileInfo = this._tileInfo;
         var info = tileInfo[quadKey];
         if (defined(info)) {
-            if ((info.bits & terrainBitmask === 0) && !info.terrainInParent){
-                // Already have info and there isn't any imagery here
-                return undefined;
+            if (!isBitSet(info.bits, terrainBitmask) && !info.terrainInParent){
+                // Already have info and there isn't any terrain here
+                bHasTerrain = false;
             }
         } else {
             if (info === null) {
                 // Parent was retrieved and said child doesn't exist
-                return undefined;
+                bHasTerrain = false;
             }
 
             var q = quadKey;
@@ -694,18 +699,31 @@ define([
                 q = q.substring(0, q.length-1);
                 info = tileInfo[q];
                 if (defined(info)) {
-                    if ((info.bits & cacheFlagBitmask === 0) &&
-                        (info.bits & childrenBitmasks[parseInt(last)] === 0)){
+                    if (!isBitSet(info.bits, cacheFlagBitmask) &&
+                        !isBitSet(info.bits, childrenBitmasks[parseInt(last)])){
                         // We have no subtree or child available at some point in this node's ancestry
-                        return undefined;
+                        bHasTerrain = false;
                     }
 
                     break;
                 } else if (info === null) {
                     // Some node in the ancestry was loaded and said there wasn't a subtree
-                    return undefined;
+                    bHasTerrain = false;
                 }
             }
+        }
+
+        if (!bHasTerrain) {
+            if(defined(info) && !info.ancestorHasTerrain) {
+                // We haven't reached a level with terrain, so return the ellipsoid
+                return new HeightmapTerrainData({
+                    buffer : new Uint8Array(16 * 16),
+                    width : 16,
+                    height : 16
+                });
+            }
+
+            return undefined;
         }
 
 
@@ -722,7 +740,7 @@ define([
                             childTileMask: info.bits & anyChildBitmask
                         });
                     }
-                    if ((info.bits & terrainBitmask) !== 0 || info.terrainInParent) {
+                    if (isBitSet(info.bits, terrainBitmask) || info.terrainInParent) {
                         var q = quadKey;
                         if (info.terrainInParent) {
                             // If terrain is in parent tile, process that instead
@@ -796,7 +814,7 @@ define([
         terrainCache[quadKey] = terrainTiles[0];
         var count = terrainTiles.length-1;
         for (var j = 0;j<count;++j) {
-            if (info.bits & childrenBitmasks[j] !== 0) {
+            if (isBitSet(info.bits, childrenBitmasks[j])) {
                 var childKey = quadKey + j.toString();
                 terrainCache[childKey] = terrainTiles[j + 1];
                 tileInfo[childKey].terrainInParent = true;
@@ -1049,7 +1067,7 @@ define([
                     var bits = parent.bits;
                     var isLeaf = false;
                     if (level === 4) {
-                        if ((bits & cacheFlagBitmask) !== 0) {
+                        if (isBitSet(bits, cacheFlagBitmask)) {
                             return; // We have a subtree, so just return
                         }
 
@@ -1063,7 +1081,7 @@ define([
                         } else if (level < 4) {
                             // We are still in the middle of the subtree, so add child
                             //  only if their bits are set, otherwise set child to null.
-                            if ((bits & childrenBitmasks[i]) === 0) {
+                            if (!isBitSet(bits, childrenBitmasks[i])) {
                                 tileInfo[childKey] = null;
                             } else {
                                 if (index === numInstances) {
@@ -1072,7 +1090,7 @@ define([
                                 }
 
                                 var instance = instances[index++];
-                                instance.ancestorHasTerrain = parent.ancestorHasTerrain || ((instance.bits & terrainBitmask) !== 0);
+                                instance.ancestorHasTerrain = parent.ancestorHasTerrain || isBitSet(instance.bits, terrainBitmask);
                                 tileInfo[childKey] = instance;
                                 populateTiles(childKey, instance, level + 1);
                             }
@@ -1104,7 +1122,7 @@ define([
         var q = quadKey;
         var t = tileInfo[q];
         // If we have tileInfo make sure sure it is not a node with a subtree that's not loaded
-        if (defined(t) && ((t.bits & cacheFlagBitmask) === 0 || (t.bits & anyChildBitmask) !== 0)) {
+        if (defined(t) && (!isBitSet(t.bits, cacheFlagBitmask) || isBitSet(t.bits, anyChildBitmask))) {
             return when(t);
         }
 
