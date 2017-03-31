@@ -1497,7 +1497,7 @@ define([
             }
         }
 
-        this._shaderDisableDepthDistance = frameState.minimumDisableDepthTestDistance !== 0.0;
+        this._shaderDisableDepthDistance = this._shaderDisableDepthDistance || frameState.minimumDisableDepthTestDistance !== 0.0;
 
         if (blendOptionChanged ||
             (this._shaderRotation !== this._compiledShaderRotation) ||

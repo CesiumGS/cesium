@@ -89,6 +89,9 @@ define([
         if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
             throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
         }
+        if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
+            throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
+        }
         //>>includeEnd('debug');
 
         this._show = defaultValue(options.show, true);

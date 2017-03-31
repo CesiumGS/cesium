@@ -69,6 +69,9 @@ define([
         if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
             throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
         }
+        if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
+            throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
+        }
         //>>includeEnd('debug');
 
         this._show = defaultValue(options.show, true);
@@ -103,7 +106,7 @@ define([
     var TRANSLUCENCY_BY_DISTANCE_INDEX = PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX = 7;
     var DISTANCE_DISPLAY_CONDITION_INDEX = PointPrimitive.DISTANCE_DISPLAY_CONDITION_INDEX = 8;
     var DISABLE_DEPTH_DISTANCE_INDEX = PointPrimitive.DISABLE_DEPTH_DISTANCE_INDEX = 9;
-    PointPrimitive.NUMBER_OF_PROPERTIES = 9;
+    PointPrimitive.NUMBER_OF_PROPERTIES = 10;
 
     function makeDirty(pointPrimitive, propertyChanged) {
         var pointPrimitiveCollection = pointPrimitive._pointPrimitiveCollection;
@@ -390,7 +393,7 @@ define([
             set : function(value) {
                 if (this._disableDepthTestDistance !== value) {
                     //>>includeStart('debug', pragmas.debug);
-                    if (!defined(value) && value < 0.0) {
+                    if (!defined(value) || value < 0.0) {
                         throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
                     }
                     //>>includeEnd('debug');

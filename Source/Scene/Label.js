@@ -81,6 +81,9 @@ define([
         if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
             throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
         }
+        if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
+            throw new DeveloperError('disableDepthTestDistance must be greater than 0.0.');
+        }
         //>>includeEnd('debug');
 
         this._text = defaultValue(options.text, '');
@@ -899,7 +902,7 @@ define([
             set : function(value) {
                 if (this._disableDepthTestDistance !== value) {
                     //>>includeStart('debug', pragmas.debug);
-                    if (!defined(value) && value < 0.0) {
+                    if (!defined(value) || value < 0.0) {
                         throw new DeveloperError('disableDepthTestDistance must be greater than 0.0.');
                     }
                     //>>includeEnd('debug');
