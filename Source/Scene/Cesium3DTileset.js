@@ -1410,6 +1410,21 @@ define([
                     // then the children do not need to be sorted.
 
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
+
+                    // Handle external tileset refinement issue: https://github.com/AnalyticalGraphicsInc/cesium/pull/4287#issuecomment-283354556
+                    if (allChildrenLoaded) {
+                        for (k = 0; k < childrenLength; ++k) {
+                            child = children[k];
+                            if (child.hasTilesetContent && child.contentReady) {
+                                child = child.children[0];
+                                if (!child.contentReady) {
+                                    allChildrenLoaded = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
                     if (allChildrenLoaded || t.canRequestContent()) {
                         updateTransforms(children, t.computedTransform);
 
@@ -1439,6 +1454,20 @@ define([
                                         // we want to keep it in the cache for when all children are loaded
                                         // and this tile can refine to them.
                                         touch(tileset, child, outOfCore);
+
+                                        // Handle external tileset refinement issue https://github.com/AnalyticalGraphicsInc/cesium/pull/4287#issuecomment-283354556
+                                        if (child.hasTilesetContent && child.contentReady) {
+                                            child = child.children[0];
+
+                                            if (child.contentUnloaded) {
+                                                requestContent(tileset, child, outOfCore);
+                                            } else {
+                                                // Touch loaded child even though it is not selected this frame since
+                                                // we want to keep it in the cache for when all children are loaded
+                                                // and this tile can refine to them.
+                                                touch(tileset, child);
+                                            }
+                                        }
                                     }
                                 }
                             }
