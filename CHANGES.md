@@ -32,6 +32,7 @@ Change Log
 * Fixed issues with imagerySplitPosition and the international date line in 2D mode. [#5151](https://github.com/AnalyticalGraphicsInc/cesium/pull/5151)
 * Fixed an issue with `TileBoundingBox` that caused the terrain to disappear in certain places [4032](https://github.com/AnalyticalGraphicsInc/cesium/issues/4032)
 * `QuadtreePrimitive` now uses `frameState.afterRender` to fire `tileLoadProgressEvent` [#3450](https://github.com/AnalyticalGraphicsInc/cesium/issues/3450)
+* Removed left, right, bottom and top properties from `OrthographicFrustum`.
 
 ### 1.31 - 2017-03-01
 
