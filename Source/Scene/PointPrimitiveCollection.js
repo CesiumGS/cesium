@@ -643,6 +643,10 @@ define([
         if (defined(distanceDisplayCondition)) {
             near = distanceDisplayCondition.near;
             far = distanceDisplayCondition.far;
+
+            near *= near;
+            far *= far;
+
             pointPrimitiveCollection._shaderDistanceDisplayCondition = true;
         }
 

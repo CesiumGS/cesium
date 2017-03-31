@@ -1162,6 +1162,9 @@ define([
             near = distanceDisplayCondition.near;
             far = distanceDisplayCondition.far;
 
+            near *= near;
+            far *= far;
+
             billboardCollection._shaderDistanceDisplayCondition = true;
         }
 

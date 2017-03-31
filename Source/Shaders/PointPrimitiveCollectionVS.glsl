@@ -140,8 +140,8 @@ void main()
 #endif
 
 #ifdef DISTANCE_DISPLAY_CONDITION
-    float nearSq = distanceDisplayConditionAndDisableDepth.x * distanceDisplayConditionAndDisableDepth.x;
-    float farSq = distanceDisplayConditionAndDisableDepth.y * distanceDisplayConditionAndDisableDepth.y;
+    float nearSq = distanceDisplayConditionAndDisableDepth.x;
+    float farSq = distanceDisplayConditionAndDisableDepth.y;
     if (lengthSq < nearSq || lengthSq > farSq) {
         positionEC.xyz = vec3(0.0);
     }
