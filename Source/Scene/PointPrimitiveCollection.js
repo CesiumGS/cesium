@@ -896,6 +896,8 @@ define([
             }
         }
 
+        this._shaderDisableDepthDistance = frameState.minimumDisableDepthTestDistance !== 0.0;
+
         if (blendOptionChanged ||
             (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
             (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||

@@ -260,6 +260,10 @@ void main()
 
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
+    if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0) {
+        disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
+    }
+
     if (disableDepthTestDistance != 0.0) {
         gl_Position.z = min(gl_Position.z, gl_Position.w);
 

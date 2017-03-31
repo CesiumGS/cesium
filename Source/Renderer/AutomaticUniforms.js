@@ -1494,10 +1494,18 @@ define([
          * @glslUniform
          */
         czm_geometricToleranceOverMeter : new AutomaticUniform({
-            size: 1,
-            datatype: WebGLConstants.FLOAT,
-            getValue: function(uniformState) {
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
                 return uniformState.geometricToleranceOverMeter;
+            }
+        }),
+
+        czm_minimumDisableDepthTestDistance : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.minimumDisableDepthTestDistance;
             }
         })
     };

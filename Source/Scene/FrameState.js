@@ -249,6 +249,8 @@ define([
          * @default []
          */
         this.frustumSplits = [];
+
+        this.minimumDisableDepthTestDistance = undefined;
     }
 
     /**

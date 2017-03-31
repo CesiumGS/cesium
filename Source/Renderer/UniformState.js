@@ -153,6 +153,8 @@ define([
         this._imagerySplitPosition = 0.0;
         this._pixelSizePerMeter = undefined;
         this._geometricToleranceOverMeter = undefined;
+
+        this._minimumDisableDepthTestDistance = undefined;
     }
 
     defineProperties(UniformState.prototype, {
@@ -789,6 +791,12 @@ define([
             get : function() {
                 return this._imagerySplitPosition;
             }
+        },
+
+        minimumDisableDepthTestDistance : {
+            get : function() {
+                return this._minimumDisableDepthTestDistance;
+            }
         }
     });
 
@@ -963,6 +971,11 @@ define([
         }
 
         this._geometricToleranceOverMeter = pixelSizePerMeter * frameState.maximumScreenSpaceError;
+
+        this._minimumDisableDepthTestDistance = frameState.minimumDisableDepthTestDistance;
+        if (this._minimumDisableDepthTestDistance === Number.POSITIVE_INFINITY) {
+            this._minimumDisableDepthTestDistance = -1.0;
+        }
     };
 
     function cleanViewport(uniformState) {

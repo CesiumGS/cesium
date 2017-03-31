@@ -321,6 +321,8 @@ define([
         this._cameraStartFired = false;
         this._cameraMovedTime = undefined;
 
+        this._minimumDisableDepthTestDistance = 0.0;
+
         /**
          * Exceptions occurring in <code>render</code> are always caught in order to raise the
          * <code>renderError</code> event.  If this property is true, the error is rethrown
@@ -1141,9 +1143,22 @@ define([
             get: function() {
                 return this._frameState.imagerySplitPosition;
             },
-
             set: function(value) {
                 this._frameState.imagerySplitPosition = value;
+            }
+        },
+
+        minimumDisableDepthTestDistance : {
+            get : function() {
+                return this._minimumDisableDepthTestDistance;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value) || value < 0.0) {
+                    throw new DeveloperError('minimumDisableDepthTestDistance must be greater than or equal to 0.0.');
+                }
+                //>>includeEnd('debug');
+                this._minimumDisableDepthTestDistance = value;
             }
         }
     });
@@ -1257,6 +1272,7 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
+        frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
         if (defined(scene.globe)) {
             frameState.maximumScreenSpaceError = scene.globe.maximumScreenSpaceError;
         } else {
