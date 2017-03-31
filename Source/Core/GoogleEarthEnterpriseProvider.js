@@ -995,9 +995,10 @@ define([
     }
 
     // Requests quadtree packet and populates _tileInfo with results
-    GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket = function(quadKey) {
+    GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket = function(quadKey, version) {
+        version = defaultValue(version, 1);
         quadKey = defaultValue(quadKey, '');
-        var url = this._url + 'flatfile?q2-0' + quadKey + '-q.2';
+        var url = this._url + 'flatfile?q2-0' + quadKey + '-q.' + version.toString();
         var proxy = this._proxy;
         if (defined(proxy)) {
             url = proxy.getURL(url);
@@ -1064,9 +1065,8 @@ define([
                     ++offset;
 
                     ++offset; // 2 byte align
-
-                    // We only support version 2 which we verified above this tile already is
-                    //var cnodeVersion = dv.getUint16(offset, true);
+                    
+                    var cnodeVersion = dv.getUint16(offset, true);
                     offset += sizeOfUint16;
 
                     var imageVersion = dv.getUint16(offset, true);
@@ -1098,6 +1098,7 @@ define([
 
                     instances.push({
                         bits : bitfield,
+                        cnodeVersion : cnodeVersion,
                         imageryVersion : imageVersion,
                         terrainVersion : terrainVersion,
                         ancestorHasTerrain : false, // Set it later once we find its parent
@@ -1196,7 +1197,7 @@ define([
         //  is already resolved (like in the tests), so subtreePromises will never get cleared out.
         //  The promise will always resolve with a bool, but the initial request will also remove
         //  the promise from subtreePromises.
-        promise = subtreePromises[q] = that._getQuadTreePacket(q);
+        promise = subtreePromises[q] = that._getQuadTreePacket(q, t.cnodeVersion);
 
         return promise
             .then(function() {
