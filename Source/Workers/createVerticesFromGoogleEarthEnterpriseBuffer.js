@@ -5,6 +5,7 @@ define([
     '../Core/Cartesian2',
     '../Core/Cartesian3',
     '../Core/Cartographic',
+    '../Core/defaultValue',
     '../Core/defined',
     '../Core/Ellipsoid',
     '../Core/EllipsoidalOccluder',
@@ -21,6 +22,7 @@ define([
     Cartesian2,
     Cartesian3,
     Cartographic,
+    defaultValue,
     defined,
     Ellipsoid,
     EllipsoidalOccluder,
@@ -38,6 +40,18 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
     var sizeOfFloat = Float32Array.BYTES_PER_ELEMENT;
     var sizeOfDouble = Float64Array.BYTES_PER_ELEMENT;
+
+    function indexOfEpsilon(arr, elem, elemType) {
+        elemType = defaultValue(elemType, CesiumMath);
+        var count = arr.length;
+        for (var i = 0; i < count; ++i) {
+            if (elemType.equalsEpsilon(arr[i], elem, CesiumMath.EPSILON12)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
 
     function createVerticesFromGoogleEarthEnterpriseBuffer(parameters, transferableObjects) {
         parameters.ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
@@ -95,6 +109,10 @@ define([
             rectangleHeight = rectangle.height;
         }
 
+        // Keep track of quad borders so we can remove duplicates around the borders
+        var quadBorderLatitudes = [geographicSouth, geographicNorth];
+        var quadBorderLongitudes = [geographicWest, geographicEast];
+
         var fromENU = Transforms.eastNorthUpToFixedFrame(relativeToCenter, ellipsoid);
         var toENU = Matrix4.inverseTransformation(fromENU, matrix4Scratch);
 
@@ -118,10 +136,23 @@ define([
         var size = 0;
         var indicesSize = 0;
         for (var quad = 0; quad < 4; ++quad) {
-            var quadSize = dv.getUint32(offset, true);
-
             var o = offset;
-            o += sizeOfUint32 + 4*sizeOfDouble; // size + originX + originY + stepX + stepY
+            var quadSize = dv.getUint32(o, true);
+            o += sizeOfUint32;
+
+            var x = CesiumMath.toRadians(dv.getFloat64(o, true) * 180.0);
+            o += sizeOfDouble;
+            if (indexOfEpsilon(quadBorderLongitudes, x) === -1) {
+                quadBorderLongitudes.push(x);
+            }
+
+            var y = CesiumMath.toRadians(dv.getFloat64(o, true) * 180.0);
+            o += sizeOfDouble;
+            if (indexOfEpsilon(quadBorderLatitudes, y) === -1) {
+                quadBorderLatitudes.push(y);
+            }
+
+            o += 2*sizeOfDouble; // stepX + stepY
 
             var c = dv.getInt32(o, true); // Read point count
             o += sizeOfInt32;
@@ -132,6 +163,10 @@ define([
 
             offset += quadSize + sizeOfUint32; // Jump to next quad
         }
+
+        // Quad Border points to remove duplicates
+        var quadBorderPoints = [];
+        var quadBorderIndices = [];
 
         // Create arrays
         var positions = new Array(size);
@@ -177,8 +212,11 @@ define([
             //var level = dv.getInt32(offset, true);
             offset += sizeOfInt32;
 
-            var index = pointOffset;
-            for (var i = 0; i < numPoints; ++i, ++index) {
+            var indicesMapping = [];
+            for (var i = 0; i < numPoints; ++i) {
+                // Keep track of quad indices to overall tile indices
+                indicesMapping.length = numPoints;
+
                 var longitude = originX + dv.getUint8(offset++) * stepX;
                 scratchCartographic.longitude = longitude;
                 var latitude = originY + dv.getUint8(offset++) * stepY;
@@ -197,36 +235,50 @@ define([
 
                 scratchCartographic.height = height;
 
+                // Is it along a quad border - if so check if already exists and use that index
+                if (indexOfEpsilon(quadBorderLongitudes, longitude) !== -1 ||
+                    indexOfEpsilon(quadBorderLatitudes, latitude) !== -1) {
+                    var index = indexOfEpsilon(quadBorderPoints, scratchCartographic, Cartographic);
+                    if (index === -1) {
+                        quadBorderPoints.push(Cartographic.clone(scratchCartographic));
+                        quadBorderIndices.push(pointOffset);
+                    } else {
+                        indicesMapping[i] = index;
+                        continue;
+                    }
+                }
+                indicesMapping[i] = pointOffset;
+
                 if (Math.abs(longitude - geographicWest) < halfStepX) {
                     westBorder.push({
-                        index: index,
+                        index: pointOffset,
                         cartographic: Cartographic.clone(scratchCartographic)
                     });
                 } else if(Math.abs(longitude - geographicEast) < halfStepX) {
                     eastBorder.push({
-                        index: index,
+                        index: pointOffset,
                         cartographic: Cartographic.clone(scratchCartographic)
                     });
                 }
 
                 if (Math.abs(latitude - geographicSouth) < halfStepY) {
                     southBorder.push({
-                        index: index,
+                        index: pointOffset,
                         cartographic: Cartographic.clone(scratchCartographic)
                     });
                 } else if(Math.abs(latitude - geographicNorth) < halfStepY) {
                     northBorder.push({
-                        index: index,
+                        index: pointOffset,
                         cartographic: Cartographic.clone(scratchCartographic)
                     });
                 }
 
                 minHeight = Math.min(height, minHeight);
                 maxHeight = Math.max(height, maxHeight);
-                heights[index] = height;
+                heights[pointOffset] = height;
 
                 var pos = ellipsoid.cartographicToCartesian(scratchCartographic);
-                positions[index] = pos;
+                positions[pointOffset] = pos;
 
                 Matrix4.multiplyByPoint(toENU, pos, scratchCartesian);
 
@@ -238,19 +290,20 @@ define([
                 var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
                 v = CesiumMath.clamp(v, 0.0, 1.0);
 
-                uvs[index] = new Cartesian2(u, v);
+                uvs[pointOffset] = new Cartesian2(u, v);
+                ++pointOffset;
             }
 
-            index = indicesOffset;
             var facesElementCount = numFaces * 3;
-            for (i = 0; i < facesElementCount; ++i, ++index) {
-                indices[index] = pointOffset + dv.getUint16(offset, true);
+            for (i = 0; i < facesElementCount; ++i, ++indicesOffset) {
+                indices[indicesOffset] = indicesMapping[dv.getUint16(offset, true)];
                 offset += sizeOfUint16;
             }
-
-            pointOffset += numPoints;
-            indicesOffset += facesElementCount;
         }
+
+        positions.length = pointOffset;
+        uvs.length = pointOffset;
+        heights.length = pointOffset;
 
         var vertexCountWithoutSkirts = pointOffset;
         var skirtIndex = indicesOffset;
