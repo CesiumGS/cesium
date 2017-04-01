@@ -89,6 +89,7 @@ defineSuite([
             quadKey = defaultValue(quadKey, '') + index.toString();
             this._tileInfo[quadKey] = {
                 bits : 0xFF,
+                cnodeVersion : 1,
                 imageryVersion : 1,
                 terrainVersion : 1
             };
@@ -97,13 +98,9 @@ defineSuite([
             return when();
         });
 
-        var count = 0;
-        var requestQuads = [GoogleEarthEnterpriseProvider.tileXYToQuadKey(0, 0, 1), quad];
-        var requestType = ['blob', 'arraybuffer'];
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            expect(url).toEqual('http://test.server/3d/flatfile?f1-0' + requestQuads[count] + '-i.1');
-            expect(responseType).toEqual(requestType[count]);
-            ++count;
+            expect(url).toEqual('http://test.server/3d/flatfile?f1-0' + quad + '-i.1');
+            expect(responseType).toEqual('arraybuffer');
             deferred.resolve();
         });
 
@@ -116,9 +113,9 @@ defineSuite([
             .then(function(image) {
                 expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket.calls.count()).toEqual(4);
                 expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith();
-                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('0');
-                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('01');
-                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('012');
+                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('0', 1);
+                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('01', 1);
+                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('012', 1);
 
                 var tileInfo = provider._tileInfo;
                 expect(tileInfo['0']).toBeDefined();
