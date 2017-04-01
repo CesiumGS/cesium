@@ -210,9 +210,9 @@ defineSuite([
                     var ib = upsampled._indices;
                     var heights = upsampled._heightValues;
 
-                    expect(uBuffer.length).toBe(9);
-                    expect(vBuffer.length).toBe(9);
-                    expect(heights.length).toBe(9);
+                    expect(uBuffer.length).toBe(4);
+                    expect(vBuffer.length).toBe(4);
+                    expect(heights.length).toBe(4);
                     expect(ib.length).toBe(6);
 
                     var rectangle = childRectangles[i];
@@ -244,57 +244,11 @@ defineSuite([
                     expect(east).toEqual(3);
                     expect(west).toEqual(3);
 
-                    var westIndices = upsampled._westIndices;
-                    for (j = 0; j < westIndices.length; ++j) {
-                        index = westIndices[j];
-                        u = (uBuffer[index] / maxShort) * rectangle.width + rectangle.west;
-                        v = (vBuffer[index] / maxShort) * rectangle.height + rectangle.south;
-                        h = CesiumMath.lerp(upsampled._minimumHeight, upsampled._maximumHeight, heights[index] / maxShort);
-                        console.log(u+'/'+v+'/'+h);
-                    }
-                    console.log();
-
-                    var southIndices = upsampled._southIndices;
-                    for (j = 0; j < southIndices.length; ++j) {
-                        index = southIndices[j];
-                        u = (uBuffer[index] / maxShort) * rectangle.width + rectangle.west;
-                        v = (vBuffer[index] / maxShort) * rectangle.height + rectangle.south;
-                        h = CesiumMath.lerp(upsampled._minimumHeight, upsampled._maximumHeight, heights[index] / maxShort);
-                        console.log(u+'/'+v+'/'+h);
-                    }
-                    console.log();
-
-                    var eastIndices = upsampled._eastIndices;
-                    for (j = 0; j < eastIndices.length; ++j) {
-                        index = eastIndices[j];
-                        u = (uBuffer[index] / maxShort) * rectangle.width + rectangle.west;
-                        v = (vBuffer[index] / maxShort) * rectangle.height + rectangle.south;
-                        h = CesiumMath.lerp(upsampled._minimumHeight, upsampled._maximumHeight, heights[index] / maxShort);
-                        console.log(u+'/'+v+'/'+h);
-                    }
-                    console.log();
-
-                    var northIndices = upsampled._northIndices;
-                    for (j = 0; j < northIndices.length; ++j) {
-                        index = northIndices[j];
-                        u = (uBuffer[index] / maxShort) * rectangle.width + rectangle.west;
-                        v = (vBuffer[index] / maxShort) * rectangle.height + rectangle.south;
-                        h = CesiumMath.lerp(upsampled._minimumHeight, upsampled._maximumHeight, heights[index] / maxShort);
-                        console.log(u+'/'+v+'/'+h);
-                    }
-
-                    // var sw = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 0.0);
-                    // expect(sw).not.toBe(-1);
-                    // var nw = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 1.0);
-                    // expect(nw).not.toBe(-1);
-                    // var se = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 0.0);
-                    // expect(se).not.toBe(-1);
-                    // var ne = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 1.0);
-                    // expect(ne).not.toBe(-1);
-                    //
-                    // var nwToSe = hasTriangle(ib, sw, se, nw) && hasTriangle(ib, nw, se, ne);
-                    // var swToNe = hasTriangle(ib, sw, ne, nw) && hasTriangle(ib, sw, se, ne);
-                    // expect(nwToSe || swToNe).toBe(true);
+                    // Each side of quad has 2 edge points
+                    expect(upsampled._westIndices.length).toEqual(2);
+                    expect(upsampled._southIndices.length).toEqual(2);
+                    expect(upsampled._eastIndices.length).toEqual(2);
+                    expect(upsampled._northIndices.length).toEqual(2);
                 }
             });
         });
@@ -466,7 +420,7 @@ defineSuite([
     describe('createMesh', function() {
         var data;
         var tilingScheme;
-        var buffer
+        var buffer;
 
         beforeEach(function() {
             tilingScheme = new GeographicTilingScheme();
@@ -507,7 +461,7 @@ defineSuite([
             var wgs84 = Ellipsoid.WGS84;
             return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
                 expect(mesh).toBeInstanceOf(TerrainMesh);
-                expect(mesh.vertices.length).toBe(28 * mesh.encoding.getStride()); // 16 regular + 12 skirt vertices
+                expect(mesh.vertices.length).toBe(21 * mesh.encoding.getStride()); // 9 regular + 12 skirt vertices
                 expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
                 expect(mesh.minimumHeight).toBe(0);
                 expect(mesh.maximumHeight).toBeCloseTo(20, 5);
@@ -518,7 +472,7 @@ defineSuite([
                 var count = mesh.vertices.length / mesh.encoding.getStride();
                 for (var i = 0; i < count; ++i) {
                     var height = encoding.decodeHeight(mesh.vertices, i);
-                    if (i < 16) { // Original vertices
+                    if (i < 9) { // Original vertices
                         expect(height).toBeBetween(0, 20);
 
                         // Only test on original positions as the skirts angle outward
@@ -536,7 +490,7 @@ defineSuite([
         it('exaggerates mesh', function() {
             return data.createMesh(tilingScheme, 0, 0, 0, 2).then(function(mesh) {
                 expect(mesh).toBeInstanceOf(TerrainMesh);
-                expect(mesh.vertices.length).toBe(28 * mesh.encoding.getStride()); // 16 regular + 12 skirt vertices
+                expect(mesh.vertices.length).toBe(21 * mesh.encoding.getStride()); // 9 regular + 12 skirt vertices
                 expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
                 expect(mesh.minimumHeight).toBe(0);
                 expect(mesh.maximumHeight).toBeCloseTo(40, 5);
@@ -545,7 +499,7 @@ defineSuite([
                 var count = mesh.vertices.length / mesh.encoding.getStride();
                 for (var i = 0; i < count; ++i) {
                     var height = encoding.decodeHeight(mesh.vertices, i);
-                    if (i < 16) { // Original vertices
+                    if (i < 9) { // Original vertices
                         expect(height).toBeBetween(0, 40);
                     } else { // Skirts
                         expect(height).toBeBetween(-1000, -960);

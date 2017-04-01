@@ -212,11 +212,9 @@ define([
             //var level = dv.getInt32(offset, true);
             offset += sizeOfInt32;
 
-            var indicesMapping = [];
+            // Keep track of quad indices to overall tile indices
+            var indicesMapping = new Array(numPoints);
             for (var i = 0; i < numPoints; ++i) {
-                // Keep track of quad indices to overall tile indices
-                indicesMapping.length = numPoints;
-
                 var longitude = originX + dv.getUint8(offset++) * stepX;
                 scratchCartographic.longitude = longitude;
                 var latitude = originY + dv.getUint8(offset++) * stepY;
@@ -243,7 +241,7 @@ define([
                         quadBorderPoints.push(Cartographic.clone(scratchCartographic));
                         quadBorderIndices.push(pointOffset);
                     } else {
-                        indicesMapping[i] = index;
+                        indicesMapping[i] = quadBorderIndices[index];
                         continue;
                     }
                 }
