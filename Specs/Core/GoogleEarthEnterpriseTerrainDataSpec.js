@@ -461,7 +461,7 @@ defineSuite([
             var wgs84 = Ellipsoid.WGS84;
             return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
                 expect(mesh).toBeInstanceOf(TerrainMesh);
-                expect(mesh.vertices.length).toBe(21 * mesh.encoding.getStride()); // 9 regular + 12 skirt vertices
+                expect(mesh.vertices.length).toBe(17 * mesh.encoding.getStride()); // 9 regular + 8 skirt vertices
                 expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
                 expect(mesh.minimumHeight).toBe(0);
                 expect(mesh.maximumHeight).toBeCloseTo(20, 5);
@@ -490,7 +490,7 @@ defineSuite([
         it('exaggerates mesh', function() {
             return data.createMesh(tilingScheme, 0, 0, 0, 2).then(function(mesh) {
                 expect(mesh).toBeInstanceOf(TerrainMesh);
-                expect(mesh.vertices.length).toBe(21 * mesh.encoding.getStride()); // 9 regular + 12 skirt vertices
+                expect(mesh.vertices.length).toBe(17 * mesh.encoding.getStride()); // 9 regular + 8 skirt vertices
                 expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
                 expect(mesh.minimumHeight).toBe(0);
                 expect(mesh.maximumHeight).toBeCloseTo(40, 5);

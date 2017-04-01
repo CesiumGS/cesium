@@ -308,24 +308,42 @@ define([
 
         // Add skirt points
         var hMin = minHeight;
+        quadBorderPoints = [];
+        quadBorderIndices = [];
         function addSkirt(borderPoints, longitudeFudge, latitudeFudge) {
             var count = borderPoints.length;
             var lastBorderPoint;
             for (var j = 0; j < count; ++j) {
                 var borderPoint = borderPoints[j];
                 var borderCartographic = borderPoint.cartographic;
-                if (!defined(lastBorderPoint) ||
-                    !Cartographic.equalsEpsilon(borderCartographic, lastBorderPoint.cartographic, CesiumMath.EPSILON7)) {
-                    var borderIndex = borderPoint.index;
-                    var currentIndex = positions.length;
+                var borderIndex = borderPoint.index;
+                var currentIndex = positions.length;
 
-                    var longitude = borderCartographic.longitude + longitudeFudge;
-                    var latitude = borderCartographic.latitude + latitudeFudge;
-                    latitude = CesiumMath.clamp(latitude, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO); // Don't go over the poles
-                    var height = borderCartographic.height - skirtHeight;
-                    hMin = Math.min(hMin, height);
+                var longitude = borderCartographic.longitude;
+                var latitude = borderCartographic.latitude;
+                latitude = CesiumMath.clamp(latitude, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO); // Don't go over the poles
+                var height = borderCartographic.height - skirtHeight;
+                hMin = Math.min(hMin, height);
 
-                    Cartographic.fromRadians(longitude, latitude, height, scratchCartographic);
+                Cartographic.fromRadians(longitude, latitude, height, scratchCartographic);
+
+                // Detect duplicates at the corners and only had the first one
+                // We detect based on not fudged points so a corner point is fudged in both directions
+                var add = true;
+                var index = indexOfEpsilon(quadBorderPoints, scratchCartographic, Cartographic);
+                if (index === -1) {
+                    quadBorderPoints.push(Cartographic.clone(scratchCartographic));
+                    quadBorderIndices.push(currentIndex);
+                } else {
+                    currentIndex = quadBorderIndices[index];
+                    ellipsoid.cartesianToCartographic(positions[currentIndex], scratchCartographic);
+                    add = false;
+                }
+
+                scratchCartographic.longitude += longitudeFudge;
+                scratchCartographic.latitude += latitudeFudge;
+
+                if (add) {
                     var pos = ellipsoid.cartographicToCartesian(scratchCartographic);
                     positions.push(pos);
                     heights.push(height);
@@ -335,17 +353,21 @@ define([
 
                     Cartesian3.minimumByComponent(scratchCartesian, minimum, minimum);
                     Cartesian3.maximumByComponent(scratchCartesian, maximum, maximum);
-
-                    if (defined(lastBorderPoint)) {
-                        var lastBorderIndex = lastBorderPoint.index;
-                        indices.push(lastBorderIndex, currentIndex - 1, currentIndex, currentIndex, borderIndex, lastBorderIndex);
-                    }
-
-                    lastBorderPoint = borderPoint;
+                } else {
+                    // We found a corner point - it was adjusted for this side so write it back
+                    ellipsoid.cartographicToCartesian(scratchCartographic, positions[currentIndex]);
                 }
+
+                if (defined(lastBorderPoint)) {
+                    var lastBorderIndex = lastBorderPoint.index;
+                    indices.push(lastBorderIndex, currentIndex - 1, currentIndex, currentIndex, borderIndex, lastBorderIndex);
+                }
+
+                lastBorderPoint = borderPoint;
             }
         }
 
+        debugger;
         var percentage = 0.00001;
         addSkirt(westBorder, -percentage*rectangleWidth, 0);
         addSkirt(southBorder, 0, -percentage*rectangleHeight);
