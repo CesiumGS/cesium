@@ -137,6 +137,7 @@ defineSuite([
     });
 
     describe('upsample', function() {
+/*
         function findVertexWithCoordinates(uBuffer, vBuffer, u, v) {
             u *= 32767;
             u |= 0;
@@ -174,6 +175,7 @@ defineSuite([
         function verticalIntercept(u1, v1, u2, v2) {
             return intercept(u1, u2, v1, v2);
         }
+*/
 
         it('works for all four children of a simple quad', function() {
             var maxShort = 32767;
@@ -220,7 +222,7 @@ defineSuite([
                     var south = 0;
                     var east = 0;
                     var west = 0;
-                    var index, u, v, h;
+                    var index, u, v;
                     for (var j = 0; j < ib.length; ++j) {
                         index = ib[j];
                         u = (uBuffer[index] / maxShort) * rectangle.width + rectangle.west;

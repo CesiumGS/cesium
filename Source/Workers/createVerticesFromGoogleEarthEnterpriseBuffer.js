@@ -367,7 +367,6 @@ define([
             }
         }
 
-        debugger;
         var percentage = 0.00001;
         addSkirt(westBorder, -percentage*rectangleWidth, 0);
         addSkirt(southBorder, 0, -percentage*rectangleHeight);
