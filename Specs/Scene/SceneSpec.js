@@ -849,7 +849,7 @@ defineSuite([
 
         var canvas = s.canvas;
         var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
-        spyOn(s, 'pickPositionWorldCoordinates').and.callThrough();;
+        spyOn(s, 'pickPositionWorldCoordinates').and.callThrough();
 
         expect(s).toRenderAndCall(function() {
             s.pickPosition(windowPosition);

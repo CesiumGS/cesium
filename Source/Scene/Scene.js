@@ -2478,7 +2478,7 @@ define([
         if (useFXAA) {
             if (!useOIT && useGlobeDepthFramebuffer) {
                 passState.framebuffer = scene._fxaa.getColorFramebuffer();
-                    <scene className="_globeDepth execu"></scene>teCopyColor(context, passState);
+                scene._globeDepth.executeCopyColor(context, passState);
             }
 
             passState.framebuffer = environmentState.originalFramebuffer;
@@ -3028,10 +3028,6 @@ define([
     };
 
     var scratchPickPositionCartographic = new Cartographic();
-
-    function createPickPositionCacheKey(windowPosition){
-
-    }
 
      /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
