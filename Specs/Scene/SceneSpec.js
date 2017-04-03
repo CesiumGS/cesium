@@ -33,6 +33,7 @@ defineSuite([
         'Scene/Scene',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
+        'Scene/SceneTransforms',
         'Specs/createCanvas',
         'Specs/createScene',
         'Specs/equals',
@@ -72,6 +73,7 @@ defineSuite([
         Scene,
         ScreenSpaceCameraController,
         TweenCollection,
+        SceneTransforms,
         createCanvas,
         createScene,
         equals,
@@ -839,40 +841,40 @@ defineSuite([
     });
 
     it('pickPosition caches results per frame',function(){
-        var s = createScene();
-        if (!s.pickPositionSupported) {
+        if (!scene.pickPositionSupported) {
             return;
         }
 
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-        s.camera.setView({ destination : rectangle });
+        scene.camera.setView({ destination : rectangle });
 
-        var canvas = s.canvas;
+        var canvas = scene.canvas;
         var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
-        spyOn(s, 'pickPositionWorldCoordinates').and.callThrough();
+        var originaltransformWindowToDrawingBuffer = SceneTransforms.transformWindowToDrawingBuffer;
+        spyOn(SceneTransforms, 'transformWindowToDrawingBuffer').and.callThrough();
 
-        expect(s).toRenderAndCall(function() {
-            s.pickPosition(windowPosition);
-            expect(s.pickPositionWorldCoordinates).toHaveBeenCalled();
+        expect(scene).toRenderAndCall(function() {
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer).toHaveBeenCalled();
 
-            s.pickPosition(windowPosition);
-            expect(s.pickPositionWorldCoordinates.calls.count()).toEqual(1);
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(1);
 
             var rectanglePrimitive = createRectangle(rectangle);
             rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
-            var primitives = s.primitives;
+            var primitives = scene.primitives;
             primitives.add(rectanglePrimitive);
         });
 
-        expect(s).toRenderAndCall(function() {
-            s.pickPosition(windowPosition);
-            expect(s.pickPositionWorldCoordinates.calls.count()).toEqual(2);
+        expect(scene).toRenderAndCall(function() {
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(2);
 
-            s.pickPosition(windowPosition);
-            expect(s.pickPositionWorldCoordinates.calls.count()).toEqual(2);
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(2);
+            SceneTransforms.transformWindowToDrawingBuffer = originaltransformWindowToDrawingBuffer;
         });
-
     });
 
     it('pickPosition throws without windowPosition', function() {

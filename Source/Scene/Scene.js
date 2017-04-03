@@ -2525,7 +2525,7 @@ define([
     var scratchEyeTranslation = new Cartesian3();
 
     function render(scene, time) {
-        scene._pickPositionCache = {}; //clean <cache></cache>
+        scene._pickPositionCache = {}; //clean cache
 
         if (!defined(time)) {
             time = JulianDate.now();
@@ -2620,7 +2620,6 @@ define([
      * @private
      */
     Scene.prototype.render = function(time) {
-
         try {
             render(this, time);
         } catch (error) {
@@ -2959,6 +2958,12 @@ define([
         }
         //>>includeEnd('debug');
 
+        var cacheKey;
+
+        if (this._pickPositionCache.hasOwnProperty(cacheKey)){
+            return Cartesian3.clone(this._pickPositionCache[cacheKey], result);
+        }
+
         var context = this._context;
         var uniformState = context.uniformState;
 
@@ -3020,16 +3025,18 @@ define([
                     uniformState.update(this.frameState);
                 }
 
+                this._pickPositionCache[cacheKey] = Cartesian3.clone(result);
                 return result;
             }
         }
 
+        this._pickPositionCache[cacheKey] = undefined;
         return undefined;
     };
 
     var scratchPickPositionCartographic = new Cartographic();
 
-     /**
+    /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
      * <p>
      * The position reconstructed from the depth buffer in 2D may be slightly different from those
@@ -3048,16 +3055,6 @@ define([
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
      */
     Scene.prototype.pickPosition = function(windowPosition, result) {
-        var cacheKey;
-
-        if(defined(windowPosition)){
-            cacheKey = windowPosition.x + '-' + windowPosition.y;
-        }
-
-        if(defined(windowPosition) && this._pickPositionCache.hasOwnProperty(cacheKey)){
-            return Cartesian2.clone(this._pickPositionCache[cacheKey], result);
-        }
-
         result = this.pickPositionWorldCoordinates(windowPosition, result);
         if (defined(result) && this.mode !== SceneMode.SCENE3D) {
             Cartesian3.fromElements(result.y, result.z, result.x, result);
@@ -3068,8 +3065,6 @@ define([
             var cart = projection.unproject(result, scratchPickPositionCartographic);
             ellipsoid.cartographicToCartesian(cart, result);
         }
-
-        this._pickPositionCache[cacheKey] = Cartesian2.clone(result);
 
         return result;
     };
