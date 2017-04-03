@@ -38,7 +38,7 @@ define([
         return ((bits & mask) !== 0);
     }
 
-    function GoogleEarthEnterpriseTileInformation(bits, cnodeVersion, imageryVersion, terrainVersion) {
+    function TileInformation(bits, cnodeVersion, imageryVersion, terrainVersion) {
         this._bits = bits;
         this.cnodeVersion = cnodeVersion;
         this.imageryVersion = imageryVersion;
@@ -47,33 +47,35 @@ define([
         this.terrainState = 0; // UNKNOWN
     }
 
-    GoogleEarthEnterpriseTileInformation.prototype.setParent = function(parent) {
+    TileInformation.prototype.setParent = function(parent) {
         this.ancestorHasTerrain = parent.ancestorHasTerrain || this.hasTerrain();
     };
 
-    GoogleEarthEnterpriseTileInformation.prototype.hasSubtree = function() {
+    TileInformation.prototype.hasSubtree = function() {
         return isBitSet(this._bits, cacheFlagBitmask);
     };
 
-    GoogleEarthEnterpriseTileInformation.prototype.hasImagery = function() {
+    TileInformation.prototype.hasImagery = function() {
         return isBitSet(this._bits, imageBitmask);
     };
 
-    GoogleEarthEnterpriseTileInformation.prototype.hasTerrain = function() {
+    TileInformation.prototype.hasTerrain = function() {
         return isBitSet(this._bits, terrainBitmask);
     };
 
-    GoogleEarthEnterpriseTileInformation.prototype.hasChildren = function() {
+    TileInformation.prototype.hasChildren = function() {
         return isBitSet(this._bits, anyChildBitmask);
     };
 
-    GoogleEarthEnterpriseTileInformation.prototype.hasChild = function(index) {
+    TileInformation.prototype.hasChild = function(index) {
         return isBitSet(this._bits, childrenBitmasks[index]);
     };
 
-    GoogleEarthEnterpriseTileInformation.prototype.getChildBitmask = function(index) {
+    TileInformation.prototype.getChildBitmask = function(index) {
         return this._bits && anyChildBitmask;
     };
+
+    GoogleEarthEnterpriseMetadata.TileInformation = TileInformation;
 
     var metadata = {};
 
@@ -460,7 +462,7 @@ define([
                     ++offset; // Terrain provider
                     offset += sizeOfUint16; // 4 byte align
 
-                    instances.push(new GoogleEarthEnterpriseTileInformation(bitfield, cnodeVersion,
+                    instances.push(new TileInformation(bitfield, cnodeVersion,
                         imageVersion, terrainVersion));
                 }
 
@@ -528,7 +530,7 @@ define([
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
      *
-     * @returns {Promise<GoogleEarthEnterpriseTileInformation>} A promise that resolves to the tile info for the requested quad key
+     * @returns {Promise<GoogleEarthEnterpriseMetadata.TileInformation>} A promise that resolves to the tile info for the requested quad key
      */
     GoogleEarthEnterpriseMetadata.prototype.populateSubtree = function(x, y, level) {
         var quadkey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
@@ -575,7 +577,7 @@ define([
             .then(function() {
                 delete subtreePromises[q];
                 // Recursively call this incase we need multiple subtree requests
-                return that.populateSubtree(quadKey);
+                return populateSubtree(that, quadKey);
             })
             .then(function() {
                 return tileInfo[quadKey];
@@ -588,7 +590,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @returns {GoogleEarthEnterpriseTileInformation|undefined} Information about the tile or undefined if it isn't loaded.
+     * @returns {GoogleEarthEnterpriseMetadata.TileInformation|undefined} Information about the tile or undefined if it isn't loaded.
      */
     GoogleEarthEnterpriseMetadata.prototype.getTileInformation = function(x, y, level) {
         var quadkey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
@@ -599,7 +601,7 @@ define([
      * Gets information about a tile from a quadKey
      *
      * @param {String} quadkey The quadkey for the tile
-     * @returns {GoogleEarthEnterpriseTileInformation|undefined} Information about the tile or undefined if it isn't loaded.
+     * @returns {GoogleEarthEnterpriseMetadata.TileInformation|undefined} Information about the tile or undefined if it isn't loaded.
      */
     GoogleEarthEnterpriseMetadata.prototype.getTileInformationFromQuadKey = function(quadkey) {
         return this._tileInfo[quadkey];

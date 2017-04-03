@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/GoogleEarthEnterpriseProvider',
+        'Core/GoogleEarthEnterpriseTerrainProvider',
         'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/defined',
@@ -8,14 +8,9 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Math',
         'Core/TerrainProvider',
-        'Core/WebMercatorTilingScheme',
-        'Scene/DiscardMissingTileImagePolicy',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
         'ThirdParty/when'
     ], function(
-        GoogleEarthEnterpriseProvider,
+        GoogleEarthEnterpriseTerrainProvider,
         DefaultProxy,
         defaultValue,
         defined,
@@ -23,64 +18,10 @@ defineSuite([
         loadWithXhr,
         CesiumMath,
         TerrainProvider,
-        WebMercatorTilingScheme,
-        DiscardMissingTileImagePolicy,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
         when) {
     'use strict';
 
-    it('tileXYToQuadKey', function() {
-        // http://msdn.microsoft.com/en-us/library/bb259689.aspx
-        // Levels are off by one compared to the documentation because our levels
-        // start at 0 while Bing's start at 1.
-        expect(GoogleEarthEnterpriseProvider.tileXYToQuadKey(1, 0, 0)).toEqual('2');
-        expect(GoogleEarthEnterpriseProvider.tileXYToQuadKey(1, 2, 1)).toEqual('02');
-        expect(GoogleEarthEnterpriseProvider.tileXYToQuadKey(3, 5, 2)).toEqual('021');
-        expect(GoogleEarthEnterpriseProvider.tileXYToQuadKey(4, 7, 2)).toEqual('100');
-    });
-
-    it('quadKeyToTileXY', function() {
-        expect(GoogleEarthEnterpriseProvider.quadKeyToTileXY('2')).toEqual({
-            x : 1,
-            y : 0,
-            level : 0
-        });
-        expect(GoogleEarthEnterpriseProvider.quadKeyToTileXY('02')).toEqual({
-            x : 1,
-            y : 2,
-            level : 1
-        });
-        expect(GoogleEarthEnterpriseProvider.quadKeyToTileXY('021')).toEqual({
-            x : 3,
-            y : 5,
-            level : 2
-        });
-        expect(GoogleEarthEnterpriseProvider.quadKeyToTileXY('100')).toEqual({
-            x : 4,
-            y : 7,
-            level : 2
-        });
-    });
-
-    it('decode', function() {
-        CesiumMath.setRandomNumberSeed(123123);
-        var data = new Uint8Array(1025);
-        for (var i = 0; i < 1025; ++i) {
-            data[i] = Math.floor(CesiumMath.nextRandomNumber() * 256);
-        }
-
-        var buffer = data.buffer.slice();
-        var a = new Uint8Array(buffer);
-        GoogleEarthEnterpriseProvider._decode(buffer);
-        expect(a).not.toEqual(data);
-
-        // For the algorithm encode/decode are the same
-        GoogleEarthEnterpriseProvider._decode(buffer);
-        expect(a).toEqual(data);
-    });
-
+    /*
     it('request Image populates the correct metadata', function() {
         var quad = '0123';
         var index = 0;
@@ -124,13 +65,10 @@ defineSuite([
                 expect(tileInfo['0123']).toBeDefined();
             });
     });
-
-    it('conforms to ImageryProvider interface', function() {
-        expect(GoogleEarthEnterpriseProvider).toConformToInterface(ImageryProvider);
-    });
+    */
 
     it('conforms to TerrainProvider interface', function() {
-        expect(GoogleEarthEnterpriseProvider).toConformToInterface(TerrainProvider);
+        expect(GoogleEarthEnterpriseTerrainProvider).toConformToInterface(TerrainProvider);
     });
 
     // it('constructor throws when url is not specified', function() {
