@@ -12,7 +12,6 @@ Change Log
     * Set `projectionPicker` to `true` in the options when creating a `Viewer` to add a widget that will switch projections. [#5021](https://github.com/AnalyticalGraphicsInc/cesium/pull/5021)
     * Call `switchToOrthographicFrustum` or `switchToPerspectiveFrustum` on `Camera` to change projections.
 * Added support for custom time-varying properties in CZML. [#5105](https:/github.com/AnalyticalGraphicsInc/cesium/pull/5105).
-
 * Added new flight parameters to `Camera.flyTo` and `Camera.flyToBoundingSphere`: `flyOverLongitude`, `flyOverLongitudeWeight`, and `pitchAdjustHeight`. [#5070](https://github.com/AnalyticalGraphicsInc/cesium/pull/5070)
 * Added the event `Viewer.trackedEntityChanged`, which is raised when the value of `viewer.trackedEntity` changes. [#5060](https://github.com/AnalyticalGraphicsInc/cesium/pull/5060)
 * Added `Camera.DEFAULT_OFFSET` for default view of objects with bounding spheres. [#4936](https://github.com/AnalyticalGraphicsInc/cesium/pull/4936)
