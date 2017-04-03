@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './addExtensionsRequired',
         './addToArray',
         './ForEach',
         './findAccessorMinMax',
@@ -11,6 +12,7 @@ define([
         '../../Core/defaultValue',
         '../../Core/defined'
     ], function(
+        addExtensionsRequired,
         addToArray,
         ForEach,
         findAccessorMinMax,
@@ -322,11 +324,11 @@ define([
             });
         });
         ForEach.mesh(gltf, function(mesh) {
-            ForEach.meshPrimitives(mesh, function(primitive) {
+            ForEach.meshPrimitive(mesh, function(primitive) {
                 if (defined(primitive.indices)) {
                     primitive.indices = globalMapping.accessors[primitive.indices];
                 }
-                ForEach.meshPrimitiveAttributes(primitive, function(accessorId, semantic) {
+                ForEach.meshPrimitiveAttribute(primitive, function(accessorId, semantic) {
                     primitive.attributes[semantic] = globalMapping.accessors[accessorId];
                 });
                 if (defined(primitive.material)) {
@@ -409,7 +411,7 @@ define([
         ForEach.animation(gltf, function(animation) {
             var samplerMapping = {};
             animation.samplers = objectToArray(animation.samplers, samplerMapping);
-            ForEach.animationSamplers(animation, function(sampler) {
+            ForEach.animationSampler(animation, function(sampler) {
                 sampler.input = globalMapping.accessors[sampler.input];
                 sampler.output = globalMapping.accessors[sampler.output];
             });
@@ -530,8 +532,8 @@ define([
 
     function requireAttributeSetIndex(gltf) {
         ForEach.mesh(gltf, function(mesh) {
-           ForEach.meshPrimitives(mesh, function(primitive) {
-               ForEach.meshPrimitiveAttributes(primitive, function(accessorId, semantic) {
+           ForEach.meshPrimitive(mesh, function(primitive) {
+               ForEach.meshPrimitiveAttribute(primitive, function(accessorId, semantic) {
                    if (semantic === 'TEXCOORD') {
                        primitive.attributes.TEXCOORD_0 = accessorId;
                    } else if (semantic === 'COLOR') {
@@ -567,9 +569,9 @@ define([
     function underscoreApplicationSpecificSemantics(gltf) {
         var mappedSemantics = {};
         ForEach.mesh(gltf, function(mesh) {
-           ForEach.meshPrimitives(mesh, function(primitive) {
+           ForEach.meshPrimitive(mesh, function(primitive) {
                /* jshint unused:vars */
-               ForEach.meshPrimitiveAttributes(primitive, function(accessorId, semantic) {
+               ForEach.meshPrimitiveAttribute(primitive, function(accessorId, semantic) {
                    if (semantic.charAt(0) !== '_') {
                        var setIndex = semantic.search(/_[0-9]+/g);
                        var strippedSemantic = semantic;
@@ -727,15 +729,22 @@ define([
 
     function stripTechniqueParameterCount(gltf) {
         ForEach.technique(gltf, function(technique) {
-           ForEach.techniqueParameter(technique, function(parameter) {
-               if (defined(parameter.count)) {
-                   var semantic = parameter.semantic;
-                   if (!defined(semantic) || (semantic !== 'JOINTMATRIX' && semantic.indexOf('_') !== 0)) {
-                       delete parameter.count;
-                   }
-               }
-           });
+            ForEach.techniqueParameter(technique, function(parameter) {
+                if (defined(parameter.count)) {
+                    var semantic = parameter.semantic;
+                    if (!defined(semantic) || (semantic !== 'JOINTMATRIX' && semantic.indexOf('_') !== 0)) {
+                        delete parameter.count;
+                    }
+                }
+            });
         });
+    }
+
+    function addKHRTechniqueExtension(gltf) {
+        var techniques = gltf.techniques;
+        if (defined(techniques) && techniques.length > 0) {
+            addExtensionsRequired(gltf, 'KHR_technique_webgl');
+        }
     }
 
     function glTF10to20(gltf) {
@@ -778,6 +787,8 @@ define([
         stripTechniqueAttributeValues(gltf);
         // only techniques with a JOINTMATRIX or application specific semantic may have a defined count property
         stripTechniqueParameterCount(gltf);
+        // add KHR_technique_webgl extension
+        addKHRTechniqueExtension(gltf);
     }
 
     return updateVersion;

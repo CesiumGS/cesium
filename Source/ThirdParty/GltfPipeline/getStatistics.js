@@ -69,7 +69,7 @@ define([
     function getAllPrimitives(gltf) {
         var primitives = [];
         ForEach.mesh(gltf, function(mesh) {
-           ForEach.meshPrimitives(mesh, function(primitive) {
+           ForEach.meshPrimitive(mesh, function(primitive) {
                primitives.push(primitive);
            });
         });
@@ -86,7 +86,7 @@ define([
 
     function getNumberOfExternalProperties(property) {
         var count = 0;
-        ForEach.arrayOfObjects(property, function(object) {
+        ForEach.object(property, function(object) {
             var uri = object.uri;
             if (defined(uri) && !isDataUri(uri)) {
                 count++;

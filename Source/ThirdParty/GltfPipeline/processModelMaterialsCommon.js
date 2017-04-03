@@ -822,7 +822,7 @@ define([
 
     function ensureSemanticExistence(gltf) {
         ForEach.mesh(gltf, function(mesh) {
-            ForEach.meshPrimitives(mesh, function(primitive) {
+            ForEach.meshPrimitive(mesh, function(primitive) {
                 ensureSemanticExistenceForPrimitive(gltf, primitive);
             });
         });
@@ -832,7 +832,7 @@ define([
         var accessors = gltf.accessors;
         var materials = gltf.materials;
         ForEach.mesh(gltf, function(mesh) {
-           ForEach.meshPrimitives(mesh, function(primitive) {
+           ForEach.meshPrimitive(mesh, function(primitive) {
                var materialId = primitive.material;
                var material = materials[materialId];
 

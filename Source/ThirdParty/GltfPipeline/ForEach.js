@@ -13,7 +13,7 @@ define([
      */
     function ForEach() {}
 
-    ForEach.arrayOfObjects = function(arrayOfObjects, handler) {
+    ForEach.object = function(arrayOfObjects, handler) {
         if (defined(arrayOfObjects)) {
             for (var i = 0; i < arrayOfObjects.length; i++) {
                 var object = arrayOfObjects[i];
@@ -25,7 +25,7 @@ define([
 
     ForEach.topLevel = function(gltf, name, handler) {
         var arrayOfObjects = gltf[name];
-        ForEach.arrayOfObjects(arrayOfObjects, handler);
+        ForEach.object(arrayOfObjects, handler);
     };
 
     ForEach.accessor = function(gltf, handler) {
@@ -34,8 +34,8 @@ define([
 
     ForEach.accessorWithSemantic = function(gltf, semantic, handler) {
         ForEach.mesh(gltf, function(mesh) {
-            ForEach.meshPrimitives(mesh, function(primitive) {
-                ForEach.meshPrimitiveAttributes(primitive, function(accessorId, attributeSemantic) {
+            ForEach.meshPrimitive(mesh, function(primitive) {
+                ForEach.meshPrimitiveAttribute(primitive, function(accessorId, attributeSemantic) {
                     if (attributeSemantic.indexOf(semantic) === 0) {
                         handler(accessorId, attributeSemantic, primitive);
                     }
@@ -48,10 +48,10 @@ define([
         ForEach.topLevel(gltf, 'animations', handler);
     };
 
-    ForEach.animationSamplers = function(animation, handler) {
+    ForEach.animationSampler = function(animation, handler) {
         var samplers = animation.samplers;
         if (defined(samplers)) {
-            ForEach.arrayOfObjects(samplers, handler);
+            ForEach.object(samplers, handler);
         }
     };
 
@@ -90,7 +90,7 @@ define([
         ForEach.topLevel(gltf, 'meshes', handler);
     };
 
-    ForEach.meshPrimitives = function(mesh, handler) {
+    ForEach.meshPrimitive = function(mesh, handler) {
         var primitives = mesh.primitives;
         if (defined(primitives)) {
             var primitivesLength = primitives.length;
@@ -101,7 +101,7 @@ define([
         }
     };
 
-    ForEach.meshPrimitiveAttributes = function(primitive, handler) {
+    ForEach.meshPrimitiveAttribute = function(primitive, handler) {
         var attributes = primitive.attributes;
         if (defined(attributes)) {
             for (var semantic in attributes) {
