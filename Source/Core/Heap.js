@@ -14,6 +14,7 @@ define([
     /**
      * @alias Heap
      * @constructor
+     * @private
      *
      * @param {Function} comparator The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
      */

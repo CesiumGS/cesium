@@ -842,7 +842,7 @@ defineSuite([
             scene.renderForSpecs();
 
             var stats = tileset._statistics;
-            // LOD skipping visits all visible; Only root is visited
+            // LOD skipping visits all visible
             expect(stats.visited).toEqual(5);
             // tileset is refining and adds a stencil clear command
             expect(stats.numberOfCommands).toEqual(2);
@@ -2354,7 +2354,7 @@ defineSuite([
         expect(stats.numberOfCommands).toEqual(0);
     });
 
-    it ('does not add stencil clear command or backface commands when fully resolved', function() {
+    it('does not add stencil clear command or backface commands when fully resolved', function() {
         viewAllTiles();
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
             scene.renderForSpecs();

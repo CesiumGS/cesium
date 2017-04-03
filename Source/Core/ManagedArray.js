@@ -16,6 +16,7 @@ define([
      *
      * @alias ManagedArray
      * @constructor
+     * @private
      *
      * @param {Number} [length=0] The initial length of the array.
      */
@@ -137,7 +138,7 @@ define([
     /**
      * Trim the internal array to the specified length. Defaults to the current length.
      *
-     * @param {Number} length The length.
+     * @param {Number} [length] The length.
      */
     ManagedArray.prototype.trim = function(length) {
         length = defaultValue(length, this.length);

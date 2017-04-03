@@ -152,7 +152,7 @@ define([
          * @type {Cesium3DTileRefine}
          * @readonly
          */
-        this.refine = refine;
+        this.refine = defaultValue(refine, Cesium3DTileRefine.REPLACE);
 
         /**
          * An array of {@link Cesium3DTile} objects that are this tile's children.
@@ -295,17 +295,6 @@ define([
          * @private
          */
         this.selected = false;
-
-        /**
-         * Marks if the tile is replaced this frame.
-         *
-         * @type {Boolean}
-         *
-         * @private
-         */
-        this.replaced = false;
-
-        this._needsRequest = false;
 
         /**
          * The stored plane mask from the visibility check during tree traversal.

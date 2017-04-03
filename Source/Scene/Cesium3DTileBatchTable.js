@@ -12,7 +12,6 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/freezeObject',
         '../Core/Math',
         '../Core/PixelFormat',
         '../Renderer/ContextLimits',
@@ -28,9 +27,7 @@ define([
         './BlendingState',
         './Cesium3DTileColorBlendMode',
         './CullFace',
-        './getBinaryAccessor',
-        '../Scene/StencilFunction',
-        '../Scene/StencilOperation'
+        './getBinaryAccessor'
     ], function(
         arrayFill,
         Cartesian2,
@@ -44,7 +41,6 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        freezeObject,
         CesiumMath,
         PixelFormat,
         ContextLimits,
@@ -60,9 +56,7 @@ define([
         BlendingState,
         Cesium3DTileColorBlendMode,
         CullFace,
-        getBinaryAccessor,
-        StencilFunction,
-        StencilOperation) {
+        getBinaryAccessor) {
     'use strict';
 
     /**
@@ -1246,6 +1240,7 @@ define([
 
     Cesium3DTileBatchTable.prototype.getAddCommand = function() {
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
+
 // TODO: This function most likely will not get optimized.  Do something like this later in the render loop.
         return function(command) {
             var commandList = this.commandList;
