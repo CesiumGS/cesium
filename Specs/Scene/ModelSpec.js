@@ -1834,8 +1834,8 @@ defineSuite([
             verifyRender(m);
             var gltf = m.gltf;
             var accessors = gltf.accessors;
-            var normalAccessor = accessors.accessor_25;
-            var positionAccessor = accessors.accessor_23;
+            var normalAccessor = accessors[2];
+            var positionAccessor = accessors[1];
             normalAccessor.normalized = true;
             positionAccessor.normalized = true;
             var decodeMatrixArray = normalAccessor.extensions.WEB3D_quantized_attributes.decodeMatrix;

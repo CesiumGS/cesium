@@ -1401,6 +1401,7 @@ define([
         var programs = model.gltf.programs;
         for (var id in programs) {
             if (programs.hasOwnProperty(id)) {
+                id = parseInt(id);
                 model._loadResources.programsToCreate.enqueue(id);
             }
         }
