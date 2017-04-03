@@ -996,6 +996,7 @@ define([
         Color.clone(frameState.backgroundColor, this._backgroundColor);
 
         this._minimumDisableDepthTestDistance = frameState.minimumDisableDepthTestDistance;
+        this._minimumDisableDepthTestDistance *= this._minimumDisableDepthTestDistance;
         if (this._minimumDisableDepthTestDistance === Number.POSITIVE_INFINITY) {
             this._minimumDisableDepthTestDistance = -1.0;
         }

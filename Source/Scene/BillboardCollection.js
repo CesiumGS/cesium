@@ -1169,6 +1169,7 @@ define([
         }
 
         var disableDepthTestDistance = billboard.disableDepthTestDistance;
+        disableDepthTestDistance *= disableDepthTestDistance;
         if (disableDepthTestDistance > 0.0) {
             billboardCollection._shaderDisableDepthDistance = true;
             if (disableDepthTestDistance === Number.POSITIVE_INFINITY) {

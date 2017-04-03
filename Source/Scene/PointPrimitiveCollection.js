@@ -651,6 +651,7 @@ define([
         }
 
         var disableDepthTestDistance = pointPrimitive.disableDepthTestDistance;
+        disableDepthTestDistance *= disableDepthTestDistance;
         if (disableDepthTestDistance > 0.0) {
             pointPrimitiveCollection._shaderDisableDepthDistance = true;
             if (disableDepthTestDistance === Number.POSITIVE_INFINITY) {

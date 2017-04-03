@@ -102,7 +102,7 @@ void main()
 
     ///////////////////////////////////////////////////////////////////////////
 
-#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(DISTANCE_DISPLAY_CONDITION)
+#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(DISTANCE_DISPLAY_CONDITION) || defined(DISABLE_DEPTH_DISTANCE)
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -153,16 +153,17 @@ void main()
 
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
-    if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0) {
+    if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
+    {
         disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
     }
 
-    if (disableDepthTestDistance != 0.0) {
+    if (disableDepthTestDistance != 0.0)
+    {
         gl_Position.z = min(gl_Position.z, gl_Position.w);
 
         bool clipped = gl_Position.z < -gl_Position.w || gl_Position.z > gl_Position.w;
-        float distance = length(positionEC.xyz);
-        if (!clipped && (disableDepthTestDistance < 0.0 || (distance > 0.0 && distance < disableDepthTestDistance)))
+        if (!clipped && (disableDepthTestDistance < 0.0 || (lengthSq > 0.0 && lengthSq < disableDepthTestDistance)))
         {
             gl_Position.z = -gl_Position.w;
         }
