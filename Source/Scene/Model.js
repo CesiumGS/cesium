@@ -1319,8 +1319,8 @@ define([
 
     function parseBuffers(model) {
         var loadResources = model._loadResources;
-        var buffers = model.gltf.buffers;
         // Iterate this way for compatibility with objects and arrays
+        var buffers = model.gltf.buffers;
         for (var id in buffers) {
             if (buffers.hasOwnProperty(id)) {
                 var buffer = buffers[id];
@@ -1339,14 +1339,11 @@ define([
     }
 
     function parseBufferViews(model) {
-        var bufferViews = model.gltf.bufferViews;
-        for (var id in bufferViews) {
-            if (bufferViews.hasOwnProperty(id)) {
-                if (bufferViews[id].target === WebGLConstants.ARRAY_BUFFER) {
-                    model._loadResources.buffersToCreate.enqueue(id);
-                }
+        ForEach.bufferView(model.gltf, function(bufferView, id) {
+            if (bufferView.target === WebGLConstants.ARRAY_BUFFER) {
+                model._loadResources.buffersToCreate.enqueue(id);
             }
-        }
+        });
     }
 
     function shaderLoad(model, id) {
@@ -1365,46 +1362,37 @@ define([
         var gltf = model.gltf;
         var buffers = gltf.buffers;
         var bufferViews = gltf.bufferViews;
-        var shaders = gltf.shaders;
-        for (var id in shaders) {
-            if (shaders.hasOwnProperty(id)) {
-                var shader = shaders[id];
-
-                // Shader references either uri (external or base64-encoded) or bufferView
-                if (defined(shader.bufferView)) {
-                    var bufferViewId = shader.bufferView;
-                    var bufferView = bufferViews[bufferViewId];
-                    var bufferId = bufferView.buffer;
-                    var buffer = buffers[bufferId];
-                    var source = String.fromCharCode.apply(null, buffer.extras._pipeline.source.slice(bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength));
-                    model._loadResources.shaders[id] = {
-                        source : source,
-                        bufferView : undefined
-                    };
-                    shader.extras._pipeline.source = source;
-                } else if (defined(shader.extras._pipeline.source)) {
-                    model._loadResources.shaders[id] = {
-                        source : shader.extras._pipeline.source,
-                        bufferView: undefined
-                    };
-                } else {
-                    ++model._loadResources.pendingShaderLoads;
-                    var uri = new Uri(shader.uri);
-                    var shaderPath = uri.resolve(model._baseUri).toString();
-                    loadText(shaderPath).then(shaderLoad(model, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
-                }
+        ForEach.shader(gltf, function(shader, id) {
+            // Shader references either uri (external or base64-encoded) or bufferView
+            if (defined(shader.bufferView)) {
+                var bufferViewId = shader.bufferView;
+                var bufferView = bufferViews[bufferViewId];
+                var bufferId = bufferView.buffer;
+                var buffer = buffers[bufferId];
+                var source = String.fromCharCode.apply(null, buffer.extras._pipeline.source.slice(bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength));
+                model._loadResources.shaders[id] = {
+                    source : source,
+                    bufferView : undefined
+                };
+                shader.extras._pipeline.source = source;
+            } else if (defined(shader.extras._pipeline.source)) {
+                model._loadResources.shaders[id] = {
+                    source : shader.extras._pipeline.source,
+                    bufferView: undefined
+                };
+            } else {
+                ++model._loadResources.pendingShaderLoads;
+                var uri = new Uri(shader.uri);
+                var shaderPath = uri.resolve(model._baseUri).toString();
+                loadText(shaderPath).then(shaderLoad(model, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
             }
-        }
+        });
     }
 
     function parsePrograms(model) {
-        var programs = model.gltf.programs;
-        for (var id in programs) {
-            if (programs.hasOwnProperty(id)) {
-                id = parseInt(id);
-                model._loadResources.programsToCreate.enqueue(id);
-            }
-        }
+        ForEach.program(model.gltf, function(program, id) {
+            model._loadResources.programsToCreate.enqueue(id);
+        });
     }
 
     function imageLoad(model, textureId, imageId) {
@@ -1430,72 +1418,69 @@ define([
     function parseTextures(model, context) {
         var gltf = model.gltf;
         var images = gltf.images;
-        var textures = gltf.textures;
-        for (var id in textures) {
-            if (textures.hasOwnProperty(id)) {
-                var imageId = textures[id].source;
-                var gltfImage = images[imageId];
-                var extras = gltfImage.extras;
+        ForEach.texture(gltf, function(texture, id) {
+            var imageId = texture.source;
+            var gltfImage = images[imageId];
+            var extras = gltfImage.extras;
 
-                var bufferViewId = gltfImage.bufferView;
-                var uri = gltfImage.uri;
+            var bufferViewId = gltfImage.bufferView;
+            var uri = gltfImage.uri;
 
-                // First check for a compressed texture
-                if (defined(extras) && defined(extras.compressedImage3DTiles)) {
-                    var crunch = extras.compressedImage3DTiles.crunch;
-                    var s3tc = extras.compressedImage3DTiles.s3tc;
-                    var pvrtc = extras.compressedImage3DTiles.pvrtc1;
-                    var etc1 = extras.compressedImage3DTiles.etc1;
+            // First check for a compressed texture
+            if (defined(extras) && defined(extras.compressedImage3DTiles)) {
+                var crunch = extras.compressedImage3DTiles.crunch;
+                var s3tc = extras.compressedImage3DTiles.s3tc;
+                var pvrtc = extras.compressedImage3DTiles.pvrtc1;
+                var etc1 = extras.compressedImage3DTiles.etc1;
 
-                    if (context.s3tc && defined(crunch)) {
-                        if (defined(crunch.bufferView)) {
-                            bufferViewId = crunch.bufferView;
-                        } else {
-                            uri = crunch.uri;
-                        }
-                    } else if (context.s3tc && defined(s3tc)) {
-                        if (defined(s3tc.bufferView)) {
-                            bufferViewId = s3tc.bufferView;
-                        } else {
-                            uri = s3tc.uri;
-                        }
-                    } else if (context.pvrtc && defined(pvrtc)) {
-                        if (defined(pvrtc.bufferView)) {
-                            bufferViewId = pvrtc.bufferView;
-                        } else {
-                            uri = pvrtc.uri;
-                        }
-                    } else if (context.etc1 && defined(etc1)) {
-                        if (defined(etc1.bufferView)) {
-                            bufferViewId = etc1.bufferView;
-                        } else {
-                            uri = etc1.uri;
-                        }
-                    }
-                }
-
-                // Image references either uri (external or base64-encoded) or bufferView
-                if (defined(bufferViewId)) {
-                    model._loadResources.texturesToCreateFromBufferView.enqueue({
-                        id : id,
-                        image : undefined,
-                        bufferView : bufferViewId,
-                        mimeType : gltfImage.mimeType
-                    });
-                } else {
-                    ++model._loadResources.pendingTextureLoads;
-                    uri = new Uri(uri);
-                    var imagePath = uri.resolve(model._baseUri).toString();
-                    if (ktxRegex.test(imagePath)) {
-                        loadKTX(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
-                    } else if (crnRegex.test(imagePath)) {
-                        loadCRN(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                if (context.s3tc && defined(crunch)) {
+                    if (defined(crunch.bufferView)) {
+                        bufferViewId = crunch.bufferView;
                     } else {
-                        loadImage(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                        uri = crunch.uri;
+                    }
+                } else if (context.s3tc && defined(s3tc)) {
+                    if (defined(s3tc.bufferView)) {
+                        bufferViewId = s3tc.bufferView;
+                    } else {
+                        uri = s3tc.uri;
+                    }
+                } else if (context.pvrtc && defined(pvrtc)) {
+                    if (defined(pvrtc.bufferView)) {
+                        bufferViewId = pvrtc.bufferView;
+                    } else {
+                        uri = pvrtc.uri;
+                    }
+                } else if (context.etc1 && defined(etc1)) {
+                    if (defined(etc1.bufferView)) {
+                        bufferViewId = etc1.bufferView;
+                    } else {
+                        uri = etc1.uri;
                     }
                 }
             }
-        }
+
+            // Image references either uri (external or base64-encoded) or bufferView
+            if (defined(bufferViewId)) {
+                model._loadResources.texturesToCreateFromBufferView.enqueue({
+                    id : id,
+                    image : undefined,
+                    bufferView : bufferViewId,
+                    mimeType : gltfImage.mimeType
+                });
+            } else {
+                ++model._loadResources.pendingTextureLoads;
+                uri = new Uri(uri);
+                var imagePath = uri.resolve(model._baseUri).toString();
+                if (ktxRegex.test(imagePath)) {
+                    loadKTX(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                } else if (crnRegex.test(imagePath)) {
+                    loadCRN(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                } else {
+                    loadImage(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                }
+            }
+        });
     }
 
     var nodeTranslationScratch = new Cartesian3();
@@ -1519,58 +1504,52 @@ define([
         var skinnedNodes = [];
 
         var skinnedNodesIds = model._loadResources.skinnedNodesIds;
-        var nodes = model.gltf.nodes;
 
-        for (var id in nodes) {
-            if (nodes.hasOwnProperty(id)) {
-                id = parseInt(id);
-                var node = nodes[id];
+        ForEach.node(model.gltf, function(node, id) {
+            var runtimeNode = {
+                // Animation targets
+                matrix : undefined,
+                translation : undefined,
+                rotation : undefined,
+                scale : undefined,
 
-                var runtimeNode = {
-                    // Animation targets
-                    matrix : undefined,
-                    translation : undefined,
-                    rotation : undefined,
-                    scale : undefined,
+                // Per-node show inherited from parent
+                computedShow : true,
 
-                    // Per-node show inherited from parent
-                    computedShow : true,
+                // Computed transforms
+                transformToRoot : new Matrix4(),
+                computedMatrix : new Matrix4(),
+                dirtyNumber : 0,                    // The frame this node was made dirty by an animation; for graph traversal
 
-                    // Computed transforms
-                    transformToRoot : new Matrix4(),
-                    computedMatrix : new Matrix4(),
-                    dirtyNumber : 0,                    // The frame this node was made dirty by an animation; for graph traversal
+                // Rendering
+                commands : [],                      // empty for transform, light, and camera nodes
 
-                    // Rendering
-                    commands : [],                      // empty for transform, light, and camera nodes
+                // Skinned node
+                inverseBindMatrices : undefined,    // undefined when node is not skinned
+                bindShapeMatrix : undefined,        // undefined when node is not skinned or identity
+                joints : [],                        // empty when node is not skinned
+                computedJointMatrices : [],         // empty when node is not skinned
 
-                    // Skinned node
-                    inverseBindMatrices : undefined,    // undefined when node is not skinned
-                    bindShapeMatrix : undefined,        // undefined when node is not skinned or identity
-                    joints : [],                        // empty when node is not skinned
-                    computedJointMatrices : [],         // empty when node is not skinned
+                // Joint node
+                jointName : node.jointName,         // undefined when node is not a joint
 
-                    // Joint node
-                    jointName : node.jointName,         // undefined when node is not a joint
+                // Graph pointers
+                children : [],                      // empty for leaf nodes
+                parents : [],                       // empty for root nodes
 
-                    // Graph pointers
-                    children : [],                      // empty for leaf nodes
-                    parents : [],                       // empty for root nodes
+                // Publicly-accessible ModelNode instance to modify animation targets
+                publicNode : undefined
+            };
+            runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, id, getTransform(node));
 
-                    // Publicly-accessible ModelNode instance to modify animation targets
-                    publicNode : undefined
-                };
-                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, id, getTransform(node));
+            runtimeNodes[id] = runtimeNode;
+            runtimeNodesByName[node.name] = runtimeNode;
 
-                runtimeNodes[id] = runtimeNode;
-                runtimeNodesByName[node.name] = runtimeNode;
-
-                if (defined(node.skin)) {
-                    skinnedNodesIds.push(id);
-                    skinnedNodes.push(runtimeNode);
-                }
+            if (defined(node.skin)) {
+                skinnedNodesIds.push(id);
+                skinnedNodes.push(runtimeNode);
             }
-        }
+        });
 
         model._runtime.nodes = runtimeNodes;
         model._runtime.nodesByName = runtimeNodesByName;
@@ -1580,25 +1559,20 @@ define([
     function parseMaterials(model) {
         var runtimeMaterialsByName = {};
         var runtimeMaterialsById = {};
-        var materials = model.gltf.materials;
         var uniformMaps = model._uniformMaps;
 
-        for (var id in materials) {
-            if (materials.hasOwnProperty(id)) {
-                id = parseInt(id);
-                // Allocated now so ModelMaterial can keep a reference to it.
-                uniformMaps[id] = {
-                    uniformMap : undefined,
-                    values : undefined,
-                    jointMatrixUniformName : undefined
-                };
+        ForEach.material(model.gltf, function(material, id) {
+            // Allocated now so ModelMaterial can keep a reference to it.
+            uniformMaps[id] = {
+                uniformMap : undefined,
+                values : undefined,
+                jointMatrixUniformName : undefined
+            };
 
-                var material = materials[id];
-                var modelMaterial = new ModelMaterial(model, material, id);
-                runtimeMaterialsByName[material.name] = modelMaterial;
-                runtimeMaterialsById[id] = modelMaterial;
-            }
-        }
+            var modelMaterial = new ModelMaterial(model, material, id);
+            runtimeMaterialsByName[material.name] = modelMaterial;
+            runtimeMaterialsById[id] = modelMaterial;
+        });
 
         model._runtime.materialsByName = runtimeMaterialsByName;
         model._runtime.materialsById = runtimeMaterialsById;
@@ -1607,30 +1581,25 @@ define([
     function parseMeshes(model) {
         var runtimeMeshesByName = {};
         var runtimeMaterialsById = model._runtime.materialsById;
-        var meshes = model.gltf.meshes;
 
-        for (var id in meshes) {
-            if (meshes.hasOwnProperty(id)) {
-                id = parseInt(id);
-                var mesh = meshes[id];
-                runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
-                if (defined(model.extensionsUsed.WEB3D_quantized_attributes)) {
-                    // Cache primitives according to their program
-                    var primitives = mesh.primitives;
-                    var primitivesLength = primitives.length;
-                    for (var i = 0; i < primitivesLength; i++) {
-                        var primitive = primitives[i];
-                        var programId = getProgramForPrimitive(model, primitive);
-                        var programPrimitives = model._programPrimitives[programId];
-                        if (!defined(programPrimitives)) {
-                            programPrimitives = [];
-                            model._programPrimitives[programId] = programPrimitives;
-                        }
-                        programPrimitives.push(primitive);
+        ForEach.mesh(model.gltf, function(mesh, id) {
+            runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
+            if (defined(model.extensionsUsed.WEB3D_quantized_attributes)) {
+                // Cache primitives according to their program
+                var primitives = mesh.primitives;
+                var primitivesLength = primitives.length;
+                for (var i = 0; i < primitivesLength; i++) {
+                    var primitive = primitives[i];
+                    var programId = getProgramForPrimitive(model, primitive);
+                    var programPrimitives = model._programPrimitives[programId];
+                    if (!defined(programPrimitives)) {
+                        programPrimitives = [];
+                        model._programPrimitives[programId] = programPrimitives;
                     }
+                    programPrimitives.push(primitive);
                 }
             }
-        }
+        });
 
         model._runtime.meshesByName = runtimeMeshesByName;
     }
@@ -1694,27 +1663,23 @@ define([
         // The Cesium Renderer requires knowing the datatype for an index buffer
         // at creation type, which is not part of the glTF bufferview so loop
         // through glTF accessors to create the bufferview's index buffer.
-        var accessors = model.gltf.accessors;
-        for (var id in accessors) {
-            if (accessors.hasOwnProperty(id)) {
-                var accessor = accessors[id];
-                bufferView = bufferViews[accessor.bufferView];
+        ForEach.accessor(model.gltf, function(accessor) {
+            bufferView = bufferViews[accessor.bufferView];
 
-                if ((bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[accessor.bufferView])) {
-                    var indexBuffer = Buffer.createIndexBuffer({
-                        context : context,
-                        typedArray : loadResources.getBuffer(bufferView),
-                        usage : BufferUsage.STATIC_DRAW,
-                        indexDatatype : accessor.componentType
-                    });
-                    indexBuffer.vertexArrayDestroyable = false;
-                    rendererBuffers[accessor.bufferView] = indexBuffer;
-                    // In theory, several glTF accessors with different componentTypes could
-                    // point to the same glTF bufferView, which would break this.
-                    // In practice, it is unlikely, but possible with uint32 indices in glTF 2.0.
-                }
+            if ((bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[accessor.bufferView])) {
+                var indexBuffer = Buffer.createIndexBuffer({
+                    context : context,
+                    typedArray : loadResources.getBuffer(bufferView),
+                    usage : BufferUsage.STATIC_DRAW,
+                    indexDatatype : accessor.componentType
+                });
+                indexBuffer.vertexArrayDestroyable = false;
+                rendererBuffers[accessor.bufferView] = indexBuffer;
+                // In theory, several glTF accessors with different componentTypes could
+                // point to the same glTF bufferView, which would break this.
+                // In practice, it is unlikely, but possible with uint32 indices in glTF 2.0.
             }
-        }
+        });
     }
 
     function createAttributeLocations(model, attributes) {
@@ -2257,25 +2222,21 @@ define([
 
         var gltf = model.gltf;
         var accessors = gltf.accessors;
-        var skins = gltf.skins;
         var runtimeSkins = {};
 
-        for (var id in skins) {
-            if (skins.hasOwnProperty(id)) {
-                var skin = skins[id];
-                var accessor = accessors[skin.inverseBindMatrices];
+        ForEach.skin(gltf, function(skin, id) {
+            var accessor = accessors[skin.inverseBindMatrices];
 
-                var bindShapeMatrix;
-                if (!Matrix4.equals(skin.bindShapeMatrix, Matrix4.IDENTITY)) {
-                    bindShapeMatrix = Matrix4.clone(skin.bindShapeMatrix);
-                }
-
-                runtimeSkins[id] = {
-                    inverseBindMatrices : ModelAnimationCache.getSkinInverseBindMatrices(model, accessor),
-                    bindShapeMatrix : bindShapeMatrix // not used when undefined
-                };
+            var bindShapeMatrix;
+            if (!Matrix4.equals(skin.bindShapeMatrix, Matrix4.IDENTITY)) {
+                bindShapeMatrix = Matrix4.clone(skin.bindShapeMatrix);
             }
-        }
+
+            runtimeSkins[id] = {
+                inverseBindMatrices : ModelAnimationCache.getSkinInverseBindMatrices(model, accessor),
+                bindShapeMatrix : bindShapeMatrix // not used when undefined
+            };
+        });
 
         createJoints(model, runtimeSkins);
     }

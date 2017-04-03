@@ -250,7 +250,7 @@ define([
         };
         // Convert top level objects to arrays
         for (var topLevelId in gltf) {
-            if (gltf.hasOwnProperty(topLevelId) && topLevelId !== 'extras' && topLevelId !== 'asset') {
+            if (gltf.hasOwnProperty(topLevelId) && topLevelId !== 'extras' && topLevelId !== 'asset' && topLevelId !== 'extensions') {
                 var objectMapping = {};
                 var object = gltf[topLevelId];
                 if (typeof(object) === 'object' && !Array.isArray(object)) {
