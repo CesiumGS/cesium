@@ -3999,8 +3999,11 @@ define([
         var extensionsRequired = model.extensionsRequired;
         for (var extension in extensionsRequired) {
             if (extensionsRequired.hasOwnProperty(extension)) {
-                if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
-                    extension !== 'KHR_materials_common' && extension !== 'WEB3D_quantized_attributes') {
+                if (extension !== 'CESIUM_RTC' &&
+                    extension !== 'KHR_technique_webgl' &&
+                    extension !== 'KHR_binary_glTF' &&
+                    extension !== 'KHR_materials_common' &&
+                    extension !== 'WEB3D_quantized_attributes') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
             }
