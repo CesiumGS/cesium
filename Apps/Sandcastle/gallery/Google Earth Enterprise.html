@@ -27,21 +27,23 @@
     function startup(Cesium) {
         'use strict';
 //Sandcastle_Begin
-var provider = new Cesium.GoogleEarthEnterpriseProvider({
-    url : 'http://www.earthenterprise.org/3d',
-    proxy : new Cesium.DefaultProxy('/proxy/')
-});
-
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    imageryProvider : provider,
-    terrainProvider : provider,
+    imageryProvider : new Cesium.GoogleEarthEnterpriseImageryProvider({
+        url : 'http://www.earthenterprise.org/3d',
+        proxy : new Cesium.DefaultProxy('/proxy/')
+    }),
+    terrainProvider : new Cesium.GoogleEarthEnterpriseTerrainProvider({
+        url : 'http://www.earthenterprise.org/3d',
+        proxy : new Cesium.DefaultProxy('/proxy/')
+    }),
     baseLayerPicker : false
 });
 
 // Start off looking at San Francisco.
 viewer.camera.setView({
     destination: Cesium.Rectangle.fromDegrees(-123.0, 36.0, -121.7, 39.0)
-});//Sandcastle_End
+});
+//Sandcastle_End
         Sandcastle.finishedLoading();
     }
     if (typeof Cesium !== "undefined") {
