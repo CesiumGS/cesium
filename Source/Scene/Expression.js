@@ -143,18 +143,14 @@ define([
     }
 
     function normalize(arg) {
-        var length;
         if (typeof arg === 'number') {
             return 1.0;
         } else if (arg instanceof Cartesian2) {
-            length = Cartesian2.magnitude(arg);
-            return Cartesian2.fromElements(arg.x / length, arg.y / length, ScratchStorage.getCartesian2());
+            return Cartesian2.normalize(arg, ScratchStorage.getCartesian2());
         } else if (arg instanceof Cartesian3) {
-            length = Cartesian3.magnitude(arg);
-            return Cartesian3.fromElements(arg.x / length, arg.y / length, arg.z / length, ScratchStorage.getCartesian3());
+            return Cartesian3.normalize(arg, ScratchStorage.getCartesian3());
         } else if (arg instanceof Cartesian4) {
-            length = Cartesian4.magnitude(arg);
-            return Cartesian4.fromElements(arg.x / length, arg.y / length, arg.z / length, arg.w / length, ScratchStorage.getCartesian4());
+            return Cartesian4.normalize(arg, ScratchStorage.getCartesian4());
         } else {
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Invalid argument type for normalize() function');

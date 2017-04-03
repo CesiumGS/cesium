@@ -3350,6 +3350,20 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
+    it('gets shader expression for length', function() {
+        var expression = new Expression('length(3.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'length(3.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for normalize', function() {
+        var expression = new Expression('normalize(3.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'normalize(3.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
     it('throws when getting shader expression for regex', function() {
         var expression = new Expression('regExp("a").test("abc")');
         expect(function() {
