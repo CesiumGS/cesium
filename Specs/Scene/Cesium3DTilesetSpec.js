@@ -171,6 +171,10 @@ defineSuite([
     });
 
     it('rejects readyPromise with invalid tileset.json', function() {
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            deferred.reject();
+        });
+
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : 'invalid.json'
         }));
@@ -179,9 +183,8 @@ defineSuite([
             fail('should not resolve');
         }).otherwise(function(error) {
             expect(tileset.ready).toEqual(false);
-            expect(error.statusCode).toEqual(404);
         });
-    }, 10000);
+    });
 
     it('rejects readyPromise with invalid tileset version', function() {
         var tilesetJson = {
