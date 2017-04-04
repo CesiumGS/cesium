@@ -1335,7 +1335,6 @@ define([
         var finalQueue = selectionState.finalQueue;
         var selectionQueue = selectionState.selectionQueue;
         selectionQueue.length = 0;
-        tileset._hasMixedContent = false;
 
         var length = finalQueue.length;
         for (var i = 0; i < length; ++i) {
@@ -1429,6 +1428,7 @@ define([
 
         tileset._selectedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
+        tileset._hasMixedContent = false;
 
         // Move sentinel node to the tail so, at the start of the frame, all tiles
         // may be potentially replaced.  Tiles are moved to the right of the sentinel
@@ -1644,6 +1644,9 @@ define([
                     // at least one child was visible but not in request volume. Add the parent.
                     if (tile.childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_NOT_IN_REQUEST_VOLUME) {
                         loadAndAddToQueue(tileset, tile, finalQueue);
+                        if (tile.childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE) {
+                            tileset._hasMixedContent = true;
+                        }
                     }
                 }
             }

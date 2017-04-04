@@ -877,24 +877,13 @@ defineSuite([
             setZoom(20.0);
             scene.renderForSpecs();
             expect(stats.numberOfCommands).toEqual(5);
+            expect(root.selected).toBe(false);
 
             // No longer renders the tile with a request volume
             setZoom(1500.0);
-            scene.renderForSpecs();
-            expect(stats.numberOfCommands).toEqual(4);
-
-            // Now test when refineToVisible is true
-            tileset._refineToVisible = true;
-
-            // Renders all 5 tiles
-            setZoom(20.0);
             scene.renderForSpecs();
             expect(stats.numberOfCommands).toEqual(5);
-
-            // No longer renders the tile with a request volume
-            setZoom(1500.0);
-            scene.renderForSpecs();
-            expect(stats.numberOfCommands).toEqual(4);
+            expect(root.selected).toBe(true); // one child is no longer selected. root is chosen instead
         });
     });
 
