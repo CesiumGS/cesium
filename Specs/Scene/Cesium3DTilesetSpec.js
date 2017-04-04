@@ -2273,11 +2273,11 @@ defineSuite([
             scene.renderForSpecs();
             var stats = tileset._statistics;
             expect(stats.numberContentReady).toEqual(1);
-            expect(tileset._refining).toBe(true);
+            expect(tileset._hasMixedContent).toBe(true);
 
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
                 expect(stats.numberContentReady).toEqual(5);
-                expect(tileset._refining).toBe(false);
+                expect(tileset._hasMixedContent).toBe(false);
             });
         });
     });
@@ -2295,7 +2295,7 @@ defineSuite([
                 scene.renderForSpecs();
                 // 1 for root tiles, 1 for stencil clear
                 expect(stats.numberOfCommands).toEqual(2);
-                expect(tileset._refining).toBe(true);
+                expect(tileset._hasMixedContent).toBe(true);
 
                 var commandList = scene.frameState.commandList;
                 expect(commandList[0] instanceof ClearCommand).toBe(true);
@@ -2323,7 +2323,7 @@ defineSuite([
                 expect(root._finalResolution).toBe(false);
                 expect(root.children[0].children[0].children[3].selected).toBe(true);
                 expect(root.children[0].children[0].children[3]._finalResolution).toBe(true);
-                expect(tileset._refining).toBe(true);
+                expect(tileset._hasMixedContent).toBe(true);
 
                 var commandList = scene.frameState.commandList;
                 expect(commandList[0] instanceof ClearCommand).toBe(true);
@@ -2348,7 +2348,7 @@ defineSuite([
                 scene.renderForSpecs();
                 // 1 for root tile, 1 for stencil clear
                 expect(stats.numberOfCommands).toEqual(2);
-                expect(tileset._refining).toBe(true);
+                expect(tileset._hasMixedContent).toBe(true);
 
                 var commandList = scene.frameState.commandList;
                 expect(commandList[0] instanceof ClearCommand).toBe(true);

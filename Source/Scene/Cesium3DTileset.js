@@ -575,7 +575,7 @@ define([
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
         this._loadHeaps = {};
-        this._refining = false;
+        this._hasMixedContent = false;
     }
 
     function Cesium3DTilesetStatistics() {
@@ -1342,7 +1342,7 @@ define([
         var finalQueue = selectionState.finalQueue;
         var selectionQueue = selectionState.selectionQueue;
         selectionQueue.length = 0;
-        tileset._refining = false;
+        tileset._hasMixedContent = false;
 
         var length = finalQueue.length;
         for (var i = 0; i < length; ++i) {
@@ -1352,7 +1352,7 @@ define([
             if (tile.hasContent || tile.hasTilesetContent) {  // could be Empty3DTileContent
                 while (defined(tile) && !(tile.hasContent && tile.contentReady)) {
                     if (!tile.contentReady) {
-                        tileset._refining = true;
+                        tileset._hasMixedContent = true;
                     }
                     tile = tile.parent;
                 }
@@ -1499,7 +1499,7 @@ define([
 
         markNearestLoadedTilesForSelection(selectionState, tileset, frameState, outOfCore);
 
-        if (tileset._refining) {
+        if (tileset._hasMixedContent) {
             markTilesAsFinal(selectionQueue);
         }
 
@@ -1904,7 +1904,7 @@ define([
 
         var tile, i;
 
-        if (tileset._refining && frameState.context.stencilBuffer && length > 0) {
+        if (tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0) {
             /**
              * Consider 'leaf' tiles as selected tiles that have no selected descendants. They may have children,
              * but they are currently our effective leaves because they do not have selected descendants. These tiles
