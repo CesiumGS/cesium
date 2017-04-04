@@ -143,7 +143,10 @@ define([
 
         this.refCount = 1;
 
-        this._readyPromise = this._getQuadTreePacket();
+        this._readyPromise = this._getQuadTreePacket()
+            .then(function() {
+                return true;
+            });
     }
 
     defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
@@ -156,6 +159,18 @@ define([
         url : {
             get : function() {
                 return this._url;
+            }
+        },
+
+        /**
+         * Gets the proxy used by this provider.
+         * @memberof GoogleEarthEnterpriseImageryProvider.prototype
+         * @type {Proxy}
+         * @readonly
+         */
+        proxy : {
+            get : function() {
+                return this._proxy;
             }
         },
 
@@ -390,11 +405,8 @@ define([
                     throw new RuntimeError('Invalid data type. Must be 1 for QuadTreePacket');
                 }
 
-                var version = dv.getUint32(offset, true);
+                //var version = dv.getUint32(offset, true);
                 offset += sizeOfUint32;
-                if (version !== 2) {
-                    throw new RuntimeError('Invalid version. Only QuadTreePacket version 2 supported.');
-                }
 
                 var numInstances = dv.getInt32(offset, true);
                 offset += sizeOfInt32;

@@ -121,8 +121,9 @@ define([
         this._ready = false;
         var that = this;
         this._readyPromise = this._metadata.readyPromise
-            .then(function() {
-                that._ready = true;
+            .then(function(result) {
+                that._ready = result;
+                return result;
             });
     }
 
