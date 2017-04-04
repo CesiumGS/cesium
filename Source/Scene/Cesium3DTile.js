@@ -186,16 +186,6 @@ define([
          */
         this.parent = parent;
 
-        /**
-         * The number of unloaded children, i.e., children whose content is not loaded.
-         *
-         * @type {Number}
-         * @readonly
-         *
-         * @private
-         */
-        this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
-
         var hasContent;
         var hasTilesetContent;
         var requestServer;
@@ -237,9 +227,6 @@ define([
 
         this._createContent = createContent;
         this._content = createContent();
-        if (!hasContent && !hasTilesetContent) {
-            addContentReadyPromise(this);
-        }
 
         this._requestServer = requestServer;
 
@@ -456,19 +443,6 @@ define([
         }
     });
 
-    function addContentReadyPromise(tile) {
-        // Content enters the READY state
-        tile._content.readyPromise.then(function(content) {
-            if (defined(tile.parent)) {
-                --tile.parent.numberOfChildrenWithoutContent;
-            }
-        }).otherwise(function(error) {
-            // In this case, that.parent.numberOfChildrenWithoutContent will never reach zero
-            // and therefore that.parent will never refine.  If this becomes an issue, failed
-            // requests can be reissued.
-        });
-    }
-
     /**
      * Requests the tile's content.
      * <p>
@@ -478,9 +452,7 @@ define([
      * @private
      */
     Cesium3DTile.prototype.requestContent = function() {
-        if (this._content.request()) {
-            addContentReadyPromise(this);
-        }
+        this._content.request();
     };
 
     /**
@@ -506,15 +478,8 @@ define([
      * @private
      */
     Cesium3DTile.prototype.unloadContent = function() {
-        if (defined(this.parent)) {
-            ++this.parent.numberOfChildrenWithoutContent;
-        }
-
         this._content = this._content && this._content.destroy();
         this._content = this._createContent();
-        if (!this.hasContent && !this.hasTilesetContent) {
-            addContentReadyPromise(this);
-        }
 
         this.replacementNode = undefined;
 

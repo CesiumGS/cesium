@@ -1026,11 +1026,10 @@ define([
             var rootTile = new Cesium3DTile(that, baseUrl, tilesetJson.root, parentTile);
 
             // If there is a parentTile, add the root of the currently loading tileset
-            // to parentTile's children, and increment its numberOfChildrenWithoutContent
+            // to parentTile's children, and update its _depth.
             if (defined(parentTile)) {
                 parentTile.children.push(rootTile);
                 rootTile._depth = parentTile._depth + 1;
-                ++parentTile.numberOfChildrenWithoutContent;
             }
 
             ++stats.numberTotal;

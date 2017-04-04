@@ -726,6 +726,19 @@ defineSuite([
         });
     }
 
+    function numberOfChildrenWithoutContent(tile) {
+        var children = tile.children;
+        var length = children.length;
+        var count = 0;
+        for (var i = 0; i < length; ++i) {
+            var child = children[i];
+            if (!child.contentReady) {
+                ++count;
+            }
+        }
+        return count;
+    }
+
     // Adjust distances for each test because the dynamic SSE takes the
     // bounding volume height into account, which differs for each bounding volume.
     it('uses dynamic screen space error for tileset with region', function() {
@@ -847,7 +860,7 @@ defineSuite([
             // tileset is refining and adds a stencil clear command
             expect(stats.numberOfCommands).toEqual(2);
             expect(stats.numberOfPendingRequests).toEqual(4);
-            expect(root.numberOfChildrenWithoutContent).toEqual(4);
+            expect(numberOfChildrenWithoutContent(root)).toEqual(4);
         });
     });
 
@@ -904,7 +917,7 @@ defineSuite([
             return when.join(root.children[0].readyPromise, root.children[1].readyPromise).then(function() {
                 // Even though root's children are loaded, the grandchildren need to be loaded before it becomes refinable
                 scene.renderForSpecs();
-                expect(root.numberOfChildrenWithoutContent).toEqual(0); // Children are loaded
+                expect(numberOfChildrenWithoutContent(root)).toEqual(0); // Children are loaded
                 expect(stats.numberOfCommands).toEqual(3); // Stencil, root backfaces, root
                 expect(stats.numberOfPendingRequests).toEqual(4); // Loading grandchildren
 
