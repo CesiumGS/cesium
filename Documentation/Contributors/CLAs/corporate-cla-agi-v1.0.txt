@@ -1,6 +1,5 @@
                       Analytical Graphics, Inc.
   Software Grant and Corporate Contributor License Agreement ("Agreement")
-           http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt
                                  v1.0
 
 In order to clarify the intellectual property license granted with
