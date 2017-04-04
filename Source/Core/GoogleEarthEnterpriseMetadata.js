@@ -143,9 +143,14 @@ define([
 
         this.refCount = 1;
 
+        var that = this;
         this._readyPromise = this._getQuadTreePacket()
             .then(function() {
                 return true;
+            })
+            .otherwise(function(e) {
+                var message = 'An error occurred while accessing ' + getMetadataUrl(that, '', 1) + '.';
+                throw new RuntimeError(message);
             });
     }
 
@@ -379,7 +384,7 @@ define([
     GoogleEarthEnterpriseMetadata.prototype._getQuadTreePacket = function(quadKey, version) {
         version = defaultValue(version, 1);
         quadKey = defaultValue(quadKey, '');
-        var url = this._url + 'flatfile?q2-0' + quadKey + '-q.' + version.toString();
+        var url = getMetadataUrl(this, quadKey, version);
         var proxy = this._proxy;
         if (defined(proxy)) {
             url = proxy.getURL(url);
@@ -618,6 +623,10 @@ define([
     GoogleEarthEnterpriseMetadata.prototype.getTileInformationFromQuadKey = function(quadkey) {
         return this._tileInfo[quadkey];
     };
+
+    function getMetadataUrl(that, quadKey, version) {
+        return that._url + 'flatfile?q2-0' + quadKey + '-q.' + version.toString();
+    }
 
     return GoogleEarthEnterpriseMetadata;
 });

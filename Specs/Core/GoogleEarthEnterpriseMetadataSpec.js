@@ -258,7 +258,7 @@ defineSuite([
         return provider.readyPromise.then(function () {
             fail('should not resolve');
         }).otherwise(function (e) {
-            expect(e.statusCode).toEqual(404);
+            expect(e.message).toContain(url);
         });
     });
 
