@@ -1200,19 +1200,12 @@ define([
         return error;
     }
 
-    var scratchCartesian = new Cartesian3();
-
     function computeDistanceToCamera(children, frameState) {
         var length = children.length;
         for (var i = 0; i < length; ++i) {
             var child = children[i];
             child.distanceToCamera = child.distanceToTile(frameState);
-
-            var toCenter = Cartesian3.subtract(child.contentBoundingVolume.boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
-            var distance = Cartesian3.magnitude(toCenter);
-            Cartesian3.divideByScalar(toCenter, distance, toCenter);
-            var dot = Cartesian3.dot(frameState.camera.directionWC, toCenter);
-            child._centerZDepth = distance * dot;
+            child._centerZDepth = child.distanceToTileCenter(frameState);
         }
     }
 

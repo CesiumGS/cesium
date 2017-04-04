@@ -563,6 +563,26 @@ define([
         return boundingVolume.distanceToCamera(frameState);
     };
 
+
+    var scratchCartesian = new Cartesian3();
+
+    /**
+     * Computes the distance from the center of the tile's bounding volume to the camera.
+     *
+     * @param {FrameState} frameState The frame state.
+     * @returns {Number} The distance, in meters, or zero if the camera is inside the bounding volume.
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.distanceToTileCenter = function(frameState) {
+        var boundingVolume = getBoundingVolume(this, frameState).boundingVolume;
+        var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
+        var distance = Cartesian3.magnitude(toCenter);
+        Cartesian3.divideByScalar(toCenter, distance, toCenter);
+        var dot = Cartesian3.dot(frameState.camera.directionWC, toCenter);
+        return distance * dot;
+    };
+
     /**
      * Checks if the camera is inside the viewer request volume.
      *
