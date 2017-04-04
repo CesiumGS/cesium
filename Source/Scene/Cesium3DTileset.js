@@ -1891,7 +1891,7 @@ define([
     var stencilClearCommand = new ClearCommand({
         stencil : 0
     });
-    var backfaceCommands = [];
+    var backfaceCommands = new ManagedArray();
 
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
@@ -1947,13 +1947,16 @@ define([
                     var lengthBeforeUpdate = commandList.length;
                     tile.update(tileset, frameState);
                     for (var j = lengthBeforeUpdate; j < commandList.length; ++j) {
-                        command = DrawCommand.shallowClone(commandList[j]);
-                        commandList[j] = command;
+                        command = commandList[j];
 
                         if (!tile._finalResolution) {
                             // draw backfaces of all unresolved tiles so resolved tiles don't poke through
                             if (command.renderState.depthMask) {
-                                backfaceCommands.push(DrawCommand.shallowClone(command));
+                                // resize internal array if too small
+                                backfaceCommands.reserve(backfaceCommands.length + 1);
+                                // clone the command in-place if the internal array contained an old command allocated there
+                                var backfaceCommand = DrawCommand.shallowClone(command, backfaceCommands.get(backfaceCommands.length));
+                                backfaceCommands.push(backfaceCommand);
                             }
                         }
 
@@ -1977,7 +1980,7 @@ define([
 
             // write just depth of unresolved tiles so resolved final res tiles do not appear in front
             for (i = 0; i < backfaceCommandsLength; ++i) {
-                command = backfaceCommands[i];
+                command = backfaceCommands.get(i);
                 rs = clone(command.renderState, true);
                 rs.cull.enabled = true;
                 rs.cull.face = CullFace.FRONT;
@@ -1992,7 +1995,7 @@ define([
             }
 
             for (i = 0; i < backfaceCommandsLength; ++i) {
-                commandList[initialLength + i] = backfaceCommands[i];
+                commandList[initialLength + i] = backfaceCommands.get(i);
             }
 
         } else {
@@ -2007,6 +2010,8 @@ define([
                 }
             }
         }
+
+        backfaceCommands.trim();
 
         // Number of commands added by each update above
         tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
