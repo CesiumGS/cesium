@@ -1331,7 +1331,7 @@ define([
 
     var descendantStack = [];
 
-    function markNearestLoadedTilesForSelection(selectionState, tileset, frameState, outOfCore) {
+    function markNearestLoadedTilesForSelection(tileset, frameState, selectionState, outOfCore) {
         var finalQueue = selectionState.finalQueue;
         var selectionQueue = selectionState.selectionQueue;
         selectionQueue.length = 0;
@@ -1490,7 +1490,7 @@ define([
         nextQueue.trim(processLength);
         finalQueue.trim();
 
-        markNearestLoadedTilesForSelection(selectionState, tileset, frameState, outOfCore);
+        markNearestLoadedTilesForSelection(tileset, frameState, selectionState, outOfCore);
 
         if (tileset._hasMixedContent) {
             markTilesAsFinal(selectionQueue);
@@ -1519,7 +1519,7 @@ define([
         var length = processingQueue.length;
 
         for (var i = 0; i < length; ++i) {
-            queueDescendants(tileset, processingQueue.get(i), selectionState, frameState, outOfCore);
+            queueDescendants(tileset, processingQueue.get(i), frameState, selectionState, outOfCore);
         }
         selectionState.done = (nextQueue.length === 0);
     }
@@ -1530,7 +1530,7 @@ define([
                (tile._depth > ancestor._depth + tileset.skipLevels);
     }
 
-    function updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, loadSiblings) {
+    function updateAndPushChildren(tileset, tile, frameState, stack, loadSiblings, outOfCore) {
         var children = tile.children;
         var childrenLength = children.length;
 
@@ -1588,22 +1588,22 @@ define([
      * Any tiles that have no children, are additive, or meet the tileset's maximum screen space error are added
      * to selectionState.finalQueue instead
      */
-    function queueDescendants(tileset, start, selectionState, frameState, outOfCore) {
+    function queueDescendants(tileset, start, frameState, selectionState, outOfCore) {
         var stack = tempStack;
 
-        queueTile(tileset, start, start, stack, selectionState, frameState, outOfCore);
+        queueTile(tileset, start, start, frameState, selectionState, stack, outOfCore);
 
         while (stack.length > 0) {
             var tile = stack.pop();
             visitTile(tileset, tile, frameState, outOfCore);
-            queueTile(tileset, start, tile, stack, selectionState, frameState, outOfCore);
+            queueTile(tileset, start, tile, frameState, selectionState, stack, outOfCore);
         }
     }
 
     /**
      * Load and add a tile to the proper queue and load and push children to the processing stack
      */
-    function queueTile(tileset, start, tile, stack, selectionState, frameState, outOfCore) {
+    function queueTile(tileset, start, tile, frameState, selectionState, stack, outOfCore) {
         var nextQueue = selectionState.nextQueue;
         var finalQueue = selectionState.finalQueue;
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
@@ -1623,7 +1623,7 @@ define([
         } else {
             if (tile.refine === Cesium3DTileRefine.ADD) {
                 loadAndAddToQueue(tileset, tile, finalQueue);
-                updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, loadSiblings);
+                updateAndPushChildren(tileset, tile, frameState, stack, loadSiblings, outOfCore);
             } else {
                 if (tile.children.length === 0) {
                     loadAndAddToQueue(tileset, tile, finalQueue);
@@ -1640,7 +1640,7 @@ define([
                 } else if (selectionHeuristic(tileset, start, tile)) {
                     loadAndAddToQueue(tileset, tile, nextQueue);
                 } else {
-                    updateAndPushChildren(tileset, tile, stack, frameState, outOfCore, loadSiblings);
+                    updateAndPushChildren(tileset, tile, frameState, stack, loadSiblings, outOfCore);
                     // at least one child was visible but not in request volume. Add the parent.
                     if (tile.childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_NOT_IN_REQUEST_VOLUME) {
                         loadAndAddToQueue(tileset, tile, finalQueue);
