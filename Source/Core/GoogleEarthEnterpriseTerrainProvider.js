@@ -3,9 +3,11 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
+        './Credit',
         './defaultValue',
         './defined',
         './defineProperties',
+        './destroyObject',
         './DeveloperError',
         './Ellipsoid',
         './Event',
@@ -22,9 +24,11 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -54,9 +58,10 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url of the Google Earth Enterprise server hosting the imagery.
-     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see CesiumTerrainProvider
      * @see GoogleEarthEnterpriseImageryProvider
@@ -86,6 +91,12 @@ define([
             rectangle : new Rectangle(-CesiumMath.PI, -CesiumMath.PI, CesiumMath.PI, CesiumMath.PI),
             ellipsoid : options.ellipsoid
         });
+
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
 
         // 1024 was the initial size of the heightmap before decimation in GEE
         this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, 1024, this._tilingScheme.getNumberOfXTilesAtLevel(0));
@@ -181,7 +192,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return this._readyPromise.promise;
+                return this._readyPromise;
             }
         },
 
@@ -194,7 +205,7 @@ define([
          */
         credit : {
             get : function() {
-                return undefined;
+                return this._credit;
             }
         },
 
@@ -467,7 +478,25 @@ define([
      * @returns {Boolean} Undefined if not supported, otherwise true or false.
      */
     GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
+        var metadata = this._metadata;
+        var info = metadata.getTileInformation(x, y, level);
+        if (defined(info)) {
+            return info.hasTerrain();
+        }
         return undefined;
+    };
+
+    /**
+     * Releases resources used by this provider
+     */
+    GoogleEarthEnterpriseTerrainProvider.prototype.destroy = function() {
+        var metadata = this._metadata;
+        if (defined(metadata)) {
+            this._metadata = undefined;
+            GoogleEarthEnterpriseMetadata.releaseMetadata(metadata);
+        }
+
+        return destroyObject(this);
     };
 
     //

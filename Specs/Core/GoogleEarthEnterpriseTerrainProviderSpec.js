@@ -4,406 +4,301 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/defined',
+        'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
+        'Core/GoogleEarthEnterpriseMetadata',
+        'Core/GoogleEarthEnterpriseTerrainData',
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Math',
         'Core/TerrainProvider',
+        'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         GoogleEarthEnterpriseTerrainProvider,
         DefaultProxy,
         defaultValue,
         defined,
+        Ellipsoid,
+        GeographicTilingScheme,
+        GoogleEarthEnterpriseMetadata,
+        GoogleEarthEnterpriseTerrainData,
         loadImage,
         loadWithXhr,
         CesiumMath,
         TerrainProvider,
+        pollToPromise,
         when) {
     'use strict';
 
-    /*
-    it('request Image populates the correct metadata', function() {
-        var quad = '0123';
-        var index = 0;
-        var provider;
-        spyOn(GoogleEarthEnterpriseProvider.prototype, '_getQuadTreePacket').and.callFake(function(quadKey, version) {
-            quadKey = defaultValue(quadKey, '') + index.toString();
-            this._tileInfo[quadKey] = {
-                bits : 0xFF,
-                cnodeVersion : 1,
-                imageryVersion : 1,
-                terrainVersion : 1
-            };
-            index = (index + 1) % 4;
+    function installMockGetQuadTreePacket() {
+        spyOn(GoogleEarthEnterpriseMetadata.prototype, '_getQuadTreePacket').and.callFake(function(quadKey, version) {
+            quadKey = defaultValue(quadKey, '');
+            this._tileInfo[quadKey + '0'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey + '1'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey + '2'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey + '3'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
 
             return when();
         });
+    }
 
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            expect(url).toEqual('http://test.server/3d/flatfile?f1-0' + quad + '-i.1');
-            expect(responseType).toEqual('arraybuffer');
-            deferred.resolve();
+    var terrainProvider;
+    function waitForTile(level, x, y, f) {
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            url : 'made/up/url'
         });
 
-        provider = new GoogleEarthEnterpriseProvider({
-            url: 'http://test.server/3d'
-        });
+        return pollToPromise(function() {
+            return terrainProvider.ready;
+        }).then(function() {
+            var promise = terrainProvider.requestTileGeometry(level, x, y);
 
-        var tileXY = GoogleEarthEnterpriseProvider.quadKeyToTileXY(quad);
-        return provider.requestImage(tileXY.x, tileXY.y, tileXY.level)
-            .then(function(image) {
-                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket.calls.count()).toEqual(4);
-                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith();
-                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('0', 1);
-                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('01', 1);
-                expect(GoogleEarthEnterpriseProvider.prototype._getQuadTreePacket).toHaveBeenCalledWith('012', 1);
-
-                var tileInfo = provider._tileInfo;
-                expect(tileInfo['0']).toBeDefined();
-                expect(tileInfo['01']).toBeDefined();
-                expect(tileInfo['012']).toBeDefined();
-                expect(tileInfo['0123']).toBeDefined();
+            return when(promise, f, function(error) {
+                expect('requestTileGeometry').toBe('returning a tile.'); // test failure
             });
+        });
+    }
+
+    afterEach(function() {
+        loadWithXhr.load = loadWithXhr.defaultLoad;
+        if (defined(terrainProvider)) {
+            terrainProvider.destroy();
+            terrainProvider = undefined;
+        }
     });
-    */
 
     it('conforms to TerrainProvider interface', function() {
         expect(GoogleEarthEnterpriseTerrainProvider).toConformToInterface(TerrainProvider);
     });
 
-    // it('constructor throws when url is not specified', function() {
-    //     function constructWithoutServer() {
-    //         return new BingMapsImageryProvider({
-    //             mapStyle : BingMapsStyle.AERIAL
-    //         });
-    //     }
-    //     expect(constructWithoutServer).toThrowDeveloperError();
-    // });
-    //
-    // function createFakeMetadataResponse(mapStyle) {
-    //     var stylePrefix = 'a';
-    //     switch (mapStyle) {
-    //     case BingMapsStyle.AERIAL_WITH_LABELS:
-    //         stylePrefix = 'h';
-    //         break;
-    //     case BingMapsStyle.ROAD:
-    //         stylePrefix = 'r';
-    //         break;
-    //     }
-    //
-    //     return {
-    //         "authenticationResultCode" : "ValidCredentials",
-    //         "brandLogoUri" : "http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png",
-    //         "copyright" : "Copyright © 2014 Microsoft and its suppliers. All rights reserved. This API cannot be accessed and the content and any results may not be used, reproduced or transmitted in any manner without express written permission from Microsoft Corporation.",
-    //         "resourceSets" : [{
-    //             "estimatedTotal" : 1,
-    //             "resources" : [{
-    //                 "__type" : "ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1",
-    //                 "imageHeight" : 256,
-    //                 "imageUrl" : "http:\/\/ecn.{subdomain}.tiles.virtualearth.net.fake.invalid\/tiles\/" + stylePrefix + "{quadkey}.jpeg?g=3031&mkt={culture}",
-    //                 "imageUrlSubdomains" : ["t0", "t1", "t2", "t3"],
-    //                 "imageWidth" : 256,
-    //                 "imageryProviders" : [{
-    //                     "attribution" : "© 2014 DigitalGlobe",
-    //                     "coverageAreas" : [{
-    //                         "bbox" : [-67, -179.99, 27, 0],
-    //                         "zoomMax" : 21,
-    //                         "zoomMin" : 14
-    //                     }, {
-    //                         "bbox" : [27, -179.99, 87, -126.5],
-    //                         "zoomMax" : 21,
-    //                         "zoomMin" : 14
-    //                     }, {
-    //                         "bbox" : [48.4, -126.5, 87, -5.75],
-    //                         "zoomMax" : 21,
-    //                         "zoomMin" : 14
-    //                     }]
-    //                 }, {
-    //                     "attribution" : "Image courtesy of NASA",
-    //                     "coverageAreas" : [{
-    //                         "bbox" : [-90, -180, 90, 180],
-    //                         "zoomMax" : 8,
-    //                         "zoomMin" : 1
-    //                     }]
-    //                 }],
-    //                 "vintageEnd" : null,
-    //                 "vintageStart" : null,
-    //                 "zoomMax" : 21,
-    //                 "zoomMin" : 1
-    //             }]
-    //         }],
-    //         "statusCode" : 200,
-    //         "statusDescription" : "OK",
-    //         "traceId" : "ea754a48ccdb4dd297c8f35350e0f0d9|BN20130533|02.00.106.1600|"
-    //     };
-    // }
-    //
-    // function installFakeMetadataRequest(url, mapStyle, proxy) {
-    //     var expectedUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle + '?incl=ImageryProviders&key=';
-    //     if (defined(proxy)) {
-    //         expectedUrl = proxy.getURL(expectedUrl);
-    //     }
-    //
-    //     loadJsonp.loadAndExecuteScript = function(url, functionName) {
-    //         expect(url).toStartWith(expectedUrl);
-    //
-    //         setTimeout(function() {
-    //             window[functionName](createFakeMetadataResponse(mapStyle));
-    //         }, 1);
-    //     };
-    // }
-    //
-    // function installFakeImageRequest(expectedUrl) {
-    //     loadImage.createImage = function(url, crossOrigin, deferred) {
-    //         if (/^blob:/.test(url)) {
-    //             // load blob url normally
-    //             loadImage.defaultCreateImage(url, crossOrigin, deferred);
-    //         } else {
-    //             if (defined(expectedUrl)) {
-    //                 expect(url).toEqual(expectedUrl);
-    //             }
-    //             // Just return any old image.
-    //             loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-    //         }
-    //     };
-    //
-    //     loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-    //         if (defined(expectedUrl)) {
-    //             expect(url).toEqual(expectedUrl);
-    //         }
-    //
-    //         // Just return any old image.
-    //         loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
-    //     };
-    // }
-    //
-    // it('resolves readyPromise', function() {
-    //     var url = 'http://fake.fake.invalid';
-    //     var mapStyle = BingMapsStyle.ROAD;
-    //
-    //     installFakeMetadataRequest(url, mapStyle);
-    //     installFakeImageRequest();
-    //
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url,
-    //         mapStyle : mapStyle
-    //     });
-    //
-    //     return provider.readyPromise.then(function(result) {
-    //         expect(result).toBe(true);
-    //         expect(provider.ready).toBe(true);
-    //     });
-    // });
-    //
-    // it('rejects readyPromise on error', function() {
-    //     var url = 'host.invalid';
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url
-    //     });
-    //
-    //     return provider.readyPromise.then(function () {
-    //         fail('should not resolve');
-    //     }).otherwise(function (e) {
-    //         expect(provider.ready).toBe(false);
-    //         expect(e.message).toContain(url);
-    //     });
-    // });
-    //
-    // it('returns valid value for hasAlphaChannel', function() {
-    //     var url = 'http://fake.fake.invalid';
-    //     var mapStyle = BingMapsStyle.AERIAL;
-    //
-    //     installFakeMetadataRequest(url, mapStyle);
-    //     installFakeImageRequest();
-    //
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url,
-    //         mapStyle : mapStyle
-    //     });
-    //
-    //     return pollToPromise(function() {
-    //         return provider.ready;
-    //     }).then(function() {
-    //         expect(typeof provider.hasAlphaChannel).toBe('boolean');
-    //     });
-    // });
-    //
-    // it('can provide a root tile', function() {
-    //     var url = 'http://fake.fake.invalid';
-    //     var mapStyle = BingMapsStyle.ROAD;
-    //
-    //     installFakeMetadataRequest(url, mapStyle);
-    //     installFakeImageRequest();
-    //
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url,
-    //         mapStyle : mapStyle
-    //     });
-    //
-    //     expect(provider.url).toEqual(url);
-    //     expect(provider.key).toBeDefined();
-    //     expect(provider.mapStyle).toEqual(mapStyle);
-    //
-    //     return pollToPromise(function() {
-    //         return provider.ready;
-    //     }).then(function() {
-    //         expect(provider.tileWidth).toEqual(256);
-    //         expect(provider.tileHeight).toEqual(256);
-    //         expect(provider.maximumLevel).toEqual(20);
-    //         expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-    //         expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
-    //         expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
-    //         expect(provider.credit).toBeInstanceOf(Object);
-    //
-    //         installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg?g=3031&mkt=');
-    //
-    //         return provider.requestImage(0, 0, 0).then(function(image) {
-    //             expect(image).toBeInstanceOf(Image);
-    //         });
-    //     });
-    // });
-    //
-    // it('sets correct culture in tile requests', function() {
-    //     var url = 'http://fake.fake.invalid';
-    //     var mapStyle = BingMapsStyle.AERIAL_WITH_LABELS;
-    //
-    //     installFakeMetadataRequest(url, mapStyle);
-    //     installFakeImageRequest();
-    //
-    //     var culture = 'ja-jp';
-    //
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url,
-    //         mapStyle : mapStyle,
-    //         culture : culture
-    //     });
-    //
-    //     expect(provider.culture).toEqual(culture);
-    //
-    //     return pollToPromise(function() {
-    //         return provider.ready;
-    //     }).then(function() {
-    //         installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/h0.jpeg?g=3031&mkt=ja-jp');
-    //
-    //         return provider.requestImage(0, 0, 0).then(function(image) {
-    //             expect(image).toBeInstanceOf(Image);
-    //         });
-    //     });
-    // });
-    //
-    // it('routes requests through a proxy if one is specified', function() {
-    //     var url = 'http://foo.bar.invalid';
-    //     var mapStyle = BingMapsStyle.ROAD;
-    //
-    //     var proxy = new DefaultProxy('/proxy/');
-    //
-    //     installFakeMetadataRequest(url, mapStyle, proxy);
-    //     installFakeImageRequest();
-    //
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url,
-    //         mapStyle : mapStyle,
-    //         proxy : proxy
-    //     });
-    //
-    //     expect(provider.url).toEqual(url);
-    //     expect(provider.proxy).toEqual(proxy);
-    //
-    //     return pollToPromise(function() {
-    //         return provider.ready;
-    //     }).then(function() {
-    //         installFakeImageRequest(proxy.getURL('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg?g=3031&mkt='));
-    //
-    //         return provider.requestImage(0, 0, 0).then(function(image) {
-    //             expect(image).toBeInstanceOf(Image);
-    //         });
-    //     });
-    // });
-    //
-    // it('raises error on invalid url', function() {
-    //     var url = 'host.invalid';
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url
-    //     });
-    //
-    //     var errorEventRaised = false;
-    //     provider.errorEvent.addEventListener(function(error) {
-    //         expect(error.message).toContain(url);
-    //         errorEventRaised = true;
-    //     });
-    //
-    //     return pollToPromise(function() {
-    //         return provider.ready || errorEventRaised;
-    //     }).then(function() {
-    //         expect(provider.ready).toEqual(false);
-    //         expect(errorEventRaised).toEqual(true);
-    //     });
-    // });
-    //
-    // it('raises error event when image cannot be loaded', function() {
-    //     var url = 'http://foo.bar.invalid';
-    //     var mapStyle = BingMapsStyle.ROAD;
-    //
-    //     installFakeMetadataRequest(url, mapStyle);
-    //     installFakeImageRequest();
-    //
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url,
-    //         mapStyle : mapStyle
-    //     });
-    //
-    //     var layer = new ImageryLayer(provider);
-    //
-    //     var tries = 0;
-    //     provider.errorEvent.addEventListener(function(error) {
-    //         expect(error.timesRetried).toEqual(tries);
-    //         ++tries;
-    //         if (tries < 3) {
-    //             error.retry = true;
-    //         }
-    //     });
-    //
-    //     loadImage.createImage = function(url, crossOrigin, deferred) {
-    //         if (/^blob:/.test(url)) {
-    //             // load blob url normally
-    //             loadImage.defaultCreateImage(url, crossOrigin, deferred);
-    //         } else if (tries === 2) {
-    //             // Succeed after 2 tries
-    //             loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-    //         } else {
-    //             // fail
-    //             setTimeout(function() {
-    //                 deferred.reject();
-    //             }, 1);
-    //         }
-    //     };
-    //
-    //     loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-    //         if (tries === 2) {
-    //             // Succeed after 2 tries
-    //             loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
-    //         } else {
-    //             // fail
-    //             setTimeout(function() {
-    //                 deferred.reject();
-    //             }, 1);
-    //         }
-    //     };
-    //
-    //     return pollToPromise(function() {
-    //         return provider.ready;
-    //     }).then(function() {
-    //         var imagery = new Imagery(layer, 0, 0, 0);
-    //         imagery.addReference();
-    //         layer._requestImagery(imagery);
-    //
-    //         return pollToPromise(function() {
-    //             return imagery.state === ImageryState.RECEIVED;
-    //         }).then(function() {
-    //             expect(imagery.image).toBeInstanceOf(Image);
-    //             expect(tries).toEqual(2);
-    //             imagery.releaseReference();
-    //         });
-    //     });
-    // });
+    it('constructor throws if url is not provided', function() {
+        expect(function() {
+            return new GoogleEarthEnterpriseTerrainProvider();
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new GoogleEarthEnterpriseTerrainProvider({
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('resolves readyPromise', function() {
+        installMockGetQuadTreePacket();
+
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        return terrainProvider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(terrainProvider.ready).toBe(true);
+        });
+    });
+
+    it('uses geographic tiling scheme by default', function() {
+        installMockGetQuadTreePacket();
+
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        return pollToPromise(function() {
+            return terrainProvider.ready;
+        }).then(function() {
+            var tilingScheme = terrainProvider.tilingScheme;
+            expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
+        });
+    });
+
+    it('can use a custom ellipsoid', function() {
+        installMockGetQuadTreePacket();
+
+        var ellipsoid = new Ellipsoid(1, 2, 3);
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            url : 'made/up/url',
+            ellipsoid : ellipsoid
+        });
+
+        return pollToPromise(function() {
+            return terrainProvider.ready;
+        }).then(function() {
+            expect(terrainProvider.tilingScheme.ellipsoid).toEqual(ellipsoid);
+        });
+    });
+
+    it('has error event', function() {
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            url : 'made/up/url'
+        });
+        expect(terrainProvider.errorEvent).toBeDefined();
+        expect(terrainProvider.errorEvent).toBe(terrainProvider.errorEvent);
+    });
+
+    it('returns reasonable geometric error for various levels', function() {
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        expect(terrainProvider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
+        expect(terrainProvider.getLevelMaximumGeometricError(0)).toEqualEpsilon(terrainProvider.getLevelMaximumGeometricError(1) * 2.0, CesiumMath.EPSILON10);
+        expect(terrainProvider.getLevelMaximumGeometricError(1)).toEqualEpsilon(terrainProvider.getLevelMaximumGeometricError(2) * 2.0, CesiumMath.EPSILON10);
+    });
+
+    it('logo is undefined if credit is not provided', function() {
+        installMockGetQuadTreePacket();
+
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        return pollToPromise(function() {
+            return terrainProvider.ready;
+        }).then(function() {
+            expect(terrainProvider.credit).toBeUndefined();
+        });
+    });
+
+    it('logo is defined if credit is provided', function() {
+        installMockGetQuadTreePacket();
+
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            url : 'made/up/url',
+            credit : 'thanks to our awesome made up contributors!'
+        });
+
+        return pollToPromise(function() {
+            return terrainProvider.ready;
+        }).then(function() {
+            expect(terrainProvider.credit).toBeDefined();
+        });
+    });
+
+    it('has a water mask is false', function() {
+        installMockGetQuadTreePacket();
+
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        return pollToPromise(function() {
+            return terrainProvider.ready;
+        }).then(function() {
+            expect(terrainProvider.hasWaterMask).toBe(false);
+        });
+    });
+
+    it('has vertex normals is false', function() {
+        installMockGetQuadTreePacket();
+
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        return pollToPromise(function() {
+            return terrainProvider.ready;
+        }).then(function() {
+            expect(terrainProvider.hasVertexNormals).toBe(false);
+        });
+    });
+
+    describe('requestTileGeometry', function() {
+        it('uses the proxy if one is supplied', function() {
+            installMockGetQuadTreePacket();
+            var baseUrl = 'made/up/url';
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url.indexOf('/proxy/?')).toBe(0);
+
+                // Just return any old file, as long as its big enough
+                loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
+            };
+
+            terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+                url : baseUrl,
+                proxy : new DefaultProxy('/proxy/')
+            });
+
+            return pollToPromise(function() {
+                return terrainProvider.ready;
+            }).then(function() {
+                return terrainProvider.requestTileGeometry(0, 0, 0);
+            });
+        });
+
+        it('provides GoogleEarthEnterpriseTerrainData', function() {
+            installMockGetQuadTreePacket();
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.terrain', responseType, method, data, headers, deferred);
+            };
+
+            return waitForTile(0, 0, 0, function(loadedData) {
+                expect(loadedData).toBeInstanceOf(GoogleEarthEnterpriseTerrainData);
+            });
+        });
+
+        it('returns undefined if too many requests are already in progress', function() {
+            installMockGetQuadTreePacket();
+            var baseUrl = 'made/up/url';
+
+            var deferreds = [];
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                // Do nothing, so requests never complete
+                deferreds.push(deferred);
+            };
+
+            terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+                url : baseUrl
+            });
+
+            return pollToPromise(function() {
+                return terrainProvider.ready;
+            }).then(function() {
+                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+                expect(promise).toBeDefined();
+
+                var i;
+                for (i = 0; i < 10; ++i) {
+                    promise = terrainProvider.requestTileGeometry(0, 0, 0);
+                }
+
+                return terrainProvider.requestTileGeometry(0, 0, 0)
+                    .then(function(terrainData) {
+                        expect(terrainData).toBeUndefined();
+
+                        for (i = 0; i < deferreds.length; ++i) {
+                            deferreds[i].resolve();
+                        }
+                    });
+            });
+        });
+
+        it('supports getTileDataAvailable()', function() {
+            installMockGetQuadTreePacket();
+            var baseUrl = 'made/up/url';
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.terrain', responseType, method, data, headers, deferred);
+            };
+
+            terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+                url : baseUrl
+            });
+
+            return pollToPromise(function() {
+                return terrainProvider.ready;
+            }).then(function() {
+                var tileInfo = terrainProvider._metadata._tileInfo;
+                var info = tileInfo[GoogleEarthEnterpriseMetadata.tileXYToQuadKey(0, 1, 0)];
+                info._bits = 0x7F; // Remove terrain bit from 0,1,0 tile
+
+                expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);
+                expect(terrainProvider.getTileDataAvailable(0, 1, 0)).toBe(false);
+                expect(terrainProvider.getTileDataAvailable(1, 0, 0)).toBe(true);
+                expect(terrainProvider.getTileDataAvailable(1, 1, 0)).toBe(true);
+                expect(terrainProvider.getTileDataAvailable(0, 0, 2)).toBeUndefined();
+            });
+        });
+    });
 });

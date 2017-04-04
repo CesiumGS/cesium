@@ -248,7 +248,12 @@ define([
                 return this._terrainProvider;
             },
             set : function(value) {
-                if (value !== this._terrainProvider) {
+                var oldTerrainProvider = this._terrainProvider;
+                if (value !== oldTerrainProvider) {
+                    if (defined(oldTerrainProvider) && defined(oldTerrainProvider.destroy)) {
+                        oldTerrainProvider.destroy();
+                    }
+
                     this._terrainProvider = value;
                     this._terrainProviderChanged.raiseEvent(value);
                 }

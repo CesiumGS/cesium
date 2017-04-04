@@ -1,8 +1,10 @@
 /*global define*/
 define([
+    '../Core/Credit',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/defineProperties',
+    '../Core/destroyObject',
     '../Core/DeveloperError',
     '../Core/Event',
     '../Core/GeographicTilingScheme',
@@ -16,9 +18,11 @@ define([
     '../ThirdParty/protobuf-minimal',
     '../ThirdParty/when'
 ], function(
+    Credit,
     defaultValue,
     defined,
     defineProperties,
+    destroyObject,
     DeveloperError,
     Event,
     GeographicTilingScheme,
@@ -63,12 +67,13 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url of the Google Earth Enterprise server hosting the imagery.
+     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
+     *        expected to have a getURL function which returns the proxied URL, if needed.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded. If this value is not specified, a default
      *        is to discard tiles that fail to download.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
-     *        expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthImageryProvider
@@ -106,6 +111,12 @@ define([
             rectangle : new Rectangle(-CesiumMath.PI, -CesiumMath.PI, CesiumMath.PI, CesiumMath.PI),
             ellipsoid : options.ellipsoid
         });
+
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
 
         this._tileWidth = 256;
         this._tileHeight = 256;
@@ -335,7 +346,7 @@ define([
          */
         credit : {
             get : function() {
-                return undefined;
+                return this._credit;
             }
         },
 
@@ -496,6 +507,19 @@ define([
      */
     GoogleEarthEnterpriseImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
+    };
+
+    /**
+     * Releases resources used by this provider
+     */
+    GoogleEarthEnterpriseImageryProvider.prototype.destroy = function() {
+        var metadata = this._metadata;
+        if (defined(metadata)) {
+            this._metadata = undefined;
+            GoogleEarthEnterpriseMetadata.releaseMetadata(metadata);
+        }
+
+        return destroyObject(this);
     };
 
 
