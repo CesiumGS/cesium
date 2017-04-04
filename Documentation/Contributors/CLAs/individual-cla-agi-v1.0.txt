@@ -1,6 +1,5 @@
                       Analytical Graphics, Inc.
      Individual Contributor License Agreement ("Agreement") v1.0
-       http://www.agi.com/licenses/individual-cla-agi-v1.0.txt
 
 In order to clarify the intellectual property license granted with
 Contributions from any person or entity, Analytical Graphics, Inc.
