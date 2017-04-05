@@ -67,7 +67,7 @@ define([
      */
     ManagedArray.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number.lessThan('index', index, this._array._length);
+        Check.typeOf.number.lessThan('index', index, this._array.length);
         //>>includeEnd('debug');
 
         return this._array[index];
