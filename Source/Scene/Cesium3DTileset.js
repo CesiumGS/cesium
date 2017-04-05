@@ -1265,7 +1265,6 @@ define([
                 (tile.contentsVisibility(frameState) !== Intersect.OUTSIDE)
             )) {
             tileset._selectedTiles.push(tile);
-            tile.selected = true;
 
             var tileContent = tile.content;
             if (tileContent.featurePropertiesDirty) {
@@ -1335,6 +1334,7 @@ define([
         var finalQueue = selectionState.finalQueue;
         var selectionQueue = selectionState.selectionQueue;
         selectionQueue.length = 0;
+        var frameNumber = frameState.frameNumber;
 
         var length = finalQueue.length;
         for (var i = 0; i < length; ++i) {
@@ -1353,7 +1353,8 @@ define([
             if (defined(tile)) {
                 if (!tile.selected) {
                     tile._finalResolution = (tile === original || tile.refine === Cesium3DTileRefine.ADD);
-                    tile._selectedFrame = frameState.frameNumber;
+                    tile.selected = true;
+                    tile._selectedFrame = frameNumber;
                     selectionQueue.push(tile);
                 }
             } else {
@@ -1368,7 +1369,8 @@ define([
                         if (child.contentReady) {
                             if (!child.selected) {
                                 child._finalResolution = true;
-                                child._selectedFrame = frameState.frameNumber;
+                                child.selected = true;
+                                child._selectedFrame = frameNumber;
                                 touch(tileset, child, outOfCore);
                                 selectionQueue.push(child);
                             }
@@ -1695,7 +1697,7 @@ define([
                 continue;
             }
 
-            var shouldSelect = tile._selectedFrame === frameState.frameNumber;
+            var shouldSelect = tile.selected && tile._selectedFrame === frameState.frameNumber;
 
             var children = tile.children;
             var childrenLength = children.length;
@@ -1860,26 +1862,24 @@ define([
         tileset._geometricErrorLabels.removeAll();
         for (var i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
-            if (tile.selected) {
-                var boundingVolume = tile._boundingVolume.boundingVolume;
-                var halfAxes = boundingVolume.halfAxes;
-                var radius = boundingVolume.radius;
+            var boundingVolume = tile._boundingVolume.boundingVolume;
+            var halfAxes = boundingVolume.halfAxes;
+            var radius = boundingVolume.radius;
 
-                var position = Cartesian3.clone(boundingVolume.center, scratchCartesian2);
-                if (defined(halfAxes)) {
-                    position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
-                    position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
-                    position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
-                } else if (defined(radius)) {
-                    var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian2);
-                    normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian2);
-                    position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian2);
-                }
-                tileset._geometricErrorLabels.add({
-                    text: tile.geometricError.toString(),
-                    position: position
-                });
+            var position = Cartesian3.clone(boundingVolume.center, scratchCartesian2);
+            if (defined(halfAxes)) {
+                position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
+                position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
+                position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
+            } else if (defined(radius)) {
+                var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian2);
+                normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian2);
+                position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian2);
             }
+            tileset._geometricErrorLabels.add({
+                text: tile.geometricError.toString(),
+                position: position
+            });
         }
         tileset._geometricErrorLabels.update(frameState);
     }
@@ -1934,39 +1934,37 @@ define([
 
             for (i = 0; i < length; ++i) {
                 tile = selectedTiles[i];
-                if (tile.selected) {
-                    // Raise visible event before update in case the visible event
-                    // makes changes that update needs to apply to WebGL resources
-                    tileVisible.raiseEvent(tile);
-                    incrementPointAndFeatureSelectionCounts(tileset, tile.content);
+                // Raise visible event before update in case the visible event
+                // makes changes that update needs to apply to WebGL resources
+                tileVisible.raiseEvent(tile);
+                incrementPointAndFeatureSelectionCounts(tileset, tile.content);
 
-                    var lengthBeforeUpdate = commandList.length;
-                    tile.update(tileset, frameState);
-                    for (var j = lengthBeforeUpdate; j < commandList.length; ++j) {
-                        command = commandList[j];
+                var lengthBeforeUpdate = commandList.length;
+                tile.update(tileset, frameState);
+                for (var j = lengthBeforeUpdate; j < commandList.length; ++j) {
+                    command = commandList[j];
 
-                        if (!tile._finalResolution) {
-                            // draw backfaces of all unresolved tiles so resolved tiles don't poke through
-                            if (command.renderState.depthMask) {
-                                // resize internal array if too small
-                                backfaceCommands.reserve(backfaceCommands.length + 1);
-                                // clone the command in-place if the internal array contained an old command allocated there
-                                var backfaceCommand = DrawCommand.shallowClone(command, backfaceCommands.get(backfaceCommands.length));
-                                backfaceCommands.push(backfaceCommand);
-                            }
-                        }
-
-                        // ignore if tile does not write depth (ex. translucent)
+                    if (!tile._finalResolution) {
+                        // draw backfaces of all unresolved tiles so resolved tiles don't poke through
                         if (command.renderState.depthMask) {
-                            // Tiles only draw if their selection depth is >= the tile drawn already. They write their
-                            // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
-                            rs = clone(command.renderState, true);
-                            rs.stencilTest.enabled = true;
-                            rs.stencilTest.reference = tile._selectionDepth;
-                            rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
-                            rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
-                            command.renderState = RenderState.fromCache(rs);
+                            // resize internal array if too small
+                            backfaceCommands.reserve(backfaceCommands.length + 1);
+                            // clone the command in-place if the internal array contained an old command allocated there
+                            var backfaceCommand = DrawCommand.shallowClone(command, backfaceCommands.get(backfaceCommands.length));
+                            backfaceCommands.push(backfaceCommand);
                         }
+                    }
+
+                    // ignore if tile does not write depth (ex. translucent)
+                    if (command.renderState.depthMask) {
+                        // Tiles only draw if their selection depth is >= the tile drawn already. They write their
+                        // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
+                        rs = clone(command.renderState, true);
+                        rs.stencilTest.enabled = true;
+                        rs.stencilTest.reference = tile._selectionDepth;
+                        rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
+                        rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
+                        command.renderState = RenderState.fromCache(rs);
                     }
                 }
             }
@@ -1997,13 +1995,11 @@ define([
         } else {
             for (i = 0; i < length; ++i) {
                 tile = selectedTiles[i];
-                if (tile.selected) {
-                    // Raise visible event before update in case the visible event
-                    // makes changes that update needs to apply to WebGL resources
-                    tileVisible.raiseEvent(tile);
-                    tile.update(tileset, frameState);
-                    incrementPointAndFeatureSelectionCounts(tileset, tile.content);
-                }
+                // Raise visible event before update in case the visible event
+                // makes changes that update needs to apply to WebGL resources
+                tileVisible.raiseEvent(tile);
+                tile.update(tileset, frameState);
+                incrementPointAndFeatureSelectionCounts(tileset, tile.content);
             }
         }
 
