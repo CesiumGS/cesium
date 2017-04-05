@@ -694,6 +694,7 @@ define([
         this._cachedTextureMemorySizeInBytes = 0;
         this._vertexMemorySizeInBytes = 0;
         this._textureMemorySizeInBytes = 0;
+        this._trianglesLength = 0;
 
         this._nodeCommands = [];
         this._pickIds = [];
@@ -995,6 +996,17 @@ define([
         upAxis : {
             get : function() {
                 return this._upAxis;
+            }
+        },
+
+        /**
+         * Gets the model's triangle count.
+         *
+         * @private
+         */
+        trianglesLength : {
+            get : function() {
+                return this._trianglesLength;
             }
         },
 
@@ -3400,6 +3412,7 @@ define([
                     count = positions.count;
                     offset = 0;
                 }
+                model._trianglesLength = count / 3;
 
                 var um = uniformMaps[primitive.material];
                 var uniformMap = um.uniformMap;

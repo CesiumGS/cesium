@@ -103,6 +103,18 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
+        trianglesLength : {
+            get : function() {
+                if (defined(this._model)) {
+                    return this._model.trianglesLength;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
         vertexMemorySizeInBytes : {
             get : function() {
                 if (defined(this._model)) {

@@ -63,6 +63,15 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
+        trianglesLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
         vertexMemorySizeInBytes : {
             get : function() {
                 return 0;
