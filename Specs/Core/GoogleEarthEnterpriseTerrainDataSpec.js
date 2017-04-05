@@ -550,7 +550,7 @@ defineSuite([
             latitude = rectangle.south + (rectangle.north - rectangle.south) * 0.5;
 
             result = mesh.interpolateHeight(rectangle, longitude, latitude);
-            expect(result).toEqualEpsilon(10.0, 1e-10);
+            expect(result).toEqualEpsilon(10.0, 1e-6);
         });
     });
 

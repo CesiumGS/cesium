@@ -225,16 +225,13 @@ define([
      */
     GoogleEarthEnterpriseTerrainData.prototype.interpolateHeight = function(rectangle, longitude, latitude) {
         var u = CesiumMath.clamp((longitude - rectangle.west) / rectangle.width, 0.0, 1.0);
-        u *= maxShort;
         var v = CesiumMath.clamp((latitude - rectangle.south) / rectangle.height, 0.0, 1.0);
-        v *= maxShort;
 
-        var heightSample;
-        if (defined(this._mesh)) {
-            heightSample = interpolateMeshHeight(this, u, v);
+        if (!defined(this._mesh)) {
+            return interpolateHeight(this, u, v, rectangle);
         }
 
-        return heightSample;
+        return interpolateMeshHeight(this, u, v);
     };
 
     var upsampleTaskProcessor = new TaskProcessor('upsampleQuantizedTerrainMesh');
@@ -420,6 +417,101 @@ define([
                 var h1 = encoding.decodeHeight(vertices, i1);
                 var h2 = encoding.decodeHeight(vertices, i2);
                 return barycentric.x * h0 + barycentric.y * h1 + barycentric.z * h2;
+            }
+        }
+
+        // Position does not lie in any triangle in this mesh.
+        return undefined;
+    }
+
+    var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
+    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+    var sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
+    var sizeOfFloat = Float32Array.BYTES_PER_ELEMENT;
+    var sizeOfDouble = Float64Array.BYTES_PER_ELEMENT;
+    function interpolateHeight(terrainData, u, v, rectangle) {
+        var buffer = terrainData._buffer;
+        var quad = 0; // SW
+        var uStart = 0.0;
+        var vStart = 0.0;
+        if (v > 0.5) { // Upper row
+            if (u > 0.5) { // NE
+                quad = 2;
+                uStart = 0.5;
+            } else { // NW
+                quad = 3;
+            }
+            vStart = 0.5;
+        } else if (u > 0.5) { // SE
+            quad = 1;
+            uStart = 0.5;
+        }
+
+        var dv = new DataView(buffer);
+        var offset = 0;
+        for (var q = 0; q < quad; ++q) {
+            offset += dv.getUint32(offset, true);
+            offset += sizeOfUint32;
+        }
+        offset += sizeOfUint32; // Skip length of quad
+        offset += 2*sizeOfDouble; // Skip origin
+
+        // Read sizes
+        var xSize = CesiumMath.toRadians(dv.getFloat64(offset, true)*180.0);
+        offset += sizeOfDouble;
+        var ySize = CesiumMath.toRadians(dv.getFloat64(offset, true)*180.0);
+        offset += sizeOfDouble;
+
+        // Samples per quad
+        var xScale = rectangle.width / xSize / 2;
+        var yScale = rectangle.height / ySize / 2;
+
+        // Number of points
+        var numPoints = dv.getInt32(offset, true);
+        offset += sizeOfInt32;
+
+        // Number of faces
+        var numIndices = dv.getInt32(offset, true)*3;
+        offset += sizeOfInt32;
+
+        offset += sizeOfInt32; // Skip Level
+
+        var uBuffer = new Array(numPoints);
+        var vBuffer = new Array(numPoints);
+        var heights = new Array(numPoints);
+        for (var i=0;i<numPoints;++i) {
+            uBuffer[i] = uStart + (dv.getUint8(offset++) * xScale);
+            vBuffer[i] = vStart + (dv.getUint8(offset++) * yScale);
+
+            // Height is stored in units of (1/EarthRadius) or (1/6371010.0)
+            heights[i] = (dv.getFloat32(offset, true) * 6371010.0);
+            offset += sizeOfFloat;
+        }
+
+        var indices = new Array(numIndices);
+        for (i=0;i<numIndices;++i) {
+            indices[i] = dv.getUint16(offset, true);
+            offset += sizeOfUint16;
+        }
+
+        for (i = 0; i < numIndices; i += 3) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+            var i2 = indices[i + 2];
+
+            var u0 = uBuffer[i0];
+            var u1 = uBuffer[i1];
+            var u2 = uBuffer[i2];
+
+            var v0 = vBuffer[i0];
+            var v1 = vBuffer[i1];
+            var v2 = vBuffer[i2];
+
+            var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, u0, v0, u1, v1, u2, v2, barycentricCoordinateScratch);
+            if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
+                return barycentric.x * heights[i0] +
+                       barycentric.y * heights[i1] +
+                       barycentric.z * heights[i2];
             }
         }
 
