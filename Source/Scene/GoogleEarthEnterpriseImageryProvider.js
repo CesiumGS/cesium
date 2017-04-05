@@ -15,6 +15,7 @@ define([
     '../Core/Rectangle',
     '../Core/RuntimeError',
     '../Core/throttleRequestByServer',
+    '../Core/TileProviderError',
     '../ThirdParty/protobuf-minimal',
     '../ThirdParty/when'
 ], function(
@@ -33,6 +34,7 @@ define([
     Rectangle,
     RuntimeError,
     throttleRequestByServer,
+    TileProviderError,
     protobuf,
     when) {
     'use strict';
@@ -131,10 +133,16 @@ define([
 
         this._ready = false;
         var that = this;
+        var metadataError;
         this._readyPromise = this._metadata.readyPromise
             .then(function(result) {
+                TileProviderError.handleSuccess(metadataError);
                 that._ready = result;
                 return result;
+            })
+            .otherwise(function(e) {
+                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
+                return when.reject(e);
             });
     }
 
@@ -484,10 +492,6 @@ define([
                 }
 
                 return loadImageFromTypedArray(a, type);
-            })
-            .otherwise(function(error) {
-                // Just ignore failures and return invalidImage
-                return invalidImage;
             });
     };
 

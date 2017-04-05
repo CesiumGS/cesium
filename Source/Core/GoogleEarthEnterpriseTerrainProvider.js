@@ -19,7 +19,9 @@ define([
         './Math',
         './Rectangle',
         './TerrainProvider',
-        './throttleRequestByServer'
+        './throttleRequestByServer',
+        './TileProviderError',
+        '../ThirdParty/when'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -40,7 +42,9 @@ define([
         CesiumMath,
         Rectangle,
         TerrainProvider,
-        throttleRequestByServer) {
+        throttleRequestByServer,
+        TileProviderError,
+        when) {
     'use strict';
 
     var TerrainState = {
@@ -107,10 +111,16 @@ define([
 
         this._ready = false;
         var that = this;
+        var metadataError;
         this._readyPromise = this._metadata.readyPromise
             .then(function(result) {
+                TileProviderError.handleSuccess(metadataError);
                 that._ready = result;
                 return result;
+            })
+            .otherwise(function(e) {
+                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
+                return when.reject(e);
             });
     }
 

@@ -35,9 +35,26 @@ defineSuite([
     when) {
     'use strict';
 
+    var oldDecode;
+    beforeAll(function() {
+        oldDecode = GoogleEarthEnterpriseMetadata.decode;
+        GoogleEarthEnterpriseMetadata.decode = function(data) {
+            return data;
+        };
+    });
+
+    afterAll(function() {
+        GoogleEarthEnterpriseMetadata.decode = oldDecode;
+    });
+
+    var imageryProvider;
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
+        if (defined(imageryProvider)) {
+            imageryProvider.destroy();
+            imageryProvider = undefined;
+        }
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -92,26 +109,26 @@ defineSuite([
         installMockGetQuadTreePacket();
         var url = 'http://fake.fake.invalid';
 
-        var provider = new GoogleEarthEnterpriseImageryProvider({
+        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
             url : url
         });
 
-        return provider.readyPromise.then(function(result) {
+        return imageryProvider.readyPromise.then(function(result) {
             expect(result).toBe(true);
-            expect(provider.ready).toBe(true);
+            expect(imageryProvider.ready).toBe(true);
         });
     });
 
     it('rejects readyPromise on error', function() {
         var url = 'host.invalid';
-        var provider = new GoogleEarthEnterpriseImageryProvider({
+        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
             url : url
         });
 
-        return provider.readyPromise.then(function () {
+        return imageryProvider.readyPromise.then(function () {
             fail('should not resolve');
         }).otherwise(function (e) {
-            expect(provider.ready).toBe(false);
+            expect(imageryProvider.ready).toBe(false);
             expect(e.message).toContain(url);
         });
     });
@@ -120,15 +137,15 @@ defineSuite([
         installMockGetQuadTreePacket();
         var url = 'http://fake.fake.invalid';
 
-        var provider = new GoogleEarthEnterpriseImageryProvider({
+        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
             url : url
         });
 
         return pollToPromise(function() {
-            return provider.ready;
+            return imageryProvider.ready;
         }).then(function() {
-            expect(typeof provider.hasAlphaChannel).toBe('boolean');
-            expect(provider.hasAlphaChannel).toBe(false);
+            expect(typeof imageryProvider.hasAlphaChannel).toBe('boolean');
+            expect(imageryProvider.hasAlphaChannel).toBe(false);
         });
     });
 
@@ -136,27 +153,27 @@ defineSuite([
         installMockGetQuadTreePacket();
         var url = 'http://fake.fake.invalid/';
 
-        var provider = new GoogleEarthEnterpriseImageryProvider({
+        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
             url : url
         });
 
-        expect(provider.url).toEqual(url);
+        expect(imageryProvider.url).toEqual(url);
 
         return pollToPromise(function() {
-            return provider.ready;
+            return imageryProvider.ready;
         }).then(function() {
-            expect(provider.tileWidth).toEqual(256);
-            expect(provider.tileHeight).toEqual(256);
-            expect(provider.maximumLevel).toEqual(23);
-            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            expect(imageryProvider.tileWidth).toEqual(256);
+            expect(imageryProvider.tileHeight).toEqual(256);
+            expect(imageryProvider.maximumLevel).toEqual(23);
+            expect(imageryProvider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             // Defaults to custom tile policy
-            expect(provider.tileDiscardPolicy).not.toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.rectangle).toEqual(new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI));
-            expect(provider.credit).toBeUndefined();
+            expect(imageryProvider.tileDiscardPolicy).not.toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(imageryProvider.rectangle).toEqual(new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI));
+            expect(imageryProvider.credit).toBeUndefined();
 
             installFakeImageRequest('http://fake.fake.invalid/flatfile?f1-03-i.1');
 
-            return provider.requestImage(0, 0, 0).then(function(image) {
+            return imageryProvider.requestImage(0, 0, 0).then(function(image) {
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -168,80 +185,63 @@ defineSuite([
 
         var proxy = new DefaultProxy('/proxy/');
 
-        var provider = new GoogleEarthEnterpriseImageryProvider({
+        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
             url : url,
             proxy : proxy
         });
 
-        expect(provider.url).toEqual(url);
-        expect(provider.proxy).toEqual(proxy);
+        expect(imageryProvider.url).toEqual(url);
+        expect(imageryProvider.proxy).toEqual(proxy);
 
         return pollToPromise(function() {
-            return provider.ready;
+            return imageryProvider.ready;
         }).then(function() {
             installFakeImageRequest(proxy.getURL('http://foo.bar.invalid/flatfile?f1-03-i.1'));
 
-            return provider.requestImage(0, 0, 0).then(function(image) {
+            return imageryProvider.requestImage(0, 0, 0).then(function(image) {
                 expect(image).toBeInstanceOf(Image);
             });
         });
     });
 
     it('raises error on invalid url', function() {
-        installMockGetQuadTreePacket();
         var url = 'host.invalid';
-        var provider = new GoogleEarthEnterpriseImageryProvider({
+        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
             url : url
         });
 
         var errorEventRaised = false;
-        provider.errorEvent.addEventListener(function(error) {
+        imageryProvider.errorEvent.addEventListener(function(error) {
             expect(error.message).toContain(url);
             errorEventRaised = true;
         });
 
         return pollToPromise(function() {
-            return provider.ready || errorEventRaised;
+            return imageryProvider.ready || errorEventRaised;
         }).then(function() {
-            expect(provider.ready).toEqual(false);
+            expect(imageryProvider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
     });
 
     it('raises error event when image cannot be loaded', function() {
         installMockGetQuadTreePacket();
-        //installFakeImageRequest();
         var url = 'http://foo.bar.invalid';
 
-        var provider = new GoogleEarthEnterpriseImageryProvider({
+        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
             url : url
         });
 
-        var layer = new ImageryLayer(provider);
+        var layer = new ImageryLayer(imageryProvider);
 
         var tries = 0;
-        provider.errorEvent.addEventListener(function(error) {
+        imageryProvider.errorEvent.addEventListener(function(error) {
             expect(error.timesRetried).toEqual(tries);
             ++tries;
             if (tries < 3) {
                 error.retry = true;
             }
         });
-
-        loadImage.createImage = function(url, crossOrigin, deferred) {
-            if (/^blob:/.test(url)) {
-                // load blob url normally
-                loadImage.defaultCreateImage(url, crossOrigin, deferred);
-            } else if (tries === 2) {
-                // Succeed after 2 tries
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            } else {
-                // fail
-                setTimeout(function() {
-                    deferred.reject();
-                }, 1);
-            }
-        };
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (tries === 2) {
@@ -256,7 +256,7 @@ defineSuite([
         };
 
         return pollToPromise(function() {
-            return provider.ready;
+            return imageryProvider.ready;
         }).then(function() {
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();

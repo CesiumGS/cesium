@@ -511,103 +511,48 @@ defineSuite([
         });
     });
 
-    /*
     describe('interpolateHeight', function() {
         var tilingScheme;
         var rectangle;
+        var mesh;
 
         beforeEach(function() {
             tilingScheme = new GeographicTilingScheme();
             rectangle = tilingScheme.tileXYToRectangle(7, 6, 5);
+            var buffer = getBuffer(tilingScheme, 7, 6, 5);
+            mesh = new GoogleEarthEnterpriseTerrainData({
+                buffer : buffer,
+                childTileMask : 15
+            });
         });
 
         it('clamps coordinates if given a position outside the mesh', function() {
-            var mesh = new QuantizedMeshTerrainData({
-                minimumHeight : 0.0,
-                maximumHeight : 4.0,
-                quantizedVertices : new Uint16Array([ // order is sw nw se ne
-                    // u
-                    0, 0, 32767, 32767,
-                    // v
-                    0, 32767, 0, 32767,
-                    // heights
-                    32767 / 4.0, 2.0 * 32767 / 4.0, 3.0 * 32767 / 4.0, 32767
-                ]),
-                indices : new Uint16Array([
-                    0, 3, 1,
-                    0, 2, 3
-                ]),
-                boundingSphere : new BoundingSphere(),
-                horizonOcclusionPoint : new Cartesian3(),
-                westIndices : [0, 1],
-                southIndices : [0, 1],
-                eastIndices : [2, 3],
-                northIndices : [1, 3],
-                westSkirtHeight : 1.0,
-                southSkirtHeight : 1.0,
-                eastSkirtHeight : 1.0,
-                northSkirtHeight : 1.0,
-                childTileMask : 15
-            });
-
             expect(mesh.interpolateHeight(rectangle, 0.0, 0.0)).toBe(mesh.interpolateHeight(rectangle, rectangle.east, rectangle.south));
         });
 
         it('returns a height interpolated from the correct triangle', function() {
-            // zero height along line between southwest and northeast corners.
-            // Negative height in the northwest corner, positive height in the southeast.
-            var mesh = new QuantizedMeshTerrainData({
-                minimumHeight : -16384,
-                maximumHeight : 16383,
-                quantizedVertices : new Uint16Array([ // order is sw nw se ne
-                    // u
-                    0, 0, 32767, 32767,
-                    // v
-                    0, 32767, 0, 32767,
-                    // heights
-                    16384, 0, 32767, 16384
-                ]),
-                indices : new Uint16Array([
-                    0, 3, 1,
-                    0, 2, 3
-                ]),
-                boundingSphere : new BoundingSphere(),
-                horizonOcclusionPoint : new Cartesian3(),
-                westIndices : [0, 1],
-                southIndices : [0, 1],
-                eastIndices : [2, 3],
-                northIndices : [1, 3],
-                westSkirtHeight : 1.0,
-                southSkirtHeight : 1.0,
-                eastSkirtHeight : 1.0,
-                northSkirtHeight : 1.0,
-                childTileMask : 15
-            });
-
-
             // position in the northwest quadrant of the tile.
             var longitude = rectangle.west + (rectangle.east - rectangle.west) * 0.25;
             var latitude = rectangle.south + (rectangle.north - rectangle.south) * 0.75;
 
             var result = mesh.interpolateHeight(rectangle, longitude, latitude);
-            expect(result).toBeLessThan(0.0);
+            expect(result).toBeBetween(0.0, 10.0);
 
             // position in the southeast quadrant of the tile.
             longitude = rectangle.west + (rectangle.east - rectangle.west) * 0.75;
             latitude = rectangle.south + (rectangle.north - rectangle.south) * 0.25;
 
             result = mesh.interpolateHeight(rectangle, longitude, latitude);
-            expect(result).toBeGreaterThan(0.0);
+            expect(result).toBeBetween(10.0, 20.0);
 
             // position on the line between the southwest and northeast corners.
             longitude = rectangle.west + (rectangle.east - rectangle.west) * 0.5;
             latitude = rectangle.south + (rectangle.north - rectangle.south) * 0.5;
 
             result = mesh.interpolateHeight(rectangle, longitude, latitude);
-            expect(result).toEqualEpsilon(0.0, 1e-10);
+            expect(result).toEqualEpsilon(10.0, 1e-10);
         });
     });
-    */
 
     describe('isChildAvailable', function() {
         var data;

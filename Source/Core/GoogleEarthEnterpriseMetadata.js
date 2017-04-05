@@ -150,7 +150,7 @@ define([
             })
             .otherwise(function(e) {
                 var message = 'An error occurred while accessing ' + getMetadataUrl(that, '', 1) + '.';
-                throw new RuntimeError(message);
+                return when.reject(new RuntimeError(message));
             });
     }
 
