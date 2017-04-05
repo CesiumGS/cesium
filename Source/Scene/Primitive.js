@@ -1683,6 +1683,11 @@ define([
     function createBoundingSphereProperties(primitive, properties, index) {
         properties.boundingSphere = {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if(!primitive._ready){
+                    throw new DeveloperError('primitive must be ready before creating the bounding sphere.');
+                }
+                //>>includeEnd('debug');
                 var boundingSphere = primitive._instanceBoundingSpheres[index];
                 var modelMatrix = primitive.modelMatrix;
                 if (defined(modelMatrix) && defined(boundingSphere)) {
