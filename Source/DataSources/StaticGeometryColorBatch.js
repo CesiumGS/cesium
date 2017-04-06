@@ -311,6 +311,21 @@ define([
         }
     };
 
+    Batch.prototype.destroy = function() {
+        var primitive = this.primitive;
+        var primitives = this.primitives;
+        if (defined(primitive)) {
+            primitives.remove(primitive);
+        }
+        var oldPrimitive = this.oldPrimitive;
+        if (defined(oldPrimitive)) {
+            primitives.remove(oldPrimitive);
+        }
+        if(defined(this.removeMaterialSubscription)) {
+            this.removeMaterialSubscription();
+        }
+    };
+
     /**
      * @private
      */

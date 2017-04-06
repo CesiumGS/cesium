@@ -533,7 +533,7 @@ defineSuite([
     });
 
     it('StaticGeometryPerMaterialBatch handles shared material being invalidated', function() {
-        var batch = new StaticGeometryPerMaterialBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false, ShadowMode.DISABLED);
+        var batch = new StaticGeometryPerMaterialBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, undefined, false, ShadowMode.DISABLED);
 
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
@@ -580,7 +580,7 @@ defineSuite([
     });
 
     it('StaticGeometryColorBatch updates color attribute after rebuilding primitive', function() {
-        var batch = new StaticGeometryColorBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false, ShadowMode.DISABLED);
+        var batch = new StaticGeometryColorBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, undefined, false, ShadowMode.DISABLED);
 
         var entity = new Entity({
             position : new Cartesian3(1234, 5678, 9101112),

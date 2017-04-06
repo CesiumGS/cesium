@@ -287,7 +287,7 @@ define([
         return BoundingSphereState.DONE;
     };
 
-    Batch.prototype.destroy = function(time) {
+    Batch.prototype.destroy = function() {
         var primitive = this.primitive;
         var primitives = this.primitives;
         if (defined(primitive)) {
