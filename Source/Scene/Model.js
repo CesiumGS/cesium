@@ -3412,7 +3412,21 @@ define([
                     count = positions.count;
                     offset = 0;
                 }
-                model._trianglesLength = count / 3;
+
+                switch(primitive.mode) {
+                    case 0: // POINTS
+                    case 1: // LINES
+                    case 2: // LINE_LOOP
+                    case 3: // LINE_STRIP
+                        break;
+                    case 4: // TRIANGLES
+                        model._trianglesLength += (count / 3);
+                        break;
+                    case 5: // TRIANGLE_STRIP
+                    case 6: // TRIANGLE_FAN
+                        model._trianglesLength += Math.max(count - 2, 0);
+                        break;
+                }
 
                 var um = uniformMaps[primitive.material];
                 var uniformMap = um.uniformMap;
