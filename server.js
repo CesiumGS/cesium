@@ -6,6 +6,8 @@
     var compression = require('compression');
     var url = require('url');
     var request = require('request');
+    var fs = require('fs');
+    var spdy = require('spdy');
 
     var yargs = require('yargs').options({
         'port' : {
@@ -134,7 +136,12 @@
         });
     });
 
-    var server = app.listen(argv.port, argv.public ? undefined : 'localhost', function() {
+    var server = spdy.createServer({
+        key : fs.readFileSync(__dirname + '/server.key'),
+        cert : fs.readFileSync(__dirname + '/server.crt')
+    }, app);
+
+    server.listen(argv.port, argv.public ? undefined : 'localhost', function() {
         if (argv.public) {
             console.log('Cesium development server running publicly.  Connect to http://localhost:%d/', server.address().port);
         } else {
@@ -142,7 +149,7 @@
         }
     });
 
-    server.on('error', function (e) {
+    server.on('error', function(e) {
         if (e.code === 'EADDRINUSE') {
             console.log('Error: Port %d is already in use, select a different port.', argv.port);
             console.log('Example: node server.js --port %d', argv.port + 1);
@@ -165,7 +172,7 @@
         if (isFirstSig) {
             console.log('Cesium development server shutting down.');
             server.close(function() {
-              process.exit(0);
+                process.exit(0);
             });
             isFirstSig = false;
         } else {
