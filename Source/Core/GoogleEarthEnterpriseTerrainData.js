@@ -211,8 +211,6 @@ define([
         });
     };
 
-    var maxShort = 32767;
-
     /**
      * Computes the terrain height at a specified longitude and latitude.
      *
