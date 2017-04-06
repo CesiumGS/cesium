@@ -994,13 +994,39 @@ define([
     function depthClampVS(vertexShaderSource) {
         var modifiedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_depth_clamp_main');
         modifiedVS +=
+            '#ifdef GL_EXT_frag_depth\n' +
+            'varying float v_WindowZ;\n' +
+            '#endif\n' +
             'void main() {\n' +
             '    czm_non_depth_clamp_main();\n' +
             '    vec4 position = gl_Position;\n' +
+            '#ifdef GL_EXT_frag_depth\n' +
+            '    v_WindowZ = (0.5 * (position.z / position.w) + 0.5) * position.w;\n' +
+            '#endif\n' +
             '    position.z = min(position.z, position.w);\n' +
             '    gl_Position = position;' +
             '}\n';
         return modifiedVS;
+    }
+
+    function depthClampFS(fragmentShaderSource) {
+        var modifiedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_non_depth_clamp_main');
+        modifiedFS +=
+            '#ifdef GL_EXT_frag_depth\n' +
+            'varying float v_WindowZ;\n' +
+            '#endif\n' +
+            'void main() {\n' +
+            '    czm_non_depth_clamp_main();\n' +
+            '#ifdef GL_EXT_frag_depth\n' +
+            '    gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
+            '#endif\n' +
+            '}\n';
+        modifiedFS =
+            '#ifdef GL_EXT_frag_depth\n' +
+            '#extension GL_EXT_frag_depth : enable\n' +
+            '#endif\n' +
+            modifiedFS;
+        return modifiedFS;
     }
 
     function validateShaderMatching(shaderProgram, attributeLocations) {
@@ -1446,7 +1472,7 @@ define([
             vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
             vs = depthClampVS(vs);
 
-            fs = primitive._depthFailAppearance.getFragmentShaderSource();
+            fs = depthClampFS(primitive._depthFailAppearance.getFragmentShaderSource());
 
             primitive._spDepthFail = ShaderProgram.replaceCache({
                 context : context,
