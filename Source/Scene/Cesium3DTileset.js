@@ -1978,20 +1978,6 @@ define([
             for (i = 0; i < backfaceCommandsLength; ++i) {
                 command = backfaceCommands.get(i);
                 rs = clone(command.renderState, true);
-                if (rs.cull.enabled && rs.cull.face === CullFace.BACK) {
-                    rs.colorMask.red = false;
-                    rs.colorMask.green = false;
-                    rs.colorMask.blue = false;
-                    rs.colorMask.alpha = false;
-                    command.castShadows = false;
-                    command.receiveShadows = false;
-                    command.shaderProgram = ShaderProgram.fromCache({
-                        vertexShaderSource: command.shaderProgram._vertexShaderSource,
-                        fragmentShaderSource: 'void main() { }',
-                        attributeLocations: command.shaderProgram._attributeLocations,
-                        context: frameState.context
-                    });
-                }
                 rs.cull.enabled = true;
                 rs.cull.face = CullFace.FRONT;
                 command.renderState = RenderState.fromCache(rs);
