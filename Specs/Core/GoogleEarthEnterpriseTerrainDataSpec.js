@@ -71,12 +71,16 @@ defineSuite([
             // Origin
             var xOrigin = southwest.longitude;
             var yOrigin = southwest.latitude;
-            if (i & 1) {
+
+            if ((i & 2) !== 0) { // Top row
+                if ((i & 1) === 0) { // NE
+                    xOrigin = center.longitude;
+                    altitudeStart = 10;
+                }
+                yOrigin = center.latitude;
+            } else if ((i & 1) !== 0) { // SE
                 xOrigin = center.longitude;
                 altitudeStart = 10;
-            }
-            if (i & 2) {
-                yOrigin = center.latitude;
             }
 
             dv.setFloat64(offset, CesiumMath.toDegrees(xOrigin)/180.0, true);
