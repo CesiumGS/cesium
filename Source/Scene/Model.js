@@ -694,6 +694,7 @@ define([
         this._cachedTextureMemorySizeInBytes = 0;
         this._vertexMemorySizeInBytes = 0;
         this._textureMemorySizeInBytes = 0;
+        this._trianglesLength = 0;
 
         this._nodeCommands = [];
         this._pickIds = [];
@@ -995,6 +996,17 @@ define([
         upAxis : {
             get : function() {
                 return this._upAxis;
+            }
+        },
+
+        /**
+         * Gets the model's triangle count.
+         *
+         * @private
+         */
+        trianglesLength : {
+            get : function() {
+                return this._trianglesLength;
             }
         },
 
@@ -3342,6 +3354,22 @@ define([
         };
     }
 
+    function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
+        switch (primitive.mode) {
+            case PrimitiveType.POINTS:
+            case PrimitiveType.LINES:
+            case PrimitiveType.LINE_LOOP:
+            case PrimitiveType.LINE_STRIP:
+                return 0;
+            case PrimitiveType.TRIANGLES:
+                return (indicesCount / 3);
+            case PrimitiveType.TRIANGLE_STRIP:
+            case PrimitiveType.TRIANGLE_FAN:
+                return Math.max(indicesCount - 2, 0);
+        }
+        return 0;
+    }
+
     function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
@@ -3400,6 +3428,9 @@ define([
                     count = positions.count;
                     offset = 0;
                 }
+
+                // Update model triangle count using number of indices
+                model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);
 
                 var um = uniformMaps[primitive.material];
                 var uniformMap = um.uniformMap;
