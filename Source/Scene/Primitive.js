@@ -993,32 +993,14 @@ define([
 
     function depthClampVS(vertexShaderSource) {
         var modifiedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_depth_clamp_main');
-        modifiedVS += 'varying float v_WindowZ;\n' +
-                      'void main() {\n' +
-                      '    czm_non_depth_clamp_main();\n' +
-                      '    vec4 position = gl_Position;\n' +
-                      '    v_WindowZ = (0.5 * (position.z / position.w) + 0.5) * position.w;\n' +
-                      '    position.z = min(position.z, position.w);\n' +
-                      '    gl_Position = position;' +
-                      '}\n';
+        modifiedVS +=
+            'void main() {\n' +
+            '    czm_non_depth_clamp_main();\n' +
+            '    vec4 position = gl_Position;\n' +
+            '    position.z = min(position.z, position.w);\n' +
+            '    gl_Position = position;' +
+            '}\n';
         return modifiedVS;
-    }
-
-    function depthClampFS(context, fragmentShaderSource) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!context.fragmentDepth) {
-            throw new DeveloperError('The depth fail appearance requires the EXT_frag_depth extension.');
-        }
-        //>>includeEnd('debug');
-
-        var modifiedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_non_depth_clamp_main');
-        modifiedFS += 'varying float v_WindowZ;\n' +
-              'void main() {\n' +
-              '    czm_non_depth_clamp_main();\n' +
-              '    gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
-              '}\n';
-        modifiedFS = '#extension GL_EXT_frag_depth : enable\n' + modifiedFS;
-        return modifiedFS;
     }
 
     function validateShaderMatching(shaderProgram, attributeLocations) {
@@ -1464,7 +1446,7 @@ define([
             vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
             vs = depthClampVS(vs);
 
-            fs = depthClampFS(context, primitive._depthFailAppearance.getFragmentShaderSource());
+            fs = primitive._depthFailAppearance.getFragmentShaderSource();
 
             primitive._spDepthFail = ShaderProgram.replaceCache({
                 context : context,
