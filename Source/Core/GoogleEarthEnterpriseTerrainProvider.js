@@ -102,10 +102,11 @@ define([
         }
         this._credit = credit;
 
-        // 1024 was the initial size of the heightmap before decimation in GEE
-        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, 1024, this._tilingScheme.getNumberOfXTilesAtLevel(0));
+        // Pulled from Google's documentation
+        this._levelZeroMaximumGeometricError = 40075.16;
 
         this._terrainCache = {};
+        this._terrainPromises = {};
 
         this._errorEvent = new Event();
 
@@ -341,6 +342,7 @@ define([
 
 
         var that = this;
+        var terrainPromises = this._terrainPromises;
         return metadata.populateSubtree(x, y, level)
             .then(function(info){
                 if (defined(info)) {
@@ -388,15 +390,29 @@ define([
                     if (terrainVersion > 0) {
                         var url = buildTerrainUrl(that, q, terrainVersion);
                         var promise;
-                        throttleRequests = defaultValue(throttleRequests, true);
-                        if (throttleRequests) {
-                            promise = throttleRequestByServer(url, loadArrayBuffer);
-                            if (!defined(promise)) {
-                                return undefined;
-                            }
+                        if (defined(terrainPromises[q])) {
+                            promise = terrainPromises[q];
                         } else {
-                            promise = loadArrayBuffer(url);
+                            var requestPromise;
+                            throttleRequests = defaultValue(throttleRequests, true);
+                            if (throttleRequests) {
+                                requestPromise = throttleRequestByServer(url, loadArrayBuffer);
+                                if (!defined(requestPromise)) {
+                                    return undefined;
+                                }
+                            } else {
+                                requestPromise = loadArrayBuffer(url);
+                            }
+
+                            terrainPromises[q] = requestPromise;
+
+                            promise = requestPromise
+                                .always(function(terrain) {
+                                    delete terrainPromises[q];
+                                    return terrain;
+                                });
                         }
+
                         return promise
                             .then(function(terrain) {
                                 if (defined(terrain)) {
@@ -491,7 +507,8 @@ define([
         var metadata = this._metadata;
         var info = metadata.getTileInformation(x, y, level);
         if (defined(info)) {
-            return info.hasTerrain();
+            // We may have terrain or no ancestors have had it so we'll return the ellipsoid
+            return info.terrainState !== TerrainState.NONE || !info.ancestorHasTerrain;
         }
         return undefined;
     };

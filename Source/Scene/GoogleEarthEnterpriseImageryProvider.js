@@ -395,6 +395,8 @@ define([
         return undefined;
     };
 
+    var loadedImages = {};
+
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
@@ -470,6 +472,15 @@ define([
 
                     return when(invalidImage);
                 });
+        }
+
+        var quadkey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
+        if (!defined(loadedImages[quadkey])) {
+            loadedImages[quadkey] = 0;
+        }
+        if (++loadedImages[quadkey] > 10) {
+            debugger;
+            console.error(x + ', ' + y + ', ' + level + ' loaded ' + loadedImages[quadkey] + ' times.');
         }
 
         return promise

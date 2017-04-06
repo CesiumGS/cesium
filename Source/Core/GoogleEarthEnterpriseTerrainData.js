@@ -164,9 +164,8 @@ define([
 
         // Compute the center of the tile for RTC rendering.
         var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
-
-        // 1024 was the initial size of the heightmap before decimation in GEE
-        var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, 1024, tilingScheme.getNumberOfXTilesAtLevel(0));
+        
+        var levelZeroMaxError = 40075.16; // From Google's Doc
         var thisLevelMaxError = levelZeroMaxError / (1 << level);
         this._skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
 

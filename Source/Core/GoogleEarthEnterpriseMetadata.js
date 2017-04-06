@@ -291,6 +291,12 @@ define([
         }
 
         var dataView = new DataView(data);
+        var magic = dataView.getUint32(0, true);
+        if (magic === compressedMagic || magic === compressedMagicSwap) {
+            // Occasionally packets don't come back encoded, so just return
+            return data;
+        }
+
         var keyView = new DataView(keyBuffer);
 
         var dp = 0;
@@ -592,9 +598,11 @@ define([
 
         return promise
             .then(function() {
-                delete subtreePromises[q];
                 // Recursively call this incase we need multiple subtree requests
                 return populateSubtree(that, quadKey);
+            })
+            .always(function() {
+                delete subtreePromises[q];
             })
             .then(function() {
                 return tileInfo[quadKey];
