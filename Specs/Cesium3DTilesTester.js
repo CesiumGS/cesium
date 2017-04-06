@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        'Core/arrayFill',
         'Core/Color',
         'Core/defaultValue',
         'Core/defined',
@@ -9,6 +10,7 @@ define([
         'Scene/TileBoundingSphere',
         'Specs/pollToPromise'
     ], function(
+        arrayFill,
         Color,
         defaultValue,
         defined,
@@ -216,8 +218,13 @@ define([
         var magic = defaultValue(options.magic, [98, 51, 100, 109]);
         var version = defaultValue(options.version, 1);
         var featuresLength = defaultValue(options.featuresLength, 1);
+        var featureTableJson = {
+            BATCH_LENGTH : featuresLength
+        };
+        var featureTableJsonString = JSON.stringify(featureTableJson);
+        var featureTableJsonByteLength = featureTableJsonString.length;
 
-        var headerByteLength = 24;
+        var headerByteLength = 28;
         var byteLength = headerByteLength;
         var buffer = new ArrayBuffer(byteLength);
         var view = new DataView(buffer);
@@ -225,11 +232,12 @@ define([
         view.setUint8(1, magic[1]);
         view.setUint8(2, magic[2]);
         view.setUint8(3, magic[3]);
-        view.setUint32(4, version, true);          // version
-        view.setUint32(8, byteLength, true);       // byteLength
-        view.setUint32(12, 0, true);               // batchTableJsonByteLength
-        view.setUint32(16, 0, true);               // batchTableBinaryByteLength
-        view.setUint32(20, featuresLength, true);  // batchLength
+        view.setUint32(4, version, true);                       // version
+        view.setUint32(8, byteLength, true);                    // byteLength
+        view.setUint32(12, featureTableJsonByteLength, true);   // featureTableJsonByteLength
+        view.setUint32(16, 0, true);                            // featureTableBinaryByteLength
+        view.setUint32(20, 0, true);                            // batchTableJsonByteLength
+        view.setUint32(24, 0, true);                            // batchTableBinaryByteLength
 
         return buffer;
     };
@@ -247,7 +255,7 @@ define([
         var featuresLength = defaultValue(options.featuresLength, 1);
         var featureTableJson = {
             INSTANCES_LENGTH : featuresLength,
-            POSITION : new Array(featuresLength * 3).fill(0)
+            POSITION : arrayFill(new Array(featuresLength * 3), 0)
         };
         var featureTableJsonString = JSON.stringify(featureTableJson);
         var featureTableJsonByteLength = featureTableJsonString.length;

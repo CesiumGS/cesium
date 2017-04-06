@@ -2808,4 +2808,36 @@ defineSuite([
 
         expect(tweenSpy.calls.mostRecent().args[1].destination.equalsEpsilon(expectedDestination, 0.1)).toBe(true);
     });
+
+    it('switches projections', function() {
+        expect(camera.frustum instanceof PerspectiveFrustum).toEqual(true);
+        camera.switchToOrthographicFrustum();
+        expect(camera.frustum instanceof OrthographicFrustum).toEqual(true);
+        camera.switchToPerspectiveFrustum();
+        expect(camera.frustum instanceof PerspectiveFrustum).toEqual(true);
+    });
+
+    it('does not switch projection in 2D', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new GeographicProjection(ellipsoid);
+        var maxRadii = ellipsoid.maximumRadius;
+
+        camera._mode = SceneMode.SCENE2D;
+        camera._projection = projection;
+
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.right = maxRadii * Math.PI;
+        frustum.left = -frustum.right;
+        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
+        frustum.bottom = -frustum.top;
+        frustum.near = 0.01 * maxRadii;
+        frustum.far = 60.0 * maxRadii;
+        camera.frustum = frustum;
+
+        expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+        camera.switchToOrthographicFrustum();
+        expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+        camera.switchToPerspectiveFrustum();
+        expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+    });
 });

@@ -168,6 +168,15 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
+        trianglesLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
         vertexMemorySizeInBytes : {
             get : function() {
                 return this._vertexMemorySizeInBytes;
@@ -807,7 +816,7 @@ define([
         });
     }
 
-    var semantics = ['POSITION', 'COLOR', 'NORMAL'];
+    var defaultProperties = ['POSITION', 'COLOR', 'NORMAL', 'POSITION_ABSOLUTE'];
 
     function getStyleableProperties(source, properties) {
         // Get all the properties used by this style
@@ -815,22 +824,10 @@ define([
         var matches = regex.exec(source);
         while (matches !== null) {
             var name = matches[1];
-            if ((semantics.indexOf(name) === -1) && (properties.indexOf(name) === -1)) {
+            if (properties.indexOf(name) === -1) {
                 properties.push(name);
             }
             matches = regex.exec(source);
-        }
-    }
-
-    function getStyleableSemantics(source, properties) {
-        // Get the semantics used by this style
-        var length = semantics.length;
-        for (var i = 0; i < length; ++i) {
-            var semantic = semantics[i];
-            var styleName = 'czm_tiles3d_style_' + semantic;
-            if (source.indexOf(styleName) >= 0) {
-                properties.push(semantic);
-            }
         }
     }
 
@@ -845,17 +842,17 @@ define([
     }
 
     function modifyStyleFunction(source) {
-        // Replace occurrences of czm_tiles3d_style_SEMANTIC with semantic
-        var length = semantics.length;
+        // Replace occurrences of czm_tiles3d_style_DEFAULTPROPERTY
+        var length = defaultProperties.length;
         for (var i = 0; i < length; ++i) {
-            var semantic = semantics[i];
-            var styleName = 'czm_tiles3d_style_' + semantic;
-            var replaceName = semantic.toLowerCase();
-            source = source.replace(new RegExp(styleName, 'g'), replaceName);
+            var property = defaultProperties[i];
+            var styleName = 'czm_tiles3d_style_' + property;
+            var replaceName = property.toLowerCase();
+            source = source.replace(new RegExp(styleName + '(\\W)', 'g'), replaceName + '$1');
         }
 
         // Edit the function header to accept the point position, color, and normal
-        return source.replace('()', '(vec3 position, vec4 color, vec3 normal)');
+        return source.replace('()', '(vec3 position, vec3 position_absolute, vec4 color, vec3 normal)');
     }
 
     function createShaders(content, frameState, style) {
@@ -907,26 +904,25 @@ define([
 
         // Get the properties in use by the style
         var styleableProperties = [];
-        var styleableSemantics = [];
 
         if (hasColorStyle) {
             getStyleableProperties(colorStyleFunction, styleableProperties);
-            getStyleableSemantics(colorStyleFunction, styleableSemantics);
             colorStyleFunction = modifyStyleFunction(colorStyleFunction);
         }
         if (hasShowStyle) {
             getStyleableProperties(showStyleFunction, styleableProperties);
-            getStyleableSemantics(showStyleFunction, styleableSemantics);
             showStyleFunction = modifyStyleFunction(showStyleFunction);
         }
         if (hasPointSizeStyle) {
             getStyleableProperties(pointSizeStyleFunction, styleableProperties);
-            getStyleableSemantics(pointSizeStyleFunction, styleableSemantics);
             pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
         }
 
-        var usesColorSemantic = styleableSemantics.indexOf('COLOR') >= 0;
-        var usesNormalSemantic = styleableSemantics.indexOf('NORMAL') >= 0;
+        var usesColorSemantic = styleableProperties.indexOf('COLOR') >= 0;
+        var usesNormalSemantic = styleableProperties.indexOf('NORMAL') >= 0;
+
+        // Split default properties from user properties
+        var userProperties = styleableProperties.filter(function(property) { return defaultProperties.indexOf(property) === -1; });
 
         //>>includeStart('debug', pragmas.debug);
         if (usesNormalSemantic && !hasNormals) {
@@ -939,7 +935,7 @@ define([
         for (name in styleableShaderAttributes) {
             if (styleableShaderAttributes.hasOwnProperty(name)) {
                 attribute = styleableShaderAttributes[name];
-                var enabled = (styleableProperties.indexOf(name) >= 0);
+                var enabled = (userProperties.indexOf(name) >= 0);
                 var vertexAttribute = getVertexAttribute(vertexArray, attribute.location);
                 vertexAttribute.enabled = enabled;
             }
@@ -967,9 +963,9 @@ define([
 
         var attributeDeclarations = '';
 
-        var length = styleableProperties.length;
+        var length = userProperties.length;
         for (i = 0; i < length; ++i) {
-            name = styleableProperties[i];
+            name = userProperties[i];
             attribute = styleableShaderAttributes[name];
             //>>includeStart('debug', pragmas.debug);
             if (!defined(attribute)) {
@@ -1069,6 +1065,7 @@ define([
         } else {
             vs += '    vec3 position = a_position; \n';
         }
+        vs += '    vec3 position_absolute = vec3(czm_model * vec4(position, 1.0)); \n';
 
         if (hasNormals) {
             if (isOctEncoded16P) {
@@ -1081,15 +1078,15 @@ define([
         }
 
         if (hasColorStyle) {
-            vs += '    color = getColorFromStyle(position, color, normal); \n';
+            vs += '    color = getColorFromStyle(position, position_absolute, color, normal); \n';
         }
 
         if (hasShowStyle) {
-            vs += '    float show = float(getShowFromStyle(position, color, normal)); \n';
+            vs += '    float show = float(getShowFromStyle(position, position_absolute, color, normal)); \n';
         }
 
         if (hasPointSizeStyle) {
-            vs += '    gl_PointSize = getPointSizeFromStyle(position, color, normal); \n';
+            vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal); \n';
         } else {
             vs += '    gl_PointSize = u_pointSize; \n';
         }

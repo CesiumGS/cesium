@@ -326,6 +326,8 @@ define([
         this._cameraStartFired = false;
         this._cameraMovedTime = undefined;
 
+        this._minimumDisableDepthTestDistance = 0.0;
+
         /**
          * Exceptions occurring in <code>render</code> are always caught in order to raise the
          * <code>renderError</code> event.  If this property is true, the error is rethrown
@@ -670,7 +672,7 @@ define([
         this.initializeFrame();
     }
 
-    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.99;
+    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
 
     defineProperties(Scene.prototype, {
         /**
@@ -1146,9 +1148,31 @@ define([
             get: function() {
                 return this._frameState.imagerySplitPosition;
             },
-
             set: function(value) {
                 this._frameState.imagerySplitPosition = value;
+            }
+        },
+
+        /**
+         * The distance from the camera at which to disable the depth test of billboards, labels and points
+         * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
+         * be applied. When less than zero, the depth test should never be applied. Setting the disableDepthTestDistance
+         * property of a billboard, label or point will override this value.
+         * @memberof Scene.prototype
+         * @type {Number}
+         * @default 0.0
+         */
+        minimumDisableDepthTestDistance : {
+            get : function() {
+                return this._minimumDisableDepthTestDistance;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value) || value < 0.0) {
+                    throw new DeveloperError('minimumDisableDepthTestDistance must be greater than or equal to 0.0.');
+                }
+                //>>includeEnd('debug');
+                this._minimumDisableDepthTestDistance = value;
             }
         }
     });
@@ -1262,6 +1286,7 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
+        frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
         if (defined(scene.globe)) {
             frameState.maximumScreenSpaceError = scene.globe.maximumScreenSpaceError;
         } else {
@@ -2559,6 +2584,10 @@ define([
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(scene, frameNumber, time);
         frameState.passes.render = true;
+
+        var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
+        frameState.backgroundColor = backgroundColor;
+
         frameState.creditDisplay.beginFrame();
 
         scene.fog.update(frameState);
@@ -2585,7 +2614,7 @@ define([
         }
 
         updateEnvironment(scene);
-        updateAndExecuteCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+        updateAndExecuteCommands(scene, passState, backgroundColor);
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 

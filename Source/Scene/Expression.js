@@ -104,7 +104,8 @@ define([
         exp2 : exp2,
         log : Math.log,
         log2 : log2,
-        fract : fract
+        fract : fract,
+        length : Math.abs
     };
 
     var ternaryFunctions = {
@@ -121,7 +122,7 @@ define([
     }
 
     function log2(number) {
-    	return CesiumMath.logBase(number, 2.0);
+        return CesiumMath.logBase(number, 2.0);
     }
 
     /**
@@ -773,6 +774,21 @@ define([
         var evaluate = unaryFunctions[call];
         return function(feature) {
             var left = this._left.evaluate(feature);
+
+            if (call === 'length') {
+                if (typeof left === 'number') {
+                    return evaluate(left);
+                } else if (left instanceof Cartesian2) {
+                    return Cartesian2.magnitude(left);
+                } else if (left instanceof Cartesian3) {
+                    return Cartesian3.magnitude(left);
+                } else if (left instanceof Cartesian4) {
+                    return Cartesian4.magnitude(left);
+                } else {
+                    throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
+                }
+            }
+
             if (typeof left === 'number') {
                 return evaluate(left);
             } else if (left instanceof Cartesian2) {
@@ -1557,7 +1573,7 @@ define([
                 } else if (value === 'Number') {
                     return 'float(' + left + ')';
                 } else if (value === 'round') {
-                	return 'floor(' + left + ' + 0.5)';
+                    return 'floor(' + left + ' + 0.5)';
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
                 } else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {

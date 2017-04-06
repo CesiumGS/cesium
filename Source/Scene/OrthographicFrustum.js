@@ -87,11 +87,7 @@ define([
             frustum._far = frustum.far;
 
             if (!frustum._useDeprecated) {
-                var ratio = frustum.aspectRatio;
-                if (ratio > 1.0) {
-                    ratio = 1.0 / frustum.aspectRatio;
-                }
-
+                var ratio = 1.0 / frustum.aspectRatio;
                 f.right = frustum.width * 0.5;
                 f.left = -f.right;
                 f.top = ratio * f.right;
