@@ -92,8 +92,8 @@ define([
         var candidate = -1;
 
         while(1) {
-            var left = 2 * index + 1;
-            var right = 2 * index + 2;
+            var left = 2 * (index + 1) - 1;
+            var right = 2 * (index + 1);
 
             if (left < length && comparator(data[left], data[index]) < 0) {
                 candidate = left;
@@ -159,15 +159,15 @@ define([
             data.push(value);
         }
 
-        do {
-            var parent = Math.floor(index / 2);
+        while (index !== 0) {
+            var parent = Math.floor((index - 1) / 2);
             if (comparator(data[index], data[parent]) < 0) {
                 swap(data, index, parent);
                 index = parent;
             } else {
                 break;
             }
-        } while (index !== 0);
+        }
 
         if (this._length > this.maximumSize && this.maximumSize > 0) {
             this._length = this.maximumSize;
