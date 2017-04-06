@@ -3354,6 +3354,22 @@ define([
         };
     }
 
+    function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
+        switch (primitive.mode) {
+            case PrimitiveType.POINTS:
+            case PrimitiveType.LINES:
+            case PrimitiveType.LINE_LOOP:
+            case PrimitiveType.LINE_STRIP:
+                return 0;
+            case PrimitiveType.TRIANGLES:
+                return (indicesCount / 3);
+            case PrimitiveType.TRIANGLE_STRIP:
+            case PrimitiveType.TRIANGLE_FAN:
+                return Math.max(indicesCount - 2, 0);
+        }
+        return 0;
+    }
+
     function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
@@ -3413,20 +3429,8 @@ define([
                     offset = 0;
                 }
 
-                switch(primitive.mode) {
-                    case 0: // POINTS
-                    case 1: // LINES
-                    case 2: // LINE_LOOP
-                    case 3: // LINE_STRIP
-                        break;
-                    case 4: // TRIANGLES
-                        model._trianglesLength += (count / 3);
-                        break;
-                    case 5: // TRIANGLE_STRIP
-                    case 6: // TRIANGLE_FAN
-                        model._trianglesLength += Math.max(count - 2, 0);
-                        break;
-                }
+                // Update model triangle count using number of indices
+                model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);
 
                 var um = uniformMaps[primitive.material];
                 var uniformMap = um.uniformMap;
