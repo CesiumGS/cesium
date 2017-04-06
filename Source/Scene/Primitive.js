@@ -1686,8 +1686,12 @@ define([
             var castShadows = ShadowMode.castShadows(primitive.shadows);
             var receiveShadows = ShadowMode.receiveShadows(primitive.shadows);
             var colorLength = colorCommands.length;
+
+            var factor = twoPasses ? 2 : 1;
+            factor *= defined(primitive._depthFailAppearance) ? 2 : 1;
+
             for (var j = 0; j < colorLength; ++j) {
-                var sphereIndex = twoPasses ? Math.floor(j / 2) : j;
+                var sphereIndex = Math.floor(j / factor);
                 var colorCommand = colorCommands[j];
                 colorCommand.modelMatrix = modelMatrix;
                 colorCommand.boundingVolume = boundingSpheres[sphereIndex];
