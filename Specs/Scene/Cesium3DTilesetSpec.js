@@ -171,6 +171,10 @@ defineSuite([
     });
 
     it('rejects readyPromise with invalid tileset.json', function() {
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            deferred.reject();
+        });
+
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : 'invalid.json'
         }));
@@ -179,9 +183,8 @@ defineSuite([
             fail('should not resolve');
         }).otherwise(function(error) {
             expect(tileset.ready).toEqual(false);
-            expect(error.statusCode).toEqual(404);
         });
-    }, 10000);
+    });
 
     it('rejects readyPromise with invalid tileset version', function() {
         var tilesetJson = {
@@ -418,13 +421,14 @@ defineSuite([
         });
     });
 
-    function checkPointAndFeatureCounts(tileset, features, points) {
+    function checkPointAndFeatureCounts(tileset, features, points, triangles) {
         var stats = tileset._statistics;
 
         expect(stats.numberOfFeaturesSelected).toEqual(0);
         expect(stats.numberOfFeaturesLoaded).toEqual(0);
         expect(stats.numberOfPointsSelected).toEqual(0);
         expect(stats.numberOfPointsLoaded).toEqual(0);
+        expect(stats.numberOfTrianglesSelected).toEqual(0);
 
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
             scene.renderForSpecs();
@@ -432,6 +436,7 @@ defineSuite([
             expect(stats.numberOfFeaturesLoaded).toEqual(features);
             expect(stats.numberOfPointsSelected).toEqual(points);
             expect(stats.numberOfPointsLoaded).toEqual(points);
+            expect(stats.numberOfTrianglesSelected).toEqual(triangles);
 
             viewNothing();
             scene.renderForSpecs();
@@ -440,6 +445,7 @@ defineSuite([
             expect(stats.numberOfFeaturesLoaded).toEqual(features);
             expect(stats.numberOfPointsSelected).toEqual(0);
             expect(stats.numberOfPointsLoaded).toEqual(points);
+            expect(stats.numberOfTrianglesSelected).toEqual(0);
 
             tileset.trimLoadedTiles();
 
@@ -449,6 +455,7 @@ defineSuite([
             expect(stats.numberOfFeaturesLoaded).toEqual(0);
             expect(stats.numberOfPointsSelected).toEqual(0);
             expect(stats.numberOfPointsLoaded).toEqual(0);
+            expect(stats.numberOfTrianglesSelected).toEqual(0);
         });
     }
 
@@ -457,7 +464,7 @@ defineSuite([
             url : withBatchTableUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 10, 0);
+        return checkPointAndFeatureCounts(tileset, 10, 0, 120);
     });
 
     it('verify no batch table features statistics', function() {
@@ -465,7 +472,7 @@ defineSuite([
             url : noBatchIdsUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 0, 0);
+        return checkPointAndFeatureCounts(tileset, 0, 0, 120);
     });
 
     it('verify instanced features statistics', function() {
@@ -473,7 +480,7 @@ defineSuite([
             url : instancedRedMaterialUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 25, 0);
+        return checkPointAndFeatureCounts(tileset, 25, 0, 12);
     });
 
     it('verify composite features statistics', function() {
@@ -481,7 +488,7 @@ defineSuite([
             url : compositeUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 35, 0);
+        return checkPointAndFeatureCounts(tileset, 35, 0, 132);
     });
 
     it('verify tileset of tilesets features statistics', function() {
@@ -489,7 +496,7 @@ defineSuite([
             url : tilesetOfTilesetsUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 50, 0);
+        return checkPointAndFeatureCounts(tileset, 50, 0, 600);
     });
 
     it('verify points statistics', function() {
@@ -499,7 +506,15 @@ defineSuite([
             url : pointCloudUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 0, 1000);
+        return checkPointAndFeatureCounts(tileset, 0, 1000, 0);
+    });
+
+    it('verify triangle statistics', function() {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : tilesetEmptyRootUrl
+        }));
+
+        return checkPointAndFeatureCounts(tileset, 40, 0, 480);
     });
 
     it('verify batched points statistics', function() {
@@ -509,7 +524,7 @@ defineSuite([
             url : pointCloudBatchedUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 8, 1000);
+        return checkPointAndFeatureCounts(tileset, 8, 1000, 0);
     });
 
     it('verify memory usage statistics', function() {

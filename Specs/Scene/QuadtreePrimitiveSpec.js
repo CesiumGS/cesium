@@ -179,6 +179,8 @@ defineSuite([
         quadtree.update(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
+        scene.renderForSpecs();
+
         // There will now be two zero-level tiles in the load queue.
         expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(2);
 
@@ -189,6 +191,8 @@ defineSuite([
         quadtree.update(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
+        scene.renderForSpecs();
+
         // Now there should only be one left in the update queue
         expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(1);
 
@@ -198,6 +202,8 @@ defineSuite([
         quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
         quadtree.endFrame(scene.frameState);
+
+        scene.renderForSpecs();
 
         // Now that tile's four children should be in the load queue.
         expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(4);
@@ -372,7 +378,7 @@ defineSuite([
         expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[1]);
         expect(quadtree._tileLoadQueueMedium.length).toBe(0);
         expect(quadtree._tileLoadQueueLow.length).toBe(0);
-        
+
         // Mark the first root tile renderable (but not done loading)
         quadtree._levelZeroTiles[0].renderable = true;
 
@@ -420,7 +426,7 @@ defineSuite([
         quadtree._levelZeroTiles[0].children[1].upsampledFromParent = true;
         quadtree._levelZeroTiles[0].children[2].upsampledFromParent = true;
         quadtree._levelZeroTiles[0].children[3].upsampledFromParent = true;
-        
+
         quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
         quadtree.endFrame(scene.frameState);

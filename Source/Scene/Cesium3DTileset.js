@@ -287,6 +287,7 @@ define([
             numberOfFeaturesLoaded : 0,  // number of features in memory
             numberOfPointsSelected: 0,
             numberOfPointsLoaded: 0,
+            numberOfTrianglesSelected: 0,
             // Styling stats
             numberOfTilesStyled : 0,
             numberOfFeaturesStyled : 0,
@@ -511,6 +512,7 @@ define([
         this.numberOfFeaturesLoaded = 0;
         this.numberOfPointsSelected = 0;
         this.numberOfPointsLoaded = 0;
+        this.numberOfTrianglesSelected = 0;
         this.numberOfTilesStyled = 0;
         this.numberOfFeaturesStyled = 0;
         this.numberOfTilesCulledWithChildrenUnion = 0;
@@ -1410,6 +1412,21 @@ define([
                     // then the children do not need to be sorted.
 
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
+
+                    // Handle external tileset refinement issue: https://github.com/AnalyticalGraphicsInc/cesium/pull/4287#issuecomment-283354556
+                    if (allChildrenLoaded) {
+                        for (k = 0; k < childrenLength; ++k) {
+                            child = children[k];
+                            if (child.hasTilesetContent && child.contentReady) {
+                                child = child.children[0];
+                                if (!child.contentReady) {
+                                    allChildrenLoaded = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
                     if (allChildrenLoaded || t.canRequestContent()) {
                         updateTransforms(children, t.computedTransform);
 
@@ -1439,6 +1456,20 @@ define([
                                         // we want to keep it in the cache for when all children are loaded
                                         // and this tile can refine to them.
                                         touch(tileset, child, outOfCore);
+
+                                        // Handle external tileset refinement issue https://github.com/AnalyticalGraphicsInc/cesium/pull/4287#issuecomment-283354556
+                                        if (child.hasTilesetContent && child.contentReady) {
+                                            child = child.children[0];
+
+                                            if (child.contentUnloaded) {
+                                                requestContent(tileset, child, outOfCore);
+                                            } else {
+                                                // Touch loaded child even though it is not selected this frame since
+                                                // we want to keep it in the cache for when all children are loaded
+                                                // and this tile can refine to them.
+                                                touch(tileset, child);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1650,6 +1681,7 @@ define([
         stats.numberOfTilesCulledWithChildrenUnion = 0;
         stats.numberOfFeaturesSelected = 0;
         stats.numberOfPointsSelected = 0;
+        stats.numberOfTrianglesSelected = 0;
     }
 
     function updateLastStats(tileset, isPick) {
@@ -1668,6 +1700,7 @@ define([
         last.numberOfFeaturesLoaded = stats.numberOfFeaturesLoaded;
         last.numberOfPointsSelected = stats.numberOfPointsSelected;
         last.numberOfPointsLoaded = stats.numberOfPointsLoaded;
+        last.numberOfTrianglesSelected = stats.numberOfTrianglesSelected;
         last.numberOfTilesStyled = stats.numberOfTilesStyled;
         last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
         last.numberOfTilesCulledWithChildrenUnion = stats.numberOfTilesCulledWithChildrenUnion;
@@ -1680,10 +1713,12 @@ define([
         var stats = tileset._statistics;
         var contents = content.innerContents;
         var pointsLength = content.pointsLength;
+        var trianglesLength = content.trianglesLength;
         var featuresLength = content.featuresLength;
         var vertexMemorySizeInBytes = content.vertexMemorySizeInBytes;
         var textureMemorySizeInBytes = content.textureMemorySizeInBytes;
         var batchTableMemorySizeInBytes = content.batchTableMemorySizeInBytes;
+
         if (load) {
             stats.numberOfFeaturesLoaded += decrement ? -featuresLength : featuresLength;
             stats.numberOfPointsLoaded += decrement ? -pointsLength : pointsLength;
@@ -1693,6 +1728,7 @@ define([
         } else {
             stats.numberOfFeaturesSelected += decrement ? -featuresLength : featuresLength;
             stats.numberOfPointsSelected += decrement ? -pointsLength : pointsLength;
+            stats.numberOfTrianglesSelected += decrement ? -trianglesLength : trianglesLength;
         }
 
         if (defined(contents)) {

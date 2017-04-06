@@ -139,7 +139,7 @@ require({
     var subtabs = {};
     var docError = false;
     var galleryError = false;
-    var notFound = false;
+    var deferredLoadError = false;
     var galleryTooltipTimer;
     var activeGalleryTooltipDemo;
     var demoTileHeightRule = findCssStyle('.demoTileThumbnail');
@@ -695,7 +695,7 @@ require({
     }
 
     function loadFromGallery(demo) {
-        notFound = false;
+        deferredLoadError = false;
         document.getElementById('saveAsFile').download = demo.name + '.html';
         registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
         registry.byId('label').set('value', decodeHTML(demo.label).replace(/\\n/g, '\n'));
@@ -806,8 +806,8 @@ require({
                 if (galleryError) {
                     appendConsole('consoleError', 'Error loading gallery, please run the build script.', true);
                 }
-                if (notFound) {
-                    appendConsole('consoleLog', 'Unable to load demo named ' + queryObject.src.replace('.html', '') + '\n', true);
+                if (deferredLoadError) {
+                    appendConsole('consoleLog', 'Unable to load demo named ' + queryObject.src.replace('.html', '') + '. Redirecting to HelloWorld.\n', true);
                 }
             }
         } else if (Cesium.defined(e.data.log)) {
@@ -1060,15 +1060,10 @@ require({
             url : 'gallery/' + name + '.html',
             handleAs : 'text',
             error : function(error) {
-                if (error.status === 404) {
                     loadFromGallery(gallery_demos[hello_world_index])
                         .then(function() {
-                            notFound = true;
+                            deferredLoadError = true;
                         });
-                } else {
-                    galleryError = true;
-                    appendConsole('consoleError', error, true);
-                }
             }
         });
     }

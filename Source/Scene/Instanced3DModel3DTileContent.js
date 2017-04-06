@@ -123,6 +123,19 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
+        trianglesLength : {
+            get : function() {
+                var collection = this._modelInstanceCollection;
+                if (defined(collection) && defined(collection._model)) {
+                    return collection._model.trianglesLength;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
         vertexMemorySizeInBytes : {
             get : function() {
                 var collection = this._modelInstanceCollection;

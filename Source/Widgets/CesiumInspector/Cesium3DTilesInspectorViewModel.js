@@ -659,7 +659,8 @@ define([
                     '<li><strong>Features Selected: </strong>' + stats.numberOfFeaturesSelected.toLocaleString() + '</li>' +
                     '<li><strong>Features Loaded: </strong>' + stats.numberOfFeaturesLoaded.toLocaleString() + '</li>' +
                     '<li><strong>Points Selected: </strong>' + stats.numberOfPointsSelected.toLocaleString() + '</li>' +
-                    '<li><strong>Points Loaded: </strong>' + stats.numberOfPointsLoaded.toLocaleString() + '</li>';
+                    '<li><strong>Points Loaded: </strong>' + stats.numberOfPointsLoaded.toLocaleString() + '</li>' +
+                    '<li><strong>Triangles Selected: </strong>' + stats.numberOfTrianglesSelected.toLocaleString() + '</li>';
                 s += '</ul>';
                 s += '<ul class="cesium-cesiumInspector-stats">';
                 s +=

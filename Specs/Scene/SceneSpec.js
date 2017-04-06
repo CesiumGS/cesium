@@ -1078,4 +1078,11 @@ defineSuite([
         }
         s.destroyForSpecs();
     });
+
+    it('throws when minimumDisableDepthTestDistance is set less than 0.0', function() {
+        expect(function() {
+            scene.minimumDisableDepthTestDistance = -1.0;
+        }).toThrowDeveloperError();
+    });
+
 }, 'WebGL');
