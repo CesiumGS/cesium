@@ -172,6 +172,13 @@ define([
                 return this._materialProperty;
             }
         },
+        /**
+         * Gets the material property used to fill the geometry when it fails the depth test.
+         * @memberof PolylineGeometryUpdater.prototype
+         *
+         * @type {MaterialProperty}
+         * @readonly
+         */
         depthFailMaterialProperty : {
             get : function() {
                 return this._depthFailMaterialProperty;

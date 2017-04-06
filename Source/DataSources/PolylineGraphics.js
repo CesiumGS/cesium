@@ -93,6 +93,15 @@ define([
          */
         material : createMaterialPropertyDescriptor('material'),
 
+        /**
+         * Gets or sets the Property specifying the material used to draw the polyline when it fails the depth test.
+         * <p>
+         * Requires the EXT_frag_depth WebGL extension to render properly. If the extension is not supported,
+         * there may be artifacts.
+         * </p>
+         * @type {MaterialProperty}
+         * @default undefined
+         */
         depthFailMaterial : createMaterialPropertyDescriptor('depthFailMaterial'),
 
         /**
@@ -127,7 +136,7 @@ define([
          * @default Cesium.Math.RADIANS_PER_DEGREE
          */
         granularity : createPropertyDescriptor('granularity'),
-        
+
         /**
          * Get or sets the enum Property specifying whether the polyline
          * casts or receives shadows from each light source.

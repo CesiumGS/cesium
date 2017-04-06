@@ -239,7 +239,7 @@ define([
          *
          * <p>
          * Requires the EXT_frag_depth WebGL extension to render properly. If the extension is not supported,
-         * a DeveloperError will be thrown.
+         * there may be artifacts.
          * </p>
          * @type Appearance
          *
