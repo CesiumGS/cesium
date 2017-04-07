@@ -370,15 +370,16 @@ define([
         var finalPositions = new Float64Array(size * 3);
         var prevPositions = new Float64Array(size * 3);
         var nextPositions = new Float64Array(size * 3);
-        var expandAndWidth = new Float32Array(size * 2);
+        var expandWidthAndLength = new Float32Array(size * 3);
         var st = vertexFormat.st ? new Float32Array(size * 2) : undefined;
         var finalColors = defined(colors) ? new Uint8Array(size * 4) : undefined;
 
         var positionIndex = 0;
-        var expandAndWidthIndex = 0;
+        var expandWidthAndLengthIndex = 0;
         var stIndex = 0;
         var colorIndex = 0;
         var position;
+        var distanceFromStart = 0.0;
 
         for (j = 0; j < positionsLength; ++j) {
             if (j === 0) {
@@ -415,6 +416,10 @@ define([
                 }
             }
 
+            if (j > 0) {
+                distanceFromStart += Cartesian3.distance(scratchPosition, scratchPrevPosition);
+            }
+
             var startK = j === 0 ? 2 : 0;
             var endK = j === positionsLength - 1 ? 2 : 4;
 
@@ -425,12 +430,13 @@ define([
                 positionIndex += 3;
 
                 var direction = (k - 2 < 0) ? -1.0 : 1.0;
-                expandAndWidth[expandAndWidthIndex++] = 2 * (k % 2) - 1;       // expand direction
-                expandAndWidth[expandAndWidthIndex++] = direction * width;
+                expandWidthAndLength[expandWidthAndLengthIndex++] = 2 * (k % 2) - 1;       // expand direction
+                expandWidthAndLength[expandWidthAndLengthIndex++] = direction * width;
+                expandWidthAndLength[expandWidthAndLengthIndex++] = distanceFromStart;
 
                 if (vertexFormat.st) {
                     st[stIndex++] = j / (positionsLength - 1);
-                    st[stIndex++] = Math.max(expandAndWidth[expandAndWidthIndex - 2], 0.0);
+                    st[stIndex++] = Math.max(expandWidthAndLength[expandWidthAndLengthIndex - 3], 0.0);
                 }
 
                 if (defined(finalColors)) {
@@ -464,10 +470,10 @@ define([
             values : nextPositions
         });
 
-        attributes.expandAndWidth = new GeometryAttribute({
+        attributes.expandWidthAndLength = new GeometryAttribute({
             componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 2,
-            values : expandAndWidth
+            componentsPerAttribute : 3,
+            values : expandWidthAndLength
         });
 
         if (vertexFormat.st) {
