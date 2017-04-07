@@ -1379,8 +1379,10 @@ define([
                                 selectionQueue.push(child);
                             }
                         }
-                        if (!child.contentReady || child.refine === Cesium3DTileRefine.ADD) {
-                            descendantStack.push(child);
+                        if (child._depth - original._depth < 2) { // prevent traversing too far
+                            if (!child.contentReady || child.refine === Cesium3DTileRefine.ADD) {
+                                descendantStack.push(child);
+                            }
                         }
                     }
                 }
