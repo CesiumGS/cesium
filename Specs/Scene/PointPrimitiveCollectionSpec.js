@@ -73,6 +73,7 @@ defineSuite([
         expect(p.scaleByDistance).not.toBeDefined();
         expect(p.translucencyByDistance).not.toBeDefined();
         expect(p.distanceDisplayCondition).not.toBeDefined();
+        expect(p.disableDepthTestDistance).toEqual(0.0);
         expect(p.id).not.toBeDefined();
     });
 
@@ -103,6 +104,7 @@ defineSuite([
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0),
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
             distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
+            disableDepthTestDistance : 10.0,
             id : 'id'
         });
 
@@ -121,6 +123,7 @@ defineSuite([
         expect(p.scaleByDistance).toEqual(new NearFarScalar(1.0, 3.0, 1.0e6, 0.0));
         expect(p.translucencyByDistance).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
         expect(p.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
+        expect(p.disableDepthTestDistance).toEqual(10.0);
         expect(p.id).toEqual('id');
     });
 
@@ -135,6 +138,7 @@ defineSuite([
         p.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
         p.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
         p.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
+        p.disableDepthTestDistance = 10.0;
 
         expect(p.show).toEqual(false);
         expect(p.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -151,6 +155,7 @@ defineSuite([
         expect(p.scaleByDistance).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
         expect(p.translucencyByDistance).toEqual(new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0));
         expect(p.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
+        expect(p.disableDepthTestDistance).toEqual(10.0);
     });
 
     it('is not destroyed', function() {
@@ -306,6 +311,39 @@ defineSuite([
         var dc = new DistanceDisplayCondition(100.0, 10.0);
         expect(function() {
             p.distanceDisplayCondition = dc;
+        }).toThrowDeveloperError();
+    });
+
+    it('renders with disableDepthTestDistance', function() {
+        var p = pointPrimitives.add({
+            position : new Cartesian3(-1.0, 0.0, 0.0),
+            pixelSize : 10.0,
+            color : Color.LIME
+        });
+        pointPrimitives.add({
+            position : Cartesian3.ZERO,
+            pixelSize : 10.0,
+            color : Color.BLUE
+        });
+
+        expect(scene).toRender([0 , 0, 255, 255]);
+
+        p.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+        expect(scene).toRender([0, 255, 0, 255]);
+    });
+
+    it('throws with new point primitive with invalid disableDepthTestDistance (< 0.0)', function() {
+        expect(function() {
+            pointPrimitives.add({
+                disableDepthTestDistance : -1.0
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with disableDepthTestDistance set less than 0.0', function() {
+        var p = pointPrimitives.add();
+        expect(function() {
+            p.disableDepthTestDistance = -1.0;
         }).toThrowDeveloperError();
     });
 

@@ -100,6 +100,7 @@ defineSuite([
         expect(label.pixelOffsetScaleByDistance).not.toBeDefined();
         expect(label.scaleByDistance).not.toBeDefined();
         expect(label.distanceDisplayCondition).not.toBeDefined();
+        expect(label.disableDepthTestDistance).toEqual(0.0);
     });
 
     it('can add a label with specified values', function() {
@@ -134,6 +135,7 @@ defineSuite([
         var pixelOffsetScale = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
         var scaleByDistance = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
         var distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
+        var disableDepthTestDistance = 10.0;
         var label = labels.add({
             show : show,
             position : position,
@@ -155,7 +157,8 @@ defineSuite([
             translucencyByDistance : translucency,
             pixelOffsetScaleByDistance : pixelOffsetScale,
             scaleByDistance : scaleByDistance,
-            distanceDisplayCondition : distanceDisplayCondition
+            distanceDisplayCondition : distanceDisplayCondition,
+            disableDepthTestDistance : disableDepthTestDistance
         });
 
         expect(label.show).toEqual(show);
@@ -179,6 +182,7 @@ defineSuite([
         expect(label.pixelOffsetScaleByDistance).toEqual(pixelOffsetScale);
         expect(label.scaleByDistance).toEqual(scaleByDistance);
         expect(label.distanceDisplayCondition).toEqual(distanceDisplayCondition);
+        expect(label.disableDepthTestDistance).toEqual(disableDepthTestDistance);
     });
 
     it('can specify font using units other than pixels', function() {
@@ -672,6 +676,43 @@ defineSuite([
         var dc = new DistanceDisplayCondition(100.0, 10.0);
         expect(function() {
             l.distanceDisplayCondition = dc;
+        }).toThrowDeveloperError();
+    });
+
+    it('renders with disableDepthTestDistance', function() {
+        var l = labels.add({
+            position : new Cartesian3(-1.0, 0.0, 0.0),
+            text : solidBox,
+            fillColor : Color.LIME,
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER
+        });
+        labels.add({
+            position : Cartesian3.ZERO,
+            text : solidBox,
+            fillColor : Color.BLUE,
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER
+        });
+
+        expect(scene).toRender([0, 0, 255, 255]);
+
+        l.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+        expect(scene).toRender([0, 255, 0, 255]);
+    });
+
+    it('throws with new label with disableDepthTestDistance less than 0.0', function() {
+        expect(function() {
+            labels.add({
+                disableDepthTestDistance : -1.0
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with disableDepthTestDistance set less than 0.0', function() {
+        var l = labels.add();
+        expect(function() {
+            l.disableDepthTestDistance = -1.0;
         }).toThrowDeveloperError();
     });
 

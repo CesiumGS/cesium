@@ -417,7 +417,84 @@ define([
         return unitQuaternion;
     }
 
+    function getPropertyType(czmlInterval) {
+        // The associations in this function need to be kept in sync with the
+        // associations in unwrapInterval.
+
+        // Intentionally omitted due to conficts in CZML property names:
+        // * Image (conflicts with Uri)
+        // * Rotation (conflicts with Number)
+        //
+        // cartesianVelocity is also omitted due to incomplete support for
+        // derivative information in CZML properties.
+        // (Currently cartesianVelocity is hacked directly into the position processing code)
+        if (typeof czmlInterval === 'boolean') {
+            return Boolean;
+        } else if (typeof czmlInterval === 'number') {
+            return Number;
+        } else if (typeof czmlInterval === 'string') {
+            return String;
+        } else if (czmlInterval.hasOwnProperty('array')) {
+            return Array;
+        } else if (czmlInterval.hasOwnProperty('boolean')) {
+            return Boolean;
+        } else if (czmlInterval.hasOwnProperty('boundingRectangle')) {
+            return BoundingRectangle;
+        } else if (czmlInterval.hasOwnProperty('cartesian2')) {
+            return Cartesian2;
+        } else if (czmlInterval.hasOwnProperty('cartesian') ||
+                   czmlInterval.hasOwnProperty('unitCartesian') ||
+                   czmlInterval.hasOwnProperty('unitSpherical') ||
+                   czmlInterval.hasOwnProperty('spherical') ||
+                   czmlInterval.hasOwnProperty('cartographicRadians') ||
+                   czmlInterval.hasOwnProperty('cartographicDegrees')) {
+            return Cartesian3;
+        } else if (czmlInterval.hasOwnProperty('rgba') ||
+                   czmlInterval.hasOwnProperty('rgbaf')) {
+            return Color;
+        } else if (czmlInterval.hasOwnProperty('colorBlendMode')) {
+            return ColorBlendMode;
+        } else if (czmlInterval.hasOwnProperty('cornerType')) {
+            return CornerType;
+        } else if (czmlInterval.hasOwnProperty('heightReference')) {
+            return HeightReference;
+        } else if (czmlInterval.hasOwnProperty('horizontalOrigin')) {
+            return HorizontalOrigin;
+        } else if (czmlInterval.hasOwnProperty('date')) {
+            return JulianDate;
+        } else if (czmlInterval.hasOwnProperty('labelStyle')) {
+            return LabelStyle;
+        } else if (czmlInterval.hasOwnProperty('number')) {
+            return Number;
+        } else if (czmlInterval.hasOwnProperty('nearFarScalar')) {
+            return NearFarScalar;
+        } else if (czmlInterval.hasOwnProperty('object') ||
+                   czmlInterval.hasOwnProperty('value')) {
+            return Object;
+        } else if (czmlInterval.hasOwnProperty('unitQuaternion')) {
+            return Quaternion;
+        } else if (czmlInterval.hasOwnProperty('shadowMode')) {
+            return ShadowMode;
+        } else if (czmlInterval.hasOwnProperty('string')) {
+            return String;
+        } else if (czmlInterval.hasOwnProperty('stripeOrientation')) {
+            return StripeOrientation;
+        } else if (czmlInterval.hasOwnProperty('wsen') ||
+                   czmlInterval.hasOwnProperty('wsenDegrees')) {
+            return Rectangle;
+        } else if (czmlInterval.hasOwnProperty('uri')) {
+            return Uri;
+        } else if (czmlInterval.hasOwnProperty('verticalOrigin')) {
+            return VerticalOrigin;
+        } else {
+            // fallback case
+            return Object;
+        }
+    }
+
     function unwrapInterval(type, czmlInterval, sourceUri) {
+        // The associations in this function need to be kept in sync with the
+        // associations in getPropertyType
         /*jshint sub:true*/
         switch (type) {
             case Array:
@@ -450,12 +527,14 @@ define([
                 return defaultValue(czmlInterval.number, czmlInterval);
             case NearFarScalar:
                 return czmlInterval.nearFarScalar;
+            case Object:
+                return defaultValue(defaultValue(czmlInterval.object, czmlInterval.value), czmlInterval);
             case Quaternion:
                 return unwrapQuaternionInterval(czmlInterval);
             case Rotation:
                 return defaultValue(czmlInterval.number, czmlInterval);
             case ShadowMode:
-                return ShadowMode[defaultValue(czmlInterval.shadows, czmlInterval)];
+                return ShadowMode[defaultValue(defaultValue(czmlInterval.shadowMode, czmlInterval.shadows), czmlInterval)];
             case String:
                 return defaultValue(czmlInterval.string, czmlInterval);
             case StripeOrientation:
@@ -531,7 +610,7 @@ define([
             unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
             packedLength = defaultValue(type.packedLength, 1);
             unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
-            isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
+            isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && (unwrappedIntervalLength > packedLength) && (type !== Object);
         }
 
         //Rotation is a special case because it represents a native type (Number)
@@ -982,6 +1061,35 @@ define([
         var orientationData = packet.orientation;
         if (defined(orientationData)) {
             processPacketData(Quaternion, entity, 'orientation', orientationData, undefined, sourceUri, entityCollection);
+        }
+    }
+
+    function processProperties(entity, packet, entityCollection, sourceUri) {
+        var propertiesData = packet.properties;
+        if (defined(propertiesData)) {
+            if (!defined(entity.properties)) {
+                entity.properties = new PropertyBag();
+            }
+            //We cannot simply call processPacketData(entity, 'properties', propertyData, undefined, sourceUri, entityCollection)
+            //because each property of "properties" may vary separately.
+            //The properties will be accessible as entity.properties.myprop.getValue(time).
+
+            for (var key in propertiesData) {
+                if (propertiesData.hasOwnProperty(key)) {
+                    if (!entity.properties.hasProperty(key)) {
+                        entity.properties.addProperty(key);
+                    }
+
+                    var propertyData = propertiesData[key];
+                    if (isArray(propertyData)) {
+                        for (var i = 0, len = propertyData.length; i < len; i++) {
+                            processProperty(getPropertyType(propertyData[i]), entity.properties, key, propertyData[i], undefined, sourceUri, entityCollection);
+                        }
+                    } else {
+                        processProperty(getPropertyType(propertyData), entity.properties, key, propertyData, undefined, sourceUri, entityCollection);
+                    }
+                }
+            }
         }
     }
 
@@ -1989,6 +2097,7 @@ define([
         processPoint, //
         processPolygon, //
         processPolyline, //
+        processProperties, //
         processRectangle, //
         processPosition, //
         processViewFrom, //
