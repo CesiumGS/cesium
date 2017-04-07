@@ -409,7 +409,7 @@ define([
 
             indices.push(lastBorderIndex, lastSkirtIndex, firstSkirtIndex, firstSkirtIndex, firstBorderIndex, lastBorderIndex);
         }
-        
+
         size = positions.length; // Get new size with skirt vertices
 
         var boundingSphere3D = BoundingSphere.fromPoints(positions);
