@@ -357,11 +357,6 @@ define([
      * @see ImageryLayer#isDestroyed
      */
     ImageryLayer.prototype.destroy = function() {
-        var imageryProvider = this._imageryProvider;
-        if (defined(imageryProvider.destroy)) {
-            imageryProvider.destroy();
-        }
-
         return destroyObject(this);
     };
 

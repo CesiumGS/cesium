@@ -77,74 +77,36 @@ define([
 
     GoogleEarthEnterpriseMetadata.TileInformation = TileInformation;
 
-    var metadata = {};
-
-    GoogleEarthEnterpriseMetadata.getMetadata = function(url, proxy) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
-        }
-        //>>includeEnd('debug');
-
-        url = appendForwardSlash(url);
-
-        var result = metadata[url];
-        if (defined(metadata[url])) {
-            ++result.refCount;
-            return result;
-        }
-
-        result = new GoogleEarthEnterpriseMetadata(url, proxy);
-        metadata[url] = result;
-
-        return result;
-    };
-
-    GoogleEarthEnterpriseMetadata.releaseMetadata = function(metadataObj) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(metadataObj)) {
-            throw new DeveloperError('metadataObj is required.');
-        }
-        //>>includeEnd('debug');
-
-        --metadataObj.refCount;
-        if (metadataObj.refCount === 0) {
-            delete metadata[metadataObj.url];
-        }
-    };
-
     /**
      * Provides metadata using the Google Earth Enterprise REST API. This is used by the
      *
      * @alias GoogleEarthEnterpriseMetadata
      * @constructor
      *
-     * @param {String} url The url of the Google Earth Enterprise server hosting the imagery.
-     * @param {Proxy} [proxy] A proxy to use for requests. This object is
+     * @param {Object} options Object with the following properties:
+     * @param {String} options.url The url of the Google Earth Enterprise server hosting the imagery.
+     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @see GoogleEarthEnterpriseImageryProvider
      * @see GoogleEarthEnterpriseTerrainProvider
      *
-     * @private
      */
-    function GoogleEarthEnterpriseMetadata(url, proxy) {
+    function GoogleEarthEnterpriseMetadata(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
+        if (!defined(options.url)) {
             throw new DeveloperError('url is required.');
         }
         //>>includeEnd('debug');
 
-        this._url = url;
-        this._proxy = proxy;
+        this._url = options.url;
+        this._proxy = options.proxy;
 
         this._tileInfo = {};
         this._subtreePromises = {};
 
-        this.refCount = 1;
-
         var that = this;
-        this._readyPromise = this._getQuadTreePacket()
+        this._readyPromise = this.getQuadTreePacket()
             .then(function() {
                 return true;
             })
@@ -156,8 +118,8 @@ define([
 
     defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
         /**
-         * Gets the name of the Google Earth Enterprise server url hosting the imagery.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * Gets the name of the Google Earth Enterprise server.
+         * @memberof GoogleEarthEnterpriseMetadata.prototype
          * @type {String}
          * @readonly
          */
@@ -168,7 +130,7 @@ define([
         },
 
         /**
-         * Gets the proxy used by this provider.
+         * Gets the proxy used for metadata requests.
          * @memberof GoogleEarthEnterpriseImageryProvider.prototype
          * @type {Proxy}
          * @readonly
@@ -180,7 +142,7 @@ define([
         },
 
         /**
-         * Gets a promise that resolves to true when the provider is ready for use.
+         * Gets a promise that resolves to true when the metadata is ready for use.
          * @memberof GoogleEarthEnterpriseProvider.prototype
          * @type {Promise.<Boolean>}
          * @readonly
@@ -275,6 +237,8 @@ define([
      * Decodes data that is received from the Google Earth Enterprise server.
      *
      * @param {ArrayBuffer} data The data to be decoded.
+     *
+     * @private
      */
     GoogleEarthEnterpriseMetadata.decode = function(data) {
         if (!defined(data)) {
@@ -350,6 +314,8 @@ define([
      * Uncompresses a Google Earth Enterprise packet.
      *
      * @param {ArrayBuffer} data The data to be uncompressed.
+     *
+     * @private
      */
     GoogleEarthEnterpriseMetadata.uncompressPacket = function (data) {
         // The layout of this decoded data is
@@ -386,8 +352,15 @@ define([
         return uncompressedPacket;
     };
 
-    // Requests quadtree packet and populates _tileInfo with results
-    GoogleEarthEnterpriseMetadata.prototype._getQuadTreePacket = function(quadKey, version) {
+    /**
+     * Retrieves a Google Earth Enterprise quadtree packet.
+     *
+     * @param {String} [quadKey=''] The quadkey to retrieve the packet for.
+     * @param {Number} [version=1] The cnode version to be used in the request.
+     *
+     * @private
+     */
+    GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket = function(quadKey, version) {
         version = defaultValue(version, 1);
         quadKey = defaultValue(quadKey, '');
         var url = getMetadataUrl(this, quadKey, version);
@@ -554,6 +527,8 @@ define([
      * @param {Number} level The tile level.
      *
      * @returns {Promise<GoogleEarthEnterpriseMetadata.TileInformation>} A promise that resolves to the tile info for the requested quad key
+     *
+     * @private
      */
     GoogleEarthEnterpriseMetadata.prototype.populateSubtree = function(x, y, level) {
         var quadkey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
@@ -590,11 +565,11 @@ define([
                 });
         }
 
-        // We need to split up the promise here because when will execute syncronously if _getQuadTreePacket
+        // We need to split up the promise here because when will execute syncronously if getQuadTreePacket
         //  is already resolved (like in the tests), so subtreePromises will never get cleared out.
         //  The promise will always resolve with a bool, but the initial request will also remove
         //  the promise from subtreePromises.
-        promise = subtreePromises[q] = that._getQuadTreePacket(q, t.cnodeVersion);
+        promise = subtreePromises[q] = that.getQuadTreePacket(q, t.cnodeVersion);
 
         return promise
             .then(function() {
@@ -616,6 +591,8 @@ define([
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
      * @returns {GoogleEarthEnterpriseMetadata.TileInformation|undefined} Information about the tile or undefined if it isn't loaded.
+     *
+     * @private
      */
     GoogleEarthEnterpriseMetadata.prototype.getTileInformation = function(x, y, level) {
         var quadkey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
@@ -627,6 +604,8 @@ define([
      *
      * @param {String} quadkey The quadkey for the tile
      * @returns {GoogleEarthEnterpriseMetadata.TileInformation|undefined} Information about the tile or undefined if it isn't loaded.
+     *
+     * @private
      */
     GoogleEarthEnterpriseMetadata.prototype.getTileInformationFromQuadKey = function(quadkey) {
         return this._tileInfo[quadkey];

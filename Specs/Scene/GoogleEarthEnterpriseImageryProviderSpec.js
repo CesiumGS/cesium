@@ -51,10 +51,6 @@ defineSuite([
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
-        if (defined(imageryProvider)) {
-            imageryProvider.destroy();
-            imageryProvider = undefined;
-        }
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -70,7 +66,7 @@ defineSuite([
     });
 
     function installMockGetQuadTreePacket() {
-        spyOn(GoogleEarthEnterpriseMetadata.prototype, '_getQuadTreePacket').and.callFake(function(quadKey, version) {
+        spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
             quadKey = defaultValue(quadKey, '');
             this._tileInfo[quadKey + '0'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
             this._tileInfo[quadKey + '1'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);

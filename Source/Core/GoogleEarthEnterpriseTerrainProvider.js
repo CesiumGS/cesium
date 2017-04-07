@@ -64,17 +64,19 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url of the Google Earth Enterprise server hosting the imagery.
+     * @param {GoogleEarthEnterpriseMetadata} options.metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider.
      * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
-     * @see CesiumTerrainProvider
      * @see GoogleEarthEnterpriseImageryProvider
+     * @see CesiumTerrainProvider
      *
      * @example
+     * var geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
      * var gee = new Cesium.GoogleEarthEnterpriseTerrainProvider({
-     *     url : 'http://www.earthenterprise.org/3d'
+     *     metadata : geeMetadata
      * });
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
@@ -83,13 +85,20 @@ define([
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
+        if (!(defined(options.url) || defined(options.metadata))) {
+            throw new DeveloperError('options.url or options.metadata is required.');
         }
         //>>includeEnd('debug');
 
-        this._metadata = GoogleEarthEnterpriseMetadata.getMetadata(options.url, options.proxy);
-        this._proxy = options.proxy;
+        if (defined(options.metadata)) {
+            this._metadata = options.metadata;
+        } else {
+            this._metadata = new GoogleEarthEnterpriseMetadata({
+                url : options.url,
+                proxy : options.proxy
+            });
+        }
+        this._proxy = defaultValue(options.proxy, this._metadata.proxy);
 
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
@@ -518,19 +527,6 @@ define([
             return info.terrainState !== TerrainState.NONE || !info.ancestorHasTerrain;
         }
         return undefined;
-    };
-
-    /**
-     * Releases resources used by this provider
-     */
-    GoogleEarthEnterpriseTerrainProvider.prototype.destroy = function() {
-        var metadata = this._metadata;
-        if (defined(metadata)) {
-            this._metadata = undefined;
-            GoogleEarthEnterpriseMetadata.releaseMetadata(metadata);
-        }
-
-        return destroyObject(this);
     };
 
     //

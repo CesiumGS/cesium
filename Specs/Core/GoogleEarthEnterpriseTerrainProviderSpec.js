@@ -32,7 +32,7 @@ defineSuite([
     'use strict';
 
     function installMockGetQuadTreePacket() {
-        spyOn(GoogleEarthEnterpriseMetadata.prototype, '_getQuadTreePacket').and.callFake(function(quadKey, version) {
+        spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
             quadKey = defaultValue(quadKey, '');
             this._tileInfo[quadKey + '0'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
             this._tileInfo[quadKey + '1'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
@@ -62,10 +62,6 @@ defineSuite([
 
     afterEach(function() {
         loadWithXhr.load = loadWithXhr.defaultLoad;
-        if (defined(terrainProvider)) {
-            terrainProvider.destroy();
-            terrainProvider = undefined;
-        }
     });
 
     it('conforms to TerrainProvider interface', function() {
@@ -210,8 +206,7 @@ defineSuite([
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url.indexOf('/proxy/?')).toBe(0);
 
-                // Just return any old file, as long as its big enough
-                loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.terrain', responseType, method, data, headers, deferred);
             };
 
             terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
@@ -242,8 +237,12 @@ defineSuite([
             var baseUrl = 'made/up/url';
 
             var deferreds = [];
-
+            var loadRealTile = true;
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                if (loadRealTile) {
+                    loadRealTile = false;
+                    return loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.terrain', responseType, method, data, headers, deferred);
+                }
                 // Do nothing, so requests never complete
                 deferreds.push(deferred);
             };
@@ -252,26 +251,39 @@ defineSuite([
                 url : baseUrl
             });
 
+            var promises = [];
             return pollToPromise(function() {
                 return terrainProvider.ready;
-            }).then(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-                expect(promise).toBeDefined();
+            })
+                .then(function() {
+                    var promise = terrainProvider.requestTileGeometry(1, 2, 3);
+                    expect(promise).toBeDefined();
+                    return promise;
+                })
+                .then(function(terrainData) {
+                    expect(terrainData).toBeDefined();
+                    for (var i = 0; i < 10; ++i) {
+                        promises.push(terrainProvider.requestTileGeometry(i, i, i));
+                    }
 
-                var i;
-                for (i = 0; i < 10; ++i) {
-                    promise = terrainProvider.requestTileGeometry(0, 0, 0);
-                }
+                    return terrainProvider.requestTileGeometry(1, 2, 3);
+                })
+                .then(function(terrainData) {
+                    expect(terrainData).toBeUndefined();
+                    for (var i = 0; i < deferreds.length; ++i) {
+                        deferreds[i].resolve();
+                    }
 
-                return terrainProvider.requestTileGeometry(0, 0, 0)
-                    .then(function(terrainData) {
-                        expect(terrainData).toBeUndefined();
-
-                        for (i = 0; i < deferreds.length; ++i) {
-                            deferreds[i].resolve();
-                        }
-                    });
-            });
+                    // Parsing terrain will fail, so just eat the errors and request the tile again
+                    return when.all(promises)
+                        .otherwise(function() {
+                            loadRealTile = true;
+                            return terrainProvider.requestTileGeometry(1, 2, 3);
+                        });
+                })
+                .then(function(terrainData) {
+                    expect(terrainData).toBeDefined();
+                });
         });
 
         it('supports getTileDataAvailable()', function() {
@@ -292,6 +304,8 @@ defineSuite([
                 var tileInfo = terrainProvider._metadata._tileInfo;
                 var info = tileInfo[GoogleEarthEnterpriseMetadata.tileXYToQuadKey(0, 1, 0)];
                 info._bits = 0x7F; // Remove terrain bit from 0,1,0 tile
+                info.terrainState = 1; // NONE
+                info.ancestorHasTerrain = true;
 
                 expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);
                 expect(terrainProvider.getTileDataAvailable(0, 1, 0)).toBe(false);

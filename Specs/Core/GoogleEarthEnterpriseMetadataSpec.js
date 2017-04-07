@@ -68,7 +68,7 @@ defineSuite([
     it('populateSubtree', function() {
         var quad = '0123';
         var index = 0;
-        spyOn(GoogleEarthEnterpriseMetadata.prototype, '_getQuadTreePacket').and.callFake(function(quadKey, version) {
+        spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
             quadKey = defaultValue(quadKey, '') + index.toString();
             this._tileInfo[quadKey] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
             index = (index + 1) % 4;
@@ -76,18 +76,20 @@ defineSuite([
             return when();
         });
 
-        var metadata = new GoogleEarthEnterpriseMetadata('http://test.server');
+        var metadata = new GoogleEarthEnterpriseMetadata({
+            url: 'http://test.server'
+        });
         return metadata.readyPromise
             .then(function() {
                 var tileXY = GoogleEarthEnterpriseMetadata.quadKeyToTileXY(quad);
                 return metadata.populateSubtree(tileXY.x, tileXY.y, tileXY.level);
             })
             .then(function() {
-                expect(GoogleEarthEnterpriseMetadata.prototype._getQuadTreePacket.calls.count()).toEqual(4);
-                expect(GoogleEarthEnterpriseMetadata.prototype._getQuadTreePacket).toHaveBeenCalledWith();
-                expect(GoogleEarthEnterpriseMetadata.prototype._getQuadTreePacket).toHaveBeenCalledWith('0', 1);
-                expect(GoogleEarthEnterpriseMetadata.prototype._getQuadTreePacket).toHaveBeenCalledWith('01', 1);
-                expect(GoogleEarthEnterpriseMetadata.prototype._getQuadTreePacket).toHaveBeenCalledWith('012', 1);
+                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket.calls.count()).toEqual(4);
+                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket).toHaveBeenCalledWith();
+                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket).toHaveBeenCalledWith('0', 1);
+                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket).toHaveBeenCalledWith('01', 1);
+                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket).toHaveBeenCalledWith('012', 1);
 
                 var tileInfo = metadata._tileInfo;
                 expect(tileInfo['0']).toBeDefined();
@@ -95,46 +97,6 @@ defineSuite([
                 expect(tileInfo['012']).toBeDefined();
                 expect(tileInfo['0123']).toBeDefined();
             });
-    });
-
-    it('getMetadata/releaseMetadata', function() {
-        spyOn(GoogleEarthEnterpriseMetadata.prototype, '_getQuadTreePacket').and.callFake(function(quadKey, version) {
-            return when();
-        });
-
-        var server1 = GoogleEarthEnterpriseMetadata.getMetadata('http://test.server1');
-        var server1a = GoogleEarthEnterpriseMetadata.getMetadata('http://test.server1');
-        var server2 = GoogleEarthEnterpriseMetadata.getMetadata('http://test.server2');
-
-        expect(server1a).toBe(server1);
-        expect(server1).not.toBe(server2);
-
-        GoogleEarthEnterpriseMetadata.releaseMetadata(server1);
-        GoogleEarthEnterpriseMetadata.releaseMetadata(server1a);
-
-        var server1b = GoogleEarthEnterpriseMetadata.getMetadata('http://test.server1');
-        expect(server1b).not.toBe(server1);
-    });
-
-    it('constructor throws when url is not specified', function() {
-        function constructWithoutServer() {
-            return new GoogleEarthEnterpriseMetadata();
-        }
-        expect(constructWithoutServer).toThrowDeveloperError();
-    });
-
-    it('getMetadata throws when url is not specified', function() {
-        function constructWithoutServer() {
-            return GoogleEarthEnterpriseMetadata.getMetadata();
-        }
-        expect(constructWithoutServer).toThrowDeveloperError();
-    });
-
-    it('releaseMetadata throws when object is not specified', function() {
-        function constructWithoutServer() {
-            return GoogleEarthEnterpriseMetadata.releaseMetadata();
-        }
-        expect(constructWithoutServer).toThrowDeveloperError();
     });
 
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
@@ -235,7 +197,9 @@ defineSuite([
             return new Uint8Array(data);
         });
 
-        var provider = new GoogleEarthEnterpriseMetadata(baseurl);
+        var provider = new GoogleEarthEnterpriseMetadata({
+            url: baseurl
+        });
 
         return provider.readyPromise.then(function(result) {
             expect(result).toBe(true);
@@ -253,7 +217,9 @@ defineSuite([
 
     it('rejects readyPromise on error', function() {
         var url = 'host.invalid/';
-        var provider = new GoogleEarthEnterpriseMetadata(url);
+        var provider = new GoogleEarthEnterpriseMetadata({
+            url: url
+        });
 
         return provider.readyPromise.then(function () {
             fail('should not resolve');
@@ -283,7 +249,10 @@ defineSuite([
             return new Uint8Array(data);
         });
 
-        var provider = new GoogleEarthEnterpriseMetadata(baseurl, proxy);
+        var provider = new GoogleEarthEnterpriseMetadata({
+            url : baseurl,
+            proxy : proxy
+        });
 
         expect(provider.url).toEqual(baseurl);
         expect(provider.proxy).toEqual(proxy);
