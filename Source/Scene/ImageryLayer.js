@@ -669,7 +669,9 @@ define([
 
         function success(image) {
             if (!defined(image)) {
-                return failure();
+                // Too many parallel requests, so postpone loading tile.
+                imagery.state = ImageryState.UNLOADED;
+                return;
             }
 
             imagery.image = image;

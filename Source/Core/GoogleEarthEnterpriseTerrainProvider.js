@@ -18,6 +18,7 @@ define([
         './loadArrayBuffer',
         './Math',
         './Rectangle',
+        './RuntimeError',
         './TerrainProvider',
         './throttleRequestByServer',
         './TileProviderError',
@@ -41,6 +42,7 @@ define([
         loadArrayBuffer,
         CesiumMath,
         Rectangle,
+        RuntimeError,
         TerrainProvider,
         throttleRequestByServer,
         TileProviderError,
@@ -435,9 +437,12 @@ define([
                                         info.terrainState = TerrainState.NONE;
                                     }
                                 }
+
+                                return when.reject(new RuntimeError('Failed to load terrain.'));
                             })
                             .otherwise(function(error) {
                                 info.terrainState = TerrainState.NONE;
+                                return when.reject(error);
                             });
                     } else if(!info.ancestorHasTerrain) {
                         // We haven't reached a level with terrain, so return the ellipsoid
@@ -448,6 +453,8 @@ define([
                         });
                     }
                 }
+
+                return when.reject(new RuntimeError('Failed to load terrain.'));
             });
     };
 

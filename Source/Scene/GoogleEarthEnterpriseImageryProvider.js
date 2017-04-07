@@ -466,7 +466,7 @@ define([
                     if (defined(info)) {
                         if (info.hasImagery()) {
                             var url = buildImageUrl(that, info, x, y, level);
-                            return loadArrayBuffer(url);
+                            return throttleRequestByServer(url, loadArrayBuffer);
                         }
                     }
 
@@ -474,17 +474,11 @@ define([
                 });
         }
 
-        var quadkey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
-        if (!defined(loadedImages[quadkey])) {
-            loadedImages[quadkey] = 0;
-        }
-        if (++loadedImages[quadkey] > 10) {
-            debugger;
-            console.error(x + ', ' + y + ', ' + level + ' loaded ' + loadedImages[quadkey] + ' times.');
-        }
-
         return promise
             .then(function(image) {
+                if (!defined(image)) {
+                    return; // Throttled
+                }
                 if (image === invalidImage) {
                     return invalidImage;
                 }
