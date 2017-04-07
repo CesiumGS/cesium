@@ -27,14 +27,17 @@
     function startup(Cesium) {
         'use strict';
 //Sandcastle_Begin
+var geeMetadata = new Cesium.GoogleEarthEnterpriseMetadata({
+    url : 'http://www.earthenterprise.org/3d',
+    proxy : new Cesium.DefaultProxy('/proxy/')
+});
+
 var viewer = new Cesium.Viewer('cesiumContainer', {
     imageryProvider : new Cesium.GoogleEarthEnterpriseImageryProvider({
-        url : 'http://www.earthenterprise.org/3d',
-        proxy : new Cesium.DefaultProxy('/proxy/')
+        metadata : geeMetadata
     }),
     terrainProvider : new Cesium.GoogleEarthEnterpriseTerrainProvider({
-        url : 'http://www.earthenterprise.org/3d',
-        proxy : new Cesium.DefaultProxy('/proxy/')
+        metadata : geeMetadata
     }),
     baseLayerPicker : false
 });

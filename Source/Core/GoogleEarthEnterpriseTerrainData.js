@@ -164,7 +164,7 @@ define([
 
         // Compute the center of the tile for RTC rendering.
         var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
-        
+
         var levelZeroMaxError = 40075.16; // From Google's Doc
         var thisLevelMaxError = levelZeroMaxError / (1 << level);
         this._skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
@@ -176,7 +176,8 @@ define([
             relativeToCenter : center,
             ellipsoid : ellipsoid,
             skirtHeight : this._skirtHeight,
-            exaggeration : exaggeration
+            exaggeration : exaggeration,
+            includeWebMercatorT : true
         });
 
         if (!defined(verticesPromise)) {

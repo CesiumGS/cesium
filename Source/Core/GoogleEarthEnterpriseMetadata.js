@@ -99,7 +99,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = options.url;
+        this._url = appendForwardSlash(options.url);
         this._proxy = options.proxy;
 
         this._tileInfo = {};

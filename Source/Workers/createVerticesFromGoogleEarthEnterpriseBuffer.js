@@ -15,6 +15,7 @@ define([
     '../Core/Rectangle',
     '../Core/TerrainEncoding',
     '../Core/Transforms',
+    '../Core/WebMercatorProjection',
     './createTaskProcessorWorker'
 ], function(
     AxisAlignedBoundingBox,
@@ -32,6 +33,7 @@ define([
     Rectangle,
     TerrainEncoding,
     Transforms,
+    WebMercatorProjection,
     createTaskProcessorWorker) {
     'use strict';
 
@@ -58,7 +60,8 @@ define([
         parameters.rectangle = Rectangle.clone(parameters.rectangle);
 
         var statistics = processBuffer(parameters.buffer, parameters.relativeToCenter, parameters.ellipsoid,
-            parameters.rectangle, parameters.nativeRectangle, parameters.exaggeration, parameters.skirtHeight);
+            parameters.rectangle, parameters.nativeRectangle, parameters.exaggeration, parameters.skirtHeight,
+            parameters.includeWebMercatorT);
         var vertices = statistics.vertices;
         transferableObjects.push(vertices.buffer);
         var indices = statistics.indices;
@@ -86,7 +89,7 @@ define([
     var minimumScratch = new Cartesian3();
     var maximumScratch = new Cartesian3();
     var matrix4Scratch = new Matrix4();
-    function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle, exaggeration, skirtHeight) {
+    function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle, exaggeration, skirtHeight, includeWebMercatorT) {
         var geographicWest;
         var geographicSouth;
         var geographicEast;
@@ -115,6 +118,13 @@ define([
 
         var fromENU = Transforms.eastNorthUpToFixedFrame(relativeToCenter, ellipsoid);
         var toENU = Matrix4.inverseTransformation(fromENU, matrix4Scratch);
+
+        var southMercatorY;
+        var oneOverMercatorHeight;
+        if (includeWebMercatorT) {
+            southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(geographicSouth);
+            oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(geographicNorth) - southMercatorY);
+        }
 
         var dv = new DataView(buffer);
 
@@ -172,6 +182,7 @@ define([
         var positions = new Array(size);
         var uvs = new Array(size);
         var heights = new Array(size);
+        var webMercatorTs = includeWebMercatorT ? new Array(size) : [];
         var indices = new Array(indicesSize);
 
         // Points are laid out in rows starting at SW, so storing border points as we
@@ -278,6 +289,10 @@ define([
                 var pos = ellipsoid.cartographicToCartesian(scratchCartographic);
                 positions[pointOffset] = pos;
 
+                if (includeWebMercatorT) {
+                    webMercatorTs[pointOffset] = (WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude) - southMercatorY) * oneOverMercatorHeight;
+                }
+
                 Matrix4.multiplyByPoint(toENU, pos, scratchCartesian);
 
                 Cartesian3.minimumByComponent(scratchCartesian, minimum, minimum);
@@ -302,6 +317,9 @@ define([
         positions.length = pointOffset;
         uvs.length = pointOffset;
         heights.length = pointOffset;
+        if (includeWebMercatorT) {
+            webMercatorTs.length = pointOffset;
+        }
 
         var vertexCountWithoutSkirts = pointOffset;
         var skirtIndex = indicesOffset;
@@ -348,6 +366,9 @@ define([
                     positions.push(pos);
                     heights.push(height);
                     uvs.push(Cartesian2.clone(uvs[borderIndex])); // Copy UVs from border point
+                    if (includeWebMercatorT) {
+                        webMercatorTs.push(webMercatorTs[borderIndex]);
+                    }
 
                     Matrix4.multiplyByPoint(toENU, pos, scratchCartesian);
 
@@ -387,12 +408,12 @@ define([
         var occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(relativeToCenter, positions);
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
-        var encoding = new TerrainEncoding(aaBox, hMin, maxHeight, fromENU, false, false);
+        var encoding = new TerrainEncoding(aaBox, hMin, maxHeight, fromENU, false, includeWebMercatorT);
         var vertices = new Float32Array(size * encoding.getStride());
 
         var bufferIndex = 0;
         for (var j = 0; j < size; ++j) {
-            bufferIndex = encoding.encode(vertices, bufferIndex, positions[j], uvs[j], heights[j]);
+            bufferIndex = encoding.encode(vertices, bufferIndex, positions[j], uvs[j], heights[j], undefined, webMercatorTs[j]);
         }
 
         return {
