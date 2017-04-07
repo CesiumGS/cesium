@@ -268,9 +268,7 @@ define([
                         index: pointOffset,
                         cartographic: Cartographic.clone(scratchCartographic)
                     });
-                }
-
-                if (Math.abs(latitude - geographicSouth) < halfStepY) {
+                } else if (Math.abs(latitude - geographicSouth) < halfStepY) {
                     southBorder.push({
                         index: pointOffset,
                         cartographic: Cartographic.clone(scratchCartographic)
@@ -326,11 +324,9 @@ define([
 
         // Add skirt points
         var hMin = minHeight;
-        quadBorderPoints = [];
-        quadBorderIndices = [];
-        function addSkirt(borderPoints, longitudeFudge, latitudeFudge) {
+        var lastBorderPoint;
+        function addSkirt(borderPoints, fudgeFactor, eastOrWest, cornerFudge) {
             var count = borderPoints.length;
-            var lastBorderPoint;
             for (var j = 0; j < count; ++j) {
                 var borderPoint = borderPoints[j];
                 var borderCartographic = borderPoint.cartographic;
@@ -345,39 +341,33 @@ define([
 
                 Cartographic.fromRadians(longitude, latitude, height, scratchCartographic);
 
-                // Detect duplicates at the corners and only had the first one
-                // We detect based on not fudged points so a corner point is fudged in both directions
-                var add = true;
-                var index = indexOfEpsilon(quadBorderPoints, scratchCartographic, Cartographic);
-                if (index === -1) {
-                    quadBorderPoints.push(Cartographic.clone(scratchCartographic));
-                    quadBorderIndices.push(currentIndex);
-                } else {
-                    currentIndex = quadBorderIndices[index];
-                    ellipsoid.cartesianToCartographic(positions[currentIndex], scratchCartographic);
-                    add = false;
+                // Adjust sides to angle out
+                if (eastOrWest) {
+                    scratchCartographic.longitude += fudgeFactor;
                 }
 
-                scratchCartographic.longitude += longitudeFudge;
-                scratchCartographic.latitude += latitudeFudge;
-
-                if (add) {
-                    var pos = ellipsoid.cartographicToCartesian(scratchCartographic);
-                    positions.push(pos);
-                    heights.push(height);
-                    uvs.push(Cartesian2.clone(uvs[borderIndex])); // Copy UVs from border point
-                    if (includeWebMercatorT) {
-                        webMercatorTs.push(webMercatorTs[borderIndex]);
-                    }
-
-                    Matrix4.multiplyByPoint(toENU, pos, scratchCartesian);
-
-                    Cartesian3.minimumByComponent(scratchCartesian, minimum, minimum);
-                    Cartesian3.maximumByComponent(scratchCartesian, maximum, maximum);
-                } else {
-                    // We found a corner point - it was adjusted for this side so write it back
-                    ellipsoid.cartographicToCartesian(scratchCartographic, positions[currentIndex]);
+                // Adjust top or bottom to angle out
+                // Since corners are in the east/west arrays angle the first and last points as well
+                if (!eastOrWest) {
+                    scratchCartographic.latitude += fudgeFactor;
+                } else if (j === (count-1)) {
+                    scratchCartographic.latitude += cornerFudge;
+                } else if (j === 0) {
+                    scratchCartographic.latitude -= cornerFudge;
                 }
+
+                var pos = ellipsoid.cartographicToCartesian(scratchCartographic);
+                positions.push(pos);
+                heights.push(height);
+                uvs.push(Cartesian2.clone(uvs[borderIndex])); // Copy UVs from border point
+                if (includeWebMercatorT) {
+                    webMercatorTs.push(webMercatorTs[borderIndex]);
+                }
+
+                Matrix4.multiplyByPoint(toENU, pos, scratchCartesian);
+
+                Cartesian3.minimumByComponent(scratchCartesian, minimum, minimum);
+                Cartesian3.maximumByComponent(scratchCartesian, maximum, maximum);
 
                 if (defined(lastBorderPoint)) {
                     var lastBorderIndex = lastBorderPoint.index;
@@ -388,11 +378,26 @@ define([
             }
         }
 
+        // Sort counter clockwise from NW corner
+        // Corner points are in the east/west arrays
+        westBorder.sort(function(a, b) {
+            return b.cartographic.latitude - a.cartographic.latitude;
+        });
+        southBorder.sort(function(a, b) {
+            return a.cartographic.longitude - b.cartographic.longitude;
+        });
+        eastBorder.sort(function(a, b) {
+            return a.cartographic.latitude - b.cartographic.latitude;
+        });
+        northBorder.sort(function(a, b) {
+            return b.cartographic.longitude - a.cartographic.longitude;
+        });
+
         var percentage = 0.00001;
-        addSkirt(westBorder, -percentage*rectangleWidth, 0);
-        addSkirt(southBorder, 0, -percentage*rectangleHeight);
-        addSkirt(eastBorder, percentage*rectangleWidth, 0);
-        addSkirt(northBorder, 0, percentage*rectangleHeight);
+        addSkirt(westBorder, -percentage*rectangleWidth, true, -percentage*rectangleHeight);
+        addSkirt(southBorder, -percentage*rectangleHeight, false);
+        addSkirt(eastBorder, percentage*rectangleWidth, true, percentage*rectangleHeight);
+        addSkirt(northBorder, percentage*rectangleHeight, false);
 
         size = positions.length; // Get new size with skirt vertices
 
