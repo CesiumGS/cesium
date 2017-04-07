@@ -167,7 +167,7 @@ define([
 
         var levelZeroMaxError = 40075.16; // From Google's Doc
         var thisLevelMaxError = levelZeroMaxError / (1 << level);
-        this._skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
+        this._skirtHeight = Math.min(thisLevelMaxError * 8.0, 1000.0);
 
         var verticesPromise = taskProcessor.scheduleTask({
             buffer : this._buffer,

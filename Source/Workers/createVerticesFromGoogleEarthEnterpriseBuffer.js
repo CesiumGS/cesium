@@ -399,6 +399,17 @@ define([
         addSkirt(eastBorder, percentage*rectangleWidth, true, percentage*rectangleHeight);
         addSkirt(northBorder, percentage*rectangleHeight, false);
 
+        // Since the corner between the north and west sides is in the west array, generate the last
+        //  two triangles between the last north vertex and the first west vertex
+        if (westBorder.length > 0 && northBorder.length > 0) {
+            var firstBorderIndex = westBorder[0].index;
+            var firstSkirtIndex = vertexCountWithoutSkirts;
+            var lastBorderIndex = northBorder[northBorder.length-1].index;
+            var lastSkirtIndex = positions.length - 1;
+
+            indices.push(lastBorderIndex, lastSkirtIndex, firstSkirtIndex, firstSkirtIndex, firstBorderIndex, lastBorderIndex);
+        }
+        
         size = positions.length; // Get new size with skirt vertices
 
         var boundingSphere3D = BoundingSphere.fromPoints(positions);
