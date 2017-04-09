@@ -2167,17 +2167,17 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it ('throws if distance function takes mismatching types of arguments', function() { //failed
+    it ('throws if distance function takes mismatching types of arguments', function() {
         expect(function() {
-            return new Expression('distance(1, vec2(3.0, 2.0)');
+            return new Expression('distance(1, vec2(3.0, 2.0)').evaluate(frameState,undefined);
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('distance(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))');
+            return new Expression('distance(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState,undefined);
         }).toThrowDeveloperError();
     });
 
-    it ('evaluates the dot function', function() { //failed
+    it ('evaluates the dot function', function() {
         var expression = new Expression('dot(1, 2)');
         expect(expression.evaluate(frameState, undefined)).toEqual(2.0);
 
@@ -2201,18 +2201,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it ('throws if dot function takes mismatching types of arguments', function() { //failed
+    it ('throws if dot function takes mismatching types of arguments', function() {
         expect(function() {
-            return new Expression('dot(1, vec2(3.0, 2.0)');
+            return new Expression('dot(1, vec2(3.0, 2.0)').evaluate(frameState,undefined);
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('dot(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))');
+            return new Expression('dot(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState,undefined);
         }).toThrowDeveloperError();
     });
 
-    it ('evaluates the cross function', function() { //failed; unexpected function call cross
-        var expression = new Expression('cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))'); //0,0,0
+    it ('evaluates the cross function', function() {
+        var expression = new Expression('cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))');
         expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(0.0, 0.0, 0.0));
 
         expression = new Expression('cross(vec3(-1.0, -1.0, -1.0), vec3(0.0, -2.0, -5.0))');
@@ -2234,11 +2234,11 @@ defineSuite([
 
     it ('throws if cross function takes mismatching types of arguments', function() {
         expect(function() {
-            return new Expression('cross(vec2(1.0, 2.0), vec2(3.0, 2.0)');
+            return new Expression('cross(vec2(1.0, 2.0), vec2(3.0, 2.0)').evaluate(frameState,undefined);
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('cross(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))');
+            return new Expression('cross(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState,undefined);
         }).toThrowDeveloperError();
     });
 
