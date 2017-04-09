@@ -10,8 +10,11 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/GeometryInstance',
+        '../Core/IntersectionTests',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
+        '../Core/Plane',
+        '../Core/Ray',
         '../Core/Rectangle',
         '../Core/RectangleOutlineGeometry',
         './PerInstanceColorAppearance',
@@ -28,8 +31,11 @@ define([
         DeveloperError,
         Ellipsoid,
         GeometryInstance,
+        IntersectionTests,
         Matrix4,
         OrientedBoundingBox,
+        Plane,
+        Ray,
         Rectangle,
         RectangleOutlineGeometry,
         PerInstanceColorAppearance,
@@ -153,9 +159,13 @@ define([
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3Scratch2 = new Cartesian3();
+    var cartesian3Scratch3 = new Cartesian3();
+    var eastWestNormalScratch = new Cartesian3();
     var westernMidpointScratch = new Cartesian3();
     var easternMidpointScratch = new Cartesian3();
     var cartographicScratch = new Cartographic();
+    var planeScratch = new Plane(Cartesian3.ZERO, 0.0);
+    var rayScratch = new Ray();
 
     function computeBox(tileBB, rectangle, ellipsoid) {
         ellipsoid.cartographicToCartesian(Rectangle.southwest(rectangle), tileBB.southwestCornerCartesian);
@@ -180,14 +190,47 @@ define([
         Cartesian3.normalize(eastNormal, tileBB.eastNormal);
 
         // Compute the normal of the plane bounding the southern edge of the tile.
-        var southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.southeast(rectangle), cartesian3Scratch2);
         var westVector = Cartesian3.subtract(westernMidpointCartesian, easternMidpointCartesian, cartesian3Scratch);
-        var southNormal = Cartesian3.cross(southeastCornerNormal, westVector, cartesian3Scratch2);
+        var eastWestNormal = Cartesian3.normalize(westVector, eastWestNormalScratch);
+
+        var south = rectangle.south;
+        var southSurfaceNormal;
+
+        if (south > 0.0) {
+            // Compute a plane that doesn't cut through the tile.
+            cartographicScratch.longitude = (rectangle.west +  rectangle.east) * 0.5;
+            cartographicScratch.latitude = south;
+            var southCenterCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, rayScratch.origin);
+            Cartesian3.clone(eastWestNormal, rayScratch.direction);
+            var westPlane = Plane.fromPointNormal(tileBB.southwestCornerCartesian, tileBB.westNormal, planeScratch);
+            // Find a point that is on the west and the south planes
+            IntersectionTests.rayPlane(rayScratch, westPlane, tileBB.southwestCornerCartesian);
+            southSurfaceNormal = ellipsoid.geodeticSurfaceNormal(southCenterCartesian, cartesian3Scratch2);
+
+        } else {
+            southSurfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.southeast(rectangle), cartesian3Scratch2);
+        }
+        var southNormal = Cartesian3.cross(southSurfaceNormal, westVector, cartesian3Scratch3);
         Cartesian3.normalize(southNormal, tileBB.southNormal);
 
         // Compute the normal of the plane bounding the northern edge of the tile.
-        var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.northwest(rectangle), cartesian3Scratch2);
-        var northNormal = Cartesian3.cross(westVector, northwestCornerNormal, cartesian3Scratch2);
+        var north = rectangle.north;
+        var northSurfaceNormal;
+        if (north < 0.0) {
+            // Compute a plane that doesn't cut through the tile.
+            cartographicScratch.longitude = (rectangle.west + rectangle.east) * 0.5;
+            cartographicScratch.latitude = north;
+            var northCenterCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, rayScratch.origin);
+            Cartesian3.negate(eastWestNormal, rayScratch.direction);
+            var eastPlane = Plane.fromPointNormal(tileBB.northeastCornerCartesian, tileBB.eastNormal, planeScratch);
+            // Find a point that is on the east and the north planes
+            IntersectionTests.rayPlane(rayScratch, eastPlane, tileBB.northeastCornerCartesian);
+            northSurfaceNormal = ellipsoid.geodeticSurfaceNormal(northCenterCartesian, cartesian3Scratch2);
+
+        } else {
+            northSurfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.northwest(rectangle), cartesian3Scratch2);
+        }
+        var northNormal = Cartesian3.cross(westVector, northSurfaceNormal, cartesian3Scratch3);
         Cartesian3.normalize(northNormal, tileBB.northNormal);
     }
 

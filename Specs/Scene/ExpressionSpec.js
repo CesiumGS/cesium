@@ -2011,11 +2011,11 @@ defineSuite([
 
     it('throws if fract function takes an invalid number of arguments', function() {
         expect(function() {
-            return new Expression('log2()');
+            return new Expression('fract()');
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('log2(1, 2)');
+            return new Expression('fract(1, 2)');
         }).toThrowDeveloperError();
     });
 
@@ -2239,6 +2239,30 @@ defineSuite([
 
         expect(function() {
             return new Expression('cross(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState,undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates length function', function() {
+        var expression = new Expression('length(-3.0)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(3.0);
+
+        expression = new Expression('length(vec2(-3.0, 4.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(5.0);
+
+        expression = new Expression('length(vec3(2.0, 3.0, 6.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(7.0);
+
+        expression = new Expression('length(vec4(2.0, 4.0, 7.0, 10.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(13.0);
+    });
+
+    it('throws if length function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('length()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('length(vec2(0.0, 1.0), vec2(0.0, 1.0))');
         }).toThrowDeveloperError();
     });
 

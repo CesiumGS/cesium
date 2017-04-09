@@ -2259,11 +2259,12 @@ define([
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'),
+     * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz',
      *      {
-     *          camera: viewer.scene.camera,
-     *          canvas: viewer.scene.canvas
-     *      });
+     *           camera: viewer.scene.camera,
+     *           canvas: viewer.scene.canvas
+     *      })
+     * );
      */
     function KmlDataSource(options) {
         options = defaultValue(options, {});

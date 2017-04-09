@@ -7,11 +7,14 @@ defineSuite([
         'Core/defined',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
+        'Core/Math',
         'Core/Transforms',
         'Scene/Cesium3DTileStyle',
         'Scene/Expression',
+        'Scene/PerspectiveFrustum',
         'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
+        'Specs/createScene',
+        'ThirdParty/when'
     ], function(
         PointCloud3DTileContent,
         Cartesian3,
@@ -20,11 +23,14 @@ defineSuite([
         defined,
         HeadingPitchRange,
         HeadingPitchRoll,
+        CesiumMath,
         Transforms,
         Cesium3DTileStyle,
         Expression,
+        PerspectiveFrustum,
         Cesium3DTilesTester,
-        createScene) {
+        createScene,
+        when) {
     'use strict';
 
     var scene;
@@ -62,6 +68,12 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
+
         setCamera(centerLongitude, centerLatitude);
     });
 
@@ -624,6 +636,64 @@ defineSuite([
                     show : '1 < "2"'
                 }));
             }).toThrowDeveloperError();
+        });
+    });
+
+    it('gets memory usage', function() {
+        var promises = [
+            Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl),
+            Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl),
+            Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl),
+            Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl)
+        ];
+
+        // 1000 points
+        var expectedVertexMemory = [
+            1000 * 12, // 3 floats (xyz)
+            1000 * 15, // 3 floats (xyz), 3 bytes (rgb)
+            1000 * 27, // 3 floats (xyz), 3 bytes (rgb), 3 floats (normal)
+            1000 * 11  // 3 shorts (quantized xyz), 3 bytes (rgb), 2 bytes (oct-encoded normal)
+        ];
+
+        return when.all(promises).then(function(tilesets) {
+            var length = tilesets.length;
+            for (var i = 0; i < length; ++i) {
+                var content = tilesets[i]._root.content;
+                expect(content.vertexMemorySizeInBytes).toEqual(expectedVertexMemory[i]);
+                expect(content.textureMemorySizeInBytes).toEqual(0);
+            }
+        });
+    });
+
+    it('gets memory usage for batch point cloud', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
+            var content = tileset._root.content;
+
+            // Point cloud consists of positions, colors, normals, and batchIds
+            // 3 floats (xyz), 3 floats (normal), 1 byte (batchId)
+            var pointCloudVertexMemory = 1000 * 25;
+
+            // One RGBA byte pixel per feature
+            var batchTextureMemorySizeInBytes = content.featuresLength * 4;
+            var pickTextureMemorySizeInBytes = content.featuresLength * 4;
+
+            // Features have not been picked or colored yet, so the batch table contribution is 0.
+            expect(content.vertexMemorySizeInBytes).toEqual(pointCloudVertexMemory);
+            expect(content.textureMemorySizeInBytes).toEqual(0);
+            expect(content.batchTableMemorySizeInBytes).toEqual(0);
+
+            // Color a feature and expect the texture memory to increase
+            content.getFeature(0).color = Color.RED;
+            scene.renderForSpecs();
+            expect(content.vertexMemorySizeInBytes).toEqual(pointCloudVertexMemory);
+            expect(content.textureMemorySizeInBytes).toEqual(0);
+            expect(content.batchTableMemorySizeInBytes).toEqual(batchTextureMemorySizeInBytes);
+
+            // Pick the tile and expect the texture memory to increase
+            scene.pickForSpecs();
+            expect(content.vertexMemorySizeInBytes).toEqual(pointCloudVertexMemory);
+            expect(content.textureMemorySizeInBytes).toEqual(0);
+            expect(content.batchTableMemorySizeInBytes).toEqual(batchTextureMemorySizeInBytes + pickTextureMemorySizeInBytes);
         });
     });
 

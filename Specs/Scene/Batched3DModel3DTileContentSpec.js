@@ -2,6 +2,7 @@
 defineSuite([
         'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/deprecationWarning',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
@@ -11,6 +12,7 @@ defineSuite([
     ], function(
         Batched3DModel3DTileContent,
         Cartesian3,
+        Color,
         deprecationWarning,
         HeadingPitchRange,
         HeadingPitchRoll,
@@ -32,7 +34,11 @@ defineSuite([
     var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
     var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
     var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
-    var deprecatedUrl = './Data/Cesium3DTiles/Batched/BatchedDeprecated/';
+    var texturedUrl = './Data/Cesium3DTiles/Batched/BatchedTextured/';
+    var compressedTexturesUrl = './Data/Cesium3DTiles/Batched/BatchedCompressedTextures/';
+    var deprecated1Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated1/';
+    var deprecated2Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated2/';
+    var gltfZUpUrl = './Data/Cesium3DTiles/Batched/BatchedGltfZUp';
 
     function setCamera(longitude, latitude) {
         // One feature is located at the center, point the camera there
@@ -70,9 +76,21 @@ defineSuite([
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'b3dm');
     });
 
-    it('recognizes the legacy b3dm format', function() {
+    it('recognizes the legacy 20-byte header', function() {
         spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
-        return Cesium3DTilesTester.loadTileset(scene, deprecatedUrl)
+        return Cesium3DTilesTester.loadTileset(scene, deprecated1Url)
+            .then(function(tileset) {
+                expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
+                Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+                var batchTable = tileset._root._content.batchTable;
+                expect(batchTable.batchTableJson).toBeDefined();
+                expect(batchTable.batchTableBinary).toBeUndefined();
+            });
+    });
+
+    it('recognizes the legacy 24-byte header', function() {
+        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
+        return Cesium3DTilesTester.loadTileset(scene, deprecated2Url)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
@@ -84,7 +102,7 @@ defineSuite([
 
     it('logs deprecation warning for use of BATCHID without prefixed underscore', function() {
         spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
-        return Cesium3DTilesTester.loadTileset(scene, deprecatedUrl)
+        return Cesium3DTilesTester.loadTileset(scene, deprecated1Url)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
@@ -138,6 +156,24 @@ defineSuite([
     it('renders with KHR_materials_common extension', function() {
         // Tests that the batchId attribute and CESIUM_RTC extension are handled correctly
         return Cesium3DTilesTester.loadTileset(scene, withKHRMaterialsCommonUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with textures', function() {
+        return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+    });
+
+    it('renders with compressed textures', function() {
+        return Cesium3DTilesTester.loadTileset(scene, compressedTexturesUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+    });
+
+    it('renders with a gltf z-up axis', function() {
+        return Cesium3DTilesTester.loadTileset(scene, gltfZUpUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
@@ -198,6 +234,41 @@ defineSuite([
             expect(function(){
                 content.getFeature();
             }).toThrowDeveloperError();
+        });
+    });
+
+    it('gets memory usage', function() {
+        return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
+            var content = tileset._root.content;
+
+            // 10 buildings, 32 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) and 1 ushort component (batchId) per vertex.
+            // 10 * ((24 * (8 * 4 + 1 * 2)) + (36 * 2)) = 8880
+            var vertexMemorySizeInBytes = 8880;
+
+            // Texture is 128x128 RGBA bytes, not mipmapped
+            var textureMemorySizeInBytes = 65536;
+
+            // One RGBA byte pixel per feature
+            var batchTextureMemorySizeInBytes = content.featuresLength * 4;
+            var pickTextureMemorySizeInBytes = content.featuresLength * 4;
+
+            // Features have not been picked or colored yet, so the batch table contribution is 0.
+            expect(content.vertexMemorySizeInBytes).toEqual(vertexMemorySizeInBytes);
+            expect(content.textureMemorySizeInBytes).toEqual(textureMemorySizeInBytes);
+            expect(content.batchTableMemorySizeInBytes).toEqual(0);
+
+            // Color a feature and expect the texture memory to increase
+            content.getFeature(0).color = Color.RED;
+            scene.renderForSpecs();
+            expect(content.vertexMemorySizeInBytes).toEqual(vertexMemorySizeInBytes);
+            expect(content.textureMemorySizeInBytes).toEqual(textureMemorySizeInBytes);
+            expect(content.batchTableMemorySizeInBytes).toEqual(batchTextureMemorySizeInBytes);
+
+            // Pick the tile and expect the texture memory to increase
+            scene.pickForSpecs();
+            expect(content.vertexMemorySizeInBytes).toEqual(vertexMemorySizeInBytes);
+            expect(content.textureMemorySizeInBytes).toEqual(textureMemorySizeInBytes);
+            expect(content.batchTableMemorySizeInBytes).toEqual(batchTextureMemorySizeInBytes + pickTextureMemorySizeInBytes);
         });
     });
 

@@ -12,31 +12,69 @@ Change Log
    * `Cesium3DTilesInspector`
    * `Cesium3DTilesInspectorViewModel`
 
+### 1.33 - 2017-05-01
+
+* Added `disableDepthTestDistance` to billboards, points and labels. This sets the distance to the camera where the depth test will be disabled. Setting it to zero (the default) will alwasy enable the depth test. Setting it to `Number.POSITVE_INFINITY` will never enabled the depth test. Also added `scene.minimumDisableDepthTestDistance` to change the default value from zero. [#5166](https://github.com/AnalyticalGraphicsInc/cesium/pull/5166)
+
+### 1.32 - 2017-04-03
+
+* Deprecated
+    * The `left`, `right`, `bottom`, and `top` properties of `OrthographicFrustum` are deprecated and will be removed in 1.33. Use `OrthographicOffCenterFrustum` instead.
+* Breaking changes
+    * Removed `ArcGisImageServerTerrainProvider`.
+    * The top-level `properties` in an `Entity` created by `GeoJsonDataSource` are now instances of `ConstantProperty` instead of raw values.
+* Added support for an orthographic projection in 3D and Columbus view.
+    * Set `projectionPicker` to `true` in the options when creating a `Viewer` to add a widget that will switch projections. [#5021](https://github.com/AnalyticalGraphicsInc/cesium/pull/5021)
+    * Call `switchToOrthographicFrustum` or `switchToPerspectiveFrustum` on `Camera` to change projections.
+* Added support for custom time-varying properties in CZML. [#5105](https:/github.com/AnalyticalGraphicsInc/cesium/pull/5105).
+* Added new flight parameters to `Camera.flyTo` and `Camera.flyToBoundingSphere`: `flyOverLongitude`, `flyOverLongitudeWeight`, and `pitchAdjustHeight`. [#5070](https://github.com/AnalyticalGraphicsInc/cesium/pull/5070)
+* Added the event `Viewer.trackedEntityChanged`, which is raised when the value of `viewer.trackedEntity` changes. [#5060](https://github.com/AnalyticalGraphicsInc/cesium/pull/5060)
+* Added `Camera.DEFAULT_OFFSET` for default view of objects with bounding spheres. [#4936](https://github.com/AnalyticalGraphicsInc/cesium/pull/4936)
+* Fixed an issue with `TileBoundingBox` that caused the terrain to disappear in certain places [4032](https://github.com/AnalyticalGraphicsInc/cesium/issues/4032)
+* Fixed overlapping billboard blending. [#5066](https://github.com/AnalyticalGraphicsInc/cesium/pull/5066)
+* Fixed an issue with `PinBuilder` where inset images could have low-alpha fringes against an opaque background.  [#5099](https://github.com/AnalyticalGraphicsInc/cesium/pull/5099)
+* Fix billboard, point and label clustering in 2D and Columbus view. [#5136](https://github.com/AnalyticalGraphicsInc/cesium/pull/5136)
+* Fixed `GroundPrimitive` rendering in 2D and Columbus View. [#5078](https://github.com/AnalyticalGraphicsInc/cesium/pull/5078)
+* Fixed an issue with camera tracking of dynamic ellipsoids. [#5133](https://github.com/AnalyticalGraphicsInc/cesium/pull/5133)
+* Fixed issues with imagerySplitPosition and the international date line in 2D mode. [#5151](https://github.com/AnalyticalGraphicsInc/cesium/pull/5151)
+* Fixed a bug in `ModelAnimationCache` causing different animations to reference the same animation. [#5064](https://github.com/AnalyticalGraphicsInc/cesium/pull/5064)
+* `ConstantProperty` now provides `valueOf` and `toString` methods that return the constant value.
+* Improved depth artifacts between opaque and translucent primitives. [#5116](https://github.com/AnalyticalGraphicsInc/cesium/pull/5116)
+* Fixed crunch compressed textures in IE11. [#5057](https://github.com/AnalyticalGraphicsInc/cesium/pull/5057)
+* Fixed a bug in `Quaternion.fromHeadingPitchRoll` that made it erroneously throw an exception when passed individual angles in an unminified / debug build.
+* Fixed a bug that caused an exception in `CesiumInspectorViewModel` when using the NW / NE / SW / SE / Parent buttons to navigate to a terrain tile that is not yet loaded.
+* `QuadtreePrimitive` now uses `frameState.afterRender` to fire `tileLoadProgressEvent` [#3450](https://github.com/AnalyticalGraphicsInc/cesium/issues/3450)
+
 ### 1.31 - 2017-03-01
 
 * Deprecated
-   * The function `Quaternion.fromHeadingPitchRoll(heading, pitch, roll,result)` will be removed in 1.33. Use `Quaternion.fromHeadingPitchRoll(hpr,result)` instead  where hpr is a HeadingPitchRoll.
-   * The function `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)` will be removed in 1.33. Use `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator).
-   * The function `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)` will be removed in 1.33. Use `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator).
-   * `ArcGisImageServerTerrainProvider` will be removed in 1.32 due to missing TIFF support in web browsers.
+   * The function `Quaternion.fromHeadingPitchRoll(heading, pitch, roll, result)` will be removed in 1.33. Use `Quaternion.fromHeadingPitchRoll(hpr, result)` instead  where `hpr` is a `HeadingPitchRoll`. [#4896](https://github.com/AnalyticalGraphicsInc/cesium/pull/4896)
+   * The function `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)` will be removed in 1.33. Use `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where `fixedFrameTransform` is a a 4x4 transformation matrix (see `Transforms.localFrameToFixedFrameGenerator`). [#4896](https://github.com/AnalyticalGraphicsInc/cesium/pull/4896)
+   * The function `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)` will be removed in 1.33. Use `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where `fixedFrameTransform` is a a 4x4 transformation matrix (see `Transforms.localFrameToFixedFrameGenerator`). [#4896](https://github.com/AnalyticalGraphicsInc/cesium/pull/4896)
+   * `ArcGisImageServerTerrainProvider` will be removed in 1.32 due to missing TIFF support in web browsers. [#4981](https://github.com/AnalyticalGraphicsInc/cesium/pull/4981)
 * Breaking changes
    * Corrected spelling of `Color.FUCHSIA` from `Color.FUSCHIA`. [#4977](https://github.com/AnalyticalGraphicsInc/cesium/pull/4977)
-* Added support to `DebugCameraPrimitive` to draw multifrustum planes. The attribute `debugShowFrustumPlanes` of `Scene` and `frustumPlanes` of `CesiumInspector` toggles this. `FrameState` has been augmented to include `frustumSplits` which is a `Number[]` of the near/far planes of the camera frustums.
-* Enable rendering `GroundPrimitives` on hardware without the `EXT_frag_depth` extension; however, this could cause artifacts for certain viewing angles.
-* Always outline KML line extrusions so that they show up properly in 2D and other straight down views.
+   * The enums `MIDDLE_DOUBLE_CLICK` and `RIGHT_DOUBLE_CLICK` from `ScreenSpaceEventType` have been removed. [#5052](https://github.com/AnalyticalGraphicsInc/cesium/pull/5052)
+   * Removed the function `GeometryPipeline.computeBinormalAndTangent`. Use `GeometryPipeline.computeTangentAndBitangent` instead. [#5053](https://github.com/AnalyticalGraphicsInc/cesium/pull/5053)
+   * Removed the `url` and `key` properties from `GeocoderViewModel`. [#5056](https://github.com/AnalyticalGraphicsInc/cesium/pull/5056)
+   * `BingMapsGeocoderServices` now requires `options.scene`. [#5056](https://github.com/AnalyticalGraphicsInc/cesium/pull/5056)
 * Added compressed texture support. [#4758](https://github.com/AnalyticalGraphicsInc/cesium/pull/4758)
    * glTF models and imagery layers can now reference [KTX](https://www.khronos.org/opengles/sdk/tools/KTX/) textures and textures compressed with [crunch](https://github.com/BinomialLLC/crunch).
    * Added `loadKTX`, to load KTX textures, and `loadCRN` to load crunch compressed textures.
    * Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_s3tc`, `WEBGL_compressed_texture_pvrtc`, and `WEBGL_compressed_texture_etc1`.
    * Added `CompressedTextureBuffer`.
-* Improved `RectangleGeometry` by skipping unecessary logic in the code [#4948](https://github.com/AnalyticalGraphicsInc/cesium/pull/4948)
-* Added `Transforms.localFrameToFixedFrameGenerator` to generate a function that computes a 4x4 transformation matrix from a local reference frame to fixed reference frame.
+* Added support for `Scene.pickPosition` in Columbus view and 2D. [#4990](https://github.com/AnalyticalGraphicsInc/cesium/pull/4990)
+* Added support for depth picking translucent primitives when `Scene.pickTranslucentDepth` is `true`. [#4979](https://github.com/AnalyticalGraphicsInc/cesium/pull/4979)
 * Fixed an issue where the camera would zoom past an object and flip to the other side of the globe. [#4967](https://github.com/AnalyticalGraphicsInc/cesium/pull/4967) and [#4982](https://github.com/AnalyticalGraphicsInc/cesium/pull/4982)
-* Fixed exception in 2D in certain cases with polylines when rotating the map. [#4619](https://github.com/AnalyticalGraphicsInc/cesium/issues/4619)
-* Fixed an issue with constant `VertexArray` attributes not being set correctly. [#4995](https://github.com/AnalyticalGraphicsInc/cesium/pull/4995)
-* Add support for `Scene.pickPosition` in Columbus view and 2D. [#4990](https://github.com/AnalyticalGraphicsInc/cesium/pull/4990)
+* Enable rendering `GroundPrimitives` on hardware without the `EXT_frag_depth` extension; however, this could cause artifacts for certain viewing angles. [#4930](https://github.com/AnalyticalGraphicsInc/cesium/pull/4930)
+* Added `Transforms.localFrameToFixedFrameGenerator` to generate a function that computes a 4x4 transformation matrix from a local reference frame to fixed reference frame. [#4896](https://github.com/AnalyticalGraphicsInc/cesium/pull/4896)
 * Added `Label.scaleByDistance` to control minimum/maximum label size based on distance from the camera. [#5019](https://github.com/AnalyticalGraphicsInc/cesium/pull/5019)
-* Add support for depth picking translucent primitives when `Scene.pickTranslucentDepth` is `true`. [#4979](https://github.com/AnalyticalGraphicsInc/cesium/pull/4979)
+* Added support to `DebugCameraPrimitive` to draw multifrustum planes. The attribute `debugShowFrustumPlanes` of `Scene` and `frustumPlanes` of `CesiumInspector` toggle this. [#4932](https://github.com/AnalyticalGraphicsInc/cesium/pull/4932)
+* Added fix to always outline KML line extrusions so that they show up properly in 2D and other straight down views. [#4961](https://github.com/AnalyticalGraphicsInc/cesium/pull/4961)
+* Improved `RectangleGeometry` by skipping unnecessary logic in the code. [#4948](https://github.com/AnalyticalGraphicsInc/cesium/pull/4948)
+* Fixed exception for polylines in 2D when rotating the map. [#4619](https://github.com/AnalyticalGraphicsInc/cesium/issues/4619)
+* Fixed an issue with constant `VertexArray` attributes not being set correctly. [#4995](https://github.com/AnalyticalGraphicsInc/cesium/pull/4995)
+* Added the event `Viewer.selectedEntityChanged`, which is raised when the value of `viewer.selectedEntity` changes. [#5043](https://github.com/AnalyticalGraphicsInc/cesium/pull/5043)
 
 ### 1.30 - 2017-02-01
 

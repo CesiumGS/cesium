@@ -1,6 +1,7 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "0.0",
+    "gltfUpAxis": "Z"
   },
   "properties": {
     "id": {
@@ -35,7 +36,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "batchedDeprecated.b3dm"
+      "url": "batchedGltfZUp.b3dm"
     }
   }
 }

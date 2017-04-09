@@ -116,7 +116,7 @@ define([
         this._instancingSupported = false;
         this._dynamic = defaultValue(options.dynamic, false);
         this._allowPicking = defaultValue(options.allowPicking, true);
-        this._cull = defaultValue(options.cull, true);
+        this._cull = defaultValue(options.cull, true); // Undocumented option
         this._ready = false;
         this._readyPromise = when.defer();
         this._state = LoadState.NEEDS_LOAD;
@@ -156,6 +156,7 @@ define([
         this._basePath = options.basePath;
         this._asynchronous = options.asynchronous;
         this._incrementallyLoadTextures = options.incrementallyLoadTextures;
+        this._upAxis = options.upAxis; // Undocumented option
 
         this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
         this._shadows = this.shadows;
@@ -357,8 +358,7 @@ define([
             if (defined(batchTable)) {
                 var gltf = collection._model.gltf;
                 var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-                var colorBlendMode = batchTable._content._tileset.colorBlendMode;
-                fs = batchTable.getFragmentShaderCallback(true, colorBlendMode, diffuseUniformName)(fs);
+                fs = batchTable.getFragmentShaderCallback(true, diffuseUniformName)(fs);
             }
             return fs;
         };
@@ -606,6 +606,7 @@ define([
             asynchronous : collection._asynchronous,
             allowPicking : allowPicking,
             incrementallyLoadTextures : collection._incrementallyLoadTextures,
+            upAxis : collection._upAxis,
             precreatedAttributes : undefined,
             vertexShaderLoaded : undefined,
             fragmentShaderLoaded : undefined,

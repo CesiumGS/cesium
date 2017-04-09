@@ -1,25 +1,13 @@
 /*global defineSuite*/
 defineSuite([
         'Renderer/ShaderProgram',
-        'Core/PrimitiveType',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
-        'Renderer/ClearCommand',
         'Renderer/ContextLimits',
-        'Renderer/DrawCommand',
         'Renderer/ShaderSource',
-        'Renderer/VertexArray',
         'Specs/createContext'
     ], function(
         ShaderProgram,
-        PrimitiveType,
-        Buffer,
-        BufferUsage,
-        ClearCommand,
         ContextLimits,
-        DrawCommand,
         ShaderSource,
-        VertexArray,
         createContext) {
     'use strict';
 

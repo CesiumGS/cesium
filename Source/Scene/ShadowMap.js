@@ -37,7 +37,6 @@ define([
         '../Renderer/RenderbufferFormat',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
-        '../Renderer/ShaderProgram',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
@@ -46,7 +45,7 @@ define([
         './CullFace',
         './CullingVolume',
         './DebugCameraPrimitive',
-        './OrthographicFrustum',
+        './OrthographicOffCenterFrustum',
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
         './Primitive',
@@ -89,7 +88,6 @@ define([
         RenderbufferFormat,
         RenderState,
         Sampler,
-        ShaderProgram,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -98,7 +96,7 @@ define([
         CullFace,
         CullingVolume,
         DebugCameraPrimitive,
-        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         PerInstanceColorAppearance,
         PerspectiveFrustum,
         Primitive,
@@ -256,7 +254,7 @@ define([
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
             // Cascaded shadows are always orthographic. The frustum dimensions are calculated on the fly.
-            this._shadowMapCamera.frustum = new OrthographicFrustum();
+            this._shadowMapCamera.frustum = new OrthographicOffCenterFrustum();
         } else if (defined(this._lightCamera.frustum.fov)) {
             // If the light camera uses a perspective frustum, then the light source is a spot light
             this._isSpotLight = true;

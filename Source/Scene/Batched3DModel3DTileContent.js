@@ -1,12 +1,14 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
@@ -18,16 +20,19 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileContentState',
         './Cesium3DTileFeature',
+        './Cesium3DTileFeatureTable',
         './getAttributeOrUniformBySemantic',
         './Model'
     ], function(
         Color,
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
         deprecationWarning,
         destroyObject,
         DeveloperError,
+        getAbsoluteUri,
         getBaseUri,
         getMagic,
         getStringFromTypedArray,
@@ -39,6 +44,7 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileContentState,
         Cesium3DTileFeature,
+        Cesium3DTileFeatureTable,
         getAttributeOrUniformBySemantic,
         Model) {
     'use strict';
@@ -90,6 +96,54 @@ define([
          */
         pointsLength : {
             get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        trianglesLength : {
+            get : function() {
+                if (defined(this._model)) {
+                    return this._model.trianglesLength;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                if (defined(this._model)) {
+                    return this._model.vertexMemorySizeInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                if (defined(this._model)) {
+                    return this._model.textureMemorySizeInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                if (defined(this.batchTable)) {
+                    return this.batchTable.memorySizeInBytes;
+                }
                 return 0;
             }
         },
@@ -226,8 +280,7 @@ define([
             var batchTable = content.batchTable;
             var gltf = content._model.gltf;
             var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-            var colorBlendMode = content._tileset.colorBlendMode;
-            var callback = batchTable.getFragmentShaderCallback(true, colorBlendMode, diffuseUniformName);
+            var callback = batchTable.getFragmentShaderCallback(true, diffuseUniformName);
             return defined(callback) ? callback(fs) : fs;
         };
     }
@@ -259,28 +312,65 @@ define([
         var byteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
+        var featureTableJsonByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+
+        var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+
         var batchTableJsonByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
         var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var batchLength = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUint32;
+        var batchLength;
 
         // TODO : remove this legacy check before merging into master
-        // Legacy header:  [batchLength] [batchTableByteLength]
-        // Current header: [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]
-        // If the header is in the legacy format 'batchLength' will be the start of the JSON string (a quotation mark) or the glTF magic.
-        // Accordingly the first byte of uint32 will be either 0x22 or 0x67 and so the uint32 will exceed any reasonable 'batchLength'.
-        if (batchLength > 10000000) {
+        // Legacy header #1: [batchLength] [batchTableByteLength]
+        // Legacy header #2: [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]
+        // Current header: [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength]
+        // If the header is in the first legacy format 'batchTableJsonByteLength' will be the start of the JSON string (a quotation mark) or the glTF magic.
+        // Accordingly its first byte will be either 0x22 or 0x67, and so the minimum uint32 expected is 0x22000000 = 570425344 = 570MB. It is unlikely that the feature table JSON will exceed this length.
+        // The check for the second legacy format is similar, except it checks 'batchTableBinaryByteLength' instead
+        if (batchTableJsonByteLength >= 570425344) {
+            // First legacy check
+            byteOffset -= sizeOfUint32 * 2;
+            batchLength = featureTableJsonByteLength;
+            batchTableJsonByteLength = featureTableBinaryByteLength;
+            batchTableBinaryByteLength = 0;
+            featureTableJsonByteLength = 0;
+            featureTableBinaryByteLength = 0;
+            deprecationWarning('b3dm-legacy-header', 'This b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
+        } else if (batchTableBinaryByteLength >= 570425344) {
+            // Second legacy check
             byteOffset -= sizeOfUint32;
             batchLength = batchTableJsonByteLength;
-            batchTableJsonByteLength = batchTableBinaryByteLength;
-            batchTableBinaryByteLength = 0;
-            deprecationWarning('b3dm-legacy-header', 'This b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
+            batchTableJsonByteLength = featureTableJsonByteLength;
+            batchTableBinaryByteLength = featureTableBinaryByteLength;
+            featureTableJsonByteLength = 0;
+            featureTableBinaryByteLength = 0;
+            deprecationWarning('b3dm-legacy-header', 'This b3dm header is using the legacy format [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
         }
 
+        var featureTableJson;
+        if (featureTableJsonByteLength === 0) {
+            featureTableJson = {
+                BATCH_LENGTH : defaultValue(batchLength, 0)
+            };
+        } else {
+            var featureTableString = getStringFromTypedArray(uint8Array, byteOffset, featureTableJsonByteLength);
+            featureTableJson = JSON.parse(featureTableString);
+            byteOffset += featureTableJsonByteLength;
+        }
+
+        var featureTableBinary = new Uint8Array(arrayBuffer, byteOffset, featureTableBinaryByteLength);
+        byteOffset += featureTableBinaryByteLength;
+
+        var featureTable = new Cesium3DTileFeatureTable(featureTableJson, featureTableBinary);
+
+        batchLength = featureTable.getGlobalProperty('BATCH_LENGTH', ComponentDatatype.UNSIGNED_INT);
+        featureTable.featuresLength = batchLength;
         this._featuresLength = batchLength;
 
         var batchTableJson;
@@ -316,11 +406,13 @@ define([
             gltf : gltfView,
             cull : false,           // The model is already culled by the 3D tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-            basePath : getBaseUri(this._url),
+            basePath : getAbsoluteUri(getBaseUri(this._url, true)),
             modelMatrix : this._tile.computedTransform,
+            upAxis : this._tileset._gltfUpAxis,
             shadows: this._tileset.shadows,
             debugWireframe: this._tileset.debugWireframe,
             incrementallyLoadTextures : false,
+            pickPrimitive : this._tileset,
             vertexShaderLoaded : getVertexShaderCallback(this),
             fragmentShaderLoaded : getFragmentShaderCallback(this),
             uniformMapLoaded : batchTable.getUniformMapCallback(),

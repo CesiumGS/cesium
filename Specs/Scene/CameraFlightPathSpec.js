@@ -2,15 +2,17 @@
 defineSuite([
         'Scene/CameraFlightPath',
         'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/Math',
-        'Scene/OrthographicFrustum',
+        'Scene/OrthographicOffCenterFrustum',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
         CameraFlightPath,
         Cartesian3,
+        Cartographic,
         CesiumMath,
-        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         SceneMode,
         createScene) {
     'use strict';
@@ -27,7 +29,7 @@ defineSuite([
 
     function createOrthographicFrustum() {
         var current = scene.camera.frustum;
-        var f = new OrthographicFrustum();
+        var f = new OrthographicOffCenterFrustum();
         f.near = current.near;
         f.far = current.far;
 
@@ -377,6 +379,182 @@ defineSuite([
         expect(typeof flight.complete).toEqual('function');
         flight.complete();
         expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
+    });
+
+    it('creates animation to hit flyOverLongitude', function() {
+        var camera = scene.camera;
+        var projection = scene.mapProjection;
+        var position = new Cartographic();
+
+        camera.position = Cartesian3.fromDegrees(10.0, 45.0, 1000.0);
+
+        var endPosition = Cartesian3.fromDegrees(20.0, 45.0, 1000.0);
+
+        var overLonFlight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : 1.0,
+            flyOverLongitude: CesiumMath.toRadians(0.0)
+        });
+
+        var directFlight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : 1.0
+        });
+
+        expect(typeof overLonFlight.update).toEqual('function');
+        expect(typeof directFlight.update).toEqual('function');
+
+        overLonFlight.update({ time : 0.3 });
+        projection.ellipsoid.cartesianToCartographic(camera.position, position);
+        var lon = CesiumMath.toDegrees(position.longitude);
+
+        expect(lon).toBeLessThan(10.0);
+
+        directFlight.update({ time : 0.3 });
+        projection.ellipsoid.cartesianToCartographic(camera.position, position);
+        lon = CesiumMath.toDegrees(position.longitude);
+
+        expect(lon).toBeGreaterThan(10.0);
+        expect(lon).toBeLessThan(20.0);
+
+    });
+
+    it('uses flyOverLongitudeWeight', function() {
+        var camera = scene.camera;
+        var projection = scene.mapProjection;
+        var position = new Cartographic();
+
+        camera.position = Cartesian3.fromDegrees(10.0, 45.0, 1000.0);
+
+        var endPosition = Cartesian3.fromDegrees(50.0, 45.0, 1000.0);
+
+        var overLonFlightSmallWeight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : 1.0,
+            flyOverLongitude: CesiumMath.toRadians(0.0),
+            flyOverLongitudeWeight: 2
+        });
+
+        var overLonFlightBigWeight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : 1.0,
+            flyOverLongitude: CesiumMath.toRadians(0.0),
+            flyOverLongitudeWeight: 20
+        });
+
+        overLonFlightBigWeight.update({ time : 0.3 });
+        projection.ellipsoid.cartesianToCartographic(camera.position, position);
+        var lon = CesiumMath.toDegrees(position.longitude);
+
+        expect(lon).toBeLessThan(10.0);
+
+        overLonFlightSmallWeight.update({ time : 0.3 });
+        projection.ellipsoid.cartesianToCartographic(camera.position, position);
+        lon = CesiumMath.toDegrees(position.longitude);
+
+        expect(lon).toBeGreaterThan(10.0);
+        expect(lon).toBeLessThan(50.0);
+
+    });
+
+    it('adjust pitch if camera flyes higher than pitchAdjustHeight', function(){
+        var camera = scene.camera;
+        var duration = 5.0;
+
+        camera.setView({
+            destination : Cartesian3.fromDegrees(-20.0, 0.0, 1000.0),
+            orientation: {
+                heading : CesiumMath.toRadians(0.0),
+                pitch : CesiumMath.toRadians(-15.0),
+                roll : 0.0
+            }
+        });
+
+        var startPitch = camera.pitch;
+        var endPitch = CesiumMath.toRadians(-45.0);
+
+        var flight = CameraFlightPath.createTween(scene, {
+            destination : Cartesian3.fromDegrees(60.0, 0.0, 2000.0),
+            pitch : endPitch,
+            duration : duration,
+            pitchAdjustHeight: 2000
+        });
+
+        flight.update({ time: 0.0 });
+        expect(camera.pitch).toEqualEpsilon(startPitch, CesiumMath.EPSILON6);
+
+        flight.update({ time : duration });
+        expect(camera.pitch).toEqualEpsilon(endPitch, CesiumMath.EPSILON6);
+
+        flight.update({ time : duration / 2.0 });
+        expect(camera.pitch).toEqualEpsilon(-CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON4);
+
+    });
+
+    it('animation with flyOverLongitude is smooth over two pi', function() {
+        var camera = scene.camera;
+        var duration = 100.0;
+        var projection = scene.mapProjection;
+        var position = new Cartographic();
+
+        var startLonDegrees = 10.0;
+        var endLonDegrees = 20.0;
+
+        camera.position = Cartesian3.fromDegrees(startLonDegrees, 45.0, 1000.0);
+        var endPosition = Cartesian3.fromDegrees(endLonDegrees, 45.0, 1000.0);
+
+        var outsideTwoPiFlight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : duration,
+            flyOverLongitude: CesiumMath.toRadians(0.0)
+        });
+
+        var prevLon = startLonDegrees;
+        var crossedDateChangesLine = 0;
+        for(var t = 1; t < duration; t++) {
+            outsideTwoPiFlight.update({ time: t });
+            projection.ellipsoid.cartesianToCartographic(camera.position, position);
+            var lon = CesiumMath.toDegrees(position.longitude);
+            var d = lon - prevLon;
+            if (d > 0) {
+                expect(prevLon).toBeLessThan(-90);
+                crossedDateChangesLine ++;
+                d -= 360;
+            }
+            prevLon = lon;
+            expect(d).toBeLessThan(0);
+        }
+
+        expect(crossedDateChangesLine).toEqual(1);
+    });
+
+    it('animation with flyOverLongitude is smooth', function() {
+        var camera = scene.camera;
+        var duration = 100.0;
+        var projection = scene.mapProjection;
+        var position = new Cartographic();
+
+        var startLonDegrees = -100.0;
+        var endLonDegrees = 100.0;
+
+        camera.position = Cartesian3.fromDegrees(startLonDegrees, 45.0, 1000.0);
+        var endPosition = Cartesian3.fromDegrees(endLonDegrees, 45.0, 1000.0);
+
+        var flight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : duration,
+            flyOverLongitude: CesiumMath.toRadians(0.0)
+        });
+
+        var prevLon = startLonDegrees;
+        for(var t = 1; t < duration; t++) {
+            flight.update({ time: t });
+            projection.ellipsoid.cartesianToCartographic(camera.position, position);
+            var lon = CesiumMath.toDegrees(position.longitude);
+            var d = lon - prevLon;
+            prevLon = lon;
+            expect(d).toBeGreaterThan(0);
+        }
     });
 
     it('does not go above the maximum height', function() {

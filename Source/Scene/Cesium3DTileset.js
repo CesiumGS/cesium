@@ -25,6 +25,7 @@ define([
         '../Core/RequestType',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './Axis',
         './Cesium3DTile',
         './Cesium3DTileChildrenVisibility',
         './Cesium3DTileColorBlendMode',
@@ -35,6 +36,7 @@ define([
         './CullingVolume',
         './DebugCameraPrimitive',
         './LabelCollection',
+        './OrthographicFrustum',
         './SceneMode',
         './ShadowMode',
         './TileBoundingRegion',
@@ -66,6 +68,7 @@ define([
         RequestType,
         Uri,
         when,
+        Axis,
         Cesium3DTile,
         Cesium3DTileChildrenVisibility,
         Cesium3DTileColorBlendMode,
@@ -76,6 +79,7 @@ define([
         CullingVolume,
         DebugCameraPrimitive,
         LabelCollection,
+        OrthographicFrustum,
         SceneMode,
         ShadowMode,
         TileBoundingRegion,
@@ -96,6 +100,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
      * @param {Boolean} [options.refineToVisible=false] Whether replacement refinement should refine when all visible children are ready. An experimental optimization.
+     * @param {Boolean} [options.cullWithChildrenBounds=true] Whether to cull tiles using the union of their children bounding volumes.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
@@ -132,7 +137,7 @@ define([
 
         if (getExtensionFromUri(url) === 'json') {
             tilesetUrl = url;
-            baseUrl = getBaseUri(url);
+            baseUrl = getBaseUri(url, true);
         } else if (isDataUri(url)) {
             tilesetUrl = url;
             baseUrl = '';
@@ -148,6 +153,7 @@ define([
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
+        this._gltfUpAxis = undefined;
         this._processingQueue = [];
         this._selectedTiles = [];
         this._selectedTilesToStyle = [];
@@ -163,6 +169,8 @@ define([
         this._trimTiles = false;
 
         this._refineToVisible = defaultValue(options.refineToVisible, false);
+
+        this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
 
         /**
          * Whether the tileset should should refine based on a dynamic screen space error. Tiles that are further
@@ -275,15 +283,20 @@ define([
             numberContentReady : 0, // Number of tiles with content loaded, does not include empty tiles
             numberTotal : 0, // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
             // Features stats
-            numberOfFeaturesSelected : 0,       // number of features rendered
+            numberOfFeaturesSelected : 0, // number of features rendered
             numberOfFeaturesLoaded : 0,  // number of features in memory
             numberOfPointsSelected: 0,
             numberOfPointsLoaded: 0,
+            numberOfTrianglesSelected: 0,
             // Styling stats
             numberOfTilesStyled : 0,
             numberOfFeaturesStyled : 0,
             // Optimization stats
             numberOfTilesCulledWithChildrenUnion : 0,
+            // Memory stats
+            vertexMemorySizeInBytes : 0,
+            textureMemorySizeInBytes : 0,
+            batchTableMemorySizeInBytes : 0,
 
             lastColor : new Cesium3DTilesetStatistics(),
             lastPick : new Cesium3DTilesetStatistics()
@@ -474,9 +487,11 @@ define([
         var that = this;
         this.loadTileset(tilesetUrl).then(function(data) {
             var tilesetJson = data.tilesetJson;
+            var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
             that._asset = tilesetJson.asset;
             that._properties = tilesetJson.properties;
             that._geometricError = tilesetJson.geometricError;
+            that._gltfUpAxis = gltfUpAxis;
             that._root = data.root;
             that._readyPromise.resolve(that);
         }).otherwise(function(error) {
@@ -497,9 +512,13 @@ define([
         this.numberOfFeaturesLoaded = 0;
         this.numberOfPointsSelected = 0;
         this.numberOfPointsLoaded = 0;
+        this.numberOfTrianglesSelected = 0;
         this.numberOfTilesStyled = 0;
         this.numberOfFeaturesStyled = 0;
         this.numberOfTilesCulledWithChildrenUnion = 0;
+        this.vertexMemorySizeInBytes = 0;
+        this.textureMemorySizeInBytes = 0;
+        this.batchTableMemorySizeInBytes = 0;
     }
 
     defineProperties(Cesium3DTileset.prototype, {
@@ -890,13 +909,16 @@ define([
             var stats = that._statistics;
 
             // Append the version to the baseUrl
-            var versionQuery = '?v=' + defaultValue(tilesetJson.asset.tilesetVersion, '0.0');
-            that._baseUrl = joinUrls(that._baseUrl, versionQuery);
+            var hasVersionQuery = /[?&]v=/.test(tilesetUrl);
+            if (!hasVersionQuery) {
+                var versionQuery = '?v=' + defaultValue(tilesetJson.asset.tilesetVersion, '0.0');
+                that._baseUrl = joinUrls(that._baseUrl, versionQuery);
+                tilesetUrl = joinUrls(tilesetUrl, versionQuery, false);
+            }
 
             // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
             // Get the baseUrl relative to the external tileset.
             var baseUrl = getBaseUri(tilesetUrl, true);
-            baseUrl = joinUrls(baseUrl, versionQuery);
             var rootTile = new Cesium3DTile(that, baseUrl, tilesetJson.root, parentTile);
 
             var refiningTiles = [];
@@ -1077,18 +1099,19 @@ define([
 
         // Avoid divide by zero when viewer is inside the tile
         var camera = frameState.camera;
+        var frustum = camera.frustum;
         var context = frameState.context;
         var height = context.drawingBufferHeight;
 
         var error;
-        if (frameState.mode === SceneMode.SCENE2D) {
-            var frustum = camera.frustum;
+        if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
+            if (defined(frustum._offCenterFrustum)) {
+                frustum = frustum._offCenterFrustum;
+            }
             var width = context.drawingBufferWidth;
-
             var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
             error = geometricError / pixelSize;
         } else {
-            // Avoid divide by zero when viewer is inside the tile
             var distance = Math.max(tile.distanceToCamera, CesiumMath.EPSILON7);
             var sseDenominator = camera.frustum.sseDenominator;
             error = (geometricError * height) / (distance * sseDenominator);
@@ -1360,7 +1383,7 @@ define([
                 // decimation is not used, but it is arguably better to cull in this way because in the cases where we cull
                 // when the parent content is visible, if the object were to be drawn at full resolution, the geometry would
                 // not be visible.
-                var useChildrenBoundUnion = t._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
+                var useChildrenBoundUnion = tileset._cullWithChildrenBounds && t._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
 
                 var childrenVisibility;
 
@@ -1389,6 +1412,21 @@ define([
                     // then the children do not need to be sorted.
 
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
+
+                    // Handle external tileset refinement issue: https://github.com/AnalyticalGraphicsInc/cesium/pull/4287#issuecomment-283354556
+                    if (allChildrenLoaded) {
+                        for (k = 0; k < childrenLength; ++k) {
+                            child = children[k];
+                            if (child.hasTilesetContent && child.contentReady) {
+                                child = child.children[0];
+                                if (!child.contentReady) {
+                                    allChildrenLoaded = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
                     if (allChildrenLoaded || t.canRequestContent()) {
                         updateTransforms(children, t.computedTransform);
 
@@ -1418,6 +1456,20 @@ define([
                                         // we want to keep it in the cache for when all children are loaded
                                         // and this tile can refine to them.
                                         touch(tileset, child, outOfCore);
+
+                                        // Handle external tileset refinement issue https://github.com/AnalyticalGraphicsInc/cesium/pull/4287#issuecomment-283354556
+                                        if (child.hasTilesetContent && child.contentReady) {
+                                            child = child.children[0];
+
+                                            if (child.contentUnloaded) {
+                                                requestContent(tileset, child, outOfCore);
+                                            } else {
+                                                // Touch loaded child even though it is not selected this frame since
+                                                // we want to keep it in the cache for when all children are loaded
+                                                // and this tile can refine to them.
+                                                touch(tileset, child);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1629,6 +1681,7 @@ define([
         stats.numberOfTilesCulledWithChildrenUnion = 0;
         stats.numberOfFeaturesSelected = 0;
         stats.numberOfPointsSelected = 0;
+        stats.numberOfTrianglesSelected = 0;
     }
 
     function updateLastStats(tileset, isPick) {
@@ -1647,23 +1700,35 @@ define([
         last.numberOfFeaturesLoaded = stats.numberOfFeaturesLoaded;
         last.numberOfPointsSelected = stats.numberOfPointsSelected;
         last.numberOfPointsLoaded = stats.numberOfPointsLoaded;
+        last.numberOfTrianglesSelected = stats.numberOfTrianglesSelected;
         last.numberOfTilesStyled = stats.numberOfTilesStyled;
         last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
         last.numberOfTilesCulledWithChildrenUnion = stats.numberOfTilesCulledWithChildrenUnion;
+        last.vertexMemorySizeInBytes = stats.vertexMemorySizeInBytes;
+        last.textureMemorySizeInBytes = stats.textureMemorySizeInBytes;
+        last.batchTableMemorySizeInBytes = stats.batchTableMemorySizeInBytes;
     }
 
     function updatePointAndFeatureCounts(tileset, content, decrement, load) {
         var stats = tileset._statistics;
         var contents = content.innerContents;
         var pointsLength = content.pointsLength;
+        var trianglesLength = content.trianglesLength;
         var featuresLength = content.featuresLength;
+        var vertexMemorySizeInBytes = content.vertexMemorySizeInBytes;
+        var textureMemorySizeInBytes = content.textureMemorySizeInBytes;
+        var batchTableMemorySizeInBytes = content.batchTableMemorySizeInBytes;
 
         if (load) {
             stats.numberOfFeaturesLoaded += decrement ? -featuresLength : featuresLength;
             stats.numberOfPointsLoaded += decrement ? -pointsLength : pointsLength;
+            stats.vertexMemorySizeInBytes += decrement ? -vertexMemorySizeInBytes : vertexMemorySizeInBytes;
+            stats.textureMemorySizeInBytes += decrement ? -textureMemorySizeInBytes : textureMemorySizeInBytes;
+            stats.batchTableMemorySizeInBytes += decrement ? -batchTableMemorySizeInBytes : batchTableMemorySizeInBytes;
         } else {
             stats.numberOfFeaturesSelected += decrement ? -featuresLength : featuresLength;
             stats.numberOfPointsSelected += decrement ? -pointsLength : pointsLength;
+            stats.numberOfTrianglesSelected += decrement ? -trianglesLength : trianglesLength;
         }
 
         if (defined(contents)) {
