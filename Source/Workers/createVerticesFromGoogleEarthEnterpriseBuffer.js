@@ -331,60 +331,15 @@ define([
         var skirtIndex = indicesOffset;
 
         // Add skirt points
-        var hMin = minHeight;
-        var lastBorderPoint;
-        function addSkirt(borderPoints, fudgeFactor, eastOrWest, cornerFudge) {
-            var count = borderPoints.length;
-            for (var j = 0; j < count; ++j) {
-                var borderPoint = borderPoints[j];
-                var borderCartographic = borderPoint.cartographic;
-                var borderIndex = borderPoint.index;
-                var currentIndex = positions.length;
-
-                var longitude = borderCartographic.longitude;
-                var latitude = borderCartographic.latitude;
-                latitude = CesiumMath.clamp(latitude, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO); // Don't go over the poles
-                var height = borderCartographic.height - skirtHeight;
-                hMin = Math.min(hMin, height);
-
-                Cartographic.fromRadians(longitude, latitude, height, scratchCartographic);
-
-                // Adjust sides to angle out
-                if (eastOrWest) {
-                    scratchCartographic.longitude += fudgeFactor;
-                }
-
-                // Adjust top or bottom to angle out
-                // Since corners are in the east/west arrays angle the first and last points as well
-                if (!eastOrWest) {
-                    scratchCartographic.latitude += fudgeFactor;
-                } else if (j === (count-1)) {
-                    scratchCartographic.latitude += cornerFudge;
-                } else if (j === 0) {
-                    scratchCartographic.latitude -= cornerFudge;
-                }
-
-                var pos = ellipsoid.cartographicToCartesian(scratchCartographic);
-                positions.push(pos);
-                heights.push(height);
-                uvs.push(Cartesian2.clone(uvs[borderIndex])); // Copy UVs from border point
-                if (includeWebMercatorT) {
-                    webMercatorTs.push(webMercatorTs[borderIndex]);
-                }
-
-                Matrix4.multiplyByPoint(toENU, pos, scratchCartesian);
-
-                Cartesian3.minimumByComponent(scratchCartesian, minimum, minimum);
-                Cartesian3.maximumByComponent(scratchCartesian, maximum, maximum);
-
-                if (defined(lastBorderPoint)) {
-                    var lastBorderIndex = lastBorderPoint.index;
-                    indices.push(lastBorderIndex, currentIndex - 1, currentIndex, currentIndex, borderIndex, lastBorderIndex);
-                }
-
-                lastBorderPoint = borderPoint;
-            }
-        }
+        var skirtOptions = {
+            hMin: minHeight,
+            lastBorderPoint : undefined,
+            skirtHeight: skirtHeight,
+            toENU: toENU,
+            ellipsoid: ellipsoid,
+            minimum: minimum,
+            maximum: maximum
+        };
 
         // Sort counter clockwise from NW corner
         // Corner points are in the east/west arrays
@@ -402,10 +357,14 @@ define([
         });
 
         var percentage = 0.00001;
-        addSkirt(westBorder, -percentage*rectangleWidth, true, -percentage*rectangleHeight);
-        addSkirt(southBorder, -percentage*rectangleHeight, false);
-        addSkirt(eastBorder, percentage*rectangleWidth, true, percentage*rectangleHeight);
-        addSkirt(northBorder, percentage*rectangleHeight, false);
+        addSkirt(positions, heights, uvs, webMercatorTs, indices, skirtOptions,
+            westBorder, -percentage*rectangleWidth, true, -percentage*rectangleHeight);
+        addSkirt(positions, heights, uvs, webMercatorTs, indices, skirtOptions,
+            southBorder, -percentage*rectangleHeight, false);
+        addSkirt(positions, heights, uvs, webMercatorTs, indices, skirtOptions,
+            eastBorder, percentage*rectangleWidth, true, percentage*rectangleHeight);
+        addSkirt(positions, heights, uvs, webMercatorTs, indices, skirtOptions,
+            northBorder, percentage*rectangleHeight, false);
 
         // Since the corner between the north and west sides is in the west array, generate the last
         //  two triangles between the last north vertex and the first west vertex
@@ -432,7 +391,7 @@ define([
         var occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(relativeToCenter, positions);
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
-        var encoding = new TerrainEncoding(aaBox, hMin, maxHeight, fromENU, false, includeWebMercatorT);
+        var encoding = new TerrainEncoding(aaBox, skirtOptions.hMin, maxHeight, fromENU, false, includeWebMercatorT);
         var vertices = new Float32Array(size * encoding.getStride());
 
         var bufferIndex = 0;
@@ -452,6 +411,63 @@ define([
             vertexCountWithoutSkirts : vertexCountWithoutSkirts,
             skirtIndex : skirtIndex
         };
+    }
+
+    function addSkirt(positions, heights, uvs, webMercatorTs, indices, skirtOptions,
+                      borderPoints, fudgeFactor, eastOrWest, cornerFudge) {
+        var count = borderPoints.length;
+        for (var j = 0; j < count; ++j) {
+            var borderPoint = borderPoints[j];
+            var borderCartographic = borderPoint.cartographic;
+            var borderIndex = borderPoint.index;
+            var currentIndex = positions.length;
+
+            var longitude = borderCartographic.longitude;
+            var latitude = borderCartographic.latitude;
+            latitude = CesiumMath.clamp(latitude, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO); // Don't go over the poles
+            var height = borderCartographic.height - skirtOptions.skirtHeight;
+            skirtOptions.hMin = Math.min(skirtOptions.hMin, height);
+
+            Cartographic.fromRadians(longitude, latitude, height, scratchCartographic);
+
+            // Adjust sides to angle out
+            if (eastOrWest) {
+                scratchCartographic.longitude += fudgeFactor;
+            }
+
+            // Adjust top or bottom to angle out
+            // Since corners are in the east/west arrays angle the first and last points as well
+            if (!eastOrWest) {
+                scratchCartographic.latitude += fudgeFactor;
+            } else if (j === (count-1)) {
+                scratchCartographic.latitude += cornerFudge;
+            } else if (j === 0) {
+                scratchCartographic.latitude -= cornerFudge;
+            }
+
+            var pos = skirtOptions.ellipsoid.cartographicToCartesian(scratchCartographic);
+            positions.push(pos);
+            heights.push(height);
+            uvs.push(Cartesian2.clone(uvs[borderIndex])); // Copy UVs from border point
+            if (webMercatorTs.length > 0) {
+                webMercatorTs.push(webMercatorTs[borderIndex]);
+            }
+
+            Matrix4.multiplyByPoint(skirtOptions.toENU, pos, scratchCartesian);
+
+            var minimum = skirtOptions.minimum;
+            var maximum = skirtOptions.maximum;
+            Cartesian3.minimumByComponent(scratchCartesian, minimum, minimum);
+            Cartesian3.maximumByComponent(scratchCartesian, maximum, maximum);
+
+            var lastBorderPoint = skirtOptions.lastBorderPoint;
+            if (defined(lastBorderPoint)) {
+                var lastBorderIndex = lastBorderPoint.index;
+                indices.push(lastBorderIndex, currentIndex - 1, currentIndex, currentIndex, borderIndex, lastBorderIndex);
+            }
+
+            skirtOptions.lastBorderPoint = borderPoint;
+        }
     }
 
     return createTaskProcessorWorker(createVerticesFromGoogleEarthEnterpriseBuffer);
