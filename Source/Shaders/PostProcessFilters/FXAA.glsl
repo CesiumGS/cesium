@@ -6,7 +6,6 @@ uniform float u_fxaaQualitySubpix;
 uniform float u_fxaaQualityEdgeThreshold;
 uniform float u_fxaaQualityEdgeThresholdMin;
 
-
 // unused constants, only used on consoles
 vec4 fxaaConsolePosPos = vec4(0.0);
 vec4 fxaaConsoleRcpFrameOpt = vec4(0.0);
