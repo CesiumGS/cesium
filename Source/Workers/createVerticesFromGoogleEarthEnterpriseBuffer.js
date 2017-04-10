@@ -147,9 +147,10 @@ define([
         var offset = 0;
         var size = 0;
         var indicesSize = 0;
+        var quadSize;
         for (var quad = 0; quad < 4; ++quad) {
             var o = offset;
-            var quadSize = dv.getUint32(o, true);
+            quadSize = dv.getUint32(o, true);
             o += sizeOfUint32;
 
             var x = CesiumMath.toRadians(dv.getFloat64(o, true) * 180.0);
@@ -199,7 +200,7 @@ define([
         var indicesOffset = 0;
         offset = 0;
         for (quad = 0; quad < 4; ++quad) {
-            var quadSize = dv.getUint32(offset, true);
+            quadSize = dv.getUint32(offset, true);
             offset += sizeOfUint32;
             var startQuad = offset;
 
