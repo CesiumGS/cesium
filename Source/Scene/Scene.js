@@ -321,11 +321,9 @@ define([
         this._cameraStartFired = false;
         this._cameraMovedTime = undefined;
 
-<<<<<<< HEAD
         this._pickPositionCache = {};
-=======
+
         this._minimumDisableDepthTestDistance = 0.0;
->>>>>>> agi/master
 
         /**
          * Exceptions occurring in <code>render</code> are always caught in order to raise the
