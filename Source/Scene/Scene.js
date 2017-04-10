@@ -2958,7 +2958,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var cacheKey;
+        var cacheKey = windowPosition.toString();
 
         if (this._pickPositionCache.hasOwnProperty(cacheKey)){
             return Cartesian3.clone(this._pickPositionCache[cacheKey], result);
