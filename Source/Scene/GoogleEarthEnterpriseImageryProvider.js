@@ -1,40 +1,40 @@
 /*global define*/
 define([
-    '../Core/Credit',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/Event',
-    '../Core/GeographicTilingScheme',
-    '../Core/GoogleEarthEnterpriseMetadata',
-    '../Core/loadArrayBuffer',
-    '../Core/loadImageFromTypedArray',
-    '../Core/Math',
-    '../Core/Rectangle',
-    '../Core/RuntimeError',
-    '../Core/throttleRequestByServer',
-    '../Core/TileProviderError',
-    '../ThirdParty/protobuf-minimal',
-    '../ThirdParty/when'
-], function(
-    Credit,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Event,
-    GeographicTilingScheme,
-    GoogleEarthEnterpriseMetadata,
-    loadArrayBuffer,
-    loadImageFromTypedArray,
-    CesiumMath,
-    Rectangle,
-    RuntimeError,
-    throttleRequestByServer,
-    TileProviderError,
-    protobuf,
-    when) {
+        '../Core/Credit',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/GeographicTilingScheme',
+        '../Core/GoogleEarthEnterpriseMetadata',
+        '../Core/loadArrayBuffer',
+        '../Core/loadImageFromTypedArray',
+        '../Core/Math',
+        '../Core/Rectangle',
+        '../Core/RuntimeError',
+        '../Core/throttleRequestByServer',
+        '../Core/TileProviderError',
+        '../ThirdParty/protobuf-minimal',
+        '../ThirdParty/when'
+    ], function(
+        Credit,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        GeographicTilingScheme,
+        GoogleEarthEnterpriseMetadata,
+        loadArrayBuffer,
+        loadImageFromTypedArray,
+        CesiumMath,
+        Rectangle,
+        RuntimeError,
+        throttleRequestByServer,
+        TileProviderError,
+        protobuf,
+        when) {
     'use strict';
 
     function GoogleEarthEnterpriseDiscardPolicy() {
@@ -205,7 +205,7 @@ define([
          * @type {Number}
          * @readonly
          */
-        tileHeight: {
+        tileHeight : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -216,7 +216,6 @@ define([
                 return this._tileHeight;
             }
         },
-
 
         /**
          * Gets the maximum level-of-detail that can be requested.  This function should
@@ -447,13 +446,13 @@ define([
 
             var q = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
             var last;
-            while(q.length > 1) {
-                last = q.substring(q.length-1);
-                q = q.substring(0, q.length-1);
+            while (q.length > 1) {
+                last = q.substring(q.length - 1);
+                q = q.substring(0, q.length - 1);
                 info = metadata.getTileInformationFromQuadKey(q);
                 if (defined(info)) {
                     if (!info.hasSubtree() &&
-                        !info.hasChild(parseInt(last))){
+                        !info.hasChild(parseInt(last))) {
                         // We have no subtree or child available at some point in this node's ancestry
                         return invalidImage;
                     }
@@ -598,7 +597,7 @@ define([
 
         var imageType = message.imageType;
         if (defined(imageType)) {
-            switch(imageType) {
+            switch (imageType) {
                 case 0:
                     message.imageType = 'image/jpeg';
                     break;
@@ -619,7 +618,6 @@ define([
 
         return message;
     }
-
 
     return GoogleEarthEnterpriseImageryProvider;
 });

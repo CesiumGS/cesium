@@ -1,38 +1,38 @@
 /*global defineSuite*/
 defineSuite([
-    'Scene/GoogleEarthEnterpriseImageryProvider',
-    'Core/DefaultProxy',
-    'Core/defaultValue',
-    'Core/defined',
-    'Core/GeographicTilingScheme',
-    'Core/GoogleEarthEnterpriseMetadata',
-    'Core/loadImage',
-    'Core/loadWithXhr',
-    'Core/Rectangle',
-    'Scene/DiscardMissingTileImagePolicy',
-    'Scene/Imagery',
-    'Scene/ImageryLayer',
-    'Scene/ImageryProvider',
-    'Scene/ImageryState',
-    'Specs/pollToPromise',
-    'ThirdParty/when'
-], function(
-    GoogleEarthEnterpriseImageryProvider,
-    DefaultProxy,
-    defaultValue,
-    defined,
-    GeographicTilingScheme,
-    GoogleEarthEnterpriseMetadata,
-    loadImage,
-    loadWithXhr,
-    Rectangle,
-    DiscardMissingTileImagePolicy,
-    Imagery,
-    ImageryLayer,
-    ImageryProvider,
-    ImageryState,
-    pollToPromise,
-    when) {
+        'Scene/GoogleEarthEnterpriseImageryProvider',
+        'Core/DefaultProxy',
+        'Core/defaultValue',
+        'Core/defined',
+        'Core/GeographicTilingScheme',
+        'Core/GoogleEarthEnterpriseMetadata',
+        'Core/loadImage',
+        'Core/loadWithXhr',
+        'Core/Rectangle',
+        'Scene/DiscardMissingTileImagePolicy',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'Specs/pollToPromise',
+        'ThirdParty/when'
+    ], function(
+        GoogleEarthEnterpriseImageryProvider,
+        DefaultProxy,
+        defaultValue,
+        defined,
+        GeographicTilingScheme,
+        GoogleEarthEnterpriseMetadata,
+        loadImage,
+        loadWithXhr,
+        Rectangle,
+        DiscardMissingTileImagePolicy,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        pollToPromise,
+        when) {
     'use strict';
 
     var oldDecode;
@@ -59,9 +59,9 @@ defineSuite([
 
     it('constructor throws when url is not specified', function() {
         function constructWithoutServer() {
-            return new GoogleEarthEnterpriseImageryProvider({
-            });
+            return new GoogleEarthEnterpriseImageryProvider({});
         }
+
         expect(constructWithoutServer).toThrowDeveloperError();
     });
 
@@ -121,9 +121,9 @@ defineSuite([
             url : url
         });
 
-        return imageryProvider.readyPromise.then(function () {
+        return imageryProvider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function (e) {
+        }).otherwise(function(e) {
             expect(imageryProvider.ready).toBe(false);
             expect(e.message).toContain(url);
         });

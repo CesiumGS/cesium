@@ -1,24 +1,24 @@
 /*global define*/
 define([
-    './appendForwardSlash',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './loadArrayBuffer',
-    './RuntimeError',
-    '../ThirdParty/pako_inflate',
-    '../ThirdParty/when'
-], function(
-    appendForwardSlash,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    loadArrayBuffer,
-    RuntimeError,
-    pako,
-    when) {
+        '../ThirdParty/pako_inflate',
+        '../ThirdParty/when',
+        './appendForwardSlash',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './loadArrayBuffer',
+        './RuntimeError'
+    ], function(
+        pako,
+        when,
+        appendForwardSlash,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        loadArrayBuffer,
+        RuntimeError) {
     'use strict';
 
     // Bitmask for checking tile properties
@@ -117,7 +117,7 @@ define([
      *
      * @returns {Number} Children bitmask
      */
-    TileInformation.prototype.getChildBitmask = function(index) {
+    TileInformation.prototype.getChildBitmask = function() {
         return this._bits && anyChildBitmask;
     };
 
@@ -212,7 +212,7 @@ define([
      */
     GoogleEarthEnterpriseMetadata.tileXYToQuadKey = function(x, y, level) {
         var quadkey = '';
-        for ( var i = level; i >= 0; --i) {
+        for (var i = level; i >= 0; --i) {
             var bitmask = 1 << i;
             var digit = 0;
 
@@ -253,7 +253,7 @@ define([
         var x = 0;
         var y = 0;
         var level = quadkey.length - 1;
-        for ( var i = level; i >= 0; --i) {
+        for (var i = level; i >= 0; --i) {
             var bitmask = 1 << i;
             var digit = +quadkey[level - i];
 
@@ -295,7 +295,7 @@ define([
         if (!defined(keyBuffer)) {
             keyBuffer = new ArrayBuffer(keylen);
             var ui8 = new Uint8Array(keyBuffer);
-            for (var i=0; i < keylen; ++i) {
+            for (var i = 0; i < keylen; ++i) {
                 ui8[i] = key.charCodeAt(i);
             }
         }
@@ -330,7 +330,7 @@ define([
             // then drop out to rotate the key for the next bit
             while ((dp < dpend64) && (kp < kpend)) {
                 dataView.setUint32(dp, dataView.getUint32(dp, true) ^ keyView.getUint32(kp, true), true);
-                dataView.setUint32(dp+4, dataView.getUint32(dp+4, true) ^ keyView.getUint32(kp+4, true), true);
+                dataView.setUint32(dp + 4, dataView.getUint32(dp + 4, true) ^ keyView.getUint32(kp + 4, true), true);
                 dp += 8;
                 kp += 24;
             }
@@ -352,7 +352,6 @@ define([
         }
     };
 
-
     var qtMagic = 32301;
     var compressedMagic = 0x7468dead;
     var compressedMagicSwap = 0xadde6874;
@@ -363,7 +362,7 @@ define([
      *
      * @private
      */
-    GoogleEarthEnterpriseMetadata.uncompressPacket = function (data) {
+    GoogleEarthEnterpriseMetadata.uncompressPacket = function(data) {
         // The layout of this decoded data is
         // Magic Uint32
         // Size Uint32
@@ -383,9 +382,9 @@ define([
         offset += sizeOfUint32;
         if (magic === compressedMagicSwap) {
             size = ((size >>> 24) & 0x000000ff) |
-                    ((size >>>  8) & 0x0000ff00) |
-                    ((size <<  8) & 0x00ff0000) |
-                    ((size << 24) & 0xff000000);
+                   ((size >>> 8) & 0x0000ff00) |
+                   ((size << 8) & 0x00ff0000) |
+                   ((size << 24) & 0xff000000);
         }
 
         var compressedPacket = new Uint8Array(data, offset);
@@ -587,8 +586,8 @@ define([
             return when(t);
         }
 
-        while((t === undefined) && q.length > 1) {
-            q = q.substring(0, q.length-1);
+        while ((t === undefined) && q.length > 1) {
+            q = q.substring(0, q.length - 1);
             t = tileInfo[q];
         }
 

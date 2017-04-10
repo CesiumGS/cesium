@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/GoogleEarthEnterpriseMetadata',
-    'Core/DefaultProxy',
-    'Core/defaultValue',
-    'Core/loadWithXhr',
-    'Core/Math',
-    'ThirdParty/when'
-], function(
-    GoogleEarthEnterpriseMetadata,
-    DefaultProxy,
-    defaultValue,
-    loadWithXhr,
-    CesiumMath,
-    when) {
+        'Core/GoogleEarthEnterpriseMetadata',
+        'Core/DefaultProxy',
+        'Core/defaultValue',
+        'Core/loadWithXhr',
+        'Core/Math',
+        'ThirdParty/when'
+    ], function(
+        GoogleEarthEnterpriseMetadata,
+        DefaultProxy,
+        defaultValue,
+        loadWithXhr,
+        CesiumMath,
+        when) {
     'use strict';
 
     it('tileXYToQuadKey', function() {
@@ -74,7 +74,7 @@ defineSuite([
         });
 
         var metadata = new GoogleEarthEnterpriseMetadata({
-            url: 'http://test.server'
+            url : 'http://test.server'
         });
         return metadata.readyPromise
             .then(function() {
@@ -99,9 +99,10 @@ defineSuite([
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
     var sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+
     function createFakeMetadataResponse() {
         var numInstances = 2;
-        var buffer = new ArrayBuffer(32+numInstances*32);
+        var buffer = new ArrayBuffer(32 + numInstances * 32);
         var dv = new DataView(buffer);
 
         var offset = 0;
@@ -121,7 +122,7 @@ defineSuite([
         dv.setInt32(offset, 32, true);
         offset += sizeOfInt32;
 
-        dv.setInt32(offset, 32 + 32*numInstances, true);
+        dv.setInt32(offset, 32 + 32 * numInstances, true);
         offset += sizeOfInt32;
 
         dv.setInt32(offset, 0, true);
@@ -131,7 +132,7 @@ defineSuite([
         offset += sizeOfInt32;
 
         for (var i = 0; i < numInstances; ++i) {
-            if (i === (numInstances-1)) {
+            if (i === (numInstances - 1)) {
                 dv.setUint8(offset, 0x40);
             } else {
                 dv.setUint8(offset, 0x41);
@@ -195,7 +196,7 @@ defineSuite([
         });
 
         var provider = new GoogleEarthEnterpriseMetadata({
-            url: baseurl
+            url : baseurl
         });
 
         return provider.readyPromise.then(function(result) {
@@ -215,12 +216,12 @@ defineSuite([
     it('rejects readyPromise on error', function() {
         var url = 'host.invalid/';
         var provider = new GoogleEarthEnterpriseMetadata({
-            url: url
+            url : url
         });
 
-        return provider.readyPromise.then(function () {
+        return provider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function (e) {
+        }).otherwise(function(e) {
             expect(e.message).toContain(url);
         });
     });

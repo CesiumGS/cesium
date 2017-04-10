@@ -44,6 +44,7 @@ defineSuite([
     }
 
     var terrainProvider;
+
     function waitForTile(level, x, y, f) {
         terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
             url : 'made/up/url'
@@ -74,8 +75,7 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new GoogleEarthEnterpriseTerrainProvider({
-            });
+            return new GoogleEarthEnterpriseTerrainProvider({});
         }).toThrowDeveloperError();
     });
 
@@ -86,7 +86,7 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        return terrainProvider.readyPromise.then(function (result) {
+        return terrainProvider.readyPromise.then(function(result) {
             expect(result).toBe(true);
             expect(terrainProvider.ready).toBe(true);
         });

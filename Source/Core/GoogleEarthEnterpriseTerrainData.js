@@ -1,46 +1,46 @@
 /*global define*/
 define([
-    '../ThirdParty/when',
-    './BoundingSphere',
-    './Cartesian2',
-    './Cartesian3',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './GeographicTilingScheme',
-    './HeightmapTessellator',
-    './IndexDatatype',
-    './Intersections2D',
-    './Math',
-    './OrientedBoundingBox',
-    './QuantizedMeshTerrainData',
-    './Rectangle',
-    './TaskProcessor',
-    './TerrainEncoding',
-    './TerrainMesh',
-    './TerrainProvider'
-], function(
-    when,
-    BoundingSphere,
-    Cartesian2,
-    Cartesian3,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    GeographicTilingScheme,
-    HeightmapTessellator,
-    IndexDatatype,
-    Intersections2D,
-    CesiumMath,
-    OrientedBoundingBox,
-    QuantizedMeshTerrainData,
-    Rectangle,
-    TaskProcessor,
-    TerrainEncoding,
-    TerrainMesh,
-    TerrainProvider) {
+        '../ThirdParty/when',
+        './BoundingSphere',
+        './Cartesian2',
+        './Cartesian3',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './GeographicTilingScheme',
+        './HeightmapTessellator',
+        './IndexDatatype',
+        './Intersections2D',
+        './Math',
+        './OrientedBoundingBox',
+        './QuantizedMeshTerrainData',
+        './Rectangle',
+        './TaskProcessor',
+        './TerrainEncoding',
+        './TerrainMesh',
+        './TerrainProvider'
+    ], function(
+        when,
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        GeographicTilingScheme,
+        HeightmapTessellator,
+        IndexDatatype,
+        Intersections2D,
+        CesiumMath,
+        OrientedBoundingBox,
+        QuantizedMeshTerrainData,
+        Rectangle,
+        TaskProcessor,
+        TerrainEncoding,
+        TerrainMesh,
+        TerrainProvider) {
     'use strict';
 
     /**
@@ -87,7 +87,6 @@ define([
 
         this._buffer = options.buffer;
 
-
         // Convert from google layout to layout of other providers
         // 3 2 -> 2 3
         // 0 1 -> 0 1
@@ -123,7 +122,6 @@ define([
             }
         }
     });
-
 
     var taskProcessor = new TaskProcessor('createVerticesFromGoogleEarthEnterpriseBuffer');
 
@@ -394,6 +392,7 @@ define([
     var texCoordScratch1 = new Cartesian2();
     var texCoordScratch2 = new Cartesian2();
     var barycentricCoordinateScratch = new Cartesian3();
+
     function interpolateMeshHeight(terrainData, u, v) {
         var mesh = terrainData._mesh;
         var vertices = mesh.vertices;
@@ -427,6 +426,7 @@ define([
     var sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
     var sizeOfFloat = Float32Array.BYTES_PER_ELEMENT;
     var sizeOfDouble = Float64Array.BYTES_PER_ELEMENT;
+
     function interpolateHeight(terrainData, u, v, rectangle) {
         var buffer = terrainData._buffer;
         var quad = 0; // SW
@@ -452,12 +452,12 @@ define([
             offset += sizeOfUint32;
         }
         offset += sizeOfUint32; // Skip length of quad
-        offset += 2*sizeOfDouble; // Skip origin
+        offset += 2 * sizeOfDouble; // Skip origin
 
         // Read sizes
-        var xSize = CesiumMath.toRadians(dv.getFloat64(offset, true)*180.0);
+        var xSize = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
         offset += sizeOfDouble;
-        var ySize = CesiumMath.toRadians(dv.getFloat64(offset, true)*180.0);
+        var ySize = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
         offset += sizeOfDouble;
 
         // Samples per quad
@@ -469,7 +469,7 @@ define([
         offset += sizeOfInt32;
 
         // Number of faces
-        var numIndices = dv.getInt32(offset, true)*3;
+        var numIndices = dv.getInt32(offset, true) * 3;
         offset += sizeOfInt32;
 
         offset += sizeOfInt32; // Skip Level
@@ -477,7 +477,7 @@ define([
         var uBuffer = new Array(numPoints);
         var vBuffer = new Array(numPoints);
         var heights = new Array(numPoints);
-        for (var i=0;i<numPoints;++i) {
+        for (var i = 0; i < numPoints; ++i) {
             uBuffer[i] = uStart + (dv.getUint8(offset++) * xScale);
             vBuffer[i] = vStart + (dv.getUint8(offset++) * yScale);
 
@@ -487,7 +487,7 @@ define([
         }
 
         var indices = new Array(numIndices);
-        for (i=0;i<numIndices;++i) {
+        for (i = 0; i < numIndices; ++i) {
             indices[i] = dv.getUint16(offset, true);
             offset += sizeOfUint16;
         }

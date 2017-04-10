@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
@@ -15,15 +16,16 @@ define([
         './GoogleEarthEnterpriseMetadata',
         './GoogleEarthEnterpriseTerrainData',
         './HeightmapTerrainData',
+        './JulianDate',
         './loadArrayBuffer',
         './Math',
         './Rectangle',
         './RuntimeError',
         './TerrainProvider',
         './throttleRequestByServer',
-        './TileProviderError',
-        '../ThirdParty/when'
+        './TileProviderError'
     ], function(
+        when,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -39,14 +41,14 @@ define([
         GoogleEarthEnterpriseMetadata,
         GoogleEarthEnterpriseTerrainData,
         HeightmapTerrainData,
+        JulianDate,
         loadArrayBuffer,
         CesiumMath,
         Rectangle,
         RuntimeError,
         TerrainProvider,
         throttleRequestByServer,
-        TileProviderError,
-        when) {
+        TileProviderError) {
     'use strict';
 
     var TerrainState = {
@@ -54,6 +56,47 @@ define([
         NONE : 1,
         SELF : 2,
         PARENT : 3
+    };
+
+    var julianDateScratch = new JulianDate();
+
+    function TerrainCache() {
+        this._terrainCache = {};
+        this._lastTidy = JulianDate.now();
+    }
+
+    TerrainCache.prototype.add = function(quadKey, buffer) {
+        this._terrainCache[quadKey] = {
+            buffer : buffer,
+            timestamp : JulianDate.now()
+        };
+    };
+
+    TerrainCache.prototype.get = function(quadKey) {
+        var terrainCache = this._terrainCache;
+        var result = terrainCache[quadKey];
+        if (defined(result)) {
+            delete this._terrainCache[quadKey];
+            return result.buffer;
+        }
+    };
+
+    TerrainCache.prototype.tidy = function() {
+        JulianDate.now(julianDateScratch);
+        if (JulianDate.secondsDifference(julianDateScratch, this._lastTidy) > 10) {
+            var terrainCache = this._terrainCache;
+            var keys = Object.keys(terrainCache);
+            var count = keys.length;
+            for (var i = 0; i < count; ++i) {
+                var k = keys[i];
+                var e = terrainCache[k];
+                if (JulianDate.secondsDifference(julianDateScratch, e.timestamp) > 10) {
+                    delete terrainCache[k];
+                }
+            }
+
+            JulianDate.clone(julianDateScratch, this._lastTidy);
+        }
     };
 
     /**
@@ -116,7 +159,7 @@ define([
         // Pulled from Google's documentation
         this._levelZeroMaximumGeometricError = 40075.16;
 
-        this._terrainCache = {};
+        this._terrainCache = new TerrainCache();
         this._terrainPromises = {};
 
         this._errorEvent = new Event();
@@ -303,7 +346,8 @@ define([
         var metadata = this._metadata;
         var info = metadata.getTileInformationFromQuadKey(quadKey);
 
-        if (!defined(terrainCache[quadKey])) { // If its in the cache we know we have it so just skip all the checks
+        if (!defined(terrainCache.get(quadKey))) { // If its in the cache we know we have it so just skip all the checks
+            terrainCache.tidy(); // Cleanup the cache since we know we don't have it
             if (defined(info)) {
                 if (info.terrainState === TerrainState.NONE) {
                     // Already have info and there isn't any terrain here
@@ -339,7 +383,7 @@ define([
         }
 
         if (!hasTerrain) {
-            if(defined(info) && !info.ancestorHasTerrain) {
+            if (defined(info) && !info.ancestorHasTerrain) {
                 // We haven't reached a level with terrain, so return the ellipsoid
                 return new HeightmapTerrainData({
                     buffer : new Uint8Array(16 * 16),
@@ -351,22 +395,21 @@ define([
             return undefined;
         }
 
-
         var that = this;
         var terrainPromises = this._terrainPromises;
         return metadata.populateSubtree(x, y, level)
-            .then(function(info){
+            .then(function(info) {
                 if (defined(info)) {
-                    if (defined(terrainCache[quadKey])) {
+                    var buffer = terrainCache.get(quadKey);
+                    if (defined(buffer)) {
                         if (info.terrainState === TerrainState.UNKNOWN) {
                             // If its already in the cache then a parent request must've loaded it
                             info.terrainState = TerrainState.PARENT;
                         }
-                        var buffer = terrainCache[quadKey];
-                        delete terrainCache[quadKey];
+
                         return new GoogleEarthEnterpriseTerrainData({
-                            buffer: buffer,
-                            childTileMask: info.getChildBitmask()
+                            buffer : buffer,
+                            childTileMask : info.getChildBitmask()
                         });
                     }
 
@@ -375,12 +418,12 @@ define([
                     var terrainVersion = -1;
                     var terrainState = info.terrainState;
                     if (terrainState !== TerrainState.NONE) {
-                        switch(terrainState) {
+                        switch (terrainState) {
                             case TerrainState.SELF: // We have terrain and have retrieved it before
                                 terrainVersion = info.terrainVersion;
                                 break;
                             case TerrainState.PARENT: // We have terrain in our parent
-                                q = q.substring(0, q.length-1);
+                                q = q.substring(0, q.length - 1);
                                 parentInfo = metadata.getTileInformationFromQuadKey(q);
                                 terrainVersion = parentInfo.terrainVersion;
                                 break;
@@ -388,7 +431,7 @@ define([
                                 if (info.hasTerrain()) {
                                     terrainVersion = info.terrainVersion; // We should have terrain
                                 } else {
-                                    q = q.substring(0, q.length-1);
+                                    q = q.substring(0, q.length - 1);
                                     parentInfo = metadata.getTileInformationFromQuadKey(q);
                                     if (defined(parentInfo) && parentInfo.hasTerrain()) {
                                         terrainVersion = parentInfo.terrainVersion; // Try checking in the parent
@@ -431,13 +474,13 @@ define([
                                     var uncompressedTerrain = GoogleEarthEnterpriseMetadata.uncompressPacket(terrain);
                                     parseTerrainPacket(that, uncompressedTerrain, q);
 
-                                    var buffer = terrainCache[quadKey];
+                                    var buffer = terrainCache.get(quadKey);
                                     if (defined(buffer)) {
                                         if (q !== quadKey) {
                                             // If we didn't request this tile directly then it came from a parent
                                             info.terrainState = TerrainState.PARENT;
                                         }
-                                        delete terrainCache[quadKey];
+
                                         return new GoogleEarthEnterpriseTerrainData({
                                             buffer : buffer,
                                             childTileMask : info.getChildBitmask()
@@ -453,7 +496,7 @@ define([
                                 info.terrainState = TerrainState.NONE;
                                 return when.reject(error);
                             });
-                    } else if(!info.ancestorHasTerrain) {
+                    } else if (!info.ancestorHasTerrain) {
                         // We haven't reached a level with terrain, so return the ellipsoid
                         return new HeightmapTerrainData({
                             buffer : new Uint8Array(16 * 16),
@@ -468,6 +511,7 @@ define([
     };
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+
     function parseTerrainPacket(that, terrainData, quadKey) {
         var info = that._metadata.getTileInformationFromQuadKey(quadKey);
         var terrainCache = that._terrainCache;
@@ -478,7 +522,7 @@ define([
 
         var offset = 0;
         var terrainTiles = [];
-        while(offset < totalSize) {
+        while (offset < totalSize) {
             // Each tile is split into 4 parts
             var tileStart = offset;
             for (var quad = 0; quad < 4; ++quad) {
@@ -490,13 +534,13 @@ define([
         }
 
         // If we were sent child tiles, store them till they are needed
-        terrainCache[quadKey] = terrainTiles[0];
+        terrainCache.add(quadKey, terrainTiles[0]);
         info.terrainState = TerrainState.SELF;
-        var count = terrainTiles.length-1;
+        var count = terrainTiles.length - 1;
         for (var j = 0; j < count; ++j) {
             var childKey = quadKey + j.toString();
             if (info.hasChild(j)) {
-                terrainCache[childKey] = terrainTiles[j+1];
+                terrainCache.add(childKey, terrainTiles[j + 1]);
             }
         }
     }

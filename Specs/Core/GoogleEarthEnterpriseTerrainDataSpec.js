@@ -1,32 +1,32 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/GoogleEarthEnterpriseTerrainData',
-    'Core/BoundingSphere',
-    'Core/Cartesian3',
-    'Core/Cartographic',
-    'Core/Ellipsoid',
-    'Core/GeographicTilingScheme',
-    'Core/Math',
-    'Core/Matrix4',
-    'Core/Rectangle',
-    'Core/TerrainData',
-    'Core/TerrainMesh',
-    'Core/Transforms',
-    'ThirdParty/when'
-], function(
-    GoogleEarthEnterpriseTerrainData,
-    BoundingSphere,
-    Cartesian3,
-    Cartographic,
-    Ellipsoid,
-    GeographicTilingScheme,
-    CesiumMath,
-    Matrix4,
-    Rectangle,
-    TerrainData,
-    TerrainMesh,
-    Transforms,
-    when) {
+        'Core/GoogleEarthEnterpriseTerrainData',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
+        'Core/Math',
+        'Core/Matrix4',
+        'Core/Rectangle',
+        'Core/TerrainData',
+        'Core/TerrainMesh',
+        'Core/Transforms',
+        'ThirdParty/when'
+    ], function(
+        GoogleEarthEnterpriseTerrainData,
+        BoundingSphere,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        GeographicTilingScheme,
+        CesiumMath,
+        Matrix4,
+        Rectangle,
+        TerrainData,
+        TerrainMesh,
+        Transforms,
+        when) {
     'use strict';
 
     var sizeOfUint8 = Uint8Array.BYTES_PER_ELEMENT;
@@ -35,7 +35,7 @@ defineSuite([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
     var sizeOfFloat = Float32Array.BYTES_PER_ELEMENT;
     var sizeOfDouble = Float64Array.BYTES_PER_ELEMENT;
-    var toEarthRadii = 1.0/6371010.0;
+    var toEarthRadii = 1.0 / 6371010.0;
 
     function getBuffer(tilingScheme, x, y, level) {
         var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
@@ -63,7 +63,7 @@ defineSuite([
 
         var altitudeStart = 0;
         var offset = 0;
-        for(var i=0;i<4;++i) {
+        for (var i = 0; i < 4; ++i) {
             altitudeStart = 0;
             dv.setUint32(offset, quadSize, true);
             offset += sizeOfUint32;
@@ -83,9 +83,9 @@ defineSuite([
                 altitudeStart = 10;
             }
 
-            dv.setFloat64(offset, CesiumMath.toDegrees(xOrigin)/180.0, true);
+            dv.setFloat64(offset, CesiumMath.toDegrees(xOrigin) / 180.0, true);
             offset += sizeOfDouble;
-            dv.setFloat64(offset, CesiumMath.toDegrees(yOrigin)/180.0, true);
+            dv.setFloat64(offset, CesiumMath.toDegrees(yOrigin) / 180.0, true);
             offset += sizeOfDouble;
 
             // Step - Each step is a degree
@@ -126,7 +126,7 @@ defineSuite([
             }
 
             // Faces
-            var indices = [0,1,2,1,3,2];
+            var indices = [0, 1, 2, 1, 3, 2];
             for (j = 0; j < indices.length; ++j) {
                 dv.setUint16(offset, indices[j], true);
                 offset += sizeOfUint16;
@@ -282,7 +282,7 @@ defineSuite([
                         encoding.decodePosition(mesh.vertices, i, cartesian);
                         wgs84.cartesianToCartographic(cartesian, cartographic);
                         cartographic.longitude = CesiumMath.convertLongitudeRange(cartographic.longitude);
-                        expect(Rectangle.contains(rectangle,cartographic)).toBe(true);
+                        expect(Rectangle.contains(rectangle, cartographic)).toBe(true);
                     } else { // Skirts
                         expect(height).toBeBetween(-1000, -980);
                     }
@@ -360,7 +360,7 @@ defineSuite([
 
         beforeEach(function() {
             data = new GoogleEarthEnterpriseTerrainData({
-                buffer: new ArrayBuffer(1),
+                buffer : new ArrayBuffer(1),
                 childTileMask : 15
             });
         });
@@ -391,7 +391,7 @@ defineSuite([
 
         it('returns true for all children when child mask is not explicitly specified', function() {
             data = new GoogleEarthEnterpriseTerrainData({
-                buffer: new ArrayBuffer(1)
+                buffer : new ArrayBuffer(1)
             });
 
             expect(data.isChildAvailable(10, 20, 20, 40)).toBe(true);
@@ -402,7 +402,7 @@ defineSuite([
 
         it('works when only southwest child is available', function() {
             data = new GoogleEarthEnterpriseTerrainData({
-                buffer: new ArrayBuffer(1),
+                buffer : new ArrayBuffer(1),
                 childTileMask : 1
             });
 
@@ -414,7 +414,7 @@ defineSuite([
 
         it('works when only southeast child is available', function() {
             data = new GoogleEarthEnterpriseTerrainData({
-                buffer: new ArrayBuffer(1),
+                buffer : new ArrayBuffer(1),
                 childTileMask : 2
             });
 
@@ -426,7 +426,7 @@ defineSuite([
 
         it('works when only northeast child is available', function() {
             data = new GoogleEarthEnterpriseTerrainData({
-                buffer: new ArrayBuffer(1),
+                buffer : new ArrayBuffer(1),
                 childTileMask : 4
             });
 
@@ -438,7 +438,7 @@ defineSuite([
 
         it('works when only northwest child is available', function() {
             data = new GoogleEarthEnterpriseTerrainData({
-                buffer: new ArrayBuffer(1),
+                buffer : new ArrayBuffer(1),
                 childTileMask : 8
             });
 
