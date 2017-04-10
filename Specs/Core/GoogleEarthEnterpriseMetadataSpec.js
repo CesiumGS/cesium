@@ -16,9 +16,6 @@ defineSuite([
     'use strict';
 
     it('tileXYToQuadKey', function() {
-        // http://msdn.microsoft.com/en-us/library/bb259689.aspx
-        // Levels are off by one compared to the documentation because our levels
-        // start at 0 while Bing's start at 1.
         expect(GoogleEarthEnterpriseMetadata.tileXYToQuadKey(1, 0, 0)).toEqual('2');
         expect(GoogleEarthEnterpriseMetadata.tileXYToQuadKey(1, 2, 1)).toEqual('02');
         expect(GoogleEarthEnterpriseMetadata.tileXYToQuadKey(3, 5, 2)).toEqual('021');

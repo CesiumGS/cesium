@@ -13,6 +13,7 @@ define([
     '../Core/Matrix4',
     '../Core/OrientedBoundingBox',
     '../Core/Rectangle',
+    '../Core/RuntimeError',
     '../Core/TerrainEncoding',
     '../Core/Transforms',
     '../Core/WebMercatorProjection',
@@ -31,6 +32,7 @@ define([
     Matrix4,
     OrientedBoundingBox,
     Rectangle,
+    RuntimeError,
     TerrainEncoding,
     Transforms,
     WebMercatorProjection,
@@ -197,8 +199,9 @@ define([
         var indicesOffset = 0;
         offset = 0;
         for (quad = 0; quad < 4; ++quad) {
-            //var quadSize = dv.getUint32(offset, true);
+            var quadSize = dv.getUint32(offset, true);
             offset += sizeOfUint32;
+            var startQuad = offset;
 
             var originX = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
             offset += sizeOfDouble;
@@ -309,6 +312,10 @@ define([
             for (i = 0; i < facesElementCount; ++i, ++indicesOffset) {
                 indices[indicesOffset] = indicesMapping[dv.getUint16(offset, true)];
                 offset += sizeOfUint16;
+            }
+
+            if (quadSize !== (offset-startQuad)) {
+                throw new RuntimeError('Invalid terrain tile.');
             }
         }
 

@@ -25,7 +25,6 @@ define([
     var childrenBitmasks = [0x01, 0x02, 0x04, 0x08];
     var anyChildBitmask = 0x0F;
     var cacheFlagBitmask = 0x10; // True if there is a child subtree
-    //var vectorDataBitmask = 0x20;
     var imageBitmask = 0x40;
     var terrainBitmask = 0x80;
 
@@ -38,6 +37,16 @@ define([
         return ((bits & mask) !== 0);
     }
 
+    /**
+     * Contains information about each tile from a Google Earth Enterprise server
+     *
+     * @param {Number} bits Bitmask that contains the type of data and available children for each tile.
+     * @param {Number} cnodeVersion Version of the request for subtree metadata.
+     * @param {Number} imageryVersion Version of the request for imagery tile.
+     * @param {Number} terrainVersion Version of the request for terrain tile.
+     *
+     * @private
+     */
     function TileInformation(bits, cnodeVersion, imageryVersion, terrainVersion) {
         this._bits = bits;
         this.cnodeVersion = cnodeVersion;
@@ -47,30 +56,67 @@ define([
         this.terrainState = 0; // UNKNOWN
     }
 
+    /**
+     * Sets the parent for the tile
+     *
+     * @param {TileInformation} parent Parent tile
+     */
     TileInformation.prototype.setParent = function(parent) {
         this.ancestorHasTerrain = parent.ancestorHasTerrain || this.hasTerrain();
     };
 
+    /**
+     * Gets whether a subtree is available
+     *
+     * @returns {Boolean} true if subtree is available, false otherwise.
+     */
     TileInformation.prototype.hasSubtree = function() {
         return isBitSet(this._bits, cacheFlagBitmask);
     };
 
+    /**
+     * Gets whether imagery is available
+     *
+     * @returns {Boolean} true if imagery is available, false otherwise.
+     */
     TileInformation.prototype.hasImagery = function() {
         return isBitSet(this._bits, imageBitmask);
     };
 
+    /**
+     * Gets whether terrain is available
+     *
+     * @returns {Boolean} true if terrain is available, false otherwise.
+     */
     TileInformation.prototype.hasTerrain = function() {
         return isBitSet(this._bits, terrainBitmask);
     };
 
+    /**
+     * Gets whether any children are present
+     *
+     * @returns {Boolean} true if any children are available, false otherwise.
+     */
     TileInformation.prototype.hasChildren = function() {
         return isBitSet(this._bits, anyChildBitmask);
     };
 
+    /**
+     * Gets whether a specified child is available
+     *
+     * @param {Number} index Index of child tile
+     *
+     * @returns {Boolean} true if child is available, false otherwise
+     */
     TileInformation.prototype.hasChild = function(index) {
         return isBitSet(this._bits, childrenBitmasks[index]);
     };
 
+    /**
+     * Gets bitmask containing children
+     *
+     * @returns {Number} Children bitmask
+     */
     TileInformation.prototype.getChildBitmask = function(index) {
         return this._bits && anyChildBitmask;
     };
@@ -438,17 +484,14 @@ define([
                     offset += sizeOfUint16;
 
                     // Number of channels stored in the dataBuffer
-                    //var numChannels = dv.getUint16(offset, true);
                     offset += sizeOfUint16;
 
                     offset += sizeOfUint16; // 4 byte align
 
                     // Channel type offset into dataBuffer
-                    //var typeOffset = dv.getInt32(offset, true);
                     offset += sizeOfInt32;
 
                     // Channel version offset into dataBuffer
-                    //var versionOffset = dv.getInt32(offset, true);
                     offset += sizeOfInt32;
 
                     offset += 8; // Ignore image neighbors for now
