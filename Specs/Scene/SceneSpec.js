@@ -850,7 +850,6 @@ defineSuite([
 
         var canvas = scene.canvas;
         var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
-        var originaltransformWindowToDrawingBuffer = SceneTransforms.transformWindowToDrawingBuffer;
         spyOn(SceneTransforms, 'transformWindowToDrawingBuffer').and.callThrough();
 
         expect(scene).toRenderAndCall(function() {
@@ -873,7 +872,6 @@ defineSuite([
 
             scene.pickPosition(windowPosition);
             expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(2);
-            SceneTransforms.transformWindowToDrawingBuffer = originaltransformWindowToDrawingBuffer;
         });
     });
 
