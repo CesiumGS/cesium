@@ -24,7 +24,8 @@ defineSuite([
             show : false,
             scaleByDistance : new NearFarScalar(3, 4, 5, 6),
             heightReference : HeightReference.RELATIVE_TO_GROUND,
-            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
+            disableDepthTestDistance : 10.0
         };
 
         var point = new PointGraphics(options);
@@ -36,6 +37,7 @@ defineSuite([
         expect(point.scaleByDistance).toBeInstanceOf(ConstantProperty);
         expect(point.heightReference).toBeInstanceOf(ConstantProperty);
         expect(point.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+        expect(point.disableDepthTestDistance).toBeInstanceOf(ConstantProperty);
 
         expect(point.color.getValue()).toEqual(options.color);
         expect(point.pixelSize.getValue()).toEqual(options.pixelSize);
@@ -45,6 +47,7 @@ defineSuite([
         expect(point.scaleByDistance.getValue()).toEqual(options.scaleByDistance);
         expect(point.heightReference.getValue()).toEqual(options.heightReference);
         expect(point.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
+        expect(point.disableDepthTestDistance.getValue()).toEqual(options.disableDepthTestDistance);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -57,6 +60,7 @@ defineSuite([
         source.scaleByDistance = new ConstantProperty(new NearFarScalar());
         source.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        source.disableDepthTestDistance = new ConstantProperty(10.0);
 
         var target = new PointGraphics();
         target.merge(source);
@@ -68,6 +72,7 @@ defineSuite([
         expect(target.scaleByDistance).toBe(source.scaleByDistance);
         expect(target.heightReference).toBe(source.heightReference);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(target.disableDepthTestDistance).toBe(source.disableDepthTestDistance);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -80,6 +85,7 @@ defineSuite([
         source.scaleByDistance = new ConstantProperty(new NearFarScalar());
         source.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        source.disableDepthTestDistance = new ConstantProperty(10.0);
 
         var color = new ConstantProperty(Color.WHITE);
         var pixelSize = new ConstantProperty(1);
@@ -88,6 +94,7 @@ defineSuite([
         var show = new ConstantProperty(true);
         var heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         var distanDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        var disableDepthTestDistance = new ConstantProperty(20.0);
 
         var target = new PointGraphics();
         target.color = color;
@@ -98,6 +105,7 @@ defineSuite([
         target.scaleByDistance = show;
         target.heightReference = heightReference;
         target.distanceDisplayCondition = distanDisplayCondition;
+        target.disableDepthTestDistance = disableDepthTestDistance;
 
         target.merge(source);
         expect(target.color).toBe(color);
@@ -108,6 +116,7 @@ defineSuite([
         expect(target.scaleByDistance).toBe(show);
         expect(target.heightReference).toBe(heightReference);
         expect(target.distanceDisplayCondition).toBe(distanDisplayCondition);
+        expect(target.disableDepthTestDistance).toBe(disableDepthTestDistance);
     });
 
     it('clone works', function() {
@@ -120,6 +129,7 @@ defineSuite([
         source.scaleByDistance = new ConstantProperty(new NearFarScalar());
         source.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        source.disableDepthTestDistance = new ConstantProperty(10.0);
 
         var result = source.clone();
         expect(result.color).toBe(source.color);
@@ -130,6 +140,7 @@ defineSuite([
         expect(result.scaleByDistance).toBe(source.scaleByDistance);
         expect(result.heightReference).toBe(source.heightReference);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(result.disableDepthTestDistance).toBe(source.disableDepthTestDistance);
     });
 
     it('merge throws if source undefined', function() {

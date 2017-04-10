@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.33 - 2017-05-01
+
+* Added `disableDepthTestDistance` to billboards, points and labels. This sets the distance to the camera where the depth test will be disabled. Setting it to zero (the default) will alwasy enable the depth test. Setting it to `Number.POSITVE_INFINITY` will never enabled the depth test. Also added `scene.minimumDisableDepthTestDistance` to change the default value from zero. [#5166](https://github.com/AnalyticalGraphicsInc/cesium/pull/5166)
+
 ### 1.32 - 2017-04-03
 
 * Deprecated
@@ -8,29 +12,26 @@ Change Log
 * Breaking changes
     * Removed `ArcGisImageServerTerrainProvider`.
     * The top-level `properties` in an `Entity` created by `GeoJsonDataSource` are now instances of `ConstantProperty` instead of raw values.
-* Added `Camera.flyTo` and `Camera.flyToBoundingSphere` options [#5070](https://github.com/AnalyticalGraphicsInc/cesium/pull/5070)
-    * `flyOverLongitude` to select one of two possible on Globe paths which camera should fly.
-    * `flyOverLongitudeWeight` to set a threshold: how many times the `flyOverLongitude` way can be than shortest path.
-    * `pitchAdjustHeight` to adjust camera pitch during exaggerated flights, to keep Earth in viewport.
-* Added the event `Viewer.trackedEntityChanged`, which is raised when the value of `viewer.trackedEntity` changes. [#5060](https://github.com/AnalyticalGraphicsInc/cesium/pull/5060)
-* Added `Camera.DEFAULT_OFFSET` for default view of objects with bounding spheres [#4936](https://github.com/AnalyticalGraphicsInc/cesium/pull/4936)
-* Changed billboard blending behavior [#5066](https://github.com/AnalyticalGraphicsInc/cesium/pull/5056)
-* Decrease multi-frustum overlap to prevent depth artifacts between opaque and translucent draw calls. [#5116](https://github.com/AnalyticalGraphicsInc/cesium/pull/5116)
-* Fix crunch compressed textures in IE11. [#5057](https://github.com/AnalyticalGraphicsInc/cesium/pull/5057)
-* Fixed a bug in `Quaternion.fromHeadingPitchRoll` that made it erroneously throw an exception when passed individual angles in an unminified / debug build.
-* Fix `GroundPrimitive` rendering in 2D and Columbus View [#5078](https://github.com/AnalyticalGraphicsInc/cesium/pull/5078)
-* Fixed an issue with `PinBuilder` where inset images could have low-alpha fringes against an opaque background.  [#5099](https://github.com/AnalyticalGraphicsInc/cesium/pull/5099)
-* Fixed a bug in `ModelAnimationCache` causing different animations to reference the same animation. [#5064](https://github.com/AnalyticalGraphicsInc/cesium/pull/5064)
-* Fixed a bug that caused an exception in `CesiumInspectorViewModel` when using the NW / NE / SW / SE / Parent buttons to navigate to a terrain tile that is not yet loaded.
-* `ConstantProperty` now provides `valueOf` and `toString` methods that return the constant value.
-* Added support for time-varying properties in CZML [#5105](https:/github.com/AnalyticalGraphicsInc/cesium/pull/5105).
 * Added support for an orthographic projection in 3D and Columbus view.
     * Set `projectionPicker` to `true` in the options when creating a `Viewer` to add a widget that will switch projections. [#5021](https://github.com/AnalyticalGraphicsInc/cesium/pull/5021)
     * Call `switchToOrthographicFrustum` or `switchToPerspectiveFrustum` on `Camera` to change projections.
-* Fixed an issue with camera tracking of dynamic ellipsoids. [#5133](https://github.com/AnalyticalGraphicsInc/cesium/pull/5133)
-* Fix billboard, point and label clustering in 2D and Columbus view. [#5136](https://github.com/AnalyticalGraphicsInc/cesium/pull/5136)
-* Fixed issues with imagerySplitPosition and the international date line in 2D mode. [#5151](https://github.com/AnalyticalGraphicsInc/cesium/pull/5151)
+* Added support for custom time-varying properties in CZML. [#5105](https:/github.com/AnalyticalGraphicsInc/cesium/pull/5105).
+* Added new flight parameters to `Camera.flyTo` and `Camera.flyToBoundingSphere`: `flyOverLongitude`, `flyOverLongitudeWeight`, and `pitchAdjustHeight`. [#5070](https://github.com/AnalyticalGraphicsInc/cesium/pull/5070)
+* Added the event `Viewer.trackedEntityChanged`, which is raised when the value of `viewer.trackedEntity` changes. [#5060](https://github.com/AnalyticalGraphicsInc/cesium/pull/5060)
+* Added `Camera.DEFAULT_OFFSET` for default view of objects with bounding spheres. [#4936](https://github.com/AnalyticalGraphicsInc/cesium/pull/4936)
 * Fixed an issue with `TileBoundingBox` that caused the terrain to disappear in certain places [4032](https://github.com/AnalyticalGraphicsInc/cesium/issues/4032)
+* Fixed overlapping billboard blending. [#5066](https://github.com/AnalyticalGraphicsInc/cesium/pull/5066)
+* Fixed an issue with `PinBuilder` where inset images could have low-alpha fringes against an opaque background.  [#5099](https://github.com/AnalyticalGraphicsInc/cesium/pull/5099)
+* Fix billboard, point and label clustering in 2D and Columbus view. [#5136](https://github.com/AnalyticalGraphicsInc/cesium/pull/5136)
+* Fixed `GroundPrimitive` rendering in 2D and Columbus View. [#5078](https://github.com/AnalyticalGraphicsInc/cesium/pull/5078)
+* Fixed an issue with camera tracking of dynamic ellipsoids. [#5133](https://github.com/AnalyticalGraphicsInc/cesium/pull/5133)
+* Fixed issues with imagerySplitPosition and the international date line in 2D mode. [#5151](https://github.com/AnalyticalGraphicsInc/cesium/pull/5151)
+* Fixed a bug in `ModelAnimationCache` causing different animations to reference the same animation. [#5064](https://github.com/AnalyticalGraphicsInc/cesium/pull/5064)
+* `ConstantProperty` now provides `valueOf` and `toString` methods that return the constant value.
+* Improved depth artifacts between opaque and translucent primitives. [#5116](https://github.com/AnalyticalGraphicsInc/cesium/pull/5116)
+* Fixed crunch compressed textures in IE11. [#5057](https://github.com/AnalyticalGraphicsInc/cesium/pull/5057)
+* Fixed a bug in `Quaternion.fromHeadingPitchRoll` that made it erroneously throw an exception when passed individual angles in an unminified / debug build.
+* Fixed a bug that caused an exception in `CesiumInspectorViewModel` when using the NW / NE / SW / SE / Parent buttons to navigate to a terrain tile that is not yet loaded.
 * `QuadtreePrimitive` now uses `frameState.afterRender` to fire `tileLoadProgressEvent` [#3450](https://github.com/AnalyticalGraphicsInc/cesium/issues/3450)
 * `Scene.pickPosition` now caches results per frame to increase performance [#5117](https://github.com/AnalyticalGraphicsInc/cesium/issues/5117)
 
