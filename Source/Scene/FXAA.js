@@ -12,8 +12,13 @@ define([
         '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/Texture',
-        '../Shaders/PostProcessFilters/FXAA'
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
+        '../Shaders/PostProcessFilters/FXAA',
+        '../Shaders/PostProcessFilters/FXAA3_11'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -27,8 +32,13 @@ define([
         Renderbuffer,
         RenderbufferFormat,
         RenderState,
+        Sampler,
         Texture,
-        FXAAFS) {
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
+        FXAAFS,
+        FXAA3_11) {
     'use strict';
 
     /**
@@ -50,6 +60,11 @@ define([
             owner : this
         });
         this._clearCommand = clearCommand;
+
+        this._qualityPreset = 39;
+        this._qualitySubPix = 0.5;
+        this._qualityEdgeThreshold = 0.125;
+        this._qualityEdgeThresholdMin = 0.0833;
     }
 
     function destroyResources(fxaa) {
@@ -85,7 +100,13 @@ define([
                 width : width,
                 height : height,
                 pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                sampler : new Sampler({
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    minificationFilter : TextureMinificationFilter.LINEAR,
+                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                })
             });
 
             if (context.depthTexture) {
@@ -119,7 +140,15 @@ define([
         }
 
         if (!defined(this._command)) {
-            this._command = context.createViewportQuadCommand(FXAAFS, {
+            var fs =
+                '#define FXAA_PC 1\n' +
+                '#define FXAA_WEBGL_1 1\n' +
+                '#define FXAA_QUALITY_PRESET 39\n' +
+                '#define FXAA_GREEN_AS_LUMA 1\n' +
+                FXAA3_11 + '\n' +
+                FXAAFS;
+
+            this._command = context.createViewportQuadCommand(fs, {
                 owner : this
             });
         }
@@ -137,13 +166,22 @@ define([
 
         if (textureChanged) {
             var that = this;
-            var step = new Cartesian2(1.0 / this._texture.width, 1.0 / this._texture.height);
+            var rcpFrame = new Cartesian2(1.0 / this._texture.width, 1.0 / this._texture.height);
             this._command.uniformMap = {
                 u_texture : function() {
                     return that._texture;
                 },
-                u_step : function() {
-                    return step;
+                u_fxaaQualityRcpFrame : function() {
+                    return rcpFrame;
+                },
+                u_fxaaQualitySubpix : function() {
+                    return that._qualitySubPix;
+                },
+                u_fxaaQualityEdgeThreshold : function() {
+                    return that._qualityEdgeThreshold;
+                },
+                u_fxaaQualityEdgeThresholdMin : function() {
+                    return that._qualityEdgeThresholdMin;
                 }
             };
         }
