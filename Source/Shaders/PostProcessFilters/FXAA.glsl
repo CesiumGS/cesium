@@ -18,7 +18,7 @@ vec4 fxaaConsole360ConstDir = vec4(0.0);
 
 void main()
 {
-    gl_FragColor = FxaaPixelShader(
+    vec4 color = FxaaPixelShader(
         v_textureCoordinates,
         fxaaConsolePosPos,
         u_texture,
@@ -35,4 +35,6 @@ void main()
         fxaaConsoleEdgeThreshold,
         fxaaConsoleEdgeThresholdMin,
         fxaaConsole360ConstDir);
+    float alpha = texture2D(u_texture, v_textureCoordinates).a;
+    gl_FragColor = vec4(color.rgb, alpha);
 }
