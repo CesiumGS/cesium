@@ -2,13 +2,11 @@
 define([
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         './OrthographicOffCenterFrustum'
     ], function(
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         OrthographicOffCenterFrustum) {
     'use strict';
@@ -26,10 +24,6 @@ define([
      * var maxRadii = ellipsoid.maximumRadius;
      *
      * var frustum = new Cesium.OrthographicOffCenterFrustum();
-     * frustum.right = maxRadii * Cesium.Math.PI;
-     * frustum.left = -c.frustum.right;
-     * frustum.top = c.frustum.right * (canvas.clientHeight / canvas.clientWidth);
-     * frustum.bottom = -c.frustum.top;
      * frustum.near = 0.01 * maxRadii;
      * frustum.far = 50.0 * maxRadii;
      */
@@ -57,8 +51,6 @@ define([
          */
         this.far = 500000000.0;
         this._far = this.far;
-
-        this._useDeprecated = false;
     }
 
     function update(frustum) {
@@ -86,15 +78,6 @@ define([
             frustum._near = frustum.near;
             frustum._far = frustum.far;
 
-            if (!frustum._useDeprecated) {
-                var ratio = 1.0 / frustum.aspectRatio;
-                f.right = frustum.width * 0.5;
-                f.left = -f.right;
-                f.top = ratio * f.right;
-                f.bottom = -f.top;
-                f.near = frustum.near;
-                f.far = frustum.far;
-            }
         }
     }
 
