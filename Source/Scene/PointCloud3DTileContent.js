@@ -797,7 +797,7 @@ define([
             shaderProgram : undefined, // Updated in createShaders
             uniformMap : drawUniformMap,
             renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
-            pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE,
+            pass : isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE,
             owner : content
         });
 
@@ -811,7 +811,7 @@ define([
             shaderProgram : undefined, // Updated in createShaders
             uniformMap : pickUniformMap,
             renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
-            pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE,
+            pass : isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE,
             owner : content
         });
     }
@@ -1259,7 +1259,7 @@ define([
         // Update the render state
         var isTranslucent = (this._highlightColor.alpha < 1.0) || (this._constantColor.alpha < 1.0) || this._styleTranslucent;
         this._drawCommand.renderState = isTranslucent ? this._translucentRenderState : this._opaqueRenderState;
-        this._drawCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+        this._drawCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE;
 
         if (defined(this.batchTable)) {
             this.batchTable.update(tileset, frameState);
