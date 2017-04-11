@@ -1405,11 +1405,11 @@ define([
     }
 
     var selectionState = {
-        processingQueue: new ManagedArray(),
-        nextQueue: new ManagedArray(),
-        finalQueue: new ManagedArray(),
-        selectionQueue: new ManagedArray(),
-        done: false
+        processingQueue : new ManagedArray(),
+        nextQueue : new ManagedArray(),
+        finalQueue : new ManagedArray(),
+        selectionQueue : new ManagedArray(),
+        done : false
     };
 
     function sortForLoad(a, b) {
@@ -1665,7 +1665,7 @@ define([
      * Furthermore, this is a preorder traversal so children tiles are selected before ancestor tiles.
      *
      * The reason for the preorder traversal is so that tiles can easily be marked with their
-     * selection depth. A tile's _selectionDepth is it's depth in the tree where all non-selected tiles are removed.
+     * selection depth. A tile's _selectionDepth is its depth in the tree where all non-selected tiles are removed.
      * This property is important for use in the stencil test because we want to render deeper tiles on top of their
      * ancestors. If a tileset is very deep, the depth is unlikely to fit into the stencil buffer.
      *
@@ -1682,7 +1682,7 @@ define([
         var ancestorStack = tempStack3;
 
         stack.push(root);
-        while(stack.length > 0 || ancestorStack.length > 0) {
+        while (stack.length > 0 || ancestorStack.length > 0) {
             if (ancestorStack.length > 0) {
                 var waitingTile = ancestorStack[ancestorStack.length - 1];
                 if (waitingTile._stackLength === stack.length) {
@@ -1704,8 +1704,6 @@ define([
 
             children.sort(sortChildrenByDistanceToCamera);
 
-            var i, child;
-
             var additive = tile.refine === Cesium3DTileRefine.ADD;
 
             if (shouldSelect) {
@@ -1724,8 +1722,8 @@ define([
                 }
             }
 
-            for (i = 0; i < childrenLength; ++i) {
-                child = children[i];
+            for (var i = 0; i < childrenLength; ++i) {
+                var child = children[i];
                 if (isVisible(child.visibilityPlaneMask)) {
                     stack.push(child);
                 }

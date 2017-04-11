@@ -31,7 +31,7 @@ defineSuite([
     it('maintains heap property on insert', function() {
         var heap = new Heap(comparator);
         var pass = true;
-        for(var i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             heap.insert(Math.random());
             pass = pass && checkHeap(heap, comparator);
         }
@@ -55,8 +55,7 @@ defineSuite([
     it('can build heap', function() {
         var heap = new Heap(comparator);
         var arr = new Array(length);
-        var i;
-        for (i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             arr[i] = Math.random();
         }
         heap.buildHeap(arr);
