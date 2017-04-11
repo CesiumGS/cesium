@@ -1315,6 +1315,7 @@ define([
 
     function deriveCommand(command) {
         var derivedCommand = DrawCommand.shallowClone(command);
+        derivedCommand.pass = Pass.CESIUM_3D_TILE;
 
         // Add a uniform to indicate if the original command was translucent so
         // the shader knows not to cull vertices that were originally transparent
