@@ -435,9 +435,6 @@ define([
             }
             var url = buildImageUrl(this, info, x, y, level);
             promise = throttleRequestByServer(url, loadArrayBuffer);
-            if (!defined(promise)) {
-                return; // Returning undefined will allow for a retry later
-            }
         } else {
             if (info === null) {
                 // Parent was retrieved and said child doesn't exist
@@ -466,17 +463,31 @@ define([
 
             // There is nothing in the heirarchy that leads us to think this tile isn't available
             //  so populate the tree so the info is available for this tile.
-            promise = metadata.populateSubtree(x, y, level)
-                .then(function(info) {
-                    if (defined(info)) {
+            var metadataPromise = metadata.populateSubtree(x, y, level, true);
+
+            if (defined(metadataPromise)) {
+                promise = metadataPromise
+                    .then(function(info) {
+                        if (!defined(info)) {
+                            return undefined; //Metadata throttled
+                        }
+
                         if (info.hasImagery()) {
                             var url = buildImageUrl(that, info, x, y, level);
                             return throttleRequestByServer(url, loadArrayBuffer);
                         }
-                    }
 
-                    return when(invalidImage);
-                });
+                        return when(invalidImage);
+                    })
+                    .otherwise(function() {
+                        // Metadata couldn't be loaded, so imagery isn't available
+                        return invalidImage;
+                    });
+            }
+        }
+
+        if (!defined(promise)) {
+            return undefined; // Metadata or Image request throttled
         }
 
         return promise

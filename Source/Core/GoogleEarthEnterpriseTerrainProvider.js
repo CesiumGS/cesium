@@ -21,6 +21,7 @@ define([
         './Math',
         './Rectangle',
         './RuntimeError',
+        './TaskProcessor',
         './TerrainProvider',
         './throttleRequestByServer',
         './TileProviderError'
@@ -46,6 +47,7 @@ define([
         CesiumMath,
         Rectangle,
         RuntimeError,
+        TaskProcessor,
         TerrainProvider,
         throttleRequestByServer,
         TileProviderError) {
@@ -315,6 +317,8 @@ define([
         }
     });
 
+    var taskProcessor = new TaskProcessor('decodeGoogleEarthEnterpriseTerrainPacket');
+
     /**
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link GoogleEarthEnterpriseProvider#ready} returns true.  The result must include terrain data and
@@ -392,158 +396,152 @@ define([
                 });
             }
 
-            return undefined;
+            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
         }
 
         var that = this;
         var terrainPromises = this._terrainPromises;
-        return metadata.populateSubtree(x, y, level)
-            .then(function(info) {
-                if (defined(info)) {
-                    var buffer = terrainCache.get(quadKey);
-                    if (defined(buffer)) {
-                        if (info.terrainState === TerrainState.UNKNOWN) {
-                            // If its already in the cache then a parent request must've loaded it
-                            info.terrainState = TerrainState.PARENT;
-                        }
+        var metadataPromise = metadata.populateSubtree(x, y, level, throttleRequests);
+        if (!defined(metadataPromise)) {
+            return undefined; // Metadata request throttled
+        }
 
-                        return new GoogleEarthEnterpriseTerrainData({
-                            buffer : buffer,
-                            childTileMask : info.getChildBitmask()
-                        });
+        return metadataPromise
+            .then(function(info) {
+                if (!defined(info)) {
+                    return undefined; //Metadata request throttled
+                }
+
+                var buffer = terrainCache.get(quadKey);
+                if (defined(buffer)) {
+                    if (info.terrainState === TerrainState.UNKNOWN) {
+                        // If its already in the cache then a parent request must've loaded it
+                        info.terrainState = TerrainState.PARENT;
                     }
 
-                    var parentInfo;
-                    var q = quadKey;
-                    var terrainVersion = -1;
-                    var terrainState = info.terrainState;
-                    if (terrainState !== TerrainState.NONE) {
-                        switch (terrainState) {
-                            case TerrainState.SELF: // We have terrain and have retrieved it before
-                                terrainVersion = info.terrainVersion;
-                                break;
-                            case TerrainState.PARENT: // We have terrain in our parent
+                    return new GoogleEarthEnterpriseTerrainData({
+                        buffer : buffer,
+                        childTileMask : info.getChildBitmask()
+                    });
+                }
+
+                var parentInfo;
+                var q = quadKey;
+                var terrainVersion = -1;
+                var terrainState = info.terrainState;
+                if (terrainState !== TerrainState.NONE) {
+                    switch (terrainState) {
+                        case TerrainState.SELF: // We have terrain and have retrieved it before
+                            terrainVersion = info.terrainVersion;
+                            break;
+                        case TerrainState.PARENT: // We have terrain in our parent
+                            q = q.substring(0, q.length - 1);
+                            parentInfo = metadata.getTileInformationFromQuadKey(q);
+                            terrainVersion = parentInfo.terrainVersion;
+                            break;
+                        case TerrainState.UNKNOWN: // We haven't tried to retrieve terrain yet
+                            if (info.hasTerrain()) {
+                                terrainVersion = info.terrainVersion; // We should have terrain
+                            } else {
                                 q = q.substring(0, q.length - 1);
                                 parentInfo = metadata.getTileInformationFromQuadKey(q);
-                                terrainVersion = parentInfo.terrainVersion;
-                                break;
-                            case TerrainState.UNKNOWN: // We haven't tried to retrieve terrain yet
-                                if (info.hasTerrain()) {
-                                    terrainVersion = info.terrainVersion; // We should have terrain
-                                } else {
-                                    q = q.substring(0, q.length - 1);
-                                    parentInfo = metadata.getTileInformationFromQuadKey(q);
-                                    if (defined(parentInfo) && parentInfo.hasTerrain()) {
-                                        terrainVersion = parentInfo.terrainVersion; // Try checking in the parent
-                                    }
+                                if (defined(parentInfo) && parentInfo.hasTerrain()) {
+                                    terrainVersion = parentInfo.terrainVersion; // Try checking in the parent
                                 }
-                                break;
-                        }
-                    }
-
-                    if (terrainVersion > 0) {
-                        var url = buildTerrainUrl(that, q, terrainVersion);
-                        var promise;
-                        if (defined(terrainPromises[q])) {
-                            promise = terrainPromises[q];
-                        } else {
-                            var requestPromise;
-                            throttleRequests = defaultValue(throttleRequests, true);
-                            if (throttleRequests) {
-                                requestPromise = throttleRequestByServer(url, loadArrayBuffer);
-                                if (!defined(requestPromise)) {
-                                    return undefined;
-                                }
-                            } else {
-                                requestPromise = loadArrayBuffer(url);
                             }
-
-                            terrainPromises[q] = requestPromise;
-
-                            promise = requestPromise
-                                .always(function(terrain) {
-                                    delete terrainPromises[q];
-                                    return terrain;
-                                });
-                        }
-
-                        return promise
-                            .then(function(terrain) {
-                                if (defined(terrain)) {
-                                    GoogleEarthEnterpriseMetadata.decode(terrain);
-                                    var uncompressedTerrain = GoogleEarthEnterpriseMetadata.uncompressPacket(terrain);
-                                    parseTerrainPacket(that, uncompressedTerrain, q);
-
-                                    var buffer = terrainCache.get(quadKey);
-                                    if (defined(buffer)) {
-                                        if (q !== quadKey) {
-                                            // If we didn't request this tile directly then it came from a parent
-                                            info.terrainState = TerrainState.PARENT;
-                                        }
-
-                                        return new GoogleEarthEnterpriseTerrainData({
-                                            buffer : buffer,
-                                            childTileMask : info.getChildBitmask()
-                                        });
-                                    } else {
-                                        info.terrainState = TerrainState.NONE;
-                                    }
-                                }
-
-                                return when.reject(new RuntimeError('Failed to load terrain.'));
-                            })
-                            .otherwise(function(error) {
-                                info.terrainState = TerrainState.NONE;
-                                return when.reject(error);
-                            });
-                    } else if (!info.ancestorHasTerrain) {
-                        // We haven't reached a level with terrain, so return the ellipsoid
-                        return new HeightmapTerrainData({
-                            buffer : new Uint8Array(16 * 16),
-                            width : 16,
-                            height : 16
-                        });
+                            break;
                     }
                 }
 
-                return when.reject(new RuntimeError('Failed to load terrain.'));
+                if (terrainVersion > 0) {
+                    var url = buildTerrainUrl(that, q, terrainVersion);
+                    var promise;
+                    if (defined(terrainPromises[q])) {
+                        promise = terrainPromises[q];
+                    } else {
+                        var requestPromise;
+                        throttleRequests = defaultValue(throttleRequests, true);
+                        if (throttleRequests) {
+                            requestPromise = throttleRequestByServer(url, loadArrayBuffer);
+                            if (!defined(requestPromise)) {
+                                return undefined;
+                            }
+                        } else {
+                            requestPromise = loadArrayBuffer(url);
+                        }
+
+                        terrainPromises[q] = requestPromise;
+
+                        promise = requestPromise
+                            .always(function(terrain) {
+                                delete terrainPromises[q];
+                                return terrain;
+                            });
+                    }
+
+                    return promise
+                        .then(function(terrain) {
+                            if (defined(terrain)) {
+                                var decodePromise = taskProcessor.scheduleTask({
+                                    buffer : terrain,
+                                    type : 'Terrain'
+                                });
+
+                                if (!defined(decodePromise)) {
+                                    // Postponed
+                                    return undefined;
+                                }
+                                return decodePromise
+                                    .then(function(terrainTiles) {
+                                        // If we were sent child tiles, store them till they are needed
+                                        var buffer;
+                                        if (q !== quadKey) {
+                                            terrainCache.add(q, terrainTiles[0]);
+                                            var parentInfo = metadata.getTileInformationFromQuadKey(q);
+                                            parentInfo.terrainState = TerrainState.SELF;
+                                        } else {
+                                            buffer = terrainTiles[0];
+                                            info.terrainState = TerrainState.SELF;
+                                        }
+                                        var count = terrainTiles.length - 1;
+                                        for (var j = 0; j < count; ++j) {
+                                            var childKey = q + j.toString();
+                                            if (childKey === quadKey) {
+                                                buffer = terrainTiles[j + 1];
+                                                // If we didn't request this tile directly then it came from a parent
+                                                info.terrainState = TerrainState.PARENT;
+                                            } else if (info.hasChild(j)) {
+                                                terrainCache.add(childKey, terrainTiles[j + 1]);
+                                            }
+                                        }
+
+                                        if (defined(buffer)) {
+                                            return new GoogleEarthEnterpriseTerrainData({
+                                                buffer : buffer,
+                                                childTileMask : info.getChildBitmask()
+                                            });
+                                        } else {
+                                            info.terrainState = TerrainState.NONE;
+                                        }
+                                    });
+                            }
+
+                            return when.reject(new RuntimeError('Failed to load terrain.'));
+                        })
+                        .otherwise(function(error) {
+                            info.terrainState = TerrainState.NONE;
+                            return when.reject(error);
+                        });
+                } else if (!info.ancestorHasTerrain) {
+                    // We haven't reached a level with terrain, so return the ellipsoid
+                    return new HeightmapTerrainData({
+                        buffer : new Uint8Array(16 * 16),
+                        width : 16,
+                        height : 16
+                    });
+                }
             });
     };
-
-    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-
-    function parseTerrainPacket(that, terrainData, quadKey) {
-        var info = that._metadata.getTileInformationFromQuadKey(quadKey);
-        var terrainCache = that._terrainCache;
-        var buffer = terrainData.buffer;
-
-        var dv = new DataView(buffer);
-        var totalSize = terrainData.length;
-
-        var offset = 0;
-        var terrainTiles = [];
-        while (offset < totalSize) {
-            // Each tile is split into 4 parts
-            var tileStart = offset;
-            for (var quad = 0; quad < 4; ++quad) {
-                var size = dv.getUint32(offset, true);
-                offset += sizeOfUint32;
-                offset += size;
-            }
-            terrainTiles.push(buffer.slice(tileStart, offset));
-        }
-
-        // If we were sent child tiles, store them till they are needed
-        terrainCache.add(quadKey, terrainTiles[0]);
-        info.terrainState = TerrainState.SELF;
-        var count = terrainTiles.length - 1;
-        for (var j = 0; j < count; ++j) {
-            var childKey = quadKey + j.toString();
-            if (info.hasChild(j)) {
-                terrainCache.add(childKey, terrainTiles[j + 1]);
-            }
-        }
-    }
 
     /**
      * Gets the maximum geometric error allowed in a tile at a given level.

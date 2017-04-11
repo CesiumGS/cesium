@@ -8,7 +8,8 @@ define([
         './defineProperties',
         './DeveloperError',
         './loadArrayBuffer',
-        './RuntimeError'
+        './RuntimeError',
+        './throttleRequestByServer'
     ], function(
         pako,
         when,
@@ -18,7 +19,8 @@ define([
         defineProperties,
         DeveloperError,
         loadArrayBuffer,
-        RuntimeError) {
+        RuntimeError,
+        throttleRequestByServer) {
     'use strict';
 
     // Bitmask for checking tile properties
@@ -152,7 +154,7 @@ define([
         this._subtreePromises = {};
 
         var that = this;
-        this._readyPromise = this.getQuadTreePacket()
+        this._readyPromise = this.getQuadTreePacket('', 1, false)
             .then(function() {
                 return true;
             })
@@ -405,17 +407,23 @@ define([
      *
      * @private
      */
-    GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket = function(quadKey, version) {
+    GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket = function(quadKey, version, throttle) {
         version = defaultValue(version, 1);
         quadKey = defaultValue(quadKey, '');
+        throttle = defaultValue(throttle, true);
         var url = getMetadataUrl(this, quadKey, version);
         var proxy = this._proxy;
         if (defined(proxy)) {
             url = proxy.getURL(url);
         }
 
+        var promise = throttleRequestByServer(url, loadArrayBuffer);
+        if (!defined(promise)) {
+            return undefined;
+        }
+
         var that = this;
-        return loadArrayBuffer(url)
+        return promise
             .then(function(metadata) {
                 GoogleEarthEnterpriseMetadata.decode(metadata);
 
@@ -434,8 +442,12 @@ define([
                     throw new RuntimeError('Invalid data type. Must be 1 for QuadTreePacket');
                 }
 
-                //var version = dv.getUint32(offset, true);
+                // Tile format version
+                var quadVersion = dv.getUint32(offset, true);
                 offset += sizeOfUint32;
+                if (quadVersion !== 2) {
+                    throw new RuntimeError('Invalid quadpacket version. Only version 2 is supported.');
+                }
 
                 var numInstances = dv.getInt32(offset, true);
                 offset += sizeOfInt32;
@@ -572,12 +584,12 @@ define([
      *
      * @private
      */
-    GoogleEarthEnterpriseMetadata.prototype.populateSubtree = function(x, y, level) {
+    GoogleEarthEnterpriseMetadata.prototype.populateSubtree = function(x, y, level, throttle) {
         var quadkey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
         return populateSubtree(this, quadkey);
     };
 
-    function populateSubtree(that, quadKey) {
+    function populateSubtree(that, quadKey, throttle) {
         var tileInfo = that._tileInfo;
         var q = quadKey;
         var t = tileInfo[q];
@@ -595,7 +607,7 @@ define([
         //   null so one of its parents was a leaf node, so this tile doesn't exist
         //   undefined so no parent exists - this shouldn't ever happen once the provider is ready
         if (!defined(t)) {
-            return when(undefined);
+            return when.reject(new RuntimeError('Couldn\'t load metadata for tile ' + quadKey));
         }
 
         var subtreePromises = that._subtreePromises;
@@ -603,6 +615,9 @@ define([
         if (defined(promise)) {
             return promise
                 .then(function() {
+                    if (!defined(tileInfo[quadKey])) {
+                        return when.reject(new RuntimeError('Couldn\'t load metadata for tile ' + quadKey));
+                    }
                     return tileInfo[quadKey];
                 });
         }
@@ -611,7 +626,11 @@ define([
         //  is already resolved (like in the tests), so subtreePromises will never get cleared out.
         //  The promise will always resolve with a bool, but the initial request will also remove
         //  the promise from subtreePromises.
-        promise = subtreePromises[q] = that.getQuadTreePacket(q, t.cnodeVersion);
+        promise = that.getQuadTreePacket(q, t.cnodeVersion, throttle);
+        if (!defined(promise)) {
+            return undefined;
+        }
+        subtreePromises[q] = promise;
 
         return promise
             .then(function() {
@@ -622,6 +641,9 @@ define([
                 delete subtreePromises[q];
             })
             .then(function() {
+                if (!defined(tileInfo[quadKey])) {
+                    return when.reject(new RuntimeError('Couldn\'t load metadata for tile ' + quadKey));
+                }
                 return tileInfo[quadKey];
             });
     }
