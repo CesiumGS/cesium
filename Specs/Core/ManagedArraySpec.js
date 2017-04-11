@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/ManagedArray'
+        'Core/ManagedArray'
 ], function(
-    ManagedArray) {
+        ManagedArray) {
     'use strict';
 
     it('constructor has expected default values', function() {
@@ -42,7 +42,7 @@ defineSuite([
         var array = new ManagedArray();
         array.resize(10);
         expect(function() {
-            array.set('', 5);
+            array.set(undefined, 5);
         }).toThrowDeveloperError();
     });
 

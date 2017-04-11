@@ -557,7 +557,7 @@ define([
          */
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
-        this._loadHeaps = {};
+        this._requestHeaps = {};
         this._hasMixedContent = false;
     }
 
@@ -941,8 +941,8 @@ define([
         },
 
         /**
-         * This is a multiplier defining the minumum screen space error to skip.
-         * If current tile has screen space error of 100, no tiles will be loaded unless they
+         * Multiplier defining the minumum screen space error to skip.
+         * For example, if a tile has screen space error of 100, no tiles will be loaded unless they
          * are leaves or have a screen space error <= 100 / skipSSEFactor.
          *
          * Only used when tileset.skipLODs === true.
@@ -952,7 +952,7 @@ define([
          */
         skipSSEFactor : {
             get : function() {
-                return this.skipLODs ? this._skipSSEFactor : 0.1;
+                return this._skipSSEFactor;
             },
 
             set : function(value) {
@@ -961,8 +961,8 @@ define([
         },
 
          /**
-         * This is a constant defining the minumum number of levels skip.
-         * If current tile is level 1, no tiles will be loaded unless they
+         * Constant defining the minumum number of levels skip.
+         * For example, if a tile is level 1, no tiles will be loaded unless they
          * are at level greater than 2.
          *
          * Only used when tileset.skipLODs === true.
@@ -972,7 +972,7 @@ define([
          */
         skipLevels : {
             get : function() {
-                return this.skipLODs ? this._skipLevels : 0;
+                return this._skipLevels;
             },
 
             set : function(value) {
@@ -1066,13 +1066,13 @@ define([
                 // The heap approach is a O(n log k) to find the best tiles for loading.
                 var requestServer = tile3D.requestServer;
                 if (defined(requestServer)) {
-                    if (!defined(that._loadHeaps[requestServer])) {
+                    if (!defined(that._requestHeaps[requestServer])) {
                         var heap = new Heap(sortForLoad);
-                        that._loadHeaps[requestServer] = heap;
+                        that._requestHeaps[requestServer] = heap;
                         heap.maximumSize = RequestScheduler.maximumRequestsPerServer;
                         heap.reserve(heap.maximumSize);
                     }
-                    tile3D._loadHeap = that._loadHeaps[requestServer];
+                    tile3D._loadHeap = that._requestHeaps[requestServer];
                 }
             }
 
@@ -1388,14 +1388,14 @@ define([
 
     function markTilesAsFinal(tiles) {
         var length = tiles.length;
-        tiles = tiles.internalArray;
+        var tilesArray = tiles.internalArray;
         var i;
         for (i = 0; i < length; ++i) {
-            tiles[i]._finalResolution = true;
+            tilesArray[i]._finalResolution = true;
         }
 
         for (i = 0; i < length; ++i) {
-            var parent = tiles[i].parent;
+            var parent = tilesArray[i].parent;
             while (defined(parent)) {
                 // tiles using additive refinement are always final
                 parent._finalResolution = (parent.refine === Cesium3DTileRefine.ADD);
@@ -1416,9 +1416,8 @@ define([
         var diff = b._sse - a._sse;
         if (diff === 0 || a.refine === Cesium3DTileRefine.ADD || b.refine === Cesium3DTileRefine.ADD) {
             return a.distanceToCamera - b.distanceToCamera;
-        } else {
-            return diff;
         }
+        return diff;
     }
 
     function selectTiles(tileset, frameState, outOfCore) {
@@ -1500,13 +1499,13 @@ define([
 
         traverseAndSelect(tileset, root, frameState);
 
-        requestTiles(tileset, tileset._loadHeaps, outOfCore);
+        requestTiles(tileset, tileset._requestHeaps, outOfCore);
     }
 
-    function requestTiles(tileset, loadHeaps, outOfCore) {
-        for (var name in loadHeaps) {
-            if (loadHeaps.hasOwnProperty(name)) {
-                var heap = loadHeaps[name];
+    function requestTiles(tileset, requestHeaps, outOfCore) {
+        for (var name in requestHeaps) {
+            if (requestHeaps.hasOwnProperty(name)) {
+                var heap = requestHeaps[name];
                 var tile;
                 while (defined(tile = heap.pop())) {
                     requestContent(tileset, tile, outOfCore);
@@ -1527,9 +1526,11 @@ define([
     }
 
     function selectionHeuristic(tileset, ancestor, tile) {
+        var skipLevels = tileset.skipLODs ? tileset._skipLevels : 0;
+        var skipSSEFactor = tileset.skipLODs ? tileset.skipSSEFactor : 0.1;
         return (ancestor !== tile && tile.hasContent && !tileset.lowMemory) &&
-               (tile._sse < ancestor._sse / tileset.skipSSEFactor) &&
-               (tile._depth > ancestor._depth + tileset.skipLevels);
+               (tile._sse < ancestor._sse / skipSSEFactor) &&
+               (tile._depth > ancestor._depth + skipLevels);
     }
 
     function updateAndPushChildren(tileset, tile, frameState, stack, loadSiblings, outOfCore) {
@@ -1555,21 +1556,21 @@ define([
                 } else {
                     touch(tileset, child, outOfCore);
                     if (loadSiblings) {
-                        loadTile(tileset, child);
+                        loadTile(child);
                     }
                 }
             }
         }
     }
 
-    function loadTile(tileset, tile) {
+    function loadTile(tile) {
         if (tile.contentUnloaded) {
             tile._loadHeap.insert(tile);
         }
     }
 
     function loadAndAddToQueue(tileset, tile, queue) {
-        loadTile(tileset, tile);
+        loadTile(tile);
         if (isVisible(tile.visibilityPlaneMask)) {
             queue.push(tile);
         }
@@ -1583,7 +1584,7 @@ define([
         touch(tileset, tile, outOfCore);
     }
 
-    var tempStack = [];
+    var scratchStack = [];
 
     /**
      * Add all descendants of the starting tile that meet the selection heuristic to selectionState.nextQueue.
@@ -1591,7 +1592,7 @@ define([
      * to selectionState.finalQueue instead
      */
     function queueDescendants(tileset, start, frameState, selectionState, outOfCore) {
-        var stack = tempStack;
+        var stack = scratchStack;
 
         queueTile(tileset, start, start, frameState, selectionState, stack, outOfCore);
 
@@ -1612,7 +1613,7 @@ define([
         var loadSiblings = tileset.loadSiblings;
 
         if (tile.hasTilesetContent) {
-            loadTile(tileset, tile);
+            loadTile(tile);
             if (!tile.contentReady) {
                 finalQueue.push(tile);
             } else {
@@ -1655,8 +1656,8 @@ define([
         }
     }
 
-    var tempStack2 = [];
-    var tempStack3 = [];
+    var scratchStack2 = [];
+    var scratchStack3 = [];
 
     /**
      * Traverse the tree while tiles are visible and check if their selected frame is the current frame.
@@ -1678,8 +1679,8 @@ define([
      * no deeper than 255. It is very, very unlikely this will cause a problem.
      */
     function traverseAndSelect(tileset, root, frameState) {
-        var stack = tempStack2;
-        var ancestorStack = tempStack3;
+        var stack = scratchStack2;
+        var ancestorStack = scratchStack3;
 
         stack.push(root);
         while(stack.length > 0 || ancestorStack.length > 0) {
@@ -1907,7 +1908,7 @@ define([
 
         if (tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0) {
             /**
-             * Consider 'leaf' tiles as selected tiles that have no selected descendants. They may have children,
+             * Consider 'effective leaf' tiles as selected tiles that have no selected descendants. They may have children,
              * but they are currently our effective leaves because they do not have selected descendants. These tiles
              * are those where with tile._finalResolution === true.
              * Let 'unresolved' tiles be those with tile._finalResolution === false.

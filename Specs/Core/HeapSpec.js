@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/Heap'
+        'Core/Heap'
 ], function(
-    Heap) {
+        Heap) {
     'use strict';
 
     var length = 100;

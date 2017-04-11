@@ -70,8 +70,8 @@ define([
                 return this._maximumSize;
             },
 
-            set: function(val) {
-                this._maximumSize = val;
+            set: function(value) {
+                this._maximumSize = value;
                 if (this._length > this._maximumSize && this._maximumSize > 0) {
                     this._length = this._maximumSize;
                     this._data.length = this._maximumSize;
