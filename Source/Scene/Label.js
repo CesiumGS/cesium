@@ -81,6 +81,9 @@ define([
         if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
             throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
         }
+        if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
+            throw new DeveloperError('disableDepthTestDistance must be greater than 0.0.');
+        }
         //>>includeEnd('debug');
 
         this._text = defaultValue(options.text, '');
@@ -105,6 +108,7 @@ define([
         this._scaleByDistance = options.scaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
         this._distanceDisplayCondition = options.distanceDisplayCondition;
+        this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -885,6 +889,41 @@ define([
         },
 
         /**
+         * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+         * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+         * @memberof Label.prototype
+         * @type {Number}
+         * @default 0.0
+         */
+        disableDepthTestDistance : {
+            get : function() {
+                return this._disableDepthTestDistance;
+            },
+            set : function(value) {
+                if (this._disableDepthTestDistance !== value) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (!defined(value) || value < 0.0) {
+                        throw new DeveloperError('disableDepthTestDistance must be greater than 0.0.');
+                    }
+                    //>>includeEnd('debug');
+                    this._disableDepthTestDistance = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.disableDepthTestDistance = value;
+                        }
+                    }
+                    var backgroundBillboard = this._backgroundBillboard;
+                    if (defined(backgroundBillboard)) {
+                        backgroundBillboard.disableDepthTestDistance = value;
+                    }
+                }
+            }
+        },
+
+        /**
          * Gets or sets the user-defined object returned when the label is picked.
          * @memberof Label.prototype
          * @type {Object}
@@ -1124,6 +1163,7 @@ define([
                NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
+               this._disableDepthTestDistance === other._disableDepthTestDistance &&
                this._id === other._id;
     };
 
