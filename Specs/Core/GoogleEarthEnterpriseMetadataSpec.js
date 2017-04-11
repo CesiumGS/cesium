@@ -96,103 +96,13 @@ defineSuite([
             });
     });
 
-    var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
-    var sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
-    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-
-    function createFakeMetadataResponse() {
-        var numInstances = 2;
-        var buffer = new ArrayBuffer(32 + numInstances * 32);
-        var dv = new DataView(buffer);
-
-        var offset = 0;
-
-        dv.setUint32(offset, 32301, true);
-        offset += sizeOfUint32;
-
-        dv.setUint32(offset, 1, true);
-        offset += sizeOfUint32;
-
-        dv.setUint32(offset, 2, true);
-        offset += sizeOfUint32;
-
-        dv.setInt32(offset, numInstances, true);
-        offset += sizeOfInt32;
-
-        dv.setInt32(offset, 32, true);
-        offset += sizeOfInt32;
-
-        dv.setInt32(offset, 32 + 32 * numInstances, true);
-        offset += sizeOfInt32;
-
-        dv.setInt32(offset, 0, true);
-        offset += sizeOfInt32;
-
-        dv.setInt32(offset, 0, true);
-        offset += sizeOfInt32;
-
-        for (var i = 0; i < numInstances; ++i) {
-            if (i === (numInstances - 1)) {
-                dv.setUint8(offset, 0x40);
-            } else {
-                dv.setUint8(offset, 0x41);
-            }
-            ++offset;
-
-            ++offset; // 2 byte align
-
-            dv.setUint16(offset, 2, true);
-            offset += sizeOfUint16;
-
-            dv.setUint16(offset, 1, true);
-            offset += sizeOfUint16;
-
-            dv.setUint16(offset, 1, true);
-            offset += sizeOfUint16;
-
-            // Number of channels stored in the dataBuffer
-            //var numChannels = dv.getUint16(offset, true);
-            offset += sizeOfUint16;
-
-            offset += sizeOfUint16; // 4 byte align
-
-            // Channel type offset into dataBuffer
-            //var typeOffset = dv.getInt32(offset, true);
-            offset += sizeOfInt32;
-
-            // Channel version offset into dataBuffer
-            //var versionOffset = dv.getInt32(offset, true);
-            offset += sizeOfInt32;
-
-            offset += 8; // Ignore image neighbors for now
-
-            // Data providers aren't used
-            ++offset; // Image provider
-            ++offset; // Terrain provider
-            offset += sizeOfUint16; // 4 byte align
-        }
-
-        return buffer;
-    }
-
     it('resolves readyPromise', function() {
         var baseurl = 'http://fake.fake.invalid/';
 
-        var response = createFakeMetadataResponse();
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             expect(url).toEqual(baseurl + 'flatfile?q2-0-q.1');
             expect(responseType).toEqual('arraybuffer');
-            deferred.resolve(response);
-        });
-
-        spyOn(GoogleEarthEnterpriseMetadata, 'decode').and.callFake(function(data) {
-            expect(data).toEqual(response);
-            return data;
-        });
-
-        spyOn(GoogleEarthEnterpriseMetadata, 'uncompressPacket').and.callFake(function(data) {
-            expect(data).toEqual(response);
-            return new Uint8Array(data);
+            loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
         });
 
         var provider = new GoogleEarthEnterpriseMetadata({
@@ -230,21 +140,10 @@ defineSuite([
         var proxy = new DefaultProxy('/proxy/');
         var baseurl = 'http://fake.fake.invalid/';
 
-        var response = createFakeMetadataResponse();
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             expect(url).toEqual(proxy.getURL(baseurl + 'flatfile?q2-0-q.1'));
             expect(responseType).toEqual('arraybuffer');
-            deferred.resolve(response);
-        });
-
-        spyOn(GoogleEarthEnterpriseMetadata, 'decode').and.callFake(function(data) {
-            expect(data).toEqual(response);
-            return data;
-        });
-
-        spyOn(GoogleEarthEnterpriseMetadata, 'uncompressPacket').and.callFake(function(data) {
-            expect(data).toEqual(response);
-            return new Uint8Array(data);
+            loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
         });
 
         var provider = new GoogleEarthEnterpriseMetadata({

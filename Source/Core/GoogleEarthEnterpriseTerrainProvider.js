@@ -317,7 +317,7 @@ define([
         }
     });
 
-    var taskProcessor = new TaskProcessor('decodeGoogleEarthEnterpriseTerrainPacket');
+    var taskProcessor = new TaskProcessor('decodeGoogleEarthEnterprisePacket', Number.POSITIVE_INFINITY);
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before
@@ -487,10 +487,6 @@ define([
                                     type : 'Terrain'
                                 });
 
-                                if (!defined(decodePromise)) {
-                                    // Postponed
-                                    return undefined;
-                                }
                                 return decodePromise
                                     .then(function(terrainTiles) {
                                         // If we were sent child tiles, store them till they are needed
