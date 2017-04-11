@@ -13,7 +13,7 @@ defineSuite([
     it('constructor initializes length', function() {
         var array = new ManagedArray(10);
         expect(array.length).toEqual(10);
-        expect(array.internalData.length).toEqual(10);
+        expect(array.internalArray.length).toEqual(10);
     });
 
     it('can get and set values', function() {
@@ -25,14 +25,14 @@ defineSuite([
         }
         for (i = 0; i < length; ++i) {
             expect(array.get(i)).toEqual(i*i);
-            expect(array.internalData[i]).toEqual(i*i);
+            expect(array.internalArray[i]).toEqual(i*i);
         }
     });
 
     it('get throws if index does not exist', function() {
         var array = new ManagedArray();
         array.reserve(5);
-        expect(array.internalData.length).toEqual(5);
+        expect(array.internalArray.length).toEqual(5);
         expect(function() {
             array.get(5);
         }).toThrowDeveloperError();
@@ -63,9 +63,9 @@ defineSuite([
             var val = Math.random();
             array.push(val);
             expect(array.length).toEqual(i+1);
-            expect(array.internalData.length).toEqual(i+1);
+            expect(array.internalArray.length).toEqual(i+1);
             expect(array.get(i)).toEqual(val);
-            expect(array.internalData[i]).toEqual(val);
+            expect(array.internalArray[i]).toEqual(val);
         }
     });
 
@@ -80,7 +80,7 @@ defineSuite([
             var val = array.get(i);
             expect(array.pop()).toEqual(val);
             expect(array.length).toEqual(i);
-            expect(array.internalData.length).toEqual(length);
+            expect(array.internalArray.length).toEqual(length);
         }
     });
 
@@ -94,13 +94,13 @@ defineSuite([
     it('reserve', function() {
         var array = new ManagedArray(2);
         array.reserve(10);
-        expect(array.internalData.length).toEqual(10);
+        expect(array.internalArray.length).toEqual(10);
         expect(array.length).toEqual(2);
         array.reserve(20);
-        expect(array.internalData.length).toEqual(20);
+        expect(array.internalArray.length).toEqual(20);
         expect(array.length).toEqual(2);
         array.reserve(5);
-        expect(array.internalData.length).toEqual(20);
+        expect(array.internalArray.length).toEqual(20);
         expect(array.length).toEqual(2);
     });
 
@@ -114,13 +114,13 @@ defineSuite([
     it('resize', function() {
         var array = new ManagedArray(2);
         array.resize(10);
-        expect(array.internalData.length).toEqual(10);
+        expect(array.internalArray.length).toEqual(10);
         expect(array.length).toEqual(10);
         array.resize(20);
-        expect(array.internalData.length).toEqual(20);
+        expect(array.internalArray.length).toEqual(20);
         expect(array.length).toEqual(20);
         array.resize(5);
-        expect(array.internalData.length).toEqual(20);
+        expect(array.internalArray.length).toEqual(20);
         expect(array.length).toEqual(5);
     });
 
@@ -128,14 +128,14 @@ defineSuite([
         var array = new ManagedArray(2);
         array.reserve(10);
         expect(array.length).toEqual(2);
-        expect(array.internalData.length).toEqual(10);
+        expect(array.internalArray.length).toEqual(10);
         array.trim();
-        expect(array.internalData.length).toEqual(2);
+        expect(array.internalArray.length).toEqual(2);
         array.trim(5);
         expect(array.length).toEqual(2);
-        expect(array.internalData.length).toEqual(5);
+        expect(array.internalArray.length).toEqual(5);
         array.trim(3);
         expect(array.length).toEqual(2);
-        expect(array.internalData.length).toEqual(3);
+        expect(array.internalArray.length).toEqual(3);
     });
 });

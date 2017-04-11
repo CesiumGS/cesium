@@ -538,6 +538,7 @@ define([
         /**
          * Determines whether low memory level-of-detail skipping should be used.
          * When true, only tiles that meet the maximum screen space error will ever be downloaded.
+         * Skipping factors are ignored and just the desired tiles are loaded.
          *
          * Only used when tileset.skipLODs === true.
          *
@@ -549,6 +550,7 @@ define([
         /**
          * Determines whether sibling tiles should be loaded when skipping levels-of-detail.
          * When true, the siblings of any visible and downloaded tile are downloaded as well.
+         * This may be useful for ensuring that tiles are already available when the viewer turns left/right.
          *
          * Only used when tileset.skipLODs === true.
          *
