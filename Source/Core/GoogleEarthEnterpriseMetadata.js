@@ -404,6 +404,9 @@ define([
      *
      * @param {String} [quadKey=''] The quadkey to retrieve the packet for.
      * @param {Number} [version=1] The cnode version to be used in the request.
+     * @param {Boolean} [throttle=true] True if the number of simultaneous requests should be limited,
+     *                  or false if the request should be initiated regardless of the number of requests
+     *                  already in progress.
      *
      * @private
      */
@@ -446,7 +449,7 @@ define([
                 var quadVersion = dv.getUint32(offset, true);
                 offset += sizeOfUint32;
                 if (quadVersion !== 2) {
-                    throw new RuntimeError('Invalid quadpacket version. Only version 2 is supported.');
+                    throw new RuntimeError('Invalid QuadTreePacket version. Only version 2 is supported.');
                 }
 
                 var numInstances = dv.getInt32(offset, true);
@@ -579,14 +582,18 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Boolean} [throttle=true] True if the number of simultaneous requests should be limited,
+     *                  or false if the request should be initiated regardless of the number of requests
+     *                  already in progress.
      *
      * @returns {Promise<GoogleEarthEnterpriseMetadata.TileInformation>} A promise that resolves to the tile info for the requested quad key
      *
      * @private
      */
     GoogleEarthEnterpriseMetadata.prototype.populateSubtree = function(x, y, level, throttle) {
+        throttle = defaultValue(throttle, true);
         var quadkey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
-        return populateSubtree(this, quadkey);
+        return populateSubtree(this, quadkey, throttle);
     };
 
     function populateSubtree(that, quadKey, throttle) {
@@ -635,7 +642,7 @@ define([
         return promise
             .then(function() {
                 // Recursively call this incase we need multiple subtree requests
-                return populateSubtree(that, quadKey);
+                return populateSubtree(that, quadKey, throttle);
             })
             .always(function() {
                 delete subtreePromises[q];
