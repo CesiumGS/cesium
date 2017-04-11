@@ -1337,7 +1337,7 @@ defineSuite([
         });
     });
 
-        it('debugShowGeometricError with regions', function() {
+    it('debugShowGeometricError with regions', function() {
         // tilesetUrl has bounding regions
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
@@ -2443,7 +2443,7 @@ defineSuite([
         scene.camera.moveDown(200.0);
 
         var tileset = scene.primitives.add(new Cesium3DTileset({
-            url: tilesetOfTilesetsUrl,
+            url: tilesetOfTilesetsUrl
         }));
 
         return Cesium3DTilesTester.waitForReady(scene, tileset).then(function(tileset) {

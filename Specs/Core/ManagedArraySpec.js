@@ -59,8 +59,7 @@ defineSuite([
     it('can push values', function() {
         var array = new ManagedArray();
         var length = 10;
-        var i;
-        for (i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             var val = Math.random();
             array.push(val);
             expect(array.length).toEqual(i+1);
