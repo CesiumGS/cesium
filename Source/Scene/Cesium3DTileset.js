@@ -135,9 +135,9 @@ define([
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      * @param {Boolean} [options.skipLODs=true] Determines if level-of-detail skipping optimization should be used.
      * @param {Number} [options.skipSSEFactor=10] Multiplier defining the minimum screen space error to skip when loading tiles. Used in conjuction with skipLevels to determine which tiles to load.
-     * @param {Number} [options.skipLevels=1] Constant defining the minimum number of levels to skip when loading tiles. Used in conjuction with skipSSEFactor to determine which tiles to load.
-     * @param {Boolean} [options.lowMemory=false] Determines whether low memory level-of-detail skipping should be used.
-     * @param {Boolean} [options.loadSiblings=false] Determines whether sibling tiles should be loaded when skipping levels-of-detail.
+     * @param {Number} [options.skipLevels=1] Constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjuction with skipSSEFactor to determine which tiles to load.
+     * @param {Boolean} [options.immediatelyLoadDesiredLOD=false] When true, do not progressively refine. Immediately load the desired LOD.
+     * @param {Boolean} [options.loadSiblings=false] Determines whether sibling tiles should be loaded when skipping levels-of-detail. When true, the siblings of any visible and downloaded tile are downloaded as well.
      *
      * @example
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -536,7 +536,6 @@ define([
         this._skipLevels = defaultValue(options.skipLevels, 1);
 
         /**
-         * Determines whether low memory level-of-detail skipping should be used.
          * When true, only tiles that meet the maximum screen space error will ever be downloaded.
          * Skipping factors are ignored and just the desired tiles are loaded.
          *
@@ -545,7 +544,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.lowMemory = defaultValue(options.lowMemory, false);
+        this.immediatelyLoadDesiredLOD = defaultValue(options.immediatelyLoadDesiredLOD, false);
 
         /**
          * Determines whether sibling tiles should be loaded when skipping levels-of-detail.
@@ -963,7 +962,7 @@ define([
         },
 
          /**
-         * Constant defining the minumum number of levels skip.
+         * Constant defining the minumum number of levels skip. When it is 0, no levels are skipped.
          * For example, if a tile is level 1, no tiles will be loaded unless they
          * are at level greater than 2.
          *
@@ -1528,7 +1527,7 @@ define([
     function selectionHeuristic(tileset, ancestor, tile) {
         var skipLevels = tileset.skipLODs ? tileset._skipLevels : 0;
         var skipSSEFactor = tileset.skipLODs ? tileset.skipSSEFactor : 0.1;
-        return (ancestor !== tile && tile.hasContent && !tileset.lowMemory) &&
+        return (ancestor !== tile && tile.hasContent && !tileset.immediatelyLoadDesiredLOD) &&
                (tile._sse < ancestor._sse / skipSSEFactor) &&
                (tile._depth > ancestor._depth + skipLevels);
     }
@@ -1617,11 +1616,7 @@ define([
             if (!tile.contentReady) {
                 finalQueue.push(tile);
             } else {
-                var child = tile.children[0];
-                child.visibilityPlaneMask = tile.visibilityPlaneMask;
-                child.updateTransform(tile.computedTransform);
-                child.distanceToCamera = tile.distanceToCamera;
-                stack.push(child);
+                updateAndPushChildren(tileset, tile, frameState, stack, loadSiblings, outOfCore);
             }
         } else {
             if (tile.refine === Cesium3DTileRefine.ADD) {
