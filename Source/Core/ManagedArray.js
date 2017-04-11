@@ -53,7 +53,7 @@ define([
          * @type Array
          * @readonly
          */
-        internalData : {
+        internalArray : {
             get : function() {
                 return this._array;
             }

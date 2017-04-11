@@ -531,28 +531,8 @@ define([
          */
         this.skipLODs = defaultValue(options.skipLODs, true);
 
-        /**
-         * This is a multiplier defining the minumum screen space error to skip.
-         * If current tile has screen space error of 100, no tiles will be loaded unless they
-         * are leaves or have a screen space error <= 100 / skipSSEFactor.
-         *
-         * Only used when tileset.skipLODs === true.
-         *
-         * @type {Number}
-         * @default 10
-         */
         this._skipSSEFactor = defaultValue(options.skipSSEFactor, 10);
 
-        /**
-         * This is a constant defining the minumum number of levels skip.
-         * If current tile is level 1, no tiles will be loaded unless they
-         * are at level greater than 2.
-         *
-         * Only used when tileset.skipLODs === true.
-         *
-         * @type {Number}
-         * @default 1
-         */
         this._skipLevels = defaultValue(options.skipLevels, 1);
 
         /**
@@ -961,7 +941,14 @@ define([
         },
 
         /**
-         * @private
+         * This is a multiplier defining the minumum screen space error to skip.
+         * If current tile has screen space error of 100, no tiles will be loaded unless they
+         * are leaves or have a screen space error <= 100 / skipSSEFactor.
+         *
+         * Only used when tileset.skipLODs === true.
+         *
+         * @type {Number}
+         * @default 10
          */
         skipSSEFactor : {
             get : function() {
@@ -973,8 +960,15 @@ define([
             }
         },
 
-        /**
-         * @private
+         /**
+         * This is a constant defining the minumum number of levels skip.
+         * If current tile is level 1, no tiles will be loaded unless they
+         * are at level greater than 2.
+         *
+         * Only used when tileset.skipLODs === true.
+         *
+         * @type {Number}
+         * @default 1
          */
         skipLevels : {
             get : function() {
@@ -1394,7 +1388,7 @@ define([
 
     function markTilesAsFinal(tiles) {
         var length = tiles.length;
-        tiles = tiles.internalData;
+        tiles = tiles.internalArray;
         var i;
         for (i = 0; i < length; ++i) {
             tiles[i]._finalResolution = true;

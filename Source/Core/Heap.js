@@ -26,7 +26,7 @@ define([
         this._comparator = comparator;
         this._data = [];
         this._length = 0;
-        this.maximumSize = 0;
+        this._maximumSize = 0;
     }
 
     defineProperties(Heap.prototype, {
@@ -56,6 +56,27 @@ define([
             get : function() {
                 return this._length;
             }
+        },
+
+        /**
+         * Gets and sets the maximum size of the heap.
+         *
+         * @memberof Heap.prototype
+         *
+         * @type {Number}
+         */
+        maximumSize : {
+            get: function() {
+                return this._maximumSize;
+            },
+
+            set: function(val) {
+                this._maximumSize = val;
+                if (this._length > this._maximumSize && this._maximumSize > 0) {
+                    this._length = this._maximumSize;
+                    this._data.length = this._maximumSize;
+                }
+            }
         }
     });
 
@@ -72,8 +93,7 @@ define([
      */
     Heap.prototype.reserve = function(length) {
         length = defaultValue(length, this._length);
-        var data = this._data;
-        data.length = length;
+        this._data.length = length;
     };
 
     /**
@@ -91,9 +111,9 @@ define([
         var data = this._data;
         var candidate = -1;
 
-        while(1) {
-            var left = 2 * (index + 1) - 1;
+        while (true) {
             var right = 2 * (index + 1);
+            var left = right - 1;
 
             if (left < length && comparator(data[left], data[index]) < 0) {
                 candidate = left;
@@ -113,9 +133,9 @@ define([
             }
         }
 
-        if (this._length > this.maximumSize && this.maximumSize > 0) {
-            this._length = this.maximumSize;
-            this.reserve();
+        if (this._length > this._maximumSize && this._maximumSize > 0) {
+            this._length = this._maximumSize;
+            this._data.length = this._maximumSize;
         }
     };
 
@@ -169,8 +189,8 @@ define([
             }
         }
 
-        if (this._length > this.maximumSize && this.maximumSize > 0) {
-            this._length = this.maximumSize;
+        if (this._length > this._maximumSize && this._maximumSize > 0) {
+            this._length = this._maximumSize;
         }
     };
 
