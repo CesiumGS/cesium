@@ -134,8 +134,8 @@ define([
      * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      * @param {Boolean} [options.skipLODs=true] Determines if level-of-detail skipping optimization should be used.
-     * @param {Number} [options.skipSSEFactor=10] Multiplier defining the minimum screen space error to skip when loading tiles.
-     * @param {Number} [options.skipLevels=1] Constant defining the minimum number of levels to skip when loading tiles.
+     * @param {Number} [options.skipSSEFactor=10] Multiplier defining the minimum screen space error to skip when loading tiles. Used in conjuction with skipLevels to determine which tiles to load.
+     * @param {Number} [options.skipLevels=1] Constant defining the minimum number of levels to skip when loading tiles. Used in conjuction with skipSSEFactor to determine which tiles to load.
      * @param {Boolean} [options.lowMemory=false] Determines whether low memory level-of-detail skipping should be used.
      * @param {Boolean} [options.loadSiblings=false] Determines whether sibling tiles should be loaded when skipping levels-of-detail.
      *
@@ -1290,8 +1290,6 @@ define([
         }
     }
 
-    var scratchStack = [];
-
     function computeChildrenVisibility(tile, frameState, checkViewerRequestVolume) {
         var flag = Cesium3DTileChildrenVisibility.NONE;
         var children = tile.children;
@@ -1659,7 +1657,6 @@ define([
     }
 
     var scratchStack2 = [];
-    var scratchStack3 = [];
 
     /**
      * Traverse the tree while tiles are visible and check if their selected frame is the current frame.
@@ -1681,8 +1678,8 @@ define([
      * no deeper than 255. It is very, very unlikely this will cause a problem.
      */
     function traverseAndSelect(tileset, root, frameState) {
-        var stack = scratchStack2;
-        var ancestorStack = scratchStack3;
+        var stack = scratchStack;
+        var ancestorStack = scratchStack2;
 
         stack.push(root);
         while (stack.length > 0 || ancestorStack.length > 0) {
