@@ -27,6 +27,7 @@ define([
         '../Core/RequestScheduler',
         '../Core/RequestType',
         '../Renderer/ClearCommand',
+        '../Renderer/Pass',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Axis',
@@ -74,6 +75,7 @@ define([
         RequestScheduler,
         RequestType,
         ClearCommand,
+        Pass,
         Uri,
         when,
         Axis,
@@ -1873,7 +1875,8 @@ define([
     }
 
     var stencilClearCommand = new ClearCommand({
-        stencil : 0
+        stencil : 0,
+        pass : Pass.CESIUM_3D_TILE
     });
 
     function updateTiles(tileset, frameState) {
