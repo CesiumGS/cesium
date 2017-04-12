@@ -1063,7 +1063,7 @@ define([
                         heap.maximumSize = RequestScheduler.maximumRequestsPerServer;
                         heap.reserve(heap.maximumSize);
                     }
-                    tile3D._loadHeap = that._requestHeaps[requestServer];
+                    tile3D._requestHeap = that._requestHeaps[requestServer];
                 }
             }
 
@@ -1554,7 +1554,7 @@ define([
 
     function loadTile(tile) {
         if (tile.contentUnloaded) {
-            tile._loadHeap.insert(tile);
+            tile._requestHeap.insert(tile);
         }
     }
 

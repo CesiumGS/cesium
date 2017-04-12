@@ -2406,14 +2406,14 @@ defineSuite([
         });
     });
 
-    it('lowMemory', function() {
+    it('immediatelyLoadDesiredLOD', function() {
         // Look at bottom-left corner of tileset
         scene.camera.moveLeft(200.0);
         scene.camera.moveDown(200.0);
 
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url: tilesetOfTilesetsUrl,
-            lowMemory: true,
+            immediatelyLoadDesiredLOD: true,
             skipSSEFactor: 0.1,         // tiny skip factor so we would normally load all tiles
             skipLevels: 0
         }));
@@ -2426,7 +2426,7 @@ defineSuite([
                     scene.renderForSpecs();
                     expect(stats.numberContentReady).toBe(1);
 
-                    tileset.lowMemory = false;
+                    tileset.immediatelyLoadDesiredLOD = false;
                     scene.renderForSpecs();
                     return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
                         scene.renderForSpecs();

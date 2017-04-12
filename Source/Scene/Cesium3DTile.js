@@ -335,7 +335,7 @@ define([
 
         this._sse = 0;
         this._finalResolution = true;
-        this._loadHeap = undefined;
+        this._requestHeap = undefined;
         this._depth = 0;
         this._centerZDepth = 0;
         this._stackLength = 0;
