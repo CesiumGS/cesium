@@ -459,10 +459,10 @@ define([
                                 var r = result[key];
                                 if (r !== null) {
                                     var info = TileInformation.fromObject(result[key]);
-                                    tileInfo[key] = info;
                                     if (defined(parent) && key.length === topLevelKeyLength) {
                                         info.setParent(parent);
                                     }
+                                    tileInfo[key] = info;
                                 } else {
                                     tileInfo[key] = null;
                                 }
