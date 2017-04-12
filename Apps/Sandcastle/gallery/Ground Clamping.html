@@ -39,7 +39,7 @@ var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     requestVertexNormals : true
 });
 viewer.terrainProvider = cesiumTerrainProviderMeshes;
-
+viewer.scene.globe.depthTestAgainstTerrain = true;
 Sandcastle.addDefaultToolbarMenu([{
     //
     // To clamp points or billboards set the heightReference to CLAMP_TO_GROUND or RELATIVE_TO_GROUND
@@ -133,6 +133,21 @@ Sandcastle.addDefaultToolbarMenu([{
         });
 
         viewer.zoomTo(e);
+    }
+}, {
+    text : 'Draw Model',
+    onselect : function() {
+        var e = viewer.entities.add({
+            position : Cesium.Cartesian3.fromDegrees(-122.1958, 46.1915),
+            model : {
+                uri : '../../SampleData/models/CesiumMan/Cesium_Man.glb',
+                heightReference : Cesium.HeightReference.CLAMP_TO_GROUND,
+                minimumPixelSize : 128,
+                maximumScale : 100
+            }
+        });
+
+        viewer.trackedEntity = e;
     }
 }], 'zoomButtons');
 

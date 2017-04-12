@@ -41,22 +41,16 @@ defineSuite([
 
     it('constructor sets expected properties', function() {
         var flightDuration = 1234;
-        var url = 'bing.invalid/';
-        var key = 'testKey';
 
         var geocoder = new Geocoder({
             container : document.body,
             scene : scene,
-            flightDuration : flightDuration,
-            url : url,
-            key : key
+            flightDuration : flightDuration
         });
 
         var viewModel = geocoder.viewModel;
         expect(viewModel.scene).toBe(scene);
         expect(viewModel.flightDuration).toBe(flightDuration);
-        expect(viewModel.url).toBe(url);
-        expect(viewModel.key).toBe(key);
         geocoder.destroy();
     });
 
@@ -130,6 +124,7 @@ defineSuite([
         expect(viewModel._selectedSuggestion.displayName).toEqual('a');
         viewModel._handleArrowUp(viewModel);
         expect(viewModel._selectedSuggestion).toBeUndefined();
+        document.body.removeChild(container);
     });
 
 }, 'WebGL');

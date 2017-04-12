@@ -1,6 +1,5 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/Cartesian2',
         'Core/FeatureDetection',
         'Core/GeometryInstance',
         'Core/Math',
@@ -8,12 +7,12 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
         'Scene/EllipsoidSurfaceAppearance',
+        'Scene/OrthographicFrustum',
         'Scene/PerspectiveFrustum',
         'Scene/Primitive',
         'Scene/SceneMode',
         'Specs/createScene'
     ], 'Scene/Pick', function(
-        Cartesian2,
         FeatureDetection,
         GeometryInstance,
         CesiumMath,
@@ -21,6 +20,7 @@ defineSuite([
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
         EllipsoidSurfaceAppearance,
+        OrthographicFrustum,
         PerspectiveFrustum,
         Primitive,
         SceneMode,
@@ -92,24 +92,21 @@ defineSuite([
         }
 
         var rectangle = createRectangle();
-        var pickedObject = scene.pick(new Cartesian2(0, 0));
-        expect(pickedObject.primitive).toEqual(rectangle);
+        expect(scene).toPickPrimitive(rectangle);
     });
 
     it('does not pick primitives when show is false', function() {
         var rectangle = createRectangle();
         rectangle.show = false;
 
-        var pickedObject = scene.pick(new Cartesian2(0, 0));
-        expect(pickedObject).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     it('does not pick primitives when alpha is zero', function() {
         var rectangle = createRectangle();
         rectangle.appearance.material.uniforms.color.alpha = 0.0;
 
-        var pickedObject = scene.pick(new Cartesian2(0, 0));
-        expect(pickedObject).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     it('picks the top primitive', function() {
@@ -117,8 +114,7 @@ defineSuite([
         var rectangle2 = createRectangle();
         rectangle2.height = 0.01;
 
-        var pickedObject = scene.pick(new Cartesian2(0, 0));
-        expect(pickedObject.primitive).toEqual(rectangle2);
+        expect(scene).toPickPrimitive(rectangle2);
     });
 
     it('does not drill pick undefined window positions', function() {
@@ -132,10 +128,11 @@ defineSuite([
         var rectangle2 = createRectangle();
         rectangle2.height = 0.01;
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
-        expect(pickedObjects.length).toEqual(2);
-        expect(pickedObjects[0].primitive).toEqual(rectangle2);
-        expect(pickedObjects[1].primitive).toEqual(rectangle1);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(2);
+            expect(pickedObjects[0].primitive).toEqual(rectangle2);
+            expect(pickedObjects[1].primitive).toEqual(rectangle1);
+        });
     });
 
     it('does not drill pick when show is false', function() {
@@ -144,9 +141,10 @@ defineSuite([
         rectangle2.height = 0.01;
         rectangle2.show = false;
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
-        expect(pickedObjects.length).toEqual(1);
-        expect(pickedObjects[0].primitive).toEqual(rectangle1);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(1);
+            expect(pickedObjects[0].primitive).toEqual(rectangle1);
+        });
     });
 
     it('does not drill pick when alpha is zero', function() {
@@ -155,9 +153,10 @@ defineSuite([
         rectangle2.height = 0.01;
         rectangle2.appearance.material.uniforms.color.alpha = 0.0;
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
-        expect(pickedObjects.length).toEqual(1);
-        expect(pickedObjects[0].primitive).toEqual(rectangle1);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(1);
+            expect(pickedObjects[0].primitive).toEqual(rectangle1);
+        });
     });
 
     it('can drill pick batched Primitives with show attribute', function() {
@@ -204,12 +203,13 @@ defineSuite([
             appearance : new EllipsoidSurfaceAppearance()
         }));
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
-        expect(pickedObjects.length).toEqual(2);
-        expect(pickedObjects[0].primitive).toEqual(primitive);
-        expect(pickedObjects[0].id).toEqual(3);
-        expect(pickedObjects[1].primitive).toEqual(primitive);
-        expect(pickedObjects[1].id).toEqual(1);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(2);
+            expect(pickedObjects[0].primitive).toEqual(primitive);
+            expect(pickedObjects[0].id).toEqual(3);
+            expect(pickedObjects[1].primitive).toEqual(primitive);
+            expect(pickedObjects[1].id).toEqual(1);
+        });
     });
 
     it('can drill pick without ID', function() {
@@ -239,9 +239,10 @@ defineSuite([
             appearance : new EllipsoidSurfaceAppearance()
         }));
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
-        expect(pickedObjects.length).toEqual(1);
-        expect(pickedObjects[0].primitive).toEqual(primitive);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(1);
+            expect(pickedObjects[0].primitive).toEqual(primitive);
+        });
     });
 
     it('can drill pick batched Primitives without show attribute', function() {
@@ -279,10 +280,11 @@ defineSuite([
             appearance : new EllipsoidSurfaceAppearance()
         }));
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
-        expect(pickedObjects.length).toEqual(1);
-        expect(pickedObjects[0].primitive).toEqual(primitive);
-        expect(pickedObjects[0].id).toEqual(3);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(1);
+            expect(pickedObjects[0].primitive).toEqual(primitive);
+            expect(pickedObjects[0].id).toEqual(3);
+        });
     });
 
     it('stops drill picking when the limit is reached.', function() {
@@ -293,11 +295,12 @@ defineSuite([
         rectangle3.height = 0.02;
         rectangle4.height = 0.03;
 
-        var pickedObjects = scene.drillPick(new Cartesian2(0, 0), 3);
-        expect(pickedObjects.length).toEqual(3);
-        expect(pickedObjects[0].primitive).toEqual(rectangle4);
-        expect(pickedObjects[1].primitive).toEqual(rectangle3);
-        expect(pickedObjects[2].primitive).toEqual(rectangle2);
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(3);
+            expect(pickedObjects[0].primitive).toEqual(rectangle4);
+            expect(pickedObjects[1].primitive).toEqual(rectangle3);
+            expect(pickedObjects[2].primitive).toEqual(rectangle2);
+        });
     });
 
     it('picks in 2D', function() {
@@ -305,20 +308,21 @@ defineSuite([
         camera.setView({ destination : primitiveRectangle });
         var rectangle = createRectangle();
         scene.initializeFrame();
-        var pickedObject = scene.pick(new Cartesian2(0, 0));
-        expect(pickedObject).toBeDefined();
-        expect(pickedObject.primitive).toEqual(rectangle);
-        scene.morphTo3D(0.0);
+        expect(scene).toPickPrimitive(rectangle);
     });
 
-    it('picks in 2D when rotated', function() {
-        scene.morphTo2D(0.0);
+    it('picks in 3D with orthographic projection', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 20.0;
+        camera.frustum = frustum;
+
+        // force off center update
+        expect(frustum.projectionMatrix).toBeDefined();
+
         camera.setView({ destination : primitiveRectangle });
         var rectangle = createRectangle();
         scene.initializeFrame();
-        var pickedObject = scene.pick(new Cartesian2(0.0, 0.0));
-        expect(pickedObject).toBeDefined();
-        expect(pickedObject.primitive).toEqual(rectangle);
-        scene.morphTo3D(0.0);
+        expect(scene).toPickPrimitive(rectangle);
     });
 }, 'WebGL');

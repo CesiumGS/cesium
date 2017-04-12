@@ -327,7 +327,7 @@ gulp.task('deploy-s3', function(done) {
         return;
     }
 
-    var argv = yargs.usage('Usage: delpoy -b [Bucket Name] -d [Upload Directory]')
+    var argv = yargs.usage('Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]')
         .demand(['b', 'd']).argv;
 
     var uploadDirectory = argv.d;
@@ -570,7 +570,8 @@ function listAll(s3, bucketName, prefix, files, marker) {
 gulp.task('deploy-set-version', function() {
     var version = yargs.argv.version;
     if (version) {
-        packageJson.version += '-' + version;
+        // NPM versions can only contain alphanumeric and hyphen characters
+        packageJson.version += '-' + version.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
     }
 });
@@ -627,6 +628,7 @@ gulp.task('test', function(done) {
     var includeCategory = argv.include ? argv.include : '';
     var excludeCategory = argv.exclude ? argv.exclude : '';
     var webglValidation = argv.webglValidation ? argv.webglValidation : false;
+    var webglStub = argv.webglStub ? argv.webglStub : false;
     var release = argv.release ? argv.release : false;
     var failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
     var suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
@@ -660,7 +662,7 @@ gulp.task('test', function(done) {
         },
         files: files,
         client: {
-            args: [includeCategory, excludeCategory, webglValidation, release]
+            args: [includeCategory, excludeCategory, webglValidation, webglStub, release]
         }
     }, function(e) {
         return done(failTaskOnError ? e : undefined);
