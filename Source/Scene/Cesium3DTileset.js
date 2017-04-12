@@ -552,6 +552,14 @@ define([
         this._hasMixedContent = false;
 
         this._backfaceCommands = new ManagedArray();
+
+        this._selectionState = {
+            processingQueue : new ManagedArray(),
+            nextQueue : new ManagedArray(),
+            finalQueue : new ManagedArray(),
+            selectionQueue : new ManagedArray(),
+            done : false
+        };
     }
 
     function Cesium3DTilesetStatistics() {
@@ -1395,14 +1403,6 @@ define([
         }
     }
 
-    var selectionState = {
-        processingQueue : new ManagedArray(),
-        nextQueue : new ManagedArray(),
-        finalQueue : new ManagedArray(),
-        selectionQueue : new ManagedArray(),
-        done : false
-    };
-
     function sortForLoad(a, b) {
         var diff = b._sse - a._sse;
         if (diff === 0 || a.refine === Cesium3DTileRefine.ADD || b.refine === Cesium3DTileRefine.ADD) {
@@ -1452,6 +1452,7 @@ define([
             return;
         }
 
+        var selectionState = tileset._selectionState;
         var processingQueue = selectionState.processingQueue;
         var nextQueue = selectionState.nextQueue;
         var finalQueue = selectionState.finalQueue;
