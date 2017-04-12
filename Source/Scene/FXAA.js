@@ -141,10 +141,7 @@ define([
 
         if (!defined(this._command)) {
             var fs =
-                '#define FXAA_PC 1\n' +
-                '#define FXAA_WEBGL_1 1\n' +
                 '#define FXAA_QUALITY_PRESET ' + this._qualityPreset + '\n' +
-                '#define FXAA_GREEN_AS_LUMA 1\n' +
                 FXAA3_11 + '\n' +
                 FXAAFS;
 
