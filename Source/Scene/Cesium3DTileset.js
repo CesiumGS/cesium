@@ -1535,11 +1535,11 @@ define([
         var showAdditive = tile.refine === Cesium3DTileRefine.ADD && tile._sse > maximumScreenSpaceError;
         var showReplacement = tile.refine === Cesium3DTileRefine.REPLACE && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
 
-        if (showAdditive || showReplacement) {
+        if (showAdditive || showReplacement || tile.hasTilesetContent) {
             for (var i = 0; i < childrenLength; ++i) {
                 var child = children[i];
                 if (isVisible(child.visibilityPlaneMask)) {
-                    if (!showAdditive || getScreenSpaceError(tileset, tile.geometricError, child, frameState) > maximumScreenSpaceError) {
+                    if (!showAdditive || getScreenSpaceError(tileset, tile.geometricError, child, frameState) > maximumScreenSpaceError || tile.hasTilesetContent) {
                         stack.push(child);
                     }
                 } else {
