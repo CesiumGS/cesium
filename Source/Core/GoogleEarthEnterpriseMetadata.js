@@ -507,13 +507,6 @@ define([
             t = tileInfo[q];
         }
 
-        // t is either
-        //   null so one of its parents was a leaf node, so this tile doesn't exist
-        //   undefined so no parent exists - this shouldn't ever happen once the provider is ready
-        if (!defined(t)) {
-            return when.reject(new RuntimeError('Couldn\'t load metadata for tile ' + quadKey));
-        }
-
         var subtreePromises = that._subtreePromises;
         var promise = subtreePromises[q];
         if (defined(promise)) {
@@ -522,6 +515,14 @@ define([
                     // Recursively call this incase we need multiple subtree requests
                     return populateSubtree(that, quadKey, throttle);
                 });
+        }
+
+        // t is either
+        //   null so one of its parents was a leaf node, so this tile doesn't exist
+        //   exists but doesn't have a subtree to request
+        //   undefined so no parent exists - this shouldn't ever happen once the provider is ready
+        if (!defined(t) || !t.hasSubtree()) {
+            return when.reject(new RuntimeError('Couldn\'t load metadata for tile ' + quadKey));
         }
 
         // We need to split up the promise here because when will execute syncronously if getQuadTreePacket
