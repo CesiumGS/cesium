@@ -49,6 +49,11 @@ defineSuite([
         terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
             url : 'made/up/url'
         });
+        // Fake tile info
+        var q = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
+        var t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 0, 1, 1);
+        t.ancestorHasTerrain = true;
+        terrainProvider._metadata._tileInfo[q] = t;
 
         return pollToPromise(function() {
             return terrainProvider.ready;
@@ -256,6 +261,12 @@ defineSuite([
                 return terrainProvider.ready;
             })
                 .then(function() {
+                    // Fake tile info
+                    var q = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(1, 2, 3);
+                    var t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 0, 1, 1);
+                    t.ancestorHasTerrain = true;
+                    terrainProvider._metadata._tileInfo[q] = t;
+
                     var promise = terrainProvider.requestTileGeometry(1, 2, 3);
                     expect(promise).toBeDefined();
                     return promise;
@@ -263,6 +274,11 @@ defineSuite([
                 .then(function(terrainData) {
                     expect(terrainData).toBeDefined();
                     for (var i = 0; i < 10; ++i) {
+                        // Fake tile info
+                        var q = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(i, i, i);
+                        var t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 0, 1, 1);
+                        t.ancestorHasTerrain = true;
+                        terrainProvider._metadata._tileInfo[q] = t;
                         promises.push(terrainProvider.requestTileGeometry(i, i, i));
                     }
 
@@ -311,7 +327,7 @@ defineSuite([
                 expect(terrainProvider.getTileDataAvailable(0, 1, 0)).toBe(false);
                 expect(terrainProvider.getTileDataAvailable(1, 0, 0)).toBe(true);
                 expect(terrainProvider.getTileDataAvailable(1, 1, 0)).toBe(true);
-                expect(terrainProvider.getTileDataAvailable(0, 0, 2)).toBeUndefined();
+                expect(terrainProvider.getTileDataAvailable(0, 0, 2)).toBe(false);
             });
         });
     });
