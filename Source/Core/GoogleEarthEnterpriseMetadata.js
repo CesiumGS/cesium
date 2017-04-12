@@ -473,9 +473,6 @@ define([
             });
     };
 
-    // Verifies there is tileInfo for a quadKey. If not it requests the subtrees required to get it.
-    // Returns promise that resolves to true if the tile info is available, false otherwise.
-
     /**
      * Populates the metadata subtree down to the specified tile.
      *
