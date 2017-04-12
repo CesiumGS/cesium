@@ -520,13 +520,7 @@ define([
         var subtreePromises = that._subtreePromises;
         var promise = subtreePromises[q];
         if (defined(promise)) {
-            return promise
-                .then(function() {
-                    if (!defined(tileInfo[quadKey])) {
-                        return when.reject(new RuntimeError('Couldn\'t load metadata for tile ' + quadKey));
-                    }
-                    return tileInfo[quadKey];
-                });
+            return promise;
         }
 
         // We need to split up the promise here because when will execute syncronously if getQuadTreePacket
@@ -545,13 +539,10 @@ define([
                 return populateSubtree(that, quadKey, throttle);
             })
             .always(function() {
-                delete subtreePromises[q];
-            })
-            .then(function() {
                 if (!defined(tileInfo[quadKey])) {
-                    return when.reject(new RuntimeError('Couldn\'t load metadata for tile ' + quadKey));
+                    console.log('GoogleEarthEnterpriseMetadata: Failed to retrieve metadata for tile ' + quadKey);
                 }
-                return tileInfo[quadKey];
+                delete subtreePromises[q];
             });
     }
 
