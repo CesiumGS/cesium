@@ -130,7 +130,7 @@ define([
      * @returns {Number} Children bitmask
      */
     TileInformation.prototype.getChildBitmask = function() {
-        return this._bits && anyChildBitmask;
+        return this._bits & anyChildBitmask;
     };
 
     GoogleEarthEnterpriseMetadata.TileInformation = TileInformation;
@@ -285,6 +285,37 @@ define([
             y : y,
             level : level
         };
+    };
+
+    GoogleEarthEnterpriseMetadata.prototype.isValid = function(quadKey) {
+        var info = this.getTileInformationFromQuadKey(quadKey);
+        if (defined(info)) {
+            return info !== null;
+        }
+
+        var valid = true;
+        var q = quadKey;
+        var last;
+        while (q.length > 1) {
+            last = q.substring(q.length - 1);
+            q = q.substring(0, q.length - 1);
+            info = this.getTileInformationFromQuadKey(q);
+            if (defined(info)) {
+                if (!info.hasSubtree() &&
+                    !info.hasChild(parseInt(last))) {
+                    // We have no subtree or child available at some point in this node's ancestry
+                    valid = false;
+                }
+
+                break;
+            } else if (info === null) {
+                // Some node in the ancestry was loaded and said there wasn't a subtree
+                valid = false;
+                break;
+            }
+        }
+
+        return valid;
     };
 
     var compressedMagic = 0x7468dead;

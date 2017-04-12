@@ -109,12 +109,6 @@ define([
 
     function requestTileGeometry(tileTerrain, terrainProvider, x, y, level) {
         function success(terrainData) {
-            if (!defined(terrainData)) {
-                // Deferred - try again later.
-                tileTerrain.state = TerrainState.UNLOADED;
-                return;
-            }
-
             tileTerrain.data = terrainData;
             tileTerrain.state = TerrainState.RECEIVED;
         }
