@@ -426,79 +426,30 @@ define([
 
         var invalidImage = this._tileDiscardPolicy._image; // Empty image or undefined depending on discard policy
         var metadata = this._metadata;
+        var quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y , level);
         var info = metadata.getTileInformation(x, y, level);
-        var promise;
-        if (defined(info)) {
-            if (!info.hasImagery()) {
-                // Already have info and there isn't any imagery here
-                return invalidImage;
-            }
-            var url = buildImageUrl(this, info, x, y, level);
-            promise = throttleRequestByServer(url, loadArrayBuffer);
-        } else {
-            if (info === null) {
-                // Parent was retrieved and said child doesn't exist
-                return invalidImage;
-            }
-
-            var q = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
-            var last;
-            while (q.length > 1) {
-                last = q.substring(q.length - 1);
-                q = q.substring(0, q.length - 1);
-                info = metadata.getTileInformationFromQuadKey(q);
-                if (defined(info)) {
-                    if (!info.hasSubtree() &&
-                        !info.hasChild(parseInt(last))) {
-                        // We have no subtree or child available at some point in this node's ancestry
-                        return invalidImage;
-                    }
-
-                    break;
-                } else if (info === null) {
-                    // Some node in the ancestry was loaded and said there wasn't a subtree
-                    return invalidImage;
-                }
-            }
-
-            // There is nothing in the heirarchy that leads us to think this tile isn't available
-            //  so populate the tree so the info is available for this tile.
-            var metadataPromise = metadata.populateSubtree(x, y, level, true);
-
-            if (defined(metadataPromise)) {
-                promise = metadataPromise
-                    .then(function(info) {
-                        if (!defined(info)) {
-                            return undefined; //Metadata throttled
-                        }
-
-                        if (info.hasImagery()) {
-                            var url = buildImageUrl(that, info, x, y, level);
-                            return throttleRequestByServer(url, loadArrayBuffer);
-                        }
-
-                        return when(invalidImage);
-                    })
-                    .otherwise(function() {
-                        // Metadata couldn't be loaded, so imagery isn't available
-                        return invalidImage;
-                    });
+        if (!defined(info)) {
+            if (metadata.isValid(quadKey)) {
+                metadata.populateSubtree(x, y, level);
+                return undefined; // No metadata so return undefined so we can be loaded later
+            } else {
+                return invalidImage; // Image doesn't exist
             }
         }
 
+        if (!info.hasImagery()) {
+            // Already have info and there isn't any imagery here
+            return invalidImage;
+        }
+        // Load the
+        var url = buildImageUrl(this, info, x, y, level);
+        var promise = throttleRequestByServer(url, loadArrayBuffer);
         if (!defined(promise)) {
-            return undefined; // Metadata or Image request throttled
+            return undefined; //Throttled
         }
 
         return promise
             .then(function(image) {
-                if (!defined(image)) {
-                    return; // Throttled
-                }
-                if (image === invalidImage) {
-                    return invalidImage;
-                }
-
                 GoogleEarthEnterpriseMetadata.decode(image);
                 var a = new Uint8Array(image);
                 var type = getImageType(a);
@@ -509,7 +460,7 @@ define([
                 }
 
                 if (!defined(type) || !defined(a)) {
-                    throw new RuntimeError('Invalid image');
+                    return invalidImage;
                 }
 
                 return loadImageFromTypedArray(a, type);
