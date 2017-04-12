@@ -1345,7 +1345,7 @@ define([
                 break;
             }
 
-            var pass = command instanceof ClearCommand ? Pass.OPAQUE : command.pass;
+            var pass = command.pass;
             var index = frustumCommands.indices[pass]++;
             frustumCommands.commands[pass][index] = command;
 
@@ -1928,6 +1928,13 @@ define([
                 }
             }
 
+            us.updatePass(Pass.CESIUM_3D_TILE);
+            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
+            length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
             var startPass = Pass.GROUND + 1;
@@ -2001,7 +2008,7 @@ define([
             var command = commandList[i];
             updateDerivedCommands(scene, command);
 
-            if (command.castShadows && (command.pass === Pass.GLOBE || command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT)) {
+            if (command.castShadows && (command.pass === Pass.GLOBE || command.pass === Pass.CESIUM_3D_TILE || command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT)) {
                 if (isVisible(command, shadowVolume)) {
                     if (isPointLight) {
                         for (var k = 0; k < numberOfPasses; ++k) {
