@@ -87,6 +87,7 @@ define([
      * @constructor
      */
     function Cesium3DTile(tileset, baseUrl, header, parent) {
+        this._tileset = tileset;
         this._header = header;
         var contentHeader = header.content;
 
@@ -340,6 +341,8 @@ define([
         this._stackLength = 0;
         this._selectedFrame = -1;
         this._selectionDepth = 0;
+        this._lastFinalResolution = undefined;
+        this._lastSelectionDepth = undefined;
     }
 
     defineProperties(Cesium3DTile.prototype, {

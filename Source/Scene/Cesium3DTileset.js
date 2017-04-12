@@ -27,9 +27,6 @@ define([
         '../Core/RequestScheduler',
         '../Core/RequestType',
         '../Renderer/ClearCommand',
-        '../Renderer/DrawCommand',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Axis',
@@ -40,15 +37,12 @@ define([
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
         './Cesium3DTileStyleEngine',
-        './CullFace',
         './CullingVolume',
         './DebugCameraPrimitive',
         './LabelCollection',
         './OrthographicFrustum',
         './SceneMode',
         './ShadowMode',
-        './StencilFunction',
-        './StencilOperation',
         './TileBoundingRegion',
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
@@ -80,9 +74,6 @@ define([
         RequestScheduler,
         RequestType,
         ClearCommand,
-        DrawCommand,
-        RenderState,
-        ShaderProgram,
         Uri,
         when,
         Axis,
@@ -93,15 +84,12 @@ define([
         Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
         Cesium3DTileStyleEngine,
-        CullFace,
         CullingVolume,
         DebugCameraPrimitive,
         LabelCollection,
         OrthographicFrustum,
         SceneMode,
         ShadowMode,
-        StencilFunction,
-        StencilOperation,
         TileBoundingRegion,
         TileBoundingSphere,
         TileOrientedBoundingBox) {
@@ -560,6 +548,8 @@ define([
 
         this._requestHeaps = {};
         this._hasMixedContent = false;
+
+        this._backfaceCommands = new ManagedArray();
     }
 
     function Cesium3DTilesetStatistics() {
@@ -1885,7 +1875,6 @@ define([
     var stencilClearCommand = new ClearCommand({
         stencil : 0
     });
-    var backfaceCommands = new ManagedArray();
 
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
@@ -1898,7 +1887,28 @@ define([
 
         var tile, i;
 
-        if (tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0) {
+        var bivariateVisibilityTest = tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
+
+        tileset._backfaceCommands.length = 0;
+
+        if (bivariateVisibilityTest) {
+            commandList.push(stencilClearCommand);
+        }
+
+        var lengthBeforeUpdate = commandList.length;
+        for (i = 0; i < length; ++i) {
+            tile = selectedTiles[i];
+            // Raise visible event before update in case the visible event
+            // makes changes that update needs to apply to WebGL resources
+            tileVisible.raiseEvent(tile);
+            tile.update(tileset, frameState);
+            incrementPointAndFeatureSelectionCounts(tileset, tile.content);
+        }
+        var lengthAfterUpdate = commandList.length;
+
+        tileset._backfaceCommands.trim();
+
+        if (bivariateVisibilityTest) {
             /**
              * Consider 'effective leaf' tiles as selected tiles that have no selected descendants. They may have children,
              * but they are currently our effective leaves because they do not have selected descendants. These tiles
@@ -1923,85 +1933,22 @@ define([
              * of an object, they will always be drawn while loading, even if backface culling is enabled.
              */
 
-            commandList.push(stencilClearCommand);
-
-            var command, rs;
-
-            var initialLength = commandList.length;
-            backfaceCommands.length = 0;
-
-            for (i = 0; i < length; ++i) {
-                tile = selectedTiles[i];
-                // Raise visible event before update in case the visible event
-                // makes changes that update needs to apply to WebGL resources
-                tileVisible.raiseEvent(tile);
-                incrementPointAndFeatureSelectionCounts(tileset, tile.content);
-
-                var lengthBeforeUpdate = commandList.length;
-                tile.update(tileset, frameState);
-                for (var j = lengthBeforeUpdate; j < commandList.length; ++j) {
-                    command = commandList[j];
-
-                    if (!tile._finalResolution) {
-                        // draw backfaces of all unresolved tiles so resolved tiles don't poke through
-                        if (command.renderState.depthMask) {
-                            // resize internal array if too small
-                            backfaceCommands.reserve(backfaceCommands.length + 1);
-                            // clone the command in-place if the internal array contained an old command allocated there
-                            var backfaceCommand = DrawCommand.shallowClone(command, backfaceCommands.get(backfaceCommands.length));
-                            backfaceCommands.push(backfaceCommand);
-                        }
-                    }
-
-                    // ignore if tile does not write depth (ex. translucent)
-                    if (command.renderState.depthMask) {
-                        // Tiles only draw if their selection depth is >= the tile drawn already. They write their
-                        // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
-                        rs = clone(command.renderState, true);
-                        rs.stencilTest.enabled = true;
-                        rs.stencilTest.reference = tile._selectionDepth;
-                        rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
-                        rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
-                        command.renderState = RenderState.fromCache(rs);
-                    }
-                }
-            }
-
-            var addedCommandsLength = commandList.length - initialLength;
+            var backfaceCommands = tileset._backfaceCommands.internalArray;
+            var addedCommandsLength = (lengthAfterUpdate - lengthBeforeUpdate);
             var backfaceCommandsLength = backfaceCommands.length;
 
-            // write just depth of unresolved tiles so resolved final res tiles do not appear in front
-            for (i = 0; i < backfaceCommandsLength; ++i) {
-                command = backfaceCommands.get(i);
-                rs = clone(command.renderState, true);
-                rs.cull.enabled = true;
-                rs.cull.face = CullFace.FRONT;
-                command.renderState = RenderState.fromCache(rs);
-            }
+            commandList.length += backfaceCommands.length;
 
-            commandList.length = initialLength + addedCommandsLength + backfaceCommandsLength;
-
-            // missing cache all day?
+            // copy commands to the back of the commandList
             for (i = addedCommandsLength - 1; i >= 0; --i) {
-                commandList[initialLength + backfaceCommandsLength + i] = commandList[initialLength + i];
+                commandList[lengthBeforeUpdate + backfaceCommandsLength + i] = commandList[lengthBeforeUpdate + i];
             }
 
+            // move backface commands to the front of the commandList
             for (i = 0; i < backfaceCommandsLength; ++i) {
-                commandList[initialLength + i] = backfaceCommands.get(i);
-            }
-
-        } else {
-            for (i = 0; i < length; ++i) {
-                tile = selectedTiles[i];
-                // Raise visible event before update in case the visible event
-                // makes changes that update needs to apply to WebGL resources
-                tileVisible.raiseEvent(tile);
-                tile.update(tileset, frameState);
-                incrementPointAndFeatureSelectionCounts(tileset, tile.content);
+                commandList[lengthBeforeUpdate + i] = backfaceCommands[i];
             }
         }
-
-        backfaceCommands.trim();
 
         // Number of commands added by each update above
         tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
