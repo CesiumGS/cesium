@@ -1,40 +1,40 @@
 /*global define*/
 define([
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/GeographicTilingScheme',
-        '../Core/GoogleEarthEnterpriseMetadata',
-        '../Core/loadArrayBuffer',
-        '../Core/loadImageFromTypedArray',
-        '../Core/Math',
-        '../Core/Rectangle',
-        '../Core/RuntimeError',
-        '../Core/throttleRequestByServer',
-        '../Core/TileProviderError',
-        '../ThirdParty/protobuf-minimal',
-        '../ThirdParty/when'
-    ], function(
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        GeographicTilingScheme,
-        GoogleEarthEnterpriseMetadata,
-        loadArrayBuffer,
-        loadImageFromTypedArray,
-        CesiumMath,
-        Rectangle,
-        RuntimeError,
-        throttleRequestByServer,
-        TileProviderError,
-        protobuf,
-        when) {
+    '../Core/Credit',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/DeveloperError',
+    '../Core/Event',
+    '../Core/GeographicTilingScheme',
+    '../Core/GoogleEarthEnterpriseMetadata',
+    '../Core/loadArrayBuffer',
+    '../Core/loadImageFromTypedArray',
+    '../Core/Math',
+    '../Core/Rectangle',
+    '../Core/RuntimeError',
+    '../Core/throttleRequestByServer',
+    '../Core/TileProviderError',
+    '../ThirdParty/protobuf-minimal',
+    '../ThirdParty/when'
+], function(
+    Credit,
+    defaultValue,
+    defined,
+    defineProperties,
+    DeveloperError,
+    Event,
+    GeographicTilingScheme,
+    GoogleEarthEnterpriseMetadata,
+    loadArrayBuffer,
+    loadImageFromTypedArray,
+    CesiumMath,
+    Rectangle,
+    RuntimeError,
+    throttleRequestByServer,
+    TileProviderError,
+    protobuf,
+    when) {
     'use strict';
 
     function GoogleEarthEnterpriseDiscardPolicy() {
@@ -422,11 +422,10 @@ define([
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
-        var that = this;
 
         var invalidImage = this._tileDiscardPolicy._image; // Empty image or undefined depending on discard policy
         var metadata = this._metadata;
-        var quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y , level);
+        var quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
         var info = metadata.getTileInformation(x, y, level);
         if (!defined(info)) {
             if (metadata.isValid(quadKey)) {

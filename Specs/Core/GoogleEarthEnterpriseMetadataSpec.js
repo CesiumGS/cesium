@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/GoogleEarthEnterpriseMetadata',
-        'Core/DefaultProxy',
-        'Core/defaultValue',
-        'Core/loadWithXhr',
-        'Core/Math',
-        'ThirdParty/when'
-    ], function(
-        GoogleEarthEnterpriseMetadata,
-        DefaultProxy,
-        defaultValue,
-        loadWithXhr,
-        CesiumMath,
-        when) {
+    'Core/GoogleEarthEnterpriseMetadata',
+    'Core/DefaultProxy',
+    'Core/defaultValue',
+    'Core/loadWithXhr',
+    'Core/Math',
+    'ThirdParty/when'
+], function(
+    GoogleEarthEnterpriseMetadata,
+    DefaultProxy,
+    defaultValue,
+    loadWithXhr,
+    CesiumMath,
+    when) {
     'use strict';
 
     it('tileXYToQuadKey', function() {

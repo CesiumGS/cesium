@@ -1,34 +1,34 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/GoogleEarthEnterpriseTerrainProvider',
-        'Core/DefaultProxy',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/GoogleEarthEnterpriseMetadata',
-        'Core/GoogleEarthEnterpriseTerrainData',
-        'Core/loadImage',
-        'Core/loadWithXhr',
-        'Core/Math',
-        'Core/TerrainProvider',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        GoogleEarthEnterpriseTerrainProvider,
-        DefaultProxy,
-        defaultValue,
-        defined,
-        Ellipsoid,
-        GeographicTilingScheme,
-        GoogleEarthEnterpriseMetadata,
-        GoogleEarthEnterpriseTerrainData,
-        loadImage,
-        loadWithXhr,
-        CesiumMath,
-        TerrainProvider,
-        pollToPromise,
-        when) {
+    'Core/GoogleEarthEnterpriseTerrainProvider',
+    'Core/DefaultProxy',
+    'Core/defaultValue',
+    'Core/defined',
+    'Core/Ellipsoid',
+    'Core/GeographicTilingScheme',
+    'Core/GoogleEarthEnterpriseMetadata',
+    'Core/GoogleEarthEnterpriseTerrainData',
+    'Core/loadImage',
+    'Core/loadWithXhr',
+    'Core/Math',
+    'Core/TerrainProvider',
+    'Specs/pollToPromise',
+    'ThirdParty/when'
+], function(
+    GoogleEarthEnterpriseTerrainProvider,
+    DefaultProxy,
+    defaultValue,
+    defined,
+    Ellipsoid,
+    GeographicTilingScheme,
+    GoogleEarthEnterpriseMetadata,
+    GoogleEarthEnterpriseTerrainData,
+    loadImage,
+    loadWithXhr,
+    CesiumMath,
+    TerrainProvider,
+    pollToPromise,
+    when) {
     'use strict';
 
     function installMockGetQuadTreePacket() {
@@ -266,14 +266,14 @@ defineSuite([
             return pollToPromise(function() {
                 return terrainProvider.ready;
             })
-                .then(function(){
+                .then(function() {
                     return pollToPromise(function() {
                         var b = true;
                         for (var i = 0; i < 10; ++i) {
                             b = b && terrainProvider.getTileDataAvailable(i, i, i);
                         }
                         return b && terrainProvider.getTileDataAvailable(1, 2, 3);
-                    })
+                    });
                 })
                 .then(function() {
                     var promise = terrainProvider.requestTileGeometry(1, 2, 3);

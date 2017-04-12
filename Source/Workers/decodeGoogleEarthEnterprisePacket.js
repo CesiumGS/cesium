@@ -38,7 +38,7 @@ define([
         buffer = uncompressedTerrain.buffer;
         var length = uncompressedTerrain.length;
 
-        switch(type) {
+        switch (type) {
             case Types.METADATA:
                 return processMetadata(buffer, length, parameters.quadKey);
             case Types.TERRAIN:
@@ -48,6 +48,7 @@ define([
     }
 
     var qtMagic = 32301;
+
     function processMetadata(buffer, totalSize, quadKey) {
         var dv = new DataView(buffer);
         var offset = 0;
@@ -211,6 +212,7 @@ define([
 
     var compressedMagic = 0x7468dead;
     var compressedMagicSwap = 0xadde6874;
+
     function uncompressPacket(data) {
         // The layout of this decoded data is
         // Magic Uint32

@@ -1,42 +1,42 @@
 /*global define*/
 define([
-        '../Core/AxisAlignedBoundingBox',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/Ellipsoid',
-        '../Core/EllipsoidalOccluder',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/OrientedBoundingBox',
-        '../Core/Rectangle',
-        '../Core/RuntimeError',
-        '../Core/TerrainEncoding',
-        '../Core/Transforms',
-        '../Core/WebMercatorProjection',
-        './createTaskProcessorWorker'
-    ], function(
-        AxisAlignedBoundingBox,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        defaultValue,
-        defined,
-        Ellipsoid,
-        EllipsoidalOccluder,
-        CesiumMath,
-        Matrix4,
-        OrientedBoundingBox,
-        Rectangle,
-        RuntimeError,
-        TerrainEncoding,
-        Transforms,
-        WebMercatorProjection,
-        createTaskProcessorWorker) {
+    '../Core/AxisAlignedBoundingBox',
+    '../Core/BoundingSphere',
+    '../Core/Cartesian2',
+    '../Core/Cartesian3',
+    '../Core/Cartographic',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/Ellipsoid',
+    '../Core/EllipsoidalOccluder',
+    '../Core/Math',
+    '../Core/Matrix4',
+    '../Core/OrientedBoundingBox',
+    '../Core/Rectangle',
+    '../Core/RuntimeError',
+    '../Core/TerrainEncoding',
+    '../Core/Transforms',
+    '../Core/WebMercatorProjection',
+    './createTaskProcessorWorker'
+], function(
+    AxisAlignedBoundingBox,
+    BoundingSphere,
+    Cartesian2,
+    Cartesian3,
+    Cartographic,
+    defaultValue,
+    defined,
+    Ellipsoid,
+    EllipsoidalOccluder,
+    CesiumMath,
+    Matrix4,
+    OrientedBoundingBox,
+    Rectangle,
+    RuntimeError,
+    TerrainEncoding,
+    Transforms,
+    WebMercatorProjection,
+    createTaskProcessorWorker) {
     'use strict';
 
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
@@ -91,6 +91,7 @@ define([
     var minimumScratch = new Cartesian3();
     var maximumScratch = new Cartesian3();
     var matrix4Scratch = new Matrix4();
+
     function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle, exaggeration, skirtHeight, includeWebMercatorT) {
         var geographicWest;
         var geographicSouth;
@@ -165,14 +166,14 @@ define([
                 quadBorderLatitudes.push(y);
             }
 
-            o += 2*sizeOfDouble; // stepX + stepY
+            o += 2 * sizeOfDouble; // stepX + stepY
 
             var c = dv.getInt32(o, true); // Read point count
             o += sizeOfInt32;
             size += c;
 
             c = dv.getInt32(o, true); // Read index count
-            indicesSize += c*3;
+            indicesSize += c * 3;
 
             offset += quadSize + sizeOfUint32; // Jump to next quad
         }
@@ -264,23 +265,23 @@ define([
 
                 if (Math.abs(longitude - geographicWest) < halfStepX) {
                     westBorder.push({
-                        index: pointOffset,
-                        cartographic: Cartographic.clone(scratchCartographic)
+                        index : pointOffset,
+                        cartographic : Cartographic.clone(scratchCartographic)
                     });
-                } else if(Math.abs(longitude - geographicEast) < halfStepX) {
+                } else if (Math.abs(longitude - geographicEast) < halfStepX) {
                     eastBorder.push({
-                        index: pointOffset,
-                        cartographic: Cartographic.clone(scratchCartographic)
+                        index : pointOffset,
+                        cartographic : Cartographic.clone(scratchCartographic)
                     });
                 } else if (Math.abs(latitude - geographicSouth) < halfStepY) {
                     southBorder.push({
-                        index: pointOffset,
-                        cartographic: Cartographic.clone(scratchCartographic)
+                        index : pointOffset,
+                        cartographic : Cartographic.clone(scratchCartographic)
                     });
-                } else if(Math.abs(latitude - geographicNorth) < halfStepY) {
+                } else if (Math.abs(latitude - geographicNorth) < halfStepY) {
                     northBorder.push({
-                        index: pointOffset,
-                        cartographic: Cartographic.clone(scratchCartographic)
+                        index : pointOffset,
+                        cartographic : Cartographic.clone(scratchCartographic)
                     });
                 }
 
@@ -315,7 +316,7 @@ define([
                 offset += sizeOfUint16;
             }
 
-            if (quadSize !== (offset-startQuad)) {
+            if (quadSize !== (offset - startQuad)) {
                 throw new RuntimeError('Invalid terrain tile.');
             }
         }
@@ -332,13 +333,13 @@ define([
 
         // Add skirt points
         var skirtOptions = {
-            hMin: minHeight,
+            hMin : minHeight,
             lastBorderPoint : undefined,
-            skirtHeight: skirtHeight,
-            toENU: toENU,
-            ellipsoid: ellipsoid,
-            minimum: minimum,
-            maximum: maximum
+            skirtHeight : skirtHeight,
+            toENU : toENU,
+            ellipsoid : ellipsoid,
+            minimum : minimum,
+            maximum : maximum
         };
 
         // Sort counter clockwise from NW corner
@@ -358,20 +359,20 @@ define([
 
         var percentage = 0.00001;
         addSkirt(positions, heights, uvs, webMercatorTs, indices, skirtOptions,
-            westBorder, -percentage*rectangleWidth, true, -percentage*rectangleHeight);
+            westBorder, -percentage * rectangleWidth, true, -percentage * rectangleHeight);
         addSkirt(positions, heights, uvs, webMercatorTs, indices, skirtOptions,
-            southBorder, -percentage*rectangleHeight, false);
+            southBorder, -percentage * rectangleHeight, false);
         addSkirt(positions, heights, uvs, webMercatorTs, indices, skirtOptions,
-            eastBorder, percentage*rectangleWidth, true, percentage*rectangleHeight);
+            eastBorder, percentage * rectangleWidth, true, percentage * rectangleHeight);
         addSkirt(positions, heights, uvs, webMercatorTs, indices, skirtOptions,
-            northBorder, percentage*rectangleHeight, false);
+            northBorder, percentage * rectangleHeight, false);
 
         // Since the corner between the north and west sides is in the west array, generate the last
         //  two triangles between the last north vertex and the first west vertex
         if (westBorder.length > 0 && northBorder.length > 0) {
             var firstBorderIndex = westBorder[0].index;
             var firstSkirtIndex = vertexCountWithoutSkirts;
-            var lastBorderIndex = northBorder[northBorder.length-1].index;
+            var lastBorderIndex = northBorder[northBorder.length - 1].index;
             var lastSkirtIndex = positions.length - 1;
 
             indices.push(lastBorderIndex, lastSkirtIndex, firstSkirtIndex, firstSkirtIndex, firstBorderIndex, lastBorderIndex);
@@ -439,7 +440,7 @@ define([
             // Since corners are in the east/west arrays angle the first and last points as well
             if (!eastOrWest) {
                 scratchCartographic.latitude += fudgeFactor;
-            } else if (j === (count-1)) {
+            } else if (j === (count - 1)) {
                 scratchCartographic.latitude += cornerFudge;
             } else if (j === 0) {
                 scratchCartographic.latitude -= cornerFudge;

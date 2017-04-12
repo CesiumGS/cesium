@@ -1,28 +1,28 @@
 /*global define*/
 define([
-        '../ThirdParty/pako_inflate',
-        '../ThirdParty/when',
-        './appendForwardSlash',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './loadArrayBuffer',
-        './RuntimeError',
-        './TaskProcessor',
-        './throttleRequestByServer'
-    ], function(
-        pako,
-        when,
-        appendForwardSlash,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        loadArrayBuffer,
-        RuntimeError,
-        TaskProcessor,
-        throttleRequestByServer) {
+    '../ThirdParty/pako_inflate',
+    '../ThirdParty/when',
+    './appendForwardSlash',
+    './defaultValue',
+    './defined',
+    './defineProperties',
+    './DeveloperError',
+    './loadArrayBuffer',
+    './RuntimeError',
+    './TaskProcessor',
+    './throttleRequestByServer'
+], function(
+    pako,
+    when,
+    appendForwardSlash,
+    defaultValue,
+    defined,
+    defineProperties,
+    DeveloperError,
+    loadArrayBuffer,
+    RuntimeError,
+    TaskProcessor,
+    throttleRequestByServer) {
     'use strict';
 
     // Bitmask for checking tile properties
@@ -454,8 +454,8 @@ define([
                         }
 
                         // Copy the resulting objects into tileInfo
-                        for(var key in result) {
-                            if(result.hasOwnProperty(key)) {
+                        for (var key in result) {
+                            if (result.hasOwnProperty(key)) {
                                 var r = result[key];
                                 if (r !== null) {
                                     var info = TileInformation.fromObject(result[key]);
