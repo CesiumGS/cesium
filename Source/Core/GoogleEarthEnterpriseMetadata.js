@@ -520,13 +520,16 @@ define([
         var subtreePromises = that._subtreePromises;
         var promise = subtreePromises[q];
         if (defined(promise)) {
-            return promise;
+            return promise
+                .then(function() {
+                    // Recursively call this incase we need multiple subtree requests
+                    return populateSubtree(that, quadKey, throttle);
+                });
         }
 
         // We need to split up the promise here because when will execute syncronously if getQuadTreePacket
         //  is already resolved (like in the tests), so subtreePromises will never get cleared out.
-        //  The promise will always resolve with a bool, but the initial request will also remove
-        //  the promise from subtreePromises.
+        //  Only the initial request will also remove the promise from subtreePromises.
         promise = that.getQuadTreePacket(q, t.cnodeVersion, throttle);
         if (!defined(promise)) {
             return undefined;
@@ -539,9 +542,6 @@ define([
                 return populateSubtree(that, quadKey, throttle);
             })
             .always(function() {
-                if (!defined(tileInfo[quadKey])) {
-                    console.log('GoogleEarthEnterpriseMetadata: Failed to retrieve metadata for tile ' + quadKey);
-                }
                 delete subtreePromises[q];
             });
     }
