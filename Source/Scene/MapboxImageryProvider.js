@@ -65,7 +65,7 @@ define([
         this._url = url;
         this._mapId = mapId;
         this._accessToken = MapboxApi.getAccessToken(options.accessToken);
-        this._accessTokenErrorCredit = MapboxApi.getErrorCredit(options.key);
+        this._accessTokenErrorCredit = MapboxApi.getErrorCredit(options.accessToken);
         var format = defaultValue(options.format, 'png');
         if (!/\./.test(format)) {
             format = '.' + format;
