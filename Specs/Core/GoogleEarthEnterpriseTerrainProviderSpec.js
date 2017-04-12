@@ -34,10 +34,21 @@ defineSuite([
     function installMockGetQuadTreePacket() {
         spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
             quadKey = defaultValue(quadKey, '');
-            this._tileInfo[quadKey + '0'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
-            this._tileInfo[quadKey + '1'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
-            this._tileInfo[quadKey + '2'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
-            this._tileInfo[quadKey + '3'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            var t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t.ancestorHasTerrain = true;
+            this._tileInfo[quadKey + '0'] = t;
+
+            t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t.ancestorHasTerrain = true;
+            this._tileInfo[quadKey + '1'] = t;
+
+            t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t.ancestorHasTerrain = true;
+            this._tileInfo[quadKey + '2'] = t;
+
+            t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t.ancestorHasTerrain = true;
+            this._tileInfo[quadKey + '3'] = t;
 
             return when();
         });
@@ -49,14 +60,9 @@ defineSuite([
         terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
             url : 'made/up/url'
         });
-        // Fake tile info
-        var q = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
-        var t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 0, 1, 1);
-        t.ancestorHasTerrain = true;
-        terrainProvider._metadata._tileInfo[q] = t;
 
         return pollToPromise(function() {
-            return terrainProvider.ready;
+            return terrainProvider.ready && terrainProvider.getTileDataAvailable(x, y, level);
         }).then(function() {
             var promise = terrainProvider.requestTileGeometry(level, x, y);
 
@@ -260,13 +266,16 @@ defineSuite([
             return pollToPromise(function() {
                 return terrainProvider.ready;
             })
+                .then(function(){
+                    return pollToPromise(function() {
+                        var b = true;
+                        for (var i = 0; i < 10; ++i) {
+                            b = b && terrainProvider.getTileDataAvailable(i, i, i);
+                        }
+                        return b && terrainProvider.getTileDataAvailable(1, 2, 3);
+                    })
+                })
                 .then(function() {
-                    // Fake tile info
-                    var q = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(1, 2, 3);
-                    var t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 0, 1, 1);
-                    t.ancestorHasTerrain = true;
-                    terrainProvider._metadata._tileInfo[q] = t;
-
                     var promise = terrainProvider.requestTileGeometry(1, 2, 3);
                     expect(promise).toBeDefined();
                     return promise;
@@ -274,11 +283,6 @@ defineSuite([
                 .then(function(terrainData) {
                     expect(terrainData).toBeDefined();
                     for (var i = 0; i < 10; ++i) {
-                        // Fake tile info
-                        var q = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(i, i, i);
-                        var t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 0, 1, 1);
-                        t.ancestorHasTerrain = true;
-                        terrainProvider._metadata._tileInfo[q] = t;
                         promises.push(terrainProvider.requestTileGeometry(i, i, i));
                     }
 
