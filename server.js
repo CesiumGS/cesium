@@ -3,7 +3,6 @@
     /*jshint node:true*/
 
     var express = require('express');
-    var a = 1;
     var compression = require('compression');
     var url = require('url');
     var request = require('request');
