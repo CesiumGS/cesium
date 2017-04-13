@@ -531,17 +531,6 @@ define([
         }),
 
         /**
-         * @private
-         */
-        czm_inverseProjectionOIT : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.FLOAT_MAT4,
-            getValue : function(uniformState) {
-                return uniformState.inverseProjectionOIT;
-            }
-        }),
-
-        /**
          * An automatic GLSL uniform representing a 4x4 projection transformation matrix with the far plane at infinity,
          * that transforms eye coordinates to clip coordinates.  Clip coordinates is the
          * coordinate system for a vertex shader's <code>gl_Position</code> output.  An infinite far plane is used
@@ -1480,7 +1469,7 @@ define([
 
          /**
          * An automatic GLSL uniform representing the splitter position to use when rendering imagery layers with a splitter.
-         * This will be in the range 0.0 to 1.0 with 0.0 being the far left of the viewport and 1.0 being the far right of the viewport.
+         * This will be in pixel coordinates relative to the canvas.
          *
          * @alias czm_imagerySplitPosition
          * @glslUniform
