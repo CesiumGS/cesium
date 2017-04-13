@@ -1,14 +1,10 @@
 /*global define*/
 define([
         '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../ThirdParty/when',
-        './Cesium3DTileContentState'
+        '../Core/destroyObject'
     ], function(
         defineProperties,
-        destroyObject,
-        when,
-        Cesium3DTileContentState) {
+        destroyObject) {
     'use strict';
 
     /**
@@ -25,20 +21,8 @@ define([
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
-        this.state = undefined;
         this.batchTable = undefined;
         this.featurePropertiesDirty = false;
-
-        this._contentReadyToProcessPromise = when.defer();
-        this._readyPromise = when.defer();
-
-        // Transition into the PROCESSING state.
-        this.state = Cesium3DTileContentState.PROCESSING;
-        this._contentReadyToProcessPromise.resolve(this);
-
-        // Transition into the READY state.
-        this.state = Cesium3DTileContentState.READY;
-        this._readyPromise.resolve(this);
     }
 
     defineProperties(Empty3DTileContent.prototype, {

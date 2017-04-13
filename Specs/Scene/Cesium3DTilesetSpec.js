@@ -271,7 +271,6 @@ defineSuite([
 
             expect(tileset._geometricError).toEqual(240.0);
             expect(tileset._root).toBeDefined();
-            expect(tileset._root.descendantsWithContent).toBeUndefined();
             expect(tileset.url).toEqual(tilesetUrl);
         });
     });

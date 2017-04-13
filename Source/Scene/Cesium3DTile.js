@@ -13,16 +13,22 @@ define([
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/getExtensionFromUri',
+        '../Core/getMagic',
+        '../Core/getStringFromTypedArray',
         '../Core/Intersect',
         '../Core/joinUrls',
+        '../Core/loadArrayBuffer',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/RectangleOutlineGeometry',
+        '../Core/Request',
         '../Core/RequestScheduler',
+        '../Core/RequestType',
         '../Core/SphereOutlineGeometry',
         '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './Cesium3DTileChildrenVisibility',
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
@@ -50,16 +56,22 @@ define([
         DeveloperError,
         GeometryInstance,
         getExtensionFromUri,
+        getMagic,
+        getStringFromTypedArray,
         Intersect,
         joinUrls,
+        loadArrayBuffer,
         Matrix3,
         Matrix4,
         OrientedBoundingBox,
         Rectangle,
         RectangleOutlineGeometry,
+        Request,
         RequestScheduler,
+        RequestType,
         SphereOutlineGeometry,
         Uri,
+        when,
         Cesium3DTileChildrenVisibility,
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
@@ -164,17 +176,6 @@ define([
         this.children = [];
 
         /**
-         * Descendant tiles that need to be visible before this tile can refine. For example, if
-         * a child is empty (such as for accelerating culling), its descendants with content would
-         * be added here. This array is generated during runtime in {@link Cesium3DTileset#loadTileset}.
-         * If a tiles's children all have content, this is left undefined.
-         *
-         * @type {Array}
-         * @readonly
-         */
-        this.descendantsWithContent = undefined;
-
-        /**
          * This tile's parent or <code>undefined</code> if this tile is the root.
          * <p>
          * When a tile's content points to an external tileset.json, the external tileset's
@@ -187,72 +188,75 @@ define([
          */
         this.parent = parent;
 
-        var hasContent;
-        var hasTilesetContent;
+        var content;
+        var hasEmptyContent;
+        var contentState;
+        var contentUrl;
         var requestServer;
-        var createContent;
 
         if (defined(contentHeader)) {
-            var contentUrl = contentHeader.url;
-            var url = joinUrls(baseUrl, contentUrl);
-            requestServer = RequestScheduler.getRequestServer(url);
-            var type = getExtensionFromUri(url);
-            var contentFactory = Cesium3DTileContentFactory[type];
-
-            if (type === 'json') {
-                hasContent = false;
-                hasTilesetContent = true;
-            } else {
-                hasContent = true;
-                hasTilesetContent = false;
-            }
-
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(contentFactory)) {
-                throw new DeveloperError('Unknown tile content type, ' + type + ', for ' + url);
-            }
-            //>>includeEnd('debug');
-
-            var that = this;
-            createContent = function() {
-                return contentFactory(tileset, that, url);
-            };
+            hasEmptyContent = false;
+            contentState = Cesium3DTileContentState.UNLOADED;
+            contentUrl = joinUrls(baseUrl, contentHeader.url);
+            requestServer = RequestScheduler.getRequestServer(contentUrl);
         } else {
-            hasContent = false;
-            hasTilesetContent = false;
-
-            createContent = function() {
-                return new Empty3DTileContent();
-            };
+            content = new Empty3DTileContent();
+            hasEmptyContent = true;
+            contentState = Cesium3DTileContentState.READY;
         }
 
-        this._createContent = createContent;
-        this._content = createContent();
+        this._content = content;
+        this._contentUrl = contentUrl;
+        this._contentState = contentState;
+        this._contentReadyToProcessPromise = undefined;
+        this._contentReadyPromise = undefined;
 
         this._requestServer = requestServer;
 
         /**
-         * When <code>true</code>, the tile has content.  This does not imply that the content is loaded.
+         * When <code>true</code>, the tile has no content.
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @see Empty3DTileContent
+         *
+         * @private
+         */
+        this.hasEmptyContent = hasEmptyContent;
+
+        /**
+         * When <code>true</code>, the tile's content is renderable.
          * <p>
-         * When a tile's content points to a external tileset, the tile is not considered to have content.
+         * This is <code>false</code> until the tile's content is loaded.
          * </p>
          *
          * @type {Boolean}
          * @readonly
          *
+         * @see Batched3DModel3DTileContent
+         * @see Instanced3DModel3DTileContent
+         * @see PointCloud3DTileContent
+         * @see Composite3DTileContent
+         *
          * @private
          */
-        this.hasContent = hasContent;
+        this.hasRenderableContent = false;
 
         /**
          * When <code>true</code>, the tile's content points to an external tileset.
+         * <p>
+         * This is <code>false</code> until the tile's content is loaded.
+         * </p>
          *
          * @type {Boolean}
          * @readonly
          *
+         * @see Tileset3DTileContent
+         *
          * @private
          */
-        this.hasTilesetContent = hasTilesetContent;
+        this.hasTilesetContent = false;
 
         /**
          * The corresponding node in the cache replacement list.
@@ -426,7 +430,7 @@ define([
          */
         contentReady : {
             get : function() {
-                return this._content.state === Cesium3DTileContentState.READY;
+                return this._contentState === Cesium3DTileContentState.READY;
             }
         },
 
@@ -441,7 +445,47 @@ define([
          */
         contentUnloaded : {
             get : function() {
-                return this._content.state === Cesium3DTileContentState.UNLOADED;
+                return this._contentState === Cesium3DTileContentState.UNLOADED;
+            }
+        },
+
+        /**
+         * Gets the promise that will be resolved when the tile's content is ready to process.
+         * This happens after the content is downloaded but before the content is ready
+         * to render.
+         * <p>
+         * The promise remains <code>undefined</code> until the tile's content is requested.
+         * </p>
+         *
+         * @type {Promise.<Cesium3DTileContent>}
+         * @readonly
+         *
+         * @private
+         */
+        contentReadyToProcessPromise : {
+            get : function() {
+                if (defined(this._contentReadyToProcessPromise)) {
+                    return this._contentReadyToProcessPromise.promise;
+                }
+            }
+        },
+
+        /**
+         * Gets the promise that will be resolved when the tile's content is ready to render.
+         * <p>
+         * The promise remains <code>undefined</code> until the tile's content is requested.
+         * </p>
+         *
+         * @type {Promise.<Cesium3DTileContent>}
+         * @readonly
+         *
+         * @private
+         */
+        contentReadyPromise : {
+            get : function() {
+                if (defined(this._contentReadyPromise)) {
+                    return this._contentReadyPromise.promise;
+                }
             }
         }
     });
@@ -455,7 +499,69 @@ define([
      * @private
      */
     Cesium3DTile.prototype.requestContent = function() {
-        this._content.request();
+        var that = this;
+
+        if (this.hasEmptyContent) {
+            return false;
+        }
+
+        if (!this.canRequestContent()) {
+            return false;
+        }
+
+        var distance = this.distanceToCamera;
+        var promise = RequestScheduler.schedule(new Request({
+            url : this._contentUrl,
+            server : this._requestServer,
+            requestFunction : loadArrayBuffer,
+            type : RequestType.TILES3D,
+            distance : distance
+        }));
+
+        if (!defined(promise)) {
+            return false;
+        }
+
+        this._contentState = Cesium3DTileContentState.LOADING;
+        this._contentReadyToProcessPromise = when.defer();
+        this._contentReadyPromise = when.defer();
+
+        promise.then(function(arrayBuffer) {
+            if (that.isDestroyed()) {
+                return when.reject('tileset is destroyed');
+            }
+            var uint8Array = new Uint8Array(arrayBuffer);
+            var magic = getMagic(uint8Array);
+            var contentFactory = Cesium3DTileContentFactory[magic];
+            var content;
+
+            if (defined(contentFactory)) {
+                content = contentFactory(that._tileset, that, that._contentUrl, arrayBuffer, 0);
+                that.hasRenderableContent = true;
+            } else {
+                // The content may be json instead
+                content = Cesium3DTileContentFactory.json(that._tileset, that, that._contentUrl, arrayBuffer, 0);
+                that.hasTilesetContent = true;
+            }
+
+            that._content = content;
+            that._contentState = Cesium3DTileContentState.PROCESSING;
+            that._contentReadyToProcessPromise.resolve(content);
+
+            content.readyPromise.then(function(content) {
+                that._contentState = Cesium3DTileContentState.READY;
+                that._contentReadyPromise.resolve(content);
+            }).otherwise(function(error) {
+                that._contentState = Cesium3DTileContentState.FAILED;
+                that._contentReadyPromise.reject(error);
+            });
+        }).otherwise(function(error) {
+            that._contentState = Cesium3DTileContentState.FAILED;
+            that._contentReadyPromise.reject(error);
+            that._contentReadyToProcessPromise.reject(error);
+        });
+
+        return true;
     };
 
     /**
@@ -481,8 +587,14 @@ define([
      * @private
      */
     Cesium3DTile.prototype.unloadContent = function() {
+        if (!this.hasRenderableContent) {
+            return;
+        }
+
         this._content = this._content && this._content.destroy();
-        this._content = this._createContent();
+        this._contentState = Cesium3DTileContentState.UNLOADED;
+        this._contentReadyToProcessPromise = undefined;
+        this._contentReadyPromise = undefined;
 
         this.replacementNode = undefined;
 
@@ -534,7 +646,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.contentsVisibility = function(frameState) {
+    Cesium3DTile.prototype.contentVisibility = function(frameState) {
         // Assumes the tile's bounding volume intersects the culling volume already, so
         // just return Intersect.INSIDE if there is no content bounding volume.
         if (!defined(this._contentBoundingVolume)) {
