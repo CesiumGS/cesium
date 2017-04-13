@@ -52,13 +52,13 @@ define([
         },
         /**
          * The underlying bounding sphere
-         * 
+         *
          * @memberof TileOrientedBoundingBox.prototype
-         * 
+         *
          * @type {BoundingSphere}
          * @readonly
          */
-        boundingSphere : { 
+        boundingSphere : {
             get : function() {
                 return this._boundingSphere;
             }

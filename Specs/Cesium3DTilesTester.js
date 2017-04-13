@@ -111,11 +111,11 @@ define([
         });
     };
 
-    Cesium3DTilesTester.loadTileset = function(scene, url) {
+    Cesium3DTilesTester.loadTileset = function(scene, url, options) {
+        options = defaultValue(options, {});
+        options.url = url;
         // Load all visible tiles
-        var tileset = scene.primitives.add(new Cesium3DTileset({
-            url : url
-        }));
+        var tileset = scene.primitives.add(new Cesium3DTileset(options));
 
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     };

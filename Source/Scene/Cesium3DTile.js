@@ -87,6 +87,7 @@ define([
      * @constructor
      */
     function Cesium3DTile(tileset, baseUrl, header, parent) {
+        this._tileset = tileset;
         this._header = header;
         var contentHeader = header.content;
 
@@ -152,7 +153,7 @@ define([
          * @type {Cesium3DTileRefine}
          * @readonly
          */
-        this.refine = refine;
+        this.refine = defaultValue(refine, Cesium3DTileRefine.REPLACE);
 
         /**
          * An array of {@link Cesium3DTile} objects that are this tile's children.
@@ -185,16 +186,6 @@ define([
          * @readonly
          */
         this.parent = parent;
-
-        /**
-         * The number of unloaded children, i.e., children whose content is not loaded.
-         *
-         * @type {Number}
-         * @readonly
-         *
-         * @private
-         */
-        this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
 
         var hasContent;
         var hasTilesetContent;
@@ -237,9 +228,6 @@ define([
 
         this._createContent = createContent;
         this._content = createContent();
-        if (!hasContent && !hasTilesetContent) {
-            addContentReadyPromise(this);
-        }
 
         this._requestServer = requestServer;
 
@@ -297,15 +285,6 @@ define([
         this.selected = false;
 
         /**
-         * Marks if the tile is replaced this frame.
-         *
-         * @type {Boolean}
-         *
-         * @private
-         */
-        this.replaced = false;
-
-        /**
          * The stored plane mask from the visibility check during tree traversal.
          *
          * @type {Number}
@@ -313,12 +292,12 @@ define([
          * @private
          */
         this.visibilityPlaneMask = true;
-        
+
         /**
          * Flag to mark children visibility
          *
          * @type {Cesium3DTileChildrenVisibility}
-         * 
+         *
          * @private
          */
         this.childrenVisibility = Cesium3DTileChildrenVisibility.VISIBLE;
@@ -349,10 +328,21 @@ define([
 
         /**
          * Marks whether the tile's children bounds are fully contained within the tile's bounds
-         * 
+         *
          * @type {Cesium3DTileOptimizationHint}
          */
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
+
+        this._sse = 0;
+        this._finalResolution = true;
+        this._requestHeap = undefined;
+        this._depth = 0;
+        this._centerZDepth = 0;
+        this._stackLength = 0;
+        this._selectedFrame = -1;
+        this._selectionDepth = 0;
+        this._lastFinalResolution = undefined;
+        this._lastSelectionDepth = undefined;
     }
 
     defineProperties(Cesium3DTile.prototype, {
@@ -456,19 +446,6 @@ define([
         }
     });
 
-    function addContentReadyPromise(tile) {
-        // Content enters the READY state
-        tile._content.readyPromise.then(function(content) {
-            if (defined(tile.parent)) {
-                --tile.parent.numberOfChildrenWithoutContent;
-            }
-        }).otherwise(function(error) {
-            // In this case, that.parent.numberOfChildrenWithoutContent will never reach zero
-            // and therefore that.parent will never refine.  If this becomes an issue, failed
-            // requests can be reissued.
-        });
-    }
-
     /**
      * Requests the tile's content.
      * <p>
@@ -478,9 +455,7 @@ define([
      * @private
      */
     Cesium3DTile.prototype.requestContent = function() {
-        if (this._content.request()) {
-            addContentReadyPromise(this);
-        }
+        this._content.request();
     };
 
     /**
@@ -506,15 +481,8 @@ define([
      * @private
      */
     Cesium3DTile.prototype.unloadContent = function() {
-        if (defined(this.parent)) {
-            ++this.parent.numberOfChildrenWithoutContent;
-        }
-
         this._content = this._content && this._content.destroy();
         this._content = this._createContent();
-        if (!this.hasContent && !this.hasTilesetContent) {
-            addContentReadyPromise(this);
-        }
 
         this.replacementNode = undefined;
 
@@ -596,6 +564,26 @@ define([
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
         var boundingVolume = getBoundingVolume(this, frameState);
         return boundingVolume.distanceToCamera(frameState);
+    };
+
+
+    var scratchCartesian = new Cartesian3();
+
+    /**
+     * Computes the distance from the center of the tile's bounding volume to the camera.
+     *
+     * @param {FrameState} frameState The frame state.
+     * @returns {Number} The distance, in meters, or zero if the camera is inside the bounding volume.
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.distanceToTileCenter = function(frameState) {
+        var boundingVolume = getBoundingVolume(this, frameState).boundingVolume;
+        var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
+        var distance = Cartesian3.magnitude(toCenter);
+        Cartesian3.divideByScalar(toCenter, distance, toCenter);
+        var dot = Cartesian3.dot(frameState.camera.directionWC, toCenter);
+        return distance * dot;
     };
 
     /**
@@ -719,7 +707,8 @@ define([
         var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
         if (showVolume) {
             if (!defined(tile._debugBoundingVolume)) {
-                tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(hasContentBoundingVolume ? Color.WHITE : Color.RED);
+                var color = tile._finalResolution ? (hasContentBoundingVolume ? Color.WHITE : Color.RED) : Color.YELLOW;
+                tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(color);
             }
             tile._debugBoundingVolume.update(frameState);
         } else if (!showVolume && defined(tile._debugBoundingVolume)) {

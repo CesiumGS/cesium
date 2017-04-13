@@ -27,7 +27,9 @@ define([
         './BlendingState',
         './Cesium3DTileColorBlendMode',
         './CullFace',
-        './getBinaryAccessor'
+        './getBinaryAccessor',
+        './StencilFunction',
+        './StencilOperation'
     ], function(
         arrayFill,
         Cartesian2,
@@ -56,7 +58,9 @@ define([
         BlendingState,
         Cesium3DTileColorBlendMode,
         CullFace,
-        getBinaryAccessor) {
+        getBinaryAccessor,
+        StencilFunction,
+        StencilOperation) {
     'use strict';
 
     /**
@@ -1240,6 +1244,8 @@ define([
 
     Cesium3DTileBatchTable.prototype.getAddCommand = function() {
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
+        var tile = this._content._tile;
+        var tileset = tile._tileset;
 
 // TODO: This function most likely will not get optimized.  Do something like this later in the render loop.
         return function(command) {
@@ -1255,7 +1261,26 @@ define([
                 derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
             }
 
+            var bivariateVisibilityTest = tileset._hasMixedContent && this.context.stencilBuffer;
+
+            if (bivariateVisibilityTest) {
+                if (!tile._finalResolution) {
+                    if (!defined(derivedCommands.zback)) {
+                        derivedCommands.zback = deriveZBackfaceCommand(command);
+                    }
+                    tileset._backfaceCommands.push(derivedCommands.zback);
+                }
+
+                if (!defined(derivedCommands.stencil) || tile._selectionDepth !== tile._lastSelectionDepth) {
+                    derivedCommands.stencil = deriveStencilCommand(derivedCommands.originalCommand, tile._selectionDepth);
+                    tile._lastSelectionDepth = tile._selectionDepth;
+                }
+            }
+
             updateDerivedCommands(derivedCommands, command);
+
+            // replace original commands with stenciled commands
+            var opaqueCommand = bivariateVisibilityTest ? derivedCommands.stencil : derivedCommands.originalCommand;
 
             // If the command was originally opaque:
             //    * If the styling applied to the tile is all opaque, use the original command
@@ -1268,7 +1293,7 @@ define([
 // commands so the third-case may be overkill.  Change this to a PERFORMANCE_IDEA?
             if (command.pass !== Pass.TRANSLUCENT) {
                 if (styleCommandsNeeded === StyleCommandsNeeded.ALL_OPAQUE) {
-                    commandList.push(derivedCommands.originalCommand);
+                    commandList.push(opaqueCommand);
                 }
 
                 if (styleCommandsNeeded === StyleCommandsNeeded.ALL_TRANSLUCENT) {
@@ -1280,7 +1305,7 @@ define([
                 }
 
                 if (styleCommandsNeeded === StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT) {
-                    commandList.push(derivedCommands.originalCommand);
+                    commandList.push(opaqueCommand);
                     commandList.push(derivedCommands.back);
                     commandList.push(derivedCommands.front);
                 }
@@ -1289,7 +1314,7 @@ define([
                 // as of now, a style can't change an originally translucent feature to
                 // opaque since the style's alpha is modulated, not a replacement.  When
                 // this changes, we need to derive new opaque commands here.
-                commandList.push(derivedCommands.originalCommand);
+                commandList.push(opaqueCommand);
             }
         };
     };
@@ -1327,6 +1352,32 @@ define([
             return translucentCommand;
         };
 
+        return derivedCommand;
+    }
+
+    // write just backface depth of unresolved tiles so resolved stenciled tiles do not appear in front
+    function deriveZBackfaceCommand(command) {
+        var derivedCommand = DrawCommand.shallowClone(command);
+        var rs = clone(derivedCommand.renderState, true);
+        rs.cull.enabled = true;
+        rs.cull.face = CullFace.FRONT;
+        derivedCommand.renderState = RenderState.fromCache(rs);
+        return derivedCommand;
+    }
+
+    function deriveStencilCommand(command, reference) {
+        var derivedCommand = command;
+        if (command.renderState.depthMask) { // ignore if tile does not write depth (ex. translucent)
+            // Tiles only draw if their selection depth is >= the tile drawn already. They write their
+            // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
+            derivedCommand = DrawCommand.shallowClone(command);
+            var rs = clone(derivedCommand.renderState, true);
+            rs.stencilTest.enabled = true;
+            rs.stencilTest.reference = reference;
+            rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
+            rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
+            derivedCommand.renderState = RenderState.fromCache(rs);
+        }
         return derivedCommand;
     }
 
