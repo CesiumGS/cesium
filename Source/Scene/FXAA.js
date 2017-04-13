@@ -18,7 +18,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Shaders/PostProcessFilters/FXAA',
-        '../Shaders/PostProcessFilters/FXAA3_11'
+        '../ThirdParty/Shaders/FXAA3_11'
     ], function(
         BoundingRectangle,
         Cartesian2,
