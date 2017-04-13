@@ -144,7 +144,7 @@ define([
      */
     PolylineDashMaterialProperty.prototype.equals = function(other) {
         return this === other || //
-               (other instanceof PolylineDashMaterialProperty && //
+               (other instanceof PolylineDashMaterialProperty &&
                 Property.equals(this._color, other._color) &&
                 Property.equals(this._gapColor, other._gapColor) &&
                 Property.equals(this._dashLength, other._dashLength) &&
