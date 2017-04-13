@@ -167,15 +167,6 @@ define([
                 },
                 u_fxaaQualityRcpFrame : function() {
                     return rcpFrame;
-                },
-                u_fxaaQualitySubpix : function() {
-                    return that._qualitySubPix;
-                },
-                u_fxaaQualityEdgeThreshold : function() {
-                    return that._qualityEdgeThreshold;
-                },
-                u_fxaaQualityEdgeThresholdMin : function() {
-                    return that._qualityEdgeThresholdMin;
                 }
             };
         }
