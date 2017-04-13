@@ -62,9 +62,6 @@ define([
         this._clearCommand = clearCommand;
 
         this._qualityPreset = 39;
-        this._qualitySubPix = 0.5;
-        this._qualityEdgeThreshold = 0.125;
-        this._qualityEdgeThresholdMin = 0.0833;
     }
 
     function destroyResources(fxaa) {
