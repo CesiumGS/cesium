@@ -94,6 +94,7 @@ define([
          * The particle emitter for this particle system.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default new CircleEmitter({radius: 0.5});
          */
         emitter : createPropertyDescriptor('emitter'),
 
@@ -108,6 +109,7 @@ define([
          * The scale of a particle at the beginning of it's lifetime.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default 1.0
          */
         startScale: createPropertyDescriptor('startScale'),
 
@@ -115,6 +117,7 @@ define([
          * The scale of a particle at the end of it's lifetime.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default 1.0
          */
         endScale: createPropertyDescriptor('endScale'),
 
@@ -122,6 +125,7 @@ define([
          * The color of a particle at the beginning of it's lifetime.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default Color.WHITE
          */
         startColor: createPropertyDescriptor('startColor'),
 
@@ -129,6 +133,7 @@ define([
          * The color of a particle at the end of it's lifetime.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default Color.WHITE
          */
         endColor: createPropertyDescriptor('endColor'),
 
@@ -136,6 +141,7 @@ define([
          * The number of particles to emit per second.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default 5.0
          */
         rate: createPropertyDescriptor('rate'),
 
@@ -143,6 +149,7 @@ define([
          * The minimum width of a particle billboard.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default 16.0
          */
         minWidth: createPropertyDescriptor('minWidth'),
 
@@ -150,6 +157,7 @@ define([
          * The maximum width of a particle billboard.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default 16.0
          */
         maxWidth: createPropertyDescriptor('maxWidth'),
 
@@ -157,6 +165,7 @@ define([
          * The minimum height of a particle billboard.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default 16.0
          */
         minHeight: createPropertyDescriptor('minHeight'),
 
@@ -164,6 +173,7 @@ define([
          * The maximum height of a particle billboard.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default 16.0
          */
         maxHeight: createPropertyDescriptor('maxHeight'),
 
@@ -171,6 +181,7 @@ define([
          * The minimum speed of a particle.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default 5.0
          */
         minSpeed: createPropertyDescriptor('minSpeed'),
 
@@ -178,6 +189,7 @@ define([
          * The maximum speed of a particle.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default 5.0
          */
         maxSpeed: createPropertyDescriptor('maxSpeed'),
 
@@ -185,6 +197,7 @@ define([
          * Whether the particle system should loop when it's complete.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default true
          */
         loop: createPropertyDescriptor('loop'),
 
@@ -192,6 +205,7 @@ define([
          * The lifetime of the particle system.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default Number.MAX_VALUE
          */
         lifeTime: createPropertyDescriptor('lifeTime'),
 
@@ -199,6 +213,7 @@ define([
          * The model matrix of the emitter in the particle system.  This positions the emitter locally within the particle system.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default Matrix4.IDENTITY
          */
         emitterModelMatrix: createPropertyDescriptor("emitterModelMatrix"),
 
@@ -218,6 +233,7 @@ define([
          * The minimum life in seconds of a particle
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default 5.0
          */
         minLife: createPropertyDescriptor("minLife"),
 
@@ -225,6 +241,7 @@ define([
          * The maximum life in seconds of a particle
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
+         * @default 5.0
          */
         maxLife: createPropertyDescriptor("maxLife")
     });
