@@ -12,8 +12,13 @@ define([
         '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/Texture',
-        '../Shaders/PostProcessFilters/FXAA'
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
+        '../Shaders/PostProcessFilters/FXAA',
+        '../ThirdParty/Shaders/FXAA3_11'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -27,14 +32,19 @@ define([
         Renderbuffer,
         RenderbufferFormat,
         RenderState,
+        Sampler,
         Texture,
-        FXAAFS) {
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
+        FXAAFS,
+        FXAA3_11) {
     'use strict';
 
     /**
      * @private
      */
-    function FXAA(context) {
+    function FXAA() {
         this._texture = undefined;
         this._depthStencilTexture = undefined;
         this._depthStencilRenderbuffer = undefined;
@@ -50,6 +60,8 @@ define([
             owner : this
         });
         this._clearCommand = clearCommand;
+
+        this._qualityPreset = 39;
     }
 
     function destroyResources(fxaa) {
@@ -85,7 +97,13 @@ define([
                 width : width,
                 height : height,
                 pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                sampler : new Sampler({
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    minificationFilter : TextureMinificationFilter.LINEAR,
+                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                })
             });
 
             if (context.depthTexture) {
@@ -119,7 +137,12 @@ define([
         }
 
         if (!defined(this._command)) {
-            this._command = context.createViewportQuadCommand(FXAAFS, {
+            var fs =
+                '#define FXAA_QUALITY_PRESET ' + this._qualityPreset + '\n' +
+                FXAA3_11 + '\n' +
+                FXAAFS;
+
+            this._command = context.createViewportQuadCommand(fs, {
                 owner : this
             });
         }
@@ -137,13 +160,13 @@ define([
 
         if (textureChanged) {
             var that = this;
-            var step = new Cartesian2(1.0 / this._texture.width, 1.0 / this._texture.height);
+            var rcpFrame = new Cartesian2(1.0 / this._texture.width, 1.0 / this._texture.height);
             this._command.uniformMap = {
                 u_texture : function() {
                     return that._texture;
                 },
-                u_step : function() {
-                    return step;
+                u_fxaaQualityRcpFrame : function() {
+                    return rcpFrame;
                 }
             };
         }
