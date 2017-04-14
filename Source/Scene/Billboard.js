@@ -89,6 +89,9 @@ define([
         if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
             throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
         }
+        if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
+            throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
+        }
         //>>includeEnd('debug');
 
         this._show = defaultValue(options.show, true);
@@ -111,6 +114,7 @@ define([
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._sizeInMeters = defaultValue(options.sizeInMeters, false);
         this._distanceDisplayCondition = options.distanceDisplayCondition;
+        this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -178,7 +182,8 @@ define([
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
     var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
-    Billboard.NUMBER_OF_PROPERTIES = 15;
+    var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE = 15;
+    Billboard.NUMBER_OF_PROPERTIES = 16;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -749,6 +754,30 @@ define([
         },
 
         /**
+         * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+         * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+         * @memberof Billboard.prototype
+         * @type {Number}
+         * @default 0.0
+         */
+        disableDepthTestDistance : {
+            get : function() {
+                return this._disableDepthTestDistance;
+            },
+            set : function(value) {
+                if (this._disableDepthTestDistance !== value) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (!defined(value) || value < 0.0) {
+                        throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
+                    }
+                    //>>includeEnd('debug');
+                    this._disableDepthTestDistance = value;
+                    makeDirty(this, DISABLE_DEPTH_DISTANCE);
+                }
+            }
+        },
+
+        /**
          * Gets or sets the user-defined object returned when the billboard is picked.
          * @memberof Billboard.prototype
          * @type {Object}
@@ -1278,7 +1307,8 @@ define([
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
                NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
-               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition);
+               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
+               this._disableDepthTestDistance === other._disableDepthTestDistance;
     };
 
     Billboard.prototype._destroy = function() {

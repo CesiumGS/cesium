@@ -52,8 +52,8 @@ We love pull requests.  We strive to promptly review them, provide feedback, and
 
 Before we can merge a pull request, we require a signed Contributor License Agreement.  There is a CLA for:
 
-* [individuals](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt) and 
-* [corporations](http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt).
+* [individuals](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt) and 
+* [corporations](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt).
 
 This only needs to be completed once.  The CLA ensures you retain copyright to your contributions, and we have the right to use them and incorporate them into Cesium using the [Apache 2.0 License](LICENSE.md).
 
