@@ -193,6 +193,8 @@ Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
+var emitterModelMatrix = new Cesium.Matrix4();
+
 //Generate a random circular pattern with varying heights.
 function computeCirclularFlight(lon, lat, radius) {
     var property = new Cesium.SampledPositionProperty();
@@ -223,6 +225,50 @@ var entity = viewer.entities.add({
         minimumPixelSize : 64
     },
 
+    particleSystem: {
+        image: '../../SampleData/fire.png',
+
+        startColor: Cesium.Color.RED.withAlpha(0.7),
+        endColor: Cesium.Color.YELLOW.withAlpha(0.3),
+
+        startScale: viewModel.startScale,
+        endScale: viewModel.endScale,
+
+        minLife: viewModel.minLife,
+        maxLife: viewModel.maxLife,
+
+        minSpeed: viewModel.minSpeed,
+        maxSpeed: viewModel.maxSpeed,
+
+        width: viewModel.particleSize,
+        height: viewModel.particleSize,
+
+        // Particles per second.
+        rate: viewModel.rate,
+
+        bursts: [
+            {time: 5.0, min: 300, max: 500},
+            {time: 10.0, min: 50, max: 100},
+            {time: 15.0, min: 200, max: 300}
+        ],
+
+        lifeTime: 16.0,
+
+        emitter: new Cesium.CircleEmitter({
+            radius: 0.5
+        }),
+
+        emitterModelMatrix: Cesium.Matrix4.fromTranslationRotationScale(
+            new Cesium.TranslationRotationScale(
+                new Cesium.Cartesian3(viewModel.transX, viewModel.transY, viewModel.transZ),
+                Cesium.Quaternion.fromHeadingPitchRoll(Cesium.HeadingPitchRoll.fromDegrees(viewModel.heading, viewModel.pitch, viewModel.roll))
+            ),
+            emitterModelMatrix
+        ),
+
+        forces: [applyGravity]
+    },
+
     position : staticPosition
 });
 viewer.trackedEntity = entity;
@@ -243,62 +289,11 @@ function applyGravity(p, dt) {
     p.velocity = Cesium.Cartesian3.add(p.velocity, gravityScratch, p.velocity);
 }
 
-var emitterModelMatrix = new Cesium.Matrix4();
-
-var particles = scene.primitives.add(new Cesium.ParticleSystem({
-
-    image: '../../SampleData/fire.png',
-
-    startColor: Cesium.Color.RED.withAlpha(0.7),
-    endColor: Cesium.Color.YELLOW.withAlpha(0.3),
-
-    startScale: viewModel.startScale,
-    endScale: viewModel.endScale,
-
-    minLife: viewModel.minLife,
-    maxLife: viewModel.maxLife,
-
-    minSpeed: viewModel.minSpeed,
-    maxSpeed: viewModel.maxSpeed,
-
-    width: viewModel.particleSize,
-    height: viewModel.particleSize,
-
-    // Particles per second.
-    rate: viewModel.rate,
-
-    bursts: [
-        {time: 5.0, min: 300, max: 500},
-        {time: 10.0, min: 50, max: 100},
-        {time: 15.0, min: 200, max: 300}
-    ],
-
-    lifeTime: 16.0,
-
-    emitter: new Cesium.CircleEmitter({
-        radius: 0.5
-    }),
-
-    emitterModelMatrix: Cesium.Matrix4.fromTranslationRotationScale(
-        new Cesium.TranslationRotationScale(
-            new Cesium.Cartesian3(viewModel.transX, viewModel.transY, viewModel.transZ),
-            Cesium.Quaternion.fromHeadingPitchRoll(Cesium.HeadingPitchRoll.fromDegrees(viewModel.heading, viewModel.pitch, viewModel.roll))
-        ),
-        emitterModelMatrix
-    ),
-
-    forces: [applyGravity]
-}));
-
-entity._getModelMatrix(viewer.clock.currentTime, particles.modelMatrix);
 
 
 viewer.scene.preRender.addEventListener(function(scene, time) {
-    // Sync the modelMatrix with the entitys position.
-    entity._getModelMatrix(viewer.clock.currentTime, particles.modelMatrix);
-
     // Account for any changes to the emitter model matrix.
-    particles.emitterModelMatrix = Cesium.Matrix4.fromTranslationRotationScale(
+    entity.particleSystem.emitterModelMatrix = Cesium.Matrix4.fromTranslationRotationScale(
         new Cesium.TranslationRotationScale(
             new Cesium.Cartesian3(viewModel.transX, viewModel.transY, viewModel.transZ),
             Cesium.Quaternion.fromHeadingPitchRoll(Cesium.HeadingPitchRoll.fromDegrees(viewModel.heading, viewModel.pitch, viewModel.roll))
@@ -317,53 +312,53 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
 
 Cesium.knockout.getObservable(viewModel, 'rate').subscribe(
     function(newValue) {
-        particles.rate = parseFloat(newValue);
+        entity.particleSystem.rate = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'particleSize').subscribe(
     function(newValue) {
         var particleSize = parseFloat(newValue);
-        particles.minWidth = particleSize;
-        particles.maxWidth = particleSize;
-        particles.minHeight = particleSize;
-        particles.maxHeight = particleSize;
+        entity.particleSystem.minWidth = particleSize;
+        entity.particleSystem.maxWidth = particleSize;
+        entity.particleSystem.minHeight = particleSize;
+        entity.particleSystem.maxHeight = particleSize;
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'minLife').subscribe(
     function(newValue) {
-        particles.minLife = parseFloat(newValue);
+        entity.particleSystem.minLife = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'maxLife').subscribe(
     function(newValue) {
-        particles.maxLife = parseFloat(newValue);
+        entity.particleSystem.maxLife = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'minSpeed').subscribe(
     function(newValue) {
-        particles.minSpeed = parseFloat(newValue);
+        entity.particleSystem.minSpeed = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'maxSpeed').subscribe(
     function(newValue) {
-        particles.maxSpeed = parseFloat(newValue);
+        entity.particleSystem.maxSpeed = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'startScale').subscribe(
     function(newValue) {
-        particles.startScale = parseFloat(newValue);
+        entity.particleSystem.startScale = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'endScale').subscribe(
     function(newValue) {
-        particles.endScale = parseFloat(newValue);
+        entity.particleSystem.endScale = parseFloat(newValue);
     }
 );
 
@@ -395,14 +390,14 @@ Sandcastle.addToggleButton('Fly', viewModel.fly, function(checked) {
 var options = [{
     text : 'Circle',
     onselect : function() {
-        particles.emitter = new Cesium.CircleEmitter({
+        entity.particleSystem.emitter = new Cesium.CircleEmitter({
             radius: 0.5
         });
     }
 }, {
     text : 'Cone',
     onselect : function() {
-        particles.emitter = new Cesium.ConeEmitter({
+        entity.particleSystem.emitter = new Cesium.ConeEmitter({
             height: 10.0,
             angle: Cesium.Math.toRadians(45.0)
         });
@@ -410,7 +405,7 @@ var options = [{
 }, {
     text : 'Box',
     onselect : function() {
-        particles.emitter = new Cesium.BoxEmitter({
+        entity.particleSystem.emitter = new Cesium.BoxEmitter({
             width: 10.0,
             height: 10.0,
             depth: 10.0
@@ -419,7 +414,7 @@ var options = [{
 }, {
     text : 'Sphere',
     onselect : function() {
-        particles.emitter = new Cesium.SphereEmitter({
+        entity.particleSystem.emitter = new Cesium.SphereEmitter({
             radius: 5.0
         });
     }
