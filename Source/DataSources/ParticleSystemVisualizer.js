@@ -39,7 +39,7 @@ define([
     var defaultLifeTime = Number.MAX_VALUE;
     var defaultLoop = true;
     var defaultEmitterModelMatrix = Matrix4.IDENTITY;
-    var defaultEmitter = new CircleEmitter({radius: 0.5})
+    var defaultEmitter = new CircleEmitter({radius: 0.5});
     var defaultMinSpeed = 5.0;
     var defaultMaxSpeed = 5.0;
     var defaultMinLife = 5.0;

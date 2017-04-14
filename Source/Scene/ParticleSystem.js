@@ -31,33 +31,22 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this.particles = defaultValue(options.particles, []);
-
         this.forces = defaultValue(options.forces, []);
 
-        // Done.
         this.emitter = defaultValue(options.emitter, new CircleEmitter({radius: 0.5}));
 
-        // Done.
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-
-        // Done
         this.emitterModelMatrix = Matrix4.clone(defaultValue(options.emitterModelMatrix, Matrix4.IDENTITY));
 
-        // Done
         this.startColor = defaultValue(options.startColor, Color.clone(Color.WHITE));
         this.endColor = defaultValue(options.endColor, Color.clone(Color.WHITE));
 
-        // Done
         this.startScale = defaultValue(options.startScale, 1.0);
         this.endScale = defaultValue(options.endScale, 1.0);
 
-        // Done
         this.rate = defaultValue(options.rate, 5);
-
-        // Done.
         this.bursts = defaultValue(options.bursts, null);
 
-        // Done.
         this.loop = defaultValue(options.loop, true);
 
         var speed = defaultValue(options.speed, undefined);
@@ -90,10 +79,8 @@ define([
             this.maxMass = defaultValue(options.maxMass, 1.0);
         }
 
-        // Done
         this.image = defaultValue(options.image, null);
 
-        // Done
         var width = defaultValue(options.width, undefined);
         if (width) {
             this.minWidth = width;
@@ -104,7 +91,6 @@ define([
             this.maxWidth = defaultValue(options.maxWidth, 1.0);
         }
 
-        // Done
         var height = defaultValue(options.height, undefined);
         if (height) {
             this.minHeight = height;
@@ -115,7 +101,6 @@ define([
             this.maxHeight = defaultValue(options.maxHeight, 1.0);
         }
 
-        // Done
         this.lifeTime = defaultValue(options.lifeTime, Number.MAX_VALUE);
 
         this.complete = new Event();
@@ -230,10 +215,12 @@ define([
         var particles = this.particles;
         var emitter = this.emitter;
 
+        var particle = null;
+
         // update particles and remove dead particles
         var length = particles.length;
         for (i = 0; i < length; ++i) {
-            var particle = particles[i];
+            particle = particles[i];
             if (!particle.update(this.forces, dt)) {
                 removeBillboard(this, particle);
                 particles[i] = particles[length - 1];
@@ -256,7 +243,7 @@ define([
 
             for (i = 0; i < numToEmit; i++) {
                 // Create a new particle.
-                var particle = this.emitter.emit( particle );
+                particle = this.emitter.emit( particle );
                 if (particle) {
 
                     //For the velocity we need to add it to the original position and then multiply by point.
