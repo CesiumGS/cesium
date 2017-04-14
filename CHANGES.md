@@ -4,6 +4,8 @@ Change Log
 ### 1.33 - 2017-05-01
 
 * Added `disableDepthTestDistance` to billboards, points and labels. This sets the distance to the camera where the depth test will be disabled. Setting it to zero (the default) will alwasy enable the depth test. Setting it to `Number.POSITVE_INFINITY` will never enabled the depth test. Also added `scene.minimumDisableDepthTestDistance` to change the default value from zero. [#5166](https://github.com/AnalyticalGraphicsInc/cesium/pull/5166)
+* `Scene.pickPosition` now caches results per frame to increase performance [#5117](https://github.com/AnalyticalGraphicsInc/cesium/issues/5117)
+
 
 ### 1.32 - 2017-04-03
 
@@ -33,7 +35,6 @@ Change Log
 * Fixed a bug in `Quaternion.fromHeadingPitchRoll` that made it erroneously throw an exception when passed individual angles in an unminified / debug build.
 * Fixed a bug that caused an exception in `CesiumInspectorViewModel` when using the NW / NE / SW / SE / Parent buttons to navigate to a terrain tile that is not yet loaded.
 * `QuadtreePrimitive` now uses `frameState.afterRender` to fire `tileLoadProgressEvent` [#3450](https://github.com/AnalyticalGraphicsInc/cesium/issues/3450)
-* `Scene.pickPosition` now caches results per frame to increase performance [#5117](https://github.com/AnalyticalGraphicsInc/cesium/issues/5117)
 
 ### 1.31 - 2017-03-01
 
