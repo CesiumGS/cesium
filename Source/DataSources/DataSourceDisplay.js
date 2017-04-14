@@ -19,6 +19,7 @@ define([
         './GeometryVisualizer',
         './LabelVisualizer',
         './ModelVisualizer',
+        './ParticleSystemVisualizer',
         './PathVisualizer',
         './PointVisualizer',
         './PolygonGeometryUpdater',
@@ -46,6 +47,7 @@ define([
         GeometryVisualizer,
         LabelVisualizer,
         ModelVisualizer,
+        ParticleSystemVisualizer,
         PathVisualizer,
         PointVisualizer,
         PolygonGeometryUpdater,
@@ -79,7 +81,7 @@ define([
             throw new DeveloperError('dataSourceCollection is required.');
         }
         //>>includeEnd('debug');
-        
+
         GroundPrimitive.initializeTerrainHeights();
 
         var scene = options.scene;
@@ -127,7 +129,8 @@ define([
                 new LabelVisualizer(entityCluster, entities),
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
-                new PathVisualizer(scene, entities)];
+                new PathVisualizer(scene, entities),
+                new ParticleSystemVisualizer(scene, entities)];
     };
 
     defineProperties(DataSourceDisplay.prototype, {
@@ -239,7 +242,7 @@ define([
             this._ready = false;
             return false;
         }
-        
+
         var result = true;
 
         var i;

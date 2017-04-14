@@ -22,6 +22,7 @@ define([
         './EllipsoidGraphics',
         './LabelGraphics',
         './ModelGraphics',
+        './ParticleSystemGraphics',
         './PathGraphics',
         './PointGraphics',
         './PolygonGraphics',
@@ -54,6 +55,7 @@ define([
         EllipsoidGraphics,
         LabelGraphics,
         ModelGraphics,
+        ParticleSystemGraphics,
         PathGraphics,
         PointGraphics,
         PolygonGraphics,
@@ -107,6 +109,7 @@ define([
      * @param {EllipsoidGraphics} [options.ellipsoid] A ellipsoid to associate with this entity.
      * @param {LabelGraphics} [options.label] A options.label to associate with this entity.
      * @param {ModelGraphics} [options.model] A model to associate with this entity.
+     * @param {ParticleSystemGraphics} [options.particleSystem] A particle system to associate with this entity.
      * @param {PathGraphics} [options.path] A path to associate with this entity.
      * @param {PointGraphics} [options.point] A point to associate with this entity.
      * @param {PolygonGraphics} [options.polygon] A polygon to associate with this entity.
@@ -133,7 +136,7 @@ define([
         this._show = defaultValue(options.show, true);
         this._parent = undefined;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
-                               'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
+                               'ellipsoid', 'label', 'model', 'orientation', 'particleSystem', 'path', 'point', 'polygon', //
                                'polyline', 'polylineVolume', 'position', 'properties', 'rectangle', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
@@ -156,6 +159,8 @@ define([
         this._modelSubscription = undefined;
         this._orientation = undefined;
         this._orientationSubscription = undefined;
+        this._particleSystem = undefined;
+        this._particleSystemSubscription = undefined;
         this._path = undefined;
         this._pathSubscription = undefined;
         this._point = undefined;
@@ -391,6 +396,12 @@ define([
          * @type {Property}
          */
         orientation : createPropertyDescriptor('orientation'),
+        /**
+         * Gets or sets the particle system.
+         * @memberof Entity.prototype
+         * @type {ParticleSystemGraphics}
+         */
+        particleSystem : createPropertyTypeDescriptor('particleSystem', ParticleSystemGraphics),
         /**
          * Gets or sets the path.
          * @memberof Entity.prototype
