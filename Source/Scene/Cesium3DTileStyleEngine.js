@@ -134,13 +134,21 @@ define([
             feature.backgroundYPadding = style.backgroundYPadding.evaluate(frameState, feature);
             feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
 
-            var nearRange = style.scaleByDistanceNearRange.evaluate(frameState, feature);
-            var nearValue = style.scaleByDistanceNearValue.evaluate(frameState, feature);
-            var farRange = style.scaleByDistanceFarRange.evaluate(frameState, feature);
-            var farValue = style.scaleByDistanceFarValue.evaluate(frameState, feature);
+            var scaleByDistanceNearRange = style.scaleByDistanceNearRange;
+            var scaleByDistanceNearValue = style.scaleByDistanceNearValue;
+            var scaleByDistanceFarRange = style.scaleByDistanceFarRange;
+            var scaleByDistanceFarValue = style.scaleByDistanceFarValue;
 
-            if (defined(nearRange) && defined(nearValue) && defined(farRange) && defined(farValue)) {
+            if (defined(scaleByDistanceNearRange) && defined(scaleByDistanceNearValue) &&
+                defined(scaleByDistanceFarRange) && defined(scaleByDistanceFarValue)) {
+                var nearRange = scaleByDistanceNearRange.evaluate(frameState, feature);
+                var nearValue = scaleByDistanceNearValue.evaluate(frameState, feature);
+                var farRange = scaleByDistanceFarRange.evaluate(frameState, feature);
+                var farValue = scaleByDistanceFarValue.evaluate(frameState, feature);
+
                 feature.scaleByDistance = new NearFarScalar(nearRange, nearValue, farRange, farValue);
+            } else {
+                feature.scaleByDistance = undefined;
             }
         }
     }
