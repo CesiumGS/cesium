@@ -242,8 +242,11 @@ var entity = viewer.entities.add({
         minSpeed: viewModel.minSpeed,
         maxSpeed: viewModel.maxSpeed,
 
-        width: viewModel.particleSize,
-        height: viewModel.particleSize,
+        minWidth: viewModel.particleSize,
+        minHeight: viewModel.particleSize,
+
+        maxWidth: viewModel.particleSize,
+        maxHeight: viewModel.particleSize,
 
         // Particles per second.
         rate: viewModel.rate,
