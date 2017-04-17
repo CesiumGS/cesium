@@ -106,6 +106,8 @@ define([
         this.complete = new Event();
         this.isComplete = false;
 
+        this.show = defaultValue(options.show, true);
+
         this.carryOver = 0.0;
         this.currentTime = 0.0;
         this._billboardCollection = undefined;
@@ -266,7 +268,9 @@ define([
             }
         }
 
-        this._billboardCollection.update(frameState);
+        if (this.show) {
+            this._billboardCollection.update(frameState);
+        }
 
         this._previousTime = JulianDate.clone(frameState.time, this._previousTime);
 

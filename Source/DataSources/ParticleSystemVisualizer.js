@@ -106,16 +106,6 @@ define([
                 show = defined(modelMatrix);
             }
 
-            // TODO:
-            /*
-            if (!show) {
-                if (defined(modelData)) {
-                    particleSystem.show = false;
-                }
-                continue;
-            }
-            */
-
             if (!defined(particleSystem)) {
                 particleSystem = new ParticleSystem();
                 particleSystem.id = entity;
@@ -123,7 +113,7 @@ define([
                 particleHash[entity.id] = particleSystem;
             }
 
-            particleSystem.show = true;
+            particleSystem.show = show;
             particleSystem.image = Property.getValueOrUndefined(particleSystemGraphics._image, time);
             particleSystem.emitter = Property.getValueOrDefault(particleSystemGraphics._emitter, time, defaultEmitter);
             particleSystem.startScale = Property.getValueOrDefault(particleSystemGraphics._startScale, time, defaultStartScale);
@@ -143,8 +133,9 @@ define([
             particleSystem.loop = Property.getValueOrDefault(particleSystemGraphics._loop, time, defaultLoop);
             particleSystem.emitterModelMatrix = Property.getValueOrDefault(particleSystemGraphics._emitterModelMatrix, time, defaultEmitterModelMatrix);
             particleSystem.bursts = Property.getValueOrUndefined(particleSystemGraphics._bursts, time);
-
-            particleSystem.modelMatrix = modelMatrix;
+            if (modelMatrix) {
+                particleSystem.modelMatrix = modelMatrix;
+            }
         }
 
         return true;
