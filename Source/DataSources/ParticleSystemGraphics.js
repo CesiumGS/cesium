@@ -62,6 +62,8 @@ define([
         this._emitterModelMatrixSubscription = undefined;
         this._bursts = undefined;
         this._burstsSubscription = undefined;
+        this._forces = undefined;
+        this.__forcesSubscription = undefined;
 
         this._definitionChanged = new Event();
 
@@ -243,7 +245,14 @@ define([
          * @type {Property}
          * @default 5.0
          */
-        maxLife: createPropertyDescriptor("maxLife")
+        maxLife: createPropertyDescriptor("maxLife"),
+
+        /**
+         * An array of callbacks that apply a force to a given particle over time.
+         * Callbacks can either be functions with the signature (particle, time delta) or
+         * objects with an apply function with same signature.
+         */
+        forces: createPropertyDescriptor("forces")
     });
 
     /**
@@ -277,6 +286,7 @@ define([
         result.lifeTime = this.lifeTime;
         result.emitterModelMatrix = this.emitterModelMatrix;
         result.bursts = this.bursts;
+        result.forces = this.forces;
 
         return result;
     };
@@ -314,6 +324,7 @@ define([
         this.lifeTime = defaultValue(this.lifeTime, source.lifeTime);
         this.emitterModelMatrix = defaultValue(this.emitterModelMatrix, source.emitterModelMatrix);
         this.bursts = defaultValue(this.bursts, source.bursts);
+        this.forces = defaultValue(this.forces, source.forces);
     };
 
     return ParticleSystemGraphics;

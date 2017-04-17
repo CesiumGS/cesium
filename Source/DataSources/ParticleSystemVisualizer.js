@@ -133,6 +133,7 @@ define([
             particleSystem.loop = Property.getValueOrDefault(particleSystemGraphics._loop, time, defaultLoop);
             particleSystem.emitterModelMatrix = Property.getValueOrDefault(particleSystemGraphics._emitterModelMatrix, time, defaultEmitterModelMatrix);
             particleSystem.bursts = Property.getValueOrUndefined(particleSystemGraphics._bursts, time);
+            particleSystem.forces = Property.getValueOrUndefined(particleSystemGraphics._forces, time);
             if (modelMatrix) {
                 particleSystem.modelMatrix = modelMatrix;
             }
