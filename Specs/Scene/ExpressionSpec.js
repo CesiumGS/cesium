@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-    'Scene/Expression',
-    'Core/Cartesian2',
-    'Core/Cartesian3',
-    'Core/Cartesian4',
-    'Core/Color',
-    'Core/Math',
-    'Scene/ExpressionNodeType'
-], function(
-    Expression,
-    Cartesian2,
-    Cartesian3,
-    Cartesian4,
-    Color,
-    CesiumMath,
-    ExpressionNodeType) {
+        'Scene/Expression',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Color',
+        'Core/Math',
+        'Scene/ExpressionNodeType'
+    ], function(
+        Expression,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Color,
+        CesiumMath,
+        ExpressionNodeType) {
     'use strict';
 
     var frameState = {};

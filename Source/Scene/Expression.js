@@ -1,28 +1,28 @@
 /*global define*/
 define([
-    '../Core/Cartesian2',
-    '../Core/Cartesian3',
-    '../Core/Cartesian4',
-    '../Core/Color',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/isArray',
-    '../Core/Math',
-    '../ThirdParty/jsep',
-    './ExpressionNodeType'
-], function(
-    Cartesian2,
-    Cartesian3,
-    Cartesian4,
-    Color,
-    defined,
-    defineProperties,
-    DeveloperError,
-    isArray,
-    CesiumMath,
-    jsep,
-    ExpressionNodeType) {
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/isArray',
+        '../Core/Math',
+        '../ThirdParty/jsep',
+        './ExpressionNodeType'
+    ], function(
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Color,
+        defined,
+        defineProperties,
+        DeveloperError,
+        isArray,
+        CesiumMath,
+        jsep,
+        ExpressionNodeType) {
     "use strict";
 
     var unaryOperators = ['!', '-', '+'];
