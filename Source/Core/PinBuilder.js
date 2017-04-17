@@ -219,6 +219,10 @@ define([
                 drawIcon(context2D, image, size);
                 cache[id] = canvas;
                 return canvas;
+            })
+            .otherwise(function(e) {
+                // image failed to load - maybe an unsupported maki icon choice. return a blank pin.
+                return canvas;
             });
             cache[id] = promise;
             return promise;
