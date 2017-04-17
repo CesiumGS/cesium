@@ -126,20 +126,21 @@ define([
 
     function log2(number) {
         return CesiumMath.logBase(number, 2.0);
-
     }
 
     function distance(x, y) {
         if (typeof x === 'number' && typeof y === 'number') {
             return Math.abs(x - y);
         } else if (x instanceof Cartesian2 && y instanceof Cartesian2) {
-            return Cartesian2.distance(x ,y);
+            return Cartesian2.distance(x, y);
         } else if (x instanceof Cartesian3 && y instanceof Cartesian3) {
             return Cartesian3.distance(x, y);
         } else if (x instanceof Cartesian4 && y instanceof Cartesian4) {
             return Cartesian4.distance(x, y);
         } else {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Function distance requires matching types of inputs. Arguments are ' + x + ' and ' + y + '.');
+            //>>includeEnd('debug');
         }
     }
 
@@ -153,9 +154,10 @@ define([
         } else if (x instanceof Cartesian4 && y instanceof Cartesian4) {
             return Cartesian4.dot(x, y);
         } else {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Function dot requires matching types of inputs. Arguments are ' + x + ' and ' + y + '.');
+            //>>includeEnd('debug');
         }
-
     }
 
     function cross(x, y) {
@@ -1784,11 +1786,11 @@ define([
             case ExpressionNodeType.LITERAL_REGEX:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: Regular expressions are not supported.');
-            //>>includeEnd('debug');
+                //>>includeEnd('debug');
             case ExpressionNodeType.LITERAL_UNDEFINED:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: undefined is not supported.');
-            //>>includeEnd('debug');
+                //>>includeEnd('debug');
             case ExpressionNodeType.BUILTIN_VARIABLE:
                 if (value === 'tiles3d_tileset_time') {
                     return 'u_tilesetTime';

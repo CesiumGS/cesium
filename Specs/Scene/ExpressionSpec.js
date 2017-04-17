@@ -2169,11 +2169,11 @@ defineSuite([
 
     it('throws if distance function takes mismatching types of arguments', function() {
         expect(function() {
-            return new Expression('distance(1, vec2(3.0, 2.0)').evaluate(frameState,undefined);
+            return new Expression('distance(1, vec2(3.0, 2.0)').evaluate(frameState, undefined);
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('distance(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState,undefined);
+            return new Expression('distance(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -2194,7 +2194,7 @@ defineSuite([
     it('throws if dot function takes an invalid number of arguments', function() {
         expect(function() {
             return new Expression('dot(0.0)');
-        }) .toThrowDeveloperError();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new Expression('dot(1, 3, 0)');
@@ -2203,11 +2203,11 @@ defineSuite([
 
     it('throws if dot function takes mismatching types of arguments', function() {
         expect(function() {
-            return new Expression('dot(1, vec2(3.0, 2.0)').evaluate(frameState,undefined);
+            return new Expression('dot(1, vec2(3.0, 2.0)').evaluate(frameState, undefined);
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('dot(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState,undefined);
+            return new Expression('dot(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -2232,13 +2232,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws if cross function takes mismatching types of arguments', function() {
+    it('throws if cross function does not take vec3 arguments', function() {
         expect(function() {
-            return new Expression('cross(vec2(1.0, 2.0), vec2(3.0, 2.0)').evaluate(frameState,undefined);
+            return new Expression('cross(vec2(1.0, 2.0), vec2(3.0, 2.0)').evaluate(frameState, undefined);
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression('cross(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState,undefined);
+            return new Expression('cross(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -2265,7 +2265,6 @@ defineSuite([
             return new Expression('length(vec2(0.0, 1.0), vec2(0.0, 1.0))');
         }).toThrowDeveloperError();
     });
-
 
     it('evaluates ternary conditional', function() {
         var expression = new Expression('true ? "first" : "second"');
@@ -3260,6 +3259,27 @@ defineSuite([
         var expression = new Expression('max(3.0,5.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'max(3.0, 5.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for distance', function() {
+        var expression = new Expression('distance(0.0, 1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'distance(0.0, 1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for dot', function() {
+        var expression = new Expression('dot(1.0, 2.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'dot(1.0, 2.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for cross', function() {
+        var expression = new Expression('cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))';
         expect(shaderExpression).toEqual(expected);
     });
 
