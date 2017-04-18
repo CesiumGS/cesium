@@ -270,7 +270,7 @@ define([
         this._executeOITFunction = undefined;
 
         var globeDepth;
-        if (false && context.depthTexture) {
+        if (context.depthTexture) {
             globeDepth = new GlobeDepth();
         }
 
@@ -2464,11 +2464,9 @@ define([
             passState.framebuffer = scene._fxaa.getColorFramebuffer();
         }
 
-        /*
         if (defined(passState.framebuffer)) {
             clear.execute(context, passState);
         }
-        */
     }
 
     function resolveFramebuffers(scene, passState) {
