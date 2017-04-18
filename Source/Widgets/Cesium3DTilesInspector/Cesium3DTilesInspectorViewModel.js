@@ -14,8 +14,7 @@ define([
     '../../ThirdParty/knockout',
     '../../Scene/PerformanceDisplay',
     '../../Core/ScreenSpaceEventHandler',
-    '../../Core/ScreenSpaceEventType',
-    '../../ThirdParty/when'
+    '../../Core/ScreenSpaceEventType'
 ], function(
     Cartesian3,
     Cartographic,
@@ -31,8 +30,7 @@ define([
     knockout,
     PerformanceDisplay,
     ScreenSpaceEventHandler,
-    ScreenSpaceEventType,
-    when) {
+    ScreenSpaceEventType) {
     'use strict';
 
     function getPickTileset(viewModel) {
@@ -106,10 +104,6 @@ define([
             s += '</ul>';
         }
         return s;
-    }
-
-    function forceUpdate(viewModel, property) {
-        viewModel[property] = viewModel[property];
     }
 
     var colorBlendModes = [{
@@ -237,6 +231,7 @@ define([
 
         knockout.track(this, ['performance', 'inspectorVisible', '_statsText', '_pickStatsText', '_editorError', 'showPickStats', 'showStats',
                               'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'styleString']);
+
 
         this._properties = knockout.observable({});
         /**
@@ -416,7 +411,7 @@ define([
             set : function(value) {
                 showRequestVolumes(value);
                 if (that._tileset) {
-                    that._tileset.debugShowContentBoundingVolume = value;
+                    that._tileset.debugShowViewerRequestVolume  = value;
                 }
             }
         });
@@ -497,7 +492,7 @@ define([
             set : function(value) {
                 dynamicSSEDensity(value);
                 if (that._tileset) {
-                    that._tileset.dynamicScreenSpaceErrorDensity = Math.pow(this.value, 6);
+                    that._tileset.dynamicScreenSpaceErrorDensity = Math.pow(value, 6);
                 }
             }
         });
@@ -554,9 +549,10 @@ define([
 
         this._style = undefined;
         this._shouldStyle = false;
-        this._subscriptions = [];
         this._tileset = undefined;
         this._feature = undefined;
+        this._definedProperties = ['propertiesText', 'dynamicSSE', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes', 'showContentBoundingVolumes',
+                                   'showRequestVolumes', 'showGeometricError', 'freezeFrame', 'maximumSSE', 'dynamicSSEDensity', 'dynamicSSEFactor', 'pickActive'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
@@ -632,7 +628,8 @@ define([
                                     'freezeFrame'];
                     var length = settings.length;
                     for (var i = 0; i < length; ++i) {
-                        forceUpdate(this, settings[i]);
+                        var setting = settings[i];
+                        this[setting] = this[setting];
                     }
 
                     // update view model with existing tileset settings
@@ -858,8 +855,10 @@ define([
     Cesium3DTilesInspectorViewModel.prototype.destroy = function() {
         this._eventHandler.destroy();
         this._removePostRenderEvent();
-        this._subscriptions.forEach(function(subscription) {
-            subscription.dispose();
+
+        var that = this;
+        this._definedProperties.forEach(function(property) {
+            knockout.getObservable(that, property).dispose();
         });
 
         return destroyObject(this);

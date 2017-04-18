@@ -4,6 +4,7 @@ defineSuite([
         'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Core/defined',
+        'Core/Math',
         'Scene/Globe',
         'Specs/createScene',
         'ThirdParty/when'
@@ -12,6 +13,7 @@ defineSuite([
         Cesium3DTileset,
         Cesium3DTileStyle,
         defined,
+        CesiumMath,
         Globe,
         createScene,
         when) {
@@ -22,6 +24,7 @@ defineSuite([
 
     var scene;
     var viewModel;
+    var performanceContainer = document.createElement('div');
 
     beforeAll(function() {
         scene = createScene();
@@ -41,7 +44,7 @@ defineSuite([
     });
 
     it('can create and destroy', function() {
-        var viewModel = new Cesium3DTilesInspectorViewModel(scene);
+        var viewModel = new Cesium3DTilesInspectorViewModel(scene, performanceContainer);
         expect(viewModel._scene).toBe(scene);
         expect(viewModel.isDestroyed()).toEqual(false);
         viewModel.destroy();
@@ -54,19 +57,25 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    describe('tileset options', function() {
+    it('throws if performanceContainer is undefined', function() {
+        expect(function() {
+            return new Cesium3DTilesInspectorViewModel(scene);
+        }).toThrowDeveloperError();
+    });
 
+    describe('tileset options', function() {
         it('show properties', function() {
-            viewModel = new Cesium3DTilesInspectorViewModel(scene);
-            viewModel.tileset = new Cesium3DTileset({
+            viewModel = new Cesium3DTilesInspectorViewModel(scene, performanceContainer);
+            var tileset = new Cesium3DTileset({
                 url: tilesetUrl
             });
+            viewModel.tileset = tileset;
             var done = when.defer();
-            viewModel._tilesetLoaded.then(function() {
-                expect(viewModel.propertiesText().indexOf('id') !== -1).toBe(true);
-                expect(viewModel.propertiesText().indexOf('Longitude') !== -1).toBe(true);
-                expect(viewModel.propertiesText().indexOf('Latitude') !== -1).toBe(true);
-                expect(viewModel.propertiesText().indexOf('Height') !== -1).toBe(true);
+            tileset.readyPromise.then(function() {
+                expect(viewModel.propertiesText.indexOf('id') !== -1).toBe(true);
+                expect(viewModel.propertiesText.indexOf('Longitude') !== -1).toBe(true);
+                expect(viewModel.propertiesText.indexOf('Latitude') !== -1).toBe(true);
+                expect(viewModel.propertiesText.indexOf('Height') !== -1).toBe(true);
                 viewModel.destroy();
                 done.resolve();
             });
@@ -76,11 +85,12 @@ defineSuite([
 
     describe('display options', function() {
         beforeAll(function() {
-            viewModel = new Cesium3DTilesInspectorViewModel(scene);
-            viewModel.tileset = new Cesium3DTileset({
+            viewModel = new Cesium3DTilesInspectorViewModel(scene, performanceContainer);
+            var tileset = new Cesium3DTileset({
                 url: tilesetUrl
             });
-            return viewModel._tilesetLoaded;
+            viewModel.tileset = tileset;
+            return tileset.readyPromise;
         });
 
         afterAll(function() {
@@ -132,7 +142,7 @@ defineSuite([
 
     describe('update options', function() {
         beforeAll(function() {
-            viewModel = new Cesium3DTilesInspectorViewModel(scene);
+            viewModel = new Cesium3DTilesInspectorViewModel(scene, performanceContainer);
             viewModel.tileset = new Cesium3DTileset({
                 url: tilesetUrl
             });
@@ -163,7 +173,7 @@ defineSuite([
             viewModel.dynamicSSEDensity = 0.1;
             expect(viewModel.tileset.dynamicScreenSpaceError).toBe(true);
             expect(viewModel.tileset.dynamicScreenSpaceErrorFactor).toBe(2);
-            expect(viewModel.tileset.dynamicScreenSpaceErrorDensity).toBe(0.1);
+            expect(viewModel.tileset.dynamicScreenSpaceErrorDensity).toEqualEpsilon(0.000001, CesiumMath.EPSILON12);
         });
     });
 
@@ -188,7 +198,7 @@ defineSuite([
                 }
             });
 
-            viewModel = new Cesium3DTilesInspectorViewModel(scene);
+            viewModel = new Cesium3DTilesInspectorViewModel(scene, performanceContainer);
             viewModel.tileset = new Cesium3DTileset({
                 url: tilesetUrl
             });
@@ -202,7 +212,7 @@ defineSuite([
 
         it ('loads tileset style', function() {
             viewModel.tileset.style = style;
-            viewModel.update();
+            viewModel._update();
             expect(JSON.stringify(style.style)).toBe(JSON.stringify(JSON.parse(viewModel.styleString)));
         });
 
@@ -214,11 +224,11 @@ defineSuite([
 
         it('recompiles style', function() {
             viewModel.tileset.style = style;
-            viewModel.update();
+            viewModel._update();
             var s = JSON.parse(viewModel.styleString);
             s.color = "color('red')";
-            viewModel._styleString = JSON.stringify(s);
-            viewModel._compileStyle();
+            viewModel.styleString = JSON.stringify(s);
+            viewModel.compileStyle();
             expect(viewModel.tileset.style.style.color).toBe("color('red')");
             expect(viewModel.tileset.style.style.meta.description).toBe("'Building id ${id} has height ${Height}.'");
         });

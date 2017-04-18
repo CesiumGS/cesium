@@ -1,18 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Cesium3DTileset',
         'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector',
+        'Scene/Cesium3DTileset',
         'Specs/createScene',
         'Core/Ellipsoid',
-        'Scene/Globe',
-        'ThirdParty/when'
+        'Scene/Globe'
     ], function(
-        Cesium3DTileset,
         Cesium3DTilesInspector,
+        Cesium3DTileset,
         createScene,
         Ellipsoid,
-        Globe,
-        when) {
+        Globe) {
     'use strict';
 
     // Parent tile with content and four child tiles with content
@@ -22,8 +20,7 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var globe = new Globe(ellipsoid);
-        scene.globe = globe;
+        scene.globe = new Globe(ellipsoid);
     });
 
     afterAll(function() {
@@ -93,23 +90,6 @@ defineSuite([
             viewModel.performance = false;
             expect(viewModel._performanceDisplay._container.className.indexOf('cesium-cesiumInspector-show') === -1).toBe(true);
             expect(viewModel._performanceDisplay._container.className.indexOf('cesium-cesiumInspector-hide') !== -1).toBe(true);
-        });
-
-        it ('shows stats', function() {
-            var viewModel = widget.viewModel;
-            viewModel.showStats = true;
-            expect(viewModel.statsText).not.toBe('');
-            viewModel.showStats = false;
-            expect(viewModel.statsText).toBe('');
-        });
-
-        it ('shows pick stats', function() {
-            var viewModel = widget.viewModel;
-            viewModel.picking = true;
-            viewModel.showPickStats = true;
-            expect(viewModel.pickStatsText).not.toBe('');
-            viewModel.showPickStats = false;
-            expect(viewModel.pickStatsText).toBe('');
         });
     });
 }, 'WebGL');
