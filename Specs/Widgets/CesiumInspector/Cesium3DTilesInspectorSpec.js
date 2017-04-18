@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTileset',
-        'Widgets/CesiumInspector/Cesium3DTilesInspector',
+        'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector',
         'Specs/createScene',
         'Core/Ellipsoid',
         'Scene/Globe',
@@ -66,7 +66,7 @@ defineSuite([
     describe('logging', function() {
         var widget;
         var container;
-        
+
         beforeAll(function() {
             container = document.createElement('div');
             container.id = 'testContainer';

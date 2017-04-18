@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'Widgets/CesiumInspector/Cesium3DTilesInspectorViewModel',
+        'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel',
         'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Core/defined',
@@ -138,7 +138,7 @@ defineSuite([
             });
             return viewModel._tilesetLoaded;
         });
-        
+
         afterAll(function() {
             viewModel.destroy();
         });
