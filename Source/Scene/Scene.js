@@ -2986,7 +2986,7 @@ define([
 
         var cacheKey = windowPosition.toString();
 
-        if(this._pickPositionCacheDirty){
+        if (this._pickPositionCacheDirty){
             this._pickPositionCache = {};
             this._pickPositionCacheDirty = false;
         } else if (this._pickPositionCache.hasOwnProperty(cacheKey)){
