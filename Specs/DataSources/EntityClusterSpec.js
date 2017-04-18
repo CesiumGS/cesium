@@ -175,6 +175,29 @@ defineSuite([
         expect(cluster._clusterLabelCollection).not.toBeDefined();
     });
 
+    it('clusters billboards on first update', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        var billboard = cluster.getBillboard(entity);
+        billboard.id = entity;
+        billboard.image = createBillboardImage();
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        entity = new Entity();
+        billboard = cluster.getBillboard(entity);
+        billboard.id = entity;
+        billboard.image = createBillboardImage();
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+
+        cluster.enabled = true;
+        cluster.update(scene.frameState);
+
+        expect(cluster._clusterLabelCollection).toBeDefined();
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+    });
+
     it('clusters labels', function() {
         cluster = new EntityCluster();
         cluster._initialize(scene);
@@ -208,6 +231,29 @@ defineSuite([
         expect(cluster._clusterLabelCollection).not.toBeDefined();
     });
 
+    it('clusters labels on first update', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        var label = cluster.getLabel(entity);
+        label.id = entity;
+        label.text = 'a';
+        label.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        entity = new Entity();
+        label = cluster.getLabel(entity);
+        label.id = entity;
+        label.text = 'b';
+        label.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+
+        cluster.enabled = true;
+        cluster.update(scene.frameState);
+
+        expect(cluster._clusterLabelCollection).toBeDefined();
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+    });
+
     it('clusters points', function() {
         cluster = new EntityCluster();
         cluster._initialize(scene);
@@ -239,6 +285,29 @@ defineSuite([
         cluster.update(frameState);
 
         expect(cluster._clusterLabelCollection).not.toBeDefined();
+    });
+
+    it('clusters points on first update', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        var point = cluster.getPoint(entity);
+        point.id = entity;
+        point.pixelSize = 1;
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        entity = new Entity();
+        point = cluster.getPoint(entity);
+        point.id = entity;
+        point.pixelSize = 1;
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+
+        cluster.enabled = true;
+        cluster.update(scene.frameState);
+
+        expect(cluster._clusterLabelCollection).toBeDefined();
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
     });
 
     it('clusters points that have labels', function() {

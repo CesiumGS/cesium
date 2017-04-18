@@ -321,6 +321,9 @@ define([
         this._cameraStartFired = false;
         this._cameraMovedTime = undefined;
 
+        this._pickPositionCache = {};
+        this._pickPositionCacheDirty = false;
+
         this._minimumDisableDepthTestDistance = 0.0;
 
         /**
@@ -2548,6 +2551,8 @@ define([
     var scratchEyeTranslation = new Cartesian3();
 
     function render(scene, time) {
+        scene._pickPositionCacheDirty = true;
+
         if (!defined(time)) {
             time = JulianDate.now();
         }
@@ -2979,6 +2984,15 @@ define([
         }
         //>>includeEnd('debug');
 
+        var cacheKey = windowPosition.toString();
+
+        if (this._pickPositionCacheDirty){
+            this._pickPositionCache = {};
+            this._pickPositionCacheDirty = false;
+        } else if (this._pickPositionCache.hasOwnProperty(cacheKey)){
+            return Cartesian3.clone(this._pickPositionCache[cacheKey], result);
+        }
+
         var context = this._context;
         var uniformState = context.uniformState;
 
@@ -3040,10 +3054,12 @@ define([
                     uniformState.update(this.frameState);
                 }
 
+                this._pickPositionCache[cacheKey] = Cartesian3.clone(result);
                 return result;
             }
         }
 
+        this._pickPositionCache[cacheKey] = undefined;
         return undefined;
     };
 
@@ -3078,6 +3094,7 @@ define([
             var cart = projection.unproject(result, scratchPickPositionCartographic);
             ellipsoid.cartographicToCartesian(cart, result);
         }
+
         return result;
     };
 
