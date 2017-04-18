@@ -217,43 +217,39 @@ define([
      *   }
      * });
      */
-    function Scene(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var canvas = options.canvas;
-        var contextOptions = options.contextOptions;
-        var creditContainer = options.creditContainer;
-
+    function Scene(canvas, context, creditDisplay, options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(canvas)) {
-            throw new DeveloperError('options and options.canvas are required.');
+        if (!defined(context)) {
+            throw new DeveloperError('options.context is required.');
+        }
+        if (!defined(creditDisplay)) {
+            throw new DeveloperError('options.creditDisplay is required.');
         }
         //>>includeEnd('debug');
 
-        var context = new Context(canvas, contextOptions);
-        if (!defined(creditContainer)) {
-            creditContainer = document.createElement('div');
-            creditContainer.style.position = 'absolute';
-            creditContainer.style.bottom = '0';
-            creditContainer.style['text-shadow'] = '0 0 2px #000000';
-            creditContainer.style.color = '#ffffff';
-            creditContainer.style['font-size'] = '10px';
-            creditContainer.style['padding-right'] = '5px';
-            canvas.parentNode.appendChild(creditContainer);
-        }
+        // TODO Dan
+        this._canvas = canvas;
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._id = createGuid();
-        this._frameState = new FrameState(context, new CreditDisplay(creditContainer));
+        this._frameState = new FrameState(context, creditDisplay);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
+        var viewport = options.viewport;
+        if (!defined(viewport)) {
+            viewport = new BoundingRectangle();
+            viewport.x = 0;
+            viewport.y = 0;
+            viewport.width = context.drawingBufferWidth;
+            viewport.height = context.drawingBufferHeight;
+        }
+        this._viewport = viewport;
+
         var ps = new PassState(context);
-        ps.viewport = new BoundingRectangle();
-        ps.viewport.x = 0;
-        ps.viewport.y = 0;
-        ps.viewport.width = context.drawingBufferWidth;
-        ps.viewport.height = context.drawingBufferHeight;
+        ps.viewport = viewport;
         this._passState = ps;
 
-        this._canvas = canvas;
         this._context = context;
         this._computeEngine = new ComputeEngine(context);
         this._globe = undefined;
@@ -261,8 +257,6 @@ define([
         this._groundPrimitives = new PrimitiveCollection();
 
         this._tweens = new TweenCollection();
-
-        this._shaderFrameCount = 0;
 
         this._sunPostProcess = undefined;
 
@@ -272,11 +266,11 @@ define([
 
         this._pickFramebuffer = undefined;
 
-        this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
+        this._useOIT = false;//defaultValue(options.orderIndependentTranslucency, true);
         this._executeOITFunction = undefined;
 
         var globeDepth;
-        if (context.depthTexture) {
+        if (false && context.depthTexture) {
             globeDepth = new GlobeDepth();
         }
 
@@ -389,7 +383,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.sunBloom = true;
+        this.sunBloom = false;//true;
         this._sunBloom = undefined;
 
         /**
@@ -504,18 +498,6 @@ define([
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
-         * Displays frames per second and time between frames.
-         * </p>
-         *
-         * @type Boolean
-         *
-         * @default false
-         */
-        this.debugShowFramesPerSecond = false;
-
-        /**
-         * This property is for debugging only; it is not for production use.
-         * <p>
          * Displays depth information for the indicated frustum.
          * </p>
          *
@@ -558,7 +540,7 @@ define([
          * @type Boolean
          * @default true
          */
-        this.fxaa = true;
+        this.fxaa = false;//true;
 
         /**
          * When <code>true</code>, enables picking using the depth buffer.
@@ -566,7 +548,7 @@ define([
          * @type Boolean
          * @default true
          */
-        this.useDepthPicking = true;
+        this.useDepthPicking = false;//true;
 
         /**
          * When <code>true</code>, enables picking translucent geometry using the depth buffer.
@@ -618,7 +600,6 @@ define([
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
-        this._performanceDisplay = undefined;
         this._debugVolume = undefined;
 
         var camera = new Camera(this);
@@ -670,19 +651,37 @@ define([
     var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
 
     defineProperties(Scene.prototype, {
-        /**
-         * Gets the canvas element to which this scene is bound.
-         * @memberof Scene.prototype
-         *
-         * @type {Canvas}
-         * @readonly
-         */
+        viewport : {
+            get : function() {
+                return this._viewport;
+            },
+            set : function(value) {
+                var context = this._context;
+
+                if (!defined(value)) {
+                    value = new BoundingRectangle();
+                    value.x = 0;
+                    value.y = 0;
+                    value.width = context.drawingBufferWidth;
+                    value.height = context.drawingBufferHeight;
+                }
+
+                //>>includeStart('debug', pragmas.debug);
+                if (value.x < 0 || value.y < 0 || value.width > context.drawingBufferWidth || value.height > context.drawingBufferHeight) {
+                    throw new DeveloperError('viewport width must be in [0, drawingBufferWidth] and height must be in [0, drawingBufferHeight].');
+                }
+                //>>includeEnd('debug');
+
+                this._viewport = value;
+                this._passState.viewport = this._viewport;
+            }
+        },
+        // TODO Dan
         canvas : {
             get : function() {
                 return this._canvas;
             }
         },
-
         /**
          * The drawingBufferWidth of the underlying GL context.
          * @memberof Scene.prototype
@@ -2126,11 +2125,6 @@ define([
 
             Camera.clone(savedCamera, camera);
         } else {
-            viewport.x = 0;
-            viewport.y = 0;
-            viewport.width = context.drawingBufferWidth;
-            viewport.height = context.drawingBufferHeight;
-
             if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
                 executeCommandsInViewport(true, scene, passState, backgroundColor);
             } else {
@@ -2427,12 +2421,12 @@ define([
         // Clear the pass state framebuffer.
         var clear = scene._clearColorCommand;
         Color.clone(clearColor, clear.color);
-        clear.execute(context, passState);
+        //clear.execute(context, passState);
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
-            scene._globeDepth.update(context);
+            scene._globeDepth.update(context, passState);
             scene._globeDepth.clear(context, passState, clearColor);
         }
 
@@ -2470,9 +2464,11 @@ define([
             passState.framebuffer = scene._fxaa.getColorFramebuffer();
         }
 
+        /*
         if (defined(passState.framebuffer)) {
             clear.execute(context, passState);
         }
+        */
     }
 
     function resolveFramebuffers(scene, passState) {
@@ -2528,12 +2524,6 @@ define([
      * @private
      */
     Scene.prototype.initializeFrame = function() {
-        // Destroy released shaders once every 120 frames to avoid thrashing the cache
-        if (this._shaderFrameCount++ === 120) {
-            this._shaderFrameCount = 0;
-            this._context.shaderCache.destroyReleasedShaderPrograms();
-        }
-
         this._tweens.update();
 
         this._screenSpaceCameraController.update();
@@ -2578,10 +2568,9 @@ define([
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
         frameState.backgroundColor = backgroundColor;
 
-        frameState.creditDisplay.beginFrame();
-
         scene.fog.update(frameState);
 
+        us.viewport = scene._viewport;
         us.update(frameState);
 
         var shadowMap = scene.shadowMap;
@@ -2612,28 +2601,7 @@ define([
             scene.globe.endFrame(frameState);
         }
 
-        frameState.creditDisplay.endFrame();
-
-        if (scene.debugShowFramesPerSecond) {
-            if (!defined(scene._performanceDisplay)) {
-                var performanceContainer = document.createElement('div');
-                performanceContainer.className = 'cesium-performanceDisplay-defaultContainer';
-                var container = scene._canvas.parentNode;
-                container.appendChild(performanceContainer);
-                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
-                scene._performanceDisplay = performanceDisplay;
-                scene._performanceContainer = performanceContainer;
-            }
-
-            scene._performanceDisplay.update();
-        } else if (defined(scene._performanceDisplay)) {
-            scene._performanceDisplay = scene._performanceDisplay && scene._performanceDisplay.destroy();
-            scene._performanceContainer.parentNode.removeChild(scene._performanceContainer);
-        }
-
-        context.endFrame();
         callAfterRenderFunctions(frameState);
-
         scene._postRender.raiseEvent(scene, time);
     }
 
@@ -3274,13 +3242,6 @@ define([
             this._oit.destroy();
         }
         this._fxaa.destroy();
-
-        this._context = this._context && this._context.destroy();
-        this._frameState.creditDisplay.destroy();
-        if (defined(this._performanceDisplay)){
-            this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
-            this._performanceContainer.parentNode.removeChild(this._performanceContainer);
-        }
 
         return destroyObject(this);
     };

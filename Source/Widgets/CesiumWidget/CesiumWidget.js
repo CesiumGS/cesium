@@ -18,6 +18,7 @@ define([
         '../../Scene/Globe',
         '../../Scene/Moon',
         '../../Scene/Scene',
+        '../../Scene/SceneManager',
         '../../Scene/SceneMode',
         '../../Scene/ShadowMode',
         '../../Scene/SkyAtmosphere',
@@ -43,6 +44,7 @@ define([
         Globe,
         Moon,
         Scene,
+        SceneManager,
         SceneMode,
         ShadowMode,
         SkyAtmosphere,
@@ -253,10 +255,13 @@ define([
         configureCanvasSize(this);
 
         try {
-            var scene = new Scene({
+            var sceneManager = new SceneManager({
                 canvas : canvas,
                 contextOptions : options.contextOptions,
-                creditContainer : creditContainer,
+                creditContainer : creditContainer
+            });
+            this._sceneManager = sceneManager;
+            var scene = this._scene = sceneManager.add({
                 mapProjection : options.mapProjection,
                 orderIndependentTranslucency : options.orderIndependentTranslucency,
                 scene3DOnly : defaultValue(options.scene3DOnly, false),
@@ -264,7 +269,6 @@ define([
                 shadows : options.shadows,
                 mapMode2D : options.mapMode2D
             });
-            this._scene = scene;
 
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
@@ -648,7 +652,7 @@ define([
      * removing the widget from layout.
      */
     CesiumWidget.prototype.destroy = function() {
-        this._scene = this._scene && this._scene.destroy();
+        this._sceneManager = this._sceneManager && this._sceneManager.destroy();
         this._container.removeChild(this._element);
         destroyObject(this);
     };
@@ -677,9 +681,9 @@ define([
      */
     CesiumWidget.prototype.render = function() {
         if (this._canRender) {
-            this._scene.initializeFrame();
+            this._sceneManager.initializeFrame();
             var currentTime = this._clock.tick();
-            this._scene.render(currentTime);
+            this._sceneManager.render(currentTime);
         } else {
             this._clock.tick();
         }

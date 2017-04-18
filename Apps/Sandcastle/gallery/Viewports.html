@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Add multiple viewports">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var widget = viewer.cesiumWidget;
+var sceneManager = widget._sceneManager;
+
+var scene0 = sceneManager.get(0);
+var scene1 = sceneManager.add({
+    mapProjection : scene0.mapProjection,
+    orderIndependentTranslucency : scene0.orderIndependentTranslucency,
+    scene3DOnly : scene0.scene3DOnly,
+    terrainExaggeration : scene0.terrainExaggeration,
+    shadows : scene0.shadows,
+    mapMode2D : scene0.mapMode2D
+});
+
+var ellipsoid = scene1.mapProjection.ellipsoid;
+scene1.globe = new Cesium.Globe(ellipsoid);
+scene1.skyAtmosphere = scene0.skyAtmosphere;
+//scene1.skyBox = scene0.skyBox;
+//scene1.sun = scene0.sun;
+//scene1.moon = scene0.moon;
+scene1.imageryLayers.addImageryProvider(new Cesium.BingMapsImageryProvider({
+    url : 'https://dev.virtualearth.net'
+}));
+
+//scene1.morphToColumbusView(0);
+//scene1.morphTo2D(0);
+
+function resize() {
+    var context = sceneManager.context;
+
+    var viewport = new Cesium.BoundingRectangle();
+    viewport.x = context.drawingBufferWidth * 0.1;
+    viewport.y = context.drawingBufferHeight * 0.1;
+    viewport.width = context.drawingBufferWidth - context.drawingBufferWidth * 0.2;
+    viewport.height = context.drawingBufferHeight - context.drawingBufferHeight * 0.2;
+
+    scene0.viewport = viewport;
+
+    viewport = new Cesium.BoundingRectangle();
+    viewport.x = scene0.viewport.x + scene0.viewport.width * 0.1;
+    viewport.y = scene0.viewport.y + scene0.viewport.height * 0.1;
+    viewport.width = scene0.viewport.width * 0.4;
+    viewport.height = scene0.viewport.height * 0.4;
+
+    scene1.viewport = viewport;
+}
+
+resize();
+
+if (Cesium.defined(window.addEventListener)) {
+    window.addEventListener('resize', resize, false);
+}
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
