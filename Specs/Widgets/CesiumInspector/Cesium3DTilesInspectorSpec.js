@@ -1,18 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Cesium3DTileset',
         'Widgets/CesiumInspector/Cesium3DTilesInspector',
-        'Specs/createScene',
         'Core/Ellipsoid',
+        'Scene/Cesium3DTileset',
         'Scene/Globe',
-        'ThirdParty/when'
+        'Specs/createScene'
     ], function(
-        Cesium3DTileset,
         Cesium3DTilesInspector,
-        createScene,
         Ellipsoid,
+        Cesium3DTileset,
         Globe,
-        when) {
+        createScene) {
     'use strict';
 
     // Parent tile with content and four child tiles with content
@@ -66,7 +64,7 @@ defineSuite([
     describe('logging', function() {
         var widget;
         var container;
-        
+
         beforeAll(function() {
             container = document.createElement('div');
             container.id = 'testContainer';

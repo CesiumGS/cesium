@@ -92,18 +92,9 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        contentReadyToProcessPromise : {
-            get : function() {
-                return this._contentReadyToProcessPromise.promise;
-            }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         readyPromise : {
             get : function() {
-                return this._readyPromise.promise;
+                return undefined;
             }
         }
     });
@@ -122,18 +113,6 @@ define([
      */
     Empty3DTileContent.prototype.getFeature = function(batchId) {
         return undefined;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Empty3DTileContent.prototype.request = function() {
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Empty3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
     };
 
     /**

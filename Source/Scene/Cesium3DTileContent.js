@@ -111,20 +111,6 @@ define([
         },
 
         /**
-         * Gets the tile's batch table memory in bytes.
-         *
-         * @memberof Cesium3DTileContent.prototype
-         *
-         * @type {Number}
-         * @readonly
-         */
-        batchTableMemorySizeInBytes : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
-        },
-
-        /**
          * Gets the tile's texture memory in bytes.
          *
          * @memberof Cesium3DTileContent.prototype
@@ -139,10 +125,24 @@ define([
         },
 
         /**
+         * Gets the tile's batch table memory in bytes.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
          * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content a composite's inner tiles, which can also be composites.
          *
-         * @memberof Composite3DTileContent.prototype
+         * @memberof Cesium3DTileContent.prototype
          *
          * @type {Array}
          * @readonly
@@ -156,10 +156,10 @@ define([
         /**
          * Gets the promise that will be resolved when the tile's content is ready to render.
          *
+         * @memberof Cesium3DTileContent.prototype
+         *
          * @type {Promise.<Cesium3DTileContent>}
          * @readonly
-         *
-         * @private
          */
         readyPromise : {
             get : function() {

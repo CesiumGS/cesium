@@ -10,8 +10,7 @@ define([
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
-        '../ThirdParty/when',
-        './Cesium3DTileContentState'
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
@@ -23,8 +22,7 @@ define([
         Request,
         RequestScheduler,
         RequestType,
-        when,
-        Cesium3DTileContentState) {
+        when) {
     'use strict';
 
     /**
@@ -206,7 +204,7 @@ define([
             if (defined(contentFactory)) {
                 var innerContent = contentFactory(content._tileset, content._tile, content._url, arrayBuffer, byteOffset);
                 content._contents.push(innerContent);
-                contentPromises.push(content.readyPromise);
+                contentPromises.push(innerContent.readyPromise);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + tileType + ', inside Composite tile');
             }
@@ -235,11 +233,11 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Composite3DTileContent.prototype.update = function(tileset, context, frameState, commandList) {
+    Composite3DTileContent.prototype.update = function(tileset, frameState) {
         var contents = this._contents;
         var length = contents.length;
         for (var i = 0; i < length; ++i) {
-            contents[i].update(tileset, context, frameState, commandList);
+            contents[i].update(tileset, frameState);
         }
     };
 

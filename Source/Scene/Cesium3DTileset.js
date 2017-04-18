@@ -1515,7 +1515,7 @@ define([
     function selectionHeuristic(tileset, ancestor, tile) {
         var skipLevels = tileset.skipLODs ? tileset._skipLevels : 0;
         var skipSSEFactor = tileset.skipLODs ? tileset.skipSSEFactor : 0.1;
-        return (ancestor !== tile && tile.hasRenderableContent && !tileset.immediatelyLoadDesiredLOD) &&
+        return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLOD) &&
                (tile._sse < ancestor._sse / skipSSEFactor) &&
                (tile._depth > ancestor._depth + skipLevels);
     }

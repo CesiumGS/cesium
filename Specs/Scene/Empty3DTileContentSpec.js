@@ -1,20 +1,9 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Empty3DTileContent',
-        'Scene/Cesium3DTileContentState'
+        'Scene/Empty3DTileContent'
     ], function(
-        Empty3DTileContent,
-        Cesium3DTileContentState) {
+        Empty3DTileContent) {
     'use strict';
-
-    it('resolves readyPromise', function() {
-        var content = new Empty3DTileContent();
-        content.request();
-        content.update();
-        return content.readyPromise.then(function(content) {
-            expect(content.state).toEqual(Cesium3DTileContentState.READY);
-        });
-    });
 
     it('destroys', function() {
         var content = new Empty3DTileContent();

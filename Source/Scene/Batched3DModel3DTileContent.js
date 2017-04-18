@@ -386,7 +386,6 @@ define([
         this._model.shadows = this._tileset.shadows;
         this._model.debugWireframe = this._tileset.debugWireframe;
         this._model.update(frameState);
-
         frameState.addCommand = oldAddCommand;
    };
 

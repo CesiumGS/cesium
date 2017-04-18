@@ -126,7 +126,8 @@ define([
         try {
             tilesetJson = JSON.parse(jsonString);
         } catch (error) {
-            content._readyPromise.reject(new DeveloperError('Invalid json content'));
+            content._readyPromise.reject(new DeveloperError('Invalid tile content.'));
+            return;
         }
 
         content._tileset.loadTileset(content._url, tilesetJson, content._tile);
