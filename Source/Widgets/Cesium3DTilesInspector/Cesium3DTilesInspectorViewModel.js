@@ -235,7 +235,9 @@ define([
 
         this._properties = knockout.observable({});
         /**
-         * @type {string}
+         * Gets the names of the properties in the tileset.  This property is observable.
+         * @type {String}
+         * @readonly
          */
         this.propertiesText = '';
         knockout.defineProperty(this, 'propertiesText', function() {
@@ -562,8 +564,8 @@ define([
         /**
          * Gets the stats text.  This property is observable.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
          * @type {String}
+         * @readonly
          */
         statsText : {
             get : function() {
@@ -573,8 +575,8 @@ define([
         /**
          * Gets the pick stats text.  This property is observable.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
          * @type {String}
+         * @readonly
          */
         pickStatsText : {
             get : function() {
@@ -582,12 +584,24 @@ define([
             }
         },
 
+        /**
+         * Gets the available blend modes
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         * @type {Object[]}
+         * @readonly
+         */
         colorBlendModes : {
             get : function() {
                 return colorBlendModes;
             }
         },
 
+        /**
+         * Gets the editor error message
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         * @type {String}
+         * @readonly
+         */
         editorError : {
             get : function() {
                 return this._editorError;
@@ -597,7 +611,6 @@ define([
         /**
          * Gets or sets the tileset of the view model
          * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
          * @type {Cesium3DTileset}
          */
         tileset : {
@@ -650,7 +663,6 @@ define([
         /**
          * Gets the current feature of the view model
          * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
          * @type {Cesium3DTileFeature}
          */
         feature : {
@@ -740,7 +752,7 @@ define([
     };
 
     /**
-     *
+     * Compiles the style in the style editor
      */
     Cesium3DTilesInspectorViewModel.prototype.compileStyle = function() {
         if (defined(this._style)) {
@@ -811,7 +823,7 @@ define([
     };
 
     /**
-     * Updates the view model
+     * Updates the values of view model
      * @private
      */
     Cesium3DTilesInspectorViewModel.prototype._update = function() {
