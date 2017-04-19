@@ -640,6 +640,7 @@ define([
     }
 
     var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
+    var scratchDefaultViewport = new BoundingRectangle();
 
     defineProperties(Scene.prototype, {
         viewport : {
@@ -650,9 +651,7 @@ define([
                 var context = this._context;
 
                 if (!defined(value)) {
-                    value = new BoundingRectangle();
-                    value.x = 0;
-                    value.y = 0;
+                    value = scratchDefaultViewport;
                     value.width = context.drawingBufferWidth;
                     value.height = context.drawingBufferHeight;
                 }
@@ -663,7 +662,10 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                this._viewport = value;
+                this._viewport.x = Math.floor(value.x);
+                this._viewport.y = Math.floor(value.y);
+                this._viewport.width = Math.ceil(value.width);
+                this._viewport.height = Math.ceil(value.height);
             }
         },
         // TODO Dan
@@ -2165,7 +2167,7 @@ define([
         var viewportX = viewport.x;
         var viewportWidth = viewport.width;
 
-        if (x === 0.0 || windowCoordinates.x <= viewportX || windowCoordinates.x >= viewportWidth) {
+        if (x === 0.0 || windowCoordinates.x <= viewportX || windowCoordinates.x >= viewportX + viewportWidth) {
             executeCommandsInViewport(true, scene, passState, backgroundColor);
         } else if (Math.abs(viewportX + viewportWidth * 0.5 - windowCoordinates.x) < 1.0) {
             viewport.width = windowCoordinates.x - viewport.x;
@@ -2411,7 +2413,7 @@ define([
         }
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = false;//!picking && defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
             scene._globeDepth.update(context, passState);
             scene._globeDepth.clear(context, passState, clearColor);
@@ -2429,7 +2431,7 @@ define([
         }
 
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
-        var useOIT = environmentState.useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
+        var useOIT = environmentState.useOIT = false;//!picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
             scene._oit.update(context, passState, scene._globeDepth.framebuffer);
             scene._oit.clear(context, passState, clearColor);
@@ -2437,7 +2439,7 @@ define([
         }
 
         // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
-        var useFXAA = environmentState.useFXAA = !picking && scene.fxaa;
+        var useFXAA = environmentState.useFXAA = false;//!picking && scene.fxaa;
         if (useFXAA) {
             scene._fxaa.update(context, passState);
             scene._fxaa.clear(context, passState, clearColor);
