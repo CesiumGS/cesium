@@ -168,7 +168,13 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
             "scaleByDistanceNearRange" : "1000.0",
             "scaleByDistanceNearValue" : "2.0",
             "scaleByDistanceFarRange" : " 10000.0",
-            "scaleByDistanceFarValue" : "0.5"
+            "scaleByDistanceFarValue" : "0.5",
+            "translucencyByDistanceNearRange" : "10000.0",
+            "translucencyByDistanceNearValue" : "1.0",
+            "translucencyByDistanceFarRange" : " 20000.0",
+            "translucencyByDistanceFarValue" : "0.1",
+            "distanceDisplayConditionNear" : "0",
+            "distanceDisplayConditionFar" : "30000.0"
         });
     });
 });

@@ -3,12 +3,14 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
         './LabelStyle'
     ], function(
         Color,
         defined,
         defineProperties,
+        DistanceDisplayCondition,
         NearFarScalar,
         LabelStyle) {
     'use strict';
@@ -167,6 +169,16 @@ define([
             } else {
                 feature.translucencyByDistance = undefined;
             }
+
+            var distanceDisplayConditionNear = style.distanceDisplayConditionNear;
+            var distanceDisplayConditionFar = style.distanceDisplayConditionFar;
+
+            if (defined(distanceDisplayConditionNear) && defined(distanceDisplayConditionFar)) {
+                var near = distanceDisplayConditionNear.evaluate(frameState, feature);
+                var far = distanceDisplayConditionFar.evaluate(frameState, feature);
+
+                feature.distanceDisplayCondition = new DistanceDisplayCondition(near, far);
+            }
         }
     }
 
@@ -185,6 +197,7 @@ define([
             feature.backgroundYPadding = 5.0;
             feature.backgroundEnabled = false;
             feature.scaleByDistance = undefined;
+            feature.translucencyByDistance = undefined;
         }
     }
 
