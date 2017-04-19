@@ -1610,6 +1610,7 @@ define([
                     loadAndAddToQueue(tileset, tile, finalQueue);
                 } else if (tile._sse <= maximumScreenSpaceError) {
                     if (tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION) {
+                        updateTransforms(tile.children, tile.computedTransform);
                         if (computeChildrenVisibility(tile, frameState, false) & Cesium3DTileChildrenVisibility.VISIBLE) {
                             loadAndAddToQueue(tileset, tile, finalQueue);
                         } else {
