@@ -1410,6 +1410,50 @@ defineSuite([
         expect(Cartesian3.fromArray(normals, 18)).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON7);
     });
 
+    it('computeNormal computes normal of (0,0,1) for a degenerate triangle', function() {
+        var geometry = new Geometry({
+            attributes: {
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+                })
+            },
+            indices : [0, 1, 0],
+            primitiveType: PrimitiveType.TRIANGLES
+        });
+
+        geometry = GeometryPipeline.computeNormal(geometry);
+
+        expect(geometry.attributes.normal.values.length).toEqual(2*3);
+        expect(geometry.attributes.normal.values).toEqual([0, 0, 1, 0, 0, 1]);
+    });
+
+    it('computeNormal takes first normal for two coplanar triangles with opposite winding orders', function() {
+        var geometry = new Geometry({
+            attributes: {
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 1, 1, 1, 1],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+                })
+            },
+            indices : [0, 1, 2, 2, 1, 0],
+            primitiveType: PrimitiveType.TRIANGLES
+        });
+
+        geometry = GeometryPipeline.computeNormal(geometry);
+
+        var normals = geometry.attributes.normal.values;
+        expect(normals.length).toEqual(3*3);
+
+        var a = Cartesian3.normalize(new Cartesian3(-1, 0, 1), new Cartesian3());
+
+        expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 3)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+    });
+
     it('computeTangentAndBitangent throws when geometry is undefined', function() {
         expect(function() {
             GeometryPipeline.computeTangentAndBitangent();
@@ -1663,45 +1707,6 @@ defineSuite([
             expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
 
             actual = Cartesian3.fromArray(actualBitangents, i);
-            expected = Cartesian3.fromArray(expectedBitangents, i);
-            expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
-        }
-    });
-
-    it ('computeBinormalAndTangent computes tangent and binormal for BoxGeometry', function() {
-        // This test is for the deprecated computeBinormalAndTangent API
-        // It tests to assert that the binormal attribute is set correctly and
-        // is a copy of the bitangent attribute
-        var geometry = BoxGeometry.createGeometry(new BoxGeometry({
-            vertexFormat : new VertexFormat({
-                position : true,
-                normal : true,
-                st : true
-            }),
-            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
-        }));
-        geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
-        var actualTangents = geometry.attributes.tangent.values;
-        var actualBinormals = geometry.attributes.binormal.values;
-
-        var expectedGeometry = BoxGeometry.createGeometry(new BoxGeometry({
-            vertexFormat: VertexFormat.ALL,
-            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
-        }));
-        var expectedTangents = expectedGeometry.attributes.tangent.values;
-        var expectedBitangents = expectedGeometry.attributes.bitangent.values;
-
-        expect(actualTangents.length).toEqual(expectedTangents.length);
-        expect(actualBinormals.length).toEqual(expectedBitangents.length);
-
-        for (var i = 0; i < actualTangents.length; i += 3) {
-            var actual = Cartesian3.fromArray(actualTangents, i);
-            var expected = Cartesian3.fromArray(expectedTangents, i);
-            expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
-
-            actual = Cartesian3.fromArray(actualBinormals, i);
             expected = Cartesian3.fromArray(expectedBitangents, i);
             expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
         }

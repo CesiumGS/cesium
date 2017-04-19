@@ -108,6 +108,13 @@ define([
         this.frustums = false;
 
         /**
+         * Gets or sets the show frustum planes state.  This property is observable.
+         * @type {Boolean}
+         * @default false
+         */
+        this.frustumPlanes = false;
+
+        /**
          * Gets or sets the show performance display state.  This property is observable.
          * @type {Boolean}
          * @default false
@@ -305,6 +312,7 @@ define([
 
         knockout.track(this, [
             'frustums',
+            'frustumPlanes',
             'performance',
             'shaderCacheText',
             'primitiveBoundingSphere',
@@ -349,6 +357,10 @@ define([
 
         this._frustumsSubscription = knockout.getObservable(this, 'frustums').subscribe(function(val) {
             that._scene.debugShowFrustums = val;
+        });
+
+        this._frustumPlanesSubscription = knockout.getObservable(this, 'frustumPlanes').subscribe(function(val) {
+            that._scene.debugShowFrustumPlanes = val;
         });
 
         this._performanceSubscription = knockout.getObservable(this, 'performance').subscribe(function(val) {
@@ -481,7 +493,7 @@ define([
 
                 globe._surface._tilesToRender = [];
 
-                if (defined(that._tile)) {
+                if (defined(that._tile) && that._tile.renderable) {
                     globe._surface._tilesToRender.push(that._tile);
                 }
             }
@@ -881,7 +893,12 @@ define([
                         this.tileText = 'L: ' + newTile.level + ' X: ' + newTile.x + ' Y: ' + newTile.y;
                         this.tileText += '<br>SW corner: ' + newTile.rectangle.west + ', ' + newTile.rectangle.south;
                         this.tileText += '<br>NE corner: ' + newTile.rectangle.east + ', ' + newTile.rectangle.north;
-                        this.tileText += '<br>Min: ' + newTile.data.minimumHeight + ' Max: ' + newTile.data.maximumHeight;
+                        var data = newTile.data;
+                        if (defined(data)) {
+                            this.tileText += '<br>Min: ' + data.minimumHeight + ' Max: ' + data.maximumHeight;
+                        } else {
+                            this.tileText += '<br>(Tile is not loaded)';
+                        }
                     }
                     this._tile = newTile;
                     this.showTileBoundingSphere();
@@ -940,6 +957,7 @@ define([
     CesiumInspectorViewModel.prototype.destroy = function() {
         this._eventHandler.destroy();
         this._frustumsSubscription.dispose();
+        this._frustumPlanesSubscription.dispose();
         this._performanceSubscription.dispose();
         this._primitiveBoundingSphereSubscription.dispose();
         this._primitiveReferenceFrameSubscription.dispose();

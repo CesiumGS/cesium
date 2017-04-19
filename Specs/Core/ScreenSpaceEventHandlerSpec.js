@@ -387,9 +387,9 @@ defineSuite([
             expect(action).not.toHaveBeenCalled();
         }
 
-        var possibleButtons = [MouseButton.LEFT, MouseButton.MIDDLE, MouseButton.RIGHT];
+        var possibleButtons = [MouseButton.LEFT];
         var possibleModifiers = [undefined, KeyboardEventModifier.SHIFT, KeyboardEventModifier.CTRL, KeyboardEventModifier.ALT];
-        var possibleEventTypes = [ScreenSpaceEventType.LEFT_DOUBLE_CLICK, ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK, ScreenSpaceEventType.RIGHT_DOUBLE_CLICK];
+        var possibleEventTypes = [ScreenSpaceEventType.LEFT_DOUBLE_CLICK];
         createAllMouseSpecCombinations(testMouseDoubleClickEvent, possibleButtons, possibleModifiers, possibleEventTypes);
     });
 

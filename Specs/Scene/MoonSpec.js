@@ -57,25 +57,25 @@ defineSuite([
     });
 
     it('draws in 3D', function() {
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
         scene.moon = new Moon();
 
         lookAtMoon(scene.camera, scene.frameState.time);
 
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
         scene.moon = scene.moon.destroy();
     });
 
     it('does not render when show is false', function() {
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
         scene.moon = new Moon();
 
         lookAtMoon(scene.camera, scene.frameState.time);
 
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
         scene.moon.show = false;
 
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
         scene.moon = scene.moon.destroy();
     });
 

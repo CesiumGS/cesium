@@ -117,7 +117,14 @@ define([
              * @type {Boolean}
              * @default false
              */
-            pick : false
+            pick : false,
+
+            /**
+             * <code>true</code> if the primitive should update for a depth only pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            depth : false
         };
 
         /**
@@ -189,7 +196,7 @@ define([
             /**
              * All shadow maps that are enabled this frame.
              */
-             shadowMaps : [],
+            shadowMaps : [],
 
             /**
              * Shadow maps that originate from light sources. Does not include shadow maps that are used for
@@ -227,6 +234,28 @@ define([
              */
             outOfView : true
         };
+
+        /**
+        * The position of the splitter to use when rendering imagery layers on either side of a splitter.
+        * This value should be between 0.0 and 1.0 with 0 being the far left of the viewport and 1 being the far right of the viewport.
+        * @type {Number}
+        * @default 0.0
+        */
+        this.imagerySplitPosition = 0.0;
+
+        /**
+         * Distances to the near and far planes of the camera frustums
+         * @type {Number[]}
+         * @default []
+         */
+        this.frustumSplits = [];
+
+        /**
+         * The current scene background color
+         *
+         * @type {Color}
+         */
+        this.backgroundColor = undefined;
     }
 
     /**

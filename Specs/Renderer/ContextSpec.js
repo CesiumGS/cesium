@@ -6,8 +6,7 @@ defineSuite([
         'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ContextLimits',
-        'Specs/createContext',
-        'Specs/renderFragment'
+        'Specs/createContext'
     ], function(
         Context,
         Color,
@@ -15,8 +14,7 @@ defineSuite([
         Buffer,
         BufferUsage,
         ContextLimits,
-        createContext,
-        renderFragment) {
+        createContext) {
     'use strict';
 
     var context;
@@ -38,26 +36,6 @@ defineSuite([
 
     it('get canvas', function() {
         expect(context.canvas).not.toBeNull();
-    });
-
-    it('get redBits', function() {
-        expect(context.redBits).toEqual(8);
-    });
-
-    it('get greenBits', function() {
-        expect(context.greenBits).toEqual(8);
-    });
-
-    it('get blueBits', function() {
-        expect(context.blueBits).toEqual(8);
-    });
-
-    it('get alphaBits', function() {
-        expect(context.alphaBits).toEqual(8);
-    });
-
-    it('get depthBits', function() {
-        expect(context.depthBits).toBeGreaterThanOrEqualTo(16);
     });
 
     it('get stencilBits', function() {
@@ -157,13 +135,11 @@ defineSuite([
          
          fs += '}';
 
-        var pixel = renderFragment(context, fs);
-
-        if (context.standardDerivatives) {
-            expect(pixel).toEqual([0, 0, 255, 255]);
-        } else {
-            expect(pixel).toEqual([255, 255, 255, 255]);
-        }
+        var expected = context.standardDerivatives ? [0, 0, 255, 255] : [255, 255, 255, 255];
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender(expected);
     });
 
     it('gets the element index uint extension', function() {
@@ -213,26 +189,29 @@ defineSuite([
     });
 
     it('get the fragment depth extension', function() {
+        if (context.fragmentDepth && !context.webgl2) {
+            return;
+        }
+
         var fs =
             'void main()\n' +
             '{\n' +
             '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
             '}';
 
-        var pixel = renderFragment(context, fs, 0.5, true);
-        expect(pixel).toEqual([255, 0, 0, 255]);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            depth : 0.5
+        }).contextToRender([255, 0, 0, 255]);
 
-        var fsFragDepth = '';
-        
-        if (context.fragmentDepth && !context.webgl2) {
-            fsFragDepth += '#extension GL_EXT_frag_depth : enable\n';
-        }
-        
+        var fsFragDepth = '#extension GL_EXT_frag_depth : enable\n';
+
         fsFragDepth +=
             'void main()\n' +
             '{\n' +
             '    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n';
-        
+
         if (context.fragmentDepth) {
             fsFragDepth += '    gl_FragDepth';
             if (!context.webgl2) {
@@ -240,16 +219,16 @@ defineSuite([
             }
             fsFragDepth += ' = 0.0;\n';
         }
-        
+
         fsFragDepth += '}\n';
 
-        pixel = renderFragment(context, fsFragDepth, 1.0, false);
-
-        if (context.fragmentDepth) {
-            expect(pixel).toEqual([0, 255, 0, 255]);
-        } else {
-            expect(pixel).toEqual([255, 0, 0, 255]);
-        }
+        var expected = [0, 255, 0, 255];
+        expect({
+            context : context,
+            fragmentShader : fsFragDepth,
+            depth : 1.0,
+            clear : false
+        }).contextToRender(expected);
     });
 
     it('get the draw buffers extension', function() {

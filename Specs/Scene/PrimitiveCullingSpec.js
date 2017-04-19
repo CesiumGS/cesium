@@ -6,6 +6,7 @@ defineSuite([
         'Core/defaultValue',
         'Core/GeometryInstance',
         'Core/loadImage',
+        'Core/Math',
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/Transforms',
@@ -15,6 +16,7 @@ defineSuite([
         'Scene/LabelCollection',
         'Scene/Material',
         'Scene/PerInstanceColorAppearance',
+        'Scene/PerspectiveFrustum',
         'Scene/PolylineCollection',
         'Scene/Primitive',
         'Scene/SceneMode',
@@ -27,6 +29,7 @@ defineSuite([
         defaultValue,
         GeometryInstance,
         loadImage,
+        CesiumMath,
         Rectangle,
         RectangleGeometry,
         Transforms,
@@ -36,6 +39,7 @@ defineSuite([
         LabelCollection,
         Material,
         PerInstanceColorAppearance,
+        PerspectiveFrustum,
         PolylineCollection,
         Primitive,
         SceneMode,
@@ -61,6 +65,15 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    beforeEach(function() {
+        scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
+    });
+
     afterEach(function() {
         scene.primitives.removeAll();
         primitive = primitive && primitive.destroy();
@@ -71,15 +84,15 @@ defineSuite([
             destination : rectangle
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.primitives.add(primitive);
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         if (scene.mode !== SceneMode.SCENE2D) {
             // move the camera through the rectangle so that is behind the view frustum
             scene.camera.moveForward(100000000.0);
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
         }
     }
 
@@ -104,15 +117,15 @@ defineSuite([
             destination : rectangle
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.primitives.add(primitive);
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         // create the globe; it should occlude the primitive
         scene.globe = new Globe();
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.globe = undefined;
     }

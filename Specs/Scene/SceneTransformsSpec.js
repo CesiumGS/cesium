@@ -7,6 +7,7 @@ defineSuite([
         'Core/Math',
         'Core/Rectangle',
         'Scene/Camera',
+        'Scene/OrthographicFrustum',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
@@ -17,6 +18,7 @@ defineSuite([
         CesiumMath,
         Rectangle,
         Camera,
+        OrthographicFrustum,
         SceneMode,
         createScene) {
     'use strict';
@@ -170,6 +172,29 @@ defineSuite([
         // Update scene state
         scene.morphTo2D(0);
         scene.renderForSpecs();
+
+        var position = Cartesian3.fromDegrees(0,0);
+        var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
+
+        expect(windowCoordinates.x).toBeGreaterThan(0.0);
+        expect(windowCoordinates.y).toBeGreaterThan(0.0);
+
+        expect(windowCoordinates.x).toBeLessThan(1.0);
+        expect(windowCoordinates.y).toBeLessThan(1.0);
+    });
+
+    it('returns correct window position in 3D with orthographic frustum', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 20.0;
+        scene.camera.frustum = frustum;
+
+        // Update scene state
+        scene.renderForSpecs();
+
+        scene.camera.setView({
+            destination : Rectangle.fromDegrees(-0.000001, -0.000001, 0.000001, 0.000001)
+        });
 
         var position = Cartesian3.fromDegrees(0,0);
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
