@@ -186,7 +186,7 @@ define([
                                                 'value: colorBlendMode');
         stylePanelContents.appendChild(blendDropdown);
         var styleEditor = document.createElement('textarea');
-        styleEditor.setAttribute('data-bind', 'textInput: styleString, event: { keypress: styleEditorKeyPress }');
+        styleEditor.setAttribute('data-bind', 'textInput: styleString, event: { keydown: styleEditorKeyPress }');
         stylePanelContents.className = 'cesium-cesiumInspector-styleEditor';
         stylePanelContents.appendChild(styleEditor);
         var closeStylesBtn = makeButton('compileStyle', 'Compile (Ctrl+Enter)');

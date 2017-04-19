@@ -173,7 +173,7 @@ defineSuite([
             viewModel.dynamicScreenSpaceErrorDensity = 0.1;
             expect(viewModel.tileset.dynamicScreenSpaceError).toBe(true);
             expect(viewModel.tileset.dynamicScreenSpaceErrorFactor).toBe(2);
-            expect(viewModel.tileset.dynamicScreenSpaceErrorDensity).toEqualEpsilon(0.000001, CesiumMath.EPSILON12);
+            expect(viewModel.tileset.dynamicScreenSpaceErrorDensity).toBe(0.1);
         });
     });
 

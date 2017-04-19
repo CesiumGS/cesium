@@ -801,10 +801,11 @@ define([
     Cesium3DTilesInspectorViewModel.prototype.styleEditorKeyPress = function(sender, event) {
         if (event.keyCode === 9) { //tab
             event.preventDefault();
-            var start = this.selectionStart;
-            var end = this.selectionEnd;
+            var textArea = event.target;
+            var start = textArea.selectionStart;
+            var end = textArea.selectionEnd;
             var newEnd = end;
-            var selected = this.value.slice(start, end);
+            var selected = textArea.value.slice(start, end);
             var lines = selected.split('\n');
             var length = lines.length;
             var i;
@@ -827,9 +828,9 @@ define([
                 }
             }
             var newText = lines.join('\n');
-            this.value = this.value.slice(0, start) + newText + this.value.slice(end);
-            this.selectionStart = start !== end ? start : newEnd;
-            this.selectionEnd = newEnd;
+            textArea.value = textArea.value.slice(0, start) + newText + textArea.value.slice(end);
+            textArea.selectionStart = start !== end ? start : newEnd;
+            textArea.selectionEnd = newEnd;
         } else if (event.ctrlKey && (event.keyCode === 10 || event.keyCode === 13)) { //ctrl + enter
             this.compileStyle();
         }
