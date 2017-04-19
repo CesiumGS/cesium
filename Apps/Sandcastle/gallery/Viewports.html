@@ -79,6 +79,18 @@ resize();
 if (Cesium.defined(window.addEventListener)) {
     window.addEventListener('resize', resize, false);
 }
+
+viewer.entities.add({
+    name : 'Red box with black outline',
+    position: Cesium.Cartesian3.fromDegrees(-107.0, 40.0, 300000.0),
+    box : {
+        dimensions : new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
+        material : Cesium.Color.RED.withAlpha(0.5),
+        outline : true,
+        outlineColor : Cesium.Color.BLACK
+    }
+});
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

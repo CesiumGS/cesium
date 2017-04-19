@@ -266,7 +266,7 @@ define([
 
         this._pickFramebuffer = undefined;
 
-        this._useOIT = false;//defaultValue(options.orderIndependentTranslucency, true);
+        this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
         this._executeOITFunction = undefined;
 
         var globeDepth;
@@ -2444,7 +2444,7 @@ define([
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
         var useOIT = environmentState.useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
-            scene._oit.update(context, scene._globeDepth.framebuffer);
+            scene._oit.update(context, passState, scene._globeDepth.framebuffer);
             scene._oit.clear(context, passState, clearColor);
             environmentState.useOIT = scene._oit.isSupported();
         }
