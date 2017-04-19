@@ -210,6 +210,9 @@ define([
                 that._availability = new TileAvailability(that._tilingScheme, availableTiles.length);
 
                 for (var level = 0; level < availableTiles.length; ++level) {
+                    if (that._availableLevels && that._availableLevels.indexOf(level) === -1) {
+                        availableTiles[level] = [];
+                    }
                     var rangesAtLevel = availableTiles[level];
                     var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
 
@@ -217,12 +220,6 @@ define([
                         var range = rangesAtLevel[rangeIndex];
                         that._availability.addAvailableTileRange(level, range.startX, yTiles - range.endY - 1, range.endX, yTiles - range.startY - 1);
                     }
-                }
-            }
-
-            for (var i = 0; i < that._availableTiles.length; i++) {
-                if (that._availableLevels && that._availableLevels.indexOf(i) === -1) {
-                  that._availableTiles[i] = [];
                 }
             }
 
