@@ -72,7 +72,7 @@ defineSuite([
 
             var viewModel = widget.viewModel;
             viewModel.tileset = new Cesium3DTileset({
-                url: tilesetUrl
+                url : tilesetUrl
             });
             return viewModel._tilesetLoaded;
         });
@@ -82,7 +82,7 @@ defineSuite([
             document.body.removeChild(container);
         });
 
-        it ('shows performance', function() {
+        it('shows performance', function() {
             var viewModel = widget.viewModel;
             viewModel.performance = true;
             expect(viewModel._performanceDisplay._container.className.indexOf('cesium-cesiumInspector-show') !== -1).toBe(true);

@@ -1,6 +1,7 @@
 /*global define*/
 define([
     '../../Core/Check',
+    '../../Core/defaultValue',
     '../../Core/defined',
     '../../Core/defineProperties',
     '../../Core/destroyObject',
@@ -9,6 +10,7 @@ define([
     './Cesium3DTilesInspectorViewModel'
 ], function(
     Check,
+    defaultValue,
     defined,
     defineProperties,
     destroyObject,
@@ -52,9 +54,10 @@ define([
         return container;
     }
 
-    function makeRangeInput(property, min, max, step, text) {
+    function makeRangeInput(property, min, max, step, text, displayProperty) {
+        displayProperty = defaultValue(displayProperty, property);
         var input = document.createElement('input');
-        input.setAttribute('data-bind', 'value: ' + property);
+        input.setAttribute('data-bind', 'value: ' + displayProperty);
         input.type = 'number';
 
         var slider = document.createElement('input');
@@ -152,15 +155,15 @@ define([
         displayPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
 
         updatePanelContents.appendChild(makeCheckbox('freezeFrame', 'Freeze Frame'));
-        updatePanelContents.appendChild(makeCheckbox('dynamicSSE', 'Dynamic SSE'));
+        updatePanelContents.appendChild(makeCheckbox('dynamicScreenSpaceError', 'Dynamic Screen Space Error'));
         var sseContainer = document.createElement('div');
-        sseContainer.appendChild(makeRangeInput('maximumSSE', 0, 128, 1, 'Maximum SSE'));
+        sseContainer.appendChild(makeRangeInput('maximumScreenSpaceError', 0, 128, 1, 'Maximum Screen Space Error'));
         updatePanelContents.appendChild(sseContainer);
-        var dynamicSSEContainer = document.createElement('div');
-        dynamicSSEContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : dynamicSSE, "cesium-cesiumInspector-hide" : !dynamicSSE}');
-        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEDensity', 0, 1, 0.005, 'SSE Density'));
-        dynamicSSEContainer.appendChild(makeRangeInput('dynamicSSEFactor', 1, 10, 0.1, 'SSE Factor'));
-        updatePanelContents.appendChild(dynamicSSEContainer);
+        var dynamicScreenSpaceErrorContainer = document.createElement('div');
+        dynamicScreenSpaceErrorContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : dynamicScreenSpaceError, "cesium-cesiumInspector-hide" : !dynamicScreenSpaceError}');
+        dynamicScreenSpaceErrorContainer.appendChild(makeRangeInput('dynamicScreenSpaceErrorDensitySliderValue', 0, 1, 0.005, 'Screen Space Error Density', 'dynamicScreenSpaceErrorDensity'));
+        dynamicScreenSpaceErrorContainer.appendChild(makeRangeInput('dynamicScreenSpaceErrorFactor', 1, 10, 0.1, 'Screen Space Error Factor'));
+        updatePanelContents.appendChild(dynamicScreenSpaceErrorContainer);
 
         loggingPanelContents.appendChild(makeCheckbox('performance', 'Performance'));
         loggingPanelContents.appendChild(performanceContainer);

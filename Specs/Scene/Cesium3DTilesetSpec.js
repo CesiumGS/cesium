@@ -348,7 +348,7 @@ defineSuite([
                 }
                 expect(failedTiles).toEqual(1);
             });
-       });
+        });
     });
 
     it('renders tileset', function() {
@@ -1012,11 +1012,11 @@ defineSuite([
         it('does not select visible tiles with invisible children', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 scene.camera.setView({
-                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 22),
-                    orientation: {
-                        heading: 0,
-                        pitch:  1.57,
-                        roll: 0
+                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 22),
+                    orientation : {
+                        heading : 0,
+                        pitch : 1.57,
+                        roll : 0
                     }
                 });
 
@@ -1044,11 +1044,11 @@ defineSuite([
                 childRoot.geometricError = 240;
 
                 scene.camera.setView({
-                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
-                    orientation: {
-                        heading: 0,
-                        pitch:  -1.57,
-                        roll: 0
+                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
+                    orientation : {
+                        heading : 0,
+                        pitch : -1.57,
+                        roll : 0
                     }
                 });
 
@@ -1071,11 +1071,11 @@ defineSuite([
                 var childRoot = root.children[0];
 
                 scene.camera.setView({
-                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
-                    orientation: {
-                        heading: 0,
-                        pitch:  -1.57,
-                        roll: 0
+                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
+                    orientation : {
+                        heading : 0,
+                        pitch : -1.57,
+                        roll : 0
                     }
                 });
 
@@ -1099,11 +1099,11 @@ defineSuite([
 
         it('does select visibile tiles with visible children failing request volumes', function() {
             scene.camera.setView({
-                destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 100),
-                orientation: {
-                    heading: 0,
-                    pitch:  -1.57,
-                    roll: 0
+                destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 100),
+                orientation : {
+                    heading : 0,
+                    pitch : -1.57,
+                    roll : 0
                 }
             });
 
@@ -1128,11 +1128,11 @@ defineSuite([
         it('does select visibile tiles with visible children passing request volumes', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 scene.camera.setView({
-                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 40),
-                    orientation: {
-                        heading: 0,
-                        pitch:  -1.57,
-                        roll: 0
+                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 40),
+                    orientation : {
+                        heading : 0,
+                        pitch : -1.57,
+                        roll : 0
                     }
                 });
 
@@ -2363,7 +2363,7 @@ defineSuite([
 
     it('does not add commands or stencil clear command with no selected tiles', function() {
         var tileset = scene.primitives.add(new Cesium3DTileset({
-            url: tilesetUrl
+            url : tilesetUrl
         }));
         scene.renderForSpecs();
         var stats = tileset._statistics;
@@ -2393,7 +2393,7 @@ defineSuite([
         scene.camera.moveLeft(200.0);
         scene.camera.moveDown(200.0);
 
-        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, { loadSiblings: false }).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, {loadSiblings : false}).then(function(tileset) {
             var stats = tileset._statistics;
             scene.renderForSpecs();
             expect(stats.numberContentReady).toBe(2);
@@ -2412,10 +2412,10 @@ defineSuite([
         scene.camera.moveDown(200.0);
 
         var tileset = scene.primitives.add(new Cesium3DTileset({
-            url: tilesetOfTilesetsUrl,
-            immediatelyLoadDesiredLOD: true,
-            skipSSEFactor: 0.1,         // tiny skip factor so we would normally load all tiles
-            skipLevels: 0
+            url : tilesetOfTilesetsUrl,
+            immediatelyLoadDesiredLOD : true,
+            skipSSEFactor : 0.1,         // tiny skip factor so we would normally load all tiles
+            skipLevels : 0
         }));
         return Cesium3DTilesTester.waitForReady(scene, tileset).then(function(tileset) {
             scene.renderForSpecs();
@@ -2443,7 +2443,7 @@ defineSuite([
         scene.camera.moveDown(200.0);
 
         var tileset = scene.primitives.add(new Cesium3DTileset({
-            url: tilesetOfTilesetsUrl
+            url : tilesetOfTilesetsUrl
         }));
 
         return Cesium3DTilesTester.waitForReady(scene, tileset).then(function(tileset) {

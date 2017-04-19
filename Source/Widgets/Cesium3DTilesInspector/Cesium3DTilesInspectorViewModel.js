@@ -232,7 +232,6 @@ define([
         knockout.track(this, ['performance', 'inspectorVisible', '_statsText', '_pickStatsText', '_editorError', 'showPickStats', 'showStats',
                               'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'styleString']);
 
-
         this._properties = knockout.observable({});
         /**
          * Gets the names of the properties in the tileset.  This property is observable.
@@ -251,25 +250,25 @@ define([
             return names.join(', ');
         });
 
-        var dynamicSSE = knockout.observable();
-        knockout.defineProperty(this, 'dynamicSSE', {
+        var dynamicScreenSpaceError = knockout.observable();
+        knockout.defineProperty(this, 'dynamicScreenSpaceError', {
             get : function() {
-                return dynamicSSE();
+                return dynamicScreenSpaceError();
             },
             set : function(value) {
-                dynamicSSE(value);
+                dynamicScreenSpaceError(value);
                 if (defined(that._tileset)) {
                     that._tileset.dynamicScreenSpaceError = value;
                 }
             }
         });
         /**
-         * Gets or sets the flag to enable dynamic SSE.  This property is observable.
+         * Gets or sets the flag to enable dynamic screen space error.  This property is observable.
          *
          * @type {Boolean}
          * @default false
          */
-        this.dynamicSSE = false;
+        this.dynamicScreenSpaceError = false;
 
         var colorBlendMode = knockout.observable();
         knockout.defineProperty(this, 'colorBlendMode', {
@@ -413,7 +412,7 @@ define([
             set : function(value) {
                 showRequestVolumes(value);
                 if (that._tileset) {
-                    that._tileset.debugShowViewerRequestVolume  = value;
+                    that._tileset.debugShowViewerRequestVolume = value;
                 }
             }
         });
@@ -466,13 +465,13 @@ define([
          */
         this.freezeFrame = false;
 
-        var maximumSSE = knockout.observable();
-        knockout.defineProperty(this, 'maximumSSE', {
+        var maximumScreenSpaceError = knockout.observable();
+        knockout.defineProperty(this, 'maximumScreenSpaceError', {
             get : function() {
-                return maximumSSE();
+                return maximumScreenSpaceError();
             },
             set : function(value) {
-                maximumSSE(value);
+                maximumScreenSpaceError(value);
                 if (that._tileset) {
                     that._tileset.maximumScreenSpaceError = value;
                 }
@@ -484,47 +483,65 @@ define([
          * @type {Number}
          * @default 16
          */
-        this.maximumSSE = 16;
+        this.maximumScreenSpaceError = 16;
 
-        var dynamicSSEDensity = knockout.observable();
-        knockout.defineProperty(this, 'dynamicSSEDensity', {
+        var dynamicScreenSpaceErrorDensity = knockout.observable();
+        knockout.defineProperty(this, 'dynamicScreenSpaceErrorDensity', {
             get : function() {
-                return dynamicSSEDensity();
+                return dynamicScreenSpaceErrorDensity();
             },
             set : function(value) {
-                dynamicSSEDensity(value);
+                dynamicScreenSpaceErrorDensity(value);
                 if (that._tileset) {
-                    that._tileset.dynamicScreenSpaceErrorDensity = Math.pow(value, 6);
+                    that._tileset.dynamicScreenSpaceErrorDensity = value;
                 }
             }
         });
         /**
-         * Gets or sets the dynamic SSE density.  This property is observable.
+         * Gets or sets the dynamic screen space error density.  This property is observable.
          *
          * @type {Number}
          * @default 0.00278
          */
-        this.dynamicSSEDensity = 0.00278;
+        this.dynamicScreenSpaceErrorDensity = 0.00278;
 
-        var dynamicSSEFactor = knockout.observable();
-        knockout.defineProperty(this, 'dynamicSSEFactor', {
+        /**
+         * Gets or sets the dynamic screen space error density slider value.
+         * This allows the slider to be exponential because values tend to be closer to 0 than 1.
+         * This property is observable.
+         *
+         * @type {Number}
+         * @default 0.00278
+         */
+        this.dynamicScreenSpaceErrorDensitySliderValue = undefined;
+        knockout.defineProperty(this, 'dynamicScreenSpaceErrorDensitySliderValue', {
             get : function() {
-                return dynamicSSEFactor();
+                return Math.pow(dynamicScreenSpaceErrorDensity(), 1 / 6);
             },
             set : function(value) {
-                dynamicSSEFactor(value);
+                dynamicScreenSpaceErrorDensity(Math.pow(value, 6));
+            }
+        });
+
+        var dynamicScreenSpaceErrorFactor = knockout.observable();
+        knockout.defineProperty(this, 'dynamicScreenSpaceErrorFactor', {
+            get : function() {
+                return dynamicScreenSpaceErrorFactor();
+            },
+            set : function(value) {
+                dynamicScreenSpaceErrorFactor(value);
                 if (that._tileset) {
                     that._tileset.dynamicScreenSpaceErrorFactor = value;
                 }
             }
         });
         /**
-         * Gets or sets the dynamic SSE factor.  This property is observable.
+         * Gets or sets the dynamic screen space error factor.  This property is observable.
          *
          * @type {Number}
          * @default 4.0
          */
-        this.dynamicSSEFactor = 4.0;
+        this.dynamicScreenSpaceErrorFactor = 4.0;
 
         var pickTileset = getPickTileset(this);
         var pickActive = knockout.observable();
@@ -553,8 +570,9 @@ define([
         this._shouldStyle = false;
         this._tileset = undefined;
         this._feature = undefined;
-        this._definedProperties = ['propertiesText', 'dynamicSSE', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes', 'showContentBoundingVolumes',
-                                   'showRequestVolumes', 'showGeometricError', 'freezeFrame', 'maximumSSE', 'dynamicSSEDensity', 'dynamicSSEFactor', 'pickActive'];
+        this._definedProperties = ['propertiesText', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
+                                   'showContentBoundingVolumes', 'showRequestVolumes', 'showGeometricError', 'freezeFrame', 'maximumScreenSpaceError',
+                                   'dynamicScreenSpaceErrorDensity', 'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
@@ -617,7 +635,6 @@ define([
             get : function() {
                 return this._tileset;
             },
-
             set : function(tileset) {
                 this._tileset = tileset;
                 this._style = undefined;
@@ -626,10 +643,10 @@ define([
                 if (defined(tileset)) {
                     var that = this;
                     tileset.readyPromise.then(function(t) {
-                        that._properties(t.properties);
+                        if (!that.isDestroyed()) {
+                            that._properties(t.properties);
+                        }
                     });
-
-
 
                     // update tileset with existing settings
                     var settings = ['colorize',
@@ -646,10 +663,10 @@ define([
                     }
 
                     // update view model with existing tileset settings
-                    this.maximumSSE = tileset.maximumScreenSpaceError;
-                    this.dynamicSSE = tileset.dynamicScreenSpaceError;
-                    this.dynamicSSEDensity = tileset.dynamicScreenSpaceErrorDensity;
-                    this.dynamicSSEFactor = tileset.dynamicScreenSpaceErrorFactor;
+                    this.maximumScreenSpaceError = tileset.maximumScreenSpaceError;
+                    this.dynamicScreenSpaceError = tileset.dynamicScreenSpaceError;
+                    this.dynamicScreenSpaceErrorDensity = tileset.dynamicScreenSpaceErrorDensity;
+                    this.dynamicScreenSpaceErrorFactor = tileset.dynamicScreenSpaceErrorFactor;
                     this.colorBlendMode = tileset.colorBlendMode;
                 } else {
                     this._properties({});
@@ -669,7 +686,7 @@ define([
             get : function() {
                 return this._feature;
             },
-            set: function(feature) {
+            set : function(feature) {
                 if (this._feature === feature) {
                     return;
                 }
@@ -755,30 +772,27 @@ define([
      * Compiles the style in the style editor
      */
     Cesium3DTilesInspectorViewModel.prototype.compileStyle = function() {
-        if (defined(this._style)) {
-            if (this.styleString !== JSON.stringify(this._style.style)) {
-                if (defined(this._tileset)) {
-                    var old = this._tileset.style;
-                    this._editorError = '';
-                    try {
-                        if (this.styleString.length === 0) {
-                            this.styleString = '{}';
-                        }
-                        var style = new Cesium3DTileStyle(JSON.parse(this.styleString));
-                        this._tileset.style = style;
-                        this._style = style;
-                        this._tileset.update(this._scene.frameState);
-                    } catch (err) {
-                        this._tileset.style = old;
-                        this._style = old;
-                        this._editorError = err.toString();
-                    }
-
-                    // set feature again so pick coloring is set
-                    this.feature = this._feature;
-                }
-            }
+        if (!defined(this._tileset) || !defined(this._style) || this.styleString === JSON.stringify(this._style.style)) {
+            return;
         }
+        var old = this._tileset.style;
+        this._editorError = '';
+        try {
+            if (this.styleString.length === 0) {
+                this.styleString = '{}';
+            }
+            var style = new Cesium3DTileStyle(JSON.parse(this.styleString));
+            this._tileset.style = style;
+            this._style = style;
+            this._tileset.update(this._scene.frameState);
+        } catch (err) {
+            this._tileset.style = old;
+            this._style = old;
+            this._editorError = err.toString();
+        }
+
+        // set feature again so pick coloring is set
+        this.feature = this._feature;
     };
 
     /**

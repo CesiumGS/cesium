@@ -67,7 +67,7 @@ defineSuite([
         it('show properties', function() {
             viewModel = new Cesium3DTilesInspectorViewModel(scene, performanceContainer);
             var tileset = new Cesium3DTileset({
-                url: tilesetUrl
+                url : tilesetUrl
             });
             viewModel.tileset = tileset;
             var done = when.defer();
@@ -87,7 +87,7 @@ defineSuite([
         beforeAll(function() {
             viewModel = new Cesium3DTilesInspectorViewModel(scene, performanceContainer);
             var tileset = new Cesium3DTileset({
-                url: tilesetUrl
+                url : tilesetUrl
             });
             viewModel.tileset = tileset;
             return tileset.readyPromise;
@@ -144,7 +144,7 @@ defineSuite([
         beforeAll(function() {
             viewModel = new Cesium3DTilesInspectorViewModel(scene, performanceContainer);
             viewModel.tileset = new Cesium3DTileset({
-                url: tilesetUrl
+                url : tilesetUrl
             });
             return viewModel._tilesetLoaded;
         });
@@ -153,7 +153,7 @@ defineSuite([
             viewModel.destroy();
         });
 
-        it ('freeze frame', function() {
+        it('freeze frame', function() {
             viewModel.freezeFrame = false;
             expect(viewModel.tileset.debugFreezeFrame).toBe(false);
             viewModel.freezeFrame = true;
@@ -161,16 +161,16 @@ defineSuite([
         });
 
         it('maximum screen space error', function() {
-            viewModel.dynamicSSE = false;
-            viewModel.maximumSSE = 10;
+            viewModel.dynamicScreenSpaceError = false;
+            viewModel.maximumScreenSpaceError = 10;
             expect(viewModel.tileset.dynamicScreenSpaceError).toBe(false);
             expect(viewModel.tileset.maximumScreenSpaceError).toBe(10);
         });
 
         it('dynamic screen space error', function() {
-            viewModel.dynamicSSE = true;
-            viewModel.dynamicSSEFactor = 2;
-            viewModel.dynamicSSEDensity = 0.1;
+            viewModel.dynamicScreenSpaceError = true;
+            viewModel.dynamicScreenSpaceErrorFactor = 2;
+            viewModel.dynamicScreenSpaceErrorDensity = 0.1;
             expect(viewModel.tileset.dynamicScreenSpaceError).toBe(true);
             expect(viewModel.tileset.dynamicScreenSpaceErrorFactor).toBe(2);
             expect(viewModel.tileset.dynamicScreenSpaceErrorDensity).toEqualEpsilon(0.000001, CesiumMath.EPSILON12);
@@ -182,8 +182,8 @@ defineSuite([
 
         beforeAll(function() {
             style = new Cesium3DTileStyle({
-                color: {
-                    conditions: [
+                color : {
+                    conditions : [
                         ["${Height} >= 83", "color('purple', 0.5)"],
                         ["${Height} >= 80", "color('red')"],
                         ["${Height} >= 70", "color('orange')"],
@@ -193,14 +193,14 @@ defineSuite([
                         ["true", "color('blue')"]
                     ]
                 },
-                meta: {
-                    description: "'Building id ${id} has height ${Height}.'"
+                meta : {
+                    description : "'Building id ${id} has height ${Height}.'"
                 }
             });
 
             viewModel = new Cesium3DTilesInspectorViewModel(scene, performanceContainer);
             viewModel.tileset = new Cesium3DTileset({
-                url: tilesetUrl
+                url : tilesetUrl
             });
 
             return viewModel._tilesetLoaded;
@@ -210,13 +210,13 @@ defineSuite([
             viewModel.destroy();
         });
 
-        it ('loads tileset style', function() {
+        it('loads tileset style', function() {
             viewModel.tileset.style = style;
             viewModel._update();
             expect(JSON.stringify(style.style)).toBe(JSON.stringify(JSON.parse(viewModel.styleString)));
         });
 
-        it ('does not throw on invalid syntax', function() {
+        it('does not throw on invalid syntax', function() {
             expect(function() {
                 viewModel.styleString = 'invalid';
             }).not.toThrowError();
@@ -233,7 +233,7 @@ defineSuite([
             expect(viewModel.tileset.style.style.meta.description).toBe("'Building id ${id} has height ${Height}.'");
         });
 
-        it ('does not throw on invalid value', function() {
+        it('does not throw on invalid value', function() {
             expect(function() {
                 viewModel.styleString = '{ "color": "color(1)" }';
             }).not.toThrowError();
