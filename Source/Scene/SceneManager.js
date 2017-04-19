@@ -1,21 +1,27 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Renderer/ClearCommand',
         '../Renderer/Context',
+        '../Renderer/PassState',
         './CreditDisplay',
         './PerformanceDisplay',
         './Scene'
     ], function(
+        Color,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
+        ClearCommand,
         Context,
+        PassState,
         CreditDisplay,
         PerformanceDisplay,
         Scene) {
@@ -57,6 +63,21 @@ define([
 
         this._scenes = [];
 
+        this._clearColorCommand = new ClearCommand({
+            color : new Color(),
+            stencil : 0,
+            owner : this
+        });
+
+        this._passState = new PassState(context);
+
+        /**
+         * The background color.
+         *
+         * @type {Color}
+         * @default {@link Color.BLACK}
+         */
+        this.backgroundColor = Color.clone(Color.BLACK);
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
@@ -92,6 +113,12 @@ define([
         context : {
             get : function() {
                 return this._context;
+            }
+        },
+
+        length : {
+            get : function() {
+                return this._scenes.length;
             }
         }
     });
@@ -141,10 +168,21 @@ define([
 
         this._creditDisplay.beginFrame();
 
+        var passState = this._passState;
+        passState.framebuffer = undefined;
+        passState.blendingEnabled = undefined;
+        passState.scissorTest = undefined;
+
+        // Clear the default framebuffer.
+        var backgroundColor = defaultValue(this.backgroundColor, Color.BLACK);
+        var clear = this._clearColorCommand;
+        Color.clone(backgroundColor, clear.color);
+        clear.execute(context, passState);
+
         var scenes = this._scenes;
         var length = scenes.length;
         for (var i = 0; i < length; ++i) {
-            scenes[i].render(time);
+            scenes[i].render(time, passState);
         }
 
         this._creditDisplay.endFrame();

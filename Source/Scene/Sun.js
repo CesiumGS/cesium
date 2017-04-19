@@ -139,11 +139,7 @@ define([
     /**
      * @private
      */
-    Sun.prototype.update = function(scene) {
-        var passState = scene._passState;
-        var frameState = scene.frameState;
-        var context = scene.context;
-
+    Sun.prototype.update = function(frameState, passState) {
         if (!this.show) {
             return undefined;
         }
@@ -157,6 +153,7 @@ define([
             return undefined;
         }
 
+        var context = frameState.context;
         var drawingBufferWidth = passState.viewport.width;
         var drawingBufferHeight = passState.viewport.height;
 
@@ -289,7 +286,7 @@ define([
 
         var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition, scratchCartesian4);
 
-        var dist = Cartesian3.magnitude(Cartesian3.subtract(position, scene.camera.position, scratchCartesian4));
+        var dist = Cartesian3.magnitude(Cartesian3.subtract(position, frameState.camera.position, scratchCartesian4));
         var projMatrix = context.uniformState.projection;
 
         var positionEC = scratchPositionEC;

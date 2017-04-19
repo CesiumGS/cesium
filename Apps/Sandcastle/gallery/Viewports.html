@@ -44,9 +44,9 @@ var scene1 = sceneManager.add({
 var ellipsoid = scene1.mapProjection.ellipsoid;
 scene1.globe = new Cesium.Globe(ellipsoid);
 scene1.skyAtmosphere = scene0.skyAtmosphere;
-//scene1.skyBox = scene0.skyBox;
-//scene1.sun = scene0.sun;
-//scene1.moon = scene0.moon;
+scene1.skyBox = scene0.skyBox;
+scene1.sun = scene0.sun;
+scene1.moon = scene0.moon;
 scene1.imageryLayers.addImageryProvider(new Cesium.BingMapsImageryProvider({
     url : 'https://dev.virtualearth.net'
 }));
@@ -90,6 +90,117 @@ viewer.entities.add({
         outlineColor : Cesium.Color.BLACK
     }
 });
+
+// TODO: fix picking and pick depth
+/*
+function createModel(scene, url, height, heading, pitch, roll) {
+    height = Cesium.defaultValue(height, 0.0);
+    heading = Cesium.defaultValue(heading, 0.0);
+    pitch = Cesium.defaultValue(pitch, 0.0);
+    roll = Cesium.defaultValue(roll, 0.0);
+    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+
+    var origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
+
+    scene.primitives.removeAll(); // Remove previous model
+    var model = scene.primitives.add(Cesium.Model.fromGltf({
+        url : url,
+        modelMatrix : modelMatrix,
+        minimumPixelSize : 128
+    }));
+
+    model.readyPromise.then(function(model) {
+        // Play and loop all animations at half-speed
+        model.activeAnimations.addAll({
+            speedup : 0.5,
+            loop : Cesium.ModelAnimationLoop.REPEAT
+        });
+
+        var camera = scene.camera;
+
+        // Zoom to model
+        var controller = scene.screenSpaceCameraController;
+        var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+        controller.minimumZoomDistance = r * 0.5;
+
+        var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
+        var heading = Cesium.Math.toRadians(230.0);
+        var pitch = Cesium.Math.toRadians(-20.0);
+        camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
+    }).otherwise(function(error){
+        window.alert(error);
+    });
+
+    return model;
+}
+
+function createLabel(scene) {
+    var labels = scene.primitives.add(new Cesium.LabelCollection());
+    return labels.add({
+        show : false,
+        showBackground : true,
+        font : '14px monospace',
+        horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
+        verticalOrigin : Cesium.VerticalOrigin.TOP,
+        pixelOffset : new Cesium.Cartesian2(15, 0)
+    });
+}
+
+Sandcastle.addToolbarButton('Pick position', function() {
+    var uri = '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck-kmc.gltf';
+    var model0 = createModel(scene0, uri);
+    var model1 = createModel(scene1, uri);
+
+    var label0 = createLabel(scene0);
+    var label1 = createLabel(scene1);
+
+    label0.sceneRef = scene0;
+    label1.sceneRef = scene1;
+
+    // Mouse over the globe to see the cartographic position
+    var handler = new Cesium.ScreenSpaceEventHandler(sceneManager.canvas);
+    handler.setInputAction(function(movement) {
+        var length = sceneManager.length;
+        for (var i = 0; i < length; ++i) {
+            var foundPosition = false;
+
+            var scene = sceneManager.get(i);
+            if (scene.mode !== Cesium.SceneMode.MORPHING) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (scene.pickPositionSupported && Cesium.defined(pickedObject) && (pickedObject.id === model0 || pickedObject.id === model1)) {
+                    var cartesian = viewer.scene.pickPosition(movement.endPosition);
+
+                    if (Cesium.defined(cartesian)) {
+                        var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+                        var longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(2);
+                        var latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
+                        var heightString = cartographic.height.toFixed(2);
+
+                        //labelEntity.position = cartesian;
+                        //labelEntity.label.show = true;
+                        //labelEntity.label.text =
+                        //    'Lon: ' + ('   ' + longitudeString).slice(-7) + '\u00B0' +
+                        //    '\nLat: ' + ('   ' + latitudeString).slice(-7) + '\u00B0' +
+                        //    '\nAlt: ' + ('   ' + heightString).slice(-7) + 'm';
+
+                        //labelEntity.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, -cartographic.height * (scene.mode === Cesium.SceneMode.SCENE2D ? 1.5 : 1.0));
+
+                        console.log('Lon: ' + ('   ' + longitudeString).slice(-7) + '\u00B0' +
+                                    '\nLat: ' + ('   ' + latitudeString).slice(-7) + '\u00B0' +
+                                    '\nAlt: ' + ('   ' + heightString).slice(-7) + 'm');
+                        foundPosition = true;
+                    }
+                }
+            }
+
+            //if (!foundPosition) {
+            //    labelEntity.label.show = false;
+            //}
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+});
+*/
 
 //Sandcastle_End
     Sandcastle.finishedLoading();

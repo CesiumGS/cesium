@@ -246,10 +246,6 @@ define([
         }
         this._viewport = viewport;
 
-        var ps = new PassState(context);
-        ps.viewport = viewport;
-        this._passState = ps;
-
         this._context = context;
         this._computeEngine = new ComputeEngine(context);
         this._globe = undefined;
@@ -284,11 +280,6 @@ define([
         this._oit = oit;
         this._fxaa = new FXAA();
 
-        this._clearColorCommand = new ClearCommand({
-            color : new Color(),
-            stencil : 0,
-            owner : this
-        });
         this._depthClearCommand = new ClearCommand({
             depth : 1.0,
             owner : this
@@ -383,7 +374,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.sunBloom = false;//true;
+        this.sunBloom = true;
         this._sunBloom = undefined;
 
         /**
@@ -548,7 +539,7 @@ define([
          * @type Boolean
          * @default true
          */
-        this.useDepthPicking = false;//true;
+        this.useDepthPicking = true;
 
         /**
          * When <code>true</code>, enables picking translucent geometry using the depth buffer.
@@ -673,7 +664,6 @@ define([
                 //>>includeEnd('debug');
 
                 this._viewport = value;
-                this._passState.viewport = this._viewport;
             }
         },
         // TODO Dan
@@ -2277,7 +2267,7 @@ define([
         executeCommands(scene, passState);
     }
 
-    function updateEnvironment(scene) {
+    function updateEnvironment(scene, passState) {
         var frameState = scene._frameState;
 
         // Update celestial and terrestrial environment effects.
@@ -2299,7 +2289,7 @@ define([
             }
             environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
             environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState) : undefined;
-            var sunCommands = defined(scene.sun) ? scene.sun.update(scene) : undefined;
+            var sunCommands = defined(scene.sun) ? scene.sun.update(frameState, passState) : undefined;
             environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
             environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
             environmentState.moonCommand = defined(scene.moon) ? scene.moon.update(frameState) : undefined;
@@ -2418,11 +2408,6 @@ define([
             scene._sunBloom = false;
         }
 
-        // Clear the pass state framebuffer.
-        var clear = scene._clearColorCommand;
-        Color.clone(clearColor, clear.color);
-        //clear.execute(context, passState);
-
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
@@ -2464,9 +2449,12 @@ define([
             passState.framebuffer = scene._fxaa.getColorFramebuffer();
         }
 
+        // TODO: clear passState.framebuffer. I think this is only needed for the pick framebuffer
+        /*
         if (defined(passState.framebuffer)) {
             clear.execute(context, passState);
         }
+        */
     }
 
     function resolveFramebuffers(scene, passState) {
@@ -2535,7 +2523,7 @@ define([
 
     var scratchEyeTranslation = new Cartesian3();
 
-    function render(scene, time) {
+    function render(scene, time, passState) {
         if (!defined(time)) {
             time = JulianDate.now();
         }
@@ -2581,16 +2569,13 @@ define([
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;
 
-        var passState = scene._passState;
-        passState.framebuffer = undefined;
-        passState.blendingEnabled = undefined;
-        passState.scissorTest = undefined;
+        passState.viewport = scene._viewport;
 
         if (defined(scene.globe)) {
             scene.globe.beginFrame(frameState);
         }
 
-        updateEnvironment(scene);
+        updateEnvironment(scene, passState);
         updateAndExecuteCommands(scene, passState, backgroundColor);
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
@@ -2606,9 +2591,9 @@ define([
     /**
      * @private
      */
-    Scene.prototype.render = function(time) {
+    Scene.prototype.render = function(time, passState) {
         try {
-            render(this, time);
+            render(this, time, passState);
         } catch (error) {
             this._renderError.raiseEvent(this, error);
 
@@ -2638,7 +2623,7 @@ define([
             frustum = frustum._offCenterFrustum;
         }
 
-        var viewport = scene._passState.viewport;
+        var viewport = scene._viewport;
         var x = 2.0 * (drawingBufferPosition.x - viewport.x) / viewport.width - 1.0;
         x *= (frustum.right - frustum.left) * 0.5;
         var y = 2.0 * (viewport.height - drawingBufferPosition.y - viewport.y) / viewport.height - 1.0;
@@ -2682,7 +2667,7 @@ define([
         var tanPhi = Math.tan(frustum.fovy * 0.5);
         var tanTheta = frustum.aspectRatio * tanPhi;
 
-        var viewport = scene._passState.viewport;
+        var viewport = scene._viewport;
         var x = 2.0 * (drawingBufferPosition.x - viewport.x) / viewport.width - 1.0;
         var y = 2.0 * (viewport.height - drawingBufferPosition.y - viewport.y) / viewport.height - 1.0;
 
