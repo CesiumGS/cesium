@@ -2130,12 +2130,16 @@ define([
     var scratch2DViewportCameraTransform = new Matrix4();
     var scratch2DViewportEyePoint = new Cartesian3();
     var scratch2DViewportWindowCoords = new Cartesian3();
+    var scratch2DViewport = new BoundingRectangle();
 
     function execute2DViewportCommands(scene, passState, backgroundColor) {
         var context = scene.context;
         var frameState = scene.frameState;
         var camera = scene.camera;
-        var viewport = passState.viewport;
+
+        var originalViewport = passState.viewport;
+        var viewport = BoundingRectangle.clone(originalViewport, scratch2DViewport);
+        passState.viewport = viewport;
 
         var maxCartographic = scratch2DViewportCartographic;
         var maxCoord = scratch2DViewportMaxCoord;
@@ -2161,10 +2165,10 @@ define([
         var viewportX = viewport.x;
         var viewportWidth = viewport.width;
 
-        if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= context.drawingBufferWidth) {
+        if (x === 0.0 || windowCoordinates.x <= viewportX || windowCoordinates.x >= viewportWidth) {
             executeCommandsInViewport(true, scene, passState, backgroundColor);
-        } else if (Math.abs(context.drawingBufferWidth * 0.5 - windowCoordinates.x) < 1.0) {
-            viewport.width = windowCoordinates.x;
+        } else if (Math.abs(viewportX + viewportWidth * 0.5 - windowCoordinates.x) < 1.0) {
+            viewport.width = windowCoordinates.x - viewport.x;
 
             camera.position.x *= CesiumMath.sign(camera.position.x);
 
@@ -2175,7 +2179,7 @@ define([
 
             executeCommandsInViewport(true, scene, passState, backgroundColor);
 
-            viewport.x = viewport.width;
+            viewport.x = windowCoordinates.x;
 
             camera.position.x = -camera.position.x;
 
@@ -2186,8 +2190,8 @@ define([
             context.uniformState.update(frameState);
 
             executeCommandsInViewport(false, scene, passState, backgroundColor);
-        } else if (windowCoordinates.x > context.drawingBufferWidth * 0.5) {
-            viewport.width = windowCoordinates.x;
+        } else if (windowCoordinates.x > viewportX + viewportWidth * 0.5) {
+            viewport.width = windowCoordinates.x - viewportX;
 
             var right = camera.frustum.right;
             camera.frustum.right = maxCoord.x - x;
@@ -2197,8 +2201,8 @@ define([
 
             executeCommandsInViewport(true, scene, passState, backgroundColor);
 
-            viewport.x += windowCoordinates.x;
-            viewport.width = context.drawingBufferWidth - windowCoordinates.x;
+            viewport.x = windowCoordinates.x;
+            viewport.width = viewportX + viewportWidth - windowCoordinates.x;
 
             camera.position.x = -camera.position.x;
 
@@ -2211,7 +2215,7 @@ define([
             executeCommandsInViewport(false, scene, passState, backgroundColor);
         } else {
             viewport.x = windowCoordinates.x;
-            viewport.width = context.drawingBufferWidth - windowCoordinates.x;
+            viewport.width = viewportX + viewportWidth - windowCoordinates.x;
 
             var left = camera.frustum.left;
             camera.frustum.left = -maxCoord.x - x;
@@ -2221,8 +2225,8 @@ define([
 
             executeCommandsInViewport(true, scene, passState, backgroundColor);
 
-            viewport.x = 0;
-            viewport.width = windowCoordinates.x;
+            viewport.x = viewportX;
+            viewport.width = windowCoordinates.x - viewportX;
 
             camera.position.x = -camera.position.x;
 
@@ -2238,9 +2242,7 @@ define([
         camera._setTransform(transform);
         Cartesian3.clone(position, camera.position);
         camera.frustum = frustum.clone();
-
-        viewport.x = viewportX;
-        viewport.width = viewportWidth;
+        passState.viewport = originalViewport;
     }
 
     function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor) {
