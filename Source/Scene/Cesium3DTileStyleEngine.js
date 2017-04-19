@@ -150,6 +150,23 @@ define([
             } else {
                 feature.scaleByDistance = undefined;
             }
+
+            var translucencyByDistanceNearRange = style.translucencyByDistanceNearRange;
+            var translucencyByDistanceNearValue = style.translucencyByDistanceNearValue;
+            var translucencyByDistanceFarRange = style.translucencyByDistanceFarRange;
+            var translucencyByDistanceFarValue = style.translucencyByDistanceFarValue;
+
+            if (defined(translucencyByDistanceNearRange) && defined(translucencyByDistanceNearValue) &&
+                defined(translucencyByDistanceFarRange) && defined(translucencyByDistanceFarValue)) {
+                var nearRange = translucencyByDistanceNearRange.evaluate(frameState, feature);
+                var nearValue = translucencyByDistanceNearValue.evaluate(frameState, feature);
+                var farRange = translucencyByDistanceFarRange.evaluate(frameState, feature);
+                var farValue = translucencyByDistanceFarValue.evaluate(frameState, feature);
+
+                feature.translucencyByDistance = new NearFarScalar(nearRange, nearValue, farRange, farValue);
+            } else {
+                feature.translucencyByDistance = undefined;
+            }
         }
     }
 

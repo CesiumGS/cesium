@@ -83,6 +83,10 @@ define([
         this._scaleByDistanceNearValue = undefined;
         this._scaleByDistanceFarRange = undefined;
         this._scaleByDistanceFarValue = undefined;
+        this._translucencyByDistanceNearRange = undefined;
+        this._translucencyByDistanceNearValue = undefined;
+        this._translucencyByDistanceFarRange = undefined;
+        this._translucencyByDistanceFarValue = undefined;
         this._meta = undefined;
 
         this._colorShaderFunction = undefined;
@@ -140,6 +144,10 @@ define([
         var scaleByDistanceNearValueExpression = styleJson.scaleByDistanceNearValue;
         var scaleByDistanceFarRangeExpression = styleJson.scaleByDistanceFarRange;
         var scaleByDistanceFarValueExpression = styleJson.scaleByDistanceFarValue;
+        var translucencyByDistanceNearRangeExpression = styleJson.translucencyByDistanceNearRange;
+        var translucencyByDistanceNearValueExpression = styleJson.translucencyByDistanceNearValue;
+        var translucencyByDistanceFarRangeExpression = styleJson.translucencyByDistanceFarRange;
+        var translucencyByDistanceFarValueExpression = styleJson.translucencyByDistanceFarValue;
 
         var color;
         if (typeof colorExpression === 'string') {
@@ -297,6 +305,50 @@ define([
         }
 
         that._scaleByDistanceFarValue = scaleByDistanceFarValue;
+
+        var translucencyByDistanceNearRange;
+        if (typeof translucencyByDistanceNearRangeExpression === 'number') {
+            translucencyByDistanceNearRange = new Expression(String(translucencyByDistanceNearRangeExpression));
+        } else if (typeof translucencyByDistanceNearRangeExpression === 'string') {
+            translucencyByDistanceNearRange = new Expression(translucencyByDistanceNearRangeExpression);
+        } else if (defined(translucencyByDistanceNearRangeExpression) && defined(translucencyByDistanceNearRangeExpression.conditions)) {
+            translucencyByDistanceNearRange = new ConditionsExpression(translucencyByDistanceNearRangeExpression);
+        }
+
+        that._translucencyByDistanceNearRange = translucencyByDistanceNearRange;
+
+        var translucencyByDistanceNearValue;
+        if (typeof translucencyByDistanceNearValueExpression === 'number') {
+            translucencyByDistanceNearValue = new Expression(String(translucencyByDistanceNearValueExpression));
+        } else if (typeof translucencyByDistanceNearValueExpression === 'string') {
+            translucencyByDistanceNearValue = new Expression(translucencyByDistanceNearValueExpression);
+        } else if (defined(translucencyByDistanceNearValueExpression) && defined(translucencyByDistanceNearValueExpression.conditions)) {
+            translucencyByDistanceNearValue = new ConditionsExpression(translucencyByDistanceNearValueExpression);
+        }
+
+        that._translucencyByDistanceNearValue = translucencyByDistanceNearValue;
+
+        var translucencyByDistanceFarRange;
+        if (typeof translucencyByDistanceFarRangeExpression === 'number') {
+            translucencyByDistanceFarRange = new Expression(String(translucencyByDistanceFarRangeExpression));
+        } else if (typeof translucencyByDistanceFarRangeExpression === 'string') {
+            translucencyByDistanceFarRange = new Expression(translucencyByDistanceFarRangeExpression);
+        } else if (defined(translucencyByDistanceFarRangeExpression) && defined(translucencyByDistanceFarRangeExpression.conditions)) {
+            translucencyByDistanceFarRange = new ConditionsExpression(translucencyByDistanceFarRangeExpression);
+        }
+
+        that._translucencyByDistanceFarRange = translucencyByDistanceFarRange;
+
+        var translucencyByDistanceFarValue;
+        if (typeof translucencyByDistanceFarValueExpression === 'number') {
+            translucencyByDistanceFarValue = new Expression(String(translucencyByDistanceFarValueExpression));
+        } else if (typeof translucencyByDistanceFarValueExpression === 'string') {
+            translucencyByDistanceFarValue = new Expression(translucencyByDistanceFarValueExpression);
+        } else if (defined(translucencyByDistanceFarValueExpression) && defined(translucencyByDistanceFarValueExpression.conditions)) {
+            translucencyByDistanceFarValue = new ConditionsExpression(translucencyByDistanceFarValueExpression);
+        }
+
+        that._translucencyByDistanceFarValue = translucencyByDistanceFarValue;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -682,6 +734,66 @@ define([
             },
             set : function(value) {
                 this._scaleByDistanceFarValue = value;
+            }
+        },
+
+        translucencyByDistanceNearRange : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._translucencyByDistanceNearRange;
+            },
+            set : function(value) {
+                this._translucencyByDistanceNearRange = value;
+            }
+        },
+
+        translucencyByDistanceNearValue : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._translucencyByDistanceNearValue;
+            },
+            set : function(value) {
+                this._translucencyByDistanceNearValue = value;
+            }
+        },
+
+        translucencyByDistanceFarRange : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._translucencyByDistanceFarRange;
+            },
+            set : function(value) {
+                this._translucencyByDistanceFarRange = value;
+            }
+        },
+
+        translucencyByDistanceFarValue : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._translucencyByDistanceFarValue;
+            },
+            set : function(value) {
+                this._translucencyByDistanceFarValue = value;
             }
         },
 
