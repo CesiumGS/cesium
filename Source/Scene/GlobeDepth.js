@@ -43,6 +43,9 @@ define([
         this._viewport = new BoundingRectangle();
         this._rs = undefined;
 
+        this._useScissorTest = undefined;
+        this._scissorRectangle = undefined;
+
         this._debugGlobeDepthViewportCommand = undefined;
     }
 

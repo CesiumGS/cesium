@@ -540,7 +540,7 @@ define([
          * @type Boolean
          * @default true
          */
-        this.fxaa = false;//true;
+        this.fxaa = true;
 
         /**
          * When <code>true</code>, enables picking using the depth buffer.
@@ -2452,7 +2452,7 @@ define([
         // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
         var useFXAA = environmentState.useFXAA = !picking && scene.fxaa;
         if (useFXAA) {
-            scene._fxaa.update(context);
+            scene._fxaa.update(context, passState);
             scene._fxaa.clear(context, passState, clearColor);
         }
 
