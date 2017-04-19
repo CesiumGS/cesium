@@ -22,6 +22,7 @@ defineSuite([
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
             material : Color.BLUE,
+            depthFailMaterial : Color.RED,
             positions : [],
             show : true,
             width : 1,
@@ -33,6 +34,7 @@ defineSuite([
 
         var polyline = new PolylineGraphics(options);
         expect(polyline.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(polyline.depthFailMaterial).toBeInstanceOf(ColorMaterialProperty);
         expect(polyline.positions).toBeInstanceOf(ConstantProperty);
         expect(polyline.show).toBeInstanceOf(ConstantProperty);
         expect(polyline.width).toBeInstanceOf(ConstantProperty);
@@ -42,6 +44,7 @@ defineSuite([
         expect(polyline.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
 
         expect(polyline.material.color.getValue()).toEqual(options.material);
+        expect(polyline.depthFailMaterial.color.getValue()).toEqual(options.depthFailMaterial);
         expect(polyline.positions.getValue()).toEqual(options.positions);
         expect(polyline.show.getValue()).toEqual(options.show);
         expect(polyline.width.getValue()).toEqual(options.width);
@@ -54,6 +57,7 @@ defineSuite([
     it('merge assigns unassigned properties', function() {
         var source = new PolylineGraphics();
         source.material = new ColorMaterialProperty();
+        source.depthFailMaterial = new ColorMaterialProperty();
         source.positions = new ConstantProperty();
         source.width = new ConstantProperty();
         source.show = new ConstantProperty();
@@ -65,6 +69,7 @@ defineSuite([
         var target = new PolylineGraphics();
         target.merge(source);
         expect(target.material).toBe(source.material);
+        expect(target.depthFailMaterial).toBe(source.depthFailMaterial);
         expect(target.positions).toBe(source.positions);
         expect(target.width).toBe(source.width);
         expect(target.show).toBe(source.show);
@@ -77,6 +82,7 @@ defineSuite([
     it('merge does not assign assigned properties', function() {
         var source = new PolylineGraphics();
         source.material = new ColorMaterialProperty();
+        source.depthFailMaterial = new ColorMaterialProperty();
         source.positions = new ConstantProperty();
         source.width = new ConstantProperty();
         source.show = new ConstantProperty();
@@ -86,6 +92,7 @@ defineSuite([
         source.distanceDisplayCondition = new ConstantProperty();
 
         var color = new ColorMaterialProperty();
+        var depthFailColor = new ColorMaterialProperty();
         var positions = new ConstantProperty();
         var width = new ConstantProperty();
         var show = new ConstantProperty();
@@ -96,6 +103,7 @@ defineSuite([
 
         var target = new PolylineGraphics();
         target.material = color;
+        target.depthFailMaterial = depthFailColor;
         target.positions = positions;
         target.width = width;
         target.show = show;
@@ -106,6 +114,7 @@ defineSuite([
 
         target.merge(source);
         expect(target.material).toBe(color);
+        expect(target.depthFailMaterial).toBe(depthFailColor);
         expect(target.positions).toBe(positions);
         expect(target.width).toBe(width);
         expect(target.show).toBe(show);
@@ -118,6 +127,7 @@ defineSuite([
     it('clone works', function() {
         var source = new PolylineGraphics();
         source.material = new ColorMaterialProperty();
+        source.depthFailMaterial = new ColorMaterialProperty();
         source.width = new ConstantProperty();
         source.positions = new ConstantProperty();
         source.show = new ConstantProperty();
@@ -128,6 +138,7 @@ defineSuite([
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
+        expect(result.depthFailMaterial).toBe(source.depthFailMaterial);
         expect(result.positions).toBe(source.positions);
         expect(result.width).toBe(source.width);
         expect(result.show).toBe(source.show);
@@ -147,6 +158,7 @@ defineSuite([
     it('raises definitionChanged when a property is assigned or modified', function() {
         var property = new PolylineGraphics();
         testMaterialDefinitionChanged(property, 'material', Color.RED, Color.BLUE);
+        testMaterialDefinitionChanged(property, 'depthFailMaterial', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'show', true, false);
         testDefinitionChanged(property, 'positions', [], []);
         testDefinitionChanged(property, 'width', 3, 4);

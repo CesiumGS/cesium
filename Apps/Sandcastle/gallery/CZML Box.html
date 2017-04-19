@@ -71,7 +71,7 @@ var czml = [{
         "outlineColor" : {
             "rgba" : [0, 0, 0, 255]
         }
-    }    
+    }
 }, {
     "id" : "shape3",
     "name" : "Yellow box outline",
@@ -87,15 +87,14 @@ var czml = [{
         "outlineColor" : {
             "rgba" : [255, 255, 0, 255]
         }
-    } 
+    }
 }];
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-var dataSource = Cesium.CzmlDataSource.load(czml);
-viewer.dataSources.add(dataSource);
-viewer.zoomTo(dataSource);
-
-  //Sandcastle_End
+var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
+viewer.dataSources.add(dataSourcePromise);
+viewer.zoomTo(dataSourcePromise);
+//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {

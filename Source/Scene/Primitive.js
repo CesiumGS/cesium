@@ -35,6 +35,9 @@ define([
         '../ThirdParty/when',
         './BatchTable',
         './CullFace',
+        './DepthFunction',
+        './Material',
+        './PolylineMaterialAppearance',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
@@ -75,6 +78,9 @@ define([
         when,
         BatchTable,
         CullFace,
+        DepthFunction,
+        Material,
+        PolylineMaterialAppearance,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
@@ -207,7 +213,7 @@ define([
         this.geometryInstances = options.geometryInstances;
 
         /**
-         * The {@link Appearance} used to shade this primitive.  Each geometry
+         * The {@link Appearance} used to shade this primitive. Each geometry
          * instance is shaded with the same appearance.  Some appearances, like
          * {@link PerInstanceColorAppearance} allow giving each instance unique
          * properties.
@@ -219,6 +225,29 @@ define([
         this.appearance = options.appearance;
         this._appearance = undefined;
         this._material = undefined;
+
+        /**
+         * The {@link Appearance} used to shade this primitive when it fails the depth test. Each geometry
+         * instance is shaded with the same appearance.  Some appearances, like
+         * {@link PerInstanceColorAppearance} allow giving each instance unique
+         * properties.
+         *
+         * <p>
+         * When using an appearance that requires a color attribute, like PerInstanceColorAppearance,
+         * add a depthFailColor per-instance attribute instead.
+         * </p>
+         *
+         * <p>
+         * Requires the EXT_frag_depth WebGL extension to render properly. If the extension is not supported,
+         * there may be artifacts.
+         * </p>
+         * @type Appearance
+         *
+         * @default undefined
+         */
+        this.depthFailAppearance = options.depthFailAppearance;
+        this._depthFailAppearance = undefined;
+        this._depthFailMaterial = undefined;
 
         /**
          * The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
@@ -324,6 +353,11 @@ define([
         this._frontFaceRS = undefined;
         this._backFaceRS = undefined;
         this._sp = undefined;
+
+        this._depthFailAppearance = undefined;
+        this._spDepthFail = undefined;
+        this._frontFaceDepthFailRS = undefined;
+        this._backFaceDepthFailRS = undefined;
 
         this._pickRS = undefined;
         this._pickSP = undefined;
@@ -794,10 +828,10 @@ define([
         return renamedVS + '\n' + showMain;
     };
 
-    Primitive._updateColorAttribute = function(primitive, vertexShaderSource) {
+    Primitive._updateColorAttribute = function(primitive, vertexShaderSource, isDepthFail) {
         // some appearances have a color attribute for per vertex color.
         // only remove if color is a per instance attribute.
-        if (!defined(primitive._batchTableAttributeIndices.color)) {
+        if (!defined(primitive._batchTableAttributeIndices.color) && !defined(primitive._batchTableAttributeIndices.depthFailColor)) {
             return vertexShaderSource;
         }
 
@@ -805,9 +839,19 @@ define([
             return vertexShaderSource;
         }
 
+        //>>includeStart('debug', pragmas.debug);
+        if (isDepthFail && !defined(primitive._batchTableAttributeIndices.depthFailColor)) {
+            throw new DeveloperError('A depthFailColor per-instance attribute is required when using a depth fail appearance that uses a color attribute.');
+        }
+        //>>includeEnd('debug');
+
         var modifiedVS = vertexShaderSource;
         modifiedVS = modifiedVS.replace(/attribute\s+vec4\s+color;/g, '');
-        modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_color(batchId)$2');
+        if (!isDepthFail) {
+            modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_color(batchId)$2');
+        } else {
+            modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_depthFailColor(batchId)$2');
+        }
         return modifiedVS;
     };
 
@@ -945,6 +989,44 @@ define([
             '}';
 
         return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
+    }
+
+    function depthClampVS(vertexShaderSource) {
+        var modifiedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_depth_clamp_main');
+        modifiedVS +=
+            '#ifdef GL_EXT_frag_depth\n' +
+            'varying float v_WindowZ;\n' +
+            '#endif\n' +
+            'void main() {\n' +
+            '    czm_non_depth_clamp_main();\n' +
+            '    vec4 position = gl_Position;\n' +
+            '#ifdef GL_EXT_frag_depth\n' +
+            '    v_WindowZ = (0.5 * (position.z / position.w) + 0.5) * position.w;\n' +
+            '#endif\n' +
+            '    position.z = min(position.z, position.w);\n' +
+            '    gl_Position = position;' +
+            '}\n';
+        return modifiedVS;
+    }
+
+    function depthClampFS(fragmentShaderSource) {
+        var modifiedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_non_depth_clamp_main');
+        modifiedFS +=
+            '#ifdef GL_EXT_frag_depth\n' +
+            'varying float v_WindowZ;\n' +
+            '#endif\n' +
+            'void main() {\n' +
+            '    czm_non_depth_clamp_main();\n' +
+            '#ifdef GL_EXT_frag_depth\n' +
+            '    gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
+            '#endif\n' +
+            '}\n';
+        modifiedFS =
+            '#ifdef GL_EXT_frag_depth\n' +
+            '#extension GL_EXT_frag_depth : enable\n' +
+            '#endif\n' +
+            modifiedFS;
+        return modifiedFS;
     }
 
     function validateShaderMatching(shaderProgram, attributeLocations) {
@@ -1315,6 +1397,25 @@ define([
                 primitive._pickRS = RenderState.fromCache(rs);
             }
         }
+
+        if (defined(primitive._depthFailAppearance)) {
+            renderState = primitive._depthFailAppearance.getRenderState();
+            rs = clone(renderState, false);
+            rs.depthTest.func = DepthFunction.GREATER;
+            if (twoPasses) {
+                rs.cull = {
+                    enabled : true,
+                    face : CullFace.BACK
+                };
+                primitive._frontFaceDepthFailRS = RenderState.fromCache(rs);
+
+                rs.cull.face = CullFace.FRONT;
+                primitive._backFaceDepthFailRS = RenderState.fromCache(rs);
+            } else {
+                primitive._frontFaceDepthFailRS = RenderState.fromCache(rs);
+                primitive._backFaceDepthFailRS = primitive._frontFaceRS;
+            }
+        }
     }
 
     function createShaderProgram(primitive, frameState, appearance) {
@@ -1325,7 +1426,7 @@ define([
         var vs = primitive._batchTable.getVertexShaderCallback()(appearance.vertexShaderSource);
         vs = Primitive._appendShowToShader(primitive, vs);
         vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs, frameState.scene3DOnly);
-        vs = Primitive._updateColorAttribute(primitive, vs);
+        vs = Primitive._updateColorAttribute(primitive, vs, false);
         vs = modifyForEncodedNormals(primitive, vs);
         vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         var fs = appearance.getFragmentShaderSource();
@@ -1360,12 +1461,30 @@ define([
             attributeLocations : attributeLocations
         });
         validateShaderMatching(primitive._sp, attributeLocations);
+
+        if (defined(primitive._depthFailAppearance)) {
+            vs = primitive._batchTable.getVertexShaderCallback()(primitive._depthFailAppearance.vertexShaderSource);
+            vs = Primitive._appendShowToShader(primitive, vs);
+            vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs, frameState.scene3DOnly);
+            vs = Primitive._updateColorAttribute(primitive, vs, true);
+            vs = modifyForEncodedNormals(primitive, vs);
+            vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
+            vs = depthClampVS(vs);
+
+            fs = depthClampFS(primitive._depthFailAppearance.getFragmentShaderSource());
+
+            primitive._spDepthFail = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : primitive._spDepthFail,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+            validateShaderMatching(primitive._spDepthFail, attributeLocations);
+        }
     }
 
-    var modifiedModelViewScratch = new Matrix4();
-    var rtcScratch = new Cartesian3();
-
-    function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
+    function getUniforms(primitive, appearance, material, frameState) {
         // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
         var materialUniformMap = defined(material) ? material._uniforms : undefined;
         var appearanceUniformMap = {};
@@ -1398,9 +1517,26 @@ define([
             };
         }
 
+        return uniforms;
+    }
+
+    var modifiedModelViewScratch = new Matrix4();
+    var rtcScratch = new Cartesian3();
+
+    function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
+        var uniforms = getUniforms(primitive, appearance, material, frameState);
+
+        var depthFailUniforms;
+        if (defined(primitive._depthFailAppearance)) {
+            depthFailUniforms = getUniforms(primitive, primitive._depthFailAppearance, primitive._depthFailAppearance.material, frameState);
+        }
+
         var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
-        colorCommands.length = primitive._va.length * (twoPasses ? 2 : 1);
+        var multiplier = twoPasses ? 2 : 1;
+        multiplier *= defined(primitive._depthFailAppearance) ? 2 : 1;
+
+        colorCommands.length = primitive._va.length * multiplier;
         pickCommands.length = primitive._va.length;
 
         var length = colorCommands.length;
@@ -1408,6 +1544,40 @@ define([
         var vaIndex = 0;
         for (var i = 0; i < length; ++i) {
             var colorCommand;
+
+            if (defined(primitive._depthFailAppearance)) {
+                if (twoPasses) {
+                    colorCommand = colorCommands[i];
+                    if (!defined(colorCommand)) {
+                        colorCommand = colorCommands[i] = new DrawCommand({
+                            owner : primitive,
+                            primitiveType : primitive._primitiveType
+                        });
+                    }
+                    colorCommand.vertexArray = primitive._va[vaIndex];
+                    colorCommand.renderState = primitive._backFaceDepthFailRS;
+                    colorCommand.shaderProgram = primitive._spDepthFail;
+                    colorCommand.uniformMap = depthFailUniforms;
+                    colorCommand.pass = pass;
+
+                    ++i;
+                }
+
+                colorCommand = colorCommands[i];
+                if (!defined(colorCommand)) {
+                    colorCommand = colorCommands[i] = new DrawCommand({
+                        owner : primitive,
+                        primitiveType : primitive._primitiveType
+                    });
+                }
+                colorCommand.vertexArray = primitive._va[vaIndex];
+                colorCommand.renderState = primitive._frontFaceDepthFailRS;
+                colorCommand.shaderProgram = primitive._spDepthFail;
+                colorCommand.uniformMap = depthFailUniforms;
+                colorCommand.pass = pass;
+
+                ++i;
+            }
 
             if (twoPasses) {
                 colorCommand = colorCommands[i];
@@ -1515,8 +1685,12 @@ define([
             var castShadows = ShadowMode.castShadows(primitive.shadows);
             var receiveShadows = ShadowMode.receiveShadows(primitive.shadows);
             var colorLength = colorCommands.length;
+
+            var factor = twoPasses ? 2 : 1;
+            factor *= defined(primitive._depthFailAppearance) ? 2 : 1;
+
             for (var j = 0; j < colorLength; ++j) {
-                var sphereIndex = twoPasses ? Math.floor(j / 2) : j;
+                var sphereIndex = Math.floor(j / factor);
                 var colorCommand = colorCommands[j];
                 colorCommand.modelMatrix = modelMatrix;
                 colorCommand.boundingVolume = boundingSpheres[sphereIndex];
@@ -1619,6 +1793,19 @@ define([
             createSP = true;
         } else if (this._material !== material ) {
             this._material = material;
+            createSP = true;
+        }
+
+        var depthFailAppearance = this.depthFailAppearance;
+        var depthFailMaterial = defined(depthFailAppearance) ? depthFailAppearance.material : undefined;
+
+        if (this._depthFailAppearance !== depthFailAppearance) {
+            this._depthFailAppearance = depthFailAppearance;
+            this._depthFailMaterial = depthFailMaterial;
+            createRS = true;
+            createSP = true;
+        } else if (this._depthFailMaterial !== depthFailMaterial) {
+            this._depthFailMaterial = depthFailMaterial;
             createSP = true;
         }
 

@@ -135,3 +135,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Prasanna Natarajan](https://github.com/PrasannaNatarajan)
 * [Joseph Klinger](https://github.com/klingerj)
 * [Grace Lee](https://github.com/glee2244)
+* [Heiko Thiel](https://github.com/SunBlack)
+* [Sravan Kumar Kilaru](https://github.com/kilarusravankumar)
