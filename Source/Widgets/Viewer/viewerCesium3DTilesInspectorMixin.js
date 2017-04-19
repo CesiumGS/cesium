@@ -2,7 +2,7 @@
 define([
     '../../Core/Check',
     '../../Core/defineProperties',
-    '../CesiumInspector/Cesium3DTilesInspector'
+    '../Cesium3DTilesInspector/Cesium3DTilesInspector'
     ], function(
         Check,
         defineProperties,
@@ -39,10 +39,6 @@ define([
                     return cesium3DTilesInspector;
                 }
             }
-        });
-
-        viewer.scene.postRender.addEventListener(function() {
-            viewer.cesium3DTilesInspector.viewModel.update();
         });
     }
 
