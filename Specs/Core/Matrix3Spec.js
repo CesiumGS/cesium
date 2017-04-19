@@ -148,6 +148,24 @@ defineSuite([
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
+    it('fromHeadingPitchRoll computed correctly', function() {
+        var sPi = Math.sin(CesiumMath.PI);
+        var cPi = Math.cos(CesiumMath.PI);
+        var sPiOver2 = Math.sin(CesiumMath.PI_OVER_TWO);
+        var cPiOver2 = Math.cos(CesiumMath.PI_OVER_TWO);
+        var s3PiOver2 = Math.sin(CesiumMath.PI_OVER_TWO * 3);
+        var c3PiOver2 = Math.cos(CesiumMath.PI_OVER_TWO * 3);
+
+        var headingPitchRoll = new HeadingPitchRoll(-CesiumMath.PI_OVER_TWO, -CesiumMath.PI, CesiumMath.PI_OVER_TWO * 3);
+        var expected = new Matrix3(cPi * cPiOver2, -c3PiOver2 * sPiOver2 + s3PiOver2 * sPi * cPiOver2, s3PiOver2 * sPiOver2 + c3PiOver2 * sPi * cPiOver2,
+                                    cPi * sPiOver2, c3PiOver2 * cPiOver2 + s3PiOver2 * sPi * sPiOver2, -s3PiOver2 * cPiOver2 + c3PiOver2 * sPi * sPiOver2,
+                                    -sPi, s3PiOver2 * cPi, c3PiOver2 * cPi);
+        var result = new Matrix3();
+        var returnedResult = Matrix3.fromHeadingPitchRoll(headingPitchRoll, result);
+        expect(result).toBe(returnedResult);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
     it('fromScale works without a result parameter', function() {
         var expected = new Matrix3(
             7.0, 0.0, 0.0,
