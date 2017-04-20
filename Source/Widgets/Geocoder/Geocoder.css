@@ -9,11 +9,7 @@
     margin: 0;
     padding: 0 32px 0 0;
     border-radius: 0;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
     box-sizing: border-box;
-    -webkit-transition: width ease-in-out 0.25s, background-color 0.2s ease-in-out;
-    -moz-transition: width ease-in-out 0.25s, background-color 0.2s ease-in-out;
     transition: width ease-in-out 0.25s, background-color 0.2s ease-in-out;
     -webkit-appearance: none;
 }

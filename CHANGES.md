@@ -7,6 +7,9 @@ Change Log
 * Fixed issue with displaying `MapboxImageryProvider` default token error message [#5191](https://github.com/AnalyticalGraphicsInc/cesium/pull/5191)
 * Added a `depthFailMaterial` property to line entities, which is the material used to render the line when it fails the depth test. [#5160](https://github.com/AnalyticalGraphicsInc/cesium/pull/5160)
 * Upgrade FXAA to version 3.11. [#5200](https://github.com/AnalyticalGraphicsInc/cesium/pull/5200)
+* `Scene.pickPosition` now caches results per frame to increase performance [#5117](https://github.com/AnalyticalGraphicsInc/cesium/issues/5117)
+* Fix billboards not initially clustering. [#5208](https://github.com/AnalyticalGraphicsInc/cesium/pull/5208)
+* Added support for dashed polylines.  Added `PolylineDashMaterialProperty` and CZML `polylineDash` properties - `color`, `gapColor`, `dashLength`, `dashPattern` - and similar properties to Cesium's `Material`. [#5159](https://github.com/AnalyticalGraphicsInc/cesium/pull/5159)
 
 ### 1.32 - 2017-04-03
 

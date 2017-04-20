@@ -306,6 +306,9 @@ define([
         this._cameraStartFired = false;
         this._cameraMovedTime = undefined;
 
+        this._pickPositionCache = {};
+        this._pickPositionCacheDirty = false;
+
         this._minimumDisableDepthTestDistance = 0.0;
 
         /**
@@ -1410,12 +1413,6 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
-        // Determine visibility of celestial and terrestrial environment effects.
-        var environmentState = scene._environmentState;
-        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
-        environmentState.isSunVisible = isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
-        environmentState.isMoonVisible = isVisible(environmentState.moonCommand, cullingVolume, occluder);
-
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
             var command = commandList[i];
@@ -1887,7 +1884,7 @@ define([
             }
 
             if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
-                globeDepth.update(context);
+                globeDepth.update(context, passState);
                 globeDepth.executeCopyDepth(context, passState);
             }
 
@@ -2117,10 +2114,12 @@ define([
 
             Camera.clone(savedCamera, camera);
         } else {
+            updateAndClearFramebuffers(scene, passState, backgroundColor);
+
             if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
-                executeCommandsInViewport(true, scene, passState, backgroundColor);
+                executeCommandsInViewport(true, scene, passState);
             } else {
-                execute2DViewportCommands(scene, passState, backgroundColor);
+                execute2DViewportCommands(scene, passState);
             }
         }
     }
@@ -2134,7 +2133,7 @@ define([
     var scratch2DViewportWindowCoords = new Cartesian3();
     var scratch2DViewport = new BoundingRectangle();
 
-    function execute2DViewportCommands(scene, passState, backgroundColor) {
+    function execute2DViewportCommands(scene, passState) {
         var context = scene.context;
         var frameState = scene.frameState;
         var camera = scene.camera;
@@ -2167,8 +2166,8 @@ define([
         var viewportX = viewport.x;
         var viewportWidth = viewport.width;
 
-        if (x === 0.0 || windowCoordinates.x <= viewportX || windowCoordinates.x >= viewportX + viewportWidth) {
-            executeCommandsInViewport(true, scene, passState, backgroundColor);
+        if (x === 0.0 || windowCoordinates.x <= viewportX  || windowCoordinates.x >= viewportX + viewportWidth) {
+            executeCommandsInViewport(true, scene, passState);
         } else if (Math.abs(viewportX + viewportWidth * 0.5 - windowCoordinates.x) < 1.0) {
             viewport.width = windowCoordinates.x - viewport.x;
 
@@ -2179,7 +2178,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(true, scene, passState, backgroundColor);
+            executeCommandsInViewport(true, scene, passState);
 
             viewport.x = windowCoordinates.x;
 
@@ -2191,7 +2190,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(false, scene, passState, backgroundColor);
+            executeCommandsInViewport(false, scene, passState);
         } else if (windowCoordinates.x > viewportX + viewportWidth * 0.5) {
             viewport.width = windowCoordinates.x - viewportX;
 
@@ -2201,7 +2200,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(true, scene, passState, backgroundColor);
+            executeCommandsInViewport(true, scene, passState);
 
             viewport.x = windowCoordinates.x;
             viewport.width = viewportX + viewportWidth - windowCoordinates.x;
@@ -2214,7 +2213,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(false, scene, passState, backgroundColor);
+            executeCommandsInViewport(false, scene, passState);
         } else {
             viewport.x = windowCoordinates.x;
             viewport.width = viewportX + viewportWidth - windowCoordinates.x;
@@ -2225,7 +2224,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(true, scene, passState, backgroundColor);
+            executeCommandsInViewport(true, scene, passState);
 
             viewport.x = viewportX;
             viewport.width = windowCoordinates.x - viewportX;
@@ -2238,7 +2237,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(false, scene, passState, backgroundColor);
+            executeCommandsInViewport(false, scene, passState);
         }
 
         camera._setTransform(transform);
@@ -2247,7 +2246,7 @@ define([
         passState.viewport = originalViewport;
     }
 
-    function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor) {
+    function executeCommandsInViewport(firstViewport, scene, passState) {
         var depthOnly = scene.frameState.passes.depth;
 
         if (!firstViewport && !depthOnly) {
@@ -2260,12 +2259,9 @@ define([
 
         createPotentiallyVisibleSet(scene);
 
-        if (firstViewport) {
-            updateAndClearFramebuffers(scene, passState, backgroundColor);
-            if (!depthOnly) {
-                executeComputeCommands(scene);
-                executeShadowMapCastCommands(scene);
-            }
+        if (firstViewport && !depthOnly) {
+            executeComputeCommands(scene);
+            executeShadowMapCastCommands(scene);
         }
 
         executeCommands(scene, passState);
@@ -2307,6 +2303,21 @@ define([
             // of the globe are not picked.
             scene._depthPlane.update(frameState);
         }
+
+        var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
+        var cullingVolume = frameState.cullingVolume;
+
+        // get user culling volume minus the far plane.
+        var planes = scratchCullingVolume.planes;
+        for (var k = 0; k < 5; ++k) {
+            planes[k] = cullingVolume.planes[k];
+        }
+        cullingVolume = scratchCullingVolume;
+
+        // Determine visibility of celestial and terrestrial environment effects.
+        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
+        environmentState.isSunVisible = isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
+        environmentState.isMoonVisible = isVisible(environmentState.moonCommand, cullingVolume, occluder);
     }
 
     function updateDebugFrustumPlanes(scene) {
@@ -2529,6 +2540,8 @@ define([
     var scratchEyeTranslation = new Cartesian3();
 
     function render(scene, time, passState) {
+        scene._pickPositionCacheDirty = true;
+
         if (!defined(time)) {
             time = JulianDate.now();
         }
@@ -2935,6 +2948,15 @@ define([
         }
         //>>includeEnd('debug');
 
+        var cacheKey = windowPosition.toString();
+
+        if (this._pickPositionCacheDirty){
+            this._pickPositionCache = {};
+            this._pickPositionCacheDirty = false;
+        } else if (this._pickPositionCache.hasOwnProperty(cacheKey)){
+            return Cartesian3.clone(this._pickPositionCache[cacheKey], result);
+        }
+
         var context = this._context;
         var uniformState = context.uniformState;
 
@@ -2996,10 +3018,12 @@ define([
                     uniformState.update(this.frameState);
                 }
 
+                this._pickPositionCache[cacheKey] = Cartesian3.clone(result);
                 return result;
             }
         }
 
+        this._pickPositionCache[cacheKey] = undefined;
         return undefined;
     };
 
@@ -3034,6 +3058,7 @@ define([
             var cart = projection.unproject(result, scratchPickPositionCartographic);
             ellipsoid.cartographicToCartesian(cart, result);
         }
+
         return result;
     };
 
