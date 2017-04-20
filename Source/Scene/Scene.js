@@ -2425,7 +2425,7 @@ define([
         }
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = false;//!picking && defined(scene._globeDepth);
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
             scene._globeDepth.update(context, passState);
             scene._globeDepth.clear(context, passState, clearColor);
@@ -2443,7 +2443,7 @@ define([
         }
 
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
-        var useOIT = environmentState.useOIT = false;//!picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
+        var useOIT = environmentState.useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
             scene._oit.update(context, passState, scene._globeDepth.framebuffer);
             scene._oit.clear(context, passState, clearColor);
@@ -2451,7 +2451,7 @@ define([
         }
 
         // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
-        var useFXAA = environmentState.useFXAA = false;//!picking && scene.fxaa;
+        var useFXAA = environmentState.useFXAA = !picking && scene.fxaa;
         if (useFXAA) {
             scene._fxaa.update(context, passState);
             scene._fxaa.clear(context, passState, clearColor);
