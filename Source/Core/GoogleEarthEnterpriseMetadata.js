@@ -442,31 +442,44 @@ define([
 
                 return decodePromise
                     .then(function(result) {
-                        var parent;
-                        var topLevelKeyLength = quadKey.length + 1;
+                        var root;
+                        var topLevelKeyLength = -1;
                         if (quadKey !== '') {
                             // Root tile has no data except children bits, so put them into the tile info
+                            topLevelKeyLength = quadKey.length + 1;
                             var top = result[quadKey];
-                            parent = tileInfo[quadKey];
-                            parent._bits |= top._bits;
+                            root = tileInfo[quadKey];
+                            root._bits |= top._bits;
 
                             delete result[quadKey];
                         }
 
                         // Copy the resulting objects into tileInfo
-                        for (var key in result) {
-                            if (result.hasOwnProperty(key)) {
-                                var r = result[key];
-                                if (r !== null) {
-                                    var info = TileInformation.fromObject(result[key]);
-                                    if (defined(parent) && key.length === topLevelKeyLength) {
-                                        info.setParent(parent);
-                                    }
-                                    tileInfo[key] = info;
-                                } else {
-                                    tileInfo[key] = null;
+                        // Make sure we start with shorter quadkeys first, so we know the parents have
+                        //  already been processed. Otherwise we can lose ancestorHasTerrain along the way.
+                        var keys = Object.keys(result);
+                        keys.sort(function(a, b) {
+                            return a.length - b.length;
+                        });
+                        var keysLength = keys.length;
+                        for (var i = 0; i < keysLength; ++i) {
+                            var key = keys[i];
+                            if (key === "3013203200203") {
+                                debugger;
+                            }
+                            var r = result[key];
+                            if (r !== null) {
+                                var info = TileInformation.fromObject(result[key]);
+                                var keyLength = key.length;
+                                if (keyLength === topLevelKeyLength) {
+                                    info.setParent(root);
+                                } else if(keyLength > 1){
+                                    var parent = tileInfo[key.substring(0, key.length - 1)];
+                                    info.setParent(parent);
                                 }
-
+                                tileInfo[key] = info;
+                            } else {
+                                tileInfo[key] = null;
                             }
                         }
                     });

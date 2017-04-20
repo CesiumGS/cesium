@@ -167,7 +167,6 @@ define([
                         }
 
                         var instance = instances[index++];
-                        instance.setParent(parent);
                         tileInfo[childKey] = instance;
                         populateTiles(childKey, instance, level + 1);
                     }
