@@ -1422,12 +1422,6 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
-        // Determine visibility of celestial and terrestrial environment effects.
-        var environmentState = scene._environmentState;
-        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
-        environmentState.isSunVisible = isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
-        environmentState.isMoonVisible = isVisible(environmentState.moonCommand, cullingVolume, occluder);
-
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
             var command = commandList[i];
@@ -1899,7 +1893,7 @@ define([
             }
 
             if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
-                globeDepth.update(context);
+                globeDepth.update(context, passState);
                 globeDepth.executeCopyDepth(context, passState);
             }
 
@@ -2134,10 +2128,12 @@ define([
             viewport.width = context.drawingBufferWidth;
             viewport.height = context.drawingBufferHeight;
 
+            updateAndClearFramebuffers(scene, passState, backgroundColor);
+
             if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
-                executeCommandsInViewport(true, scene, passState, backgroundColor);
+                executeCommandsInViewport(true, scene, passState);
             } else {
-                execute2DViewportCommands(scene, passState, backgroundColor);
+                execute2DViewportCommands(scene, passState);
             }
         }
     }
@@ -2151,7 +2147,7 @@ define([
     var scratch2DViewportWindowCoords = new Cartesian3();
     var scratch2DViewport = new BoundingRectangle();
 
-    function execute2DViewportCommands(scene, passState, backgroundColor) {
+    function execute2DViewportCommands(scene, passState) {
         var context = scene.context;
         var frameState = scene.frameState;
         var camera = scene.camera;
@@ -2185,7 +2181,7 @@ define([
         var viewportWidth = viewport.width;
 
         if (x === 0.0 || windowCoordinates.x <= viewportX  || windowCoordinates.x >= viewportX + viewportWidth) {
-            executeCommandsInViewport(true, scene, passState, backgroundColor);
+            executeCommandsInViewport(true, scene, passState);
         } else if (Math.abs(viewportX + viewportWidth * 0.5 - windowCoordinates.x) < 1.0) {
             viewport.width = windowCoordinates.x - viewport.x;
 
@@ -2196,7 +2192,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(true, scene, passState, backgroundColor);
+            executeCommandsInViewport(true, scene, passState);
 
             viewport.x = windowCoordinates.x;
 
@@ -2208,7 +2204,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(false, scene, passState, backgroundColor);
+            executeCommandsInViewport(false, scene, passState);
         } else if (windowCoordinates.x > viewportX + viewportWidth * 0.5) {
             viewport.width = windowCoordinates.x - viewportX;
 
@@ -2218,7 +2214,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(true, scene, passState, backgroundColor);
+            executeCommandsInViewport(true, scene, passState);
 
             viewport.x = windowCoordinates.x;
             viewport.width = viewportX + viewportWidth - windowCoordinates.x;
@@ -2231,7 +2227,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(false, scene, passState, backgroundColor);
+            executeCommandsInViewport(false, scene, passState);
         } else {
             viewport.x = windowCoordinates.x;
             viewport.width = viewportX + viewportWidth - windowCoordinates.x;
@@ -2242,7 +2238,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(true, scene, passState, backgroundColor);
+            executeCommandsInViewport(true, scene, passState);
 
             viewport.x = viewportX;
             viewport.width = windowCoordinates.x - viewportX;
@@ -2255,7 +2251,7 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(false, scene, passState, backgroundColor);
+            executeCommandsInViewport(false, scene, passState);
         }
 
         camera._setTransform(transform);
@@ -2264,7 +2260,7 @@ define([
         passState.viewport = originalViewport;
     }
 
-    function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor) {
+    function executeCommandsInViewport(firstViewport, scene, passState) {
         var depthOnly = scene.frameState.passes.depth;
 
         if (!firstViewport && !depthOnly) {
@@ -2277,18 +2273,15 @@ define([
 
         createPotentiallyVisibleSet(scene);
 
-        if (firstViewport) {
-            updateAndClearFramebuffers(scene, passState, backgroundColor);
-            if (!depthOnly) {
-                executeComputeCommands(scene);
-                executeShadowMapCastCommands(scene);
-            }
+        if (firstViewport && !depthOnly) {
+            executeComputeCommands(scene);
+            executeShadowMapCastCommands(scene);
         }
 
         executeCommands(scene, passState);
     }
 
-    function updateEnvironment(scene) {
+    function updateEnvironment(scene, passState) {
         var frameState = scene._frameState;
 
         // Update celestial and terrestrial environment effects.
@@ -2310,7 +2303,7 @@ define([
             }
             environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
             environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState) : undefined;
-            var sunCommands = defined(scene.sun) ? scene.sun.update(scene) : undefined;
+            var sunCommands = defined(scene.sun) ? scene.sun.update(frameState, passState) : undefined;
             environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
             environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
             environmentState.moonCommand = defined(scene.moon) ? scene.moon.update(frameState) : undefined;
@@ -2324,6 +2317,21 @@ define([
             // of the globe are not picked.
             scene._depthPlane.update(frameState);
         }
+
+        var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
+        var cullingVolume = frameState.cullingVolume;
+
+        // get user culling volume minus the far plane.
+        var planes = scratchCullingVolume.planes;
+        for (var k = 0; k < 5; ++k) {
+            planes[k] = cullingVolume.planes[k];
+        }
+        cullingVolume = scratchCullingVolume;
+
+        // Determine visibility of celestial and terrestrial environment effects.
+        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
+        environmentState.isSunVisible = isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
+        environmentState.isMoonVisible = isVisible(environmentState.moonCommand, cullingVolume, occluder);
     }
 
     function updateDebugFrustumPlanes(scene) {
@@ -2437,7 +2445,7 @@ define([
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
-            scene._globeDepth.update(context);
+            scene._globeDepth.update(context, passState);
             scene._globeDepth.clear(context, passState, clearColor);
         }
 
@@ -2455,7 +2463,7 @@ define([
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
         var useOIT = environmentState.useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
-            scene._oit.update(context, scene._globeDepth.framebuffer);
+            scene._oit.update(context, passState, scene._globeDepth.framebuffer);
             scene._oit.clear(context, passState, clearColor);
             environmentState.useOIT = scene._oit.isSupported();
         }
@@ -2463,7 +2471,7 @@ define([
         // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
         var useFXAA = environmentState.useFXAA = !picking && scene.fxaa;
         if (useFXAA) {
-            scene._fxaa.update(context);
+            scene._fxaa.update(context, passState);
             scene._fxaa.clear(context, passState, clearColor);
         }
 
@@ -2610,7 +2618,7 @@ define([
             scene.globe.beginFrame(frameState);
         }
 
-        updateEnvironment(scene);
+        updateEnvironment(scene, passState);
         updateAndExecuteCommands(scene, passState, backgroundColor);
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
