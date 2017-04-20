@@ -49,6 +49,7 @@ vec4 getPolylineWindowCoordinates(vec4 position, vec4 previous, vec4 next, float
     vec4 previousWindow = czm_eyeToWindowCoordinates(prevEC);
     vec4 nextWindow = czm_eyeToWindowCoordinates(nextEC);
 
+#ifdef POLYLINE_DASH
     // Determine the relative screen space direction of the line.
     vec2 lineDir;
     if (usePrevious) {
@@ -61,6 +62,7 @@ vec4 getPolylineWindowCoordinates(vec4 position, vec4 previous, vec4 next, float
 
     // Quantize the angle so it doesn't change rapidly between segments.
     angle = floor(angle / czm_piOverFour + 0.5) * czm_piOverFour;
+#endif
 
     clipLineSegmentToNearPlane(prevEC.xyz, positionEC.xyz, p0, clipped, culledByNearPlane);
     clipLineSegmentToNearPlane(nextEC.xyz, positionEC.xyz, p1, clipped, culledByNearPlane);

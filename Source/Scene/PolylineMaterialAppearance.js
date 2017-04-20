@@ -106,7 +106,11 @@ define([
          */
         vertexShaderSource : {
             get : function() {
-                return this._vertexShaderSource;
+                var vs = this._vertexShaderSource;
+                if (this.material.shaderSource.search(/varying\s+float\s+v_angle;/g) !== -1) {
+                    vs = '#define POLYLINE_DASH\n' + vs;
+                }
+                return vs;
             }
         },
 
