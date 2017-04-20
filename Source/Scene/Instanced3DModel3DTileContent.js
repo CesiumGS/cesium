@@ -95,6 +95,7 @@ define([
         this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
         this._features = undefined;
+        this._commandsLength = 0;
     }
 
     defineProperties(Instanced3DModel3DTileContent.prototype, {
@@ -108,6 +109,18 @@ define([
                 } else {
                     return 0;
                 }
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        commandsLength : {
+            get : function() {
+                return this._commandsLength;
+            },
+            set : function(val) {
+                this._commandsLength = val;
             }
         },
 

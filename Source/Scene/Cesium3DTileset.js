@@ -1933,15 +1933,15 @@ define([
                 attribCounter++;
             }
             if (tileset.debugShowNumberOfCommands) {
-                labelString += "\nCommands: " + tileset._statistics.numberOfCommands.toString();
+                labelString += "\nCommands: " + tile.content.commandsLength.toString();
                 attribCounter++;
             }
             if (tileset.debugShowTextureMemoryUsage) {
-                labelString += "\nTexture Memory: " + tileset._statistics.textureMemorySizeInBytes.toString();
+                labelString += "\nTexture Memory: " + tile.content.textureMemorySizeInBytes.toString();
                 attribCounter++;
             }
             if (tileset.debugShowVertexMemoryUsage) {
-                labelString += "\nVertex Memory: " + tileset._statistics.vertexMemorySizeInBytes.toString();
+                labelString += "\nVertex Memory: " + tile.content.vertexMemorySizeInBytes.toString();
                 attribCounter++;
             }
             if (tileset.debugShowNumberOfPoints) {

@@ -748,9 +748,11 @@ define([
      * @private
      */
     Cesium3DTile.prototype.update = function(tileset, frameState) {
+        var initCommandLength = frameState.commandList.length;
         applyDebugSettings(this, tileset, frameState);
         this._content.update(tileset, frameState);
         this._transformDirty = false;
+        this._content.commandsLength = frameState.commandList.length - initCommandLength;
     };
 
     var scratchCommandList = [];

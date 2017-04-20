@@ -75,6 +75,7 @@ define([
         this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
         this._featuresLength = 0;
+        this._commandsLength = 0;
         this._features = undefined;
     }
 
@@ -109,6 +110,18 @@ define([
                     return this._model.trianglesLength;
                 }
                 return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        commandsLength : {
+            get : function() {
+                return this._commandsLength;
+            },
+            set : function(val) {
+                this._commandsLength = val;
             }
         },
 
