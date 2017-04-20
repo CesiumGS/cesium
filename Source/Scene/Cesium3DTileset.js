@@ -1957,7 +1957,7 @@ define([
                 position: position,
                 font : (18-attribCounter).toString() + 'px sans-serif',
                 showBackground: true,
-                backgroundColor: new Color(0.165, 0.165, 0.165, 0.8)
+                disableDepthTestDistance : Number.POSITIVE_INFINITY
             });
         }
         tileset._tileInfoLabels.update(frameState);
