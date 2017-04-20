@@ -1342,17 +1342,17 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
             scene.renderForSpecs();
-            expect(tileset._geometricErrorLabels).toBeDefined();
-            expect(tileset._geometricErrorLabels.length).toEqual(5);
-            expect(tileset._geometricErrorLabels._labels[0].text).toEqual('70');
-            expect(tileset._geometricErrorLabels._labels[1].text).toEqual('0');
-            expect(tileset._geometricErrorLabels._labels[2].text).toEqual('0');
-            expect(tileset._geometricErrorLabels._labels[3].text).toEqual('0');
-            expect(tileset._geometricErrorLabels._labels[4].text).toEqual('0');
+            expect(tileset._tileInfoLabels).toBeDefined();
+            expect(tileset._tileInfoLabels.length).toEqual(5);
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: 70');
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: 0');
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Geometric error: 0');
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Geometric error: 0');
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Geometric error: 0');
 
             tileset.debugShowGeometricError = false;
             scene.renderForSpecs();
-            expect(tileset._geometricErrorLabels).not.toBeDefined();
+            expect(tileset._tileInfoLabels).not.toBeDefined();
         });
     });
 
@@ -1361,14 +1361,14 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithTransformsUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
             scene.renderForSpecs();
-            expect(tileset._geometricErrorLabels).toBeDefined();
-            expect(tileset._geometricErrorLabels.length).toEqual(2);
-            expect(tileset._geometricErrorLabels._labels[0].text).toEqual('70');
-            expect(tileset._geometricErrorLabels._labels[1].text).toEqual('0');
+            expect(tileset._tileInfoLabels).toBeDefined();
+            expect(tileset._tileInfoLabels.length).toEqual(2);
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: 70');
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: 0');
 
             tileset.debugShowGeometricError = false;
             scene.renderForSpecs();
-            expect(tileset._geometricErrorLabels).not.toBeDefined();
+            expect(tileset._tileInfoLabels).not.toBeDefined();
         });
     });
 
@@ -1377,18 +1377,18 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithViewerRequestVolumeUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
             scene.renderForSpecs();
-            expect(tileset._geometricErrorLabels).toBeDefined();
-            expect(tileset._geometricErrorLabels.length).toEqual(6);
-            expect(tileset._geometricErrorLabels._labels[0].text).toEqual('70');
-            expect(tileset._geometricErrorLabels._labels[1].text).toEqual('0');
-            expect(tileset._geometricErrorLabels._labels[2].text).toEqual('0');
-            expect(tileset._geometricErrorLabels._labels[3].text).toEqual('0');
-            expect(tileset._geometricErrorLabels._labels[4].text).toEqual('0');
-            expect(tileset._geometricErrorLabels._labels[5].text).toEqual('0');
+            expect(tileset._tileInfoLabels).toBeDefined();
+            expect(tileset._tileInfoLabels.length).toEqual(6);
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: 70');
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: 0');
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Geometric error: 0');
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Geometric error: 0');
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Geometric error: 0');
+            expect(tileset._tileInfoLabels._labels[5].text).toEqual('Geometric error: 0');
 
             tileset.debugShowGeometricError = false;
             scene.renderForSpecs();
-            expect(tileset._geometricErrorLabels).not.toBeDefined();
+            expect(tileset._tileInfoLabels).not.toBeDefined();
         });
     });
 

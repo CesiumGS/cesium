@@ -222,6 +222,15 @@ define([
         this.styleVisible = false;
 
         /**
+         * Gets or sets the flag to show the tile info section.  This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.tileInfoVisible = false;
+
+
+        /**
          * Gets or sets the JSON for the tileset style.  This property is observable.
          *
          * @type {String}
@@ -230,7 +239,7 @@ define([
         this.styleString = '{}';
 
         knockout.track(this, ['performance', 'inspectorVisible', '_statsText', '_pickStatsText', '_editorError', 'showPickStats', 'showStats',
-                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'styleString']);
+                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'tileInfoVisible', 'styleString']);
 
         this._properties = knockout.observable({});
         /**
@@ -313,6 +322,8 @@ define([
                 }
             }
         });
+
+
         /**
          * Gets or sets the flag to enable picking.  This property is observable.
          *
@@ -465,6 +476,132 @@ define([
          */
         this.freezeFrame = false;
 
+        var onlyPickedTileInfo = knockout.observable();
+        knockout.defineProperty(this, 'onlyPickedTileInfo', {
+            get : function() {
+                return onlyPickedTileInfo();
+            },
+            set : function(val) {
+                onlyPickedTileInfo(val);
+                if (that._tileset) {
+                    that._tileset.debugShowOnlyPickedTile = val;
+                }
+            }
+        });
+        /**
+         * Displays tile info for only picked tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.onlyPickedTileInfo = false;
+
+        var textureMemory = knockout.observable();
+        knockout.defineProperty(this, 'textureMemory', {
+            get : function() {
+                return textureMemory();
+            },
+            set : function(val) {
+                textureMemory(val);
+                if (that._tileset) {
+                    that._tileset.debugShowTextureMemoryUsage = val;
+                }
+            }
+        });
+        /**
+         * Displays the texture memory used per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.textureMemory = false;
+
+        var numberOfTriangles = knockout.observable();
+        knockout.defineProperty(this, 'numberOfTriangles', {
+            get : function() {
+                return numberOfTriangles();
+            },
+            set : function(val) {
+                numberOfTriangles(val);
+                if (that._tileset) {
+                    that._tileset.debugShowNumberOfTriangles = val;
+                }
+            }
+        });
+        /**
+         * Displays the number of triangles per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.numberOfTriangles = false;
+
+        var numberOfPoints = knockout.observable();
+        knockout.defineProperty(this, 'numberOfPoints', {
+            get : function() {
+                return numberOfPoints();
+            },
+            set : function(val) {
+                numberOfPoints(val);
+                if (that._tileset) {
+                    that._tileset.debugShowNumberOfPoints = val;
+                }
+            }
+        });
+        /**
+         * Displays the number of points per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.numberOfPoints = false;
+
+        var vertexMemory = knockout.observable();
+        knockout.defineProperty(this, 'vertexMemory', {
+            get : function() {
+                return vertexMemory();
+            },
+            set : function(val) {
+                vertexMemory(val);
+                if (that._tileset) {
+                    that._tileset.debugShowVertexMemoryUsage = val;
+                }
+            }
+        });
+        /**
+         * Displays the vertex memory used per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.vertexMemory = false;
+
+        var numberOfCommands = knockout.observable();
+        knockout.defineProperty(this, 'numberOfCommands', {
+            get : function() {
+                return numberOfCommands();
+            },
+            set : function(val) {
+                numberOfCommands(val);
+                if (that._tileset) {
+                    that._tileset.debugShowNumberOfCommands = val;
+                }
+            }
+        });
+        /**
+         * Displays the number of commands used per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.numberOfCommands = false;
+
         var maximumScreenSpaceError = knockout.observable();
         knockout.defineProperty(this, 'maximumScreenSpaceError', {
             get : function() {
@@ -572,7 +709,8 @@ define([
         this._feature = undefined;
         this._definedProperties = ['propertiesText', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
                                    'showContentBoundingVolumes', 'showRequestVolumes', 'showGeometricError', 'freezeFrame', 'maximumScreenSpaceError',
-                                   'dynamicScreenSpaceErrorDensity', 'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive'];
+                                   'dynamicScreenSpaceErrorDensity', 'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive',
+                                    'onlyPickedTileInfo', 'textureMemory', 'vertexMemory', 'numberOfPoints', 'numberOfTriangles', 'numberOfCommands'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
@@ -655,7 +793,13 @@ define([
                                     'showContentBoundingVolumes',
                                     'showRequestVolumes',
                                     'showGeometricError',
-                                    'freezeFrame'];
+                                    'freezeFrame',
+                                    'onlyPickedTileInfo',
+                                    'textureMemory',
+                                    'vertexMemory',
+                                    'numberOfPoints',
+                                    'numberOfTriangles',
+                                    'numberOfCommands'];
                     var length = settings.length;
                     for (var i = 0; i < length; ++i) {
                         var setting = settings[i];
@@ -757,6 +901,13 @@ define([
      */
     Cesium3DTilesInspectorViewModel.prototype.toggleStyle = function() {
         this.styleVisible = !this.styleVisible;
+    };
+
+    /**
+     * Toggles the visibility of the tile info section
+     */
+    Cesium3DTilesInspectorViewModel.prototype.toggleTileInfo = function() {
+        this.tileInfoVisible = !this.tileInfoVisible;
     };
 
     /**

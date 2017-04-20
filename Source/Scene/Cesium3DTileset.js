@@ -401,7 +401,63 @@ define([
          * @default false
          */
         this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
-        this._geometricErrorLabels = undefined;
+        this._tileInfoLabels = undefined;
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the number of commands used.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowNumberOfCommands = defaultValue(options.debugShowNumberOfCommands, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the number of triangles in each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowNumberOfPoints = defaultValue(options.debugShowNumberOfPoints, false);
+
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the number of triangles in each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowNumberOfTriangles = defaultValue(options.debugShowNumberOfTriangles, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the texture memory usage.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowTextureMemoryUsage = defaultValue(options.debugShowTextureMemoryUsage, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the vertex memory usage.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowVertexMemoryUsage = defaultValue(options.debugShowVertexMemoryUsage, false);
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -1848,10 +1904,10 @@ define([
 
     var scratchCartesian2 = new Cartesian3();
 
-    function updateGeometricErrorLabels(tileset, frameState) {
+    function updateTileInfoLabels(tileset, frameState) {
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
-        tileset._geometricErrorLabels.removeAll();
+        tileset._tileInfoLabels.removeAll();
         for (var i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
             var boundingVolume = tile._boundingVolume.boundingVolume;
@@ -1868,12 +1924,43 @@ define([
                 normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian2);
                 position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian2);
             }
-            tileset._geometricErrorLabels.add({
-                text: tile.geometricError.toString(),
-                position: position
+
+            var labelString = "";
+            var attribCounter = 0;
+
+            if (tileset.debugShowGeometricError) {
+                labelString += "\nGeometric error: " + tile.geometricError.toString();
+                attribCounter++;
+            }
+            if (tileset.debugShowNumberOfCommands) {
+                labelString += "\nCommands: " + tileset._statistics.numberOfCommands.toString();
+                attribCounter++;
+            }
+            if (tileset.debugShowTextureMemoryUsage) {
+                labelString += "\nTexture Memory: " + tileset._statistics.textureMemorySizeInBytes.toString();
+                attribCounter++;
+            }
+            if (tileset.debugShowVertexMemoryUsage) {
+                labelString += "\nVertex Memory: " + tileset._statistics.vertexMemorySizeInBytes.toString();
+                attribCounter++;
+            }
+            if (tileset.debugShowNumberOfPoints) {
+                labelString += "\nPoints: " + tile.content.pointsLength.toString();
+                attribCounter++;
+            }
+            if (tileset.debugShowNumberOfTriangles) {
+                labelString += "\nTriangles: " + tile.content.trianglesLength.toString();
+                attribCounter++;
+            }
+            tileset._tileInfoLabels.add({
+                text: labelString.substring(1),
+                position: position,
+                font : (18-attribCounter).toString() + 'px sans-serif',
+                showBackground: true,
+                backgroundColor: new Color(0.165, 0.165, 0.165, 0.8)
             });
         }
-        tileset._geometricErrorLabels.update(frameState);
+        tileset._tileInfoLabels.update(frameState);
     }
 
     var stencilClearCommand = new ClearCommand({
@@ -1958,13 +2045,14 @@ define([
         // Number of commands added by each update above
         tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
 
-        if (tileset.debugShowGeometricError) {
-            if (!defined(tileset._geometricErrorLabels)) {
-                tileset._geometricErrorLabels = new LabelCollection();
+        if (tileset.debugShowGeometricError || tileset.debugShowNumberOfCommands || tileset.debugShowTextureMemoryUsage
+            || tileset.debugShowVertexMemoryUsage || tileset.debugShowNumberOfPoints || tileset.debugShowNumberOfTriangles) {
+            if (!defined(tileset._tileInfoLabels)) {
+                tileset._tileInfoLabels = new LabelCollection();
             }
-            updateGeometricErrorLabels(tileset, frameState);
+            updateTileInfoLabels(tileset, frameState);
         } else {
-            tileset._geometricErrorLabels = tileset._geometricErrorLabels && tileset._geometricErrorLabels.destroy();
+            tileset._tileInfoLabels = tileset._tileInfoLabels && tileset._tileInfoLabels.destroy();
         }
     }
 
