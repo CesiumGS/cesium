@@ -164,7 +164,9 @@ define([
         if (x instanceof Cartesian3 && y instanceof Cartesian3) {
             return Cartesian3.cross(x, y, ScratchStorage.getCartesian3());
         } else {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Invalid argument type for cross() function, must be vec3');
+            //>>includeEnd('debug');
         }
     }
 
@@ -1672,7 +1674,7 @@ define([
             case ExpressionNodeType.FUNCTION_CALL:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
-            //>>includeEnd('debug');
+                //>>includeEnd('debug');
             case ExpressionNodeType.ARRAY:
                 if (value.length === 4) {
                     return 'vec4(' + value[0] + ', ' + value[1] + ', ' + value[2] + ', ' + value[3] + ')';
@@ -1690,15 +1692,15 @@ define([
             case ExpressionNodeType.REGEX:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: Regular expressions are not supported.');
-            //>>includeEnd('debug');
+                //>>includeEnd('debug');
             case ExpressionNodeType.VARIABLE_IN_STRING:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: Converting a variable to a string is not supported.');
-            //>>includeEnd('debug');
+                //>>includeEnd('debug');
             case ExpressionNodeType.LITERAL_NULL:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: null is not supported.');
-            //>>includeEnd('debug');
+                //>>includeEnd('debug');
             case ExpressionNodeType.LITERAL_BOOLEAN:
                 return value ? 'true' : 'false';
             case ExpressionNodeType.LITERAL_NUMBER:
@@ -1717,7 +1719,7 @@ define([
                 }
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: String literals are not supported.');
-            //>>includeEnd('debug');
+                //>>includeEnd('debug');
             case ExpressionNodeType.LITERAL_COLOR:
                 var args = left;
                 if (value === 'color') {
