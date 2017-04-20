@@ -2045,8 +2045,8 @@ define([
         // Number of commands added by each update above
         tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
 
-        if (tileset.debugShowGeometricError || tileset.debugShowNumberOfCommands || tileset.debugShowTextureMemoryUsage
-            || tileset.debugShowVertexMemoryUsage || tileset.debugShowNumberOfPoints || tileset.debugShowNumberOfTriangles) {
+        if (tileset.debugShowGeometricError || tileset.debugShowNumberOfCommands || tileset.debugShowTextureMemoryUsage ||
+            tileset.debugShowVertexMemoryUsage || tileset.debugShowNumberOfPoints || tileset.debugShowNumberOfTriangles) {
             if (!defined(tileset._tileInfoLabels)) {
                 tileset._tileInfoLabels = new LabelCollection();
             }
