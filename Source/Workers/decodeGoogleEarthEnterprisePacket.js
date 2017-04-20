@@ -228,15 +228,9 @@ define([
             throw new RuntimeError('Invalid magic');
         }
 
-        // Get the size of the compressed buffer
-        var size = dv.getUint32(offset, true);
+        // Get the size of the compressed buffer - the endianness depends on which magic was used
+        var size = dv.getUint32(offset, (magic === compressedMagic));
         offset += sizeOfUint32;
-        if (magic === compressedMagicSwap) {
-            size = ((size >>> 24) & 0x000000ff) |
-                   ((size >>> 8) & 0x0000ff00) |
-                   ((size << 8) & 0x00ff0000) |
-                   ((size << 24) & 0xff000000);
-        }
 
         var compressedPacket = new Uint8Array(data, offset);
         var uncompressedPacket = pako.inflate(compressedPacket);
