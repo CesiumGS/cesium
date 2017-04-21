@@ -450,7 +450,7 @@ define([
         this.allTilesLoaded = new Event();
 
         /**
-         * The event fired to indicate that a tile's content was unloaded from the cache.
+         * The event fired to indicate that a tile's content was unloaded.
          * <p>
          * The unloaded {@link Cesium3DTile} is passed to the event listener.
          * </p>
@@ -1222,6 +1222,25 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function unloadSubtree(tileset, tile) {
+        var stats = tileset._statistics;
+        var stack = [];
+        stack.push(tile);
+        while (stack.length > 0) {
+            tile = stack.pop();
+            unloadTile(tileset, tile);
+            var children = tile.children;
+            var length = children.length;
+            for (var i = 0; i < length; ++i) {
+                var child = children[i];
+                --stats.numberTotal;
+                stack.push(child);
+            }
+        }
+
+        tile.children = [];
+    }
+
     function isVisible(visibilityPlaneMask) {
         return visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
     }
@@ -1236,12 +1255,16 @@ define([
         }
 
         var stats = tileset._statistics;
-
+        var expired = tile.contentExpired;
         var requested = tile.requestContent();
 
         if (!requested) {
             ++stats.numberOfAttemptedRequests;
             return;
+        }
+
+        if (expired && tile.hasTilesetContent) {
+            unloadSubtree(tileset, tile);
         }
 
         ++stats.numberOfPendingRequests;
@@ -1551,7 +1574,7 @@ define([
     }
 
     function loadTile(tile) {
-        if (tile.contentUnloaded) {
+        if (tile.contentUnloaded || tile.contentExpired) {
             tile._requestHeap.insert(tile);
         }
     }
@@ -1958,14 +1981,28 @@ define([
         }
     }
 
+    function unloadTile(tileset, tile) {
+        if (!tile.hasRenderableContent) {
+            return;
+        }
+
+        var stats = tileset._statistics;
+        var replacementList = tileset._replacementList;
+        var tileUnload = tileset.tileUnload;
+
+        tileUnload.raiseEvent(tile);
+        replacementList.remove(tile.replacementNode);
+        decrementPointAndFeatureLoadCounts(tileset, tile.content);
+        --stats.numberContentReady;
+        tile.unloadContent();
+    }
+
     function unloadTiles(tileset, frameState) {
         var trimTiles = tileset._trimTiles;
         tileset._trimTiles = false;
 
-        var stats = tileset._statistics;
         var maximumNumberOfLoadedTiles = tileset._maximumNumberOfLoadedTiles + 1; // + 1 to account for sentinel
         var replacementList = tileset._replacementList;
-        var tileUnload = tileset.tileUnload;
 
         // Traverse the list only to the sentinel since tiles/nodes to the
         // right of the sentinel were used this frame.
@@ -1975,16 +2012,8 @@ define([
         var node = replacementList.head;
         while ((node !== sentinel) && ((replacementList.length > maximumNumberOfLoadedTiles) || trimTiles)) {
             var tile = node.item;
-
-            decrementPointAndFeatureLoadCounts(tileset, tile.content);
-            tileUnload.raiseEvent(tile);
-            tile.unloadContent();
-
-            var currentNode = node;
             node = node.next;
-            replacementList.remove(currentNode);
-
-            --stats.numberContentReady;
+            unloadTile(tileset, tile);
         }
     }
 
