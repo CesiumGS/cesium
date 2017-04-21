@@ -54,7 +54,7 @@ define([
         this._viewport = new BoundingRectangle();
         this._rs = undefined;
 
-        this._useScissorTest = undefined;
+        this._useScissorTest = false;
         this._scissorRectangle = undefined;
 
         var clearCommand = new ClearCommand({
