@@ -42,7 +42,8 @@ defineSuite([
             translucencyByDistance : new NearFarScalar(17, 18, 19, 20),
             pixelOffsetScaleByDistance : new NearFarScalar(21, 22, 23, 24),
             sizeInMeters : true,
-            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
+            disableDepthTestDistance : 10.0
         };
 
         var billboard = new BillboardGraphics(options);
@@ -63,6 +64,7 @@ defineSuite([
         expect(billboard.pixelOffsetScaleByDistance).toBeInstanceOf(ConstantProperty);
         expect(billboard.sizeInMeters).toBeInstanceOf(ConstantProperty);
         expect(billboard.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+        expect(billboard.disableDepthTestDistance).toBeInstanceOf(ConstantProperty);
 
         expect(billboard.image.getValue()).toEqual(options.image);
         expect(billboard.rotation.getValue()).toEqual(options.rotation);
@@ -81,6 +83,7 @@ defineSuite([
         expect(billboard.pixelOffsetScaleByDistance.getValue()).toEqual(options.pixelOffsetScaleByDistance);
         expect(billboard.sizeInMeters.getValue()).toEqual(options.sizeInMeters);
         expect(billboard.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
+        expect(billboard.disableDepthTestDistance.getValue()).toEqual(options.disableDepthTestDistance);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -104,6 +107,7 @@ defineSuite([
         source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
         source.sizeInMeters = new ConstantProperty(true);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        source.disableDepthTestDistance = 10.0;
 
         var target = new BillboardGraphics();
         target.merge(source);
@@ -127,6 +131,7 @@ defineSuite([
         expect(target.pixelOffsetScaleByDistance).toBe(source.pixelOffsetScaleByDistance);
         expect(target.sizeInMeters).toBe(source.sizeInMeters);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(target.disableDepthTestDistance).toBe(source.disableDepthTestDistance);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -150,6 +155,7 @@ defineSuite([
         source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
         source.sizeInMeters = new ConstantProperty(true);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        source.disableDepthTestDistance = new ConstantProperty(10.0);
 
         var image = new ConstantProperty('');
         var imageSubRegion = new ConstantProperty();
@@ -170,6 +176,7 @@ defineSuite([
         var pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
         var sizeInMeters = new ConstantProperty(true);
         var distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        var disableDepthTestDistance = new ConstantProperty(10.0);
 
         var target = new BillboardGraphics();
         target.image = image;
@@ -191,6 +198,7 @@ defineSuite([
         target.pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
         target.sizeInMeters = sizeInMeters;
         target.distanceDisplayCondition = distanceDisplayCondition;
+        target.disableDepthTestDistance = disableDepthTestDistance;
 
         target.merge(source);
 
@@ -213,6 +221,7 @@ defineSuite([
         expect(target.pixelOffsetScaleByDistance).toBe(pixelOffsetScaleByDistance);
         expect(target.sizeInMeters).toBe(sizeInMeters);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
+        expect(target.disableDepthTestDistance).toBe(disableDepthTestDistance);
     });
 
     it('clone works', function() {
@@ -236,6 +245,7 @@ defineSuite([
         source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
         source.sizeInMeters = new ConstantProperty(true);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        source.disableDepthTestDistance = new ConstantProperty(10.0);
 
         var result = source.clone();
         expect(result.image).toBe(source.image);
@@ -257,6 +267,7 @@ defineSuite([
         expect(result.pixelOffsetScaleByDistance).toBe(source.pixelOffsetScaleByDistance);
         expect(result.sizeInMeters).toBe(source.sizeInMeters);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(result.disableDepthTestDistance).toBe(source.disableDepthTestDistance);
     });
 
     it('merge throws if source undefined', function() {

@@ -93,6 +93,20 @@ define([
         },
 
         /**
+         * Gets the number of triangles in the tile.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        trianglesLength : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
          * Gets the tile's vertex memory in bytes.
          *
          * @memberof Cesium3DTileContent.prototype

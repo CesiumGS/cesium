@@ -3,6 +3,7 @@ defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defaultValue',
         'Core/defined',
         'Core/HeadingPitchRange',
         'Core/loadWithXhr',
@@ -10,6 +11,7 @@ defineSuite([
         'Core/Matrix4',
         'Core/PrimitiveType',
         'Core/RequestScheduler',
+        'Renderer/ClearCommand',
         'Renderer/ContextLimits',
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileColorBlendMode',
@@ -17,6 +19,7 @@ defineSuite([
         'Scene/Cesium3DTileOptimizations',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
+        'Scene/CullFace',
         'Scene/CullingVolume',
         'Scene/PerspectiveFrustum',
         'Specs/Cesium3DTilesTester',
@@ -27,6 +30,7 @@ defineSuite([
         Cesium3DTileset,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
         HeadingPitchRange,
         loadWithXhr,
@@ -34,6 +38,7 @@ defineSuite([
         Matrix4,
         PrimitiveType,
         RequestScheduler,
+        ClearCommand,
         ContextLimits,
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
@@ -41,6 +46,7 @@ defineSuite([
         Cesium3DTileOptimizations,
         Cesium3DTileRefine,
         Cesium3DTileStyle,
+        CullFace,
         CullingVolume,
         PerspectiveFrustum,
         Cesium3DTilesTester,
@@ -153,7 +159,7 @@ defineSuite([
     }
 
     function viewAllTiles() {
-        setZoom(20.0);
+        setZoom(15.0);
     }
 
     function viewRootOnly() {
@@ -171,15 +177,18 @@ defineSuite([
     });
 
     it('rejects readyPromise with invalid tileset.json', function() {
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            deferred.reject();
+        });
+
         var tileset = scene.primitives.add(new Cesium3DTileset({
-            url : 'invalid'
+            url : 'invalid.json'
         }));
         scene.renderForSpecs();
         return tileset.readyPromise.then(function() {
             fail('should not resolve');
         }).otherwise(function(error) {
             expect(tileset.ready).toEqual(false);
-            expect(error.statusCode).toEqual(404);
         });
     });
 
@@ -339,7 +348,7 @@ defineSuite([
                 }
                 expect(failedTiles).toEqual(1);
             });
-       });
+        });
     });
 
     it('renders tileset', function() {
@@ -402,7 +411,8 @@ defineSuite([
 
             // Update and check that child tiles are now requested
             scene.renderForSpecs();
-            expect(stats.visited).toEqual(1); // Root is visited
+
+            expect(stats.visited).toEqual(5);
             expect(stats.numberOfCommands).toEqual(0);
             expect(stats.numberOfPendingRequests).toEqual(5);
             expect(stats.numberProcessing).toEqual(0);
@@ -418,13 +428,14 @@ defineSuite([
         });
     });
 
-    function checkPointAndFeatureCounts(tileset, features, points) {
+    function checkPointAndFeatureCounts(tileset, features, points, triangles) {
         var stats = tileset._statistics;
 
         expect(stats.numberOfFeaturesSelected).toEqual(0);
         expect(stats.numberOfFeaturesLoaded).toEqual(0);
         expect(stats.numberOfPointsSelected).toEqual(0);
         expect(stats.numberOfPointsLoaded).toEqual(0);
+        expect(stats.numberOfTrianglesSelected).toEqual(0);
 
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
             scene.renderForSpecs();
@@ -432,6 +443,7 @@ defineSuite([
             expect(stats.numberOfFeaturesLoaded).toEqual(features);
             expect(stats.numberOfPointsSelected).toEqual(points);
             expect(stats.numberOfPointsLoaded).toEqual(points);
+            expect(stats.numberOfTrianglesSelected).toEqual(triangles);
 
             viewNothing();
             scene.renderForSpecs();
@@ -440,6 +452,7 @@ defineSuite([
             expect(stats.numberOfFeaturesLoaded).toEqual(features);
             expect(stats.numberOfPointsSelected).toEqual(0);
             expect(stats.numberOfPointsLoaded).toEqual(points);
+            expect(stats.numberOfTrianglesSelected).toEqual(0);
 
             tileset.trimLoadedTiles();
 
@@ -449,6 +462,7 @@ defineSuite([
             expect(stats.numberOfFeaturesLoaded).toEqual(0);
             expect(stats.numberOfPointsSelected).toEqual(0);
             expect(stats.numberOfPointsLoaded).toEqual(0);
+            expect(stats.numberOfTrianglesSelected).toEqual(0);
         });
     }
 
@@ -457,7 +471,7 @@ defineSuite([
             url : withBatchTableUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 10, 0);
+        return checkPointAndFeatureCounts(tileset, 10, 0, 120);
     });
 
     it('verify no batch table features statistics', function() {
@@ -465,7 +479,7 @@ defineSuite([
             url : noBatchIdsUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 0, 0);
+        return checkPointAndFeatureCounts(tileset, 0, 0, 120);
     });
 
     it('verify instanced features statistics', function() {
@@ -473,7 +487,7 @@ defineSuite([
             url : instancedRedMaterialUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 25, 0);
+        return checkPointAndFeatureCounts(tileset, 25, 0, 12);
     });
 
     it('verify composite features statistics', function() {
@@ -481,7 +495,7 @@ defineSuite([
             url : compositeUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 35, 0);
+        return checkPointAndFeatureCounts(tileset, 35, 0, 132);
     });
 
     it('verify tileset of tilesets features statistics', function() {
@@ -489,7 +503,7 @@ defineSuite([
             url : tilesetOfTilesetsUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 50, 0);
+        return checkPointAndFeatureCounts(tileset, 50, 0, 600);
     });
 
     it('verify points statistics', function() {
@@ -499,7 +513,15 @@ defineSuite([
             url : pointCloudUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 0, 1000);
+        return checkPointAndFeatureCounts(tileset, 0, 1000, 0);
+    });
+
+    it('verify triangle statistics', function() {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : tilesetEmptyRootUrl
+        }));
+
+        return checkPointAndFeatureCounts(tileset, 40, 0, 480);
     });
 
     it('verify batched points statistics', function() {
@@ -509,7 +531,7 @@ defineSuite([
             url : pointCloudBatchedUrl
         }));
 
-        return checkPointAndFeatureCounts(tileset, 8, 1000);
+        return checkPointAndFeatureCounts(tileset, 8, 1000, 0);
     });
 
     it('verify memory usage statistics', function() {
@@ -719,6 +741,19 @@ defineSuite([
         });
     }
 
+    function numberOfChildrenWithoutContent(tile) {
+        var children = tile.children;
+        var length = children.length;
+        var count = 0;
+        for (var i = 0; i < length; ++i) {
+            var child = children[i];
+            if (!child.contentReady) {
+                ++count;
+            }
+        }
+        return count;
+    }
+
     // Adjust distances for each test because the dynamic SSE takes the
     // bounding volume height into account, which differs for each bounding volume.
     it('uses dynamic screen space error for tileset with region', function() {
@@ -835,86 +870,12 @@ defineSuite([
             scene.renderForSpecs();
 
             var stats = tileset._statistics;
-            expect(stats.visited).toEqual(1);
-            expect(stats.numberOfCommands).toEqual(1);
+            // LOD skipping visits all visible
+            expect(stats.visited).toEqual(5);
+            // tileset is refining and adds a stencil clear command
+            expect(stats.numberOfCommands).toEqual(2);
             expect(stats.numberOfPendingRequests).toEqual(4);
-            expect(root.numberOfChildrenWithoutContent).toEqual(4);
-        });
-    });
-
-    it('replacement refinement - refines to children when refineToVisible is false', function() {
-        viewRootOnly();
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            tileset._refineToVisible = false;
-            var root = tileset._root;
-            root.refine = Cesium3DTileRefine.REPLACE;
-            root._contentBoundingVolume = undefined; // Easier to test if the root only uses its tile bounding volume
-            var ll = root.children[0];
-            var stats = tileset._statistics;
-
-            // Look at lower-left corner of tileset
-            viewAllTiles();
-            scene.camera.moveLeft(200.0);
-            scene.camera.moveDown(200.0);
-
-            scene.renderForSpecs();
-            expect(stats.visited).toEqual(1); // Visits root only, child tiles aren't ready
-            expect(stats.numberOfCommands).toEqual(1);
-
-            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                // Even though we are only looking at the lower-left tile, all child tiles are loaded
-                scene.renderForSpecs();
-                expect(stats.visited).toEqual(2); // Only visible tiles are visited - root and ll
-                expect(stats.numberContentReady).toEqual(5); // All tiles are loaded
-                expect(stats.numberOfCommands).toEqual(1); // Root is replaced, but only ll is visible
-                expect(tileset._selectedTiles[0]).toEqual(ll);
-
-                // Now look at all tiles
-                viewAllTiles();
-                scene.renderForSpecs();
-                expect(stats.visited).toEqual(5); // All tiles are visited
-                expect(stats.numberContentReady).toEqual(5); // All tiles are loaded
-                expect(stats.numberOfCommands).toEqual(4); // Root is replaced by its 4 children
-            });
-        });
-    });
-
-    it('replacement refinement - refines to visible ready children when refineToVisible is true', function() {
-        viewRootOnly();
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            tileset._refineToVisible = true;
-            var root = tileset._root;
-            root.refine = Cesium3DTileRefine.REPLACE;
-            root._contentBoundingVolume = undefined; // Easier to test if the root only uses its tile bounding volume
-            var ll = root.children[0];
-            var stats = tileset._statistics;
-
-            // Look at lower-left corner of tileset
-            viewAllTiles();
-            scene.camera.moveLeft(200.0);
-            scene.camera.moveDown(200.0);
-
-            scene.renderForSpecs();
-            expect(stats.visited).toEqual(1); // Visits root only, ll (lower-left child) isn't ready
-            expect(stats.numberOfCommands).toEqual(1);
-
-            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                scene.renderForSpecs();
-                expect(stats.visited).toEqual(2); // Visits root and ll
-                expect(stats.numberOfCommands).toEqual(1); // ll is the only visible child and is ready, so it replaces root
-                expect(tileset._selectedTiles[0]).toBe(ll);
-
-                viewAllTiles();
-                scene.renderForSpecs();
-                expect(stats.visited).toEqual(2); // Visits root and ll
-                expect(stats.numberOfCommands).toEqual(2); // Now other children are visible but not ready. Render root and any visible ready children (only ll)
-
-                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                    scene.renderForSpecs();
-                    expect(stats.visited).toEqual(5); // Visits root and all children
-                    expect(stats.numberOfCommands).toEqual(4); // Renders children, root is replaced because all visible children are ready
-                });
-            });
+            expect(numberOfChildrenWithoutContent(root)).toEqual(4);
         });
     });
 
@@ -931,24 +892,13 @@ defineSuite([
             setZoom(20.0);
             scene.renderForSpecs();
             expect(stats.numberOfCommands).toEqual(5);
+            expect(root.selected).toBe(false);
 
             // No longer renders the tile with a request volume
             setZoom(1500.0);
-            scene.renderForSpecs();
-            expect(stats.numberOfCommands).toEqual(4);
-
-            // Now test when refineToVisible is true
-            tileset._refineToVisible = true;
-
-            // Renders all 5 tiles
-            setZoom(20.0);
             scene.renderForSpecs();
             expect(stats.numberOfCommands).toEqual(5);
-
-            // No longer renders the tile with a request volume
-            setZoom(1500.0);
-            scene.renderForSpecs();
-            expect(stats.numberOfCommands).toEqual(4);
+            expect(root.selected).toBe(true); // one child is no longer selected. root is chosen instead
         });
     });
 
@@ -967,13 +917,12 @@ defineSuite([
 
             var stats = tileset._statistics;
             var root = tileset._root;
-            expect(root.descendantsWithContent).toBeDefined();
-            expect(root.descendantsWithContent.length).toEqual(4);
+
             return when.join(root.children[0].readyPromise, root.children[1].readyPromise).then(function() {
                 // Even though root's children are loaded, the grandchildren need to be loaded before it becomes refinable
                 scene.renderForSpecs();
-                expect(root.numberOfChildrenWithoutContent).toEqual(0); // Children are loaded
-                expect(stats.numberOfCommands).toEqual(1); // Render root
+                expect(numberOfChildrenWithoutContent(root)).toEqual(0); // Children are loaded
+                expect(stats.numberOfCommands).toEqual(3); // Stencil, root backfaces, root
                 expect(stats.numberOfPendingRequests).toEqual(4); // Loading grandchildren
 
                 return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
@@ -995,13 +944,9 @@ defineSuite([
 
         viewRootOnly();
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement2Url).then(function(tileset) {
-            setZoom(30.0);
             scene.renderForSpecs();
 
             var stats = tileset._statistics;
-            var root = tileset._root;
-            expect(root.descendantsWithContent).toBeDefined();
-            expect(root.descendantsWithContent.length).toEqual(2);
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toEqual(1);
@@ -1031,8 +976,6 @@ defineSuite([
             scene.renderForSpecs();
             var stats = tileset._statistics;
             var root = tileset._root;
-            expect(root.descendantsWithContent).toBeDefined();
-            expect(root.descendantsWithContent.length).toEqual(0);
             expect(stats.numberOfCommands).toEqual(1);
 
             viewAllTiles();
@@ -1040,8 +983,7 @@ defineSuite([
             return root.children[0].content.readyPromise.then(function() {
                 // The external tileset json is loaded, but the external tileset isn't.
                 scene.renderForSpecs();
-                expect(root.descendantsWithContent.length).toEqual(4);
-                expect(stats.numberOfCommands).toEqual(1); // Render root
+                expect(stats.numberOfCommands).toEqual(2); // Stencil + Render root
                 expect(stats.numberOfPendingRequests).toEqual(4); // Loading child content tiles
 
                 return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
@@ -1070,11 +1012,11 @@ defineSuite([
         it('does not select visible tiles with invisible children', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 scene.camera.setView({
-                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 22),
-                    orientation: {
-                        heading: 0,
-                        pitch:  1.57,
-                        roll: 0
+                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 22),
+                    orientation : {
+                        heading : 0,
+                        pitch : 1.57,
+                        roll : 0
                     }
                 });
 
@@ -1102,11 +1044,11 @@ defineSuite([
                 childRoot.geometricError = 240;
 
                 scene.camera.setView({
-                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
-                    orientation: {
-                        heading: 0,
-                        pitch:  -1.57,
-                        roll: 0
+                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
+                    orientation : {
+                        heading : 0,
+                        pitch : -1.57,
+                        roll : 0
                     }
                 });
 
@@ -1120,53 +1062,54 @@ defineSuite([
                 expect(childRoot.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
 
                 expect(childRoot.selected).toBe(false);
-                expect(childRoot.replaced).toBe(true);
             });
         });
 
-        it ('does select visible tiles meeting SSE with visible children', function() {
+        it('does select visible tiles meeting SSE with visible children', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 var root = tileset._root;
                 var childRoot = root.children[0];
 
                 scene.camera.setView({
-                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
-                    orientation: {
-                        heading: 0,
-                        pitch:  -1.57,
-                        roll: 0
+                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
+                    orientation : {
+                        heading : 0,
+                        pitch : -1.57,
+                        roll : 0
                     }
                 });
 
-                childRoot.geometricError = 0;
+                childRoot.geometricError = 0; // child root should meet SSE and children should not be drawn
                 scene.renderForSpecs();
+                // wait for load because geometric error has changed
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                    scene.renderForSpecs();
 
-                expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                    expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
 
-                expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(childRoot.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                    expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                    expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                    expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                    expect(childRoot.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
 
-                expect(childRoot.selected).toBe(true);
-                expect(childRoot.replaced).toBe(false);
+                    expect(childRoot.selected).toBe(true);
+                });
             });
         });
 
         it('does select visibile tiles with visible children failing request volumes', function() {
-            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
-                scene.camera.setView({
-                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 100),
-                    orientation: {
-                        heading: 0,
-                        pitch:  -1.57,
-                        roll: 0
-                    }
-                });
+            scene.camera.setView({
+                destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 100),
+                orientation : {
+                    heading : 0,
+                    pitch : -1.57,
+                    roll : 0
+                }
+            });
 
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 var root = tileset._root;
                 var childRoot = root.children[0];
-                childRoot.geometricError = 0;
 
                 scene.renderForSpecs();
 
@@ -1185,11 +1128,11 @@ defineSuite([
         it('does select visibile tiles with visible children passing request volumes', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 scene.camera.setView({
-                    destination: Cartesian3.fromRadians(centerLongitude, centerLatitude, 40),
-                    orientation: {
-                        heading: 0,
-                        pitch:  -1.57,
-                        roll: 0
+                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 40),
+                    orientation : {
+                        heading : 0,
+                        pitch : -1.57,
+                        roll : 0
                     }
                 });
 
@@ -1198,23 +1141,39 @@ defineSuite([
                 childRoot.geometricError = 0;
 
                 scene.renderForSpecs();
+                // wait for load because geometric error has changed
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                    scene.renderForSpecs();
 
-                expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                    expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
 
-                expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(childRoot.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                    expect(childRoot.children[0].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                    expect(childRoot.children[1].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                    expect(childRoot.children[2].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                    expect(childRoot.children[3].visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
 
-                expect(tileset._selectedTiles.length).toEqual(1);
-                expect(childRoot.selected).toBe(true);
+                    expect(tileset._selectedTiles.length).toEqual(1);
+                    expect(childRoot.selected).toBe(true);
 
-                childRoot.geometricError = 200;
-                scene.renderForSpecs();
-                expect(tileset._selectedTiles.length).toEqual(4);
-                expect(childRoot.selected).toBe(false);
-                expect(childRoot.replaced).toBe(true);
+                    childRoot.geometricError = 200;
+                    scene.renderForSpecs();
+                    expect(tileset._selectedTiles.length).toEqual(4);
+                    expect(childRoot.selected).toBe(false);
+                });
             });
+        });
+    });
+
+    it('replacement and additive refinement', function() {
+        //          A
+        //      A       R (not rendered)
+        //    R   A   R   A
+        //
+        return Cesium3DTilesTester.loadTileset(scene, tilesetRefinementMix).then(function(tileset) {
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            expect(stats.visited).toEqual(7);
+            expect(stats.numberOfCommands).toEqual(6);
         });
     });
 
@@ -2308,6 +2267,210 @@ defineSuite([
             child.transform = Matrix4.IDENTITY;
             scene.renderForSpecs();
             expect(stats.numberOfCommands).toBe(totalCommands);
+        });
+    });
+
+    it('marks tileset as refining when tiles not resolved', function() {
+        viewRootOnly();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            viewAllTiles();
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            expect(stats.numberContentReady).toEqual(1);
+            expect(tileset._hasMixedContent).toBe(true);
+
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                expect(stats.numberContentReady).toEqual(5);
+                expect(tileset._hasMixedContent).toBe(false);
+            });
+        });
+    });
+
+    it('adds stencil clear command first when unresolved', function() {
+        viewRootOnly();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            var root = tileset._root;
+
+            viewAllTiles();
+            scene.renderForSpecs();
+            return root.children[0].content.readyPromise.then(function() {
+                scene.renderForSpecs();
+                // 1 for root tiles, 1 for stencil clear
+                expect(stats.numberOfCommands).toEqual(2);
+                expect(tileset._hasMixedContent).toBe(true);
+
+                var commandList = scene.frameState.commandList;
+                expect(commandList[0] instanceof ClearCommand).toBe(true);
+            });
+        });
+    });
+
+    it('creates duplicate backface commands', function() {
+        // Look at bottom-left corner of tileset so child is loaded first
+        scene.camera.moveLeft(200.0);
+        scene.camera.moveDown(200.0);
+
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            var root = tileset._root;
+
+            viewAllTiles();
+            scene.renderForSpecs();
+            return root.children[0].content.readyPromise.then(function() {
+                scene.renderForSpecs();
+                // 2 for root tile, 1 for child, 1 for stencil clear
+                expect(stats.numberOfCommands).toEqual(4);
+                expect(root.selected).toBe(true);
+                expect(root._finalResolution).toBe(false);
+                expect(root.children[0].children[0].children[3].selected).toBe(true);
+                expect(root.children[0].children[0].children[3]._finalResolution).toBe(true);
+                expect(tileset._hasMixedContent).toBe(true);
+
+                var commandList = scene.frameState.commandList;
+                expect(commandList[0] instanceof ClearCommand).toBe(true);
+                expect(commandList[0].stencil).toBe(0);
+                var rs = commandList[1].renderState;
+                expect(rs.cull.enabled).toBe(true);
+                expect(rs.cull.face).toBe(CullFace.FRONT);
+            });
+        });
+    });
+
+    it('does not create duplicate backface commands if no selected descendants', function() {
+        viewRootOnly();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            var root = tileset._root;
+
+            viewAllTiles();
+            scene.renderForSpecs();
+            return root.children[0].content.readyPromise.then(function() {
+                scene.renderForSpecs();
+                // 1 for root tile, 1 for stencil clear
+                expect(stats.numberOfCommands).toEqual(2);
+                expect(tileset._hasMixedContent).toBe(true);
+
+                var commandList = scene.frameState.commandList;
+                expect(commandList[0] instanceof ClearCommand).toBe(true);
+                expect(commandList[0].stencil).toBe(0);
+            });
+        });
+    });
+
+    it('does not add commands or stencil clear command with no selected tiles', function() {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : tilesetUrl
+        }));
+        scene.renderForSpecs();
+        var stats = tileset._statistics;
+        expect(tileset._selectedTiles.length).toEqual(0);
+        expect(stats.numberOfCommands).toEqual(0);
+    });
+
+    it('does not add stencil clear command or backface commands when fully resolved', function() {
+        viewAllTiles();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            expect(stats.numberOfCommands).toEqual(tileset._selectedTiles.length);
+
+            var commandList = scene.frameState.commandList;
+            var length = commandList.length;
+            for (var i = 0; i < length; ++i) {
+                var command = commandList[i];
+                expect(command instanceof ClearCommand).toBe(false);
+                expect(command.renderState.cull.face).not.toBe(CullFace.FRONT);
+            }
+        });
+    });
+
+    it('loadSiblings', function() {
+        // Look at bottom-left corner of tileset
+        scene.camera.moveLeft(200.0);
+        scene.camera.moveDown(200.0);
+
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, {loadSiblings : false}).then(function(tileset) {
+            var stats = tileset._statistics;
+            scene.renderForSpecs();
+            expect(stats.numberContentReady).toBe(2);
+            tileset.loadSiblings = true;
+            scene.renderForSpecs();
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                scene.renderForSpecs();
+                expect(stats.numberContentReady).toBe(5);
+            });
+        });
+    });
+
+    it('immediatelyLoadDesiredLOD', function() {
+        // Look at bottom-left corner of tileset
+        scene.camera.moveLeft(200.0);
+        scene.camera.moveDown(200.0);
+
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : tilesetOfTilesetsUrl,
+            immediatelyLoadDesiredLOD : true,
+            skipSSEFactor : 0.1,         // tiny skip factor so we would normally load all tiles
+            skipLevels : 0
+        }));
+        return Cesium3DTilesTester.waitForReady(scene, tileset).then(function(tileset) {
+            scene.renderForSpecs();
+            return tileset._root.content.readyPromise.then(function() {
+                tileset._root.children[0].refine = Cesium3DTileRefine.REPLACE;
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                    var stats = tileset._statistics;
+                    scene.renderForSpecs();
+                    expect(stats.numberContentReady).toBe(1);
+
+                    tileset.immediatelyLoadDesiredLOD = false;
+                    scene.renderForSpecs();
+                    return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                        scene.renderForSpecs();
+                        expect(stats.numberContentReady).toBe(2);
+                    });
+                });
+            });
+        });
+    });
+
+    it('selects children if no ancestors available', function() {
+        // Look at bottom-left corner of tileset
+        scene.camera.moveLeft(200.0);
+        scene.camera.moveDown(200.0);
+
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : tilesetOfTilesetsUrl
+        }));
+
+        return Cesium3DTilesTester.waitForReady(scene, tileset).then(function(tileset) {
+            scene.renderForSpecs();
+            return tileset._root.content.readyPromise.then(function() {
+                tileset._root.children[0].refine = Cesium3DTileRefine.REPLACE;
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                    var stats = tileset._statistics;
+                    scene.renderForSpecs();
+
+                    var parent = tileset._root.children[0];
+                    var child = parent.children[3].children[0];
+                    expect(child.contentReady).toBe(true);
+                    expect(parent.contentReady).toBe(false);
+                    expect(child.selected).toBe(true);
+                    expect(parent.selected).toBe(false);
+                    expect(stats.numberOfCommands).toEqual(1);
+
+                    viewAllTiles();
+                    scene.renderForSpecs();
+                    expect(child.contentReady).toBe(true);
+                    expect(parent.contentReady).toBe(false);
+                    expect(child.selected).toBe(true);
+                    expect(parent.selected).toBe(false);
+                    expect(stats.numberOfCommands).toEqual(2);
+                });
+            });
         });
     });
 
