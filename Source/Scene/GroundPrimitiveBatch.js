@@ -878,7 +878,7 @@ define([
         }
 
         batchedIndices.push({
-            color : color,
+            color : Color.clone(color),
             offset : offset,
             count : count,
             batchIds : [batchId]
@@ -905,7 +905,7 @@ define([
 
         if (endIds.length !== 0) {
             batchedIndices.push({
-                color : batchedIndices[i].color,
+                color : Color.clone(batchedIndices[i].color),
                 offset : offset + count,
                 count : batchedIndices[i].offset + batchedIndices[i].count - (offset + count),
                 batchIds : endIds
