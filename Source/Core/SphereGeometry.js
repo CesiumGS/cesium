@@ -1,16 +1,16 @@
 /*global define*/
 define([
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './EllipsoidGeometry',
         './VertexFormat'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         EllipsoidGeometry,
         VertexFormat) {
     'use strict';
@@ -65,15 +65,15 @@ define([
      * @param {SphereGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     SphereGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
+        Check.typeOf.object('value', value);
         //>>includeEnd('debug');
 
-        EllipsoidGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
+        return EllipsoidGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
     };
 
     var scratchEllipsoidGeometry = new EllipsoidGeometry();

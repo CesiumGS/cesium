@@ -8,7 +8,6 @@ defineSuite([
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/VertexFormat',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Primitive',
         'Specs/createScene'
@@ -21,7 +20,6 @@ defineSuite([
         Rectangle,
         RectangleGeometry,
         VertexFormat,
-        ClearCommand,
         Appearance,
         Primitive,
         createScene) {
@@ -65,9 +63,10 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('default construct with normal, binormal, or tangent attribute name', function() {
+    it('default construct with normal, bitangent, or tangent attribute name', function() {
         var a = new DebugAppearance({
-            attributeName : 'normal'
+            attributeName : 'normal',
+            perInstanceAttribute : false
         });
 
         expect(a.vertexShaderSource).toBeDefined();
@@ -87,7 +86,8 @@ defineSuite([
 
     it('default construct with st attribute name', function() {
         var a = new DebugAppearance({
-            attributeName : 'st'
+            attributeName : 'st',
+            perInstanceAttribute : false
         });
 
         expect(a.vertexShaderSource).toBeDefined();
@@ -108,7 +108,8 @@ defineSuite([
     it('debug appearance with float attribute name', function() {
         var a = new DebugAppearance({
             attributeName : 'rotation',
-            glslDatatype : 'float'
+            glslDatatype : 'float',
+            perInstanceAttribute : true
         });
 
         expect(a.vertexShaderSource).toBeDefined();
@@ -129,7 +130,8 @@ defineSuite([
     it('debug appearance with vec3 attribute name', function() {
         var a = new DebugAppearance({
             attributeName : 'str',
-            glslDatatype : 'vec3'
+            glslDatatype : 'vec3',
+            perInstanceAttribute : false
         });
 
         expect(a.vertexShaderSource).toBeDefined();
@@ -150,7 +152,8 @@ defineSuite([
     it('debug appearance with vec4 attribute name', function() {
         var a = new DebugAppearance({
             attributeName : 'quaternion',
-            glslDatatype : 'vec4'
+            glslDatatype : 'vec4',
+            perInstanceAttribute : true
         });
 
         expect(a.vertexShaderSource).toBeDefined();
@@ -172,7 +175,8 @@ defineSuite([
         expect(function() {
             return new DebugAppearance({
                 attributeName : 'invalid_datatype',
-                glslDatatype : 'invalid'
+                glslDatatype : 'invalid',
+                perInstanceAttribute : true
             });
         }).toThrowDeveloperError();
     });
@@ -185,37 +189,39 @@ defineSuite([
         primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
-                attributeName : 'normal'
+                attributeName : 'normal',
+                perInstanceAttribute : false
             }),
             asynchronous : false,
             compressVertices : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
-    it('renders binormal', function() {
+    it('renders bitangent', function() {
         var vertexFormat = new VertexFormat({
             position : true,
             normal : true,
-            binormal : true
+            bitangent : true
         });
         primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
-                attributeName : 'binormal'
+                attributeName : 'bitangent',
+                perInstanceAttribute : false
             }),
             asynchronous : false,
             compressVertices : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders tangent', function() {
@@ -227,16 +233,17 @@ defineSuite([
         primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
-                attributeName : 'tangent'
+                attributeName : 'tangent',
+                perInstanceAttribute : false
             }),
             asynchronous : false,
             compressVertices : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders st', function() {
@@ -247,16 +254,17 @@ defineSuite([
         primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
-                attributeName : 'st'
+                attributeName : 'st',
+                perInstanceAttribute : false
             }),
             asynchronous : false,
             compressVertices : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders float', function() {
@@ -272,15 +280,16 @@ defineSuite([
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
-                glslDatatype : 'float'
+                glslDatatype : 'float',
+                perInstanceAttribute : true
             }),
             asynchronous : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders vec2', function() {
@@ -296,15 +305,16 @@ defineSuite([
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
-                glslDatatype : 'vec2'
+                glslDatatype : 'vec2',
+                perInstanceAttribute : true
             }),
             asynchronous : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders vec3', function() {
@@ -320,15 +330,16 @@ defineSuite([
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
-                glslDatatype : 'vec3'
+                glslDatatype : 'vec3',
+                perInstanceAttribute : true
             }),
             asynchronous : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders vec4', function() {
@@ -344,14 +355,15 @@ defineSuite([
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
-                glslDatatype : 'vec4'
+                glslDatatype : 'vec4',
+                perInstanceAttribute : true
             }),
             asynchronous : false
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
 }, 'WebGL');

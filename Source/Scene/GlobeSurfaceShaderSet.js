@@ -62,7 +62,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -87,7 +87,8 @@ define([
                     (hasVertexNormals << 11) |
                     (useWebMercatorProjection << 12) |
                     (enableFog << 13) |
-                    (quantization << 14);
+                    (quantization << 14) |
+                    (applySplit << 15);
 
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
@@ -148,13 +149,20 @@ define([
                 }
             }
 
+            vs.defines.push('INCLUDE_WEB_MERCATOR_Y');
+            fs.defines.push('INCLUDE_WEB_MERCATOR_Y');
+
             if (enableFog) {
                 vs.defines.push('FOG');
                 fs.defines.push('FOG');
             }
 
+            if (applySplit) {
+                fs.defines.push('APPLY_SPLIT');
+            }
+
             var computeDayColor = '\
-    vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates)\n\
+    vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates)\n\
     {\n\
         vec4 color = initialColor;\n';
 
@@ -163,7 +171,7 @@ define([
     color = sampleAndBlend(\n\
         color,\n\
         u_dayTextures[' + i + '],\n\
-        textureCoordinates,\n\
+        u_dayTextureUseWebMercatorT[' + i + '] ? textureCoordinates.xz : textureCoordinates.xy,\n\
         u_dayTextureTexCoordsRectangle[' + i + '],\n\
         u_dayTextureTranslationAndScale[' + i + '],\n\
         ' + (applyAlpha ? 'u_dayTextureAlpha[' + i + ']' : '1.0') + ',\n\
@@ -171,7 +179,8 @@ define([
         ' + (applyContrast ? 'u_dayTextureContrast[' + i + ']' : '0.0') + ',\n\
         ' + (applyHue ? 'u_dayTextureHue[' + i + ']' : '0.0') + ',\n\
         ' + (applySaturation ? 'u_dayTextureSaturation[' + i + ']' : '0.0') + ',\n\
-        ' + (applyGamma ? 'u_dayTextureOneOverGamma[' + i + ']' : '0.0') + '\n\
+        ' + (applyGamma ? 'u_dayTextureOneOverGamma[' + i + ']' : '0.0') + ',\n\
+        ' + (applySplit ? 'u_dayTextureSplit[' + i + ']' : '0.0') + '\n\
     );\n';
             }
 

@@ -16,6 +16,7 @@ Thumbs.db
 /Source/Shaders/*.js
 /Source/Shaders/*/*.js
 /Source/Shaders/*/*/*.js
+/Source/ThirdParty/Shaders/*.js
 
 /Specs/SpecList.js
 

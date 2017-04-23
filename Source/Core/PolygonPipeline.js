@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../ThirdParty/earcut-2.1.1',
         './Cartesian2',
         './Cartesian3',
         './ComponentDatatype',
@@ -7,16 +8,13 @@ define([
         './defined',
         './DeveloperError',
         './Ellipsoid',
-        './EllipsoidTangentPlane',
         './Geometry',
         './GeometryAttribute',
         './Math',
-        './pointInsideTriangle',
         './PrimitiveType',
-        './Queue',
-        './WindingOrder',
-        '../ThirdParty/earcut-2.1.1'
+        './WindingOrder'
     ], function(
+        earcut,
         Cartesian2,
         Cartesian3,
         ComponentDatatype,
@@ -24,15 +22,11 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
-        EllipsoidTangentPlane,
         Geometry,
         GeometryAttribute,
         CesiumMath,
-        pointInsideTriangle,
         PrimitiveType,
-        Queue,
-        WindingOrder,
-        earcut) {
+        WindingOrder) {
     'use strict';
 
     var scaleToGeodeticHeightN = new Cartesian3();

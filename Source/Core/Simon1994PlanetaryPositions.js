@@ -67,40 +67,48 @@ define([
     }
 
     var epoch = new JulianDate(2451545, 0, TimeStandard.TAI); //Actually TDB (not TAI)
-    var GravitationalParameterOfEarth = 3.98600435e14;
-    var GravitationalParameterOfSun = GravitationalParameterOfEarth * (1.0 + 0.012300034) * 328900.56;
     var MetersPerKilometer = 1000.0;
     var RadiansPerDegree = CesiumMath.RADIANS_PER_DEGREE;
     var RadiansPerArcSecond = CesiumMath.RADIANS_PER_ARCSECOND;
     var MetersPerAstronomicalUnit = 1.49597870e+11; // IAU 1976 value
 
     var perifocalToEquatorial = new Matrix3();
-    function elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee, longitudeOfNode, meanLongitude, gravitationalParameter, result) {
+    function elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee, longitudeOfNode, meanLongitude, result) {
         if (inclination < 0.0) {
             inclination = -inclination;
             longitudeOfNode += CesiumMath.PI;
         }
+
+        //>>includeStart('debug', pragmas.debug);
         if (inclination < 0 || inclination > CesiumMath.PI) {
             throw new DeveloperError('The inclination is out of range. Inclination must be greater than or equal to zero and less than or equal to Pi radians.');
         }
+        //>>includeEnd('debug')
 
         var radiusOfPeriapsis = semimajorAxis * (1.0 - eccentricity);
         var argumentOfPeriapsis = longitudeOfPerigee - longitudeOfNode;
         var rightAscensionOfAscendingNode = longitudeOfNode;
         var trueAnomaly = meanAnomalyToTrueAnomaly(meanLongitude - longitudeOfPerigee, eccentricity);
         var type = chooseOrbit(eccentricity, 0.0);
+
+        //>>includeStart('debug', pragmas.debug);
         if (type === 'Hyperbolic' && Math.abs(CesiumMath.negativePiToPi(trueAnomaly)) >= Math.acos(- 1.0 / eccentricity)) {
             throw new DeveloperError('The true anomaly of the hyperbolic orbit lies outside of the bounds of the hyperbola.');
         }
+        //>>includeEnd('debug')
+
         perifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscensionOfAscendingNode, perifocalToEquatorial);
         var semilatus = radiusOfPeriapsis * (1.0 + eccentricity);
         var costheta = Math.cos(trueAnomaly);
         var sintheta = Math.sin(trueAnomaly);
 
         var denom = (1.0 + eccentricity * costheta);
+
+        //>>includeStart('debug', pragmas.debug);
         if (denom <= CesiumMath.Epsilon10) {
             throw new DeveloperError('elements cannot be converted to cartesian');
         }
+        //>>includeEnd('debug')
 
         var radius = semilatus / denom;
         if (!defined(result)) {
@@ -115,9 +123,13 @@ define([
     }
 
     function chooseOrbit(eccentricity, tolerance) {
+        //>>includeStart('debug', pragmas.debug);
         if (eccentricity < 0) {
             throw new DeveloperError('eccentricity cannot be negative.');
-        } else if (eccentricity <= tolerance) {
+        }
+        //>>includeEnd('debug')
+
+        if (eccentricity <= tolerance) {
             return 'Circular';
         } else if (eccentricity < 1.0 - tolerance) {
             return 'Elliptical';
@@ -130,9 +142,12 @@ define([
 
     // Calculates the true anomaly given the mean anomaly and the eccentricity.
     function meanAnomalyToTrueAnomaly(meanAnomaly, eccentricity) {
+        //>>includeStart('debug', pragmas.debug);
         if (eccentricity < 0.0 || eccentricity >= 1.0) {
             throw new DeveloperError('eccentricity out of range.');
         }
+        //>>includeEnd('debug')
+
         var eccentricAnomaly = meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity);
         return eccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity);
     }
@@ -141,9 +156,12 @@ define([
     var keplerEqConvergence = CesiumMath.EPSILON8;
     // Calculates the eccentric anomaly given the mean anomaly and the eccentricity.
     function meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity) {
+        //>>includeStart('debug', pragmas.debug);
         if (eccentricity < 0.0 || eccentricity >= 1.0) {
             throw new DeveloperError('eccentricity out of range.');
         }
+        //>>includeEnd('debug')
+
         var revs = Math.floor(meanAnomaly / CesiumMath.TWO_PI);
 
         // Find angle in current revolution
@@ -167,11 +185,13 @@ define([
             iterationValue = eccentricAnomaly - NRfunction / dNRfunction;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (count >= maxIterationCount) {
             throw new DeveloperError('Kepler equation did not converge');
             // STK Components uses a numerical method to find the eccentric anomaly in the case that Kepler's
             // equation does not converge. We don't expect that to ever be necessary for the reasonable orbits used here.
         }
+        //>>includeEnd('debug')
 
         eccentricAnomaly = iterationValue + revs * CesiumMath.TWO_PI;
         return eccentricAnomaly;
@@ -179,9 +199,11 @@ define([
 
      // Calculates the true anomaly given the eccentric anomaly and the eccentricity.
     function eccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity) {
+        //>>includeStart('debug', pragmas.debug);
         if (eccentricity < 0.0 || eccentricity >= 1.0) {
             throw new DeveloperError('eccentricity out of range.');
         }
+        //>>includeEnd('debug')
 
         // Calculate the number of previous revolutions
         var revs = Math.floor(eccentricAnomaly / CesiumMath.TWO_PI);
@@ -211,9 +233,12 @@ define([
      // Calculates the transformation matrix to convert from the perifocal (PQW) coordinate
      // system to inertial cartesian coordinates.
     function perifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscension, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (inclination < 0 || inclination > CesiumMath.PI) {
             throw new DeveloperError('inclination out of range');
         }
+        //>>includeEnd('debug')
+
         var cosap = Math.cos(argumentOfPeriapsis);
         var sinap = Math.sin(argumentOfPeriapsis);
 
@@ -349,7 +374,7 @@ define([
         var longitudeOfNode = 174.87317577 * RadiansPerDegree - 8679.27034 * RadiansPerArcSecond * t;
 
         return elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee,
-                longitudeOfNode, meanLongitude, GravitationalParameterOfSun, result);
+                longitudeOfNode, meanLongitude, result);
     }
 
     /**
@@ -455,7 +480,7 @@ define([
         var longitudeOfNode = longitudeOfNodeConstant + longitudeOfNodeSecPart * RadiansPerArcSecond;
 
         return elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee,
-                                   longitudeOfNode, meanLongitude, GravitationalParameterOfEarth, result);
+                                   longitudeOfNode, meanLongitude, result);
     }
 
     /**
@@ -484,9 +509,9 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} Calculated sun position
      */
-    Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame= function(date, result){
-        if (!defined(date)) {
-            date = JulianDate.now();
+    Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame= function(julianDate, result){
+        if (!defined(julianDate)) {
+            julianDate = JulianDate.now();
         }
 
         if (!defined(result)) {
@@ -494,11 +519,11 @@ define([
         }
 
         //first forward transformation
-        translation = computeSimonEarthMoonBarycenter(date, translation);
+        translation = computeSimonEarthMoonBarycenter(julianDate, translation);
         result = Cartesian3.negate(translation, result);
 
         //second forward transformation
-        computeSimonEarth(date, translation);
+        computeSimonEarth(julianDate, translation);
 
         Cartesian3.subtract(result, translation, result);
         Matrix3.multiplyByVector(axesTransformation, result, result);
@@ -513,12 +538,12 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} Calculated moon position
      */
-    Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame = function(date, result){
-        if (!defined(date)) {
-            date = JulianDate.now();
+    Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame = function(julianDate, result){
+        if (!defined(julianDate)) {
+            julianDate = JulianDate.now();
         }
 
-        result = computeSimonMoon(date, result);
+        result = computeSimonMoon(julianDate, result);
         Matrix3.multiplyByVector(axesTransformation, result, result);
 
         return result;

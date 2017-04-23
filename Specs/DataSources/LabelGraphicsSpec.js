@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'Core/NearFarScalar',
         'DataSources/ConstantProperty',
         'Scene/HorizontalOrigin',
@@ -14,6 +15,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        DistanceDisplayCondition,
         NearFarScalar,
         ConstantProperty,
         HorizontalOrigin,
@@ -36,7 +38,10 @@ defineSuite([
             scale : 8,
             show : true,
             translucencyByDistance : new NearFarScalar(9, 10, 11, 12),
-            pixelOffsetScaleByDistance : new NearFarScalar(13, 14, 15, 16)
+            pixelOffsetScaleByDistance : new NearFarScalar(13, 14, 15, 16),
+            scaleByDistance : new NearFarScalar(17, 18, 19, 20),
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
+            disableDepthTestDistance : 10.0
         };
 
         var label = new LabelGraphics(options);
@@ -53,6 +58,9 @@ defineSuite([
         expect(label.show).toBeInstanceOf(ConstantProperty);
         expect(label.translucencyByDistance).toBeInstanceOf(ConstantProperty);
         expect(label.pixelOffsetScaleByDistance).toBeInstanceOf(ConstantProperty);
+        expect(label.scaleByDistance).toBeInstanceOf(ConstantProperty);
+        expect(label.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+        expect(label.disableDepthTestDistance).toBeInstanceOf(ConstantProperty);
 
         expect(label.text.getValue()).toEqual(options.text);
         expect(label.font.getValue()).toEqual(options.font);
@@ -67,6 +75,9 @@ defineSuite([
         expect(label.show.getValue()).toEqual(options.show);
         expect(label.translucencyByDistance.getValue()).toEqual(options.translucencyByDistance);
         expect(label.pixelOffsetScaleByDistance.getValue()).toEqual(options.pixelOffsetScaleByDistance);
+        expect(label.scaleByDistance.getValue()).toEqual(options.scaleByDistance);
+        expect(label.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
+        expect(label.disableDepthTestDistance.getValue()).toEqual(options.disableDepthTestDistance);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -85,6 +96,9 @@ defineSuite([
         source.show = new ConstantProperty(false);
         source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
         source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
+        source.scaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        source.disableDepthTestDistance = new ConstantProperty(10.0);
 
         var target = new LabelGraphics();
         target.merge(source);
@@ -103,6 +117,9 @@ defineSuite([
         expect(target.show).toBe(source.show);
         expect(target.translucencyByDistance).toBe(source.translucencyByDistance);
         expect(target.pixelOffsetScaleByDistance).toBe(source.pixelOffsetScaleByDistance);
+        expect(target.scaleByDistance).toBe(source.scaleByDistance);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(target.disableDepthTestDistance).toBe(source.disableDepthTestDistance);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -121,6 +138,9 @@ defineSuite([
         source.show = new ConstantProperty(false);
         source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
         source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
+        source.scaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        source.disableDepthTestDistance = new ConstantProperty(10.0);
 
         var text = new ConstantProperty('my text');
         var font = new ConstantProperty('10px serif');
@@ -136,6 +156,9 @@ defineSuite([
         var show = new ConstantProperty(true);
         var translucencyByDistance = new ConstantProperty(new NearFarScalar());
         var pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
+        var scaleByDistance = new ConstantProperty(new NearFarScalar());
+        var distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        var disableDepthTestDistance = new ConstantProperty(20.0);
 
         var target = new LabelGraphics();
         target.text = text;
@@ -152,6 +175,9 @@ defineSuite([
         target.show = show;
         target.translucencyByDistance = translucencyByDistance;
         target.pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
+        target.scaleByDistance = scaleByDistance;
+        target.distanceDisplayCondition = distanceDisplayCondition;
+        target.disableDepthTestDistance = disableDepthTestDistance;
 
         target.merge(source);
 
@@ -169,6 +195,9 @@ defineSuite([
         expect(target.show).toBe(show);
         expect(target.translucencyByDistance).toBe(translucencyByDistance);
         expect(target.pixelOffsetScaleByDistance).toBe(pixelOffsetScaleByDistance);
+        expect(target.scaleByDistance).toBe(scaleByDistance);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
+        expect(target.disableDepthTestDistance).toBe(disableDepthTestDistance);
     });
 
     it('clone works', function() {
@@ -187,6 +216,9 @@ defineSuite([
         source.show = new ConstantProperty(false);
         source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
         source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
+        source.scaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        source.disableDepthTestDistance = new ConstantProperty(10.0);
 
         var result = source.clone();
         expect(result.text).toBe(source.text);
@@ -203,6 +235,9 @@ defineSuite([
         expect(result.show).toBe(source.show);
         expect(result.translucencyByDistance).toBe(source.translucencyByDistance);
         expect(result.pixelOffsetScaleByDistance).toBe(source.pixelOffsetScaleByDistance);
+        expect(result.scaleByDistance).toBe(source.scaleByDistance);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(result.disableDepthTestDistance).toBe(source.disableDepthTestDistance);
     });
 
     it('merge throws if source undefined', function() {

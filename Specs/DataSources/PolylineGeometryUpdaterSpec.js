@@ -5,6 +5,8 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/DistanceDisplayCondition',
+        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/JulianDate',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
@@ -20,7 +22,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/Globe',
-        'Scene/PrimitiveCollection',
+        'Scene/ShadowMode',
         'Specs/createDynamicProperty',
         'Specs/createScene'
     ], function(
@@ -29,6 +31,8 @@ defineSuite([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         JulianDate,
         ShowGeometryInstanceAttribute,
         TimeInterval,
@@ -44,7 +48,7 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         Globe,
-        PrimitiveCollection,
+        ShadowMode,
         createDynamicProperty,
         createScene) {
     'use strict';
@@ -87,10 +91,13 @@ defineSuite([
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(false);
         expect(updater.fillMaterialProperty).toBe(undefined);
+        expect(updater.depthFailMaterialProperty).toBe(undefined);
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.shadowsProperty).toBe(undefined);
+        expect(updater.distanceDisplayConditionProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -125,10 +132,13 @@ defineSuite([
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
         expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
+        expect(updater.depthFailMaterialProperty).toBe(undefined);
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
+        expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -137,6 +147,13 @@ defineSuite([
         var updater = new PolylineGeometryUpdater(entity, scene);
         entity.polyline.material = new ColorMaterialProperty();
         expect(updater.fillMaterialProperty).toBe(entity.polyline.material);
+    });
+
+    it('Polyline depth fail material is correctly exposed.', function() {
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        entity.polyline.depthFailMaterial = new ColorMaterialProperty();
+        expect(updater.depthFailMaterialProperty).toBe(entity.polyline.depthFailMaterial);
     });
 
     it('A time-varying positions causes geometry to be dynamic', function() {
@@ -190,10 +207,12 @@ defineSuite([
         var polyline = entity.polyline;
         polyline.show = new ConstantProperty(options.show);
         polyline.material = options.material;
+        polyline.depthFailMaterial = options.depthFailMaterial;
 
         polyline.width = new ConstantProperty(options.width);
         polyline.followSurface = new ConstantProperty(options.followSurface);
         polyline.granularity = new ConstantProperty(options.granularity);
+        polyline.distanceDisplayCondition = options.distanceDisplayCondition;
 
         var updater = new PolylineGeometryUpdater(entity, scene);
 
@@ -212,13 +231,43 @@ defineSuite([
         } else {
             expect(attributes.color).toBeUndefined();
         }
+        if (options.depthFailMaterial && options.depthFailMaterial instanceof ColorMaterialProperty) {
+            expect(attributes.depthFailColor.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.depthFailMaterial.color.getValue(time)));
+        } else {
+            expect(attributes.depthFailColor).toBeUndefined();
+        }
         expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.show));
+        if (options.distanceDisplayCondition) {
+            expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+        }
     }
 
     it('Creates expected per-color geometry', function() {
         validateGeometryInstance({
             show : true,
             material : new ColorMaterialProperty(Color.RED),
+            width : 3,
+            followSurface : false,
+            granularity : 1.0
+        });
+    });
+
+    it('Creates expected per-color geometry with color depth fail appearance', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            depthFailMaterial : new ColorMaterialProperty(Color.BLUE),
+            width : 3,
+            followSurface : false,
+            granularity : 1.0
+        });
+    });
+
+    it('Creates expected per-color geometry with material depth fail appearance', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            depthFailMaterial : new GridMaterialProperty(),
             width : 3,
             followSurface : false,
             granularity : 1.0
@@ -232,6 +281,39 @@ defineSuite([
             width : 4,
             followSurface : true,
             granularity : 0.5
+        });
+    });
+
+    it('Creates expected per-material geometry with color depth fail appearance', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new GridMaterialProperty(),
+            depthFailMaterial : new ColorMaterialProperty(Color.BLUE),
+            width : 4,
+            followSurface : true,
+            granularity : 0.5
+        });
+    });
+
+    it('Creates expected per-material geometry with color depth fail appearance', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new GridMaterialProperty(),
+            depthFailMaterial : new GridMaterialProperty(),
+            width : 4,
+            followSurface : true,
+            granularity : 0.5
+        });
+    });
+
+    it('Creates expected distance display condition geometry', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            width : 3,
+            followSurface : false,
+            granularity : 1.0,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
         });
     });
 

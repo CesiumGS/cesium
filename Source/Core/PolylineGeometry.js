@@ -124,8 +124,8 @@ define([
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
-        if (width < 1.0) {
-            throw new DeveloperError('width must be greater than or equal to one.');
+        if (typeof width !== 'number') {
+            throw new DeveloperError('width must be a number');
         }
         if (defined(colors) && ((colorsPerVertex && colors.length < positions.length) || (!colorsPerVertex && colors.length < positions.length - 1))) {
             throw new DeveloperError('colors has an invalid length.');
@@ -158,6 +158,8 @@ define([
      * @param {PolylineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     PolylineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -199,6 +201,8 @@ define([
         array[startingIndex++] = value._colorsPerVertex ? 1.0 : 0.0;
         array[startingIndex++] = value._followSurface ? 1.0 : 0.0;
         array[startingIndex]   = value._granularity;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
@@ -305,9 +309,11 @@ define([
         var k;
 
         var positions = arrayRemoveDuplicates(polylineGeometry._positions, Cartesian3.equalsEpsilon);
-
         var positionsLength = positions.length;
-        if (positionsLength < 2) {
+
+        // A width of a pixel or less is not a valid geometry, but in order to support external data
+        // that may have errors we treat this as an empty geometry.
+        if (positionsLength < 2 || width <= 0.0) {
             return undefined;
         }
 

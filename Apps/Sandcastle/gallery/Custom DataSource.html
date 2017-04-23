@@ -53,6 +53,7 @@ function WebGLGlobeDataSource(name) {
     this._seriesNames = [];
     this._seriesToDisplay = undefined;
     this._heightScale = 10000000;
+    this._entityCluster = new Cesium.EntityCluster();
 }
 
 Object.defineProperties(WebGLGlobeDataSource.prototype, {
@@ -195,6 +196,22 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
         },
         set : function(value) {
             this._entityCollection = value;
+        }
+    },
+    /**
+     * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+     * @memberof WebGLGlobeDataSource.prototype
+     * @type {EntityCluster}
+     */
+    clustering : {
+        get : function() {
+            return this._entityCluster;
+        },
+        set : function(value) {
+            if (!Cesium.defined(value)) {
+                throw new Cesium.DeveloperError('value must be defined.');
+            }
+            this._entityCluster = value;
         }
     }
 });

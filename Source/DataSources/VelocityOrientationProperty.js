@@ -4,10 +4,8 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
-        '../Core/JulianDate',
         '../Core/Matrix3',
         '../Core/Quaternion',
         '../Core/Transforms',
@@ -18,10 +16,8 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Ellipsoid,
         Event,
-        JulianDate,
         Matrix3,
         Quaternion,
         Transforms,
@@ -49,7 +45,7 @@ define([
      * }));
      */
     function VelocityOrientationProperty(position, ellipsoid) {
-        this._velocityVectorProperty = new VelocityVectorProperty(position);
+        this._velocityVectorProperty = new VelocityVectorProperty(position, true);
         this._subscription = undefined;
         this._ellipsoid = undefined;
         this._definitionChanged = new Event();

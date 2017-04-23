@@ -4,7 +4,6 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/combine',
-        'Core/defined',
         'Core/Ellipsoid',
         'Core/FeatureDetection',
         'Core/GeographicProjection',
@@ -13,20 +12,20 @@ defineSuite([
         'Core/Math',
         'Core/Ray',
         'Core/Transforms',
+        'Scene/Camera',
         'Scene/CameraEventType',
         'Scene/MapMode2D',
         'Scene/OrthographicFrustum',
+        'Scene/OrthographicOffCenterFrustum',
         'Scene/SceneMode',
         'Specs/createCamera',
         'Specs/createCanvas',
-        'Specs/destroyCanvas',
         'Specs/DomEventSimulator'
     ], function(
         ScreenSpaceCameraController,
         Cartesian2,
         Cartesian3,
         combine,
-        defined,
         Ellipsoid,
         FeatureDetection,
         GeographicProjection,
@@ -35,13 +34,14 @@ defineSuite([
         CesiumMath,
         Ray,
         Transforms,
+        Camera,
         CameraEventType,
         MapMode2D,
         OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         SceneMode,
         createCamera,
         createCanvas,
-        destroyCanvas,
         DomEventSimulator) {
     'use strict';
 
@@ -57,6 +57,7 @@ defineSuite([
         this.globe = undefined;
         this.mapProjection = new GeographicProjection(ellipsoid);
         this.terrainExaggeration = 1.0;
+        this.screenSpaceCameraController = undefined;
     }
 
     function MockGlobe(ellipsoid) {
@@ -64,13 +65,27 @@ defineSuite([
         this.getHeight = function(cartographic) {
             return 0.0;
         };
+        this.pick = function() {
+            return new Cartesian3(0.0, 0.0, 1.0);
+        };
+        this._surface = {
+            tileProvider : {
+                ready : true
+            },
+            _tileLoadQueueHigh : [],
+            _tileLoadQueueMedium : [],
+            _tileLoadQueueLow : [],
+            _debug : {
+                tilesWaitingForChildren : 0
+            }
+        };
     }
     beforeAll(function() {
         canvas = createCanvas(1024, 768);
     });
 
     afterAll(function() {
-        destroyCanvas(canvas);
+        document.body.removeChild(canvas);
     });
 
     beforeEach(function() {
@@ -86,6 +101,9 @@ defineSuite([
 
         scene = new MockScene(canvas, camera, Ellipsoid.WGS84);
         controller = new ScreenSpaceCameraController(scene);
+
+        scene.screenSpaceCameraController = controller;
+        camera._scene = scene;
     });
 
     afterEach(function() {
@@ -169,7 +187,7 @@ defineSuite([
         };
 
         var maxRadii = ellipsoid.maximumRadius;
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
         frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);
@@ -776,6 +794,27 @@ defineSuite([
         expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
     });
 
+    it('zoom in 3D to point 0,0', function() {
+        setUp3D();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+        updateController();
+
+        camera.setView({
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+        });
+
+        updateController();
+
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(0, 0);
+        var endPosition = new Cartesian2(0, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController();
+        expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
+    });
+
     it('zoom out in 3D', function() {
         setUp3D();
         var position = Cartesian3.clone(camera.position);
@@ -824,6 +863,52 @@ defineSuite([
         simulateMouseWheel(-120);
         updateController();
         expect(Cartesian3.magnitude(position)).toBeLessThan(Cartesian3.magnitude(camera.position));
+    });
+
+    it('zoom in 3D with orthographic projection', function() {
+        setUp3D();
+
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 20.0;
+        camera.frustum = frustum;
+
+        expect(frustum.projectionMatrix).toBeDefined();
+
+        camera.setView({ destination : Camera.DEFAULT_VIEW_RECTANGLE });
+
+        var position = Cartesian3.clone(camera.position);
+        var frustumWidth = camera.frustum.width;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController();
+        expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
+        expect(frustumWidth).toBeGreaterThan(camera.frustum.width);
+    });
+
+    it('zoom out in 3D with orthographic projection', function() {
+        setUp3D();
+
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 20.0;
+        camera.frustum = frustum;
+
+        expect(frustum.projectionMatrix).toBeDefined();
+
+        camera.setView({ destination : Camera.DEFAULT_VIEW_RECTANGLE });
+
+        var position = Cartesian3.clone(camera.position);
+        var frustumWidth = camera.frustum.width;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController();
+        expect(Cartesian3.magnitude(position)).toBeLessThan(Cartesian3.magnitude(camera.position));
+        expect(frustumWidth).toBeLessThan(camera.frustum.width);
     });
 
     it('tilts in 3D', function() {

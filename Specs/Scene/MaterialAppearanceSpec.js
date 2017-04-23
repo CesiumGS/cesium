@@ -7,7 +7,6 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Material',
         'Scene/Primitive',
@@ -20,7 +19,6 @@ defineSuite([
         GeometryInstance,
         Rectangle,
         RectangleGeometry,
-        ClearCommand,
         Appearance,
         Material,
         Primitive,
@@ -89,10 +87,10 @@ defineSuite([
             material : Material.fromType(Material.DotType)
         });
 
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
     });
 
     it('renders textured', function() {
@@ -106,10 +104,10 @@ defineSuite([
             })
         });
 
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
     });
 
     it('renders all', function() {
@@ -121,10 +119,10 @@ defineSuite([
             material : Material.fromType(Material.NormalMapType)
         });
 
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
     });
 
 }, 'WebGL');

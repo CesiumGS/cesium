@@ -1,6 +1,7 @@
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
 attribute vec3 normal;
+attribute float batchId;
 
 varying vec3 v_positionEC;
 varying vec3 v_normalEC;

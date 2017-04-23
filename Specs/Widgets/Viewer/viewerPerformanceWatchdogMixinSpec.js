@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
+        'Widgets/Viewer/viewerPerformanceWatchdogMixin',
         'Specs/createViewer',
-        'Widgets/PerformanceWatchdog/PerformanceWatchdog',
-        'Widgets/Viewer/viewerPerformanceWatchdogMixin'
+        'Widgets/PerformanceWatchdog/PerformanceWatchdog'
     ], function(
+        viewerPerformanceWatchdogMixin,
         createViewer,
-        PerformanceWatchdog,
-        viewerPerformanceWatchdogMixin) {
+        PerformanceWatchdog) {
     'use strict';
 
     var container;

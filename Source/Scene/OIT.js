@@ -5,15 +5,14 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/PixelFormat',
+        '../Core/WebGLConstants',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
-        '../Renderer/WebGLConstants',
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS',
         './BlendEquation',
@@ -24,15 +23,14 @@ define([
         defined,
         destroyObject,
         PixelFormat,
+        WebGLConstants,
         ClearCommand,
         DrawCommand,
         Framebuffer,
         PixelDatatype,
         RenderState,
-        ShaderProgram,
         ShaderSource,
         Texture,
-        WebGLConstants,
         AdjustTranslucentFS,
         CompositeOITFS,
         BlendEquation,
@@ -82,8 +80,6 @@ define([
 
         this._translucentRenderStateCache = {};
         this._alphaRenderStateCache = {};
-        this._translucentShaderCache = {};
-        this._alphaShaderCache = {};
 
         this._compositeCommand = undefined;
         this._adjustTranslucentCommand = undefined;
@@ -113,19 +109,29 @@ define([
     function updateTextures(oit, context, width, height) {
         destroyTextures(oit);
 
+        // Use zeroed arraybuffer instead of null to initialize texture
+        // to workaround Firefox 50. https://github.com/AnalyticalGraphicsInc/cesium/pull/4762
+        var source = new Float32Array(width * height * 4);
+
         oit._accumulationTexture = new Texture({
             context : context,
-            width : width,
-            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT
+            pixelDatatype : PixelDatatype.FLOAT,
+            source : {
+                arrayBufferView : source,
+                width : width,
+                height : height
+            }
         });
         oit._revealageTexture = new Texture({
             context : context,
-            width : width,
-            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT
+            pixelDatatype : PixelDatatype.FLOAT,
+            source : {
+                arrayBufferView : source,
+                width : width,
+                height : height
+            }
         });
     }
 
@@ -401,9 +407,8 @@ define([
         '    float ai = czm_gl_FragColor.a;\n' +
         '    gl_FragColor = vec4(ai);\n';
 
-    function getTranslucentShaderProgram(context, shaderProgram, cache, source) {
-        var id = shaderProgram.id;
-        var shader = cache[id];
+    function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
+        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, keyword);
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
 
@@ -436,29 +441,26 @@ define([
                     source +
                     '}\n');
 
-            shader = ShaderProgram.fromCache({
-                context : context,
+            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, keyword, {
                 vertexShaderSource : shaderProgram.vertexShaderSource,
                 fragmentShaderSource : fs,
                 attributeLocations : attributeLocations
             });
-
-            cache[id] = shader;
         }
 
         return shader;
     }
 
-    function getTranslucentMRTShaderProgram(oit, context, shaderProgram) {
-        return getTranslucentShaderProgram(context, shaderProgram, oit._translucentShaderCache, mrtShaderSource);
+    function getTranslucentMRTShaderProgram(context, shaderProgram) {
+        return getTranslucentShaderProgram(context, shaderProgram, 'translucentMRT', mrtShaderSource);
     }
 
-    function getTranslucentColorShaderProgram(oit, context, shaderProgram) {
-        return getTranslucentShaderProgram(context, shaderProgram, oit._translucentShaderCache, colorShaderSource);
+    function getTranslucentColorShaderProgram(context, shaderProgram) {
+        return getTranslucentShaderProgram(context, shaderProgram, 'translucentMultipass', colorShaderSource);
     }
 
-    function getTranslucentAlphaShaderProgram(oit, context, shaderProgram) {
-        return getTranslucentShaderProgram(context, shaderProgram, oit._alphaShaderCache, alphaShaderSource);
+    function getTranslucentAlphaShaderProgram(context, shaderProgram) {
+        return getTranslucentShaderProgram(context, shaderProgram, 'alphaMultipass', alphaShaderSource);
     }
 
     OIT.prototype.createDerivedCommands = function(command, context, result) {
@@ -477,7 +479,7 @@ define([
             result.translucentCommand = DrawCommand.shallowClone(command, result.translucentCommand);
 
             if (!defined(translucentShader) || result.shaderProgramId !== command.shaderProgram.id) {
-                result.translucentCommand.shaderProgram = getTranslucentMRTShaderProgram(this, context, command.shaderProgram);
+                result.translucentCommand.shaderProgram = getTranslucentMRTShaderProgram(context, command.shaderProgram);
                 result.translucentCommand.renderState = getTranslucentMRTRenderState(this, context, command.renderState);
                 result.shaderProgramId = command.shaderProgram.id;
             } else {
@@ -500,9 +502,9 @@ define([
             result.alphaCommand = DrawCommand.shallowClone(command, result.alphaCommand);
 
             if (!defined(colorShader) || result.shaderProgramId !== command.shaderProgram.id) {
-                result.translucentCommand.shaderProgram = getTranslucentColorShaderProgram(this, context, command.shaderProgram);
+                result.translucentCommand.shaderProgram = getTranslucentColorShaderProgram(context, command.shaderProgram);
                 result.translucentCommand.renderState = getTranslucentColorRenderState(this, context, command.renderState);
-                result.alphaCommand.shaderProgram = getTranslucentAlphaShaderProgram(this, context, command.shaderProgram);
+                result.alphaCommand.shaderProgram = getTranslucentAlphaShaderProgram(context, command.shaderProgram);
                 result.alphaCommand.renderState = getTranslucentAlphaRenderState(this, context, command.renderState);
                 result.shaderProgramId = command.shaderProgram.id;
             } else {
@@ -525,6 +527,8 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+
         passState.framebuffer = oit._adjustTranslucentFBO;
         oit._adjustTranslucentCommand.execute(context, passState);
         passState.framebuffer = oit._adjustAlphaFBO;
@@ -535,7 +539,7 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            derivedCommand = command.derivedCommands.oit.translucentCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
@@ -543,7 +547,7 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            derivedCommand = command.derivedCommands.oit.alphaCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
@@ -555,6 +559,8 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+
         passState.framebuffer = oit._adjustTranslucentFBO;
         oit._adjustTranslucentCommand.execute(context, passState);
 
@@ -563,7 +569,7 @@ define([
 
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
-            var derivedCommand = command.derivedCommands.oit.translucentCommand;
+            var derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
@@ -624,23 +630,6 @@ define([
         if (defined(this._adjustAlphaCommand)) {
             this._adjustAlphaCommand.shaderProgram = this._adjustAlphaCommand.shaderProgram && this._adjustAlphaCommand.shaderProgram.destroy();
         }
-
-        var name;
-        var cache = this._translucentShaderCache;
-        for (name in cache) {
-            if (cache.hasOwnProperty(name) && defined(cache[name])) {
-                cache[name].destroy();
-            }
-        }
-        this._translucentShaderCache = {};
-
-        cache = this._alphaShaderCache;
-        for (name in cache) {
-            if (cache.hasOwnProperty(name) && defined(cache[name])) {
-                cache[name].destroy();
-            }
-        }
-        this._alphaShaderCache = {};
 
         return destroyObject(this);
     };

@@ -4,6 +4,8 @@ Thanks for contributing to Cesium.  You rock!  Are you
 * [getting started contributing](#getting-started-contributing), or
 * [opening a pull request](#opening-a-pull-request)?
 
+To ensure an inclusive community, contributors and users in the Cesium community should follow the [code of conduct](#code-of-conduct).
+
 # Submitting an Issue
 
 If you have a question, do not submit an issue; instead, search the [Cesium forum](http://cesiumjs.org/forum.html).  The forum is very active and there are years of informative archives, often with answers from the core Cesium team.  If you do not find an answer to your question, start a new thread and you'll likely get a quick response.
@@ -50,8 +52,8 @@ We love pull requests.  We strive to promptly review them, provide feedback, and
 
 Before we can merge a pull request, we require a signed Contributor License Agreement.  There is a CLA for:
 
-* [individuals](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt) and 
-* [corporations](http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt).
+* [individuals](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt) and 
+* [corporations](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt).
 
 This only needs to be completed once.  The CLA ensures you retain copyright to your contributions, and we have the right to use them and incorporate them into Cesium using the [Apache 2.0 License](LICENSE.md).
 
@@ -63,6 +65,7 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
 
 * Review the [Contributor Guides](Documentation/Contributors/README.md).  In addition to Cesium-specific topics, they contain a lot of general software development best practices.
 * If this is your first contribution to Cesium, add your name to [CONTRIBUTORS.md](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md).
+* For an overview of our workflow see [github pull request workflows](http://cesiumjs.org/2013/10/08/GitHub-Pull-Request-Workflows/).
 * Pull request tips
    * If your pull request fixes an existing issue, include a link to the issue in the description (like this: [#1](https://github.com/AnalyticalGraphicsInc/cesium/issues/1)).  Likewise, if your pull request fixes an issue reported on the Cesium forum, include a link to the thread.
    * If your pull request needs additional work, include a [task list](https://github.com/blog/1375%0A-task-lists-in-gfm-issues-pulls-comments).
@@ -76,3 +79,9 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
       * Include reference documentation with code examples.  Follow the [Documentation Guide](Documentation/Contributors/DocumentationGuide/README.md).
       * If the change is significant, add a new [Sandcastle](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html) example or extend and existing one.
    * If you added third-party libraries, including new version of existing libraries, update [LICENSE.md](LICENSE.md).  Mention it in [CHANGES.md](CHANGES.md).  If you plan to add a third-party library, start a new thread on the [Cesium forum](http://cesiumjs.org/forum.html) first.
+
+# Code of Conduct
+
+One of Cesium's strengths is our community.  Our contributors and users are pushing the 3D geospatial field to amazing new levels.  We rely on an open, friendly, inclusive environment to facilitate this.  As such, we follow the [Contributor Covenant](http://contributor-covenant.org/)'s [Code of Conduct](http://contributor-covenant.org/version/1/4/code_of_conduct.md) to ensure a harassment-free experience in the Cesium community.  Any unacceptable behavior can be confidentiality sent to the core team at pcozzi@agi.com.
+
+This applies to the main Cesium repo, forum, twitter, and all channels, including all repos in the [AnalyticalGraphicsInc](https://github.com/AnalyticalGraphicsInc) GitHub organization.

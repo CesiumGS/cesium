@@ -12,8 +12,13 @@ define([
         '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/Texture',
-        '../Shaders/PostProcessFilters/FXAA'
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
+        '../Shaders/PostProcessFilters/FXAA',
+        '../ThirdParty/Shaders/FXAA3_11'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -27,17 +32,22 @@ define([
         Renderbuffer,
         RenderbufferFormat,
         RenderState,
+        Sampler,
         Texture,
-        FXAAFS) {
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
+        FXAAFS,
+        FXAA3_11) {
     'use strict';
 
     /**
      * @private
      */
-    function FXAA(context) {
+    function FXAA() {
         this._texture = undefined;
-        this._depthTexture = undefined;
-        this._depthRenderbuffer = undefined;
+        this._depthStencilTexture = undefined;
+        this._depthStencilRenderbuffer = undefined;
         this._fbo = undefined;
         this._command = undefined;
 
@@ -50,18 +60,20 @@ define([
             owner : this
         });
         this._clearCommand = clearCommand;
+
+        this._qualityPreset = 39;
     }
 
     function destroyResources(fxaa) {
         fxaa._fbo = fxaa._fbo && fxaa._fbo.destroy();
         fxaa._texture = fxaa._texture && fxaa._texture.destroy();
-        fxaa._depthTexture = fxaa._depthTexture && fxaa._depthTexture.destroy();
-        fxaa._depthRenderbuffer = fxaa._depthRenderbuffer && fxaa._depthRenderbuffer.destroy();
+        fxaa._depthStencilTexture = fxaa._depthStencilTexture && fxaa._depthStencilTexture.destroy();
+        fxaa._depthStencilRenderbuffer = fxaa._depthStencilRenderbuffer && fxaa._depthStencilRenderbuffer.destroy();
 
         fxaa._fbo = undefined;
         fxaa._texture = undefined;
-        fxaa._depthTexture = undefined;
-        fxaa._depthRenderbuffer = undefined;
+        fxaa._depthStencilTexture = undefined;
+        fxaa._depthStencilRenderbuffer = undefined;
 
         if (defined(fxaa._command)) {
             fxaa._command.shaderProgram = fxaa._command.shaderProgram && fxaa._command.shaderProgram.destroy();
@@ -77,31 +89,37 @@ define([
         var textureChanged = !defined(fxaaTexture) || fxaaTexture.width !== width || fxaaTexture.height !== height;
         if (textureChanged) {
             this._texture = this._texture && this._texture.destroy();
-            this._depthTexture = this._depthTexture && this._depthTexture.destroy();
-            this._depthRenderbuffer = this._depthRenderbuffer && this._depthRenderbuffer.destroy();
+            this._depthStencilTexture = this._depthStencilTexture && this._depthStencilTexture.destroy();
+            this._depthStencilRenderbuffer = this._depthStencilRenderbuffer && this._depthStencilRenderbuffer.destroy();
 
             this._texture = new Texture({
                 context : context,
                 width : width,
                 height : height,
                 pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                sampler : new Sampler({
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    minificationFilter : TextureMinificationFilter.LINEAR,
+                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                })
             });
 
             if (context.depthTexture) {
-                this._depthTexture = new Texture({
+                this._depthStencilTexture = new Texture({
                     context : context,
                     width : width,
                     height : height,
-                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
-                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                    pixelFormat : PixelFormat.DEPTH_STENCIL,
+                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
                 });
             } else {
-                this._depthRenderbuffer = new Renderbuffer({
+                this._depthStencilRenderbuffer = new Renderbuffer({
                     context : context,
                     width : width,
                     height : height,
-                    format : RenderbufferFormat.DEPTH_COMPONENT16
+                    format : RenderbufferFormat.DEPTH_STENCIL
                 });
             }
         }
@@ -112,14 +130,19 @@ define([
             this._fbo = new Framebuffer({
                 context : context,
                 colorTextures : [this._texture],
-                depthTexture : this._depthTexture,
-                depthRenderbuffer : this._depthRenderbuffer,
+                depthStencilTexture : this._depthStencilTexture,
+                depthStencilRenderbuffer : this._depthStencilRenderbuffer,
                 destroyAttachments : false
             });
         }
 
         if (!defined(this._command)) {
-            this._command = context.createViewportQuadCommand(FXAAFS, {
+            var fs =
+                '#define FXAA_QUALITY_PRESET ' + this._qualityPreset + '\n' +
+                FXAA3_11 + '\n' +
+                FXAAFS;
+
+            this._command = context.createViewportQuadCommand(fs, {
                 owner : this
             });
         }
@@ -137,13 +160,13 @@ define([
 
         if (textureChanged) {
             var that = this;
-            var step = new Cartesian2(1.0 / this._texture.width, 1.0 / this._texture.height);
+            var rcpFrame = new Cartesian2(1.0 / this._texture.width, 1.0 / this._texture.height);
             this._command.uniformMap = {
                 u_texture : function() {
                     return that._texture;
                 },
-                u_step : function() {
-                    return step;
+                u_fxaaQualityRcpFrame : function() {
+                    return rcpFrame;
                 }
             };
         }

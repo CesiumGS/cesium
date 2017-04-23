@@ -4,6 +4,8 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
+        'Core/HeadingPitchRange',
         'Core/Math',
         'Scene/Camera',
         'Scene/Material',
@@ -14,6 +16,8 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Color,
+        DistanceDisplayCondition,
+        HeadingPitchRange,
         CesiumMath,
         Camera,
         Material,
@@ -347,10 +351,10 @@ defineSuite([
     });
 
     it('does not render when constructed', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('renders polylines. one polyline with no positions', function() {
@@ -369,17 +373,17 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
+            positions : positions
         });
         polylines.add();
         polylines.add({
-            positions: positions,
+            positions: positions
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('does not crash if polyline has one position', function() {
@@ -391,10 +395,10 @@ defineSuite([
             }]
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('renders polylines with duplicate positions at construction', function() {
@@ -407,10 +411,10 @@ defineSuite([
             ]
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders polylines with duplicate positions after setting positions', function() {
@@ -422,10 +426,10 @@ defineSuite([
                        new Cartesian3(0.0, 2000000.0, 0.0)
         ];
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('A polyline that used to cross the IDL but now does not, triggers vertex creation (This code used to crash)', function() {
@@ -493,10 +497,10 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('creates two vertex arrays and renders', function() {
@@ -517,19 +521,19 @@ defineSuite([
         var p1 = polylines.add({
             positions : positions
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         p1.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         polylines.add({
             positions : positions
         });
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
     });
 
@@ -561,10 +565,10 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders a polyline with no positions', function() {
@@ -585,20 +589,20 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         polylines.add({
             positions : []
         });
 
         scene.primitives.removeAll();
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders an updated polyline with no positions using set positions', function() {
@@ -619,24 +623,24 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         var p2 = polylines.add({
             positions : []
         });
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         //recreates vertex array because buffer usage changed
         p2.positions = [];
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         //should call PolylineCollection.writePositionsUpdate
         p2.positions = [];
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders an updated polyline with no positions using show', function() {
@@ -657,23 +661,23 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         var p2 = polylines.add({
             positions : []
         });
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         //recreates vertex array because buffer usage changed
         p2.show = false;
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         //should call PolylineCollection.writeMiscUpdate
         p2.show = true;
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders an updated polyline with no positions using material', function() {
@@ -694,21 +698,21 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         var p2 = polylines.add({
             positions : []
         });
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         //recreates vertex array because buffer usage changed
         p2.material = Material.fromType(Material.PolylineOutlineType);
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('changes buffer usage after 100 iterations of not changing', function() {
@@ -729,17 +733,17 @@ defineSuite([
         var p = polylines.add({
             positions : positions
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         // changes buffer usage, recreates vertex arrays
         p.positions = positions;
         for(var j = 0; j < 101; ++j){
             scene.render();
         }
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
     });
 
@@ -773,10 +777,10 @@ defineSuite([
             }]
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
@@ -797,10 +801,10 @@ defineSuite([
         });
         var bounds = BoundingSphere.fromPoints(p.positions);
         scene.camera.viewBoundingSphere(bounds);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('does not render', function() {
@@ -816,13 +820,13 @@ defineSuite([
             }]
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
         p.show = false;
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('modifies and removes a polyline, then renders', function() {
@@ -838,14 +842,14 @@ defineSuite([
             }]
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         polylines.remove(p);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('renders a green polyline', function() {
@@ -861,10 +865,10 @@ defineSuite([
             }]
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('adds and renders a polyline', function() {
@@ -880,10 +884,10 @@ defineSuite([
             }]
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         polylines.add({
             positions : [{
@@ -897,7 +901,7 @@ defineSuite([
             }]
         });
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('removes and renders a polyline', function() {
@@ -924,14 +928,14 @@ defineSuite([
             }]
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         polylines.remove(bluePolyline);
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('removes all polylines and renders', function() {
@@ -947,14 +951,14 @@ defineSuite([
             }]
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         polylines.removeAll();
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('removes all polylines, adds a polyline, and renders', function() {
@@ -970,14 +974,14 @@ defineSuite([
             }]
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         polylines.removeAll();
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         polylines.add({
             positions : [{
@@ -991,7 +995,7 @@ defineSuite([
             }]
         });
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders using polyline positions property', function() {
@@ -1007,10 +1011,10 @@ defineSuite([
             }]
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         p.positions = [{
             x : 0.0,
@@ -1021,7 +1025,7 @@ defineSuite([
             y : 1000000.0,
             z : -2000000.0
         }]; // Behind viewer
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         p.positions = [{
             x : 0.0,
@@ -1032,7 +1036,7 @@ defineSuite([
             y : 1000000.0,
             z : 0.0
         }]; // Back in front of viewer
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders and updates one polyline from many polylines using show property', function() {
@@ -1073,16 +1077,16 @@ defineSuite([
             width : 2
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         p.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         p.show = true;
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders using polyline show property', function() {
@@ -1099,16 +1103,16 @@ defineSuite([
             show:true
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         p.show = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         p.show = true;
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders four polylines with different widths', function() {
@@ -1148,10 +1152,10 @@ defineSuite([
             }],
             width : 7
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders three polylines with different widths and updates one', function() {
@@ -1187,16 +1191,16 @@ defineSuite([
             }],
             width : 7
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         p2.material = Material.fromType(Material.PolylineOutlineType);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         p2.material = Material.fromType(Material.ColorType);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('does not render with width 0.0', function() {
@@ -1213,13 +1217,48 @@ defineSuite([
             width : 7
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         line.width = 0.0;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
+    });
+
+    it('renders with a distance display condition', function() {
+        var near = 100.0;
+        var far = 10000.0;
+
+        var line = polylines.add({
+            positions : [{
+                x : 10.0,
+                y : -10.0,
+                z : 0.0
+            }, {
+                x : 10.0,
+                y : 10.0,
+                z : 0.0
+            }],
+            width : 7,
+            distanceDisplayCondition : new DistanceDisplayCondition(near, far)
+        });
+
+        scene.primitives.add(polylines);
+        scene.renderForSpecs();
+
+        var boundingSphere = line._boundingVolumeWC;
+        var center = boundingSphere.center;
+        var radius = boundingSphere.radius;
+
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near - 10.0));
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near + 1.0));
+        expect(scene).notToRender([0, 0, 0, 255]);
+
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 10.0));
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('changes polyline position size recreates vertex arrays', function() {
@@ -1239,13 +1278,13 @@ defineSuite([
             positions : positions
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         p.positions = positions;
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         positions.push({
                 x : 0.0,
@@ -1254,7 +1293,7 @@ defineSuite([
             });
 
         p.positions = positions;
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('changes polyline width property', function() {
@@ -1280,19 +1319,19 @@ defineSuite([
                 z : 0.0
             }]
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(polylines);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         p1.width = 2;
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         p2.width = 2;
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         p1.width = 1;
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
     });
 
@@ -1311,9 +1350,10 @@ defineSuite([
         });
 
         scene.primitives.add(polylines);
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p);
-        expect(pickedObject.id).toEqual('id');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(p);
+            expect(result.id).toEqual('id');
+        });
     });
 
     it('can change pick id', function() {
@@ -1331,15 +1371,17 @@ defineSuite([
         });
 
         scene.primitives.add(polylines);
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p);
-        expect(pickedObject.id).toEqual('id');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(p);
+            expect(result.id).toEqual('id');
+        });
 
         p.id = 'id2';
 
-        pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p);
-        expect(pickedObject.id).toEqual('id2');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(p);
+            expect(result.id).toEqual('id2');
+        });
     });
 
     it('is not picked (show === false)', function() {
@@ -1357,7 +1399,7 @@ defineSuite([
         });
         scene.primitives.add(polylines);
 
-        expect(scene.pickForSpecs()).toBeUndefined();
+        expect(scene).notToPick();
     });
 
     it('is not picked (alpha === 0.0)', function() {
@@ -1375,7 +1417,7 @@ defineSuite([
         p.material.uniforms.color.alpha = 0.0;
         scene.primitives.add(polylines);
 
-        expect(scene.pickForSpecs()).toBeUndefined();
+        expect(scene).notToPick();
     });
 
     it('does not equal undefined', function() {

@@ -2,24 +2,20 @@
 defineSuite([
         'Scene/Moon',
         'Core/BoundingSphere',
-        'Core/Cartesian3',
         'Core/Color',
         'Core/defined',
         'Core/Ellipsoid',
         'Core/Matrix3',
-        'Core/Matrix4',
         'Core/Simon1994PlanetaryPositions',
         'Core/Transforms',
         'Specs/createScene'
     ], function(
         Moon,
         BoundingSphere,
-        Cartesian3,
         Color,
         defined,
         Ellipsoid,
         Matrix3,
-        Matrix4,
         Simon1994PlanetaryPositions,
         Transforms,
         createScene) {
@@ -61,25 +57,25 @@ defineSuite([
     });
 
     it('draws in 3D', function() {
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
         scene.moon = new Moon();
 
         lookAtMoon(scene.camera, scene.frameState.time);
 
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
         scene.moon = scene.moon.destroy();
     });
 
     it('does not render when show is false', function() {
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
         scene.moon = new Moon();
 
         lookAtMoon(scene.camera, scene.frameState.time);
 
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
         scene.moon.show = false;
 
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
         scene.moon = scene.moon.destroy();
     });
 

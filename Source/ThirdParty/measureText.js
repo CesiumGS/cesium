@@ -95,6 +95,8 @@ define(function() {
     var metrics = context2D.measureText(textstring),
         fontFamily = getCSSValue(context2D.canvas,"font-family"),
         fontSize = getCSSValue(context2D.canvas,"font-size").replace("px",""),
+        fontStyle = getCSSValue(context2D.canvas,"font-style"),
+        fontWeight = getCSSValue(context2D.canvas,"font-weight"),
         isSpace = !(/\S/.test(textstring));
         metrics.fontsize = fontSize;
 
@@ -102,7 +104,7 @@ define(function() {
     var leadDiv = document.createElement("div");
     leadDiv.style.position = "absolute";
     leadDiv.style.opacity = 0;
-    leadDiv.style.font = fontSize + "px " + fontFamily;
+    leadDiv.style.font = fontStyle + " " + fontWeight + " " + fontSize + "px " + fontFamily;
     leadDiv.innerHTML = textstring + "<br/>" + textstring;
     document.body.appendChild(leadDiv);
 
@@ -125,8 +127,10 @@ define(function() {
         canvas.style.opacity = 1;
         canvas.style.fontFamily = fontFamily;
         canvas.style.fontSize = fontSize;
+        canvas.style.fontStyle = fontStyle;
+        canvas.style.fontWeight = fontWeight;
         var ctx = canvas.getContext("2d");
-        ctx.font = fontSize + "px " + fontFamily;
+        ctx.font = fontStyle + " " + fontWeight + " " + fontSize + "px " + fontFamily;
 
         var w = canvas.width,
             h = canvas.height,

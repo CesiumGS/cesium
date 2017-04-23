@@ -64,6 +64,7 @@ function setProperties() {
     });
 
     entity.label.scale = 2.0;
+    entity.label.showBackground = true;
 }
 
 function offsetByDistance() {
@@ -80,6 +81,7 @@ function offsetByDistance() {
             label : {
                 text : 'Label on top of scaling billboard',
                 font : '20px sans-serif',
+                showBackground : true,
                 horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
                 pixelOffset : new Cesium.Cartesian2(0.0, -image.height),
                 pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)
@@ -103,6 +105,18 @@ function fadeByDistance() {
         label : {
             text : 'Atlanta',
             translucencyByDistance : new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0)
+        }
+    });
+}
+
+function scaleByDistance() {
+    Sandcastle.declare(scaleByDistance);
+
+    viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+        label : {
+            text : 'Philadelphia',
+            scaleByDistance : new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5)
         }
     });
 }
@@ -136,6 +150,12 @@ Sandcastle.addToolbarMenu([{
     onselect : function() {
         fadeByDistance();
         Sandcastle.highlight(fadeByDistance);
+    }
+}, {
+    text : 'Scale label by distance',
+    onselect : function() {
+        scaleByDistance();
+        Sandcastle.highlight(scaleByDistance);
     }
 }]);
 

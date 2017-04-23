@@ -12,7 +12,6 @@ define([
         '../Core/Ellipsoid',
         '../Core/EllipsoidTerrainProvider',
         '../Core/Event',
-        '../Core/GeographicProjection',
         '../Core/IntersectionTests',
         '../Core/loadImage',
         '../Core/Ray',
@@ -27,7 +26,8 @@ define([
         './GlobeSurfaceTileProvider',
         './ImageryLayerCollection',
         './QuadtreePrimitive',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         BoundingSphere,
         buildModuleUrl,
@@ -41,7 +41,6 @@ define([
         Ellipsoid,
         EllipsoidTerrainProvider,
         Event,
-        GeographicProjection,
         IntersectionTests,
         loadImage,
         Ray,
@@ -56,7 +55,8 @@ define([
         GlobeSurfaceTileProvider,
         ImageryLayerCollection,
         QuadtreePrimitive,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
 
     /**
@@ -188,23 +188,14 @@ define([
         this.depthTestAgainstTerrain = false;
 
         /**
-         * Determines whether the globe casts shadows from each light source. Any primitive that has
-         * <code>receiveShadows</code> set to <code>true</code> will receive shadows that are casted by
-         * the globe. This may impact performance since the terrain is rendered again from the light's
-         * perspective. Currently only terrain that is in view casts shadows.
+         * Determines whether the globe casts or receives shadows from each light source. Setting the globe
+         * to cast shadows may impact performance since the terrain is rendered again from the light's perspective.
+         * Currently only terrain that is in view casts shadows. By default the globe does not cast shadows.
          *
-         * @type {Boolean}
-         * @default false
+         * @type {ShadowMode}
+         * @default ShadowMode.RECEIVE_ONLY
          */
-        this.castShadows = false;
-
-        /**
-         * Determines whether the globe receives shadows from shadow casters in the scene.
-         *
-         * @type {Boolean}
-         * @default true
-         */
-        this.receiveShadows = true;
+        this.shadows = ShadowMode.RECEIVE_ONLY;
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
@@ -380,6 +371,10 @@ define([
     var scratchGetHeightCartographic = new Cartographic();
     var scratchGetHeightRay = new Ray();
 
+    function tileIfContainsCartographic(tile, cartographic) {
+        return Rectangle.contains(tile.rectangle, cartographic) ? tile : undefined;
+    }
+
     /**
      * Get the height of the surface at a given cartographic.
      *
@@ -414,15 +409,10 @@ define([
         }
 
         while (tile.renderable) {
-            var children = tile.children;
-            length = children.length;
-
-            for (i = 0; i < length; ++i) {
-                tile = children[i];
-                if (Rectangle.contains(tile.rectangle, cartographic)) {
-                    break;
-                }
-            }
+            tile = tileIfContainsCartographic(tile.southwestChild, cartographic) ||
+                   tileIfContainsCartographic(tile.southeastChild, cartographic) ||
+                   tileIfContainsCartographic(tile.northwestChild, cartographic) ||
+                   tile.northeastChild;
         }
 
         while (defined(tile) && (!defined(tile.data) || !defined(tile.data.pickTerrain))) {
@@ -434,10 +424,27 @@ define([
         }
 
         var ellipsoid = this._surface._tileProvider.tilingScheme.ellipsoid;
-        var cartesian = ellipsoid.cartographicToCartesian(cartographic, scratchGetHeightCartesian);
+
+        //cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
+        var cartesian = Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0, ellipsoid, scratchGetHeightCartesian);
 
         var ray = scratchGetHeightRay;
-        Cartesian3.normalize(cartesian, ray.direction);
+        var surfaceNormal = ellipsoid.geodeticSurfaceNormal(cartesian, ray.direction);
+
+        // Try to find the intersection point between the surface normal and z-axis.
+        // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+        var rayOrigin = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesian, 11500.0, ray.origin);
+
+        // Theoretically, not with Earth datums, the intersection point can be outside the ellipsoid
+        if (!defined(rayOrigin)) {
+            // intersection point is outside the ellipsoid, try other value
+            // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+            var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
+
+            // multiply by the *positive* value of the magnitude
+            var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchGetHeightIntersection);
+            Cartesian3.subtract(cartesian, vectorToMinimumPoint, ray.origin);
+        }
 
         var intersection = tile.data.pick(ray, undefined, undefined, false, scratchGetHeightIntersection);
         if (!defined(intersection)) {
@@ -505,8 +512,7 @@ define([
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
-            tileProvider.castShadows = this.castShadows;
-            tileProvider.receiveShadows = this.receiveShadows;
+            tileProvider.shadows = this.shadows;
 
             surface.beginFrame(frameState);
         }

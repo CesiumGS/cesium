@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -8,11 +9,13 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/Matrix4',
         '../Core/NearFarScalar',
         './SceneMode',
         './SceneTransforms'
     ], function(
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -21,6 +24,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        DistanceDisplayCondition,
         Matrix4,
         NearFarScalar,
         SceneMode,
@@ -43,6 +47,7 @@ define([
      *
      * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+     * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
      *
      * @see PointPrimitiveCollection
      * @see PointPrimitiveCollection#add
@@ -61,6 +66,12 @@ define([
         if (defined(options.translucencyByDistance) && options.translucencyByDistance.far <= options.translucencyByDistance.near) {
             throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
         }
+        if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
+            throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
+        }
+        if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
+            throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
+        }
         //>>includeEnd('debug');
 
         this._show = defaultValue(options.show, true);
@@ -72,8 +83,12 @@ define([
         this._pixelSize = defaultValue(options.pixelSize, 10.0);
         this._scaleByDistance = options.scaleByDistance;
         this._translucencyByDistance = options.translucencyByDistance;
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
+        this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
         this._id = options.id;
         this._collection = defaultValue(options.collection, pointPrimitiveCollection);
+
+        this._clusterShow = true;
 
         this._pickId = undefined;
         this._pointPrimitiveCollection = pointPrimitiveCollection;
@@ -89,7 +104,9 @@ define([
     var PIXEL_SIZE_INDEX = PointPrimitive.PIXEL_SIZE_INDEX = 5;
     var SCALE_BY_DISTANCE_INDEX = PointPrimitive.SCALE_BY_DISTANCE_INDEX = 6;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX = 7;
-    PointPrimitive.NUMBER_OF_PROPERTIES = 8;
+    var DISTANCE_DISPLAY_CONDITION_INDEX = PointPrimitive.DISTANCE_DISPLAY_CONDITION_INDEX = 8;
+    var DISABLE_DEPTH_DISTANCE_INDEX = PointPrimitive.DISABLE_DEPTH_DISTANCE_INDEX = 9;
+    PointPrimitive.NUMBER_OF_PROPERTIES = 10;
 
     function makeDirty(pointPrimitive, propertyChanged) {
         var pointPrimitiveCollection = pointPrimitive._pointPrimitiveCollection;
@@ -340,6 +357,53 @@ define([
         },
 
         /**
+         * Gets or sets the condition specifying at what distance from the camera that this point will be displayed.
+         * @memberof PointPrimitive.prototype
+         * @type {DistanceDisplayCondition}
+         * @default undefined
+         */
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && value.far <= value.near) {
+                    throw new DeveloperError('far must be greater than near');
+                }
+                //>>includeEnd('debug');
+                if (!DistanceDisplayCondition.equals(this._distanceDisplayCondition, value)) {
+                    this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
+                    makeDirty(this, DISTANCE_DISPLAY_CONDITION_INDEX);
+                }
+            }
+        },
+
+        /**
+         * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+         * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+         * @memberof PointPrimitive.prototype
+         * @type {Number}
+         * @default 0.0
+         */
+        disableDepthTestDistance : {
+            get : function() {
+                return this._disableDepthTestDistance;
+            },
+            set : function(value) {
+                if (this._disableDepthTestDistance !== value) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (!defined(value) || value < 0.0) {
+                        throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
+                    }
+                    //>>includeEnd('debug');
+                    this._disableDepthTestDistance = value;
+                    makeDirty(this, DISABLE_DEPTH_DISTANCE_INDEX);
+                }
+            }
+        },
+
+        /**
          * Gets or sets the user-defined object returned when the point is picked.
          * @memberof PointPrimitive.prototype
          * @type {Object}
@@ -352,6 +416,24 @@ define([
                 this._id = value;
                 if (defined(this._pickId)) {
                     this._pickId.object.id = value;
+                }
+            }
+        },
+
+        /**
+         * Determines whether or not this point will be shown or hidden because it was clustered.
+         * @memberof PointPrimitive.prototype
+         * @type {Boolean}
+         * @private
+         */
+        clusterShow : {
+            get : function() {
+                return this._clusterShow;
+            },
+            set : function(value) {
+                if (this._clusterShow !== value) {
+                    this._clusterShow = value;
+                    makeDirty(this, SHOW_INDEX);
                 }
             }
         }
@@ -429,8 +511,42 @@ define([
 
         var modelMatrix = pointPrimitiveCollection.modelMatrix;
         var windowCoordinates = PointPrimitive._computeScreenSpacePosition(modelMatrix, this._actualPosition, scene, result);
+        if (!defined(windowCoordinates)) {
+            return undefined;
+        }
+
         windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
         return windowCoordinates;
+    };
+
+    /**
+     * Gets a point's screen space bounding box centered around screenSpacePosition.
+     * @param {PointPrimitive} point The point to get the screen space bounding box for.
+     * @param {Cartesian2} screenSpacePosition The screen space center of the label.
+     * @param {BoundingRectangle} [result] The object onto which to store the result.
+     * @returns {BoundingRectangle} The screen space bounding box.
+     *
+     * @private
+     */
+    PointPrimitive.getScreenSpaceBoundingBox = function(point, screenSpacePosition, result) {
+        var size = point.pixelSize;
+        var halfSize = size * 0.5;
+
+        var x = screenSpacePosition.x - halfSize;
+        var y = screenSpacePosition.y - halfSize;
+        var width = size;
+        var height = size;
+
+        if (!defined(result)) {
+            result = new BoundingRectangle();
+        }
+
+        result.x = x;
+        result.y = y;
+        result.width = width;
+        result.height = height;
+
+        return result;
     };
 
     /**
@@ -451,7 +567,9 @@ define([
                this._show === other._show &&
                Color.equals(this._outlineColor, other._outlineColor) &&
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
-               NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance);
+               NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
+               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
+               this._disableDepthTestDistance === other._disableDepthTestDistance;
     };
 
     PointPrimitive.prototype._destroy = function() {

@@ -202,10 +202,10 @@ define([
 
     /**
      * Subdivides polyline and raises all points to the specified height.  Returns an array of numbers to represent the positions.
-     * @param {Cartesian3[]} positions The array of type {Cartesian3} representing positions.
-     * @param {Number|Number[]} [height=0.0] A number or array of numbers representing the heights of each position.
-     * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
+     * @param {Number|Number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
+     * @param {Number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      * @returns {Number[]} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
      *
      * @example
@@ -233,11 +233,13 @@ define([
         var length = positions.length;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var height = defaultValue(options.height, 0);
+        var hasHeightArray = isArray(height);
 
         if (length < 1) {
             return [];
         } else if (length === 1) {
             var p = ellipsoid.scaleToGeodeticSurface(positions[0], scaleFirst);
+            height = hasHeightArray ? height[0] : height;
             if (height !== 0) {
                 var n = ellipsoid.geodeticSurfaceNormal(p, cartesian);
                 Cartesian3.multiplyByScalar(n, height, n);
@@ -263,7 +265,6 @@ define([
         var arrayLength = (numPoints + 1) * 3;
         var newPositions = new Array(arrayLength);
         var offset = 0;
-        var hasHeightArray = isArray(height);
 
         for (i = 0; i < length - 1; i++) {
             var p0 = positions[i];
@@ -288,10 +289,10 @@ define([
 
     /**
      * Subdivides polyline and raises all points to the specified height. Returns an array of new {Cartesian3} positions.
-     * @param {Cartesian3[]} positions The array of type {Cartesian3} representing positions.
-     * @param {Number|Number[]} [height=0.0] A number or array of numbers representing the heights of each position.
-     * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
+     * @param {Number|Number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
+     * @param {Number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
      *
      * @example

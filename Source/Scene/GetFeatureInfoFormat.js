@@ -1,14 +1,12 @@
 /*global define*/
 define([
         '../Core/Cartographic',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         './ImageryLayerFeatureInfo'
     ], function(
         Cartographic,
-        defaultValue,
         defined,
         DeveloperError,
         RuntimeError,

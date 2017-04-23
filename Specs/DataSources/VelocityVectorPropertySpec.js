@@ -5,7 +5,9 @@ defineSuite([
         'Core/Event',
         'Core/ExtrapolationType',
         'Core/JulianDate',
+        'Core/Math',
         'DataSources/CallbackProperty',
+        'DataSources/ConstantPositionProperty',
         'DataSources/SampledPositionProperty'
     ], function(
         VelocityVectorProperty,
@@ -13,7 +15,9 @@ defineSuite([
         Event,
         ExtrapolationType,
         JulianDate,
+        CesiumMath,
         CallbackProperty,
+        ConstantPositionProperty,
         SampledPositionProperty) {
     'use strict';
 
@@ -25,18 +29,20 @@ defineSuite([
         expect(property.definitionChanged).toBeInstanceOf(Event);
         expect(property.position).toBeUndefined();
         expect(property.getValue(time)).toBeUndefined();
+        expect(property.normalize).toBe(true);
     });
 
     it('can construct with arguments', function() {
         var position = new SampledPositionProperty();
-        var property = new VelocityVectorProperty(position);
+        var property = new VelocityVectorProperty(position, false);
         expect(property.isConstant).toBe(true);
         expect(property.definitionChanged).toBeInstanceOf(Event);
         expect(property.position).toBe(position);
-        expect(property.getValue(time)).toBeUndefined();
+        expect(property.getValue(time)).toEqual(Cartesian3.ZERO);
+        expect(property.normalize).toBe(false);
     });
 
-    it('setting position raises definitionChanged event', function() {
+    it('raises definitionChanged event when position is set', function() {
         var property = new VelocityVectorProperty();
 
         var listener = jasmine.createSpy('listener');
@@ -47,7 +53,20 @@ defineSuite([
         expect(listener).toHaveBeenCalledWith(property);
     });
 
-    it('subscribes/unsubscribes to position definitionChanged and propagates up', function() {
+    it('raises definitionChanged event when normalize changes', function() {
+        var property = new VelocityVectorProperty(new SampledPositionProperty());
+
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.normalize = true;
+        expect(listener.calls.count()).toBe(0);
+
+        property.normalize = false;
+        expect(listener).toHaveBeenCalledWith(property);
+    });
+
+    it('subscribes and unsubscribes to position definitionChanged and propagates up', function() {
         var position = new SampledPositionProperty();
         var property = new VelocityVectorProperty(position);
 
@@ -66,7 +85,7 @@ defineSuite([
         expect(listener.calls.count()).toBe(0);
     });
 
-    it('setting position does not raise definitionChanged event for same data', function() {
+    it('does not raise definitionChanged event when position is set to the same instance', function() {
         var position = new SampledPositionProperty();
         var property = new VelocityVectorProperty(position);
 
@@ -77,50 +96,103 @@ defineSuite([
         expect(listener.calls.count()).toBe(0);
     });
 
-    it('works without result parameter', function() {
+    it('produces correct normalized value when called without result parameter', function() {
         var times = [new JulianDate(0, 0), new JulianDate(0, 1.0 / 60.0)];
-        var values = [Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(1, 0, 0)];
-        var velocity = Cartesian3.subtract(values[1], values[0], new Cartesian3());
-        Cartesian3.normalize(velocity, velocity);
+        var values = [new Cartesian3(0.0, 0.0, 0.0), new Cartesian3(20.0, 0.0, 0.0)];
 
         var position = new SampledPositionProperty();
         position.addSamples(times, values);
 
         var property = new VelocityVectorProperty(position);
 
-        expect(property.getValue(times[0])).toEqual(velocity);
-        expect(property.getValue(times[1])).toEqual(velocity);
+        var expectedVelocityDirection = new Cartesian3(1.0, 0.0, 0.0);
+        expect(property.getValue(times[0])).toEqual(expectedVelocityDirection);
+        expect(property.getValue(times[1])).toEqual(expectedVelocityDirection);
     });
 
-    it('works with result parameter', function() {
+    it('produces correct normalized value when called with result parameter', function() {
         var times = [new JulianDate(0, 0), new JulianDate(0, 1.0 / 60.0)];
-        var values = [Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(1, 0, 0)];
-        var velocity = Cartesian3.subtract(values[1], values[0], new Cartesian3());
-        Cartesian3.normalize(velocity, velocity);
+        var values = [new Cartesian3(0.0, 0.0, 0.0), new Cartesian3(20.0, 0.0, 0.0)];
 
         var position = new SampledPositionProperty();
         position.addSamples(times, values);
 
         var property = new VelocityVectorProperty(position);
+
+        var expectedVelocityDirection = new Cartesian3(1.0, 0.0, 0.0);
 
         var expected = new Cartesian3();
         var result = property.getValue(times[0], expected);
         expect(result).toBe(expected);
-        expect(expected).toEqual(velocity);
+        expect(result).toEqual(expectedVelocityDirection);
     });
 
-    it('is undefined at zero velocity', function() {
+    it('produces correct unnormalized value when called without result parameter', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(0, 1.0)];
+        var values = [new Cartesian3(0.0, 0.0, 0.0), new Cartesian3(20.0, 0.0, 0.0)];
+
+        var position = new SampledPositionProperty();
+        position.addSamples(times, values);
+
+        var property = new VelocityVectorProperty(position, false);
+
+        var expectedVelocity = new Cartesian3(20.0, 0.0, 0.0);
+        expect(property.getValue(times[0])).toEqualEpsilon(expectedVelocity, CesiumMath.EPSILON13);
+        expect(property.getValue(times[1])).toEqualEpsilon(expectedVelocity, CesiumMath.EPSILON13);
+    });
+
+    it('produces correct unnormalized value when called with result parameter', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(0, 1.0)];
+        var values = [new Cartesian3(0.0, 0.0, 0.0), new Cartesian3(20.0, 0.0, 0.0)];
+
+        var position = new SampledPositionProperty();
+        position.addSamples(times, values);
+
+        var property = new VelocityVectorProperty(position, false);
+
+        var expectedVelocity = new Cartesian3(20.0, 0.0, 0.0);
+
+        var expected = new Cartesian3();
+        var result = property.getValue(times[0], expected);
+        expect(result).toBe(expected);
+        expect(result).toEqualEpsilon(expectedVelocity, CesiumMath.EPSILON13);
+    });
+
+    it('produces normalized value of undefined with constant position', function() {
+        var position = new ConstantPositionProperty(new Cartesian3(1.0, 2.0, 3.0));
+
+        var property = new VelocityVectorProperty(position);
+        expect(property.getValue(new JulianDate())).toBeUndefined();
+    });
+
+    it('produces unnormalized value of zero with constant position', function() {
+        var position = new ConstantPositionProperty(new Cartesian3(1.0, 2.0, 3.0));
+
+        var property = new VelocityVectorProperty(position, false);
+        expect(property.getValue(new JulianDate())).toEqual(Cartesian3.ZERO);
+    });
+
+    it('produces normalized value of undefined at zero velocity', function() {
         var position = new CallbackProperty(function() {
-            return Cartesian3.fromDegrees(0, 0, 0);
+            return new Cartesian3(0, 0, 0);
         }, false);
 
         var property = new VelocityVectorProperty(position);
         expect(property.getValue(new JulianDate())).toBeUndefined();
     });
 
+    it('produces unnormalized value of zero at zero velocity', function() {
+        var position = new CallbackProperty(function() {
+            return new Cartesian3(0, 0, 0);
+        }, false);
+
+        var property = new VelocityVectorProperty(position, false);
+        expect(property.getValue(new JulianDate())).toEqual(Cartesian3.ZERO);
+    });
+
     it('returns undefined when position value is undefined', function() {
         var position = new SampledPositionProperty();
-        position.addSample(new JulianDate(1, 0), Cartesian3.fromDegrees(0, 0, 0));
+        position.addSample(new JulianDate(1, 0), new Cartesian3(0.0, 0.0, 0.0));
         position.forwardExtrapolationType = ExtrapolationType.NONE;
         position.backwardExtrapolationType = ExtrapolationType.NONE;
 
@@ -132,7 +204,7 @@ defineSuite([
 
     it('returns undefined when position has exactly one value', function() {
         var position = new SampledPositionProperty();
-        position.addSample(new JulianDate(1, 0), Cartesian3.fromDegrees(0, 0, 0));
+        position.addSample(new JulianDate(1, 0), new Cartesian3(0.0, 0.0, 0.0));
         position.forwardExtrapolationType = ExtrapolationType.NONE;
         position.backwardExtrapolationType = ExtrapolationType.NONE;
 

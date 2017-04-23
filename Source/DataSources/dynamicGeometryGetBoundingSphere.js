@@ -30,7 +30,7 @@ define([
         if (defined(primitive) && primitive.show && primitive.ready) {
             attributes = primitive.getGeometryInstanceAttributes(entity);
             if (defined(attributes) && defined(attributes.boundingSphere)) {
-                BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, result);
+                BoundingSphere.clone(attributes.boundingSphere, result);
                 return BoundingSphereState.DONE;
             }
         }
@@ -38,7 +38,7 @@ define([
         if (defined(outlinePrimitive) && outlinePrimitive.show && outlinePrimitive.ready) {
             attributes = outlinePrimitive.getGeometryInstanceAttributes(entity);
             if (defined(attributes) && defined(attributes.boundingSphere)) {
-                BoundingSphere.transform(attributes.boundingSphere, outlinePrimitive.modelMatrix, result);
+                BoundingSphere.clone(attributes.boundingSphere, result);
                 return BoundingSphereState.DONE;
             }
         }

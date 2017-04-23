@@ -2,19 +2,29 @@
 defineSuite([
         'DataSources/ModelGraphics',
         'Core/Cartesian3',
+        'Core/Color',
+        'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Quaternion',
         'DataSources/ConstantProperty',
         'DataSources/NodeTransformationProperty',
-        'DataSources/PropertyBag'
+        'DataSources/PropertyBag',
+        'Scene/ColorBlendMode',
+        'Scene/HeightReference',
+        'Scene/ShadowMode'
     ], function(
         ModelGraphics,
         Cartesian3,
+        Color,
+        DistanceDisplayCondition,
         JulianDate,
         Quaternion,
         ConstantProperty,
         NodeTransformationProperty,
-        PropertyBag) {
+        PropertyBag,
+        ColorBlendMode,
+        HeightReference,
+        ShadowMode) {
     'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
@@ -25,9 +35,15 @@ defineSuite([
             minimumPixelSize : 2,
             maximumScale : 200,
             incrementallyLoadTextures : false,
-            castShadows : false,
-            receiveShadows : false,
             runAnimations : false,
+            shadows : ShadowMode.DISABLED,
+            heightReference : HeightReference.CLAMP_TO_GROUND,
+            distanceDisplayCondition : new DistanceDisplayCondition(),
+            silhouetteColor : new Color(1.0, 0.0, 0.0, 1.0),
+            silhouetteSize : 3.0,
+            color : new Color(0.0, 1.0, 0.0, 0.2),
+            colorBlendMode : ColorBlendMode.HIGHLIGHT,
+            colorBlendAmount : 0.5,
             nodeTransformations : {
                 node1 : {
                     translation : Cartesian3.UNIT_Y,
@@ -44,8 +60,14 @@ defineSuite([
         expect(model.minimumPixelSize).toBeInstanceOf(ConstantProperty);
         expect(model.maximumScale).toBeInstanceOf(ConstantProperty);
         expect(model.incrementallyLoadTextures).toBeInstanceOf(ConstantProperty);
-        expect(model.castShadows).toBeInstanceOf(ConstantProperty);
-        expect(model.receiveShadows).toBeInstanceOf(ConstantProperty);
+        expect(model.shadows).toBeInstanceOf(ConstantProperty);
+        expect(model.heightReference).toBeInstanceOf(ConstantProperty);
+        expect(model.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+        expect(model.silhouetteColor).toBeInstanceOf(ConstantProperty);
+        expect(model.silhouetteSize).toBeInstanceOf(ConstantProperty);
+        expect(model.color).toBeInstanceOf(ConstantProperty);
+        expect(model.colorBlendMode).toBeInstanceOf(ConstantProperty);
+        expect(model.colorBlendAmount).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
 
         expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
@@ -56,8 +78,14 @@ defineSuite([
         expect(model.minimumPixelSize.getValue()).toEqual(options.minimumPixelSize);
         expect(model.maximumScale.getValue()).toEqual(options.maximumScale);
         expect(model.incrementallyLoadTextures.getValue()).toEqual(options.incrementallyLoadTextures);
-        expect(model.castShadows.getValue()).toEqual(options.castShadows);
-        expect(model.receiveShadows.getValue()).toEqual(options.receiveShadows);
+        expect(model.shadows.getValue()).toEqual(options.shadows);
+        expect(model.heightReference.getValue()).toEqual(options.heightReference);
+        expect(model.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
+        expect(model.silhouetteColor.getValue()).toEqual(options.silhouetteColor);
+        expect(model.silhouetteSize.getValue()).toEqual(options.silhouetteSize);
+        expect(model.color.getValue()).toEqual(options.color);
+        expect(model.colorBlendMode.getValue()).toEqual(options.colorBlendMode);
+        expect(model.colorBlendAmount.getValue()).toEqual(options.colorBlendAmount);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
 
         var actualNodeTransformations = model.nodeTransformations.getValue(new JulianDate());
@@ -77,8 +105,14 @@ defineSuite([
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
-        source.castShadows = new ConstantProperty(true);
-        source.receiveShadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        source.silhouetteColor = new ConstantProperty(new Color(1.0, 0.0, 0.0, 1.0));
+        source.silhouetteSize = new ConstantProperty(3.0);
+        source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+        source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
+        source.colorBlendAmount = new ConstantProperty(0.5);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty({
@@ -100,8 +134,14 @@ defineSuite([
         expect(target.minimumPixelSize).toBe(source.minimumPixelSize);
         expect(target.maximumScale).toBe(source.maximumScale);
         expect(target.incrementallyLoadTextures).toBe(source.incrementallyLoadTextures);
-        expect(target.castShadows).toBe(source.castShadows);
-        expect(target.receiveShadows).toBe(source.receiveShadows);
+        expect(target.shadows).toBe(source.shadows);
+        expect(target.heightReference).toBe(source.heightReference);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(target.silhouetteColor).toEqual(source.silhouetteColor);
+        expect(target.silhouetteSize).toEqual(source.silhouetteSize);
+        expect(target.color).toBe(source.color);
+        expect(target.colorBlendMode).toBe(source.colorBlendMode);
+        expect(target.colorBlendAmount).toBe(source.colorBlendAmount);
         expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
     });
@@ -114,8 +154,14 @@ defineSuite([
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
-        source.castShadows = new ConstantProperty(true);
-        source.receiveShadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        source.silhouetteColor = new ConstantProperty(new Color());
+        source.silhouetteSize = new ConstantProperty(1.0);
+        source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+        source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
+        source.colorBlendAmount = new ConstantProperty(0.5);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
@@ -127,8 +173,14 @@ defineSuite([
         var minimumPixelSize = new ConstantProperty(2.0);
         var maximumScale = new ConstantProperty(200.0);
         var incrementallyLoadTextures = new ConstantProperty(true);
-        var castShadows = new ConstantProperty(true);
-        var receiveShadows = new ConstantProperty(true);
+        var shadows = new ConstantProperty(ShadowMode.ENABLED);
+        var heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+        var distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        var silhouetteColor = new ConstantProperty(new Color());
+        var silhouetteSize = new ConstantProperty(1.0);
+        var color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+        var colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
+        var colorBlendAmount = new ConstantProperty(0.5);
         var runAnimations = new ConstantProperty(true);
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
@@ -141,8 +193,14 @@ defineSuite([
         target.minimumPixelSize = minimumPixelSize;
         target.maximumScale = maximumScale;
         target.incrementallyLoadTextures = incrementallyLoadTextures;
-        target.castShadows = castShadows;
-        target.receiveShadows = receiveShadows;
+        target.shadows = shadows;
+        target.heightReference = heightReference;
+        target.distanceDisplayCondition = distanceDisplayCondition;
+        target.silhouetteColor = silhouetteColor;
+        target.silhouetteSize = silhouetteSize;
+        target.color = color;
+        target.colorBlendMode = colorBlendMode;
+        target.colorBlendAmount = colorBlendAmount;
         target.runAnimations = runAnimations;
         target.nodeTransformations = nodeTransformations;
 
@@ -154,8 +212,14 @@ defineSuite([
         expect(target.minimumPixelSize).toBe(minimumPixelSize);
         expect(target.maximumScale).toBe(maximumScale);
         expect(target.incrementallyLoadTextures).toBe(incrementallyLoadTextures);
-        expect(target.castShadows).toBe(castShadows);
-        expect(target.receiveShadows).toBe(receiveShadows);
+        expect(target.shadows).toBe(shadows);
+        expect(target.heightReference).toBe(heightReference);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
+        expect(target.silhouetteColor).toBe(silhouetteColor);
+        expect(target.silhouetteSize).toBe(silhouetteSize);
+        expect(target.color).toBe(color);
+        expect(target.colorBlendMode).toBe(colorBlendMode);
+        expect(target.colorBlendAmount).toBe(colorBlendAmount);
         expect(target.runAnimations).toBe(runAnimations);
         expect(target.nodeTransformations).toBe(nodeTransformations);
     });
@@ -168,8 +232,14 @@ defineSuite([
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
-        source.castShadows = new ConstantProperty(true);
-        source.receiveShadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        source.silhouetteColor = new ConstantProperty(new Color());
+        source.silhouetteSize = new ConstantProperty(2.0);
+        source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+        source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
+        source.colorBlendAmount = new ConstantProperty(0.5);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty(),
@@ -183,8 +253,14 @@ defineSuite([
         expect(result.minimumPixelSize).toBe(source.minimumPixelSize);
         expect(result.maximumScale).toBe(source.maximumScale);
         expect(result.incrementallyLoadTextures).toBe(source.incrementallyLoadTextures);
-        expect(result.castShadows).toBe(source.castShadows);
-        expect(result.receiveShadows).toBe(source.receiveShadows);
+        expect(result.shadows).toBe(source.shadows);
+        expect(result.heightReference).toBe(source.heightReference);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(result.silhouetteColor).toEqual(source.silhouetteColor);
+        expect(result.silhouetteSize).toEqual(source.silhouetteSize);
+        expect(result.color).toBe(source.color);
+        expect(result.colorBlendMode).toBe(source.colorBlendMode);
+        expect(result.colorBlendAmount).toBe(source.colorBlendAmount);
         expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
     });

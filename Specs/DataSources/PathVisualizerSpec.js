@@ -3,6 +3,7 @@ defineSuite([
         'DataSources/PathVisualizer',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Matrix4',
         'Core/ReferenceFrame',
@@ -24,6 +25,7 @@ defineSuite([
         PathVisualizer,
         Cartesian3,
         Color,
+        DistanceDisplayCondition,
         JulianDate,
         Matrix4,
         ReferenceFrame,
@@ -152,6 +154,7 @@ defineSuite([
         path.material.outlineColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
         path.material.outlineWidth = new ConstantProperty(2.5);
         path.width = new ConstantProperty(12.5);
+        path.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 20.0));
         path.leadTime = new ConstantProperty(25);
         path.trailTime = new ConstantProperty(10);
 
@@ -166,6 +169,7 @@ defineSuite([
         expect(primitive.positions[2]).toEqual(testObject.position.getValue(JulianDate.addSeconds(updateTime, path.leadTime.getValue(), new JulianDate())));
         expect(primitive.show).toEqual(testObject.path.show.getValue(updateTime));
         expect(primitive.width).toEqual(testObject.path.width.getValue(updateTime));
+        expect(primitive.distanceDisplayCondition).toEqual(testObject.path.distanceDisplayCondition.getValue(updateTime));
 
         var material = primitive.material;
         expect(material.uniforms.color).toEqual(testObject.path.material.color.getValue(updateTime));
@@ -552,7 +556,7 @@ defineSuite([
         expect(result).toEqual([sampledProperty.getValue(t1), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 2, new JulianDate())), sampledProperty.getValue(updateTime), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 3, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 4, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 5, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 6, new JulianDate()))]);
     });
 
-    it('subSample works for composite properties', function() {
+    function createCompositeTest(useReferenceProperty){
         var t1 = new JulianDate(0, 0);
         var t2 = new JulianDate(1, 0);
         var t3 = new JulianDate(2, 0);
@@ -631,7 +635,15 @@ defineSuite([
         var referenceFrame = ReferenceFrame.FIXED;
         var maximumStep = 43200;
         var result = [];
-        PathVisualizer._subSample(property, t1, t6, updateTime, referenceFrame, maximumStep, result);
+
+        var propertyToTest = property;
+        if (useReferenceProperty) {
+            var testReference = entities.getOrCreateEntity('testReference');
+            testReference.position = property;
+            propertyToTest = new ReferenceProperty(entities, 'testReference', ['position']);
+        }
+
+        PathVisualizer._subSample(propertyToTest, t1, t6, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([intervalProperty.intervals.get(0).data,
                                 constantProperty.getValue(t1),
                                 sampledProperty.getValue(t3),
@@ -639,6 +651,14 @@ defineSuite([
                                 sampledProperty.getValue(t4),
                                 targetEntity.position.getValue(t5),
                                 scaledProperty.getValue(t6)]);
+    }
+
+    it('subSample works for composite properties', function() {
+        createCompositeTest(false);
+    });
+
+    it('subSample works for composite properties wrapped in reference properties', function() {
+        createCompositeTest(true);
     });
 
 }, 'WebGL');

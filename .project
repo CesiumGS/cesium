@@ -31,7 +31,7 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1400616658988</id>
+			<id>1489524263185</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -40,7 +40,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1400616658995</id>
+			<id>1489524263192</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -49,7 +49,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1400616658999</id>
+			<id>1489524263200</id>
 			<name></name>
 			<type>6</type>
 			<matcher>
@@ -58,7 +58,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1400616659006</id>
+			<id>1489524263206</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -67,12 +67,30 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1400616659012</id>
+			<id>1489524263212</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-node_modules</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1489524263219</id>
+			<name></name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-.vscode</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1489524263240</id>
+			<name></name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-.idea</arguments>
 			</matcher>
 		</filter>
 		<filter>
@@ -94,16 +112,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1400616508068</id>
-			<name>Tools</name>
-			<type>9</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-buildTasks</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1400616508072</id>
+			<id>1489523906243</id>
 			<name>Tools</name>
 			<type>9</type>
 			<matcher>

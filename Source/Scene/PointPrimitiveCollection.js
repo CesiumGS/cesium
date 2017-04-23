@@ -1,8 +1,6 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -14,9 +12,11 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
+        '../Core/WebGLConstants',
         '../Renderer/BufferUsage',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -24,13 +24,11 @@ define([
         '../Shaders/PointPrimitiveCollectionFS',
         '../Shaders/PointPrimitiveCollectionVS',
         './BlendingState',
-        './Pass',
+        './BlendOption',
         './PointPrimitive',
         './SceneMode'
     ], function(
         BoundingSphere,
-        Cartesian2,
-        Cartesian3,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -42,9 +40,11 @@ define([
         CesiumMath,
         Matrix4,
         PrimitiveType,
+        WebGLConstants,
         BufferUsage,
         ContextLimits,
         DrawCommand,
+        Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
@@ -52,7 +52,7 @@ define([
         PointPrimitiveCollectionFS,
         PointPrimitiveCollectionVS,
         BlendingState,
-        Pass,
+        BlendOption,
         PointPrimitive,
         SceneMode) {
     'use strict';
@@ -65,6 +65,8 @@ define([
     var PIXEL_SIZE_INDEX = PointPrimitive.PIXEL_SIZE_INDEX;
     var SCALE_BY_DISTANCE_INDEX = PointPrimitive.SCALE_BY_DISTANCE_INDEX;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX;
+    var DISTANCE_DISPLAY_CONDITION_INDEX = PointPrimitive.DISTANCE_DISPLAY_CONDITION_INDEX;
+    var DISABLE_DEPTH_DISTANCE_INDEX = PointPrimitive.DISABLE_DEPTH_DISTANCE_INDEX;
     var NUMBER_OF_PROPERTIES = PointPrimitive.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
@@ -72,7 +74,8 @@ define([
         positionLowAndOutline : 1,
         compressedAttribute0 : 2,        // color, outlineColor, pick color
         compressedAttribute1 : 3,        // show, translucency by distance, some free space
-        scaleByDistance : 4
+        scaleByDistance : 4,
+        distanceDisplayConditionAndDisableDepth : 5
     };
 
     /**
@@ -87,6 +90,9 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each point from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The point blending option. The default
+     * is used for rendering both opaque and translucent points. However, if either all of the points are completely opaque or all are completely translucent,
+     * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve performance by up to 2x.
      *
      * @performance For best performance, prefer a few collections, each with many points, to
      * many collections with only a few points each.  Organize collections so that points
@@ -115,9 +121,11 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._sp = undefined;
-        this._rs = undefined;
-        this._vaf = undefined;
+        this._spTranslucent = undefined;
         this._spPick = undefined;
+        this._rsOpaque = undefined;
+        this._rsTranslucent = undefined;
+        this._vaf = undefined;
 
         this._pointPrimitives = [];
         this._pointPrimitivesToUpdate = [];
@@ -132,6 +140,14 @@ define([
         this._shaderTranslucencyByDistance = false;
         this._compiledShaderTranslucencyByDistance = false;
         this._compiledShaderTranslucencyByDistancePick = false;
+
+        this._shaderDistanceDisplayCondition = false;
+        this._compiledShaderDistanceDisplayCondition = false;
+        this._compiledShaderDistanceDisplayConditionPick = false;
+
+        this._shaderDisableDepthDistance = false;
+        this._compiledShaderDisableDepthDistance = false;
+        this._compiledShaderDisableDepthDistancePick = false;
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
@@ -193,6 +209,17 @@ define([
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
+        /**
+         * The point blending option. The default is used for rendering both opaque and translucent points.
+         * However, if either all of the points are completely opaque or all are completely translucent,
+         * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve
+         * performance by up to 2x.
+         * @type {BlendOption}
+         * @default BlendOption.OPAQUE_AND_TRANSLUCENT
+         */
+        this.blendOption = defaultValue(options.blendOption, BlendOption.OPAQUE_AND_TRANSLUCENT);
+        this._blendOption = undefined;
+
         this._mode = SceneMode.SCENE3D;
         this._maxTotalPointSize = 1;
 
@@ -205,7 +232,8 @@ define([
                               BufferUsage.STATIC_DRAW, // OUTLINE_WIDTH_INDEX
                               BufferUsage.STATIC_DRAW, // PIXEL_SIZE_INDEX
                               BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
-                              BufferUsage.STATIC_DRAW  // TRANSLUCENCY_BY_DISTANCE_INDEX
+                              BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
+                              BufferUsage.STATIC_DRAW  // DISTANCE_DISPLAY_CONDITION_INDEX
                           ];
 
         var that = this;
@@ -465,6 +493,11 @@ define([
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[SCALE_BY_DISTANCE_INDEX]
+        }, {
+            index : attributeLocations.distanceDisplayConditionAndDisableDepth,
+            componentsPerAttribute : 3,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX]
         }], numberOfPointPrimitives); // 1 vertex per pointPrimitive
     }
 
@@ -555,7 +588,7 @@ define([
             }
         }
 
-        var show = pointPrimitive.show;
+        var show = pointPrimitive.show && pointPrimitive.clusterShow;
 
         // If the color alphas are zero, do not show this pointPrimitive.  This lets us avoid providing
         // color during the pick pass and also eliminates a discard in the fragment shader.
@@ -600,11 +633,41 @@ define([
         writer(i, near, nearValue, far, farValue);
     }
 
+    function writeDistanceDisplayConditionAndDepthDisable(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
+        var i = pointPrimitive._index;
+        var writer = vafWriters[attributeLocations.distanceDisplayConditionAndDisableDepth];
+        var near = 0.0;
+        var far = Number.MAX_VALUE;
+
+        var distanceDisplayCondition = pointPrimitive.distanceDisplayCondition;
+        if (defined(distanceDisplayCondition)) {
+            near = distanceDisplayCondition.near;
+            far = distanceDisplayCondition.far;
+
+            near *= near;
+            far *= far;
+
+            pointPrimitiveCollection._shaderDistanceDisplayCondition = true;
+        }
+
+        var disableDepthTestDistance = pointPrimitive.disableDepthTestDistance;
+        disableDepthTestDistance *= disableDepthTestDistance;
+        if (disableDepthTestDistance > 0.0) {
+            pointPrimitiveCollection._shaderDisableDepthDistance = true;
+            if (disableDepthTestDistance === Number.POSITIVE_INFINITY) {
+                disableDepthTestDistance = -1.0;
+            }
+        }
+
+        writer(i, near, far, disableDepthTestDistance);
+    }
+
     function writePointPrimitive(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
         writePositionSizeAndOutline(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
         writeCompressedAttrib0(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
         writeCompressedAttrib1(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
         writeScaleByDistance(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
+        writeDistanceDisplayConditionAndDepthDisable(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
     }
 
     function recomputeActualPositions(pointPrimitiveCollection, pointPrimitives, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -743,6 +806,10 @@ define([
                     writers.push(writeScaleByDistance);
                 }
 
+                if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE_INDEX]) {
+                    writers.push(writeDistanceDisplayConditionAndDepthDisable);
+                }
+
                 var numWriters = writers.length;
 
                 vafWriters = this._vaf.writers;
@@ -804,6 +871,161 @@ define([
         }
         updateBoundingVolume(this, frameState, boundingVolume);
 
+        var blendOptionChanged = this._blendOption !== this.blendOption;
+        this._blendOption = this.blendOption;
+
+        if (blendOptionChanged) {
+            if (this._blendOption === BlendOption.OPAQUE || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
+                this._rsOpaque = RenderState.fromCache({
+                    depthTest : {
+                        enabled : true,
+                        func : WebGLConstants.LEQUAL
+                    },
+                    depthMask : true
+                });
+            } else {
+                this._rsOpaque = undefined;
+            }
+
+            if (this._blendOption === BlendOption.TRANSLUCENT || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
+                this._rsTranslucent = RenderState.fromCache({
+                    depthTest : {
+                        enabled : true,
+                        func : WebGLConstants.LEQUAL
+                    },
+                    depthMask : false,
+                    blending : BlendingState.ALPHA_BLEND
+                });
+            } else {
+                this._rsTranslucent = undefined;
+            }
+        }
+
+        this._shaderDisableDepthDistance = this._shaderDisableDepthDistance || frameState.minimumDisableDepthTestDistance !== 0.0;
+
+        if (blendOptionChanged ||
+            (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
+            (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
+            (this._shaderDistanceDisplayCondition && !this._compiledShaderDistanceDisplayCondition) ||
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance)) {
+
+            vs = new ShaderSource({
+                sources : [PointPrimitiveCollectionVS]
+            });
+            if (this._shaderScaleByDistance) {
+                vs.defines.push('EYE_DISTANCE_SCALING');
+            }
+            if (this._shaderTranslucencyByDistance) {
+                vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
+            }
+            if (this._shaderDistanceDisplayCondition) {
+                vs.defines.push('DISTANCE_DISPLAY_CONDITION');
+            }
+            if (this._shaderDisableDepthDistance) {
+                vs.defines.push('DISABLE_DEPTH_DISTANCE');
+            }
+
+            if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
+                fs = new ShaderSource({
+                    defines : ['OPAQUE'],
+                    sources : [PointPrimitiveCollectionFS]
+                });
+                this._sp = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._sp,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+
+                fs = new ShaderSource({
+                    defines : ['TRANSLUCENT'],
+                    sources : [PointPrimitiveCollectionFS]
+                });
+                this._spTranslucent = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._spTranslucent,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+            }
+
+            if (this._blendOption === BlendOption.OPAQUE) {
+                fs = new ShaderSource({
+                    sources : [PointPrimitiveCollectionFS]
+                });
+                this._sp = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._sp,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+            }
+
+            if (this._blendOption === BlendOption.TRANSLUCENT) {
+                fs = new ShaderSource({
+                    sources : [PointPrimitiveCollectionFS]
+                });
+                this._spTranslucent = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._spTranslucent,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+            }
+
+            this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
+            this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
+            this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
+            this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
+        }
+
+        if (!defined(this._spPick) ||
+            (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
+            (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
+            (this._shaderDistanceDisplayCondition && !this._compiledShaderDistanceDisplayConditionPick) ||
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistancePick)) {
+
+            vs = new ShaderSource({
+                defines : ['RENDER_FOR_PICK'],
+                sources : [PointPrimitiveCollectionVS]
+            });
+
+            if (this._shaderScaleByDistance) {
+                vs.defines.push('EYE_DISTANCE_SCALING');
+            }
+            if (this._shaderTranslucencyByDistance) {
+                vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
+            }
+            if (this._shaderDistanceDisplayCondition) {
+                vs.defines.push('DISTANCE_DISPLAY_CONDITION');
+            }
+            if (this._shaderDisableDepthDistance) {
+                vs.defines.push('DISABLE_DEPTH_DISTANCE');
+            }
+
+            fs = new ShaderSource({
+                defines : ['RENDER_FOR_PICK'],
+                sources : [PointPrimitiveCollectionFS]
+            });
+
+            this._spPick = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : this._spPick,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+
+            this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
+            this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
+            this._compiledShaderDistanceDisplayConditionPick = this._shaderDistanceDisplayCondition;
+            this._compiledShaderDisableDepthDistancePick = this._shaderDisableDepthDistance;
+        }
+
         var va;
         var vaLength;
         var command;
@@ -816,61 +1038,33 @@ define([
         if (pass.render) {
             var colorList = this._colorCommands;
 
-            if (!defined(this._rs)) {
-                this._rs = RenderState.fromCache({
-                    depthTest : {
-                        enabled : true
-                    },
-                    blending : BlendingState.ALPHA_BLEND
-                });
-            }
-
-            if (!defined(this._sp) ||
-                    (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
-                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance)) {
-
-                vs = new ShaderSource({
-                    sources : [PointPrimitiveCollectionVS]
-                });
-                if (this._shaderScaleByDistance) {
-                    vs.defines.push('EYE_DISTANCE_SCALING');
-                }
-                if (this._shaderTranslucencyByDistance) {
-                    vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
-                }
-
-                this._sp = ShaderProgram.replaceCache({
-                    context : context,
-                    shaderProgram : this._sp,
-                    vertexShaderSource : vs,
-                    fragmentShaderSource : PointPrimitiveCollectionFS,
-                    attributeLocations : attributeLocations
-                });
-
-                this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
-                this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
-            }
+            var opaque = this._blendOption === BlendOption.OPAQUE;
+            var opaqueAndTranslucent = this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT;
 
             va = this._vaf.va;
             vaLength = va.length;
 
             colorList.length = vaLength;
-            for (j = 0; j < vaLength; ++j) {
+            var totalLength = opaqueAndTranslucent ? vaLength * 2 : vaLength;
+            for (j = 0; j < totalLength; ++j) {
+                var opaqueCommand = opaque || (opaqueAndTranslucent && j % 2 === 0);
+
                 command = colorList[j];
                 if (!defined(command)) {
-                    command = colorList[j] = new DrawCommand({
-                        primitiveType : PrimitiveType.POINTS,
-                        pass : Pass.OPAQUE,
-                        owner : this
-                    });
+                    command = colorList[j] = new DrawCommand();
                 }
 
+                command.primitiveType = PrimitiveType.POINTS;
+                command.pass = opaqueCommand || !opaqueAndTranslucent ? Pass.OPAQUE : Pass.TRANSLUCENT;
+                command.owner = this;
+
+                var index = opaqueAndTranslucent ? Math.floor(j / 2.0) : j;
                 command.boundingVolume = boundingVolume;
                 command.modelMatrix = modelMatrix;
-                command.shaderProgram = this._sp;
+                command.shaderProgram = opaqueCommand ? this._sp : this._spTranslucent;
                 command.uniformMap = this._uniforms;
-                command.vertexArray = va[j].va;
-                command.renderState = this._rs;
+                command.vertexArray = va[index].va;
+                command.renderState = opaqueCommand ? this._rsOpaque : this._rsTranslucent;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
                 commandList.push(command);
@@ -879,39 +1073,6 @@ define([
 
         if (picking) {
             var pickList = this._pickCommands;
-
-            if (!defined(this._spPick) ||
-                    (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
-                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick)) {
-
-                vs = new ShaderSource({
-                    defines : ['RENDER_FOR_PICK'],
-                    sources : [PointPrimitiveCollectionVS]
-                });
-
-                if (this._shaderScaleByDistance) {
-                    vs.defines.push('EYE_DISTANCE_SCALING');
-                }
-                if (this._shaderTranslucencyByDistance) {
-                    vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
-                }
-
-                fs = new ShaderSource({
-                    defines : ['RENDER_FOR_PICK'],
-                    sources : [PointPrimitiveCollectionFS]
-                });
-
-                this._spPick = ShaderProgram.replaceCache({
-                    context : context,
-                    shaderProgram : this._spPick,
-                    vertexShaderSource : vs,
-                    fragmentShaderSource : fs,
-                    attributeLocations : attributeLocations
-                });
-
-                this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
-                this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
-            }
 
             va = this._vaf.va;
             vaLength = va.length;
@@ -932,7 +1093,7 @@ define([
                 command.shaderProgram = this._spPick;
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
-                command.renderState = this._rs;
+                command.renderState = this._rsOpaque;
 
                 commandList.push(command);
             }
@@ -973,6 +1134,7 @@ define([
      */
     PointPrimitiveCollection.prototype.destroy = function() {
         this._sp = this._sp && this._sp.destroy();
+        this._spTranslucent = this._spTranslucent && this._spTranslucent.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
         destroyPointPrimitives(this._pointPrimitives);

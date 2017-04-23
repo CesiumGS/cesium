@@ -20,7 +20,12 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/StaticGeometryColorBatch',
         'DataSources/StaticGeometryPerMaterialBatch',
+        'DataSources/StaticGroundGeometryColorBatch',
         'DataSources/StaticOutlineGeometryBatch',
+        'DataSources/PolylineGeometryUpdater',
+        'DataSources/PolylineGraphics',
+        'Scene/GroundPrimitive',
+        'Scene/ShadowMode',
         'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -45,7 +50,12 @@ defineSuite([
         SampledProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
+        StaticGroundGeometryColorBatch,
         StaticOutlineGeometryBatch,
+        PolylineGeometryUpdater,
+        PolylineGraphics,
+        GroundPrimitive,
+        ShadowMode,
         createDynamicProperty,
         createScene,
         pollToPromise) {
@@ -56,10 +66,17 @@ defineSuite([
     var scene;
     beforeAll(function() {
         scene = createScene();
+
+        return GroundPrimitive.initializeTerrainHeights();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        // Leave ground primitive uninitialized
+        GroundPrimitive._initialized = false;
+        GroundPrimitive._initPromise = undefined;
+        GroundPrimitive._terrainHeights = undefined;
     });
 
     it('Can create and destroy', function() {
@@ -80,6 +97,7 @@ defineSuite([
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new ColorMaterialProperty();
+        ellipse.height = new ConstantProperty(0);
 
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
@@ -280,6 +298,228 @@ defineSuite([
         });
     });
 
+    function createAndRemoveGeometryWithShadows(shadows) {
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
+
+        var ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty();
+        ellipse.extrudedHeight = new ConstantProperty(1000);
+        ellipse.shadows = new ConstantProperty(shadows);
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            expect(primitive.shadows).toBe(shadows);
+
+            objects.remove(entity);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                expect(visualizer.update(time)).toBe(true);
+                scene.render(time);
+                return scene.primitives.length === 0;
+            }).then(function(){
+                visualizer.destroy();
+            });
+        });
+    }
+
+    it('Creates and removes geometry with shadows disabled', function() {
+        return createAndRemoveGeometryWithShadows(ShadowMode.DISABLED);
+    });
+
+    it('Creates and removes geometry with shadows enabled', function() {
+        return createAndRemoveGeometryWithShadows(ShadowMode.ENABLED);
+    });
+
+    it('Creates and removes geometry with shadow casting only', function() {
+        return createAndRemoveGeometryWithShadows(ShadowMode.CAST_ONLY);
+    });
+
+    it('Creates and removes geometry with shadow receiving only', function() {
+        return createAndRemoveGeometryWithShadows(ShadowMode.RECEIVE_ONLY);
+    });
+
+    it('Creates and removes static color material and static color depth fail material', function() {
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(PolylineGeometryUpdater, scene, objects);
+
+        var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.material = new ColorMaterialProperty();
+        polyline.depthFailMaterial = new ColorMaterialProperty();
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.polyline = polyline;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
+            expect(attributes.depthFailColor).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
+            expect(primitive.appearance).toBeInstanceOf(PolylineGeometryUpdater.perInstanceColorAppearanceType);
+            expect(primitive.depthFailAppearance).toBeInstanceOf(PolylineGeometryUpdater.perInstanceColorAppearanceType);
+
+            objects.remove(entity);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                expect(visualizer.update(time)).toBe(true);
+                scene.render(time);
+                return scene.primitives.length === 0;
+            }).then(function(){
+                visualizer.destroy();
+            });
+        });
+    });
+
+    it('Creates and removes static color material and static depth fail material', function() {
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(PolylineGeometryUpdater, scene, objects);
+
+        var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.material = new ColorMaterialProperty();
+        polyline.depthFailMaterial = new GridMaterialProperty();
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.polyline = polyline;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
+            expect(attributes.depthFailColor).toBeUndefined();
+            expect(primitive.appearance).toBeInstanceOf(PolylineGeometryUpdater.perInstanceColorAppearanceType);
+            expect(primitive.depthFailAppearance).toBeInstanceOf(PolylineGeometryUpdater.materialAppearanceType);
+
+            objects.remove(entity);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                expect(visualizer.update(time)).toBe(true);
+                scene.render(time);
+                return scene.primitives.length === 0;
+            }).then(function(){
+                visualizer.destroy();
+            });
+        });
+    });
+
+    it('Creates and removes static material and static depth fail material', function() {
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(PolylineGeometryUpdater, scene, objects);
+
+        var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.material = new GridMaterialProperty();
+        polyline.depthFailMaterial = new GridMaterialProperty();
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.polyline = polyline;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toBeUndefined();
+            expect(attributes.depthFailColor).toBeUndefined();
+            expect(primitive.appearance).toBeInstanceOf(PolylineGeometryUpdater.materialAppearanceType);
+            expect(primitive.depthFailAppearance).toBeInstanceOf(PolylineGeometryUpdater.materialAppearanceType);
+
+            objects.remove(entity);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                expect(visualizer.update(time)).toBe(true);
+                scene.render(time);
+                return scene.primitives.length === 0;
+            }).then(function(){
+                visualizer.destroy();
+            });
+        });
+    });
+
+    it('Creates and removes static material and static color depth fail material', function() {
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(PolylineGeometryUpdater, scene, objects);
+
+        var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.material = new GridMaterialProperty();
+        polyline.depthFailMaterial = new ColorMaterialProperty();
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.polyline = polyline;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toBeUndefined();
+            expect(attributes.depthFailColor).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
+            expect(primitive.appearance).toBeInstanceOf(PolylineGeometryUpdater.materialAppearanceType);
+            expect(primitive.depthFailAppearance).toBeInstanceOf(PolylineGeometryUpdater.perInstanceColorAppearanceType);
+
+            objects.remove(entity);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                expect(visualizer.update(time)).toBe(true);
+                scene.render(time);
+                return scene.primitives.length === 0;
+            }).then(function(){
+                visualizer.destroy();
+            });
+        });
+    });
+
     it('Correctly handles geometry changing batches', function() {
         var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
@@ -288,6 +528,7 @@ defineSuite([
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new ColorMaterialProperty();
+        ellipse.height = new ConstantProperty(0);
 
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
@@ -389,6 +630,33 @@ defineSuite([
         ellipse.semiMajorAxis = new SampledProperty(Number);
         ellipse.semiMajorAxis.addSample(time, 2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.extrudedHeight = new ConstantProperty(1000);
+        ellipse.material = new ColorMaterialProperty();
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
+
+        scene.initializeFrame();
+        expect(visualizer.update(time)).toBe(true);
+        scene.render(time);
+        objects.remove(entity);
+        scene.initializeFrame();
+        expect(visualizer.update(time)).toBe(true);
+        scene.render(time);
+        expect(scene.primitives.length).toBe(0);
+        visualizer.destroy();
+    });
+
+    it('Creates and removes dynamic geometry on terrain ', function() {
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
+
+        var ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new SampledProperty(Number);
+        ellipse.semiMajorAxis.addSample(time, 2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new ColorMaterialProperty();
 
         var entity = new Entity();
@@ -437,7 +705,7 @@ defineSuite([
     });
 
     it('StaticGeometryPerMaterialBatch handles shared material being invalidated', function() {
-        var batch = new StaticGeometryPerMaterialBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false);
+        var batch = new StaticGeometryPerMaterialBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, undefined, false, ShadowMode.DISABLED);
 
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
@@ -484,7 +752,7 @@ defineSuite([
     });
 
     it('StaticGeometryColorBatch updates color attribute after rebuilding primitive', function() {
-        var batch = new StaticGeometryColorBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false);
+        var batch = new StaticGeometryColorBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, undefined, false, ShadowMode.DISABLED);
 
         var entity = new Entity({
             position : new Cartesian3(1234, 5678, 9101112),
@@ -494,7 +762,8 @@ defineSuite([
                 show : new CallbackProperty(function() {
                     return true;
                 }, false),
-                material : Color.RED
+                material : Color.RED,
+                height : 0
             }
         });
 
@@ -530,8 +799,80 @@ defineSuite([
         });
     });
 
+    it('StaticGroundGeometryColorBatch updates color attribute after rebuilding primitive', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        var batch = new StaticGroundGeometryColorBatch(scene.groundPrimitives);
+
+        function computeKey(color) {
+            var ui8 = new Uint8Array(color);
+            var ui32 = new Uint32Array(ui8.buffer);
+            return ui32[0];
+        }
+
+        var entity = new Entity({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                show : new CallbackProperty(function() {
+                    return true;
+                }, false),
+                material : Color.RED
+            }
+        });
+
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        batch.add(time, updater);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+            var primitive = scene.groundPrimitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            var red = [255, 0, 0, 255];
+            var redKey = computeKey(red);
+            expect(attributes.color).toEqual(red);
+
+            // Verify we have 1 batch with the key for red
+            expect(batch._batches.length).toEqual(1);
+            expect(batch._batches.contains(redKey)).toBe(true);
+            expect(batch._batches.get(redKey).key).toEqual(redKey);
+
+            entity.ellipse.material = Color.GREEN;
+            batch.remove(updater);
+            batch.add(time, updater);
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = batch.update(time);
+                scene.render(time);
+                return isUpdated;
+            }).then(function() {
+                expect(scene.groundPrimitives.length).toEqual(1);
+                var primitive = scene.groundPrimitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity);
+                var green = [0, 128, 0, 255];
+                var greenKey = computeKey(green);
+                expect(attributes.color).toEqual(green);
+
+                // Verify we have 1 batch with the key for green
+                expect(batch._batches.length).toEqual(1);
+                expect(batch._batches.contains(greenKey)).toBe(true);
+                expect(batch._batches.get(greenKey).key).toEqual(greenKey);
+
+                batch.removeAllPrimitives();
+            });
+        });
+    });
+
     it('StaticOutlineGeometryBatch updates color attribute after rebuilding primitive', function() {
-        var batch = new StaticOutlineGeometryBatch(scene.primitives, scene, false);
+        var batch = new StaticOutlineGeometryBatch(scene.primitives, scene, false, ShadowMode.DISABLED);
 
         var entity = new Entity({
             position : new Cartesian3(1234, 5678, 9101112),
@@ -542,7 +883,8 @@ defineSuite([
                     return true;
                 }, false),
                 outline : true,
-                outlineColor : Color.RED
+                outlineColor : Color.RED,
+                height : 0
             }
         });
 
@@ -585,6 +927,7 @@ defineSuite([
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.height = new ConstantProperty(0);
 
         var entity = new Entity();
         entity.position = Cartesian3.fromDegrees(0, 0, 0);
@@ -645,7 +988,8 @@ defineSuite([
             ellipse : {
                 semiMajorAxis : 2,
                 semiMinorAxis : 1,
-                material : Color.ORANGE
+                material : Color.ORANGE,
+                height : 0
             }
         });
         objects.add(entity);
@@ -664,7 +1008,8 @@ defineSuite([
                 ellipse : {
                     semiMajorAxis : 2,
                     semiMinorAxis : 1,
-                    material : Color.BLUE
+                    material : Color.BLUE,
+                    height : 0
                 }
             });
             objects.add(entity2);
@@ -697,7 +1042,7 @@ defineSuite([
         });
     });
 
-    it('Sets static geometry  primitive show attribute when using dynamic fill color', function() {
+    it('Sets static geometry primitive show attribute when using dynamic fill color', function() {
         var entities = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entities);
 
@@ -706,7 +1051,8 @@ defineSuite([
             ellipse : {
                 semiMajorAxis : 2,
                 semiMinorAxis : 1,
-                material : new ColorMaterialProperty(createDynamicProperty(Color.BLUE))
+                material : new ColorMaterialProperty(createDynamicProperty(Color.BLUE)),
+                height : 0
             }
         });
 
@@ -740,7 +1086,7 @@ defineSuite([
         });
     });
 
-    it('Sets static geometry  primitive show attribute when using dynamic outline color', function() {
+    it('Sets static geometry primitive show attribute when using dynamic outline color', function() {
         var entities = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entities);
 

@@ -1,6 +1,5 @@
 /*global defineSuite*/
 defineSuite([
-        'Widgets/Viewer/Viewer',
         'Core/Cartesian3',
         'Core/ClockRange',
         'Core/ClockStep',
@@ -18,6 +17,7 @@ defineSuite([
         'Scene/CameraFlightPath',
         'Scene/ImageryLayerCollection',
         'Scene/SceneMode',
+        'Scene/ShadowMode',
         'Specs/createViewer',
         'Specs/DomEventSimulator',
         'Specs/MockDataSource',
@@ -33,8 +33,7 @@ defineSuite([
         'Widgets/SceneModePicker/SceneModePicker',
         'Widgets/SelectionIndicator/SelectionIndicator',
         'Widgets/Timeline/Timeline'
-    ], function(
-        Viewer,
+    ], 'Widgets/Viewer/Viewer', function(
         Cartesian3,
         ClockRange,
         ClockStep,
@@ -52,6 +51,7 @@ defineSuite([
         CameraFlightPath,
         ImageryLayerCollection,
         SceneMode,
+        ShadowMode,
         createViewer,
         DomEventSimulator,
         MockDataSource,
@@ -363,9 +363,9 @@ defineSuite([
 
     it('can set terrain shadows', function() {
         viewer = createViewer(container, {
-            terrainShadows : true
+            terrainShadows : ShadowMode.ENABLED
         });
-        expect(viewer.terrainShadows).toBe(true);
+        expect(viewer.terrainShadows).toBe(ShadowMode.ENABLED);
     });
 
     it('can set terrainProvider', function() {
@@ -687,8 +687,8 @@ defineSuite([
         dataSource.clock.stopTime = JulianDate.fromIso8601('2014-08-21T02:00Z');
         dataSource.clock.currentTime = JulianDate.fromIso8601('2014-08-02T00:00Z');
         dataSource.clock.clockRange = ClockRange.UNBOUNDED;
-        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK;
-        dataSource.clock.multiplier = 20.0;
+        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+        dataSource.clock.multiplier = 10.0;
 
         dataSource.changedEvent.raiseEvent(dataSource);
 
@@ -698,6 +698,13 @@ defineSuite([
         expect(viewer.clock.clockRange).toEqual(dataSource.clock.clockRange);
         expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
         expect(viewer.clock.multiplier).toEqual(dataSource.clock.multiplier);
+
+        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK;
+        dataSource.clock.multiplier = 1.0;
+
+        dataSource.changedEvent.raiseEvent(dataSource);
+
+        expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
     });
 
     it('can manually control the clock tracking', function() {
@@ -815,6 +822,54 @@ defineSuite([
 
         viewer.selectedEntity = undefined;
         expect(viewer.selectedEntity).toBeUndefined();
+
+        viewer.destroy();
+    });
+
+    it('raises an event when the selected entity changes', function() {
+        var viewer = createViewer(container);
+
+        var dataSource = new MockDataSource();
+        viewer.dataSources.add(dataSource);
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+
+        dataSource.entities.add(entity);
+
+        var myEntity;
+        viewer.selectedEntityChanged.addEventListener(function(newSelection) {
+            myEntity = newSelection;
+        });
+        viewer.selectedEntity = entity;
+        expect(myEntity).toBe(entity);
+
+        viewer.selectedEntity = undefined;
+        expect(myEntity).toBeUndefined();
+
+        viewer.destroy();
+    });
+
+    it('raises an event when the tracked entity changes', function() {
+        var viewer = createViewer(container);
+
+        var dataSource = new MockDataSource();
+        viewer.dataSources.add(dataSource);
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+
+        dataSource.entities.add(entity);
+
+        var myEntity;
+        viewer.trackedEntityChanged.addEventListener(function(newValue) {
+            myEntity = newValue;
+        });
+        viewer.trackedEntity = entity;
+        expect(myEntity).toBe(entity);
+
+        viewer.trackedEntity = undefined;
+        expect(myEntity).toBeUndefined();
 
         viewer.destroy();
     });
