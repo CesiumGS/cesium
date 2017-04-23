@@ -219,8 +219,6 @@ define([
          * @type {Boolean}
          * @readonly
          *
-         * @see Empty3DTileContent
-         *
          * @private
          */
         this.hasEmptyContent = hasEmptyContent;
@@ -234,11 +232,6 @@ define([
          * @type {Boolean}
          * @readonly
          *
-         * @see Batched3DModel3DTileContent
-         * @see Instanced3DModel3DTileContent
-         * @see PointCloud3DTileContent
-         * @see Composite3DTileContent
-         *
          * @private
          */
         this.hasRenderableContent = false;
@@ -251,8 +244,6 @@ define([
          *
          * @type {Boolean}
          * @readonly
-         *
-         * @see Tileset3DTileContent
          *
          * @private
          */
