@@ -380,11 +380,6 @@ define([
         // If its in the cache, return it
         var buffer = terrainCache.get(quadKey);
         if (defined(buffer)) {
-            if (terrainState === TerrainState.UNKNOWN) {
-                // If its already in the cache then a parent request must've loaded it
-                info.terrainState = TerrainState.PARENT;
-            }
-
             return new GoogleEarthEnterpriseTerrainData({
                 buffer : buffer,
                 childTileMask : computeChildMask(quadKey, info, metadata)
@@ -458,62 +453,60 @@ define([
                 requestPromise = loadArrayBuffer(url);
             }
 
-            terrainPromises[q] = requestPromise;
-
             promise = requestPromise
-                .always(function(terrain) {
+                .then(function(terrain) {
+                    if (defined(terrain)) {
+                        return taskProcessor.scheduleTask({
+                            buffer : terrain,
+                            type : 'Terrain'
+                        }, [terrain])
+                            .then(function(terrainTiles) {
+                                // Add requested tile and mark it as SELF
+                                var requestedInfo = metadata.getTileInformationFromQuadKey(q);
+                                requestedInfo.terrainState = TerrainState.SELF;
+                                terrainCache.add(q, terrainTiles[0]);
+
+                                // Add children to cache
+                                var count = terrainTiles.length - 1;
+                                for (var j = 0; j < count; ++j) {
+                                    var childKey = q + j.toString();
+                                    var child = metadata.getTileInformationFromQuadKey(childKey);
+                                    if (defined(child)) {
+                                        terrainCache.add(childKey, terrainTiles[j + 1]);
+                                        child.terrainState = TerrainState.PARENT;
+                                    }
+                                }
+                            });
+                    }
+
+                    return when.reject(new RuntimeError('Failed to load terrain.'));
+                })
+                .otherwise(function(error) {
+                    info.terrainState = TerrainState.NONE;
+                    return when.reject(error);
+                });
+
+            terrainPromises[q] = promise; // Store promise without delete from terrainPromises
+
+            // Set promise so we remove from terrainPromises just one time
+            promise = promise
+                .always(function() {
                     delete terrainPromises[q];
-                    return terrain;
                 });
         }
 
         return promise
-            .then(function(terrain) {
-                if (defined(terrain)) {
-                    return taskProcessor.scheduleTask({
-                        buffer : terrain,
-                        type : 'Terrain'
-                    } /*,[terrain]*/)
-                        .then(function(terrainTiles) {
-                            // If we were sent child tiles, store them till they are needed
-                            var buffer;
-                            if (q !== quadKey) {
-                                terrainCache.add(q, terrainTiles[0]);
-                                var parentInfo = metadata.getTileInformationFromQuadKey(q);
-                                parentInfo.terrainState = TerrainState.SELF;
-                            } else {
-                                buffer = terrainTiles[0];
-                                info.terrainState = TerrainState.SELF;
-                            }
-                            var count = terrainTiles.length - 1;
-                            for (var j = 0; j < count; ++j) {
-                                var childKey = q + j.toString();
-                                if (childKey === quadKey) {
-                                    buffer = terrainTiles[j + 1];
-                                    // If we didn't request this tile directly then it came from a parent
-                                    info.terrainState = TerrainState.PARENT;
-                                } else if (info.hasChild(j)) {
-                                    terrainCache.add(childKey, terrainTiles[j + 1]);
-                                }
-                            }
-
-                            if (defined(buffer)) {
-                                return new GoogleEarthEnterpriseTerrainData({
-                                    buffer : buffer,
-                                    childTileMask : computeChildMask(quadKey, info, metadata)
-                                });
-                            } else {
-                                info.terrainState = TerrainState.NONE;
-                                return when.reject(new RuntimeError('Failed to load terrain.'));
-                            }
-                        });
+            .then(function() {
+                var buffer = terrainCache.get(quadKey);
+                if (defined(buffer)) {
+                    return new GoogleEarthEnterpriseTerrainData({
+                        buffer : buffer,
+                        childTileMask : computeChildMask(quadKey, info, metadata)
+                    });
+                } else {
+                    info.terrainState = TerrainState.NONE;
+                    return when.reject(new RuntimeError('Failed to load terrain.'));
                 }
-
-                return when.reject(new RuntimeError('Failed to load terrain.'));
-            })
-            .otherwise(function(error) {
-                info.terrainState = TerrainState.NONE;
-                return when.reject(error);
             });
     };
 
