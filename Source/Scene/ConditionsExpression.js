@@ -157,7 +157,7 @@ define([
             var length = conditions.length;
             for (var i = 0; i < length; ++i) {
                 var statement = conditions[i];
-                if (statement.condition && statement.condition.evaluate(frameState, feature)) {
+                if (statement.condition.evaluate(frameState, feature)) {
                     return statement.expression.evaluateColor(frameState, feature, result);
                 }
             }
