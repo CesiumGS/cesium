@@ -16,6 +16,7 @@ void main()
     vec4 prev = u_modifiedModelView * previousPosition;
     vec4 next = u_modifiedModelView * nextPosition;
 
-    vec4 positionWC = getPolylineWindowCoordinatesEC(p, prev, next, expandDir, width, usePrev);
+    float angle;
+    vec4 positionWC = getPolylineWindowCoordinatesEC(p, prev, next, expandDir, width, usePrev, angle);
     gl_Position = czm_viewportOrthographic * positionWC;
 }

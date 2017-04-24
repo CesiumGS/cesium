@@ -112,5 +112,5 @@ vec4 getPolylineWindowCoordinates(vec4 position, vec4 previous, vec4 next, float
     vec4 positionEC = czm_modelViewRelativeToEye * position;
     vec4 prevEC = czm_modelViewRelativeToEye * previous;
     vec4 nextEC = czm_modelViewRelativeToEye * next;
-    return getPolylineWindowCoordinatesEC(positionEC, prevEC, nextEC, expandDirection, width, usePrevious);
+    return getPolylineWindowCoordinatesEC(positionEC, prevEC, nextEC, expandDirection, width, usePrevious, angle);
 }
