@@ -148,6 +148,21 @@ defineSuite([
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
+    it('fromHeadingPitchRoll computed correctly', function() {
+        // Expected generated via STK Components
+        var expected = new Matrix3(
+            0.754406506735489, 0.418940943945763, 0.505330889696038,
+            0.133022221559489, 0.656295369162553, -0.742685314912828,
+            -0.642787609686539, 0.627506871597133, 0.439385041770705);
+
+        var headingPitchRoll = new HeadingPitchRoll(-CesiumMath.toRadians(10), -CesiumMath.toRadians(40), CesiumMath.toRadians(55));
+        var result = new Matrix3();
+        var returnedResult = Matrix3.fromHeadingPitchRoll(headingPitchRoll, result);
+        expect(result).toBe(returnedResult);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+
     it('fromScale works without a result parameter', function() {
         var expected = new Matrix3(
             7.0, 0.0, 0.0,
