@@ -97,16 +97,13 @@ define([
                 //Loop over all expressions for replacement instead of only replacing one
                 for (var key in expressions) {
                     if (expressions.hasOwnProperty((key))) {
-                        console.log('in key: ' + key);
                         var expressionPlaceholder = new RegExp('\\$\\{' + key + '\\}', 'g');
                         if (defined(expressions[key])) {
                             cond = cond.replace(expressionPlaceholder, expressions[key]);
                             condExpression = condExpression.replace(expressionPlaceholder, expressions[key]);
-                            console.log('defined replacement: ' + cond + ', ' + condExpression);
                         } else {
                             cond = cond.replace(expressionPlaceholder, 'undefined');
                             condExpression = condExpression.replace(expressionPlaceholder, 'undefined');
-                            console.log('undefined replacement: ' + condExpression);
                         }
                     }
                 }
