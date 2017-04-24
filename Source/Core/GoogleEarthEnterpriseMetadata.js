@@ -60,14 +60,23 @@ define([
     /**
      * Creates TileInformation from an object
      *
-     * @param {Object} obj Object with same properties as TileInformation
+     * @param {Object} info Object to be cloned
+     * @param {TileInformation} [result] The object onto which to store the result.
+     * @returns {TileInformation} The modified result parameter or a new TileInformation instance if none was provided.
      */
-    TileInformation.fromObject = function(obj) {
-        var newInfo = new TileInformation(obj._bits, obj.cnodeVersion, obj.imageryVersion, obj.terrainVersion);
-        newInfo.ancestorHasTerrain = obj.ancestorHasTerrain;
-        newInfo.terrainState = obj.terrainState;
+    TileInformation.clone = function(info, result) {
+        if (!defined(result)) {
+            result = new TileInformation(info._bits, info.cnodeVersion, info.imageryVersion, info.terrainVersion);
+        } else {
+            result._bits = info._bits;
+            result.cnodeVersion = info.cnodeVersion;
+            result.imageryVersion = info.imageryVersion;
+            result.terrainVersion = info.terrainVersion;
+        }
+        result.ancestorHasTerrain = info.ancestorHasTerrain;
+        result.terrainState = info.terrainState;
 
-        return newInfo;
+        return result;
     };
 
     /**
@@ -439,7 +448,7 @@ define([
                     buffer : metadata,
                     quadKey : quadKey,
                     type : 'Metadata'
-                });
+                }, [metadata]);
 
                 return decodePromise
                     .then(function(result) {
@@ -467,7 +476,7 @@ define([
                             var key = keys[i];
                             var r = result[key];
                             if (r !== null) {
-                                var info = TileInformation.fromObject(result[key]);
+                                var info = TileInformation.clone(result[key]);
                                 var keyLength = key.length;
                                 if (keyLength === topLevelKeyLength) {
                                     info.setParent(root);
@@ -510,7 +519,7 @@ define([
         var t = tileInfo[q];
         // If we have tileInfo make sure sure it is not a node with a subtree that's not loaded
         if (defined(t) && (!t.hasSubtree() || t.hasChildren())) {
-            return when(t);
+            return t;
         }
 
         while ((t === undefined) && q.length > 1) {

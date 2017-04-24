@@ -19,8 +19,7 @@ define([
     './Rectangle',
     './TaskProcessor',
     './TerrainEncoding',
-    './TerrainMesh',
-    './TerrainProvider'
+    './TerrainMesh'
 ], function(
     when,
     BoundingSphere,
@@ -41,8 +40,7 @@ define([
     Rectangle,
     TaskProcessor,
     TerrainEncoding,
-    TerrainMesh,
-    TerrainProvider) {
+    TerrainMesh) {
     'use strict';
 
     /**
@@ -125,6 +123,9 @@ define([
     });
 
     var taskProcessor = new TaskProcessor('createVerticesFromGoogleEarthEnterpriseBuffer');
+    
+    var nativeRectangleScratch = new Rectangle();
+    var rectangleScratch = new Rectangle();
 
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
@@ -142,27 +143,19 @@ define([
      */
     GoogleEarthEnterpriseTerrainData.prototype.createMesh = function(tilingScheme, x, y, level, exaggeration) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(tilingScheme)) {
-            throw new DeveloperError('tilingScheme is required.');
-        }
-        if (!defined(x)) {
-            throw new DeveloperError('x is required.');
-        }
-        if (!defined(y)) {
-            throw new DeveloperError('y is required.');
-        }
-        if (!defined(level)) {
-            throw new DeveloperError('level is required.');
-        }
+        Check.typeOf.object('tilingScheme', tilingScheme);
+        Check.typeOf.number('x', x);
+        Check.typeOf.number('y', y);
+        Check.typeOf.number('level', level);
         //>>includeEnd('debug');
 
         var ellipsoid = tilingScheme.ellipsoid;
-        var nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);
-        var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+        tilingScheme.tileXYToNativeRectangle(x, y, level, nativeRectangleScratch);
+        tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
         exaggeration = defaultValue(exaggeration, 1.0);
 
         // Compute the center of the tile for RTC rendering.
-        var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
+        var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangleScratch));
 
         var levelZeroMaxError = 40075.16; // From Google's Doc
         var thisLevelMaxError = levelZeroMaxError / (1 << level);
@@ -170,8 +163,8 @@ define([
 
         var verticesPromise = taskProcessor.scheduleTask({
             buffer : this._buffer,
-            nativeRectangle : nativeRectangle,
-            rectangle : rectangle,
+            nativeRectangle : nativeRectangleScratch,
+            rectangle : rectangleScratch,
             relativeToCenter : center,
             ellipsoid : ellipsoid,
             skirtHeight : this._skirtHeight,
@@ -185,29 +178,30 @@ define([
         }
 
         var that = this;
-        return when(verticesPromise, function(result) {
-            that._mesh = new TerrainMesh(
-                center,
-                new Float32Array(result.vertices),
-                new Uint16Array(result.indices),
-                result.minimumHeight,
-                result.maximumHeight,
-                result.boundingSphere3D,
-                result.occludeePointInScaledSpace,
-                result.numberOfAttributes,
-                result.orientedBoundingBox,
-                TerrainEncoding.clone(result.encoding),
-                exaggeration);
+        return verticesPromise
+            .then(function(result) {
+                that._mesh = new TerrainMesh(
+                    center,
+                    new Float32Array(result.vertices),
+                    new Uint16Array(result.indices),
+                    result.minimumHeight,
+                    result.maximumHeight,
+                    result.boundingSphere3D,
+                    result.occludeePointInScaledSpace,
+                    result.numberOfAttributes,
+                    result.orientedBoundingBox,
+                    TerrainEncoding.clone(result.encoding),
+                    exaggeration);
 
-            that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
-            that._skirtIndex = result.skirtIndex;
-            that._minimumHeight = result.minimumHeight;
-            that._maximumHeight = result.maximumHeight;
+                that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
+                that._skirtIndex = result.skirtIndex;
+                that._minimumHeight = result.minimumHeight;
+                that._maximumHeight = result.maximumHeight;
 
-            // Free memory received from server after mesh is created.
-            that._buffer = undefined;
-            return that._mesh;
-        });
+                // Free memory received from server after mesh is created.
+                that._buffer = undefined;
+                return that._mesh;
+            });
     };
 
     /**
@@ -250,27 +244,13 @@ define([
      */
     GoogleEarthEnterpriseTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(tilingScheme)) {
-            throw new DeveloperError('tilingScheme is required.');
-        }
-        if (!defined(thisX)) {
-            throw new DeveloperError('thisX is required.');
-        }
-        if (!defined(thisY)) {
-            throw new DeveloperError('thisY is required.');
-        }
-        if (!defined(thisLevel)) {
-            throw new DeveloperError('thisLevel is required.');
-        }
-        if (!defined(descendantX)) {
-            throw new DeveloperError('descendantX is required.');
-        }
-        if (!defined(descendantY)) {
-            throw new DeveloperError('descendantY is required.');
-        }
-        if (!defined(descendantLevel)) {
-            throw new DeveloperError('descendantLevel is required.');
-        }
+        Check.typeOf.object('tilingScheme', tilingScheme);
+        Check.typeOf.number('thisX', thisX);
+        Check.typeOf.number('thisY', thisY);
+        Check.typeOf.number('thisLevel', thisLevel);
+        Check.typeOf.number('descendantX', descendantX);
+        Check.typeOf.number('descendantY', descendantY);
+        Check.typeOf.number('descendantLevel', descendantLevel);
         var levelDifference = descendantLevel - thisLevel;
         if (levelDifference > 1) {
             throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
@@ -309,33 +289,34 @@ define([
         }
 
         var that = this;
-        return when(upsamplePromise, function(result) {
-            var quantizedVertices = new Uint16Array(result.vertices);
-            var indicesTypedArray = IndexDatatype.createTypedArray(quantizedVertices.length / 3, result.indices);
+        return upsamplePromise
+            .then(function(result) {
+                var quantizedVertices = new Uint16Array(result.vertices);
+                var indicesTypedArray = IndexDatatype.createTypedArray(quantizedVertices.length / 3, result.indices);
 
-            var skirtHeight = that._skirtHeight;
+                var skirtHeight = that._skirtHeight;
 
-            // Use QuantizedMeshTerrainData since we have what we need already parsed
-            return new QuantizedMeshTerrainData({
-                quantizedVertices : quantizedVertices,
-                indices : indicesTypedArray,
-                minimumHeight : result.minimumHeight,
-                maximumHeight : result.maximumHeight,
-                boundingSphere : BoundingSphere.clone(result.boundingSphere),
-                orientedBoundingBox : OrientedBoundingBox.clone(result.orientedBoundingBox),
-                horizonOcclusionPoint : Cartesian3.clone(result.horizonOcclusionPoint),
-                westIndices : result.westIndices,
-                southIndices : result.southIndices,
-                eastIndices : result.eastIndices,
-                northIndices : result.northIndices,
-                westSkirtHeight : skirtHeight,
-                southSkirtHeight : skirtHeight,
-                eastSkirtHeight : skirtHeight,
-                northSkirtHeight : skirtHeight,
-                childTileMask : 0,
-                createdByUpsampling : true
+                // Use QuantizedMeshTerrainData since we have what we need already parsed
+                return new QuantizedMeshTerrainData({
+                    quantizedVertices : quantizedVertices,
+                    indices : indicesTypedArray,
+                    minimumHeight : result.minimumHeight,
+                    maximumHeight : result.maximumHeight,
+                    boundingSphere : BoundingSphere.clone(result.boundingSphere),
+                    orientedBoundingBox : OrientedBoundingBox.clone(result.orientedBoundingBox),
+                    horizonOcclusionPoint : Cartesian3.clone(result.horizonOcclusionPoint),
+                    westIndices : result.westIndices,
+                    southIndices : result.southIndices,
+                    eastIndices : result.eastIndices,
+                    northIndices : result.northIndices,
+                    westSkirtHeight : skirtHeight,
+                    southSkirtHeight : skirtHeight,
+                    eastSkirtHeight : skirtHeight,
+                    northSkirtHeight : skirtHeight,
+                    childTileMask : 0,
+                    createdByUpsampling : true
+                });
             });
-        });
     };
 
     /**
@@ -352,18 +333,10 @@ define([
      */
     GoogleEarthEnterpriseTerrainData.prototype.isChildAvailable = function(thisX, thisY, childX, childY) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(thisX)) {
-            throw new DeveloperError('thisX is required.');
-        }
-        if (!defined(thisY)) {
-            throw new DeveloperError('thisY is required.');
-        }
-        if (!defined(childX)) {
-            throw new DeveloperError('childX is required.');
-        }
-        if (!defined(childY)) {
-            throw new DeveloperError('childY is required.');
-        }
+        Check.typeOf.number('thisX', thisX);
+        Check.typeOf.number('thisY', thisY);
+        Check.typeOf.number('childX', childX);
+        Check.typeOf.number('childY', childY);
         //>>includeEnd('debug');
 
         var bitNumber = 2; // northwest child

@@ -447,12 +447,10 @@ define([
         return promise
             .then(function(terrain) {
                 if (defined(terrain)) {
-                    var decodePromise = taskProcessor.scheduleTask({
+                    return taskProcessor.scheduleTask({
                         buffer : terrain,
                         type : 'Terrain'
-                    });
-
-                    return decodePromise
+                    } ,[terrain])
                         .then(function(terrainTiles) {
                             // If we were sent child tiles, store them till they are needed
                             var buffer;
