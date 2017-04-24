@@ -148,7 +148,7 @@ define([
         if (typeof x === 'number' && typeof y === 'number') {
             return x * y;
         } else if (x instanceof Cartesian2 && y instanceof Cartesian2) {
-            return Cartesian2.dot(x ,y);
+            return Cartesian2.dot(x, y);
         } else if (x instanceof Cartesian3 && y instanceof Cartesian3) {
             return Cartesian3.dot(x, y);
         } else if (x instanceof Cartesian4 && y instanceof Cartesian4) {
