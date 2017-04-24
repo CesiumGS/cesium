@@ -119,8 +119,8 @@ define([
         this.backFaceCulling = false;
         this._backFaceCulling = false;
 
-        //this.normalShading = false;
-        //this._normalShading = false;
+        this.normalShading = false;
+        this._normalShading = false;
 
         this._opaqueRenderState = undefined;
         this._translucentRenderState = undefined;
@@ -875,7 +875,7 @@ define([
         var hasNormals = content._hasNormals;
         var hasBatchIds = content._hasBatchIds;
         var backFaceCulling = content._backFaceCulling;
-        //var normalShading = content._normalShading;
+        var normalShading = content._normalShading; 
         var vertexArray = content._drawCommand.vertexArray;
 
         var colorStyleFunction;
