@@ -32,12 +32,12 @@ define([
      *     expression : 'regExp("^1(\\d)").exec(${id})',
      *     expressions : {
      *         id : "RegEx('^1(\\d)$').exec(${id})",
-     *         area : "${length} * ${height}"
+     *         Area : "${length} * ${height}"
      *     },
      *     conditions : [
      *         ['${expression} === "1"', 'color("#FF0000")'],
      *         ['${expression} === "2"', 'color("#00FF00")'],
-     *         ["(${ID} !== 1) && (${AREA} > 0)", "color('#0000FF')"],
+     *         ["(${id} !== 1) && (${Area} > 0)", "color('#0000FF')"],
      *         ['true', 'color("#FFFFFF")']
      *     ]
      * });
