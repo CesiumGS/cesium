@@ -1277,7 +1277,7 @@ define([
     function selectTile(tileset, tile, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.contentReady && (
+        if (tile.contentAvailable && (
                 (tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE) ||
                 (tile.contentVisibility(frameState) !== Intersect.OUTSIDE)
             )) {
@@ -1357,8 +1357,8 @@ define([
             var tile = original;
             // traverse up the tree to find a ready ancestor
             if (!tile.hasEmptyContent) {
-                while (defined(tile) && !(tile.hasRenderableContent && tile.contentReady)) {
-                    if (!tile.contentReady) {
+                while (defined(tile) && !(tile.hasRenderableContent && tile.contentAvailable)) {
+                    if (!tile.contentAvailable) {
                         tileset._hasMixedContent = true;
                     }
                     tile = tile.parent;
@@ -1381,7 +1381,7 @@ define([
                     var childrenLength = children.length;
                     for (var j = 0; j < childrenLength; ++j) {
                         var child = children[j];
-                        if (child.contentReady) {
+                        if (child.contentAvailable) {
                             if (!child.selected) {
                                 child._finalResolution = true;
                                 child.selected = true;
@@ -1391,7 +1391,7 @@ define([
                             }
                         }
                         if (child._depth - original._depth < 2) { // prevent traversing too far
-                            if (!child.contentReady || child.refine === Cesium3DTileRefine.ADD) {
+                            if (!child.contentAvailable || child.refine === Cesium3DTileRefine.ADD) {
                                 descendantStack.push(child);
                             }
                         }

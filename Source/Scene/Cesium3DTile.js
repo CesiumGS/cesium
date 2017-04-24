@@ -212,6 +212,7 @@ define([
         this._contentState = contentState;
         this._contentReadyToProcessPromise = undefined;
         this._contentReadyPromise = undefined;
+        this._expiredContent = undefined;
 
         this._requestServer = requestServer;
 
@@ -446,6 +447,22 @@ define([
         },
 
         /**
+         * Determines if the tile has available content to render.  <code>true</code> if the tile's
+         * content is ready or if it has expired content that renders while new content loads; otherwise,
+         * <code>false</code>.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        contentAvailable : {
+            get : function() {
+                return this.contentReady || defined(this._expiredContent);
+            }
+        },
+
+        /**
          * Determines if the tile is ready to render. <code>true</code> if the tile
          * is ready to render; otherwise, <code>false</code>.
          *
@@ -538,6 +555,7 @@ define([
             var now = JulianDate.now(scratchJulianDate);
             if (JulianDate.lessThan(tile.expireDate, now)) {
                 tile._contentState = Cesium3DTileContentState.EXPIRED;
+                tile._expiredContent = tile._content;
             }
         }
     }
@@ -604,9 +622,6 @@ define([
             if (that.isDestroyed()) {
                 return when.reject('tileset is destroyed');
             }
-
-            // Destroy expired content to make way for the new content
-            that._content = that._content && that._content.destroy();
 
             var uint8Array = new Uint8Array(arrayBuffer);
             var magic = getMagic(uint8Array);
@@ -933,6 +948,20 @@ define([
         }
     }
 
+    function updateContent(tile, tileset, frameState) {
+        var content = tile._content;
+        var expiredContent = tile._expiredContent;
+
+        if (defined(expiredContent) && !tile.contentReady) {
+            // Render the expired content while the content loads
+            expiredContent.update(tileset, frameState);
+            return;
+        }
+
+        tile._expiredContent = tile._expiredContent && tile._expiredContent.destroy();
+        content.update(tileset, frameState);
+    }
+
     /**
      * Get the draw commands needed to render this tile.
      *
@@ -941,7 +970,7 @@ define([
     Cesium3DTile.prototype.update = function(tileset, frameState) {
         applyDebugSettings(this, tileset, frameState);
         updateExpiration(this);
-        this._content.update(tileset, frameState);
+        updateContent(this, tileset, frameState);
         this._transformDirty = false;
     };
 
@@ -977,6 +1006,7 @@ define([
      */
     Cesium3DTile.prototype.destroy = function() {
         this._content = this._content && this._content.destroy();
+        this._expiredContent = this._expiredContent && this._expiredContent.destroy();
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
