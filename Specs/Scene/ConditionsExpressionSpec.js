@@ -53,6 +53,31 @@ defineSuite([
         ]
     };
 
+    var jsonExpWithMultipleExpressions = {
+        expressions : {
+            halfHeight: '${Height}/2',
+            quarterHeight: '${Height}/4'
+        },
+        conditions : [
+            ['${halfHeight} > 50 && ${halfHeight} < 100', 'color("blue")'],
+            ['${quarterHeight} > 50 && ${quarterHeight} < 52', 'color("red")'],
+            ['true', 'color("lime")']
+        ]
+    };
+
+    var jsonExpWithMixedExpressions = {
+        expression: '${Height}',
+        expressions : {
+            halfHeight: '${Height}/2',
+            quarterHeight: '${Height}/4'
+        },
+        conditions : [
+            ['${expression} > 100 && ${halfHeight} < 100', 'color("blue")'],
+            ['${quarterHeight} > 50 && ${halfHeight} < 26', 'color("red")'],
+            ['true', 'color("lime")']
+        ]
+    };
+
 
     it('constructs', function() {
         var expression = new ConditionsExpression(jsonExp);
@@ -122,6 +147,32 @@ defineSuite([
         var expression = new ConditionsExpression(jsonExpWithUndefinedExpression);
         expect(expression._expression).toEqual(undefined);
         expect(expression.evaluateColor(frameState, undefined)).toEqual(Color.BLUE);
+    });
+
+    it('constructs and evaluates conditional expression with multiple expressions', function() {
+        var expression = new ConditionsExpression(jsonExpWithMultipleExpressions);
+        expect(expression._expressions).toEqual({halfHeight: '${Height}/2', quarterHeight: '${Height}/4', expression: undefined});
+        expect(expression._conditions).toEqual([
+            ['${halfHeight} > 50 && ${halfHeight} < 100', 'color("blue")'],
+            ['${quarterHeight} > 50 && ${quarterHeight} < 52', 'color("red")'],
+            ['true', 'color("lime")']
+        ]);
+        expect(expression.evaluateColor(frameState, new MockFeature(101))).toEqual(Color.BLUE);
+        expect(expression.evaluateColor(frameState, new MockFeature(52))).toEqual(Color.LIME);
+        expect(expression.evaluateColor(frameState, new MockFeature(3))).toEqual(Color.LIME);
+    });
+
+    it('constructs and evaluates conditional expression with mixed expressions', function() {
+        var expression = new ConditionsExpression(jsonExpWithMixedExpressions);
+        expect(expression._expressions).toEqual({halfHeight: '${Height}/2', quarterHeight: '${Height}/4', expression: '${Height}'});
+        expect(expression._conditions).toEqual([
+            ['${expression} > 100 && ${halfHeight} < 100', 'color("blue")'],
+            ['${quarterHeight} > 50 && ${halfHeight} < 26', 'color("red")'],
+            ['true', 'color("lime")']
+        ]);
+        expect(expression.evaluateColor(frameState, new MockFeature(101))).toEqual(Color.BLUE);
+        expect(expression.evaluateColor(frameState, new MockFeature(52))).toEqual(Color.LIME);
+        expect(expression.evaluateColor(frameState, new MockFeature(3))).toEqual(Color.LIME);
     });
 
     it('gets shader function', function() {

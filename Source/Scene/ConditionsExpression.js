@@ -15,8 +15,6 @@ define([
         Expression) {
     'use strict';
 
-    var expressionPlaceholder = /\$\{expression}/g;
-
     /**
      * Evaluates a conditions expression defined using the
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
@@ -32,9 +30,14 @@ define([
      * @example
      * var expression = new Cesium.Expression({
      *     expression : 'regExp("^1(\\d)").exec(${id})',
+     *     expressions : {
+     *         id : "RegEx('^1(\\d)$').exec(${id})",
+     *         area : "${length} * ${height}"
+     *     },
      *     conditions : [
      *         ['${expression} === "1"', 'color("#FF0000")'],
      *         ['${expression} === "2"', 'color("#00FF00")'],
+     *         ["(${ID} !== 1) && (${AREA} > 0)", "color('#0000FF')"],
      *         ['true', 'color("#FFFFFF")']
      *     ]
      * });
@@ -45,8 +48,13 @@ define([
     function ConditionsExpression(conditionsExpression) {
         this._conditionsExpression = clone(conditionsExpression, true);
         this._conditions = conditionsExpression.conditions;
-        this._expression = conditionsExpression.expression;
 
+        // Insert expression to expressions if it exists
+        // Then evaluate using expressions throughout class
+        // this._expression has to stay in prototype for specs to keep passing, but it can be removed in the future.
+        this._expression = conditionsExpression.expression;
+        this._expressions = conditionsExpression.expressions || {};
+        this._expressions.expression = conditionsExpression.expression;
         this._runtimeConditions = undefined;
 
         setRuntime(this);
@@ -79,19 +87,30 @@ define([
         var runtimeConditions = [];
         var conditions = expression._conditions;
         if (defined(conditions)) {
-            var exp = expression._expression;
+            var expressions = expression._expressions;
             var length = conditions.length;
             for (var i = 0; i < length; ++i) {
                 var statement = conditions[i];
                 var cond = String(statement[0]);
                 var condExpression = String(statement[1]);
-                if (defined(exp)) {
-                    cond = cond.replace(expressionPlaceholder, exp);
-                    condExpression = condExpression.replace(expressionPlaceholder, exp);
-                } else {
-                    cond = cond.replace(expressionPlaceholder, 'undefined');
-                    condExpression = condExpression.replace(expressionPlaceholder, 'undefined');
+
+                //Loop over all expressions for replacement instead of only replacing one
+                for (var key in expressions) {
+                    if (expressions.hasOwnProperty((key))) {
+                        console.log('in key: ' + key);
+                        var expressionPlaceholder = new RegExp('\\$\\{' + key + '\\}', 'g');
+                        if (defined(expressions[key])) {
+                            cond = cond.replace(expressionPlaceholder, expressions[key]);
+                            condExpression = condExpression.replace(expressionPlaceholder, expressions[key]);
+                            console.log('defined replacement: ' + cond + ', ' + condExpression);
+                        } else {
+                            cond = cond.replace(expressionPlaceholder, 'undefined');
+                            condExpression = condExpression.replace(expressionPlaceholder, 'undefined');
+                            console.log('undefined replacement: ' + condExpression);
+                        }
+                    }
                 }
+
                 runtimeConditions.push(new Statement(
                     new Expression(cond),
                     new Expression(condExpression)
@@ -141,7 +160,7 @@ define([
             var length = conditions.length;
             for (var i = 0; i < length; ++i) {
                 var statement = conditions[i];
-                if (statement.condition.evaluate(frameState, feature)) {
+                if (statement.condition && statement.condition.evaluate(frameState, feature)) {
                     return statement.expression.evaluateColor(frameState, feature, result);
                 }
             }
