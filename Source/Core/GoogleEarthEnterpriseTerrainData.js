@@ -4,6 +4,7 @@ define([
     './BoundingSphere',
     './Cartesian2',
     './Cartesian3',
+    './Check',
     './defaultValue',
     './defined',
     './defineProperties',
@@ -25,6 +26,7 @@ define([
     BoundingSphere,
     Cartesian2,
     Cartesian3,
+    Check,
     defaultValue,
     defined,
     defineProperties,
@@ -79,10 +81,9 @@ define([
      * @see QuantizedMeshTerrainData
      */
     function GoogleEarthEnterpriseTerrainData(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options) || !defined(options.buffer)) {
-            throw new DeveloperError('options.buffer is required.');
-        }
+        Check.typeOf.object('options.buffer', options.buffer);
         //>>includeEnd('debug');
 
         this._buffer = options.buffer;

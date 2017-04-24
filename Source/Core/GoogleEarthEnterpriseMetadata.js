@@ -3,6 +3,7 @@ define([
     '../ThirdParty/pako_inflate',
     '../ThirdParty/when',
     './appendForwardSlash',
+    './Check',
     './defaultValue',
     './defined',
     './defineProperties',
@@ -15,6 +16,7 @@ define([
     pako,
     when,
     appendForwardSlash,
+    Check,
     defaultValue,
     defined,
     defineProperties,
@@ -151,10 +153,9 @@ define([
      *
      */
     function GoogleEarthEnterpriseMetadata(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
-            throw new DeveloperError('url is required.');
-        }
+        Check.typeOf.string('options.url', options.url);
         //>>includeEnd('debug');
 
         this._url = appendForwardSlash(options.url);
@@ -464,9 +465,6 @@ define([
                         var keysLength = keys.length;
                         for (var i = 0; i < keysLength; ++i) {
                             var key = keys[i];
-                            if (key === "3013203200203") {
-                                debugger;
-                            }
                             var r = result[key];
                             if (r !== null) {
                                 var info = TileInformation.fromObject(result[key]);
