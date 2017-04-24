@@ -119,7 +119,7 @@ defineSuite([
             expect(tileInfo.imageryVersion).toEqual(1);
             expect(tileInfo.terrainVersion).toEqual(1);
             expect(tileInfo.ancestorHasTerrain).toEqual(false);
-            expect(tileInfo.terrainState).toEqual(0);
+            expect(tileInfo.terrainState).toBeUndefined();
         });
     });
 
@@ -164,7 +164,7 @@ defineSuite([
             expect(tileInfo.imageryVersion).toEqual(1);
             expect(tileInfo.terrainVersion).toEqual(1);
             expect(tileInfo.ancestorHasTerrain).toEqual(false);
-            expect(tileInfo.terrainState).toEqual(0);
+            expect(tileInfo.terrainState).toBeUndefined();
         });
     });
 });

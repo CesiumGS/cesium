@@ -54,7 +54,7 @@ define([
         this.imageryVersion = imageryVersion;
         this.terrainVersion = terrainVersion;
         this.ancestorHasTerrain = false; // Set it later once we find its parent
-        this.terrainState = 0; // UNKNOWN
+        this.terrainState = undefined;
     }
 
     /**

@@ -319,6 +319,23 @@ define([
 
     var taskProcessor = new TaskProcessor('decodeGoogleEarthEnterprisePacket', Number.POSITIVE_INFINITY);
 
+    // If the tile has its own terrain, then you can just use its child bitmask. If it was requested using it's parent
+    //  then you need to check all of its children to see if they have terrain.
+    function computeChildMask(quadKey, info, metadata) {
+        var childMask = info.getChildBitmask();
+        if (info.terrainState === TerrainState.PARENT) {
+            childMask = 0;
+            for (var i = 0; i < 4; ++i) {
+                var child = metadata.getTileInformationFromQuadKey(quadKey + i.toString());
+                if (defined(child) && child.hasTerrain()) {
+                    childMask |= (1 << i);
+                }
+            }
+        }
+
+        return childMask;
+    }
+
     /**
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link GoogleEarthEnterpriseProvider#ready} returns true.  The result must include terrain data and
@@ -354,16 +371,23 @@ define([
             return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
         }
 
+        var terrainState = info.terrainState;
+        if (!defined(terrainState)) {
+            // First time we have tried to load this tile, so set terrain state to UNKNOWN
+            terrainState = info.terrainState = TerrainState.UNKNOWN;
+        }
+
         // If its in the cache, return it
         var buffer = terrainCache.get(quadKey);
         if (defined(buffer)) {
-            if (info.terrainState === TerrainState.UNKNOWN) {
+            if (terrainState === TerrainState.UNKNOWN) {
                 // If its already in the cache then a parent request must've loaded it
                 info.terrainState = TerrainState.PARENT;
             }
+
             return new GoogleEarthEnterpriseTerrainData({
                 buffer : buffer,
-                childTileMask : info.getChildBitmask()
+                childTileMask : computeChildMask(quadKey, info, metadata)
             });
         }
 
@@ -378,7 +402,7 @@ define([
                 width : 16,
                 height : 16
             });
-        } else if (info.terrainState === TerrainState.NONE) {
+        } else if (terrainState === TerrainState.NONE) {
             // Already have info and there isn't any terrain here
             return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
         }
@@ -387,7 +411,6 @@ define([
         var parentInfo;
         var q = quadKey;
         var terrainVersion = -1;
-        var terrainState = info.terrainState;
         if (terrainState !== TerrainState.NONE) {
             switch (terrainState) {
                 case TerrainState.SELF: // We have terrain and have retrieved it before
@@ -450,7 +473,7 @@ define([
                     return taskProcessor.scheduleTask({
                         buffer : terrain,
                         type : 'Terrain'
-                    } ,[terrain])
+                    } /*,[terrain]*/)
                         .then(function(terrainTiles) {
                             // If we were sent child tiles, store them till they are needed
                             var buffer;
@@ -477,7 +500,7 @@ define([
                             if (defined(buffer)) {
                                 return new GoogleEarthEnterpriseTerrainData({
                                     buffer : buffer,
-                                    childTileMask : info.getChildBitmask()
+                                    childTileMask : computeChildMask(quadKey, info, metadata)
                                 });
                             } else {
                                 info.terrainState = TerrainState.NONE;
@@ -531,7 +554,8 @@ define([
                 return false; // Terrain is not available
             }
 
-            if (terrainState === TerrainState.UNKNOWN) {
+            if (!defined(terrainState) || (terrainState === TerrainState.UNKNOWN)) {
+                info.terrainState = TerrainState.UNKNOWN;
                 if (!info.hasTerrain()) {
                     quadKey = quadKey.substring(0, quadKey.length - 1);
                     var parentInfo = metadata.getTileInformationFromQuadKey(quadKey);
