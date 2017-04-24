@@ -115,6 +115,7 @@ define([
         this._quantizedVolumeScale = undefined;
         this._quantizedVolumeOffset = undefined;
 
+        this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
         this._mode = undefined;
 
         /**
@@ -1138,7 +1139,8 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
-        var updateModelMatrix = this._tile.transformDirty || this._mode !== frameState.mode;
+        var modelMatrixChanged = !Matrix4.equals(this._modelMatrix, this._tile.computedTransform);
+        var updateModelMatrix = modelMatrixChanged || this._mode !== frameState.mode;
         this._mode = frameState.mode;
 
         if (!defined(this._drawCommand)) {

@@ -120,8 +120,6 @@ define([
          */
         this.computedTransform = computedTransform;
 
-        this._transformDirty = true;
-
         this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform);
         this._boundingVolume2D = undefined;
 
@@ -423,20 +421,6 @@ define([
         },
 
         /**
-         * Whether the computedTransform has changed this frame.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        transformDirty : {
-            get : function() {
-                return this._transformDirty;
-            }
-        },
-
-        /**
          * @readonly
          * @private
          */
@@ -550,15 +534,20 @@ define([
 
     var scratchJulianDate = new JulianDate();
 
-    function updateExpiration(tile) {
-        if (defined(tile.expireDate) && tile.contentReady && !tile.hasEmptyContent) {
+    /**
+     * Update whether the tile has expired.
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.updateExpiration = function() {
+        if (defined(this.expireDate) && this.contentReady && !this.hasEmptyContent) {
             var now = JulianDate.now(scratchJulianDate);
-            if (JulianDate.lessThan(tile.expireDate, now)) {
-                tile._contentState = Cesium3DTileContentState.EXPIRED;
-                tile._expiredContent = tile._content;
+            if (JulianDate.lessThan(this.expireDate, now)) {
+                this._contentState = Cesium3DTileContentState.EXPIRED;
+                this._expiredContent = this._content;
             }
         }
-    }
+    };
 
     function updateExpireDate(tile) {
         if (defined(tile.expireDuration)) {
@@ -620,9 +609,9 @@ define([
 
         promise.then(function(arrayBuffer) {
             if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
+                // Tile is unloaded before the content finishes loading
+                return when.reject('tile is destroyed');
             }
-
             var uint8Array = new Uint8Array(arrayBuffer);
             var magic = getMagic(uint8Array);
             var contentFactory = Cesium3DTileContentFactory[magic];
@@ -642,6 +631,11 @@ define([
             that._contentReadyToProcessPromise.resolve(content);
 
             content.readyPromise.then(function(content) {
+                if (that.isDestroyed()) {
+                    // Tile is unloaded before the content finishes processing
+                    that._content.destroy();
+                    return when.reject('tile is destroyed');
+                }
                 updateExpireDate(that);
                 that._contentState = Cesium3DTileContentState.READY;
                 that._contentReadyPromise.resolve(content);
@@ -883,9 +877,8 @@ define([
     Cesium3DTile.prototype.updateTransform = function(parentTransform) {
         parentTransform = defaultValue(parentTransform, Matrix4.IDENTITY);
         var computedTransform = Matrix4.multiply(parentTransform, this.transform, scratchTransform);
-        var transformDirty = !Matrix4.equals(computedTransform, this.computedTransform);
-        if (transformDirty) {
-            this._transformDirty = true;
+        var transformChanged = !Matrix4.equals(computedTransform, this.computedTransform);
+        if (transformChanged) {
             Matrix4.clone(computedTransform, this.computedTransform);
 
             // Update the bounding volumes
@@ -969,9 +962,7 @@ define([
      */
     Cesium3DTile.prototype.update = function(tileset, frameState) {
         applyDebugSettings(this, tileset, frameState);
-        updateExpiration(this);
         updateContent(this, tileset, frameState);
-        this._transformDirty = false;
     };
 
     var scratchCommandList = [];
@@ -1005,8 +996,9 @@ define([
      * @private
      */
     Cesium3DTile.prototype.destroy = function() {
+        // For the interval between new content being requested and downloaded, expiredContent === content, so don't destroy twice
         this._content = this._content && this._content.destroy();
-        this._expiredContent = this._expiredContent && this._expiredContent.destroy();
+        this._expiredContent = this._expiredContent && !this._expiredContent.isDestroyed() && this._expiredContent.destroy();
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();

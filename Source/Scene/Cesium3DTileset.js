@@ -1222,23 +1222,25 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function unloadSubtree(tileset, tile) {
+    function destroySubtree(tileset, tile) {
+        var root = tile;
         var stats = tileset._statistics;
-        var stack = [];
+        var stack = scratchStack;
         stack.push(tile);
         while (stack.length > 0) {
             tile = stack.pop();
-            unloadTile(tileset, tile);
             var children = tile.children;
             var length = children.length;
             for (var i = 0; i < length; ++i) {
-                var child = children[i];
+                stack.push(children[i]);
+            }
+            if (tile !== root) {
+                unloadTileFromCache(tileset, tile);
+                tile.destroy();
                 --stats.numberTotal;
-                stack.push(child);
             }
         }
-
-        tile.children = [];
+        root.children = [];
     }
 
     function isVisible(visibilityPlaneMask) {
@@ -1263,8 +1265,13 @@ define([
             return;
         }
 
-        if (expired && tile.hasTilesetContent) {
-            unloadSubtree(tileset, tile);
+        if (expired) {
+            if (tile.hasRenderableContent) {
+                decrementPointAndFeatureLoadCounts(tileset, tile.content);
+                --tileset._statistics.numberContentReady;
+            } else if (tile.hasTilesetContent) {
+                destroySubtree(tileset, tile);
+            }
         }
 
         ++stats.numberOfPendingRequests;
@@ -1591,6 +1598,7 @@ define([
         tile._sse = getScreenSpaceError(tileset, tile.geometricError, tile, frameState);
         tile.selected = false;
         tile._finalResolution = false;
+        tile.updateExpiration();
         touch(tileset, tile, outOfCore);
     }
 
@@ -1623,7 +1631,12 @@ define([
         var loadSiblings = tileset.loadSiblings;
 
         if (tile.hasTilesetContent) {
-            updateAndPushChildren(tileset, tile, frameState, stack, loadSiblings, outOfCore);
+            if (tile.contentExpired) {
+                // Request new content and destroy subtree
+                loadTile(tile);
+            } else {
+                updateAndPushChildren(tileset, tile, frameState, stack, loadSiblings, outOfCore);
+            }
         } else {
             if (tile.refine === Cesium3DTileRefine.ADD) {
                 loadAndAddToQueue(tileset, tile, finalQueue);
@@ -1751,12 +1764,17 @@ define([
                 // Remove from processing queue
                 tileset._processingQueue.splice(index, 1);
                 --tileset._statistics.numberProcessing;
+
                 if (tile.hasRenderableContent) {
                     // RESEARCH_IDEA: ability to unload tiles (without content) for an
                     // external tileset when all the tiles are unloaded.
-                    ++tileset._statistics.numberContentReady;
                     incrementPointAndFeatureLoadCounts(tileset, tile.content);
-                    tile.replacementNode = tileset._replacementList.add(tile);
+                    ++tileset._statistics.numberContentReady;
+
+                    // Add to the tile cache. Previously expired tiles are already in the cache.
+                    if (!defined(tile.replacementNode)) {
+                        tile.replacementNode = tileset._replacementList.add(tile);
+                    }
                 }
             } else {
                 // Not in processing queue
@@ -1981,8 +1999,9 @@ define([
         }
     }
 
-    function unloadTile(tileset, tile) {
-        if (!tile.hasRenderableContent) {
+    function unloadTileFromCache(tileset, tile) {
+        var node = tile.replacementNode;
+        if (!defined(node)) {
             return;
         }
 
@@ -1991,13 +2010,12 @@ define([
         var tileUnload = tileset.tileUnload;
 
         tileUnload.raiseEvent(tile);
-        replacementList.remove(tile.replacementNode);
+        replacementList.remove(node);
         decrementPointAndFeatureLoadCounts(tileset, tile.content);
         --stats.numberContentReady;
-        tile.unloadContent();
     }
 
-    function unloadTiles(tileset, frameState) {
+    function unloadTiles(tileset) {
         var trimTiles = tileset._trimTiles;
         tileset._trimTiles = false;
 
@@ -2013,7 +2031,8 @@ define([
         while ((node !== sentinel) && ((replacementList.length > maximumNumberOfLoadedTiles) || trimTiles)) {
             var tile = node.item;
             node = node.next;
-            unloadTile(tileset, tile);
+            unloadTileFromCache(tileset, tile);
+            tile.unloadContent();
         }
     }
 
@@ -2100,7 +2119,7 @@ define([
         updateTiles(this, frameState);
 
         if (outOfCore) {
-            unloadTiles(this, frameState);
+            unloadTiles(this);
         }
 
         // Events are raised (added to the afterRender queue) here since promises
