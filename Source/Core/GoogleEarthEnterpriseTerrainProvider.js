@@ -458,7 +458,8 @@ define([
                     if (defined(terrain)) {
                         return taskProcessor.scheduleTask({
                             buffer : terrain,
-                            type : 'Terrain'
+                            type : 'Terrain',
+                            key : metadata.key
                         }, [terrain])
                             .then(function(terrainTiles) {
                                 // Add requested tile and mark it as SELF

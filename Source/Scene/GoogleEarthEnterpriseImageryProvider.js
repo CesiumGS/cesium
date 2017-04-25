@@ -399,6 +399,15 @@ define([
         }
         //>>includeEnd('debug');
 
+        var metadata = this._metadata;
+        var info = metadata.getTileInformation(x, y, level);
+        if (defined(info)) {
+            var credit = metadata.providers[info.imageryProvider];
+            if (defined(credit)) {
+                return [credit];
+            }
+        }
+
         return undefined;
     };
 
@@ -449,7 +458,7 @@ define([
 
         return promise
             .then(function(image) {
-                GoogleEarthEnterpriseMetadata.decode(image);
+                GoogleEarthEnterpriseMetadata.decode(metadata.key, image);
                 var a = new Uint8Array(image);
                 var type = getImageType(a);
                 if (!defined(type)) {
