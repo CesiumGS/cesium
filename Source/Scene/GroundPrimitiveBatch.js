@@ -18,6 +18,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
+        '../Core/TaskProcessor',
         '../Core/TranslationRotationScale',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
@@ -29,6 +30,7 @@ define([
         '../Renderer/VertexArray',
         '../Shaders/ShadowVolumeFS',
         '../Shaders/ShadowVolumeVS',
+        '../ThirdParty/when',
         './BlendingState',
         './DepthFunction',
         './StencilFunction',
@@ -52,6 +54,7 @@ define([
         OrientedBoundingBox,
         PrimitiveType,
         Rectangle,
+        TaskProcessor,
         TranslationRotationScale,
         Buffer,
         BufferUsage,
@@ -63,6 +66,7 @@ define([
         VertexArray,
         ShadowVolumeFS,
         ShadowVolumeVS,
+        when,
         BlendingState,
         DepthFunction,
         StencilFunction,
@@ -109,7 +113,7 @@ define([
         this._indexCounts = options.indexCounts;
         this._indices = options.indices;
 
-        this._ellispoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._minimumHeight = options.minimumHeight;
         this._maximumHeight = options.maximumHeight;
         this._center = options.center;
@@ -145,283 +149,128 @@ define([
         a_batchId : 1
     };
 
-    var scratchDecodeMatrix = new Matrix4();
-    var scratchEncodedPosition = new Cartesian3();
-    var scratchNormal = new Cartesian3();
-    var scratchScaledNormal = new Cartesian3();
-    var scratchMinHeightPosition = new Cartesian3();
-    var scratchMaxHeightPosition = new Cartesian3();
-    var scratchBVCartographic = new Cartographic();
-    var scratchBVRectangle = new Rectangle();
+    var createVerticesTaskProcessor = new TaskProcessor('createVerticesFromVectorTile');
     var scratchColor = new Color();
 
     function createVertexArray(primitive, context) {
-        if (!defined(primitive._positions)) {
+        if (defined(primitive._va)) {
             return;
         }
 
-        var positions = primitive._positions;
-        var counts = primitive._counts;
-        var indexCounts = primitive._indexCounts;
-        var indices = primitive._indices;
-        var boundingVolumes = primitive._boundingVolumes;
-        var center = primitive._center;
-        var ellipsoid = primitive._ellispoid;
-        var batchIds = primitive._batchIds;
-        var batchTable = primitive._batchTable;
+        if (!defined(primitive._verticesPromise)) {
+            var positions = primitive._positions;
+            var counts = primitive._counts;
+            var indexCounts = primitive._indexCounts;
+            var indices = primitive._indices;
 
-        var minHeight = primitive._minimumHeight;
-        var maxHeight = primitive._maximumHeight;
+            var batchIds = primitive._batchIds;
+            var batchTableColors = primitive._batchTableColors;
 
-        var quantizedOffset = primitive._quantizedOffset;
-        var quantizedScale = primitive._quantizedScale;
+            if (!defined(batchTableColors)) {
+                positions = primitive._positions.slice();
+                counts = primitive._counts.slice();
+                indexCounts = primitive._indexCounts.slice();
+                indices = primitive._indices.slice();
 
-        var decodeMatrix;
-        if (defined(quantizedOffset) && defined(quantizedScale)) {
-            decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
-        } else {
-            decodeMatrix = Matrix4.IDENTITY;
-        }
+                batchTableColors = primitive._batchTableColors = new Uint32Array(batchIds.length);
+                batchIds = primitive._batchIds = new Uint32Array(primitive._batchIds);
+                var batchTable = primitive._batchTable;
 
-        var i;
-        var j;
-        var color;
-        var rgba;
-
-        var countsLength = counts.length;
-        var offsets = new Array(countsLength);
-        var indexOffsets = new Array(countsLength);
-        var currentOffset = 0;
-        var currentIndexOffset = 0;
-        for (i = 0; i < countsLength; ++i) {
-            offsets[i] = currentOffset;
-            indexOffsets[i] = currentIndexOffset;
-
-            currentOffset += counts[i];
-            currentIndexOffset += indexCounts[i];
-        }
-
-        var positionsLength = positions.length;
-        var batchedPositions = new Float32Array(positionsLength * 2);
-        var batchedIds = new Uint16Array(positionsLength / 3 * 2);
-        var batchedIndexOffsets = new Array(indexOffsets.length);
-        var batchedIndexCounts = new Array(indexCounts.length);
-        var batchedIndices = [];
-
-        var colorToBuffers = {};
-        for (i = 0; i < countsLength; ++i) {
-            color = batchTable.getColor(batchIds[i], scratchColor);
-            rgba = color.toRgba();
-            if (!defined(colorToBuffers[rgba])) {
-                colorToBuffers[rgba] = {
-                    positionLength : counts[i],
-                    indexLength : indexCounts[i],
-                    offset : 0,
-                    indexOffset : 0,
-                    batchIds : [i]
-                };
-            } else {
-                colorToBuffers[rgba].positionLength += counts[i];
-                colorToBuffers[rgba].indexLength += indexCounts[i];
-                colorToBuffers[rgba].batchIds.push(i);
-            }
-        }
-
-        // get the offsets and counts for the positions and indices of each primitive
-        var buffer;
-        var byColorPositionOffset = 0;
-        var byColorIndexOffset = 0;
-        for (rgba in colorToBuffers) {
-            if (colorToBuffers.hasOwnProperty(rgba)) {
-                buffer = colorToBuffers[rgba];
-                buffer.offset = byColorPositionOffset;
-                buffer.indexOffset = byColorIndexOffset;
-
-                var positionLength = buffer.positionLength * 2;
-                var indexLength = buffer.indexLength * 2 + buffer.positionLength * 6;
-
-                byColorPositionOffset += positionLength;
-                byColorIndexOffset += indexLength;
-
-                buffer.indexLength = indexLength;
-            }
-        }
-
-        var batchedDrawCalls = [];
-
-        for (rgba in colorToBuffers) {
-            if (colorToBuffers.hasOwnProperty(rgba)) {
-                buffer = colorToBuffers[rgba];
-
-                batchedDrawCalls.push({
-                    color : Color.fromRgba(parseInt(rgba)),
-                    offset : buffer.indexOffset,
-                    count : buffer.indexLength,
-                    batchIds : buffer.batchIds
-                });
-            }
-        }
-
-        primitive._batchedIndices = batchedDrawCalls;
-
-        for (i = 0; i < countsLength; ++i) {
-            color = batchTable.getColor(batchIds[i], scratchColor);
-            rgba = color.toRgba();
-
-            buffer = colorToBuffers[rgba];
-            var positionOffset = buffer.offset;
-            var positionIndex = positionOffset * 3;
-            var batchIdIndex = positionOffset;
-
-            var polygonOffset = offsets[i];
-            var polygonCount = counts[i];
-            var batchId = batchIds[i];
-
-            var minLat = Number.POSITIVE_INFINITY;
-            var maxLat = Number.NEGATIVE_INFINITY;
-            var minLon = Number.POSITIVE_INFINITY;
-            var maxLon = Number.NEGATIVE_INFINITY;
-
-            for (j = 0; j < polygonCount; ++j) {
-                var encodedPosition = Cartesian3.unpack(positions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
-                var rtcPosition = Matrix4.multiplyByPoint(decodeMatrix, encodedPosition, encodedPosition);
-                var position = Cartesian3.add(rtcPosition, center, rtcPosition);
-
-                var carto = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
-                var lat = carto.latitude;
-                var lon = carto.longitude;
-
-                minLat = Math.min(lat, minLat);
-                maxLat = Math.max(lat, maxLat);
-                minLon = Math.min(lon, minLon);
-                maxLon = Math.max(lon, maxLon);
-
-                var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
-                var scaledPosition = ellipsoid.scaleToGeodeticSurface(position, position);
-                var scaledNormal = Cartesian3.multiplyByScalar(normal, minHeight, scratchScaledNormal);
-                var minHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, scratchMinHeightPosition);
-
-                scaledNormal = Cartesian3.multiplyByScalar(normal, maxHeight, scaledNormal);
-                var maxHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, scratchMaxHeightPosition);
-
-                Cartesian3.subtract(maxHeightPosition, center, maxHeightPosition);
-                Cartesian3.subtract(minHeightPosition, center, minHeightPosition);
-
-                Cartesian3.pack(maxHeightPosition, batchedPositions, positionIndex);
-                Cartesian3.pack(minHeightPosition, batchedPositions, positionIndex + 3);
-
-                batchedIds[batchIdIndex] = batchId;
-                batchedIds[batchIdIndex + 1] = batchId;
-
-                positionIndex += 6;
-                batchIdIndex += 2;
+                var length = batchTableColors.length;
+                for (var i = 0; i < length; ++i) {
+                    var color = batchTable.getColor(batchIds[i], scratchColor);
+                    batchTableColors[i] = color.toRgba();
+                }
             }
 
-            var rectangle = scratchBVRectangle;
-            rectangle.west = minLon;
-            rectangle.east = maxLon;
-            rectangle.south = minLat;
-            rectangle.north = maxLat;
+            var verticesPromise = primitive._verticesPromise = createVerticesTaskProcessor.scheduleTask({
+                minimumHeight : primitive._minimumHeight,
+                maximumHeight : primitive._maximumHeight,
+                quantizedOffset : primitive._quantizedOffset,
+                quantizedScale : primitive._quantizedScale,
+                center : primitive._center,
+                ellipsoid : primitive._ellipsoid,
+                positions : positions.buffer,
+                counts : counts.buffer,
+                indexCounts : indexCounts.buffer,
+                indices : indices.buffer,
+                batchIds : batchIds.buffer,
+                batchTableColors : batchTableColors.buffer
+            }, [positions.buffer, counts.buffer, indexCounts.buffer, indices.buffer, batchIds.buffer, batchTableColors.buffer]);
 
-            boundingVolumes[i] = OrientedBoundingBox.fromRectangle(rectangle, minHeight, maxHeight, ellipsoid);
-
-            var indicesIndex = buffer.indexOffset;
-
-            var indexOffset = indexOffsets[i];
-            var indexCount = indexCounts[i];
-
-            batchedIndexOffsets[i] = indicesIndex;
-
-            for (j = 0; j < indexCount; j += 3) {
-                var i0 = indices[indexOffset + j] - polygonOffset;
-                var i1 = indices[indexOffset + j + 1] - polygonOffset;
-                var i2 = indices[indexOffset + j + 2] - polygonOffset;
-
-                // triangle on the top of the extruded polygon
-                batchedIndices[indicesIndex++] = i0 * 2 + positionOffset;
-                batchedIndices[indicesIndex++] = i1 * 2 + positionOffset;
-                batchedIndices[indicesIndex++] = i2 * 2 + positionOffset;
-
-                // triangle on the bottom of the extruded polygon
-                batchedIndices[indicesIndex++] = i2 * 2 + 1 + positionOffset;
-                batchedIndices[indicesIndex++] = i1 * 2 + 1 + positionOffset;
-                batchedIndices[indicesIndex++] = i0 * 2 + 1 + positionOffset;
+            if (!defined(verticesPromise)) {
+                // Postponed
+                return;
             }
 
-            // indices for the walls of the extruded polygon
-            for (j = 0; j < polygonCount; ++j) {
-                var v0 = j;
-                var v1 = (j + 1) % polygonCount;
+            when(verticesPromise, function(result) {
+                primitive._positions = undefined;
+                primitive._counts = undefined;
 
-                batchedIndices[indicesIndex++] = v0 * 2 + 1 + positionOffset;
-                batchedIndices[indicesIndex++] = v1 * 2 + positionOffset;
-                batchedIndices[indicesIndex++] = v0 * 2 + positionOffset;
+                primitive._indices = new Uint32Array(result.indices);
+                primitive._indexOffsets = new Uint32Array(result.indexOffsets);
+                primitive._indexCounts = new Uint32Array(result.indexCounts);
+                primitive._batchedIndices = result.batchedIndices;
+                primitive._boundingVolumes = result.boundingVolumes;
 
-                batchedIndices[indicesIndex++] = v0 * 2 + 1 + positionOffset;
-                batchedIndices[indicesIndex++] = v1 * 2 + 1 + positionOffset;
-                batchedIndices[indicesIndex++] = v1 * 2 + positionOffset;
-            }
+                var length = primitive._boundingVolumes.length;
+                for (var i = 0; i < length; ++i) {
+                    primitive._boundingVolumes[i] = OrientedBoundingBox.clone(primitive._boundingVolumes[i]);
+                }
 
-            buffer.offset += polygonCount * 2;
-            buffer.indexOffset = indicesIndex;
+                length = primitive._batchedIndices.length;
+                for (var j = 0; j < length; ++j) {
+                    primitive._batchedIndices[j].color = Color.clone(primitive._batchedIndices[j].color);
+                }
 
-            batchedIndexCounts[i] = indicesIndex - batchedIndexOffsets[i];
+                // will be released
+                primitive._batchedPositions = new Float32Array(result.positions);
+                primitive._batchIds = new Uint32Array(result.batchIds);
+
+                primitive._ready = true;
+            });
         }
 
-        batchedIndices = new Uint32Array(batchedIndices);
+        if (primitive._ready && !defined(primitive._va)) {
+            var positionBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : primitive._batchedPositions,
+                usage : BufferUsage.STATIC_DRAW
+            });
+            var idBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : primitive._batchIds,
+                usage : BufferUsage.STATIC_DRAW
+            });
+            var indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : primitive._indices,
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : IndexDatatype.UNSIGNED_INT
+            });
 
-        primitive._positions = undefined;
-        primitive._counts = undefined;
-        primitive._batchIds = undefined;
-        primitive._indices = batchedIndices;
-        primitive._indexOffsets = batchedIndexOffsets;
-        primitive._indexCounts = batchedIndexCounts;
+            var vertexAttributes = [{
+                index : attributeLocations.position,
+                vertexBuffer : positionBuffer,
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            }, {
+                index : attributeLocations.a_batchId,
+                vertexBuffer : idBuffer,
+                componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+                componentsPerAttribute : 1
+            }];
 
-        var batchedIndicesLength = primitive._batchedIndices.length;
-        for (var m = 0; m < batchedIndicesLength; ++m) {
-            var tempIds = primitive._batchedIndices[m].batchIds;
-            var count = 0;
-            var tempIdsLength = tempIds.length;
-            for (var n = 0; n < tempIdsLength; ++n) {
-                count += batchedIndexCounts[tempIds[n]];
-            }
-            primitive._batchedIndices[m].count = count;
+            primitive._va = new VertexArray({
+                context : context,
+                attributes : vertexAttributes,
+                indexBuffer : indexBuffer
+            });
+
+            primitive._batchedPositions = undefined;
+            primitive._batchIds = undefined;
+            primitive._verticesPromise = undefined;
         }
-
-        var positionBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : batchedPositions,
-            usage : BufferUsage.STATIC_DRAW
-        });
-        var idBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : batchedIds,
-            usage : BufferUsage.STATIC_DRAW
-        });
-        var indexBuffer = Buffer.createIndexBuffer({
-            context : context,
-            typedArray : batchedIndices,
-            usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : IndexDatatype.UNSIGNED_INT
-        });
-
-        var vertexAttributes = [{
-            index : attributeLocations.position,
-            vertexBuffer : positionBuffer,
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 3
-        }, {
-            index : attributeLocations.a_batchId,
-            vertexBuffer : idBuffer,
-            componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
-            componentsPerAttribute : 1
-        }];
-
-        primitive._va = new VertexArray({
-            context : context,
-            attributes : vertexAttributes,
-            indexBuffer : indexBuffer
-        });
     }
 
     function createShaders(primitive, context) {
@@ -934,6 +783,10 @@ define([
         createShaders(this, context);
         createRenderStates(this);
         createUniformMap(this, context);
+
+        if (!this._ready) {
+            return;
+        }
 
         var passes = frameState.passes;
         if (passes.render) {
