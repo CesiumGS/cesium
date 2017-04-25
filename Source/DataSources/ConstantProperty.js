@@ -82,7 +82,7 @@ define([
             if (changed) {
                 this._hasClone = hasClone;
                 this._hasEquals = hasEquals;
-                this._value = !hasClone ? value : value.clone();
+                this._value = !hasClone ? value : value.clone(this._value);
                 this._definitionChanged.raiseEvent(this);
             }
         }
