@@ -11,22 +11,21 @@ defineSuite([
         createContext) {
     'use strict';
 
-    createBufferSpecs();
-
-    var c = createContext({ requestWebgl2 : true });
-    if (c.webgl2) {
-        createBufferSpecs({ requestWebgl2 : true });
-    }
-    c.destroyForSpecs();
+    createBufferSpecs({});
+    createBufferSpecs({
+        requestWebgl2 : true
+    });
 
     function createBufferSpecs(contextOptions) {
-        var context;
         var buffer;
         var buffer2;
+        var context = createContext(contextOptions);
 
-        beforeAll(function() {
-            context = createContext(contextOptions);
-        });
+        if (contextOptions.requestWebgl2 && !context.webgl2) {
+            // Don't repeat WebGL 1 tests
+            return;
+        }
+        var webglMessage = contextOptions.requestWebgl2 ? ': WebGL 2' : '';
 
         afterAll(function() {
             context.destroyForSpecs();
@@ -41,7 +40,7 @@ defineSuite([
             }
         });
 
-        it('throws when creating a vertex buffer with no context', function() {
+        it('throws when creating a vertex buffer with no context' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createVertexBuffer({
                     sizeInBytes : 4,
@@ -50,7 +49,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws when creating a vertex buffer with an invalid typed array', function() {
+        it('throws when creating a vertex buffer with an invalid typed array' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createVertexBuffer({
                     context : context,
@@ -60,7 +59,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws when creating a vertex buffer with both a typed array and size in bytes', function() {
+        it('throws when creating a vertex buffer with both a typed array and size in bytes' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createVertexBuffer({
                     context : context,
@@ -71,7 +70,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws when creating a vertex buffer without a typed array or size in bytes', function() {
+        it('throws when creating a vertex buffer without a typed array or size in bytes' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createVertexBuffer({
                     context : context,
@@ -80,7 +79,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws when creating a vertex buffer with invalid usage', function() {
+        it('throws when creating a vertex buffer with invalid usage' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createVertexBuffer({
                     context : context,
@@ -90,7 +89,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws when creating a vertex buffer with size of zero', function() {
+        it('throws when creating a vertex buffer with size of zero' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createVertexBuffer({
                     context : context,
@@ -100,7 +99,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('creates vertex buffer', function() {
+        it('creates vertex buffer' + webglMessage, function() {
             buffer = Buffer.createVertexBuffer({
                 context : context,
                 sizeInBytes : 16,
@@ -111,7 +110,7 @@ defineSuite([
             expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
         });
 
-        it('copies array to a vertex buffer', function() {
+        it('copies array to a vertex buffer' + webglMessage, function() {
             var sizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
             var vertices = new ArrayBuffer(sizeInBytes);
             var positions = new Float32Array(vertices);
@@ -127,7 +126,7 @@ defineSuite([
             buffer.copyFromArrayView(vertices);
         });
 
-        it('can create a vertex buffer from a typed array', function() {
+        it('can create a vertex buffer from a typed array' + webglMessage, function() {
             var typedArray = new Float32Array(3);
             typedArray[0] = 1.0;
             typedArray[1] = 2.0;
@@ -142,7 +141,7 @@ defineSuite([
             expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
         });
 
-        it('can create a vertex buffer from a size in bytes', function() {
+        it('can create a vertex buffer from a size in bytes' + webglMessage, function() {
             buffer = Buffer.createVertexBuffer({
                 context : context,
                 sizeInBytes : 4,
@@ -152,7 +151,7 @@ defineSuite([
             expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
         });
 
-        it('throws when creating an index buffer with no context', function() {
+        it('throws when creating an index buffer with no context' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createIndexBuffer({
                     sizeInBytes : 4,
@@ -162,7 +161,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws when creating an index buffer with an invalid typed array', function() {
+        it('throws when creating an index buffer with an invalid typed array' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createIndexBuffer({
                     context : context,
@@ -173,7 +172,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws when creating an index buffer with both a typed array and size in bytes', function() {
+        it('throws when creating an index buffer with both a typed array and size in bytes' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createIndexBuffer({
                     context : context,
@@ -185,7 +184,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws when creating an index buffer without a typed array or size in bytes', function() {
+        it('throws when creating an index buffer without a typed array or size in bytes' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createIndexBuffer({
                     context : context,
@@ -195,7 +194,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws when creating an index buffer with invalid usage', function() {
+        it('throws when creating an index buffer with invalid usage' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createIndexBuffer({
                     context : context,
@@ -206,7 +205,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws when creating an index buffer with invalid index data type', function() {
+        it('throws when creating an index buffer with invalid index data type' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createIndexBuffer({
                     context : context,
@@ -217,7 +216,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws when creating an index buffer with size of zero', function() {
+        it('throws when creating an index buffer with size of zero' + webglMessage, function() {
             expect(function() {
                 buffer = Buffer.createIndexBuffer({
                     context : context,
@@ -228,7 +227,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('creates index buffer', function() {
+        it('creates index buffer' + webglMessage, function() {
             buffer = Buffer.createIndexBuffer({
                 context : context,
                 sizeInBytes : 6,
@@ -244,7 +243,7 @@ defineSuite([
             expect(buffer.numberOfIndices).toEqual(3);
         });
 
-        it('copies array to an index buffer', function() {
+        it('copies array to an index buffer' + webglMessage, function() {
             var sizeInBytes = 3 * Uint16Array.BYTES_PER_ELEMENT;
             var elements = new ArrayBuffer(sizeInBytes);
             var indices = new Uint16Array(elements);
@@ -261,7 +260,7 @@ defineSuite([
             buffer.copyFromArrayView(elements);
         });
 
-        it('can create an index buffer from a typed array', function() {
+        it('can create an index buffer from a typed array' + webglMessage, function() {
             var typedArray = new Uint16Array(3);
             typedArray[0] = 1;
             typedArray[1] = 2;
@@ -278,7 +277,7 @@ defineSuite([
             expect(buffer.indexDatatype).toEqual(IndexDatatype.UNSIGNED_SHORT);
         });
 
-        it('can create an index buffer from a size in bytes', function() {
+        it('can create an index buffer from a size in bytes' + webglMessage, function() {
             buffer = Buffer.createIndexBuffer({
                 context : context,
                 sizeInBytes : 6,
@@ -290,7 +289,7 @@ defineSuite([
             expect(buffer.indexDatatype).toEqual(IndexDatatype.UNSIGNED_SHORT);
         });
 
-        it('getBufferData throws without WebGL 2', function() {
+        it('getBufferData throws without WebGL 2' + webglMessage, function() {
             if (context.webgl2) {
                 return;
             }
@@ -307,7 +306,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('getBufferData throws without arrayView', function() {
+        it('getBufferData throws without arrayView' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -323,7 +322,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('getBufferData throws with invalid sourceOffset', function() {
+        it('getBufferData throws with invalid sourceOffset' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -343,7 +342,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('getBufferData throws with invalid destinationOffset', function() {
+        it('getBufferData throws with invalid destinationOffset' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -363,7 +362,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('getBufferData throws with invalid length', function() {
+        it('getBufferData throws with invalid length' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -383,7 +382,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('getBufferData reads from vertex buffer', function() {
+        it('getBufferData reads from vertex buffer' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -406,7 +405,7 @@ defineSuite([
             expect(destArray).toEqual(typedArray);
         });
 
-        it('getBufferData reads from index buffer', function() {
+        it('getBufferData reads from index buffer' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -428,7 +427,7 @@ defineSuite([
             expect(destArray).toEqual(typedArray);
         });
 
-        it('copyFromBuffer throws without WebGL 2', function() {
+        it('copyFromBuffer throws without WebGL 2' + webglMessage, function() {
             if (context.webgl2) {
                 return;
             }
@@ -449,7 +448,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('copyFromBuffer throws without readBuffer', function() {
+        it('copyFromBuffer throws without readBuffer' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -465,7 +464,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('copyFromBuffer throws with invalid readOffset', function() {
+        it('copyFromBuffer throws with invalid readOffset' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -492,7 +491,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('copyFromBuffer throws with invalid writeOffset', function() {
+        it('copyFromBuffer throws with invalid writeOffset' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -519,7 +518,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('copyFromBuffer throws with invalid sizeInBytes', function() {
+        it('copyFromBuffer throws with invalid sizeInBytes' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -549,7 +548,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('copyFromBuffer throws with one index buffer and the other is not an index buffer', function() {
+        it('copyFromBuffer throws with one index buffer and the other is not an index buffer' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -573,7 +572,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('copyFromBuffer throws when readBuffer is the same buffer and copy range overlaps', function() {
+        it('copyFromBuffer throws when readBuffer is the same buffer and copy range overlaps' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -592,7 +591,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('copyFromBuffer with vertex buffers', function() {
+        it('copyFromBuffer with vertex buffers' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -621,7 +620,7 @@ defineSuite([
             expect(destArray).toEqual(typedArray);
         });
 
-        it('copyFromBuffer with index buffers', function() {
+        it('copyFromBuffer with index buffers' + webglMessage, function() {
             if (!context.webgl2) {
                 return;
             }
@@ -652,7 +651,7 @@ defineSuite([
             expect(destArray).toEqual(typedArray);
         });
 
-        it('destroys', function() {
+        it('destroys' + webglMessage, function() {
             var b = Buffer.createIndexBuffer({
                 context : context,
                 sizeInBytes : 3,
@@ -664,7 +663,7 @@ defineSuite([
             expect(b.isDestroyed()).toEqual(true);
         });
 
-        it('fails to provide an array view', function() {
+        it('fails to provide an array view' + webglMessage, function() {
             buffer = Buffer.createVertexBuffer({
                 context : context,
                 sizeInBytes : 3,
@@ -675,7 +674,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('fails to copy a large array view', function() {
+        it('fails to copy a large array view' + webglMessage, function() {
             buffer = Buffer.createVertexBuffer({
                 context : context,
                 sizeInBytes : 3,
@@ -688,7 +687,7 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('fails to destroy', function() {
+        it('fails to destroy' + webglMessage, function() {
             var b = Buffer.createIndexBuffer({
                 context : context,
                 sizeInBytes : 3,
