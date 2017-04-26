@@ -628,7 +628,6 @@ define([
             var box = boundingVolumeHeader.box;
             center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
             var halfAxes = Matrix3.fromArray(box, 3, scratchHalfAxes);
-            Matrix3.multiplyByScalar(halfAxes, 0.5, halfAxes);
 
             // Find the transformed center and halfAxes
             center = Matrix4.multiplyByPoint(transform, center, center);

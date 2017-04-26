@@ -173,10 +173,10 @@ define([
         this._gltfUpAxis = undefined;
         this._processingQueue = [];
         this._selectedTiles = [];
+        this._desiredTiles = new ManagedArray();
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
-        this._desiredTiles = [];
 
         var replacementList = new DoublyLinkedList();
 
@@ -266,7 +266,7 @@ define([
         this.show = defaultValue(options.show, true);
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
-        this._baseScreenSpaceError = defaultValue(options.baseScreenSpaceError, 50000000000);
+        this._baseScreenSpaceError = defaultValue(options.baseScreenSpaceError, 1024);
         this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
         this._styleEngine = new Cesium3DTileStyleEngine();
 
@@ -1339,6 +1339,26 @@ define([
 
     var descendantStack = [];
 
+    function markLoadedTilesForSelection(tileset, frameState) {
+        var tiles = tileset._desiredTiles;
+        var length = tiles.length;
+        for (var i = 0; i < length; ++i) {
+            var tile = tiles.get(i);
+
+            var loadedTile = tile._ancestorWithLoadedContent;
+            if (tile.hasContent && tile.contentReady) {
+                loadedTile = tile;
+            }
+
+            if (defined(loadedTile)) {
+                if (!loadedTile.selected) {
+                    loadedTile.selected = true;
+                    loadedTile._selectedFrame = frameState.frameNumber;
+                }
+            }
+        }
+    }
+
     function markNearestLoadedTilesForSelection(tileset, frameState, selectionState, outOfCore) {
         var finalQueue = selectionState.finalQueue;
         var selectionQueue = selectionState.selectionQueue;
@@ -1416,11 +1436,23 @@ define([
     }
 
     function sortForLoad(a, b) {
-        var diff = b._sse - a._sse;
-        if (diff === 0 || a.refine === Cesium3DTileRefine.ADD || b.refine === Cesium3DTileRefine.ADD) {
-            return a.distanceToCamera - b.distanceToCamera;
+        var diff = a.distanceToCamera - b.distanceToCamera;
+        if (a.refine === Cesium3DTileRefine.ADD || b.refine === Cesium3DTileRefine.ADD) {
+            return diff;
         }
-        return diff;
+
+        var ancestorA = a._ancestorWithLoadedContent;
+        var ancestorB = b._ancestorWithLoadedContent;
+
+        if (ancestorA === ancestorB) {
+            return diff;
+        }
+
+        var sseA = defined(ancestorA) ? ancestorA._sse - a._sse : a._sse;
+        var sseB = defined(ancestorB) ? ancestorB._sse - b._sse : b._sse;
+
+        var sseDiff = sseB - sseA;
+        return sseDiff === 0 ? diff : sseDiff;
     }
 
     function selectTiles(tileset, frameState, outOfCore) {
@@ -1430,6 +1462,7 @@ define([
 
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
 
+        tileset._desiredTiles.length = 0;
         tileset._selectedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
         tileset._hasMixedContent = false;
@@ -1478,63 +1511,27 @@ define([
         processingQueue.push(root);
         selectionState.done = false;
 
-        var baseLeaves = tileset._baseTraversal.execute(root, frameState, outOfCore);
-        for (var i = 0; i < baseLeaves.length; ++i) {
-            var tile = baseLeaves.get(i);
+        // tileset._baseScreenSpaceError = Number(tileset._maximumScreenSpaceError);
 
-            if (tile._sse <= tileset._baseScreenSpaceError) {
-                // tile.selected = true;
-                // tile._selectedFrame = frameState.frameNumber;
-                tileset._skipTraversal.execute(tile, frameState, outOfCore);
-            } else {
-                tile.selected = true;
-                tile._selectedFrame = frameState.frameNumber;
-                // selectTile(tileset, tile, frameState);
-            }
+        // leaves of the base traversal is where we start the skip traversal
+        tileset._baseTraversal.leaves = tileset._skipTraversal.queue1;
 
-            // if (defined(tile._ancestorWithLoadedContent)) {
-            //     tileset._skipTraversal.execute(tile, frameState, outOfCore);
-            // } else {
-            //     if (tile.hasContent) {
-            //         loadTile(tile);
-            //     } else if (defined(tile._ancestorWithContent)) {
-            //         loadTile(tile._ancestorWithContent);
-            //     }
-            // }
-        }
+        // load and select tiles without skipping up to tileset._baseScreenSpaceError
+        tileset._baseTraversal.execute(tileset, root, frameState, outOfCore);
 
+        // skip traversal starts from a prepopulated queue from the base traversal
+        tileset._skipTraversal.execute(tileset, undefined, frameState, outOfCore);
+
+        // mark tiles for selection or their nearest loaded ancestor
+        markLoadedTilesForSelection(tileset, frameState);
+
+        // sort selected tiles by distance to camera and call selectTile on each
+        // set tile._selectionDepth on all tiles
         traverseAndSelect(tileset, root, frameState);
 
         requestTiles(tileset, tileset._requestHeaps, outOfCore);
 
-        return;
-
-        var processLength = 0;
-        while (!selectionState.done) {
-            selectionState.nextQueue.length = 0;
-            processSelectionQueue(tileset, frameState, selectionState, outOfCore);
-
-            processLength = Math.max(processLength, selectionState.nextQueue.length);
-
-            processingQueue = selectionState.processingQueue;
-            selectionState.processingQueue = selectionState.nextQueue;
-            selectionState.nextQueue = processingQueue;
-        }
-
-        // on the next frame, we will likely need an array about the same size
-        processingQueue.trim(processLength);
-        nextQueue.trim(processLength);
-        finalQueue.trim();
-
-        markNearestLoadedTilesForSelection(tileset, frameState, selectionState, outOfCore);
-
-        if (tileset._hasMixedContent) {
-            markTilesAsFinal(selectionQueue);
-        }
-
-        traverseAndSelect(tileset, root, frameState);
-
-        requestTiles(tileset, tileset._requestHeaps, outOfCore);
+        tileset._desiredTiles.trim();
     }
 
     function requestTiles(tileset, requestHeaps, outOfCore) {
@@ -1713,12 +1710,16 @@ define([
         var stack = scratchStack;
         var ancestorStack = scratchStack2;
 
+        var lastAncestor;
         stack.push(root);
         while (stack.length > 0 || ancestorStack.length > 0) {
             if (ancestorStack.length > 0) {
                 var waitingTile = ancestorStack[ancestorStack.length - 1];
                 if (waitingTile._stackLength === stack.length) {
                     ancestorStack.pop();
+                    if (waitingTile === lastAncestor) {
+                        waitingTile._finalResolution = true;
+                    }
                     selectTile(tileset, waitingTile, frameState);
                     continue;
                 }
@@ -1741,7 +1742,12 @@ define([
             if (shouldSelect) {
                 tile._selectionDepth = ancestorStack.length;
 
-                if (tile._finalResolution || childrenLength === 0) {
+                if (tile._selectionDepth > 0) {
+                    tileset._hasMixedContent = true;
+                }
+
+                if (childrenLength === 0) {
+                    tile._finalResolution = true;
                     selectTile(tileset, tile, frameState);
                     if (!additive) {
                         continue;
@@ -1750,6 +1756,7 @@ define([
 
                 if (!additive) {
                     ancestorStack.push(tile);
+                    lastAncestor = tile;
                     tile._stackLength = stack.length;
                 }
             }
@@ -1919,36 +1926,6 @@ define([
         tileset._geometricErrorLabels.update(frameState);
     }
 
-    function updateLabels(tileset, frameState) {
-        return;
-        var selectedTiles = tileset._selectedTiles;
-        var length = selectedTiles.length;
-        tileset._labels.removeAll();
-        for (var i = 0; i < length; ++i) {
-            var tile = selectedTiles[i];
-            var boundingVolume = tile._boundingVolume.boundingVolume;
-            var halfAxes = boundingVolume.halfAxes;
-            var radius = boundingVolume.radius;
-
-            var position = Cartesian3.clone(boundingVolume.center, scratchCartesian2);
-            if (defined(halfAxes)) {
-                position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
-                position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
-                position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
-            } else if (defined(radius)) {
-                var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian2);
-                normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian2);
-                position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian2);
-            }
-            tileset._labels.add({
-                text: tile._sse.toString(),
-                position: position,
-                scale: 0.5
-            });
-        }
-        tileset._labels.update(frameState);
-    }
-
     var stencilClearCommand = new ClearCommand({
         stencil : 0,
         pass : Pass.CESIUM_3D_TILE
@@ -2038,15 +2015,6 @@ define([
             updateGeometricErrorLabels(tileset, frameState);
         } else {
             tileset._geometricErrorLabels = tileset._geometricErrorLabels && tileset._geometricErrorLabels.destroy();
-        }
-
-        if (true) {
-            if (!defined(tileset._labels)) {
-                tileset._labels = new LabelCollection();
-            }
-            updateLabels(tileset, frameState);
-        } else {
-            tileset._labels = tileset._labels && tileset._labels.destroy();
         }
     }
 

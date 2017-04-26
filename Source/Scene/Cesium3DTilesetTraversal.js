@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Check',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/freezeObject',
@@ -12,6 +13,7 @@ define([
         './OrthographicFrustum',
         './SceneMode'
     ], function(
+        Check,
         defined,
         defineProperties,
         freezeObject,
@@ -35,13 +37,18 @@ define([
         this.leaves = new ManagedArray();
     }
 
-    BaseTraversal.prototype.execute = function(root, frameState, outOfCore) {
-        this.tileset = root._tileset;
+    BaseTraversal.prototype.execute = function(tileset, root, frameState, outOfCore) {
+        this.tileset = tileset;
         this.frameState = frameState;
         this.outOfCore = outOfCore;
         this.leaves.length = 0;
+
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number.greaterThanOrEquals('baseScreenSpaceError', this.tileset._baseScreenSpaceError, this.tileset._maximumScreenSpaceError);
+        //>>includeEnd('debug');
+
         DFS(root, this);
-        return this.leaves;
+        // return this.leaves;
     };
 
     BaseTraversal.prototype.visit = function(tile) {
@@ -50,7 +57,7 @@ define([
 
     BaseTraversal.prototype.getChildren = function(tile) {
         var tileset = this.tileset;
-        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+        var baseScreenSpaceError = tileset._baseScreenSpaceError;
 
         if (tile.hasTilesetContent) {
             // load any tilesets of tilesets now because at this point we still have not achieved a base level of content
@@ -63,17 +70,18 @@ define([
         }
 
         if (tile.refine === Cesium3DTileRefine.ADD) {
-            // add to final
+            if (tile.hasContent) {
+                tileset._desiredTiles.push(tile);
+            }
         } else {
             if (tile.hasContent && // continue traversal until some content exists at all branches of the tree
-                (tile._sse <= maximumScreenSpaceError ||        // stop traversal when we have met screen space error
-                tile._sse <= tileset._baseScreenSpaceError)) {  // stop traversal when we've attained the desired base level of error
+                tile._sse <= baseScreenSpaceError) {  // stop traversal when we've attained the desired level of error
                 return emptyArray;
             }
         }
 
         var childrenVisibility = updateChildren(tileset, tile, this.frameState);
-        var showAdditive = tile.refine === Cesium3DTileRefine.ADD && tile._sse > maximumScreenSpaceError;
+        var showAdditive = tile.refine === Cesium3DTileRefine.ADD && tile._sse > baseScreenSpaceError;
         var showReplacement = tile.refine === Cesium3DTileRefine.REPLACE && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
 
         if (showAdditive || showReplacement || tile.hasTilesetContent || !defined(tile._ancestorWithContent)) {
@@ -84,9 +92,9 @@ define([
                 var child = children[i];
                 if (isVisible(child.visibilityPlaneMask)) {
                     loadTile(child, this.frameState);
-                    touch(tileset, tile, this.outOfCore);
                     allVisibleReady = allVisibleReady && child.contentReady;
                 }
+                touch(tileset, child, this.outOfCore);
             }
 
             if (allVisibleReady) {
@@ -97,14 +105,21 @@ define([
         return emptyArray;
     };
 
+    BaseTraversal.prototype.shouldVisit = function(tile) {
+        return isVisible(tile.visibilityPlaneMask);
+    }
+
     BaseTraversal.prototype.leafHandler = function(tile) {
-        var tileWithContent = tile;
-        if (!tileWithContent.hasContent || !tileWithContent.contentReady) {
-            if (defined(tile._ancestorWithLoadedContent)) {
-                tileWithContent = tile._ancestorWithLoadedContent;
-            }
+        var contentTile = tile._ancestorWithLoadedContent;
+        if (tile.hasContent && tile.contentReady) {
+            contentTile = tile;
         }
-        this.leaves.push(tileWithContent);
+
+        if (defined(contentTile)) {
+            this.leaves.push(contentTile);
+        } else {
+            this.tileset._desiredTiles.push(tile);
+        }
     };
 
     function SkipTraversal(options) {
@@ -117,15 +132,16 @@ define([
         this.selectedTiles = options.selectedTiles;
     }
 
-    SkipTraversal.prototype.execute = function(root, frameState, outOfCore) {
-        this.tileset = root._tileset;
+    SkipTraversal.prototype.execute = function(tileset, root, frameState, outOfCore) {
+        this.tileset = tileset;
         this.frameState = frameState;
         this.outOfCore = outOfCore;
         this.internalDFS.frameState = frameState;
         this.internalDFS.outOfCore = outOfCore;
+
+        BFS(root, this);
         this.queue1.length = 0;
         this.queue2.length = 0;
-        BFS(root, this);
     };
 
     SkipTraversal.prototype.visit = function(tile) {
@@ -142,16 +158,7 @@ define([
     };
 
     SkipTraversal.prototype.leafHandler = function(tile) {
-        loadTile(tile, this.frameState);
-        var tileWithContent = tile;
-        if (!tileWithContent.hasContent || !tileWithContent.contentReady) {
-            if (defined(tile._ancestorWithLoadedContent)) {
-                tileWithContent = tile._ancestorWithLoadedContent;
-            }
-        }
-
-        tileWithContent.selected = true;
-        tileWithContent._selectedFrame = this.frameState.frameNumber;
+        this.tileset._desiredTiles.push(tile);
     };
 
     function InternalSkipTraversal(selectionHeuristic) {
@@ -172,8 +179,7 @@ define([
     };
 
     InternalSkipTraversal.prototype.visit = function(tile) {
-        var tileset = tile._tileset;
-        visitTile(tileset, tile, this.frameState, this.outOfCore);
+        visitTile(this.tileset, tile, this.frameState, this.outOfCore);
     };
 
     InternalSkipTraversal.prototype.getChildren = function(tile) {
@@ -186,8 +192,10 @@ define([
             }
         } else {
             if (tile.refine === Cesium3DTileRefine.ADD) {
-                // add to final
-            } else {
+                if (tile.hasContent) {
+                    tileset._desiredTiles.push(tile);
+                }
+            } else if (tile.hasContent) {   // require the tile to have content before refining it
                 if (tile._sse <= maximumScreenSpaceError) {
                     return emptyArray;
                 }
@@ -221,37 +229,22 @@ define([
         var showAdditive = parent.refine === Cesium3DTileRefine.ADD && parent._sse > maximumScreenSpaceError;
         var showReplacement = parent.refine === Cesium3DTileRefine.REPLACE && (parent.childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
 
-        return isVisible(tile.visibilityPlaneMask) && (showReplacement || (showAdditive && getScreenSpaceError(this.tileset, parent.geometricError, tile, frameState) > maximumScreenSpaceError));
+        return isVisible(tile.visibilityPlaneMask) && (!showAdditive || getScreenSpaceError(this.tileset, parent.geometricError, tile, frameState) > maximumScreenSpaceError);
     };
 
     InternalSkipTraversal.prototype.leafHandler = function(tile) {
         if (tile !== this.root) {
+
+            if (tile.hasContent || tile.hasTilesetContent) {
+                loadTile(tile, this.frameState);
+            }
+
             this.queue.push(tile);
+
+        } else {
+            this.tileset._desiredTiles.push(tile);
         }
     };
-
-    function selectTile(tileset, tile, frameState) {
-        // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
-        // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.contentReady && (
-                (tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE) ||
-                (tile.contentsVisibility(frameState) !== Intersect.OUTSIDE)
-            )) {
-            tileset._selectedTiles.push(tile);
-
-            var tileContent = tile.content;
-            if (tileContent.featurePropertiesDirty) {
-                // A feature's property in this tile changed, the tile needs to be re-styled.
-                tileContent.featurePropertiesDirty = false;
-                tile.lastStyleTime = 0; // Force applying the style to this tile
-                tileset._selectedTilesToStyle.push(tile);
-            }  else if ((tile.lastSelectedFrameNumber !== frameState.frameNumber - 1)) {
-                // Tile is newly selected; it is selected this frame, but was not selected last frame.
-                tileset._selectedTilesToStyle.push(tile);
-            }
-            tile.lastSelectedFrameNumber = frameState.frameNumber;
-        }
-    }
 
     function updateChildren(tileset, tile, frameState) {
         var children = tile.children;
@@ -267,6 +260,7 @@ define([
         ++tileset._statistics.visited;
         tile.selected = false;
         tile._finalResolution = false;
+        computeSSE(tile, frameState);
         touch(tileset, tile, outOfCore);
         tile._ancestorWithContent = undefined;
         tile._ancestorWithLoadedContent = undefined;
@@ -288,12 +282,16 @@ define([
         }
     }
 
+    function computeSSE(tile, frameState) {
+        if (tile._sseComputedFrame !== frameState.frameNumber) {
+            tile._sseComputedFrame = frameState.frameNumber;
+            tile._sse = getScreenSpaceError(tile._tileset, tile.geometricError, tile, frameState);
+        }
+    }
+
     function loadTile(tile, frameState) {
         if (tile.contentUnloaded) {
-            if (tile._sseComputedFrame !== frameState.frameNumber) {
-                tile._sseComputedFrame = frameState.frameNumber;
-                tile._sse = getScreenSpaceError(tile._tileset, tile.geometricError, tile, frameState);
-            }
+            computeSSE(tile, frameState);
             tile._requestHeap.insert(tile);
         }
     }
@@ -394,7 +392,7 @@ define([
     function DFS(root, options) {
         var stack = options.stack;
 
-        if (!defined(options.shouldVisit) || options.shouldVisit(root)) {
+        if (defined(root) && (!defined(options.shouldVisit) || options.shouldVisit(root))) {
             stack.push(root);
         }
 
@@ -428,7 +426,7 @@ define([
         var queue1 = options.queue1;
         var queue2 = options.queue2;
 
-        if (!defined(options.shouldVisit) || options.shouldVisit(root)) {
+        if (defined(root) && (!defined(options.shouldVisit) || options.shouldVisit(root))) {
             queue1.push(root);
         }
 
