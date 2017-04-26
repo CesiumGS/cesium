@@ -12,20 +12,22 @@ defineSuite([
     'use strict';
 
     createBufferSpecs({});
-    createBufferSpecs({
-        requestWebgl2 : true
-    });
+    var c = createContext({ requestWebgl2 : true });
+    // Don't repeat WebGL 1 tests when WebGL 2 is not supported
+    if (c.webgl2) {
+        createBufferSpecs({ requestWebgl2 : true });
+    }
+    c.destroyForSpecs();
 
     function createBufferSpecs(contextOptions) {
+        var context;
         var buffer;
         var buffer2;
-        var context = createContext(contextOptions);
-
-        if (contextOptions.requestWebgl2 && !context.webgl2) {
-            // Don't repeat WebGL 1 tests
-            return;
-        }
         var webglMessage = contextOptions.requestWebgl2 ? ': WebGL 2' : '';
+
+        beforeAll(function() {
+            context = createContext(contextOptions);
+        });
 
         afterAll(function() {
             context.destroyForSpecs();
