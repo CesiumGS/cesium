@@ -1545,40 +1545,6 @@ define([
         for (var i = 0; i < length; ++i) {
             var colorCommand;
 
-            if (defined(primitive._depthFailAppearance)) {
-                if (twoPasses) {
-                    colorCommand = colorCommands[i];
-                    if (!defined(colorCommand)) {
-                        colorCommand = colorCommands[i] = new DrawCommand({
-                            owner : primitive,
-                            primitiveType : primitive._primitiveType
-                        });
-                    }
-                    colorCommand.vertexArray = primitive._va[vaIndex];
-                    colorCommand.renderState = primitive._backFaceDepthFailRS;
-                    colorCommand.shaderProgram = primitive._spDepthFail;
-                    colorCommand.uniformMap = depthFailUniforms;
-                    colorCommand.pass = pass;
-
-                    ++i;
-                }
-
-                colorCommand = colorCommands[i];
-                if (!defined(colorCommand)) {
-                    colorCommand = colorCommands[i] = new DrawCommand({
-                        owner : primitive,
-                        primitiveType : primitive._primitiveType
-                    });
-                }
-                colorCommand.vertexArray = primitive._va[vaIndex];
-                colorCommand.renderState = primitive._frontFaceDepthFailRS;
-                colorCommand.shaderProgram = primitive._spDepthFail;
-                colorCommand.uniformMap = depthFailUniforms;
-                colorCommand.pass = pass;
-
-                ++i;
-            }
-
             if (twoPasses) {
                 colorCommand = colorCommands[i];
                 if (!defined(colorCommand)) {
@@ -1608,6 +1574,40 @@ define([
             colorCommand.shaderProgram = primitive._sp;
             colorCommand.uniformMap = uniforms;
             colorCommand.pass = pass;
+
+            if (defined(primitive._depthFailAppearance)) {
+                if (twoPasses) {
+                    ++i;
+
+                    colorCommand = colorCommands[i];
+                    if (!defined(colorCommand)) {
+                        colorCommand = colorCommands[i] = new DrawCommand({
+                            owner : primitive,
+                            primitiveType : primitive._primitiveType
+                        });
+                    }
+                    colorCommand.vertexArray = primitive._va[vaIndex];
+                    colorCommand.renderState = primitive._backFaceDepthFailRS;
+                    colorCommand.shaderProgram = primitive._spDepthFail;
+                    colorCommand.uniformMap = depthFailUniforms;
+                    colorCommand.pass = pass;
+                }
+
+                ++i;
+
+                colorCommand = colorCommands[i];
+                if (!defined(colorCommand)) {
+                    colorCommand = colorCommands[i] = new DrawCommand({
+                        owner : primitive,
+                        primitiveType : primitive._primitiveType
+                    });
+                }
+                colorCommand.vertexArray = primitive._va[vaIndex];
+                colorCommand.renderState = primitive._frontFaceDepthFailRS;
+                colorCommand.shaderProgram = primitive._spDepthFail;
+                colorCommand.uniformMap = depthFailUniforms;
+                colorCommand.pass = pass;
+            }
 
             var pickCommand = pickCommands[m];
             if (!defined(pickCommand)) {
