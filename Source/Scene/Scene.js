@@ -2071,6 +2071,10 @@ define([
         var context = scene._context;
 
         var viewport = passState.viewport;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = context.drawingBufferWidth;
+        viewport.height = context.drawingBufferHeight;
 
         var frameState = scene._frameState;
         var camera = frameState.camera;
@@ -2078,12 +2082,13 @@ define([
         var depthOnly = frameState.passes.depth;
 
         if (scene._useWebVR && mode !== SceneMode.SCENE2D) {
+            updateAndClearFramebuffers(scene, passState, backgroundColor);
+
             if (!depthOnly) {
                 updatePrimitives(scene);
             }
 
             createPotentiallyVisibleSet(scene);
-            updateAndClearFramebuffers(scene, passState, backgroundColor);
 
             if (!depthOnly) {
                 executeComputeCommands(scene);
@@ -2123,13 +2128,7 @@ define([
 
             Camera.clone(savedCamera, camera);
         } else {
-            viewport.x = 0;
-            viewport.y = 0;
-            viewport.width = context.drawingBufferWidth;
-            viewport.height = context.drawingBufferHeight;
-
             updateAndClearFramebuffers(scene, passState, backgroundColor);
-
             if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
                 executeCommandsInViewport(true, scene, passState);
             } else {
