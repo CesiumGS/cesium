@@ -1337,18 +1337,20 @@ defineSuite([
         });
     });
 
-    it('debugShowGeometricError with regions', function() {
+    it('show tile info labels with regions', function() {
         // tilesetUrl has bounding regions
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
             scene.renderForSpecs();
             expect(tileset._tileInfoLabels).toBeDefined();
             expect(tileset._tileInfoLabels.length).toEqual(5);
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: 70');
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: 0');
-            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Geometric error: 0');
-            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Geometric error: 0');
-            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Geometric error: 0');
+
+            var root = tileset._root;
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Geometric error: ' + root.children[1].geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Geometric error: ' + root.children[2].geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Geometric error: ' + root.children[3].geometricError.toString());
 
             tileset.debugShowGeometricError = false;
             scene.renderForSpecs();
@@ -1356,15 +1358,17 @@ defineSuite([
         });
     });
 
-    it('debugShowGeometricError with boxes', function() {
+    it('show tile info labels with boxes', function() {
         // tilesetWithTransformsUrl has bounding boxes
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithTransformsUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
             scene.renderForSpecs();
             expect(tileset._tileInfoLabels).toBeDefined();
             expect(tileset._tileInfoLabels.length).toEqual(2);
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: 70');
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: 0');
+
+            var root = tileset._root;
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError.toString());
 
             tileset.debugShowGeometricError = false;
             scene.renderForSpecs();
@@ -1372,21 +1376,160 @@ defineSuite([
         });
     });
 
-    it('debugShowGeometricError with bounding spheres', function() {
+    it('show tile info labels with bounding spheres', function() {
         // tilesetWithViewerRequestVolumeUrl has bounding sphere
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithViewerRequestVolumeUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
             scene.renderForSpecs();
             expect(tileset._tileInfoLabels).toBeDefined();
             expect(tileset._tileInfoLabels.length).toEqual(6);
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: 70');
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: 0');
-            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Geometric error: 0');
-            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Geometric error: 0');
-            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Geometric error: 0');
-            expect(tileset._tileInfoLabels._labels[5].text).toEqual('Geometric error: 0');
+
+            var root = tileset._root;
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Geometric error: ' + root.children[1].geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Geometric error: ' + root.children[2].geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Geometric error: ' + root.children[3].geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[5].text).toEqual('Geometric error: ' + root.children[4].geometricError.toString());
 
             tileset.debugShowGeometricError = false;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).not.toBeDefined();
+        });
+    });
+
+    it('show tile info labels with number of commands', function() {
+        // tilesetUrl has bounding regions
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            tileset.debugShowNumberOfCommands = true;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).toBeDefined();
+            expect(tileset._tileInfoLabels.length).toEqual(5);
+
+            var root = tileset._root;
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Commands: ' + root.content.commandsLength.toString());
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Commands: ' + root.children[0].content.commandsLength.toString());
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Commands: ' + root.children[1].content.commandsLength.toString());
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Commands: ' + root.children[2].content.commandsLength.toString());
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Commands: ' + root.children[3].content.commandsLength.toString());
+
+            tileset.debugShowNumberOfCommands = false;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).not.toBeDefined();
+        });
+    });
+
+    it('show tile info labels with number of triangles', function() {
+        // tilesetUrl has bounding regions
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            tileset.debugShowNumberOfTriangles = true;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).toBeDefined();
+            expect(tileset._tileInfoLabels.length).toEqual(5);
+
+            var root = tileset._root;
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Triangles: ' + root.content.trianglesLength.toString());
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Triangles: ' + root.children[0].content.trianglesLength.toString());
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Triangles: ' + root.children[1].content.trianglesLength.toString());
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Triangles: ' + root.children[2].content.trianglesLength.toString());
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Triangles: ' + root.children[3].content.trianglesLength.toString());
+
+            tileset.debugShowNumberOfTriangles = false;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).not.toBeDefined();
+        });
+    });
+
+    it('show tile info labels with number of points', function() {
+        // tilesetUrl has bounding regions
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            tileset.debugShowNumberOfPoints = true;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).toBeDefined();
+            expect(tileset._tileInfoLabels.length).toEqual(5);
+
+            var root = tileset._root;
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Points: ' + root.content.pointsLength.toString());
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Points: ' + root.children[0].content.pointsLength.toString());
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Points: ' + root.children[1].content.pointsLength.toString());
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Points: ' + root.children[2].content.pointsLength.toString());
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Points: ' + root.children[3].content.pointsLength.toString());
+
+            tileset.debugShowNumberOfPoints = false;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).not.toBeDefined();
+        });
+    });
+
+    it('show tile info labels with texture memory usage', function() {
+        // tilesetUrl has bounding regions
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            tileset.debugShowTextureMemoryUsage = true;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).toBeDefined();
+            expect(tileset._tileInfoLabels.length).toEqual(5);
+
+            var root = tileset._root;
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Texture Memory: ' + root.content.textureMemorySizeInBytes.toString());
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Texture Memory: ' + root.children[0].content.textureMemorySizeInBytes.toString());
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Texture Memory: ' + root.children[1].content.textureMemorySizeInBytes.toString());
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Texture Memory: ' + root.children[2].content.textureMemorySizeInBytes.toString());
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Texture Memory: ' + root.children[3].content.textureMemorySizeInBytes.toString());
+
+            tileset.debugShowTextureMemoryUsage = false;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).not.toBeDefined();
+        });
+    });
+
+    it('show tile info labels with vertex memory usage', function() {
+        // tilesetUrl has bounding regions
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            tileset.debugShowVertexMemoryUsage = true;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).toBeDefined();
+            expect(tileset._tileInfoLabels.length).toEqual(5);
+
+            var root = tileset._root;
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Vertex Memory: ' + root.content.vertexMemorySizeInBytes.toString());
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Vertex Memory: ' + root.children[0].content.vertexMemorySizeInBytes.toString());
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Vertex Memory: ' + root.children[1].content.vertexMemorySizeInBytes.toString());
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Vertex Memory: ' + root.children[2].content.vertexMemorySizeInBytes.toString());
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Vertex Memory: ' + root.children[3].content.vertexMemorySizeInBytes.toString());
+
+            tileset.debugShowVertexMemoryUsage = false;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).not.toBeDefined();
+        });
+    });
+
+    it('show tile info labels with all stats', function() {
+        // tilesetUrl has bounding regions
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            tileset.debugShowGeometricError = true;
+            tileset.debugShowNumberOfCommands = true;
+            tileset.debugShowNumberOfPoints = true;
+            tileset.debugShowNumberOfTriangles = true;
+            tileset.debugShowTextureMemoryUsage = true;
+            tileset.debugShowVertexMemoryUsage = true;
+            viewRootOnly();
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).toBeDefined();
+
+            var content = tileset._root.content;
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + tileset._root.geometricError.toString() + '\n' +
+                                                                    'Commands: ' + content.commandsLength.toString() + '\n' +
+                                                                    'Points: ' + content.pointsLength.toString() + '\n' +
+                                                                    'Triangles: ' + content.trianglesLength.toString() + '\n' +
+                                                                    'Texture Memory: ' + content.textureMemorySizeInBytes.toString() + '\n' +
+                                                                    'Vertex Memory: ' + content.vertexMemorySizeInBytes.toString());
+
+            tileset.debugShowGeometricError = false;
+            tileset.debugShowNumberOfCommands = false;
+            tileset.debugShowNumberOfPoints = false
+            tileset.debugShowNumberOfTriangles = false;
+            tileset.debugShowTextureMemoryUsage = false
+            tileset.debugShowVertexMemoryUsage = false;
             scene.renderForSpecs();
             expect(tileset._tileInfoLabels).not.toBeDefined();
         });

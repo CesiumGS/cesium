@@ -1936,14 +1936,6 @@ define([
                 labelString += "\nCommands: " + tile.content.commandsLength.toString();
                 attribCounter++;
             }
-            if (tileset.debugShowTextureMemoryUsage) {
-                labelString += "\nTexture Memory: " + tile.content.textureMemorySizeInBytes.toString();
-                attribCounter++;
-            }
-            if (tileset.debugShowVertexMemoryUsage) {
-                labelString += "\nVertex Memory: " + tile.content.vertexMemorySizeInBytes.toString();
-                attribCounter++;
-            }
             if (tileset.debugShowNumberOfPoints) {
                 labelString += "\nPoints: " + tile.content.pointsLength.toString();
                 attribCounter++;
@@ -1952,6 +1944,15 @@ define([
                 labelString += "\nTriangles: " + tile.content.trianglesLength.toString();
                 attribCounter++;
             }
+            if (tileset.debugShowTextureMemoryUsage) {
+                labelString += "\nTexture Memory: " + tile.content.textureMemorySizeInBytes.toString();
+                attribCounter++;
+            }
+            if (tileset.debugShowVertexMemoryUsage) {
+                labelString += "\nVertex Memory: " + tile.content.vertexMemorySizeInBytes.toString();
+                attribCounter++;
+            }
+
             tileset._tileInfoLabels.add({
                 text: labelString.substring(1),
                 position: position,
