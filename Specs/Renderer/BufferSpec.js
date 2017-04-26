@@ -12,7 +12,19 @@ defineSuite([
     'use strict';
 
     createBufferSpecs();
-    createBufferSpecs({ defaultToWebgl2 : true });
+
+    var c;
+    var supportsWebGL2 = true;
+    try {
+        c = createContext({ requestWebgl2 : true });
+    } catch (error) {
+        supportsWebGL2 = false;
+    }
+
+    if (supportsWebGL2) {
+        c.destroyForSpecs();
+        createBufferSpecs({ requestWebgl2 : true });
+    }
 
     function createBufferSpecs(contextOptions) {
         var context;
