@@ -7,6 +7,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
         '../Core/Geometry',
@@ -43,6 +44,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         Ellipsoid,
         Geometry,
@@ -142,7 +144,17 @@ define([
 
         this._batchDirty = false;
         this._pickCommandsDirty = true;
+
+        this._readyPromise = when.defer();
     }
+
+    defineProperties(GroundPrimitiveBatch.prototype, {
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
+            }
+        }
+    });
 
     var attributeLocations = {
         position : 0,
@@ -270,6 +282,8 @@ define([
             primitive._batchedPositions = undefined;
             primitive._batchIds = undefined;
             primitive._verticesPromise = undefined;
+
+            primitive._readyPromise.resolve();
         }
     }
 

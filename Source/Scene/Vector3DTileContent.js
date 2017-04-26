@@ -551,9 +551,17 @@ define([
             this._labelCollection.update(frameState);
         }
 
-        if (this.state !== Cesium3DTileContentState.READY) {
-            this.state = Cesium3DTileContentState.READY;
-            this._readyPromise.resolve(this);
+        if (this.state !== Cesium3DTileContentState.READY && !defined(this._polygonReadyPromise)) {
+            if (defined(this._polygons)) {
+                var that = this;
+                this._polygonReadyPromise = this._polygons.readyPromise.then(function() {
+                    that.state = Cesium3DTileContentState.READY;
+                    that._readyPromise.resolve(that);
+                });
+            } else {
+                this.state = Cesium3DTileContentState.READY;
+                this._readyPromise.resolve(this);
+            }
         }
     };
 
