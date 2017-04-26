@@ -10,8 +10,7 @@ define([
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
-        '../ThirdParty/when',
-        './Cesium3DTileContentState'
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
@@ -23,8 +22,7 @@ define([
         Request,
         RequestScheduler,
         RequestType,
-        when,
-        Cesium3DTileContentState) {
+        when) {
     'use strict';
 
     /**
@@ -37,21 +35,20 @@ define([
      *
      * @private
      */
-    function Composite3DTileContent(tileset, tile, url, factory) {
+    function Composite3DTileContent(tileset, tile, url, arrayBuffer, byteOffset, factory) {
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
         this._contents = [];
-        this._factory = factory;
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
-        this.state = Cesium3DTileContentState.UNLOADED;
         this.batchTable = undefined;
 
-        this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
+
+        initialize(this, arrayBuffer, byteOffset, factory);
     }
 
     defineProperties(Composite3DTileContent.prototype, {
@@ -148,15 +145,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        contentReadyToProcessPromise : {
-            get : function() {
-                return this._contentReadyToProcessPromise.promise;
-            }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
@@ -182,53 +170,12 @@ define([
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Composite3DTileContent.prototype.request = function() {
-        var that = this;
-
-        var distance = this._tile.distanceToCamera;
-        var promise = RequestScheduler.schedule(new Request({
-            url : this._url,
-            server : this._tile.requestServer,
-            requestFunction : loadArrayBuffer,
-            type : RequestType.TILES3D,
-            distance : distance
-        }));
-
-        if (!defined(promise)) {
-            return false;
-        }
-
-        this.state = Cesium3DTileContentState.LOADING;
-        promise.then(function(arrayBuffer) {
-            if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
-            }
-            that.initialize(arrayBuffer);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that._readyPromise.reject(error);
-        });
-        return true;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Composite3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
+    function initialize(content, arrayBuffer, byteOffset, factory) {
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
-        var magic = getMagic(uint8Array, byteOffset);
-        if (magic !== 'cmpt') {
-            throw new DeveloperError('Invalid Composite Tile. Expected magic=cmpt. Read magic=' + magic);
-        }
-
         var view = new DataView(arrayBuffer);
-
-        byteOffset += sizeOfUint32;  // Skip magic number
+        byteOffset += sizeOfUint32;  // Skip magic
 
         //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
@@ -244,9 +191,6 @@ define([
         var tilesLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        this.state = Cesium3DTileContentState.PROCESSING;
-        this._contentReadyToProcessPromise.resolve(this);
-
         var contentPromises = [];
 
         for (var i = 0; i < tilesLength; ++i) {
@@ -255,13 +199,12 @@ define([
             // Tile byte length is stored after magic and version
             var tileByteLength = view.getUint32(byteOffset + sizeOfUint32 * 2, true);
 
-            var contentFactory = this._factory[tileType];
+            var contentFactory = factory[tileType];
 
             if (defined(contentFactory)) {
-                var content = contentFactory(this._tileset, this._tile, this._url);
-                content.initialize(arrayBuffer, byteOffset);
-                this._contents.push(content);
-                contentPromises.push(content.readyPromise);
+                var innerContent = contentFactory(content._tileset, content._tile, content._url, arrayBuffer, byteOffset);
+                content._contents.push(innerContent);
+                contentPromises.push(innerContent.readyPromise);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + tileType + ', inside Composite tile');
             }
@@ -269,16 +212,12 @@ define([
             byteOffset += tileByteLength;
         }
 
-        var that = this;
-
         when.all(contentPromises).then(function() {
-            that.state = Cesium3DTileContentState.READY;
-            that._readyPromise.resolve(that);
+            content._readyPromise.resolve(content);
         }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that._readyPromise.reject(error);
+            content._readyPromise.reject(error);
         });
-    };
+    }
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
@@ -294,11 +233,11 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Composite3DTileContent.prototype.update = function(tileset, context, frameState, commandList) {
+    Composite3DTileContent.prototype.update = function(tileset, frameState) {
         var contents = this._contents;
         var length = contents.length;
         for (var i = 0; i < length; ++i) {
-            contents[i].update(tileset, context, frameState, commandList);
+            contents[i].update(tileset, frameState);
         }
     };
 

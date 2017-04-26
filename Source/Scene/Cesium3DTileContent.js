@@ -26,21 +26,11 @@ define([
      * @see Tileset3DTileContent
      * @see Empty3DTileContent
      */
-    function Cesium3DTileContent(tileset, tile, url) {
+    function Cesium3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
         // Private members are not exposed in the public Cesium API, but derived classes
         // need to implement them.  The scope should be treated like C#'s internal.  When
         // we're ready, we'll add these members to the public API so users can implement
         // new tile formats.
-
-        /**
-         * The current state of the tile's content.
-         *
-         * @type {Cesium3DTileContentState}
-         * @readonly
-         *
-         * @private
-         */
-        this.state = undefined;
 
         /**
          * Gets the batch table texture for this tile.
@@ -121,20 +111,6 @@ define([
         },
 
         /**
-         * Gets the tile's batch table memory in bytes.
-         *
-         * @memberof Cesium3DTileContent.prototype
-         *
-         * @type {Number}
-         * @readonly
-         */
-        batchTableMemorySizeInBytes : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
-        },
-
-        /**
          * Gets the tile's texture memory in bytes.
          *
          * @memberof Cesium3DTileContent.prototype
@@ -149,10 +125,24 @@ define([
         },
 
         /**
+         * Gets the tile's batch table memory in bytes.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
          * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content a composite's inner tiles, which can also be composites.
          *
-         * @memberof Composite3DTileContent.prototype
+         * @memberof Cesium3DTileContent.prototype
          *
          * @type {Array}
          * @readonly
@@ -164,28 +154,12 @@ define([
         },
 
         /**
-         * Gets the promise that will be resolved when the tile's content is ready to process.
-         * This happens after the content is downloaded but before the content is ready
-         * to render.
-         *
-         * @type {Promise.<Cesium3DTileContent>}
-         * @readonly
-         *
-         * @private
-         */
-        contentReadyToProcessPromise : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
-        },
-
-        /**
          * Gets the promise that will be resolved when the tile's content is ready to render.
          *
+         * @memberof Cesium3DTileContent.prototype
+         *
          * @type {Promise.<Cesium3DTileContent>}
          * @readonly
-         *
-         * @private
          */
         readyPromise : {
             get : function() {
@@ -217,42 +191,6 @@ define([
      * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength - 1}.
      */
     Cesium3DTileContent.prototype.getFeature = function(batchId) {
-        DeveloperError.throwInstantiationError();
-    };
-
-    /**
-     * Requests the tile's content.
-     * <p>
-     * The request may not be made if the Cesium Request Scheduler can't prioritize it.
-     * </p>
-     * <p>
-     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-     * not part of the public Cesium API.
-     * </p>
-     *
-     * @returns {Boolean} Whether the request was initiated. May be false if the RequestScheduler is full.
-     *
-     * @private
-     */
-    Cesium3DTileContent.prototype.request = function() {
-        DeveloperError.throwInstantiationError();
-    };
-
-    /**
-     * Parses the tile's content's array buffer and initializes the content.  This does not
-     * necessarily move the state to READY since WebGL resource creation may be
-     * amortized over several frames.
-     * <p>
-     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-     * not part of the public Cesium API.
-     * </p>
-     *
-     * @param {Object} arrayBuffer The array buffer containing the contents payload.
-     * @param {Number} byteOffset The zero-based offset, in bytes, into the array buffer.
-     *
-     * @private
-     */
-    Cesium3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
         DeveloperError.throwInstantiationError();
     };
 

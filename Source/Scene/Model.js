@@ -4290,7 +4290,7 @@ define([
         var extensionsUsed = model.gltf.extensionsUsed;
         if (defined(extensionsUsed)) {
             var extensionsUsedCount = extensionsUsed.length;
-            for (var index=0;index<extensionsUsedCount;++index) {
+            for (var index = 0; index < extensionsUsedCount; ++index) {
                 var extension = extensionsUsed[index];
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&

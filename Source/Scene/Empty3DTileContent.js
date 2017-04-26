@@ -1,14 +1,10 @@
 /*global define*/
 define([
         '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../ThirdParty/when',
-        './Cesium3DTileContentState'
+        '../Core/destroyObject'
     ], function(
         defineProperties,
-        destroyObject,
-        when,
-        Cesium3DTileContentState) {
+        destroyObject) {
     'use strict';
 
     /**
@@ -25,20 +21,8 @@ define([
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
-        this.state = undefined;
         this.batchTable = undefined;
         this.featurePropertiesDirty = false;
-
-        this._contentReadyToProcessPromise = when.defer();
-        this._readyPromise = when.defer();
-
-        // Transition into the PROCESSING state.
-        this.state = Cesium3DTileContentState.PROCESSING;
-        this._contentReadyToProcessPromise.resolve(this);
-
-        // Transition into the READY state.
-        this.state = Cesium3DTileContentState.READY;
-        this._readyPromise.resolve(this);
     }
 
     defineProperties(Empty3DTileContent.prototype, {
@@ -108,18 +92,9 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        contentReadyToProcessPromise : {
-            get : function() {
-                return this._contentReadyToProcessPromise.promise;
-            }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         readyPromise : {
             get : function() {
-                return this._readyPromise.promise;
+                return undefined;
             }
         }
     });
@@ -138,18 +113,6 @@ define([
      */
     Empty3DTileContent.prototype.getFeature = function(batchId) {
         return undefined;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Empty3DTileContent.prototype.request = function() {
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Empty3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
     };
 
     /**

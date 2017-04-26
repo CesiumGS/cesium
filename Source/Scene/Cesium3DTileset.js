@@ -500,14 +500,19 @@ define([
         this._readyPromise = when.defer();
 
         var that = this;
-        this.loadTileset(tilesetUrl).then(function(data) {
-            var tilesetJson = data.tilesetJson;
+
+        // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
+        RequestScheduler.request(tilesetUrl, loadJson, undefined, RequestType.TILES3D).then(function(tilesetJson) {
+            if (that.isDestroyed()) {
+                return when.reject('tileset is destroyed');
+            }
+            that._root = that.loadTileset(tilesetUrl, tilesetJson);
+
             var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
             that._asset = tilesetJson.asset;
             that._properties = tilesetJson.properties;
             that._geometricError = tilesetJson.geometricError;
             that._gltfUpAxis = gltfUpAxis;
-            that._root = data.root;
             that._readyPromise.resolve(that);
         }).otherwise(function(error) {
             that._readyPromise.reject(error);
@@ -996,92 +1001,80 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, parentTile) {
-        var that = this;
+    Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, tilesetJson, parentTile) {
+        if (!defined(tilesetJson.asset) || (tilesetJson.asset.version !== '0.0')) {
+            throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
+        }
 
-        // We don't know the distance of the tileset until tiles.json is loaded, so use the default distance for now
-        return RequestScheduler.request(tilesetUrl, loadJson, undefined, RequestType.TILES3D).then(function(tilesetJson) {
-            if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
-            }
+        var stats = this._statistics;
 
-            if (!defined(tilesetJson.asset) || (tilesetJson.asset.version !== '0.0')) {
-                throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
-            }
+        // Append the version to the baseUrl
+        var hasVersionQuery = /[?&]v=/.test(tilesetUrl);
+        if (!hasVersionQuery) {
+            var versionQuery = '?v=' + defaultValue(tilesetJson.asset.tilesetVersion, '0.0');
+            this._baseUrl = joinUrls(this._baseUrl, versionQuery);
+            tilesetUrl = joinUrls(tilesetUrl, versionQuery, false);
+        }
 
-            var stats = that._statistics;
+        // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
+        // Get the baseUrl relative to the external tileset.
+        var baseUrl = getBaseUri(tilesetUrl, true);
+        var rootTile = new Cesium3DTile(this, baseUrl, tilesetJson.root, parentTile);
 
-            // Append the version to the baseUrl
-            var hasVersionQuery = /[?&]v=/.test(tilesetUrl);
-            if (!hasVersionQuery) {
-                var versionQuery = '?v=' + defaultValue(tilesetJson.asset.tilesetVersion, '0.0');
-                that._baseUrl = joinUrls(that._baseUrl, versionQuery);
-                tilesetUrl = joinUrls(tilesetUrl, versionQuery, false);
-            }
+        // If there is a parentTile, add the root of the currently loading tileset
+        // to parentTile's children, and update its _depth.
+        if (defined(parentTile)) {
+            parentTile.children.push(rootTile);
+            rootTile._depth = parentTile._depth + 1;
+        }
 
-            // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
-            // Get the baseUrl relative to the external tileset.
-            var baseUrl = getBaseUri(tilesetUrl, true);
-            var rootTile = new Cesium3DTile(that, baseUrl, tilesetJson.root, parentTile);
+        ++stats.numberTotal;
 
-            // If there is a parentTile, add the root of the currently loading tileset
-            // to parentTile's children, and update its _depth.
-            if (defined(parentTile)) {
-                parentTile.children.push(rootTile);
-                rootTile._depth = parentTile._depth + 1;
-            }
-
-            ++stats.numberTotal;
-
-            var stack = [];
-            stack.push({
-                header : tilesetJson.root,
-                cesium3DTile : rootTile
-            });
-
-            while (stack.length > 0) {
-                var tile = stack.pop();
-                var tile3D = tile.cesium3DTile;
-                var children = tile.header.children;
-                if (defined(children)) {
-                    var length = children.length;
-                    for (var k = 0; k < length; ++k) {
-                        var childHeader = children[k];
-                        var childTile = new Cesium3DTile(that, baseUrl, childHeader, tile3D);
-                        tile3D.children.push(childTile);
-                        childTile._depth = tile3D._depth + 1;
-                        ++stats.numberTotal;
-                        stack.push({
-                            header : childHeader,
-                            cesium3DTile : childTile
-                        });
-                    }
-                }
-                Cesium3DTileOptimizations.checkChildrenWithinParent(tile3D, true);
-
-                // Create a load heap, one for each unique server. We can only make limited requests to a given
-                // server so it is unnecessary to keep a queue of all tiles needed to be loaded.
-                // Instead of creating a list of all tiles to load and then sorting it entirely to find the best ones,
-                // we keep just a heap so we have the best `maximumRequestsPerServer` to load. The order of these does
-                // not matter much as we will try to load them all.
-                // The heap approach is a O(n log k) to find the best tiles for loading.
-                var requestServer = tile3D.requestServer;
-                if (defined(requestServer)) {
-                    if (!defined(that._requestHeaps[requestServer])) {
-                        var heap = new Heap(sortForLoad);
-                        that._requestHeaps[requestServer] = heap;
-                        heap.maximumSize = RequestScheduler.maximumRequestsPerServer;
-                        heap.reserve(heap.maximumSize);
-                    }
-                    tile3D._requestHeap = that._requestHeaps[requestServer];
-                }
-            }
-
-            return {
-                tilesetJson : tilesetJson,
-                root : rootTile
-            };
+        var stack = [];
+        stack.push({
+            header : tilesetJson.root,
+            cesium3DTile : rootTile
         });
+
+        while (stack.length > 0) {
+            var tile = stack.pop();
+            var tile3D = tile.cesium3DTile;
+            var children = tile.header.children;
+            if (defined(children)) {
+                var length = children.length;
+                for (var k = 0; k < length; ++k) {
+                    var childHeader = children[k];
+                    var childTile = new Cesium3DTile(this, baseUrl, childHeader, tile3D);
+                    tile3D.children.push(childTile);
+                    childTile._depth = tile3D._depth + 1;
+                    ++stats.numberTotal;
+                    stack.push({
+                        header : childHeader,
+                        cesium3DTile : childTile
+                    });
+                }
+            }
+            Cesium3DTileOptimizations.checkChildrenWithinParent(tile3D, true);
+
+            // Create a load heap, one for each unique server. We can only make limited requests to a given
+            // server so it is unnecessary to keep a queue of all tiles needed to be loaded.
+            // Instead of creating a list of all tiles to load and then sorting it entirely to find the best ones,
+            // we keep just a heap so we have the best `maximumRequestsPerServer` to load. The order of these does
+            // not matter much as we will try to load them all.
+            // The heap approach is a O(n log k) to find the best tiles for loading.
+            var requestServer = tile3D.requestServer;
+            if (defined(requestServer)) {
+                if (!defined(this._requestHeaps[requestServer])) {
+                    var heap = new Heap(sortForLoad);
+                    this._requestHeaps[requestServer] = heap;
+                    heap.maximumSize = RequestScheduler.maximumRequestsPerServer;
+                    heap.reserve(heap.maximumSize);
+                }
+                tile3D._requestHeap = this._requestHeaps[requestServer];
+            }
+        }
+
+        return rootTile;
     };
 
     var scratchPositionNormal = new Cartesian3();
@@ -1237,23 +1230,25 @@ define([
         if (!outOfCore) {
             return;
         }
-        if (!tile.canRequestContent()) {
+
+        if (tile.hasEmptyContent) {
             return;
         }
 
-        tile.requestContent();
-
         var stats = tileset._statistics;
 
-        if (!tile.contentUnloaded) {
-            ++stats.numberOfPendingRequests;
+        var requested = tile.requestContent();
 
-            var removeFunction = removeFromProcessingQueue(tileset, tile);
-            tile.content.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile)).otherwise(removeFunction);
-            tile.content.readyPromise.then(removeFunction).otherwise(removeFunction);
-        } else {
+        if (!requested) {
             ++stats.numberOfAttemptedRequests;
+            return;
         }
+
+        ++stats.numberOfPendingRequests;
+
+        var removeFunction = removeFromProcessingQueue(tileset, tile);
+        tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
+        tile.contentReadyPromise.then(removeFunction).otherwise(removeFunction);
     }
 
     function selectTile(tileset, tile, frameState) {
@@ -1261,7 +1256,7 @@ define([
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
         if (tile.contentReady && (
                 (tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE) ||
-                (tile.contentsVisibility(frameState) !== Intersect.OUTSIDE)
+                (tile.contentVisibility(frameState) !== Intersect.OUTSIDE)
             )) {
             tileset._selectedTiles.push(tile);
 
@@ -1338,8 +1333,8 @@ define([
             var original = finalQueue.get(i);
             var tile = original;
             // traverse up the tree to find a ready ancestor
-            if (tile.hasContent || tile.hasTilesetContent) {  // could be Empty3DTileContent
-                while (defined(tile) && !(tile.hasContent && tile.contentReady)) {
+            if (!tile.hasEmptyContent) {
+                while (defined(tile) && !(tile.hasRenderableContent && tile.contentReady)) {
                     if (!tile.contentReady) {
                         tileset._hasMixedContent = true;
                     }
@@ -1520,7 +1515,7 @@ define([
     function selectionHeuristic(tileset, ancestor, tile) {
         var skipLevels = tileset.skipLODs ? tileset._skipLevels : 0;
         var skipSSEFactor = tileset.skipLODs ? tileset.skipSSEFactor : 0.1;
-        return (ancestor !== tile && tile.hasContent && !tileset.immediatelyLoadDesiredLOD) &&
+        return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLOD) &&
                (tile._sse < ancestor._sse / skipSSEFactor) &&
                (tile._depth > ancestor._depth + skipLevels);
     }
@@ -1605,12 +1600,7 @@ define([
         var loadSiblings = tileset.loadSiblings;
 
         if (tile.hasTilesetContent) {
-            loadTile(tile);
-            if (!tile.contentReady) {
-                finalQueue.push(tile);
-            } else {
-                updateAndPushChildren(tileset, tile, frameState, stack, loadSiblings, outOfCore);
-            }
+            updateAndPushChildren(tileset, tile, frameState, stack, loadSiblings, outOfCore);
         } else {
             if (tile.refine === Cesium3DTileRefine.ADD) {
                 loadAndAddToQueue(tileset, tile, finalQueue);
@@ -1738,7 +1728,7 @@ define([
                 // Remove from processing queue
                 tileset._processingQueue.splice(index, 1);
                 --tileset._statistics.numberProcessing;
-                if (tile.hasContent) {
+                if (tile.hasRenderableContent) {
                     // RESEARCH_IDEA: ability to unload tiles (without content) for an
                     // external tileset when all the tiles are unloaded.
                     ++tileset._statistics.numberContentReady;

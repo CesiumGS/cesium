@@ -13,23 +13,18 @@ define([
         '../Core/Ellipsoid',
         '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
-        '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/joinUrls',
-        '../Core/loadArrayBuffer',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
-        '../Core/Request',
-        '../Core/RequestScheduler',
         '../Core/RequestType',
         '../Core/Transforms',
         '../Core/TranslationRotationScale',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Cesium3DTileBatchTable',
-        './Cesium3DTileContentState',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
         './ModelInstanceCollection'
@@ -47,23 +42,18 @@ define([
         Ellipsoid,
         getAbsoluteUri,
         getBaseUri,
-        getMagic,
         getStringFromTypedArray,
         joinUrls,
-        loadArrayBuffer,
         CesiumMath,
         Matrix3,
         Matrix4,
         Quaternion,
-        Request,
-        RequestScheduler,
         RequestType,
         Transforms,
         TranslationRotationScale,
         Uri,
         when,
         Cesium3DTileBatchTable,
-        Cesium3DTileContentState,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
         ModelInstanceCollection) {
@@ -79,7 +69,7 @@ define([
      *
      * @private
      */
-    function Instanced3DModel3DTileContent(tileset, tile, url) {
+    function Instanced3DModel3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
         this._modelInstanceCollection = undefined;
         this._url = url;
         this._tileset = tileset;
@@ -88,13 +78,12 @@ define([
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
-        this.state = Cesium3DTileContentState.UNLOADED;
         this.batchTable = undefined;
         this.featurePropertiesDirty = false;
 
-        this._contentReadyToProcessPromise = when.defer();
-        this._readyPromise = when.defer();
         this._features = undefined;
+
+        initialize(this, arrayBuffer, byteOffset);
     }
 
     defineProperties(Instanced3DModel3DTileContent.prototype, {
@@ -103,11 +92,7 @@ define([
          */
         featuresLength : {
             get : function() {
-                if (defined(this._modelInstanceCollection)) {
-                    return this._modelInstanceCollection.length;
-                } else {
-                    return 0;
-                }
+                return this.batchTable.featuresLength;
             }
         },
 
@@ -125,9 +110,9 @@ define([
          */
         trianglesLength : {
             get : function() {
-                var collection = this._modelInstanceCollection;
-                if (defined(collection) && defined(collection._model)) {
-                    return collection._model.trianglesLength;
+                var model = this._modelInstanceCollection._model;
+                if (defined(model)) {
+                    return model.trianglesLength;
                 }
                 return 0;
             }
@@ -138,9 +123,9 @@ define([
          */
         vertexMemorySizeInBytes : {
             get : function() {
-                var collection = this._modelInstanceCollection;
-                if (defined(collection) && defined(collection._model)) {
-                    return collection._model.vertexMemorySizeInBytes;
+                var model = this._modelInstanceCollection._model;
+                if (defined(model)) {
+                    return model.vertexMemorySizeInBytes;
                 }
                 return 0;
             }
@@ -151,9 +136,9 @@ define([
          */
         textureMemorySizeInBytes : {
             get : function() {
-                var collection = this._modelInstanceCollection;
-                if (defined(collection) && defined(collection._model)) {
-                    return collection._model.textureMemorySizeInBytes;
+                var model = this._modelInstanceCollection._model;
+                if (defined(model)) {
+                    return model.textureMemorySizeInBytes;
                 }
                 return 0;
             }
@@ -164,10 +149,7 @@ define([
          */
         batchTableMemorySizeInBytes : {
             get : function() {
-                if (defined(this.batchTable)) {
-                    return this.batchTable.memorySizeInBytes;
-                }
-                return 0;
+                return this.batchTable.memorySizeInBytes;
             }
         },
 
@@ -183,18 +165,9 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        contentReadyToProcessPromise : {
-            get : function() {
-                return this._contentReadyToProcessPromise.promise;
-            }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         readyPromise : {
             get : function() {
-                return this._readyPromise.promise;
+                return this._modelInstanceCollection.readyPromise;
             }
         }
     });
@@ -235,55 +208,16 @@ define([
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Instanced3DModel3DTileContent.prototype.request = function() {
-        var that = this;
-        var distance = this._tile.distanceToCamera;
-        var promise = RequestScheduler.schedule(new Request({
-            url : this._url,
-            server : this._tile.requestServer,
-            requestFunction : loadArrayBuffer,
-            type : RequestType.TILES3D,
-            distance : distance
-        }));
-
-        if (!defined(promise)) {
-            return false;
-        }
-
-        this.state = Cesium3DTileContentState.LOADING;
-        promise.then(function(arrayBuffer) {
-            if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
-            }
-            that.initialize(arrayBuffer);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that._readyPromise.reject(error);
-        });
-        return true;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Instanced3DModel3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
+    function initialize(content, arrayBuffer, byteOffset) {
         var byteStart = defaultValue(byteOffset, 0);
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
-        var magic = getMagic(uint8Array, byteOffset);
-        if (magic !== 'i3dm') {
-            throw new DeveloperError('Invalid Instanced 3D Model. Expected magic=i3dm. Read magic=' + magic);
-        }
-
         var view = new DataView(arrayBuffer);
-        byteOffset += sizeOfUint32;  // Skip magic number
+        byteOffset += sizeOfUint32;  // Skip magic
 
-        var version = view.getUint32(byteOffset, true);
         //>>includeStart('debug', pragmas.debug);
+        var version = view.getUint32(byteOffset, true);
         if (version !== 1) {
             throw new DeveloperError('Only Instanced 3D Model version 1 is supported. Version ' + version + ' is not.');
         }
@@ -351,7 +285,7 @@ define([
             }
         }
 
-        this.batchTable = new Cesium3DTileBatchTable(this, instancesLength, batchTableJson, batchTableBinary);
+        content.batchTable = new Cesium3DTileBatchTable(content, instancesLength, batchTableJson, batchTableBinary);
 
         var gltfByteLength = byteStart + byteLength - byteOffset;
         //>>includeStart('debug', pragmas.debug);
@@ -365,22 +299,22 @@ define([
         // Create model instance collection
         var collectionOptions = {
             instances : new Array(instancesLength),
-            batchTable : this.batchTable,
+            batchTable : content.batchTable,
             cull : false, // Already culled by 3D Tiles
             url : undefined,
             requestType : RequestType.TILES3D,
             gltf : undefined,
             basePath : undefined,
             incrementallyLoadTextures : false,
-            upAxis : this._tileset._gltfUpAxis
+            upAxis : content._tileset._gltfUpAxis
         };
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
-            collectionOptions.url = getAbsoluteUri(joinUrls(getBaseUri(this._url, true), gltfUrl));
+            collectionOptions.url = getAbsoluteUri(joinUrls(getBaseUri(content._url, true), gltfUrl));
         } else {
             collectionOptions.gltf = gltfView;
-            collectionOptions.basePath = getBaseUri(this._url, true);
+            collectionOptions.basePath = getAbsoluteUri(getBaseUri(content._url, true));
         }
 
         var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');
@@ -513,21 +447,8 @@ define([
             };
         }
 
-        var modelInstanceCollection = new ModelInstanceCollection(collectionOptions);
-        this._modelInstanceCollection = modelInstanceCollection;
-        this.state = Cesium3DTileContentState.PROCESSING;
-        this._contentReadyToProcessPromise.resolve(this);
-
-        var that = this;
-
-        modelInstanceCollection.readyPromise.then(function(modelInstanceCollection) {
-            that.state = Cesium3DTileContentState.READY;
-            that._readyPromise.resolve(that);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that._readyPromise.reject(error);
-        });
-    };
+        content._modelInstanceCollection = new ModelInstanceCollection(collectionOptions);
+    }
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.

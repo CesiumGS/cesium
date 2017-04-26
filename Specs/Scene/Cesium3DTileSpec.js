@@ -5,6 +5,7 @@ defineSuite([
         'Core/clone',
         'Core/defined',
         'Core/HeadingPitchRoll',
+        'Core/loadWithXhr',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
@@ -20,6 +21,7 @@ defineSuite([
         clone,
         defined,
         HeadingPitchRoll,
+        loadWithXhr,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -115,18 +117,6 @@ defineSuite([
         }
     };
 
-    var tileWithInvalidExtension = {
-        geometricError : 1,
-        refine : 'replace',
-        children : [],
-        content : {
-            url : '0/0.xxxx'
-        },
-        boundingVolume: {
-            box : [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
-        }
-    };
-
     var mockTileset = {
         debugShowBoundingVolume : true,
         debugShowViewerRequestVolume : true,
@@ -142,12 +132,6 @@ defineSuite([
         var transformMatrix = Transforms.headingPitchRollToFixedFrame(transformCenter, hpr);
         return Matrix4.pack(transformMatrix, new Array(16));
     }
-
-    it('throws if content has an unsupported extension', function() {
-        expect(function() {
-            return new Cesium3DTile(mockTileset, '/some_url', tileWithInvalidExtension, undefined);
-        }).toThrowDeveloperError();
-    });
 
     it('destroys', function() {
         var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);

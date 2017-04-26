@@ -1,16 +1,20 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../ThirdParty/when',
-        './Cesium3DTileContentState'
+        '../Core/DeveloperError',
+        '../Core/getStringFromTypedArray',
+        '../ThirdParty/when'
     ], function(
+        defaultValue,
         defined,
         defineProperties,
         destroyObject,
-        when,
-        Cesium3DTileContentState) {
+        DeveloperError,
+        getStringFromTypedArray,
+        when) {
     'use strict';
 
     /**
@@ -23,7 +27,7 @@ define([
      *
      * @private
      */
-    function Tileset3DTileContent(tileset, tile, url) {
+    function Tileset3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
         this._url = url;
@@ -31,12 +35,12 @@ define([
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
-        this.state = Cesium3DTileContentState.UNLOADED;
         this.batchTable = undefined;
         this.featurePropertiesDirty = false;
 
-        this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
+
+        initialize(this, arrayBuffer, byteOffset);
     }
 
     defineProperties(Tileset3DTileContent.prototype, {
@@ -106,21 +110,29 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        contentReadyToProcessPromise : {
-            get : function() {
-                return this._contentReadyToProcessPromise.promise;
-            }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
             }
         }
     });
+
+    function initialize(content, arrayBuffer, byteOffset) {
+        byteOffset = defaultValue(byteOffset, 0);
+        var uint8Array = new Uint8Array(arrayBuffer);
+        var jsonString = getStringFromTypedArray(uint8Array, byteOffset);
+        var tilesetJson;
+
+        try {
+            tilesetJson = JSON.parse(jsonString);
+        } catch (error) {
+            content._readyPromise.reject(new DeveloperError('Invalid tile content.'));
+            return;
+        }
+
+        content._tileset.loadTileset(content._url, tilesetJson, content._tile);
+        content._readyPromise.resolve(content);
+    }
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
@@ -136,31 +148,6 @@ define([
      */
     Tileset3DTileContent.prototype.getFeature = function(batchId) {
         return undefined;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Tileset3DTileContent.prototype.request = function() {
-        var that = this;
-
-        this.state = Cesium3DTileContentState.LOADING;
-        this._tileset.loadTileset(this._url, this._tile).then(function() {
-            that.state = Cesium3DTileContentState.PROCESSING;
-            that._contentReadyToProcessPromise.resolve(that);
-            that.state = Cesium3DTileContentState.READY;
-            that._readyPromise.resolve(that);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that._readyPromise.reject(error);
-        });
-        return true;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Tileset3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
     };
 
     /**
