@@ -442,7 +442,7 @@ define([
          */
         contentAvailable : {
             get : function() {
-                return this.contentReady || defined(this._expiredContent);
+                return this.contentReady || (defined(this._expiredContent) && this._contentState !== Cesium3DTileContentState.FAILED);
             }
         },
 
@@ -633,10 +633,14 @@ define([
             content.readyPromise.then(function(content) {
                 if (that.isDestroyed()) {
                     // Tile is unloaded before the content finishes processing
-                    that._content.destroy();
                     return when.reject('tile is destroyed');
                 }
                 updateExpireDate(that);
+
+                // Refresh style for expired content
+                that.lastSelectedFrameNumber = 0;
+                that.lastStyleTime = 0;
+
                 that._contentState = Cesium3DTileContentState.READY;
                 that._contentReadyPromise.resolve(content);
             }).otherwise(function(error) {
@@ -686,10 +690,6 @@ define([
 
         this.replacementNode = undefined;
 
-        // Restore properties set per frame to their defaults
-        this.distanceToCamera = 0;
-        this.visibilityPlaneMask = 0;
-        this.selected = false;
         this.lastSelectedFrameNumber = 0;
         this.lastStyleTime = 0;
 

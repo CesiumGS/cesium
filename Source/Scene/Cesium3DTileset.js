@@ -1920,7 +1920,6 @@ define([
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
         var tileVisible = tileset.tileVisible;
-
         var tile, i;
 
         var bivariateVisibilityTest = tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
