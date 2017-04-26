@@ -334,6 +334,7 @@ define([
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
 
         this._sse = 0;
+        this._sseComputedFrame = -1;
         this._finalResolution = true;
         this._requestHeap = undefined;
         this._depth = 0;
@@ -343,6 +344,9 @@ define([
         this._selectionDepth = 0;
         this._lastFinalResolution = undefined;
         this._lastSelectionDepth = undefined;
+
+        this._ancestorWithContent = undefined;
+        this._ancestorWithLoadedContent = undefined;
     }
 
     defineProperties(Cesium3DTile.prototype, {
@@ -624,6 +628,7 @@ define([
             var box = boundingVolumeHeader.box;
             center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
             var halfAxes = Matrix3.fromArray(box, 3, scratchHalfAxes);
+            Matrix3.multiplyByScalar(halfAxes, 0.5, halfAxes);
 
             // Find the transformed center and halfAxes
             center = Matrix4.multiplyByPoint(transform, center, center);

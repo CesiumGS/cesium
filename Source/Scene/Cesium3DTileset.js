@@ -37,6 +37,7 @@ define([
         './Cesium3DTileOptimizations',
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
+        './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
         './CullingVolume',
         './DebugCameraPrimitive',
@@ -85,6 +86,7 @@ define([
         Cesium3DTileOptimizations,
         Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
+        Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
         CullingVolume,
         DebugCameraPrimitive,
@@ -174,6 +176,7 @@ define([
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
+        this._desiredTiles = [];
 
         var replacementList = new DoublyLinkedList();
 
@@ -263,6 +266,7 @@ define([
         this.show = defaultValue(options.show, true);
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
+        this._baseScreenSpaceError = defaultValue(options.baseScreenSpaceError, 50000000000);
         this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
         this._styleEngine = new Cesium3DTileStyleEngine();
 
@@ -402,6 +406,8 @@ define([
          */
         this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
         this._geometricErrorLabels = undefined;
+
+        this._labels = undefined;
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -550,6 +556,12 @@ define([
 
         this._requestHeaps = {};
         this._hasMixedContent = false;
+
+        this._baseTraversal = new Cesium3DTilesetTraversal.BaseTraversal();
+        this._skipTraversal = new Cesium3DTilesetTraversal.SkipTraversal({
+            selectionHeuristic: selectionHeuristic,
+            selectedTiles: this._selectedTiles
+        });
 
         this._backfaceCommands = new ManagedArray();
 
@@ -1466,6 +1478,37 @@ define([
         processingQueue.push(root);
         selectionState.done = false;
 
+        var baseLeaves = tileset._baseTraversal.execute(root, frameState, outOfCore);
+        for (var i = 0; i < baseLeaves.length; ++i) {
+            var tile = baseLeaves.get(i);
+
+            if (tile._sse <= tileset._baseScreenSpaceError) {
+                // tile.selected = true;
+                // tile._selectedFrame = frameState.frameNumber;
+                tileset._skipTraversal.execute(tile, frameState, outOfCore);
+            } else {
+                tile.selected = true;
+                tile._selectedFrame = frameState.frameNumber;
+                // selectTile(tileset, tile, frameState);
+            }
+
+            // if (defined(tile._ancestorWithLoadedContent)) {
+            //     tileset._skipTraversal.execute(tile, frameState, outOfCore);
+            // } else {
+            //     if (tile.hasContent) {
+            //         loadTile(tile);
+            //     } else if (defined(tile._ancestorWithContent)) {
+            //         loadTile(tile._ancestorWithContent);
+            //     }
+            // }
+        }
+
+        traverseAndSelect(tileset, root, frameState);
+
+        requestTiles(tileset, tileset._requestHeaps, outOfCore);
+
+        return;
+
         var processLength = 0;
         while (!selectionState.done) {
             selectionState.nextQueue.length = 0;
@@ -1876,6 +1919,36 @@ define([
         tileset._geometricErrorLabels.update(frameState);
     }
 
+    function updateLabels(tileset, frameState) {
+        return;
+        var selectedTiles = tileset._selectedTiles;
+        var length = selectedTiles.length;
+        tileset._labels.removeAll();
+        for (var i = 0; i < length; ++i) {
+            var tile = selectedTiles[i];
+            var boundingVolume = tile._boundingVolume.boundingVolume;
+            var halfAxes = boundingVolume.halfAxes;
+            var radius = boundingVolume.radius;
+
+            var position = Cartesian3.clone(boundingVolume.center, scratchCartesian2);
+            if (defined(halfAxes)) {
+                position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
+                position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
+                position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
+            } else if (defined(radius)) {
+                var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian2);
+                normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian2);
+                position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian2);
+            }
+            tileset._labels.add({
+                text: tile._sse.toString(),
+                position: position,
+                scale: 0.5
+            });
+        }
+        tileset._labels.update(frameState);
+    }
+
     var stencilClearCommand = new ClearCommand({
         stencil : 0,
         pass : Pass.CESIUM_3D_TILE
@@ -1965,6 +2038,15 @@ define([
             updateGeometricErrorLabels(tileset, frameState);
         } else {
             tileset._geometricErrorLabels = tileset._geometricErrorLabels && tileset._geometricErrorLabels.destroy();
+        }
+
+        if (true) {
+            if (!defined(tileset._labels)) {
+                tileset._labels = new LabelCollection();
+            }
+            updateLabels(tileset, frameState);
+        } else {
+            tileset._labels = tileset._labels && tileset._labels.destroy();
         }
     }
 
