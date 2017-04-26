@@ -44,7 +44,8 @@ define([
         display.appendChild(fpsElement);
         this._container.appendChild(display);
 
-        this._lastFpsSampleTime = undefined;
+        this._lastFpsSampleTime = getTimestamp();
+        this._lastMsSampleTime = getTimestamp();
         this._frameCount = 0;
         this._time = undefined;
         this._fps = 0;
@@ -70,25 +71,21 @@ define([
         var frameTime = time - previousTime;
 
         this._frameCount++;
-        var fps = this._fps;
         var fpsElapsedTime = time - this._lastFpsSampleTime;
         if (fpsElapsedTime > 1000) {
-            fps = this._frameCount * 1000 / fpsElapsedTime | 0;
-
+            var fps = this._frameCount * 1000 / fpsElapsedTime | 0;
+            this._fpsText.nodeValue = fps + ' FPS';
+            this._fps = fps;
             this._lastFpsSampleTime = time;
             this._frameCount = 0;
         }
 
-        if (fps !== this._fps) {
-            this._fpsText.nodeValue = fps + ' FPS';
-            this._fps = fps;
-        }
-
-        if (frameTime !== this._frameTime) {
+        var msElapsedTime = time - this._lastMsSampleTime;
+        if (msElapsedTime > 200) {
             this._msText.nodeValue = frameTime.toFixed(2) + ' MS';
             this._frameTime = frameTime;
+            this._lastMsSampleTime = time;
         }
-
     };
 
     /**
