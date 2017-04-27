@@ -96,6 +96,18 @@ define([
             get : function() {
                 return undefined;
             }
+        },
+
+        /**
+         * Gets the url of the tile's content.
+         * @memberof Cesium3DTileContent.prototype
+         * @type {String}
+         * @readonly
+         */
+        url: {
+            get: function() {
+                return this._url;
+            }
         }
     });
 
