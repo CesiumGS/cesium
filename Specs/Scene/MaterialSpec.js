@@ -198,6 +198,10 @@ defineSuite([
         verifyPolylineMaterial('PolylineArrow');
     });
 
+    it('draws PolylineDash built-in material', function() {
+        verifyPolylineMaterial('PolylineDash');
+    });
+
     it('draws PolylineGlow built-in material', function() {
         verifyPolylineMaterial('PolylineGlow');
     });

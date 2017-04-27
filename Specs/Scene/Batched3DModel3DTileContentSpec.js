@@ -62,18 +62,11 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    it('throws with invalid magic', function() {
-        var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
-            magic : [120, 120, 120, 120]
-        });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'b3dm');
-    });
-
     it('throws with invalid version', function() {
         var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
-            version: 2
+            version : 2
         });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'b3dm');
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'b3dm');
     });
 
     it('recognizes the legacy 20-byte header', function() {
@@ -112,15 +105,11 @@ defineSuite([
     it('throws with empty gltf', function() {
         // Expect to throw DeveloperError in Model due to invalid gltf magic
         var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'b3dm');
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'b3dm');
     });
 
     it('resolves readyPromise', function() {
         return Cesium3DTilesTester.resolvesReadyPromise(scene, withoutBatchTableUrl);
-    });
-
-    it('rejects readyPromise on failed request', function() {
-        return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('b3dm');
     });
 
     it('renders with batch table', function() {
@@ -274,10 +263,6 @@ defineSuite([
 
     it('destroys', function() {
         return Cesium3DTilesTester.tileDestroys(scene, withoutBatchTableUrl);
-    });
-
-    it('destroys before loading finishes', function() {
-        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, withoutBatchTableUrl);
     });
 
 }, 'WebGL');

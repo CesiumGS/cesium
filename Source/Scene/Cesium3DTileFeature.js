@@ -100,6 +100,21 @@ define([
             set : function(value) {
                 this._batchTable.setColor(this._batchId, value);
             }
+        },
+
+        /**
+         * Gets the feature content.
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Cesium3DTileContent}
+         *
+         * @readonly
+         */
+        content: {
+            get: function() {
+                return this._content;
+            }
         }
     });
 

@@ -140,7 +140,7 @@ define([
         propertiesLabel.className = 'field-label';
         propertiesLabel.appendChild(document.createTextNode('Properties: '));
         var propertiesField = document.createElement('div');
-        propertiesField.setAttribute('data-bind', 'text: propertiesText');
+        propertiesField.setAttribute('data-bind', 'text: properties');
         properties.appendChild(propertiesLabel);
         properties.appendChild(propertiesField);
         tilesetPanelContents.appendChild(properties);
