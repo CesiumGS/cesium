@@ -138,7 +138,8 @@ define([
          */
         batchTableMemorySizeInBytes : {
             get : function() {
-                return this.batchTable.memorySizeInBytes;
+                // TODO
+                return 0;
             }
         },
 
