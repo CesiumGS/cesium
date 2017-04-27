@@ -62,7 +62,6 @@
             };
             button.textContent = text;
             document.getElementById(toolbarID || 'toolbar').appendChild(button);
-            return button;
         },
         addDefaultToolbarButton : function(text, onclick, toolbarID) {
             window.Sandcastle.addToolbarButton(text, onclick, toolbarID);
@@ -94,7 +93,6 @@
                 option.value = options[i].value;
                 menu.appendChild(option);
             }
-            return menu;
         },
         reset : function() {
         }
