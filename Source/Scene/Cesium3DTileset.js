@@ -1345,6 +1345,12 @@ define([
         for (var i = 0; i < length; ++i) {
             var tile = tiles.get(i);
 
+            if (tile.refine === Cesium3DTileRefine.ADD) {
+                tile.selected = true;
+                tile._selectedFrame = frameState.frameNumber;
+                continue;
+            }
+
             var loadedTile = tile._ancestorWithLoadedContent;
             if (tile.hasContent && tile.contentReady) {
                 loadedTile = tile;
@@ -1718,7 +1724,7 @@ define([
             }
 
             var tile = stack.pop();
-            if (!defined(tile)) {
+            if (!defined(tile) || tile._lastVisitedFrame !== frameState.frameNumber) {
                 continue;
             }
 
@@ -1729,24 +1735,23 @@ define([
 
             children.sort(sortChildrenByDistanceToCamera);
 
-            var additive = tile.refine === Cesium3DTileRefine.ADD;
-
             if (shouldSelect) {
-                tile._selectionDepth = ancestorStack.length;
-
-                if (tile._selectionDepth > 0) {
-                    tileset._hasMixedContent = true;
-                }
-
-                if (childrenLength === 0) {
+                if (tile.refine === Cesium3DTileRefine.ADD) {
                     tile._finalResolution = true;
                     selectTile(tileset, tile, frameState);
-                    if (!additive) {
+                } else {
+                    tile._selectionDepth = ancestorStack.length;
+
+                    if (tile._selectionDepth > 0) {
+                        tileset._hasMixedContent = true;
+                    }
+
+                    if (childrenLength === 0) {
+                        tile._finalResolution = true;
+                        selectTile(tileset, tile, frameState);
                         continue;
                     }
-                }
 
-                if (!additive) {
                     ancestorStack.push(tile);
                     lastAncestor = tile;
                     tile._stackLength = stack.length;

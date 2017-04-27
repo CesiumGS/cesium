@@ -252,8 +252,8 @@ define([
 
     function visitTile(tileset, tile, frameState, outOfCore) {
         // because the leaves of one tree traversal are the root of the subsequent traversal, avoid double visitation
-        if (tile._lastSeenFrame !== frameState.frameNumber) {
-            tile._lastSeenFrame = frameState.frameNumber;
+        if (tile._lastVisitedFrame !== frameState.frameNumber) {
+            tile._lastVisitedFrame = frameState.frameNumber;
 
             ++tileset._statistics.visited;
             tile.selected = false;
