@@ -1519,8 +1519,15 @@ define([
         // load and select tiles without skipping up to tileset._baseScreenSpaceError
         tileset._baseTraversal.execute(tileset, root, frameState, outOfCore);
 
-        // skip traversal starts from a prepopulated queue from the base traversal
-        tileset._skipTraversal.execute(tileset, undefined, frameState, outOfCore);
+        if (tileset.skipLODs) {
+            // skip traversal starts from a prepopulated queue from the base traversal
+            tileset._skipTraversal.execute(tileset, undefined, frameState, outOfCore);
+        } else {
+            for (var i = 0; i < tileset._baseTraversal.leaves.length; ++i) {
+                var tile = tileset._baseTraversal.leaves.get(i);
+                tileset._desiredTiles.push(tile);
+            }
+        }
 
         // mark tiles for selection or their nearest loaded ancestor
         markLoadedTilesForSelection(tileset, frameState);
@@ -1953,11 +1960,14 @@ define([
         var lengthBeforeUpdate = commandList.length;
         for (i = 0; i < length; ++i) {
             tile = selectedTiles[i];
-            // Raise visible event before update in case the visible event
-            // makes changes that update needs to apply to WebGL resources
-            tileVisible.raiseEvent(tile);
-            tile.update(tileset, frameState);
-            incrementPointAndFeatureSelectionCounts(tileset, tile.content);
+            // tiles may get unloaded and destroyed between selection and update
+            if (tile.selected) {
+                // Raise visible event before update in case the visible event
+                // makes changes that update needs to apply to WebGL resources
+                tileVisible.raiseEvent(tile);
+                tile.update(tileset, frameState);
+                incrementPointAndFeatureSelectionCounts(tileset, tile.content);
+            }
         }
         var lengthAfterUpdate = commandList.length;
 

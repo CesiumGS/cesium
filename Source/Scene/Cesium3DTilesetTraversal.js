@@ -48,7 +48,6 @@ define([
         //>>includeEnd('debug');
 
         DFS(root, this);
-        // return this.leaves;
     };
 
     BaseTraversal.prototype.visit = function(tile) {
@@ -87,17 +86,15 @@ define([
         if (showAdditive || showReplacement || tile.hasTilesetContent || !defined(tile._ancestorWithContent)) {
             var children = tile.children;
             var childrenLength = children.length;
-            var allVisibleReady = true;
+            var allReady = true;
             for (var i = 0; i < childrenLength; ++i) {
                 var child = children[i];
-                if (isVisible(child.visibilityPlaneMask)) {
-                    loadTile(child, this.frameState);
-                    allVisibleReady = allVisibleReady && child.contentReady;
-                }
+                loadTile(child, this.frameState);
+                allReady = allReady && child.contentReady;
                 touch(tileset, child, this.outOfCore);
             }
 
-            if (allVisibleReady) {
+            if (allReady) {
                 return children;
             }
         }
@@ -110,16 +107,7 @@ define([
     }
 
     BaseTraversal.prototype.leafHandler = function(tile) {
-        var contentTile = tile._ancestorWithLoadedContent;
-        if (tile.hasContent && tile.contentReady) {
-            contentTile = tile;
-        }
-
-        if (defined(contentTile)) {
-            this.leaves.push(contentTile);
-        } else {
-            this.tileset._desiredTiles.push(tile);
-        }
+        this.leaves.push(tile);
     };
 
     function SkipTraversal(options) {
@@ -148,13 +136,12 @@ define([
         visitTile(this.tileset, tile, this.frameState, this.outOfCore);
     };
 
-    SkipTraversal.prototype.getChildren = function(tile) {
-        this.internalDFS.execute(tile, this.queue2);
-        return this.queue2;
-    };
+    var scratchQueue = [];
 
-    SkipTraversal.prototype.addChildren = function(children, queue) {
-        // the internal DFS already adds to queue2
+    SkipTraversal.prototype.getChildren = function(tile) {
+        scratchQueue.length = 0;
+        this.internalDFS.execute(tile, scratchQueue);
+        return scratchQueue;
     };
 
     SkipTraversal.prototype.leafHandler = function(tile) {
@@ -201,7 +188,10 @@ define([
                 }
 
                 // if we have reached the skipping threshold without any loaded ancestors, return empty so this tile is loaded
-                if (defined(tile._ancestorWithLoadedContent) && this.selectionHeuristic(tileset, tile._ancestorWithLoadedContent, tile)) {
+                if (
+                    (tile.hasContent && tile.contentUnloaded) &&
+                    defined(tile._ancestorWithLoadedContent) &&
+                    this.selectionHeuristic(tileset, tile._ancestorWithLoadedContent, tile)) {
                     return emptyArray;
                 }
             }
@@ -226,10 +216,13 @@ define([
     InternalSkipTraversal.prototype.shouldVisit = function(tile) {
         var maximumScreenSpaceError = this.tileset._maximumScreenSpaceError;
         var parent = tile.parent;
+        if (!defined(parent)) {
+            return true;
+        }
         var showAdditive = parent.refine === Cesium3DTileRefine.ADD && parent._sse > maximumScreenSpaceError;
         var showReplacement = parent.refine === Cesium3DTileRefine.REPLACE && (parent.childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
 
-        return isVisible(tile.visibilityPlaneMask) && (!showAdditive || getScreenSpaceError(this.tileset, parent.geometricError, tile, frameState) > maximumScreenSpaceError);
+        return isVisible(tile.visibilityPlaneMask) && (!showAdditive || getScreenSpaceError(this.tileset, parent.geometricError, tile, this.frameState) > maximumScreenSpaceError);
     };
 
     InternalSkipTraversal.prototype.leafHandler = function(tile) {
@@ -440,8 +433,13 @@ define([
                 options.visit(node);
                 var children = options.getChildren(node);
                 var childrenLength = children.length;
-                maxLength = Math.max(maxLength, childrenLength);
-                options.addChildren(children, queue2);
+                for (var j = 0; j < childrenLength; ++j) {
+                    var child = children[j];
+
+                    if (!defined(options.shouldVisit) || options.shouldVisit(child)) {
+                        queue2.push(child);
+                    }
+                }
 
                 if (childrenLength === 0 && defined(options.leafHandler)) {
                     options.leafHandler(node);
