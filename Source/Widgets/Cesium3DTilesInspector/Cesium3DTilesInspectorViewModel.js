@@ -13,7 +13,6 @@ define([
     '../../Core/destroyObject',
     '../../ThirdParty/knockout',
     '../../Scene/PerformanceDisplay',
-    '../../Scene/LabelCollection',
     '../../Core/ScreenSpaceEventHandler',
     '../../Core/ScreenSpaceEventType'
 ], function(
@@ -30,7 +29,6 @@ define([
     destroyObject,
     knockout,
     PerformanceDisplay,
-    LabelCollection,
     ScreenSpaceEventHandler,
     ScreenSpaceEventType) {
     'use strict';
@@ -150,7 +148,6 @@ define([
         this._statsText = '';
         this._pickStatsText = '';
         this._editorError = '';
-        this._tileInfoLabels = undefined;
 
         /**
          * Gets or sets the flag to enable performance display.  This property is observable.
@@ -500,13 +497,13 @@ define([
          */
         this.onlyPickedTileInfo = false;
 
-        var showTextureMemory = knockout.observable();
-        knockout.defineProperty(this, 'showTextureMemory', {
+        var textureMemory = knockout.observable();
+        knockout.defineProperty(this, 'textureMemory', {
             get : function() {
-                return showTextureMemory();
+                return textureMemory();
             },
             set : function(val) {
-                showTextureMemory(val);
+                textureMemory(val);
                 if (that._tileset) {
                     that._tileset.debugShowTextureMemoryUsage = val;
                 }
@@ -519,15 +516,15 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.showTextureMemory = false;
+        this.textureMemory = false;
 
-        var showNumberOfTriangles = knockout.observable();
-        knockout.defineProperty(this, 'showNumberOfTriangles', {
+        var numberOfTriangles = knockout.observable();
+        knockout.defineProperty(this, 'numberOfTriangles', {
             get : function() {
-                return showNumberOfTriangles();
+                return numberOfTriangles();
             },
             set : function(val) {
-                showNumberOfTriangles(val);
+                numberOfTriangles(val);
                 if (that._tileset) {
                     that._tileset.debugShowNumberOfTriangles = val;
                 }
@@ -540,15 +537,15 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.showNumberOfTriangles = false;
+        this.numberOfTriangles = false;
 
-        var showNumberOfPoints = knockout.observable();
-        knockout.defineProperty(this, 'showNumberOfPoints', {
+        var numberOfPoints = knockout.observable();
+        knockout.defineProperty(this, 'numberOfPoints', {
             get : function() {
-                return showNumberOfPoints();
+                return numberOfPoints();
             },
             set : function(val) {
-                showNumberOfPoints(val);
+                numberOfPoints(val);
                 if (that._tileset) {
                     that._tileset.debugShowNumberOfPoints = val;
                 }
@@ -561,15 +558,15 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.showNumberOfPoints = false;
+        this.numberOfPoints = false;
 
-        var showVertexMemory = knockout.observable();
-        knockout.defineProperty(this, 'showVertexMemory', {
+        var vertexMemory = knockout.observable();
+        knockout.defineProperty(this, 'vertexMemory', {
             get : function() {
-                return showVertexMemory();
+                return vertexMemory();
             },
             set : function(val) {
-                showVertexMemory(val);
+                vertexMemory(val);
                 if (that._tileset) {
                     that._tileset.debugShowVertexMemoryUsage = val;
                 }
@@ -582,15 +579,15 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.showVertexMemory = false;
+        this.vertexMemory = false;
 
-        var showNumberOfCommands = knockout.observable();
-        knockout.defineProperty(this, 'showNumberOfCommands', {
+        var numberOfCommands = knockout.observable();
+        knockout.defineProperty(this, 'numberOfCommands', {
             get : function() {
-                return showNumberOfCommands();
+                return numberOfCommands();
             },
             set : function(val) {
-                showNumberOfCommands(val);
+                numberOfCommands(val);
                 if (that._tileset) {
                     that._tileset.debugShowNumberOfCommands = val;
                 }
@@ -603,7 +600,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.showNumberOfCommands = false;
+        this.numberOfCommands = false;
 
         var maximumScreenSpaceError = knockout.observable();
         knockout.defineProperty(this, 'maximumScreenSpaceError', {
@@ -713,7 +710,7 @@ define([
         this._definedProperties = ['propertiesText', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
                                    'showContentBoundingVolumes', 'showRequestVolumes', 'showGeometricError', 'freezeFrame', 'maximumScreenSpaceError',
                                    'dynamicScreenSpaceErrorDensity', 'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive',
-                                    'onlyPickedTileInfo', 'showTextureMemory', 'showVertexMemory', 'showNumberOfPoints', 'showNumberOfTriangles', 'showNumberOfCommands'];
+                                    'onlyPickedTileInfo', 'textureMemory', 'vertexMemory', 'numberOfPoints', 'numberOfTriangles', 'numberOfCommands'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
@@ -795,14 +792,14 @@ define([
                                     'showBoundingVolumes',
                                     'showContentBoundingVolumes',
                                     'showRequestVolumes',
+                                    'showGeometricError',
                                     'freezeFrame',
                                     'onlyPickedTileInfo',
-                                    'showGeometricError',
-                                    'showTextureMemory',
-                                    'showVertexMemory',
-                                    'showNumberOfPoints',
-                                    'showNumberOfTriangles',
-                                    'showNumberOfCommands'];
+                                    'textureMemory',
+                                    'vertexMemory',
+                                    'numberOfPoints',
+                                    'numberOfTriangles',
+                                    'numberOfCommands'];
                     var length = settings.length;
                     for (var i = 0; i < length; ++i) {
                         var setting = settings[i];
@@ -923,72 +920,6 @@ define([
     };
 
     /**
-     * Updates the debug labels
-     */
-    var scratchCartesian = new Cartesian3();
-    Cesium3DTilesInspectorViewModel.prototype.updateTileInfoLabels = function() {
-        var selectedTiles = this._tileset._selectedTiles;
-        var length = selectedTiles.length;
-        this._tileInfoLabels.removeAll();
-        for (var i = 0; i < length; ++i) {
-            var tile = selectedTiles[i];
-            var boundingVolume = tile._boundingVolume.boundingVolume;
-            var halfAxes = boundingVolume.halfAxes;
-            var radius = boundingVolume.radius;
-
-            var position = Cartesian3.clone(boundingVolume.center, scratchCartesian);
-            if (defined(halfAxes)) {
-                position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
-                position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
-                position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
-            } else if (defined(radius)) {
-                var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian);
-                normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian);
-                position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian);
-            }
-
-            //debugger;
-
-            var labelString = "";
-            var attribCounter = 0;
-
-            if (this.showGeometricError) {
-                labelString += "\nGeometric error: " + tile.geometricError.toString();
-                attribCounter++;
-            }
-            if (this.showNumberOfCommands) {
-                labelString += "\nCommands: " + tile.content.commandsLength.toString();
-                attribCounter++;
-            }
-            if (this.showNumberOfPoints) {
-                labelString += "\nPoints: " + tile.content.pointsLength.toString();
-                attribCounter++;
-            }
-            if (this.showNumberOfTriangles) {
-                labelString += "\nTriangles: " + tile.content.trianglesLength.toString();
-                attribCounter++;
-            }
-            if (this.showTextureMemory) {
-                labelString += "\nTexture Memory: " + tile.content.textureMemorySizeInBytes.toString();
-                attribCounter++;
-            }
-            if (this.showVertexMemory) {
-                labelString += "\nVertex Memory: " + tile.content.vertexMemorySizeInBytes.toString();
-                attribCounter++;
-            }
-
-            this._tileInfoLabels.add({
-                text: labelString.substring(1),
-                position: position,
-                font : (18-attribCounter).toString() + 'px sans-serif',
-                showBackground: true,
-                disableDepthTestDistance : Number.POSITIVE_INFINITY
-            });
-        }
-        this._tileInfoLabels.update(this._scene.frameState);
-    }
-
-    /**
      * Compiles the style in the style editor
      */
     Cesium3DTilesInspectorViewModel.prototype.compileStyle = function() {
@@ -1081,16 +1012,6 @@ define([
             if (this._shouldStyle) {
                 tileset._styleEngine.makeDirty();
                 this._shouldStyle = false;
-            }
-
-            if (this.showGeometricError || this.showNumberOfCommands || this.showNumberOfPoints || this.showNumberOfTriangles ||
-                this.showTextureMemory || this.showVertexMemory) {
-                if (!defined(this._tileInfoLabels)) {
-                    this._tileInfoLabels = new LabelCollection();
-                }
-                this.updateTileInfoLabels();
-            } else {
-                this._tileInfoLabels = this._tileInfoLabels && this._tileInfoLabels.destroy();
             }
         }
         if (this.showStats) {
