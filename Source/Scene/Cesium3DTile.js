@@ -344,7 +344,7 @@ define([
         this._selectionDepth = 0;
         this._lastFinalResolution = undefined;
         this._lastSelectionDepth = undefined;
-
+        this._requestedFrame = undefined;
         this._ancestorWithContent = undefined;
         this._ancestorWithLoadedContent = undefined;
     }

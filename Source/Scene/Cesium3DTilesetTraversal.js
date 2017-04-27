@@ -35,16 +35,18 @@ define([
         this.outOfCore = undefined;
         this.stack = new ManagedArray();
         this.leaves = new ManagedArray();
+        this.baseScreenSpaceError = undefined;
     }
 
-    BaseTraversal.prototype.execute = function(tileset, root, frameState, outOfCore) {
+    BaseTraversal.prototype.execute = function(tileset, root, baseScreenSpaceError, frameState, outOfCore) {
         this.tileset = tileset;
         this.frameState = frameState;
         this.outOfCore = outOfCore;
         this.leaves.length = 0;
+        this.baseScreenSpaceError = baseScreenSpaceError;
 
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number.greaterThanOrEquals('baseScreenSpaceError', this.tileset._baseScreenSpaceError, this.tileset._maximumScreenSpaceError);
+        Check.typeOf.number.greaterThanOrEquals('baseScreenSpaceError', baseScreenSpaceError, this.tileset._maximumScreenSpaceError);
         //>>includeEnd('debug');
 
         DFS(root, this);
@@ -56,7 +58,7 @@ define([
 
     BaseTraversal.prototype.getChildren = function(tile) {
         var tileset = this.tileset;
-        var baseScreenSpaceError = tileset._baseScreenSpaceError;
+        var baseScreenSpaceError = this.baseScreenSpaceError;
 
         if (tile.hasTilesetContent) {
             // load any tilesets of tilesets now because at this point we still have not achieved a base level of content
@@ -283,7 +285,8 @@ define([
     }
 
     function loadTile(tile, frameState) {
-        if (tile.contentUnloaded) {
+        if (tile.contentUnloaded && tile._requestedFrame !== frameState.frameNumber) {
+            tile._requestedFrame = frameState.frameNumber;
             computeSSE(tile, frameState);
             tile._requestHeap.insert(tile);
         }

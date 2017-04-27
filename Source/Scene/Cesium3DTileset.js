@@ -1517,7 +1517,8 @@ define([
         tileset._baseTraversal.leaves = tileset._skipTraversal.queue1;
 
         // load and select tiles without skipping up to tileset._baseScreenSpaceError
-        tileset._baseTraversal.execute(tileset, root, frameState, outOfCore);
+        var baseScreenSpaceError = tileset.skipLODs ? tileset._baseScreenSpaceError : tileset._maximumScreenSpaceError;
+        tileset._baseTraversal.execute(tileset, root, baseScreenSpaceError, frameState, outOfCore);
 
         if (tileset.skipLODs) {
             // skip traversal starts from a prepopulated queue from the base traversal
