@@ -319,6 +319,21 @@ define([
                     }
                 }
             }
+        },
+
+        /**
+         * Gets the feature content.
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Cesium3DTileContent}
+         *
+         * @readonly
+         */
+        content: {
+            get: function() {
+                return this._content;
+            }
         }
     });
 

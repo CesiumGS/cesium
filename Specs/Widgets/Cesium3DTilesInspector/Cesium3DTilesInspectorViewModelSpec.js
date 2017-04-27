@@ -72,10 +72,10 @@ defineSuite([
             viewModel.tileset = tileset;
             var done = when.defer();
             tileset.readyPromise.then(function() {
-                expect(viewModel.propertiesText.indexOf('id') !== -1).toBe(true);
-                expect(viewModel.propertiesText.indexOf('Longitude') !== -1).toBe(true);
-                expect(viewModel.propertiesText.indexOf('Latitude') !== -1).toBe(true);
-                expect(viewModel.propertiesText.indexOf('Height') !== -1).toBe(true);
+                expect(viewModel.properties.indexOf('id') !== -1).toBe(true);
+                expect(viewModel.properties.indexOf('Longitude') !== -1).toBe(true);
+                expect(viewModel.properties.indexOf('Latitude') !== -1).toBe(true);
+                expect(viewModel.properties.indexOf('Height') !== -1).toBe(true);
                 viewModel.destroy();
                 done.resolve();
             });
@@ -223,12 +223,14 @@ defineSuite([
         });
 
         it('recompiles style', function() {
+            viewModel._style = undefined;
             viewModel.tileset.style = style;
             viewModel._update();
             var s = JSON.parse(viewModel.styleString);
             s.color = "color('red')";
             viewModel.styleString = JSON.stringify(s);
             viewModel.compileStyle();
+            viewModel._update();
             expect(viewModel.tileset.style.style.color).toBe("color('red')");
             expect(viewModel.tileset.style.style.meta.description).toBe("'Building id ${id} has height ${Height}.'");
         });

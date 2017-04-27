@@ -11,7 +11,25 @@ defineSuite([
             return content.featuresLength;
         }).toThrowDeveloperError();
         expect(function() {
+            return content.pointsLength;
+        }).toThrowDeveloperError();
+        expect(function() {
+            return content.trianglesLength;
+        }).toThrowDeveloperError();
+        expect(function() {
+            return content.vertexMemorySizeInBytes;
+        }).toThrowDeveloperError();
+        expect(function() {
+            return content.textureMemorySizeInBytes;
+        }).toThrowDeveloperError();
+        expect(function() {
+            return content.batchTableMemorySizeInBytes;
+        }).toThrowDeveloperError();
+        expect(function() {
             return content.innerContents;
+        }).toThrowDeveloperError();
+        expect(function() {
+            return content.readyPromise;
         }).toThrowDeveloperError();
         expect(function() {
             return content.hasProperty(0, 'height');
@@ -20,10 +38,10 @@ defineSuite([
             return content.getFeature(0);
         }).toThrowDeveloperError();
         expect(function() {
-            content.request();
+            content.applyDebugSettings();
         }).toThrowDeveloperError();
         expect(function() {
-            content.initialize();
+            content.applyStyleWithShader();
         }).toThrowDeveloperError();
         expect(function() {
             content.update();
