@@ -87,6 +87,9 @@ define([
 
         this._viewport = new BoundingRectangle();
         this._rs = undefined;
+
+        this._useScissorTest = false;
+        this._scissorRectangle = undefined;
     }
 
     function destroyTextures(oit) {
@@ -200,7 +203,7 @@ define([
         return supported;
     }
 
-    OIT.prototype.update = function(context, framebuffer) {
+    OIT.prototype.update = function(context, passState, framebuffer) {
         if (!this.isSupported()) {
             return;
         }
@@ -312,9 +315,22 @@ define([
         this._viewport.width = width;
         this._viewport.height = height;
 
-        if (!defined(this._rs) || !BoundingRectangle.equals(this._viewport, this._rs.viewport)) {
+        var useScissorTest = !BoundingRectangle.equals(this._viewport, passState.viewport);
+        var updateScissor = useScissorTest !== this._useScissorTest;
+        this._useScissorTest = useScissorTest;
+
+        if (!BoundingRectangle.equals(this._scissorRectangle, passState.viewport)) {
+            this._scissorRectangle = BoundingRectangle.clone(passState.viewport, this._scissorRectangle);
+            updateScissor = true;
+        }
+
+        if (!defined(this._rs) || !BoundingRectangle.equals(this._viewport, this._rs.viewport) || updateScissor) {
             this._rs = RenderState.fromCache({
-                viewport : this._viewport
+                viewport : this._viewport,
+                scissorTest : {
+                    enabled : this._useScissorTest,
+                    rectangle : this._scissorRectangle
+                }
             });
         }
 
