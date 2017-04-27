@@ -362,7 +362,8 @@ define([
             pickVertexShaderLoaded : getPickVertexShaderCallback(content),
             pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
             pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
-            addBatchIdToGeneratedShaders : (batchLength > 0) // If the batch table has values in it, generated shaders will need a batchId attribute
+            addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
+            pickInfo : {tile : content._tile}
         });
     }
 

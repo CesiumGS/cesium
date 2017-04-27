@@ -641,6 +641,7 @@ define([
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._requestType = options.requestType;
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
+        this._pickInfo = options.pickInfo;
 
         /**
          * @private
@@ -3467,6 +3468,10 @@ define([
                     node : runtimeNode.publicNode,
                     mesh : runtimeMeshesByName[mesh.name]
                 };
+
+                if (defined(model._pickInfo)) {
+                    owner = combine(owner, model._pickInfo);
+                }
 
                 var castShadows = ShadowMode.castShadows(model._shadows);
                 var receiveShadows = ShadowMode.receiveShadows(model._shadows);

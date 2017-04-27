@@ -46,7 +46,7 @@ define([
         this._batchTable = content.batchTable;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
-
+        this._tile = content._tile;
         /**
          * All objects returned by {@link Scene#pick} have a <code>primitive</code> property.
          *

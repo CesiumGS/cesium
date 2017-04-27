@@ -711,7 +711,8 @@ define([
         } else {
             content._pickId = context.createPickId({
                 primitive : content._tileset,
-                content : content
+                content : content,
+                tile : content._tile
             });
 
             pickUniformMap = combine(uniformMap, {
