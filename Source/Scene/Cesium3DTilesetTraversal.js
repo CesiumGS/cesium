@@ -106,7 +106,7 @@ define([
 
     BaseTraversal.prototype.shouldVisit = function(tile) {
         return isVisible(tile.visibilityPlaneMask);
-    }
+    };
 
     BaseTraversal.prototype.leafHandler = function(tile) {
         this.leaves.push(tile);
@@ -243,7 +243,6 @@ define([
 
     function updateChildren(tileset, tile, frameState) {
         var children = tile.children;
-        var childrenLength = children.length;
 
         updateTransforms(children, tile.computedTransform);
         computeDistanceToCamera(children, frameState);
@@ -252,18 +251,23 @@ define([
     }
 
     function visitTile(tileset, tile, frameState, outOfCore) {
-        ++tileset._statistics.visited;
-        tile.selected = false;
-        tile._finalResolution = false;
-        computeSSE(tile, frameState);
-        touch(tileset, tile, outOfCore);
-        tile._ancestorWithContent = undefined;
-        tile._ancestorWithLoadedContent = undefined;
-        var parent = tile.parent;
-        if (defined(parent)) {
-            var replace = parent.refine === Cesium3DTileRefine.REPLACE;
-            tile._ancestorWithContent = (replace && parent.hasContent) ? parent : parent._ancestorWithContent;
-            tile._ancestorWithLoadedContent = (replace && parent.hasContent && parent.contentReady) ? parent : parent._ancestorWithLoadedContent;
+        // because the leaves of one tree traversal are the root of the subsequent traversal, avoid double visitation
+        if (tile._lastSeenFrame !== frameState.frameNumber) {
+            tile._lastSeenFrame = frameState.frameNumber;
+
+            ++tileset._statistics.visited;
+            tile.selected = false;
+            tile._finalResolution = false;
+            computeSSE(tile, frameState);
+            touch(tileset, tile, outOfCore);
+            tile._ancestorWithContent = undefined;
+            tile._ancestorWithLoadedContent = undefined;
+            var parent = tile.parent;
+            if (defined(parent)) {
+                var replace = parent.refine === Cesium3DTileRefine.REPLACE;
+                tile._ancestorWithContent = (replace && parent.hasContent) ? parent : parent._ancestorWithContent;
+                tile._ancestorWithLoadedContent = (replace && parent.hasContent && parent.contentReady) ? parent : parent._ancestorWithLoadedContent;
+            }
         }
     }
 

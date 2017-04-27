@@ -1497,22 +1497,6 @@ define([
             return;
         }
 
-        var selectionState = tileset._selectionState;
-        var processingQueue = selectionState.processingQueue;
-        var nextQueue = selectionState.nextQueue;
-        var finalQueue = selectionState.finalQueue;
-        var selectionQueue = selectionState.selectionQueue;
-
-        processingQueue.length = 0;
-        nextQueue.length = 0;
-        finalQueue.length = 0;
-
-        visitTile(tileset, root, frameState, outOfCore);
-        processingQueue.push(root);
-        selectionState.done = false;
-
-        // tileset._baseScreenSpaceError = Number(tileset._maximumScreenSpaceError);
-
         // leaves of the base traversal is where we start the skip traversal
         tileset._baseTraversal.leaves = tileset._skipTraversal.queue1;
 

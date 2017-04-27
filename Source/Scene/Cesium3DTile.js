@@ -345,6 +345,7 @@ define([
         this._lastFinalResolution = undefined;
         this._lastSelectionDepth = undefined;
         this._requestedFrame = undefined;
+        this._lastVisitedFrame = undefined;
         this._ancestorWithContent = undefined;
         this._ancestorWithLoadedContent = undefined;
     }
