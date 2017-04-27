@@ -1504,9 +1504,9 @@ defineSuite([
 
             tileset.debugShowGeometricError = false;
             tileset.debugShowNumberOfCommands = false;
-            tileset.debugShowNumberOfPoints = false
+            tileset.debugShowNumberOfPoints = false;
             tileset.debugShowNumberOfTriangles = false;
-            tileset.debugShowTextureMemoryUsage = false
+            tileset.debugShowTextureMemoryUsage = false;
             tileset.debugShowVertexMemoryUsage = false;
             scene.renderForSpecs();
             expect(tileset._tileInfoLabels).not.toBeDefined();
