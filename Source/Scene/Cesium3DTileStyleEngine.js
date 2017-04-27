@@ -160,12 +160,12 @@ define([
 
             if (defined(translucencyByDistanceNearRange) && defined(translucencyByDistanceNearValue) &&
                 defined(translucencyByDistanceFarRange) && defined(translucencyByDistanceFarValue)) {
-                var nearRange = translucencyByDistanceNearRange.evaluate(frameState, feature);
-                var nearValue = translucencyByDistanceNearValue.evaluate(frameState, feature);
-                var farRange = translucencyByDistanceFarRange.evaluate(frameState, feature);
-                var farValue = translucencyByDistanceFarValue.evaluate(frameState, feature);
+                var tNearRange = translucencyByDistanceNearRange.evaluate(frameState, feature);
+                var tNearValue = translucencyByDistanceNearValue.evaluate(frameState, feature);
+                var tFarRange = translucencyByDistanceFarRange.evaluate(frameState, feature);
+                var tFarValue = translucencyByDistanceFarValue.evaluate(frameState, feature);
 
-                feature.translucencyByDistance = new NearFarScalar(nearRange, nearValue, farRange, farValue);
+                feature.translucencyByDistance = new NearFarScalar(tNearRange, tNearValue, tFarRange, tFarValue);
             } else {
                 feature.translucencyByDistance = undefined;
             }
