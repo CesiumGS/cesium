@@ -350,6 +350,11 @@ define([
             return;
         }
 
+        feature._billboardColor = Color.clone(newColor, feature._billboardColor);
+        feature._billboardOutlineColor = Color.clone(newOutlineColor, feature._billboardOutlineColor);
+        feature._billboardOutlineWidth = newOutlineWidth;
+        feature._billboardSize = newPointSize;
+
         var centerAlpha = newColor.alpha;
         var cssColor = newColor.toCssColorString();
         var cssOutlineColor = newOutlineColor.toCssColorString();
@@ -359,7 +364,7 @@ define([
     }
 
     function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize) {
-        return function(id) {
+        return function() {
             var canvas = document.createElement('canvas');
 
             var length = newPixelSize + (2 * cssOutlineWidth);

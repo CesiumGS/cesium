@@ -385,8 +385,8 @@ define([
                 decodeMatrix = Matrix4.IDENTITY;
             }
 
-            this._billboardCollection = new BillboardCollection();
-            this._labelCollection = new LabelCollection();
+            this._billboardCollection = new BillboardCollection({ batchTable : batchTable });
+            this._labelCollection = new LabelCollection({ batchTable : batchTable });
 
             for (i = 0; i < numberOfPoints; ++i) {
                 var x = pointsPositions[i * 3];

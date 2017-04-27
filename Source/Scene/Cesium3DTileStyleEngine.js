@@ -100,6 +100,7 @@ define([
     }
 
     var scratchColor = new Color();
+    var scratchColor2 = new Color();
 
     function styleContent(styleEngine, frameState, content, stats) {
         var style = styleEngine._style;
@@ -125,7 +126,7 @@ define([
             var feature = content.getFeature(i);
             feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
             feature.show = style.show.evaluate(frameState, feature);
-            feature.outlineColor = style.outlineColor.evaluate(frameState, feature);
+            feature.outlineColor = style.outlineColor.evaluateColor(frameState, feature, scratchColor2);
             feature.outlineWidth = style.outlineWidth.evaluate(frameState, feature);
             feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
             feature.font = style.font.evaluate(frameState, feature);

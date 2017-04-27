@@ -84,7 +84,7 @@ defineSuite([
 
     beforeEach(function() {
         var center = Cartesian3.fromDegrees(-76.5, 39.5);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 3500.0));
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 2000.0));
     });
 
     afterEach(function() {
@@ -234,13 +234,13 @@ defineSuite([
 
     it('renders points', function() {
         return Cesium3DTilesTester.loadTileset(scene, vectorPointUrl).then(function (tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+            Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders quantized points', function() {
         return Cesium3DTilesTester.loadTileset(scene, vectorPointQuantizedUrl).then(function (tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+            Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
