@@ -9,7 +9,6 @@ defineSuite([
         'Core/GeographicTilingScheme',
         'Core/Ray',
         'Core/Rectangle',
-        'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryLayerCollection',
@@ -31,7 +30,6 @@ defineSuite([
         GeographicTilingScheme,
         Ray,
         Rectangle,
-        WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
         ImageryLayerCollection,
@@ -97,7 +95,7 @@ defineSuite([
         });
 
         beforeEach(function() {
-            tilingScheme = new WebMercatorTilingScheme();
+            tilingScheme = new GeographicTilingScheme();
             alwaysDeferTerrainProvider.tilingScheme = tilingScheme;
             alwaysFailTerrainProvider.tilingScheme = tilingScheme;
             rootTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);

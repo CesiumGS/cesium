@@ -262,6 +262,16 @@ defineSuite([
         expect(texturedBoxModel.colorBlendAmount).toEqual(0.5);
     });
 
+    it('preserves query string in url', function() {
+        var params = '?param1=1&param2=2';
+        var url = texturedBoxUrl + params;
+        var model = Model.fromGltf({
+            url: url
+        });
+        expect(model._basePath).toEndWith(params);
+        expect(model._baseUri).toEndWith(params);
+    });
+
     it('renders', function() {
         verifyRender(texturedBoxModel);
     });
@@ -379,6 +389,24 @@ defineSuite([
     it('resolves readyPromise', function() {
         return texturedBoxModel.readyPromise.then(function(model) {
             verifyRender(model);
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        var invalidGltf = clone(texturedBoxModel.gltf, true);
+        invalidGltf.shaders.CesiumTexturedBoxTest0FS.uri = 'invalid.glsl';
+
+        var model = primitives.add(new Model({
+            gltf : invalidGltf
+        }));
+
+        scene.renderForSpecs();
+
+        return model.readyPromise.then(function(model) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(model.ready).toEqual(false);
+            primitives.remove(model);
         });
     });
 
@@ -2261,6 +2289,36 @@ defineSuite([
                 var reference1 = commands[0].renderState.stencilTest.reference;
                 var reference2 = commands[2].renderState.stencilTest.reference;
                 expect(reference2).toEqual(reference1 + 1);
+            });
+        });
+    });
+
+    it('gets triangle count', function() {
+        expect(texturedBoxModel.trianglesLength).toBe(12);
+        expect(cesiumAirModel.trianglesLength).toBe(5984);
+    });
+
+    it('gets memory usage', function() {
+        // Texture is originally 211*211 but is scaled up to 256*256 to support its minification filter and then is mipmapped
+        var expectedTextureMemory = Math.floor(256*256*4*(4/3));
+        var expectedVertexMemory = 840;
+        var options = {
+            cacheKey : 'memory-usage-test',
+            incrementallyLoadTextures : false
+        };
+        return loadModel(texturedBoxUrl, options).then(function(model) {
+            // The first model owns the resources
+            expect(model.vertexMemorySizeInBytes).toBe(expectedVertexMemory);
+            expect(model.textureMemorySizeInBytes).toBe(expectedTextureMemory);
+            expect(model.cachedVertexMemorySizeInBytes).toBe(0);
+            expect(model.cachedTextureMemorySizeInBytes).toBe(0);
+
+            return loadModel(texturedBoxUrl, options).then(function(model) {
+                // The second model is sharing the resources, so its memory usage is reported as 0
+                expect(model.vertexMemorySizeInBytes).toBe(0);
+                expect(model.textureMemorySizeInBytes).toBe(0);
+                expect(model.cachedVertexMemorySizeInBytes).toBe(expectedVertexMemory);
+                expect(model.cachedTextureMemorySizeInBytes).toBe(expectedTextureMemory);
             });
         });
     });

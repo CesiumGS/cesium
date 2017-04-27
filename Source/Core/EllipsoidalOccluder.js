@@ -241,7 +241,7 @@ define([
     var subsampleScratch = [];
 
     /**
-     * Computes a point that can be used for horizon culling of an rectangle.  If the point is below
+     * Computes a point that can be used for horizon culling of a rectangle.  If the point is below
      * the horizon, the ellipsoid-conforming rectangle is guaranteed to be below the horizon as well.
      * The returned point is expressed in the ellipsoid-scaled space and is suitable for use with
      * {@link EllipsoidalOccluder#isScaledSpacePointVisible}.
