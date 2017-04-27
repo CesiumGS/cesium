@@ -38,7 +38,7 @@ define([
         json : function(tileset, tile, url, arrayBuffer, byteOffset) {
             return new Tileset3DTileContent(tileset, tile, url, arrayBuffer, byteOffset);
         },
-        vctr : function(tileset, tile, url, arraybuffer, byteOffset) {
+        vctr : function(tileset, tile, url, arrayBuffer, byteOffset) {
             return new Vector3DTileContent(tileset, tile, url, arrayBuffer, byteOffset);
         },
     };

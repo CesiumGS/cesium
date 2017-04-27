@@ -195,10 +195,6 @@ defineSuite([
         return Cesium3DTilesTester.resolvesReadyPromise(scene, vectorPolygonQuantizedUrl);
     });
 
-    it('rejects readyPromise on failed request', function() {
-        return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('vctr');
-    });
-
     it('renders polygons', function() {
         addDepthRender();
         return Cesium3DTilesTester.loadTileset(scene, vectorPolygonUrl).then(function (tileset) {
@@ -246,10 +242,6 @@ defineSuite([
 
     it('destroys', function() {
         return Cesium3DTilesTester.tileDestroys(scene, vectorPolygonQuantizedUrl);
-    });
-
-    it('destroys before loading finishes', function() {
-        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, vectorPolygonQuantizedUrl);
     });
 
 }, 'WebGL');

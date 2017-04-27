@@ -65,7 +65,7 @@ define([
      *
      * @private
      */
-    function Vector3DTileContent(tileset, tile, url) {
+    function Vector3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
@@ -77,16 +77,12 @@ define([
         this._billboardCollection = undefined;
         this._labelCollection = undefined;
 
-        /**
-         * The following properties are part of the {@link Cesium3DTileContent} interface.
-         */
-        this.state = Cesium3DTileContentState.UNLOADED;
         this.batchTable = undefined;
         this.featurePropertiesDirty = false;
-        this.boundingSphere = tile.contentBoundingVolume.boundingSphere;
 
-        this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
+
+        initialize(this, arrayBuffer, byteOffset);
     }
 
     defineProperties(Vector3DTileContent.prototype, {
@@ -102,6 +98,53 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
+        pointsLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        trianglesLength : {
+            get : function() {
+                // TODO
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                // TODO
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                return this.batchTable.memorySizeInBytes;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
         innerContents : {
             get : function() {
                 return undefined;
@@ -111,18 +154,21 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        contentReadyToProcessPromise : {
+        readyPromise : {
             get : function() {
-                return this._contentReadyToProcessPromise.promise;
+                return this._readyPromise.promise;
             }
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * Gets the url of the tile's content.
+         * @memberof Cesium3DTileContent.prototype
+         * @type {String}
+         * @readonly
          */
-        readyPromise : {
-            get : function() {
-                return this._readyPromise.promise;
+        url: {
+            get: function() {
+                return this._url;
             }
         }
     });
@@ -148,8 +194,8 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Vector3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTable.hasProperty(name);
+    Vector3DTileContent.prototype.hasProperty = function(batchId, name) {
+        return this.batchTable.hasProperty(batchId, name);
     };
 
     /**
@@ -167,38 +213,6 @@ define([
         return this._features[batchId];
     };
 
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Vector3DTileContent.prototype.request = function() {
-        var that = this;
-
-        var distance = this._tile.distanceToCamera;
-        var promise = RequestScheduler.schedule(new Request({
-            url : this._url,
-            server : this._tile.requestServer,
-            requestFunction : loadArrayBuffer,
-            type : RequestType.TILES3D,
-            distance : distance
-        }));
-
-        if (!defined(promise)) {
-            return false;
-        }
-
-        this.state = Cesium3DTileContentState.LOADING;
-        promise.then(function(arrayBuffer) {
-            if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
-            }
-            that.initialize(arrayBuffer);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that._readyPromise.reject(error);
-        });
-        return true;
-    };
-
     function createColorChangedCallback(content, numberOfPolygons) {
         return function(batchId, color) {
             if (defined(content._polygons) && batchId < numberOfPolygons) {
@@ -211,10 +225,7 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
     var sizeOfFloat32 = Float32Array.BYTES_PER_ELEMENT;
 
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Vector3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
+    function initialize(content, arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
@@ -238,10 +249,7 @@ define([
         byteOffset += sizeOfUint32;
 
         if (byteLength === 0) {
-            this.state = Cesium3DTileContentState.PROCESSING;
-            this._contentReadyToProcessPromise.resolve(this);
-            this.state = Cesium3DTileContentState.READY;
-            this._readyPromise.resolve(this);
+            content._readyPromise.resolve(content);
             return;
         }
 
@@ -322,8 +330,8 @@ define([
         var numberOfOutlines = outlinePolygons ? numberOfPolygons : 0;
         var totalPrimitives = numberOfPolygons + numberOfOutlines + numberOfPolylines + numberOfPoints;
 
-        var batchTable = new Cesium3DTileBatchTable(this, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(this, numberOfPolygons));
-        this.batchTable = batchTable;
+        var batchTable = new Cesium3DTileBatchTable(content, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(content, numberOfPolygons));
+        content.batchTable = batchTable;
 
         var center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
         var minHeight = featureTableJson.MINIMUM_HEIGHT;
@@ -385,8 +393,8 @@ define([
                 decodeMatrix = Matrix4.IDENTITY;
             }
 
-            this._billboardCollection = new BillboardCollection({ batchTable : batchTable });
-            this._labelCollection = new LabelCollection({ batchTable : batchTable });
+            content._billboardCollection = new BillboardCollection({ batchTable : batchTable });
+            content._labelCollection = new LabelCollection({ batchTable : batchTable });
 
             for (i = 0; i < numberOfPoints; ++i) {
                 var x = pointsPositions[i * 3];
@@ -396,12 +404,12 @@ define([
                 Matrix4.multiplyByPoint(decodeMatrix, position, position);
                 Cartesian3.add(position, center, position);
 
-                var b = this._billboardCollection.add();
+                var b = content._billboardCollection.add();
                 b.position = position;
                 b.verticalOrigin = VerticalOrigin.BOTTOM;
                 b._batchIndex = i;
 
-                var l = this._labelCollection.add();
+                var l = content._labelCollection.add();
                 l.text = ' ';
                 l.position = position;
                 l.verticalOrigin = VerticalOrigin.BOTTOM;
@@ -417,7 +425,7 @@ define([
         }
 
         if (positions.length > 0) {
-            this._polygons = new GroundPrimitiveBatch({
+            content._polygons = new GroundPrimitiveBatch({
                 positions : positions,
                 counts : counts,
                 indexCounts : indexCounts,
@@ -427,8 +435,8 @@ define([
                 center : center,
                 quantizedOffset : quantizedOffset,
                 quantizedScale : quantizedScale,
-                boundingVolume : this._tile._boundingVolume.boundingVolume,
-                batchTable : this.batchTable,
+                boundingVolume : content._tile._boundingVolume.boundingVolume,
+                batchTable : content.batchTable,
                 batchIds : batchIds
             });
         }
@@ -461,7 +469,7 @@ define([
                 outlineCounts[s] = count + 1;
             }
 
-            this._outlines = new GroundPolylineBatch({
+            content._outlines = new GroundPolylineBatch({
                 positions : outlinePositions,
                 widths : outlineWidths,
                 counts : outlineCounts,
@@ -469,8 +477,8 @@ define([
                 center : center,
                 quantizedOffset : quantizedOffset,
                 quantizedScale : quantizedScale,
-                boundingVolume : this._tile._boundingVolume.boundingVolume,
-                batchTable : this.batchTable
+                boundingVolume : content._tile._boundingVolume.boundingVolume,
+                batchTable : content.batchTable
             });
         }
 
@@ -483,7 +491,7 @@ define([
         }
 
         if (polylinePositions.length > 0) {
-            this._polylines = new GroundPolylineBatch({
+            content._polylines = new GroundPolylineBatch({
                 positions : polylinePositions,
                 widths : widths,
                 counts : polylineCounts,
@@ -491,14 +499,11 @@ define([
                 center : center,
                 quantizedOffset : quantizedOffset,
                 quantizedScale : quantizedScale,
-                boundingVolume : this._tile._boundingVolume.boundingVolume,
-                batchTable : this.batchTable
+                boundingVolume : content._tile._boundingVolume.boundingVolume,
+                batchTable : content.batchTable
             });
         }
-
-        this.state = Cesium3DTileContentState.PROCESSING;
-        this._contentReadyToProcessPromise.resolve(this);
-    };
+    }
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
@@ -551,15 +556,14 @@ define([
             this._labelCollection.update(frameState);
         }
 
-        if (this.state !== Cesium3DTileContentState.READY && !defined(this._polygonReadyPromise)) {
+        if (!defined(this._polygonReadyPromise)) {
             if (defined(this._polygons)) {
                 var that = this;
                 this._polygonReadyPromise = this._polygons.readyPromise.then(function() {
-                    that.state = Cesium3DTileContentState.READY;
                     that._readyPromise.resolve(that);
                 });
             } else {
-                this.state = Cesium3DTileContentState.READY;
+                this._polygonReadyPromise = true;
                 this._readyPromise.resolve(this);
             }
         }
